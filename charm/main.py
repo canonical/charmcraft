@@ -26,7 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 class CommandError(Exception):
-    """Base exception for all error commands."""
+    """Base exception for all error commands.
+
+    It optionally receives an `retcode` parameter that will be the returned code
+    by the process on exit.
+    """
     def __init__(self, message, retcode=-1):
         self.retcode = retcode
         super().__init__(message)
@@ -67,6 +71,7 @@ class VersionCommand(BaseCommand):
 
 
 class CommandExampleDebug(BaseCommand):
+    """Just an example."""
 
     name = 'example-debug'
     help_msg = "show msg in debug"
@@ -81,6 +86,7 @@ class CommandExampleDebug(BaseCommand):
 
 
 class CommandExampleError(BaseCommand):
+    """Just an example."""
 
     name = 'example-error'
     help_msg = "show msg in error"
@@ -89,8 +95,9 @@ class CommandExampleError(BaseCommand):
         logger.error("Example showing log in ERROR.")
 
 
-# XXX: the idea here was to later group these commands in the *help* message, but couldn't
-# make argparse to really do that :(
+# Collect commands in different groups, for easier human consumption. Note that this is not
+# declared in each command because it's much easier to do this separation/grouping in one
+# central place and not distributed in several classes/files.
 COMMANDS_GROUPS = [
     ('basic', [VersionCommand, CommandExampleError]),
     ('advanced', [CommandExampleDebug]),
@@ -99,6 +106,7 @@ COMMANDS_GROUPS = [
 
 class CustomArgumentParser(argparse.ArgumentParser):
     """ArgumentParser with grouped commands help."""
+    # XXX: we should find a better way of doing this
 
     def format_help(self):
         """SUPER HACKY help."""
@@ -123,6 +131,10 @@ class CustomArgumentParser(argparse.ArgumentParser):
 
 
 class Dispatcher:
+    """Set up infrastructure and let the needed command run.
+
+    ♪♫"Leeeeeet, the command ruuun"♪♫ https://www.youtube.com/watch?v=cv-0mmVnxPA
+    """
 
     def __init__(self, sysargs):
         self.commands = self._load_commands(COMMANDS_GROUPS)
@@ -157,7 +169,7 @@ class Dispatcher:
     def _load_commands(self, commands_groups):
         """Init the commands and store them by name."""
         result = {}
-        for cmd_group, cmd_classes in commands_groups:  # FIXME: colapse into listcomp
+        for cmd_group, cmd_classes in commands_groups:
             for cmd_class in cmd_classes:
                 if cmd_class.name in result:
                     raise RuntimeError(

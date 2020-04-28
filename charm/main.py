@@ -49,7 +49,7 @@ class BaseCommand:
     def fill_parser(self, parser):
         """Overwrite in each command and fill the parser with command-specific parameters.
 
-        If not overwritten, the command will not have any parameters.
+        If not overriden, the command will not have any parameters.
         """
 
 

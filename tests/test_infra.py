@@ -58,7 +58,7 @@ def test_pep8():
 def test_ensure_copyright():
     """Check that all non-empty Python files have copyright somewhere in the first 5 lines."""
     issues = []
-    regex = re.compile(r"# Copyright \d\d\d\d(-\d\d\d\d)? Canonical Ltd.\n")
+    regex = re.compile(r"# Copyright \d{4}(-\d{4})? Canonical Ltd.$")
     for filepath in _get_python_filepaths():
         if os.stat(filepath).st_size == 0:
             continue

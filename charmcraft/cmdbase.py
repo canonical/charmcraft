@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# For further info, check https://github.com/canonical/charm
+# For further info, check https://github.com/canonical/charmcraft
 
 
 class CommandError(Exception):

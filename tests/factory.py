@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# For further info, check https://github.com/canonical/charmcraft
 
 """Collection of creation functions for normally used objects for testing."""
 
-from charm.cmdbase import BaseCommand
+from charmcraft.cmdbase import BaseCommand
 
 
 def create_command(name_, help_msg_):

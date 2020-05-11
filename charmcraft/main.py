@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# For further info, check https://github.com/canonical/charm
+# For further info, check https://github.com/canonical/charmcraft
 
 
 import argparse
@@ -21,9 +21,9 @@ import operator
 import os
 import sys
 
-from charm import logsetup
-from charm.commands import version
-from charm.cmdbase import CommandError
+from charmcraft import logsetup
+from charmcraft.commands import version
+from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger(__name__)
 
@@ -127,8 +127,8 @@ class Dispatcher:
     def _build_argument_parser(self, commands_groups):
         """Build the generic argument parser."""
         parser = CustomArgumentParser(
-            prog='charm',
-            description="The main tool to build, upload, and develop in general the Juju charms.",
+            prog='charmcraft',
+            description="The main tool to build, upload, and develop in general the Juju Charms.",
             commands_groups=commands_groups)
 
         # basic general options

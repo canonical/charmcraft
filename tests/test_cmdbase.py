@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# For further info, check https://github.com/canonical/charmcraft
 
 """Tests for the commands infraestructure."""
 
 import pytest
 
-from charm.cmdbase import CommandError, BaseCommand
+from charmcraft.cmdbase import CommandError, BaseCommand
 
 
 def test_commanderror_retcode_default():

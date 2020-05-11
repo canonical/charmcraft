@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# For further info, check https://github.com/canonical/charm
+# For further info, check https://github.com/canonical/charmcraft
 
-"""Init file to allow execution of charm as a module."""
+"""Init file to allow execution of charmcraft as a module."""
 
-from charm import main
+from charmcraft import main
 main.main()

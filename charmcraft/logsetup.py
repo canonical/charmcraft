@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# For further info, check https://github.com/canonical/charm
+# For further info, check https://github.com/canonical/charmcraft
 
 """Set up logging."""
 
@@ -25,7 +25,7 @@ _MODES = {
     'verbose': (logging.DEBUG, "%(asctime)s  %(name)-18s %(levelname)-8s %(message)s"),
 }
 
-_logger = logging.getLogger('charm')
+_logger = logging.getLogger('charmcraft')
 _logger.setLevel(logging.DEBUG)
 
 _stdout_handler = logging.StreamHandler()

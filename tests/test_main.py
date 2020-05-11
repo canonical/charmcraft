@@ -11,14 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# For further info, check https://github.com/canonical/charmcraft
 
 import argparse
 import io
 import textwrap
 from unittest.mock import patch
 
-from charm.main import Dispatcher
-from charm.cmdbase import BaseCommand, CommandError
+from charmcraft.main import Dispatcher
+from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
 
 import pytest
@@ -138,7 +140,7 @@ def test_dispatcher_no_command():
     with patch('sys.stdout', fake_stdout):
         retcode = dispatcher.run()
     assert retcode == -1
-    assert "usage: charm" in fake_stdout.getvalue()
+    assert "usage: charmcraft" in fake_stdout.getvalue()
 
 
 def test_dispatcher_command_execution_ok():
@@ -201,7 +203,7 @@ def test_dispatcher_command_execution_controlled_error():
 def test_dispatcher_generic_setup_verbose(option):
     """Generic parameter handling for verbose log setup."""
     dispatcher = Dispatcher([option], [])
-    with patch('charm.logsetup.configure') as mock:
+    with patch('charmcraft.logsetup.configure') as mock:
         dispatcher.run()
     mock.assert_called_with('verbose')
 
@@ -210,7 +212,7 @@ def test_dispatcher_generic_setup_verbose(option):
 def test_dispatcher_generic_setup_quiet(option):
     """Generic parameter handling for silent log setup."""
     dispatcher = Dispatcher([option], [])
-    with patch('charm.logsetup.configure') as mock:
+    with patch('charmcraft.logsetup.configure') as mock:
         dispatcher.run()
     mock.assert_called_with('quiet')
 

@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# For further info, check https://github.com/canonical/charmcraft
 
 import io
 import itertools
@@ -27,7 +29,7 @@ FLAKE8_OPTIONS = {'max_line_length': 99, 'select': ['E', 'W', 'F', 'C', 'N']}
 def _get_python_filepaths():
     """Helper to retrieve paths of Python files."""
     python_paths = ['setup.py']
-    for root in ['charm', 'tests']:
+    for root in ['charmcraft', 'tests']:
         for dirpath, dirnames, filenames in os.walk(root):
             for filename in filenames:
                 if filename.endswith(".py"):

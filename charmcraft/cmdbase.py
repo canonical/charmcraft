@@ -18,7 +18,7 @@
 class CommandError(Exception):
     """Base exception for all error commands.
 
-    It optionally receives an `retcode` parameter that will be the returned code
+    It optionally receives a `retcode` parameter that will be the returned code
     by the process on exit.
     """
     def __init__(self, message, retcode=-1):
@@ -27,6 +27,20 @@ class CommandError(Exception):
 
 
 class BaseCommand:
+    """Base class to build charmcraft commands.
+
+    Subclass this to create a new command; the subclass must define the following attributes:
+
+    - name: the identifier in the command line
+    - help_msg: a one line help for user documentation
+
+    It also must/can override some methods for the proper command behaviour (see each
+    method's docstring).
+
+    The subclass must be declared in the corresponding section of main.COMMANDS_GROUPS,
+    and will receive and store this group on instantiation (if overriding `__init__`, the
+    subclass must pass it through upwards).
+    """
 
     name = None
     help_msg = None
@@ -37,11 +51,19 @@ class BaseCommand:
         self.group = group
 
     def fill_parser(self, parser):
-        """Override in each command and fill the parser with command-specific parameters.
+        """This is called to have the command to specify its specific parameters.
 
-        If not overriden, the command will not have any parameters.
+        Each command parameters are independant of other commands, but note there are some
+        global ones (see `main.Dispatcher._build_argument_parser`).
+
+        If this method is not overriden, the command will not have any parameters.
         """
 
     def run(self, parsed_args):
-        """Override in each command with its respectively core working code."""
+        """This is called to have the command to do its work.
+
+        It must be overriden to provide the command implementation.
+
+        Will receive the parsed execution arguments (if declared any, see `fill_parser` above).
+        """
         raise NotImplementedError()

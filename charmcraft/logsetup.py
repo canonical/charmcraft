@@ -28,12 +28,12 @@ _MODES = {
 _logger = logging.getLogger('charmcraft')
 _logger.setLevel(logging.DEBUG)
 
-_stdout_handler = logging.StreamHandler()
-_logger.addHandler(_stdout_handler)
+_stderr_handler = logging.StreamHandler()
+_logger.addHandler(_stderr_handler)
 
 
 def configure(mode):
     """Set logging in different modes."""
     level, format_string = _MODES[mode]
-    _stdout_handler.setFormatter(logging.Formatter(format_string))
-    _stdout_handler.setLevel(level)
+    _stderr_handler.setFormatter(logging.Formatter(format_string))
+    _stderr_handler.setLevel(level)

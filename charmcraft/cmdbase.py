@@ -60,10 +60,10 @@ class BaseCommand:
         """
 
     def run(self, parsed_args):
-        """This is called to have the command to do its work.
+        """This is called for the command to actually execute.
 
-        It must be overriden to provide the command implementation.
+        It must be overridden by the command implementation.
 
-        Will receive the parsed execution arguments (if declared any, see `fill_parser` above).
+        This will receive parsed arguments that were defined in :meth:.fill_parser.
         """
         raise NotImplementedError()

@@ -41,14 +41,14 @@ class CustomArgumentParser(argparse.ArgumentParser):
     """ArgumentParser with grouped commands help."""
 
     # Flag to indicate action groups that will have custom docs
-    special_group = 'MARKER'
+    special_group = object()
 
     def __init__(self, **kwargs):
         self.__commands_groups = kwargs.pop('commands_groups', ())
         super().__init__(**kwargs)
 
     def format_help(self):
-        """Produce normal help but showing the commands grouped."""
+        """Produce normal help, but with grouped commands."""
         main = False
         for ag in self._action_groups:
             if ag.title is self.special_group:
@@ -59,7 +59,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
         if not main:
             return base
 
-        # Get the size of the longest name so all helps are columned properly across the groups.
+        # Get the size of the longest name so all help texts are aligned
+        # properly across the groups.
         longest_name = 0
         for _, _, cmd_classes in self.__commands_groups:
             for cmd_class in cmd_classes:
@@ -92,7 +93,7 @@ class Dispatcher:
 
     def run(self):
         """Really run the command."""
-        self._handle_generics()
+        self._handle_global_params()
 
         if not hasattr(self.parsed_args, '_command'):
             self.main_parser.print_help()
@@ -105,8 +106,8 @@ class Dispatcher:
             return err.retcode
         return 0
 
-    def _handle_generics(self):
-        """Set up and process generics."""
+    def _handle_global_params(self):
+        """Set up and process global parameters."""
         if self.parsed_args.verbose:
             logsetup.configure('verbose')
         elif self.parsed_args.quiet:

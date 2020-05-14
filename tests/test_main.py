@@ -219,14 +219,14 @@ def test_dispatcher_generic_setup_quiet(option):
 
 def test_dispatcher_load_commands_ok():
     """Correct command loading."""
-    cmd1, cmd2, cmd3 = [create_command('cmd-name-{}'.format(n), 'cmd help') for n in range(3)]
+    cmd0, cmd1, cmd2 = [create_command('cmd-name-{}'.format(n), 'cmd help') for n in range(3)]
     groups = [
-        ('test-group-A', 'whatever title', [cmd1]),
-        ('test-group-B', 'other title', [cmd2, cmd3]),
+        ('test-group-A', 'whatever title', [cmd0]),
+        ('test-group-B', 'other title', [cmd1, cmd2]),
     ]
     dispatcher = Dispatcher([], groups)
     assert len(dispatcher.commands) == 3
-    for cmd, group in [(cmd1, 'test-group-A'), (cmd2, 'test-group-B'), (cmd3, 'test-group-B')]:
+    for cmd, group in [(cmd0, 'test-group-A'), (cmd1, 'test-group-B'), (cmd2, 'test-group-B')]:
         expected_cmd = dispatcher.commands[cmd.name]
         assert isinstance(expected_cmd, BaseCommand)
         assert expected_cmd.group == group

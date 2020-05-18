@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 # Collect commands in different groups, for easier human consumption. Note that this is not
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files.
-COMMANDS_GROUPS = [
+COMMAND_GROUPS = [
     ('basic', "basics", [version.VersionCommand, version.CommandExampleError]),
     ('advanced', "more complex stuff", [version.CommandExampleDebug]),
 ]
@@ -158,7 +158,7 @@ def main():
     logsetup.configure(mode)
 
     # process
-    dispatcher = Dispatcher(sys.argv[1:], COMMANDS_GROUPS)
+    dispatcher = Dispatcher(sys.argv[1:], COMMAND_GROUPS)
     sys.exit(dispatcher.run())
 
 

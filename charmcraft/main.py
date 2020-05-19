@@ -22,7 +22,7 @@ import os
 import sys
 
 from charmcraft import logsetup
-from charmcraft.commands import version
+from charmcraft.commands import version, build
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger(__name__)
@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files.
 COMMAND_GROUPS = [
-    ('basic', "basics", [version.VersionCommand, version.CommandExampleError]),
-    ('advanced', "more complex stuff", [version.CommandExampleDebug]),
+    ('basic', "basics", [version.VersionCommand, build.BuildCommand]),
 ]
 
 

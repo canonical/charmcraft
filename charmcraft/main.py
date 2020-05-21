@@ -102,6 +102,7 @@ class Dispatcher:
         try:
             command.run(self.parsed_args)
         except CommandError as err:
+            logger.error(str(err))
             return err.retcode
         return 0
 

@@ -16,6 +16,7 @@
 
 import argparse
 import io
+import logging
 import textwrap
 from unittest.mock import patch
 
@@ -184,8 +185,10 @@ def test_dispatcher_command_execution_crash():
         dispatcher.run()
 
 
-def test_dispatcher_command_execution_controlled_error():
+def test_dispatcher_command_execution_controlled_error(caplog):
     """Commands can indicate "fatal error" through a specific exception."""
+    caplog.set_level(logging.ERROR, logger="charmcraft")
+
     class MyCommand(BaseCommand):
         help_msg = "some help"
         name = 'cmdname'
@@ -197,6 +200,7 @@ def test_dispatcher_command_execution_controlled_error():
     dispatcher = Dispatcher(['cmdname'], groups)
     retcode = dispatcher.run()
     assert retcode == -13
+    assert ["boom"] == [rec.message for rec in caplog.records]
 
 
 @pytest.mark.parametrize("option", ['--verbose', '-v'])

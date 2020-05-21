@@ -77,8 +77,12 @@ def link(srcpath, destdir):
     return destpath
 
 
-def _build(charmdir, entrypoint):
+def build(args):
     """Main entry point."""
+    charmdir = args['from']
+    entrypoint = args['entrypoint']
+    requirement_paths = args['requirement']
+
     buildpath = charmdir / BUILD_DIRNAME
     logger.debug("Building charm in %r", str(buildpath))
 
@@ -117,13 +121,13 @@ def _build(charmdir, entrypoint):
     # XXX Facundo 2020-05-18: we may want to be flexible with how to include the
     # dependencies, e.g. respecting current lib directory, or not having a requirements file
     libpath = buildpath / 'lib'
-    reqspath = charmdir / 'requirements.txt'
     cmd = [
         'pip3', 'install',  # base command
         '--system',  # indicates to use the system file structure
         '--target={}'.format(libpath),  # put all the resulting files in that specific dir
-        '--requirement={}'.format(reqspath),  # the dependencies file
     ]
+    for reqspath in requirement_paths:
+        cmd.append('--requirement={}'.format(reqspath))  # the dependencies file(s)
     retcode = polite_exec(cmd)
     if retcode:
         raise CommandError("problems installing the dependencies")
@@ -142,6 +146,71 @@ def _build(charmdir, entrypoint):
     logger.info("Done, charm left in %r", zipname)
 
 
+class Validator:
+    """A validator of all received options."""
+
+    _options = [
+        'from',  # this needs to be processed first, as it's a base dir to find other files
+        'entrypoint',
+        'requirement',
+    ]
+
+    def __init__(self):
+        self.basedir = None  # this will be fulfilled when processing 'from'
+
+    def process(self, parsed_args):
+        """Process the received options."""
+        result = {}
+        for opt in self._options:
+            meth = getattr(self, 'validate_' + opt)
+            result[opt] = meth(getattr(parsed_args, opt, None))
+        return result
+
+    def validate_from(self, arg):
+        """Validate that the charm dir is there and yes, a directory."""
+        if arg is None:
+            arg = '.'
+        arg = pathlib.Path(arg).expanduser()
+
+        if not arg.exists():
+            raise CommandError("the charm directory was not found: {!r}".format(str(arg)))
+        if not arg.is_dir():
+            raise CommandError(
+                "the charm directory is not really a directory: {!r}".format(str(arg)))
+
+        self.basedir = arg
+        return arg
+
+    def validate_entrypoint(self, arg):
+        """Validate that the entrypoint exists and is executable."""
+        if arg is None:
+            arg = self.basedir / 'src' / 'charm.py'
+        arg = pathlib.Path(arg).expanduser()
+
+        if not arg.exists():
+            raise CommandError("the charm entry point was not found: {!r}".format(str(arg)))
+        if not os.access(arg, os.X_OK):
+            raise CommandError("the charm entry point must be executable: {!r}".format(str(arg)))
+        return arg
+
+    def validate_requirement(self, arg):
+        """Validate that the given requirement(s) (if any) exist.
+
+        If not specified, default to requirements.txt if there.
+        """
+        if arg is None:
+            arg = self.basedir / 'requirements.txt'
+            if arg.exists() and os.access(arg, os.R_OK):
+                return [arg]
+            return []
+
+        arg = [pathlib.Path(x) for x in arg]
+        for fpath in arg:
+            if not fpath.exists():
+                raise CommandError("the requirements file was not found: {!r}".format(str(fpath)))
+        return arg
+
+
 class BuildCommand(BaseCommand):
     """Show the version."""
     name = 'build'
@@ -150,29 +219,21 @@ class BuildCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'charmdir', metavar='charm-dir',
-            help='The directory where the charm project is located')
+            '-f', '--from',
+            help="the directory where the charm project is located, from where the build "
+                 "is done; defaults to '.'")
         parser.add_argument(
-            'entrypoint', metavar='charm-entrypoint',
-            help='The executable script or program which is the entry point to all the charm code')
+            '-e', '--entrypoint',
+            help="the executable script or program which is the entry point to all the "
+                 "charm code; defaults to 'src/charm.py'")
+        parser.add_argument(
+            '-r', '--requirement', action='append',
+            help="the file(s) with the needed dependencies (this option can be used multiple "
+                  "times); defaults to 'requirements.txt'")
 
     def run(self, parsed_args):
         """Run the command."""
-        charmdir = pathlib.Path(parsed_args.charmdir)
-        if not charmdir.exists():
-            raise CommandError(
-                "indicated charm directory not found: {!r}".format(parsed_args.charmdir))
-        if not charmdir.is_dir():
-            raise CommandError(
-                "indicated charm directory is not a directory: {!r}".format(parsed_args.charmdir))
-
-        entrypoint = pathlib.Path(parsed_args.entrypoint)
-        if not entrypoint.exists():
-            raise CommandError(
-                "indicated charm entry point not found: {!r}".format(parsed_args.entrypoint))
-        if not os.access(entrypoint, os.X_OK):
-            raise CommandError(
-                "indicated charm entry point must be executable: {!r}".format(
-                    parsed_args.entrypoint))
-
-        _build(charmdir, entrypoint)
+        validator = Validator()
+        args = validator.process(parsed_args)
+        logger.debug("working arguments: %s", args)
+        build(args)

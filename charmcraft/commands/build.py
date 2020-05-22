@@ -51,15 +51,12 @@ def polite_exec(cmd):
     p = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 
-    stdout = []
     for line in p.stdout:
-        stdout.append(line)
+        logger.debug(":: %s", line.rstrip())
     retcode = p.wait()
 
     if retcode:
         logger.error("Execution ended in %d for cmd %s", retcode, cmd)
-        for line in stdout:
-            logger.debug(":: %s", line.rstrip())
     return retcode
 
 

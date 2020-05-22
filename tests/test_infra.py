@@ -18,10 +18,13 @@ import io
 import itertools
 import os
 import re
+import subprocess
 from unittest.mock import patch
 
 import pytest
 from flake8.api.legacy import get_style_guide
+
+from charmcraft import __version__
 
 FLAKE8_OPTIONS = {'max_line_length': 99, 'select': ['E', 'W', 'F', 'C', 'N']}
 
@@ -74,3 +77,10 @@ def test_ensure_copyright():
     if issues:
         msg = "Please add copyright headers to the following files:\n" + "\n".join(issues)
         pytest.fail(msg, pytrace=False)
+
+
+def test_setup_version():
+    """Verify that setup.py is picking up the version correctly."""
+    cmd = [os.path.abspath('setup.py'), '--version']
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, encoding='utf8')
+    assert proc.stdout.strip() == __version__

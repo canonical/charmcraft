@@ -16,7 +16,17 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import ast
 import setuptools
+
+
+def get_version():
+    """Extract the version string from project's init."""
+    with open("charmcraft/__init__.py", "rt", encoding='utf8') as fh:
+        for line in fh:
+            if '__version__' in line:
+                return ast.literal_eval(line.split('=', 1)[1].strip())
+
 
 with open("README.md", "rt", encoding='utf8') as fh:
     long_description = fh.read()
@@ -26,7 +36,7 @@ with open("requirements.txt", "rt", encoding='utf8') as fh:
 
 setuptools.setup(
     name="charmcraft",
-    version="0.1.1",
+    version=get_version(),
     author="Facundo Batista",
     author_email="facundo.batista@canonical.com",
     description="The main tool to build, upload, and develop in general the Juju charms.",

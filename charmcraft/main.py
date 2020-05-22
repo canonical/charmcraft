@@ -21,7 +21,7 @@ import operator
 import os
 import sys
 
-from charmcraft import logsetup
+from charmcraft import logsetup, __version__
 from charmcraft.commands import version
 from charmcraft.cmdbase import CommandError
 
@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files.
 COMMAND_GROUPS = [
-    ('basic', "basics", [version.VersionCommand, version.CommandExampleError]),
-    ('advanced', "more complex stuff", [version.CommandExampleDebug]),
+    ('basic', "basics", [version.VersionCommand]),
 ]
 
 
@@ -84,6 +83,8 @@ class Dispatcher:
     """
 
     def __init__(self, sysargs, commands_groups):
+        logger.debug("Starting charmcraft version %s", __version__)
+
         self.commands = self._load_commands(commands_groups)
         logger.debug("Commands loaded: %s", self.commands)
 

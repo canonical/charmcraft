@@ -82,5 +82,6 @@ def test_ensure_copyright():
 def test_setup_version():
     """Verify that setup.py is picking up the version correctly."""
     cmd = [os.path.abspath('setup.py'), '--version']
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, encoding='utf8')
-    assert proc.stdout.strip() == __version__
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE)
+    output = proc.stdout.decode('utf8')
+    assert output.strip() == __version__

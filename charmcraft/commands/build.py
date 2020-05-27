@@ -105,7 +105,7 @@ def build(args):
     dispatch_path = buildpath / DISPATCH_FILENAME
     with open(dispatch_path, "wt", encoding="utf8") as fh:
         fh.write(dispatch_content)
-    os.chmod(dispatch_path, dispatch_path.stat().st_mode | stat.S_IXUSR)
+        os.fchmod(fh.fileno(), os.fstat().st_mode | stat.S_IXUSR)
 
     # bunch of symlinks, to support old juju
     hookpath = buildpath / 'hooks'

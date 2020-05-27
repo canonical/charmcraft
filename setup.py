@@ -34,7 +34,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/canonical/charmcraft",
     license="Apache-2.0",
-    packages=["charmcraft"],
+    packages=["charmcraft", "charmcraft.commands"],
     package_data={'': ["LICENSE", "README.md", "requirements.txt"]},
     classifiers=[
         "Environment :: Console",

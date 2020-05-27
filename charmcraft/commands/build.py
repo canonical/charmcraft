@@ -37,6 +37,7 @@ DISPATCH = """#!/bin/sh
 
 PYTHONPATH=lib {entrypoint_relative_path}
 """
+#FIXME: included venv
 
 # The minimum set of hooks to be provided for compatibility with old Juju
 HOOK_NAMES = [
@@ -65,10 +66,6 @@ def link(srcpath, destdir):
     if not destdir.exists():
         os.makedirs(destdir)
 
-    # XXX Facundo 2020-05-19: we could make hard links here, with the benefit of `juju deploy`
-    # being happy about these links, while at the same time getting the benefit of "changing
-    # a file in the project and being ready to deploy" (however, TRICKY!); that said, we would
-    # need to handle directories by hand (but currently we're not linking dirs...)
     destpath = destdir / srcpath.name
     destpath.symlink_to(srcpath)
     return destpath
@@ -85,6 +82,7 @@ def build(args):
 
     # XXX Facundo 2020-05-18: for now we're re-building always from scratch, in the
     # future we *may* reuse stuff already inside
+    #FIXME: open a bug about reusing venv and removing XXX
     if buildpath.exists():
         shutil.rmtree(str(buildpath))
     buildpath.mkdir()
@@ -96,6 +94,9 @@ def build(args):
     # the charm code
     # XXX Facundo 2020-05-18: for now, one file, may we copy the entrypoint and its whole dir/tree
     # (if not charmdir); also we need to understand if we want to ignore some files (e.g. .pyc)
+    #FIXME:
+    #- remove XXX
+    #- inlcude all the tree where entry point is located, src or whatever (if a subdir!!)
     linked_entrypoint = link(entrypoint, buildpath / 'src')
 
     # dispatch mechanism
@@ -117,7 +118,12 @@ def build(args):
     logger.debug("Installing dependencies")
     # XXX Facundo 2020-05-18: we may want to be flexible with how to include the
     # dependencies, e.g. respecting current lib directory, or not having a requirements file
-    libpath = buildpath / 'lib'
+    #FIXME:
+    # - sacar XXX
+    # - copiar mod y lib
+
+    #FIXME: no requirement, no command!!!
+    libpath = buildpath / 'lib'  #FIXME: venv!!!
     cmd = [
         'pip3', 'install',  # base command
         '--system',  # indicates to use the system file structure
@@ -154,6 +160,7 @@ class Validator:
 
     def __init__(self):
         self.basedir = None  # this will be fulfilled when processing 'from'
+        # FIXME: validate all paths args
 
     def process(self, parsed_args):
         """Process the received options."""
@@ -209,6 +216,7 @@ class Validator:
 
 
 class BuildCommand(BaseCommand):
+    #FIXME: suport comandos en setup.py
     """Show the version."""
     name = 'build'
     help_msg = "build the charm"

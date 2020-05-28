@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files.
 COMMAND_GROUPS = [
-    ('basic', "basics", [version.VersionCommand, version.CommandExampleError]),
-    ('advanced', "more complex stuff", [version.CommandExampleDebug]),
+    ('basic', "basics", [version.VersionCommand]),
 ]
 
 
@@ -103,6 +102,7 @@ class Dispatcher:
         try:
             command.run(self.parsed_args)
         except CommandError as err:
+            logger.error(str(err))
             return err.retcode
         return 0
 

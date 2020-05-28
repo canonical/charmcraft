@@ -32,32 +32,3 @@ class VersionCommand(BaseCommand):
         # XXX: we need to define how we want to store the project version (in config/file/etc.)
         version = '0.0.1'
         logger.info('Version: %s', version)
-
-
-# XXX: the following commands are left here as an example of different commands... but in
-# reality new commands will have new files for them
-
-
-class CommandExampleDebug(BaseCommand):
-    """Just an example."""
-
-    name = 'example-debug'
-    help_msg = "show msg in debug"
-
-    def fill_parser(self, parser):
-        parser.add_argument('foo')
-        parser.add_argument('--bar', action='store_true', help="To use this command in a bar")
-
-    def run(self, parsed_args):
-        logger.debug(
-            "Example showing log in DEBUG: foo=%s bar=%s", parsed_args.foo, parsed_args.bar)
-
-
-class CommandExampleError(BaseCommand):
-    """Just an example."""
-
-    name = 'example-error'
-    help_msg = "show msg in error"
-
-    def run(self, parsed_args):
-        logger.error("Example showing log in ERROR.")

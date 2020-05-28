@@ -1,0 +1,682 @@
+# Copyright 2020 Canonical Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# For further info, check https://github.com/canonical/charmcraft
+
+import logging
+import pathlib
+import os
+import stat
+import tempfile
+import zipfile
+from collections import namedtuple
+from unittest.mock import patch
+
+import pytest
+
+from charmcraft.cmdbase import CommandError
+from charmcraft.commands.build import (
+    BUILD_DIRNAME,
+    Builder,
+    CHARM_METADATA,
+    DISPATCH_CONTENT,
+    DISPATCH_FILENAME,
+    VENV_DIRNAME,
+    Validator,
+    polite_exec,
+)
+
+
+# --- Validator tests
+
+def test_validator_process_simple():
+    """Process the present options and store the result."""
+    class TestValidator(Validator):
+        _options = ['foo', 'bar']
+
+        def validate_foo(self, arg):
+            assert arg == 35
+            return 70
+
+        def validate_bar(self, arg):
+            assert arg == 45
+            return 80
+
+    test_args = namedtuple('T', 'foo bar')(35, 45)
+    validator = TestValidator()
+    result = validator.process(test_args)
+    assert result == dict(foo=70, bar=80)
+
+
+def test_validator_process_notpresent():
+    """Process an option after not finding the value."""
+    class TestValidator(Validator):
+        _options = ['foo']
+
+        def validate_foo(self, arg):
+            assert arg is None
+            return 70
+
+    test_args = namedtuple('T', 'bar')(35)
+    validator = TestValidator()
+    result = validator.process(test_args)
+    assert result == dict(foo=70)
+
+
+def test_validator_from_simple(tmp_path):
+    """'from' param: simple validation and setting in Validation."""
+    validator = Validator()
+    resp = validator.validate_from(str(tmp_path))
+    assert resp == tmp_path
+    assert validator.basedir == tmp_path
+
+
+def test_validator_from_default():
+    """'from' param: default value."""
+    validator = Validator()
+    resp = validator.validate_from(None)
+    assert resp == pathlib.Path('.').absolute()
+
+
+def test_validator_from_absolutized(tmp_path, monkeypatch):
+    """'from' param: check it's made absolute."""
+    # change dir to the temp one, where we will have the 'dir1/dir2' tree
+    dir1 = tmp_path / 'dir1'
+    dir1.mkdir()
+    dir2 = dir1 / 'dir2'
+    dir2.mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    validator = Validator()
+    resp = validator.validate_from('dir1/dir2')
+    assert resp == dir2
+
+
+def test_validator_from_expanded():
+    """'from' param: expands the user-home prefix."""
+    validator = Validator()
+    resp = validator.validate_from('~')
+    assert resp == pathlib.Path('~').expanduser().absolute()
+
+
+def test_validator_from_exist():
+    """'from' param: checks that the directory exists."""
+    validator = Validator()
+    expected_msg = "the charm directory was not found: '/not_really_there'"
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_from('/not_really_there')
+
+
+def test_validator_from_isdir(tmp_path):
+    """'from' param: checks that the directory is really that."""
+    testfile = tmp_path / 'testfile'
+    testfile.touch()
+
+    validator = Validator()
+    expected_msg = "the charm directory is not really a directory: '{}'".format(testfile)
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_from(str(testfile))
+
+
+def test_validator_entrypoint_simple(tmp_path):
+    """'entrypoint' param: simple validation."""
+    testfile = tmp_path / 'testfile'
+    testfile.touch(mode=0o777)
+
+    validator = Validator()
+    resp = validator.validate_entrypoint(str(testfile))
+    assert resp == testfile
+
+
+def test_validator_entrypoint_default(tmp_path):
+    """'entrypoint' param: default value."""
+    default_entrypoint = tmp_path / 'src' / 'charm.py'
+    default_entrypoint.parent.mkdir()
+    default_entrypoint.touch(mode=0o777)
+
+    validator = Validator()
+    validator.basedir = tmp_path
+    resp = validator.validate_entrypoint(None)
+    assert resp == default_entrypoint
+
+
+def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
+    """'entrypoint' param: check it's made absolute."""
+    # change dir to the temp one, where we will have the 'dirX/file.py' stuff
+    dirx = tmp_path / 'dirX'
+    dirx.mkdir()
+    testfile = dirx / 'file.py'
+    testfile.touch(mode=0o777)
+    monkeypatch.chdir(tmp_path)
+
+    validator = Validator()
+    resp = validator.validate_entrypoint('dirX/file.py')
+    assert resp == testfile
+
+
+def test_validator_entrypoint_expanded():
+    """'entrypoint' param: expands the user-home prefix."""
+    home = pathlib.Path("~").expanduser()
+    testfd, testpath = tempfile.mkstemp(dir=str(home))
+    try:
+        testpath = pathlib.Path(testpath)
+        os.fchmod(testfd, os.fstat(testfd).st_mode | stat.S_IXUSR)
+
+        validator = Validator()
+        relative_testpath = "~/{}".format(testpath.relative_to(home))
+        resp = validator.validate_entrypoint(relative_testpath)
+    finally:
+        testpath.unlink()
+    assert resp == testpath
+
+
+def test_validator_entrypoint_exist():
+    """'entrypoint' param: checks that the file exists."""
+    validator = Validator()
+    expected_msg = "the charm entry point was not found: '/not_really_there.py'"
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_entrypoint('/not_really_there.py')
+
+
+def test_validator_entrypoint_exec(tmp_path):
+    """'entrypoint' param: checks that the file is executable."""
+    testfile = tmp_path / 'testfile'
+    testfile.touch(mode=0o444)
+
+    validator = Validator()
+    expected_msg = "the charm entry point must be executable: '{}'".format(testfile)
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_entrypoint(str(testfile))
+
+
+def test_validator_requirement_simple(tmp_path):
+    """'requirement' param: simple validation."""
+    testfile = tmp_path / 'testfile'
+    testfile.touch()
+
+    validator = Validator()
+    resp = validator.validate_requirement([str(testfile)])
+    assert resp == [testfile]
+
+
+def test_validator_requirement_multiple(tmp_path):
+    """'requirement' param: multiple files."""
+    testfile1 = tmp_path / 'testfile1'
+    testfile1.touch()
+    testfile2 = tmp_path / 'testfile2'
+    testfile2.touch()
+
+    validator = Validator()
+    resp = validator.validate_requirement([str(testfile1), str(testfile2)])
+    assert resp == [testfile1, testfile2]
+
+
+def test_validator_requirement_default_present_ok(tmp_path):
+    """'requirement' param: default value when a requirements.txt is there and readable."""
+    default_requirement = tmp_path / 'requirements.txt'
+    default_requirement.touch()
+
+    validator = Validator()
+    validator.basedir = tmp_path
+    resp = validator.validate_requirement(None)
+    assert resp == [default_requirement]
+
+
+def test_validator_requirement_default_present_not_readable(tmp_path):
+    """'requirement' param: default value when a requirements.txt is there but not readable."""
+    default_requirement = tmp_path / 'requirements.txt'
+    default_requirement.touch(0o230)
+
+    validator = Validator()
+    validator.basedir = tmp_path
+    resp = validator.validate_requirement(None)
+    assert resp == []
+
+
+def test_validator_requirement_default_missing(tmp_path):
+    """'requirement' param: default value when no requirements.txt is there."""
+    validator = Validator()
+    validator.basedir = tmp_path
+    resp = validator.validate_requirement(None)
+    assert resp == []
+
+
+def test_validator_requirement_absolutized(tmp_path, monkeypatch):
+    """'requirement' param: check it's made absolute."""
+    # change dir to the temp one, where we will have the reqs file
+    testfile = tmp_path / 'reqs.txt'
+    testfile.touch()
+    monkeypatch.chdir(tmp_path)
+
+    validator = Validator()
+    resp = validator.validate_requirement(['reqs.txt'])
+    assert resp == [testfile]
+
+
+def test_validator_requirement_expanded():
+    """'requirement' param: expands the user-home prefix."""
+    home = pathlib.Path("~").expanduser()
+    testfd, testpath = tempfile.mkstemp(dir=str(home))
+    try:
+        testpath = pathlib.Path(testpath)
+
+        validator = Validator()
+        relative_testpath = "~/{}".format(testpath.relative_to(home))
+        resp = validator.validate_requirement([relative_testpath])
+    finally:
+        testpath.unlink()
+    assert resp == [testpath]
+
+
+def test_validator_requirement_exist():
+    """'requirement' param: checks that the file exists."""
+    validator = Validator()
+    expected_msg = "the requirements file was not found: '/not_really_there.txt'"
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_requirement(['/not_really_there.txt'])
+
+
+# --- Polite Executor tests
+
+def test_politeexec_base(caplog):
+    """Basic execution."""
+    caplog.set_level(logging.ERROR, logger="charmcraft")
+
+    cmd = ['echo', 'HELO']
+    retcode = polite_exec(cmd)
+    assert retcode == 0
+    assert not any("Execution ended" in rec.message for rec in caplog.records)
+
+
+def test_politeexec_stdout_logged(caplog):
+    """The standard output is logged in debug."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    cmd = ['echo', 'HELO']
+    polite_exec(cmd)
+    assert [":: HELO"] == [rec.message for rec in caplog.records]
+
+
+def test_politeexec_stderr_logged(caplog):
+    """The standard error is logged in debug."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    cmd = ['python3', '-c', "import sys; print('weird, huh?', file=sys.stderr)"]
+    polite_exec(cmd)
+    assert [":: weird, huh?"] == [rec.message for rec in caplog.records]
+
+
+def test_politeexec_failed(caplog):
+    """It's logged in error if cmd fails."""
+    caplog.set_level(logging.ERROR, logger="charmcraft")
+
+    cmd = ['python3', '-c', "exit(3)"]
+    retcode = polite_exec(cmd)
+    assert retcode == 3
+    assert any("Execution ended in 3" in rec.message for rec in caplog.records)
+
+
+def test_politeexec_crashed(caplog, tmp_path):
+    """It's logged in error if cmd fails."""
+    caplog.set_level(logging.ERROR, logger="charmcraft")
+    nonexistent = tmp_path / 'whatever'
+
+    cmd = [str(nonexistent)]
+    retcode = polite_exec(cmd)
+    assert retcode == -1
+    assert any("Execution crashed with FileNotFoundError" in rec.message for rec in caplog.records)
+
+
+# --- (real) build tests
+
+
+def test_build_basic_complete_structure(tmp_path):
+    """Integration test: a simple structure with custom lib and normal src dir."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    # the metadata
+    metadata = tmp_path / 'metadata.yaml'
+    with open(metadata, 'wb') as fh:
+        fh.write(b'lot of yaml config')
+
+    # a lib dir
+    lib_dir = tmp_path / 'lib'
+    lib_dir.mkdir()
+    ops_lib_dir = lib_dir / 'ops'
+    ops_lib_dir.mkdir()
+    ops_stuff = ops_lib_dir / 'stuff.txt'
+    with open(ops_stuff, 'wb') as fh:
+        fh.write(b'ops stuff')
+
+    # simple source code
+    src_dir = tmp_path / 'src'
+    src_dir.mkdir()
+    charm_script = src_dir / 'charm.py'
+    with open(charm_script, 'wb') as fh:
+        fh.write(b'all the magic')
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': charm_script,
+        'requirement': [],
+    })
+    zipname = builder.run()
+
+    # check all is properly inside the zip
+    # contents!), and all relative to build dir
+    zf = zipfile.ZipFile(zipname)
+    assert zf.read('metadata.yaml') == b"lot of yaml config"
+    assert zf.read('src/charm.py') == b"all the magic"
+    dispatch = DISPATCH_CONTENT.format(entrypoint_relative_path='src/charm.py').encode('ascii')
+    assert zf.read('dispatch') == dispatch
+    assert zf.read('hooks/install') == dispatch
+    assert zf.read('hooks/start') == dispatch
+    assert zf.read('hooks/upgrade-charm') == dispatch
+    assert zf.read('lib/ops/stuff.txt') == b"ops stuff"
+
+
+def test_build_code_simple(tmp_path):
+    """Check transferred metadata and simple entrypoint."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    metadata = tmp_path / CHARM_METADATA
+    entrypoint = tmp_path / 'crazycharm.py'
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    linked_entrypoint = builder.handle_code()
+
+    built_metadata = build_dir / CHARM_METADATA
+    assert built_metadata.is_symlink()
+    assert built_metadata.resolve() == metadata
+
+    built_entrypoint = build_dir / 'src' / 'crazycharm.py'  # note it's inside 'src'
+    assert built_entrypoint.is_symlink()
+    assert built_entrypoint.resolve() == entrypoint
+
+    assert linked_entrypoint == built_entrypoint
+
+
+def test_build_code_tree(tmp_path):
+    """The whole source code tree is built if entrypoint not at root."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    src_dir = tmp_path / 'code_source'
+    entrypoint = src_dir / 'crazycharm.py'
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    linked_entrypoint = builder.handle_code()
+
+    built_src = build_dir / 'code_source'
+    assert built_src.is_symlink()
+    assert built_src.resolve() == src_dir
+
+    assert linked_entrypoint == build_dir / 'code_source' / 'crazycharm.py'
+
+
+def test_build_dispatcher_modern_dispatch_created(tmp_path):
+    """The dispatcher script is properly built."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    linked_entrypoint = build_dir / 'somestuff.py'
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    builder.handle_dispatcher(linked_entrypoint)
+
+    included_dispatcher = build_dir / DISPATCH_FILENAME
+    with open(included_dispatcher, 'rt', encoding='utf8') as fh:
+        dispatcher_code = fh.read()
+    assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path='somestuff.py')
+
+
+def test_build_dispatcher_modern_dispatch_respected(tmp_path):
+    """The already present dispatcher script is properly transferred."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    already_present_dispatch = tmp_path / DISPATCH_FILENAME
+    already_present_dispatch.touch()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    builder.handle_dispatcher('whatever')
+
+    included_dispatcher = build_dir / DISPATCH_FILENAME
+    assert included_dispatcher.is_symlink()
+    assert included_dispatcher.resolve() == already_present_dispatch
+
+
+def test_build_dispatcher_classic_hooks_created(tmp_path):
+    """The classic hooks are implemented ok."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    linked_entrypoint = build_dir / 'somestuff.py'
+    included_dispatcher = build_dir / DISPATCH_FILENAME
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    with patch('charmcraft.commands.build.HOOK_NAMES', ['testhook']):
+        builder.handle_dispatcher(linked_entrypoint)
+
+    test_hook = build_dir / 'hooks' / 'testhook'
+    assert test_hook.is_symlink()
+    assert test_hook.resolve() == included_dispatcher
+
+
+def test_build_dispatcher_classic_hooks_respected(tmp_path):
+    """The already present classic hooks are properly transferred."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    charm_hooks_dir = tmp_path / 'hooks'
+    charm_hooks_dir.mkdir()
+    charm_test_hook = charm_hooks_dir / 'testhook'
+    charm_test_hook.touch()
+
+    linked_entrypoint = build_dir / 'somestuff.py'
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    with patch('charmcraft.commands.build.HOOK_NAMES', ['testhook']):
+        builder.handle_dispatcher(linked_entrypoint)
+
+    test_hook = build_dir / 'hooks' / 'testhook'
+    assert test_hook.is_symlink()
+    assert test_hook.resolve() == charm_test_hook
+
+
+def test_build_dependencies_copied_dirs(tmp_path):
+    """The libs with dependencies are properly transferred."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    mod_dir = tmp_path / 'mod'
+    mod_dir.mkdir()
+    lib_dir = tmp_path / 'lib'
+    lib_dir.mkdir()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    builder.handle_dependencies()
+
+    # check symlinks were created for those
+    built_mod_dir = build_dir / 'mod'
+    assert built_mod_dir.is_symlink()
+    assert built_mod_dir.resolve() == mod_dir
+    built_lib_dir = build_dir / 'lib'
+    assert built_lib_dir.is_symlink()
+    assert built_lib_dir.resolve() == lib_dir
+
+
+def test_build_dependencies_virtualenv_simple(tmp_path):
+    """A virtualenv is created with the specified requirements file."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': ['reqs.txt'],
+    })
+
+    with patch('charmcraft.commands.build.polite_exec') as mock:
+        mock.return_value = 0
+        builder.handle_dependencies()
+
+    envpath = build_dir / VENV_DIRNAME
+    mock.assert_called_once_with(
+        ['pip3', 'install', '--system', '--target={}'.format(envpath), '--requirement=reqs.txt'])
+
+
+def test_build_dependencies_virtualenv_multiple(tmp_path):
+    """A virtualenv is created with multiple requirements files."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': ['reqs1.txt', 'reqs2.txt'],
+    })
+
+    with patch('charmcraft.commands.build.polite_exec') as mock:
+        mock.return_value = 0
+        builder.handle_dependencies()
+
+    envpath = build_dir / VENV_DIRNAME
+    mock.assert_called_once_with(
+        ['pip3', 'install', '--system', '--target={}'.format(envpath),
+            '--requirement=reqs1.txt', '--requirement=reqs2.txt'])
+
+
+def test_build_dependencies_virtualenv_none(tmp_path):
+    """The virtualenv is NOT created if no needed."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+
+    with patch('charmcraft.commands.build.polite_exec') as mock:
+        builder.handle_dependencies()
+
+    mock.assert_not_called()
+
+
+def test_build_dependencies_virtualenv_error(tmp_path):
+    """Process is properly interrupted if virtualenv creation fails."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': ['something'],
+    })
+
+    with patch('charmcraft.commands.build.polite_exec') as mock:
+        mock.return_value = -7
+        with pytest.raises(CommandError, match="problems installing the dependencies"):
+            builder.handle_dependencies()
+
+
+def test_build_package_tree_structure(tmp_path, monkeypatch):
+    """The zip file is properly built internally."""
+    # create some dirs and files! a couple of files outside, and the dir we'll zip...
+    file_outside_1 = tmp_path / 'file_outside_1'
+    with open(file_outside_1, 'wb') as fh:
+        fh.write(b'content_out_1')
+    file_outside_2 = tmp_path / 'file_outside_2'
+    with open(file_outside_2, 'wb') as fh:
+        fh.write(b'content_out_2')
+    to_be_zipped_dir = tmp_path / BUILD_DIRNAME
+    to_be_zipped_dir.mkdir()
+
+    # ...also outside a dir with a file...
+    dir_outside = tmp_path / 'extdir'
+    dir_outside.mkdir()
+    file_ext = dir_outside / 'file_ext'
+    with open(file_ext, 'wb') as fh:
+        fh.write(b'external file')
+
+    # ...then another file inside, and another dir...
+    file_inside = to_be_zipped_dir / 'file_inside'
+    with open(file_inside, 'wb') as fh:
+        fh.write(b'content_in')
+    dir_inside = to_be_zipped_dir / 'somedir'
+    dir_inside.mkdir()
+
+    # ...also inside, a link to the external dir...
+    dir_linked_inside = to_be_zipped_dir / 'linkeddir'
+    dir_linked_inside.symlink_to(dir_outside)
+
+    # ...and finally another real file, and two symlinks
+    file_deep_1 = dir_inside / 'file_deep_1'
+    with open(file_deep_1, 'wb') as fh:
+        fh.write(b'content_deep')
+    file_deep_2 = dir_inside / 'file_deep_2'
+    file_deep_2.symlink_to(file_inside)
+    file_deep_3 = dir_inside / 'file_deep_3'
+    file_deep_3.symlink_to(file_outside_1)
+
+    # zip it
+    monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    zipname = builder.handle_package()
+
+    # check the stuff outside is not in the zip, the stuff inside is zipped (with
+    # contents!), and all relative to build dir
+    zf = zipfile.ZipFile(zipname)
+    assert 'file_outside_1' not in [x.filename for x in zf.infolist()]
+    assert 'file_outside_2' not in [x.filename for x in zf.infolist()]
+    assert zf.read('file_inside') == b"content_in"
+    assert zf.read('somedir/file_deep_1') == b"content_deep"  # own
+    assert zf.read('somedir/file_deep_2') == b"content_in"  # from file inside
+    assert zf.read('somedir/file_deep_3') == b"content_out_1"  # from file outside 1
+    assert zf.read('linkeddir/file_ext') == b"external file"  # from file in the outside linked dir

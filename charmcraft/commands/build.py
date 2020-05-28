@@ -65,16 +65,6 @@ def polite_exec(cmd):
     return retcode
 
 
-def link(srcpath, destdir):
-    """Link a file."""
-    if not destdir.exists():
-        os.makedirs(destdir)
-
-    destpath = destdir / srcpath.name
-    destpath.symlink_to(srcpath)
-    return destpath
-
-
 class Builder:
     """The package builder."""
 
@@ -101,20 +91,32 @@ class Builder:
         logger.info("Done, charm left in %r", zipname)
         return zipname
 
+    def _link(self, srcpath, destdir=None):
+        """Link a file."""
+        if destdir is None:
+            destdir = self.buildpath
+        else:
+            if not destdir.exists():
+                destdir.mkdir()
+
+        destpath = destdir / srcpath.name
+        destpath.symlink_to(srcpath)
+        return destpath
+
     def handle_code(self):
         """Handle basic files and the charm source code."""
         # basic files
         logger.debug("Linking in basic files and charm code")
-        link(self.charmdir / CHARM_METADATA, self.buildpath)
+        self._link(self.charmdir / CHARM_METADATA)
 
         # the whole dir/tree if entry point is in a project's subdir, itself alone otherwise
         if self.charmdir in self.entrypoint.parents and self.charmdir != self.entrypoint.parent:
             # link the whole dir
-            linked_subdir = link(self.entrypoint.parent, self.buildpath)
+            linked_subdir = self._link(self.entrypoint.parent)
             linked_entrypoint = linked_subdir / self.entrypoint.name
         else:
             # just the entry point, putting it under a src dir for juju compliance
-            linked_entrypoint = link(self.entrypoint, self.buildpath / 'src')
+            linked_entrypoint = self._link(self.entrypoint, self.buildpath / 'src')
         return linked_entrypoint
 
     def handle_dispatcher(self, linked_entrypoint):
@@ -123,13 +125,13 @@ class Builder:
         current_dispatch = self.charmdir / DISPATCH_FILENAME
         if current_dispatch.exists():
             logger.debug("Including the current dispatch script")
-            dispatch_path = link(current_dispatch, self.buildpath)
+            dispatch_path = self._link(current_dispatch)
         else:
             logger.debug("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
                 entrypoint_relative_path=linked_entrypoint.relative_to(self.buildpath))
             dispatch_path = self.buildpath / DISPATCH_FILENAME
-            with open(dispatch_path, "wt", encoding="utf8") as fh:
+            with dispatch_path.open("wt", encoding="utf8") as fh:
                 fh.write(dispatch_content)
                 fileno = fh.fileno()
                 os.fchmod(fileno, os.fstat(fileno).st_mode | stat.S_IXUSR)
@@ -156,7 +158,7 @@ class Builder:
         for depdir in ('lib', 'mod'):
             from_dir = self.charmdir / depdir
             if from_dir.exists():
-                link(from_dir, self.buildpath)
+                self._link(from_dir)
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
@@ -177,7 +179,8 @@ class Builder:
         logger.debug("Creating the package itself")
         zipname = self.charmdir.name + '.charm'
         zipfh = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
-        for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
+        buildpath_str = str(self.buildpath)  # os.walk does not support pathlib in 3.5
+        for dirpath, dirnames, filenames in os.walk(buildpath_str, followlinks=True):
             dirpath = pathlib.Path(dirpath)
             for filename in filenames:
                 filepath = dirpath / filename
@@ -230,7 +233,7 @@ class Validator:
 
         if not arg.exists():
             raise CommandError("the charm entry point was not found: {!r}".format(str(arg)))
-        if not os.access(arg, os.X_OK):
+        if not os.access(str(arg), os.X_OK):  # access does not support pathlib in 3.5
             raise CommandError("the charm entry point must be executable: {!r}".format(str(arg)))
         return arg
 
@@ -241,7 +244,7 @@ class Validator:
         """
         if arg is None:
             arg = self.basedir / 'requirements.txt'
-            if arg.exists() and os.access(arg, os.R_OK):
+            if arg.exists() and os.access(str(arg), os.R_OK):  # access doesn't support pathlib 3.5
                 return [arg]
             return []
 

@@ -76,6 +76,7 @@ def test_validator_process_notpresent():
 
 def test_validator_from_simple(tmp_path):
     """'from' param: simple validation and setting in Validation."""
+    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     validator = Validator()
     resp = validator.validate_from(str(tmp_path))
     assert resp == tmp_path
@@ -98,6 +99,7 @@ def test_validator_from_absolutized(tmp_path, monkeypatch):
     dir2.mkdir()
     monkeypatch.chdir(tmp_path)
 
+    dir2 = pathlib.Path(str(dir2))  # comparisons below don't work well in Py3.5
     validator = Validator()
     resp = validator.validate_from('dir1/dir2')
     assert resp == dir2
@@ -131,6 +133,7 @@ def test_validator_from_isdir(tmp_path):
 
 def test_validator_entrypoint_simple(tmp_path):
     """'entrypoint' param: simple validation."""
+    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     testfile = tmp_path / 'testfile'
     testfile.touch(mode=0o777)
 
@@ -141,6 +144,7 @@ def test_validator_entrypoint_simple(tmp_path):
 
 def test_validator_entrypoint_default(tmp_path):
     """'entrypoint' param: default value."""
+    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     default_entrypoint = tmp_path / 'src' / 'charm.py'
     default_entrypoint.parent.mkdir()
     default_entrypoint.touch(mode=0o777)
@@ -162,6 +166,7 @@ def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
 
     validator = Validator()
     resp = validator.validate_entrypoint('dirX/file.py')
+    testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
     assert resp == testfile
 
 
@@ -191,6 +196,7 @@ def test_validator_entrypoint_exist():
 
 def test_validator_entrypoint_exec(tmp_path):
     """'entrypoint' param: checks that the file is executable."""
+    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     testfile = tmp_path / 'testfile'
     testfile.touch(mode=0o444)
 
@@ -207,6 +213,7 @@ def test_validator_requirement_simple(tmp_path):
 
     validator = Validator()
     resp = validator.validate_requirement([str(testfile)])
+    testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
     assert resp == [testfile]
 
 
@@ -219,6 +226,8 @@ def test_validator_requirement_multiple(tmp_path):
 
     validator = Validator()
     resp = validator.validate_requirement([str(testfile1), str(testfile2)])
+    testfile1 = pathlib.Path(str(testfile1))  # comparison below don't work well in Py3.5
+    testfile2 = pathlib.Path(str(testfile2))  # comparison below don't work well in Py3.5
     assert resp == [testfile1, testfile2]
 
 
@@ -261,6 +270,7 @@ def test_validator_requirement_absolutized(tmp_path, monkeypatch):
 
     validator = Validator()
     resp = validator.validate_requirement(['reqs.txt'])
+    testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
     assert resp == [testfile]
 
 
@@ -348,7 +358,7 @@ def test_build_basic_complete_structure(tmp_path):
 
     # the metadata
     metadata = tmp_path / 'metadata.yaml'
-    with open(metadata, 'wb') as fh:
+    with metadata.open('wb') as fh:
         fh.write(b'lot of yaml config')
 
     # a lib dir
@@ -357,18 +367,18 @@ def test_build_basic_complete_structure(tmp_path):
     ops_lib_dir = lib_dir / 'ops'
     ops_lib_dir.mkdir()
     ops_stuff = ops_lib_dir / 'stuff.txt'
-    with open(ops_stuff, 'wb') as fh:
+    with ops_stuff.open('wb') as fh:
         fh.write(b'ops stuff')
 
     # simple source code
     src_dir = tmp_path / 'src'
     src_dir.mkdir()
     charm_script = src_dir / 'charm.py'
-    with open(charm_script, 'wb') as fh:
+    with charm_script.open('wb') as fh:
         fh.write(b'all the magic')
 
     builder = Builder({
-        'from': tmp_path,
+        'from': pathlib.Path(str(tmp_path)),  # bad support for tmp_path's pathlib2 in Py3.5
         'entrypoint': charm_script,
         'requirement': [],
     })
@@ -450,7 +460,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     builder.handle_dispatcher(linked_entrypoint)
 
     included_dispatcher = build_dir / DISPATCH_FILENAME
-    with open(included_dispatcher, 'rt', encoding='utf8') as fh:
+    with included_dispatcher.open('rt', encoding='utf8') as fh:
         dispatcher_code = fh.read()
     assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path='somestuff.py')
 
@@ -626,10 +636,10 @@ def test_build_package_tree_structure(tmp_path, monkeypatch):
     """The zip file is properly built internally."""
     # create some dirs and files! a couple of files outside, and the dir we'll zip...
     file_outside_1 = tmp_path / 'file_outside_1'
-    with open(file_outside_1, 'wb') as fh:
+    with file_outside_1.open('wb') as fh:
         fh.write(b'content_out_1')
     file_outside_2 = tmp_path / 'file_outside_2'
-    with open(file_outside_2, 'wb') as fh:
+    with file_outside_2.open('wb') as fh:
         fh.write(b'content_out_2')
     to_be_zipped_dir = tmp_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
@@ -638,12 +648,12 @@ def test_build_package_tree_structure(tmp_path, monkeypatch):
     dir_outside = tmp_path / 'extdir'
     dir_outside.mkdir()
     file_ext = dir_outside / 'file_ext'
-    with open(file_ext, 'wb') as fh:
+    with file_ext.open('wb') as fh:
         fh.write(b'external file')
 
     # ...then another file inside, and another dir...
     file_inside = to_be_zipped_dir / 'file_inside'
-    with open(file_inside, 'wb') as fh:
+    with file_inside.open('wb') as fh:
         fh.write(b'content_in')
     dir_inside = to_be_zipped_dir / 'somedir'
     dir_inside.mkdir()
@@ -654,7 +664,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch):
 
     # ...and finally another real file, and two symlinks
     file_deep_1 = dir_inside / 'file_deep_1'
-    with open(file_deep_1, 'wb') as fh:
+    with file_deep_1.open('wb') as fh:
         fh.write(b'content_deep')
     file_deep_2 = dir_inside / 'file_deep_2'
     file_deep_2.symlink_to(file_inside)
@@ -664,7 +674,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch):
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder({
-        'from': tmp_path,
+        'from': pathlib.Path(str(tmp_path)),  # bad support for tmp_path's pathlib2 in Py3.5
         'entrypoint': 'whatever',
         'requirement': [],
     })

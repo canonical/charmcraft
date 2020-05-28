@@ -40,11 +40,7 @@ PYTHONPATH=lib:venv ./{entrypoint_relative_path}
 """
 
 # The minimum set of hooks to be provided for compatibility with old Juju
-HOOK_NAMES = [
-    'install',
-    'start',
-    'upgrade-charm',
-]
+MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
 
 
 def polite_exec(cmd):
@@ -131,19 +127,28 @@ class Builder:
                 fileno = fh.fileno()
                 os.fchmod(fileno, os.fstat(fileno).st_mode | stat.S_IXUSR)
 
-        # bunch of symlinks, to support old juju
+        # bunch of symlinks, to support old juju; whatever is in the charm's hooks directory
+        # is respect, but also the mandatory ones are created if missing
         current_hookpath = self.charmdir / 'hooks'
         dest_hookpath = self.buildpath / 'hooks'
         dest_hookpath.mkdir()
-        for hookname in HOOK_NAMES:
-            current_hook = current_hookpath / hookname
+        if current_hookpath.exists():
+            current_hooks = set(current_hookpath.iterdir())
+        else:
+            current_hooks = set()
+
+        # respect current nodes
+        for current_hook in current_hooks:
+            logger.debug("Including current %r hook", current_hook.name)
+            dest_hook = dest_hookpath / current_hook.name
+            dest_hook.symlink_to(current_hook)
+
+        # include mandatory ones if missing
+        missing_mandatory = MANDATORY_HOOK_NAMES - {x.name for x in current_hooks}
+        for hookname in missing_mandatory:
+            logger.debug("Creating the %r hook script pointing to dispatch", hookname)
             dest_hook = dest_hookpath / hookname
-            if current_hook.exists():
-                logger.debug("Including the current %r hook script", hookname)
-                dest_hook.symlink_to(current_hook)
-            else:
-                logger.debug("Creating the %r hook script pointing to dispatch", hookname)
-                dest_hook.symlink_to(dispatch_path)
+            dest_hook.symlink_to(dispatch_path)
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""

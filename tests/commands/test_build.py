@@ -17,9 +17,7 @@
 import logging
 import pathlib
 import os
-import stat
 import sys
-import tempfile
 import zipfile
 from collections import namedtuple
 from unittest.mock import patch
@@ -171,20 +169,21 @@ def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
     assert resp == testfile
 
 
-def test_validator_entrypoint_expanded():
+def test_validator_entrypoint_expanded(tmp_path):
     """'entrypoint' param: expands the user-home prefix."""
-    home = pathlib.Path("~").expanduser()
-    testfd, testpath = tempfile.mkstemp(dir=str(home))
-    try:
-        testpath = pathlib.Path(testpath)
-        os.fchmod(testfd, os.fstat(testfd).st_mode | stat.S_IXUSR)
+    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
 
-        validator = Validator()
-        relative_testpath = "~/{}".format(testpath.relative_to(home))
-        resp = validator.validate_entrypoint(relative_testpath)
-    finally:
-        testpath.unlink()
-    assert resp == testpath
+    fake_home = tmp_path / 'homedir'
+    fake_home.mkdir()
+
+    testfile = fake_home / 'testfile'
+    testfile.touch(mode=0o777)
+
+    validator = Validator()
+
+    with patch.dict(os.environ, {'HOME': str(fake_home)}):
+        resp = validator.validate_entrypoint('~/testfile')
+    assert resp == testfile
 
 
 def test_validator_entrypoint_exist():
@@ -275,19 +274,21 @@ def test_validator_requirement_absolutized(tmp_path, monkeypatch):
     assert resp == [testfile]
 
 
-def test_validator_requirement_expanded():
+def test_validator_requirement_expanded(tmp_path):
     """'requirement' param: expands the user-home prefix."""
-    home = pathlib.Path("~").expanduser()
-    testfd, testpath = tempfile.mkstemp(dir=str(home))
-    try:
-        testpath = pathlib.Path(testpath)
+    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
 
-        validator = Validator()
-        relative_testpath = "~/{}".format(testpath.relative_to(home))
-        resp = validator.validate_requirement([relative_testpath])
-    finally:
-        testpath.unlink()
-    assert resp == [testpath]
+    fake_home = tmp_path / 'homedir'
+    fake_home.mkdir()
+
+    requirement = fake_home / 'requirements.txt'
+    requirement.touch(0o230)
+
+    validator = Validator()
+
+    with patch.dict(os.environ, {'HOME': str(fake_home)}):
+        resp = validator.validate_requirement(['~/requirements.txt'])
+    assert resp == [requirement]
 
 
 def test_validator_requirement_exist():
@@ -382,7 +383,7 @@ def test_build_basic_complete_structure(tmp_path):
 
     builder = Builder({
         'from': pathlib.Path(str(tmp_path)),  # bad support for tmp_path's pathlib2 in Py3.5
-        'entrypoint': charm_script,
+        'entrypoint': pathlib.Path(str(charm_script)),
         'requirement': [],
     })
     zipname = builder.run()
@@ -488,8 +489,8 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path):
     assert included_dispatcher.resolve() == already_present_dispatch
 
 
-def test_build_dispatcher_classic_hooks_created(tmp_path):
-    """The classic hooks are implemented ok."""
+def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
+    """The mandatory classic hooks are implemented ok if not present."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -501,7 +502,7 @@ def test_build_dispatcher_classic_hooks_created(tmp_path):
         'entrypoint': 'whatever',
         'requirement': [],
     })
-    with patch('charmcraft.commands.build.HOOK_NAMES', ['testhook']):
+    with patch('charmcraft.commands.build.MANDATORY_HOOK_NAMES', {'testhook'}):
         builder.handle_dispatcher(linked_entrypoint)
 
     test_hook = build_dir / 'hooks' / 'testhook'
@@ -509,8 +510,8 @@ def test_build_dispatcher_classic_hooks_created(tmp_path):
     assert test_hook.resolve() == included_dispatcher
 
 
-def test_build_dispatcher_classic_hooks_respected(tmp_path):
-    """The already present classic hooks are properly transferred."""
+def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
+    """The already present mandatory classic hooks are properly transferred."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -526,12 +527,37 @@ def test_build_dispatcher_classic_hooks_respected(tmp_path):
         'entrypoint': 'whatever',
         'requirement': [],
     })
-    with patch('charmcraft.commands.build.HOOK_NAMES', ['testhook']):
+    with patch('charmcraft.commands.build.MANDATORY_HOOK_NAMES', {'testhook'}):
         builder.handle_dispatcher(linked_entrypoint)
 
     test_hook = build_dir / 'hooks' / 'testhook'
     assert test_hook.is_symlink()
     assert test_hook.resolve() == charm_test_hook
+
+
+def test_build_dispatcher_classic_hooks_whatever_respected(tmp_path):
+    """Any already present stuff in hooks is respected."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    charm_hooks_dir = tmp_path / 'hooks'
+    charm_hooks_dir.mkdir()
+    charm_test_extra_stuff = charm_hooks_dir / 'extra-stuff'
+    charm_test_extra_stuff.touch()
+
+    linked_entrypoint = build_dir / 'somestuff.py'
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    with patch('charmcraft.commands.build.MANDATORY_HOOK_NAMES', {'testhook'}):  # no 'extra-stuff'
+        builder.handle_dispatcher(linked_entrypoint)
+
+    test_stuff = build_dir / 'hooks' / 'extra-stuff'
+    assert test_stuff.is_symlink()
+    assert test_stuff.resolve() == charm_test_extra_stuff
 
 
 def test_build_dependencies_copied_dirs(tmp_path):

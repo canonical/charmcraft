@@ -16,27 +16,17 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import ast
 import setuptools
 
-
-def get_version():
-    """Extract the version string from project's init."""
-    with open("charmcraft/__init__.py", "rt", encoding='utf8') as fh:
-        for line in fh:
-            if '__version__' in line:
-                return ast.literal_eval(line.split('=', 1)[1].strip())
+import charmcraft
 
 
 with open("README.md", "rt", encoding='utf8') as fh:
     long_description = fh.read()
 
-with open("requirements.txt", "rt", encoding='utf8') as fh:
-    requirements = fh.read().split('\n')
-
 setuptools.setup(
     name="charmcraft",
-    version=get_version(),
+    version=charmcraft.__version__,
     author="Facundo Batista",
     author_email="facundo.batista@canonical.com",
     description="The main tool to build, upload, and develop in general the Juju charms.",
@@ -44,8 +34,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/canonical/charmcraft",
     license="Apache-2.0",
-    packages=setuptools.find_namespace_packages(include=['charmcraft', 'charmcraft.*']),
-    package_data={'': ["LICENSE", "README.md", "requirements.txt"]},
+    packages=['charmcraft', 'charmcraft.commands'],
+    package_data={'': ["LICENSE", "README.md"]},
     classifiers=[
         "Environment :: Console",
         "License :: OSI Approved :: Apache Software License",
@@ -56,5 +46,4 @@ setuptools.setup(
         'console_scripts': ["charmcraft = charmcraft.main:main"],
     },
     python_requires='>=3',
-    install_requires=requirements,
 )

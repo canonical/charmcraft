@@ -128,7 +128,7 @@ class Builder:
                 os.fchmod(fileno, os.fstat(fileno).st_mode | stat.S_IXUSR)
 
         # bunch of symlinks, to support old juju; whatever is in the charm's hooks directory
-        # is respect, but also the mandatory ones are created if missing
+        # is respected, but also the mandatory ones are created if missing
         current_hookpath = self.charmdir / 'hooks'
         dest_hookpath = self.buildpath / 'hooks'
         dest_hookpath.mkdir()

@@ -22,7 +22,7 @@ import os
 import sys
 
 from charmcraft import logsetup, __version__
-from charmcraft.commands import version
+from charmcraft.commands import version, build
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files.
 COMMAND_GROUPS = [
-    ('basic', "basics", [version.VersionCommand]),
+    ('basic', "basics", [version.VersionCommand, build.BuildCommand]),
 ]
 
 
@@ -136,8 +136,12 @@ class Dispatcher:
 
         # basic general options
         mutexg = parser.add_mutually_exclusive_group()
-        mutexg.add_argument('-v', '--verbose', action='store_true', help="be more verbose")
-        mutexg.add_argument('-q', '--quiet', action='store_true', help="shh!")
+        mutexg.add_argument(
+            '-v', '--verbose', action='store_true',
+            help="be more verbose and show debug information")
+        mutexg.add_argument(
+            '-q', '--quiet', action='store_true',
+            help="only show warnings and errors, not progress")
 
         subparsers = parser.add_subparsers(title=CustomArgumentParser.special_group)
         for group_name, _, cmd_classes in commands_groups:

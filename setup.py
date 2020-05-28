@@ -18,15 +18,15 @@
 
 import setuptools
 
+import charmcraft
+
+
 with open("README.md", "rt", encoding='utf8') as fh:
     long_description = fh.read()
 
-with open("requirements.txt", "rt", encoding='utf8') as fh:
-    requirements = fh.read().split('\n')
-
 setuptools.setup(
     name="charmcraft",
-    version="0.1.1",
+    version=charmcraft.__version__,
     author="Facundo Batista",
     author_email="facundo.batista@canonical.com",
     description="The main tool to build, upload, and develop in general the Juju charms.",
@@ -34,8 +34,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/canonical/charmcraft",
     license="Apache-2.0",
-    packages=["charmcraft"],
-    package_data={'': ["LICENSE", "README.md", "requirements.txt"]},
+    packages=['charmcraft', 'charmcraft.commands'],
+    package_data={'': ["LICENSE", "README.md"]},
     classifiers=[
         "Environment :: Console",
         "License :: OSI Approved :: Apache Software License",
@@ -43,8 +43,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     entry_points={
-        'console_scripts': ["charmcraft = charmcraft:main"],
+        'console_scripts': ["charmcraft = charmcraft.main:main"],
     },
     python_requires='>=3',
-    install_requires=requirements,
 )

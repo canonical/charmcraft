@@ -44,7 +44,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/canonical/charmcraft",
     license="Apache-2.0",
-    packages=["charmcraft"],
+    packages=setuptools.find_namespace_packages(include=['charmcraft', 'charmcraft.*']),
     package_data={'': ["LICENSE", "README.md", "requirements.txt"]},
     classifiers=[
         "Environment :: Console",
@@ -53,7 +53,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     entry_points={
-        'console_scripts': ["charmcraft = charmcraft:main"],
+        'console_scripts': ["charmcraft = charmcraft.main:main"],
     },
     python_requires='>=3',
     install_requires=requirements,

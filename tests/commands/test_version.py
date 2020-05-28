@@ -16,14 +16,14 @@
 
 import logging
 
+from charmcraft import __version__
 from charmcraft.commands.version import VersionCommand
 
 
 def test_version_result(caplog):
     """Check it produces the right version."""
-    # XXX: this is bogus so we build all the infrastructure, but we need to update it
-    # when we define how we want to store the version
     caplog.set_level(logging.INFO, logger="charmcraft.commands.version")
     cmd = VersionCommand('group')
     cmd.run([])
-    assert ["Version: 0.0.1"] == [rec.message for rec in caplog.records]
+    expected = "Version: " + __version__
+    assert [expected] == [rec.message for rec in caplog.records]

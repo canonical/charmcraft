@@ -14,20 +14,5 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-
-import logging
-
-from charmcraft import __version__
-from charmcraft.cmdbase import BaseCommand
-
-logger = logging.getLogger(__name__)
-
-
-class VersionCommand(BaseCommand):
-    """Show the version."""
-    name = 'version'
-    help_msg = "show the version"
-
-    def run(self, parsed_args):
-        """Run the command."""
-        logger.info('Version: %s', __version__)
+VERSION = (0, 0, 1)
+__version__ = "0.0.1"

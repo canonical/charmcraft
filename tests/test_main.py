@@ -20,6 +20,7 @@ import logging
 import textwrap
 from unittest.mock import patch
 
+from charmcraft import __version__
 from charmcraft.main import Dispatcher
 from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
@@ -257,3 +258,11 @@ def test_dispatcher_load_commands_repeated():
     expected_msg = "Multiple commands with same name: (Foo|Baz) and (Baz|Foo)"
     with pytest.raises(RuntimeError, match=expected_msg):
         Dispatcher([], groups)
+
+
+def test_dispatcher_log_startup(caplog):
+    """The version is logged in debug when started."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    Dispatcher([], [])
+    expected = "Starting charmcraft version " + __version__
+    assert expected in [rec.message for rec in caplog.records]

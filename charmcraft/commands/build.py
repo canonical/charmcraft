@@ -133,9 +133,9 @@ class Builder:
         dest_hookpath = self.buildpath / 'hooks'
         dest_hookpath.mkdir()
         if current_hookpath.exists():
-            current_hooks = set(current_hookpath.iterdir())
+            current_hooks = list(current_hookpath.iterdir())
         else:
-            current_hooks = set()
+            current_hooks = []
 
         # respect current nodes
         for current_hook in current_hooks:

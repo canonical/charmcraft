@@ -136,8 +136,12 @@ class Dispatcher:
 
         # basic general options
         mutexg = parser.add_mutually_exclusive_group()
-        mutexg.add_argument('-v', '--verbose', action='store_true', help="be more verbose")
-        mutexg.add_argument('-q', '--quiet', action='store_true', help="shh!")
+        mutexg.add_argument(
+            '-v', '--verbose', action='store_true',
+            help="be more verbose and show debug information")
+        mutexg.add_argument(
+            '-q', '--quiet', action='store_true',
+            help="only show warnings and errors, not progress")
 
         subparsers = parser.add_subparsers(title=CustomArgumentParser.special_group)
         for group_name, _, cmd_classes in commands_groups:

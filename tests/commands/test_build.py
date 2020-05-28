@@ -18,6 +18,7 @@ import logging
 import pathlib
 import os
 import stat
+import sys
 import tempfile
 import zipfile
 from collections import namedtuple
@@ -306,7 +307,7 @@ def test_politeexec_base(caplog):
     cmd = ['echo', 'HELO']
     retcode = polite_exec(cmd)
     assert retcode == 0
-    assert not any("Execution ended" in rec.message for rec in caplog.records)
+    assert not caplog.records
 
 
 def test_politeexec_stdout_logged(caplog):
@@ -322,7 +323,7 @@ def test_politeexec_stderr_logged(caplog):
     """The standard error is logged in debug."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
-    cmd = ['python3', '-c', "import sys; print('weird, huh?', file=sys.stderr)"]
+    cmd = [sys.executable, '-c', "import sys; print('weird, huh?', file=sys.stderr)"]
     polite_exec(cmd)
     assert [":: weird, huh?"] == [rec.message for rec in caplog.records]
 
@@ -331,10 +332,11 @@ def test_politeexec_failed(caplog):
     """It's logged in error if cmd fails."""
     caplog.set_level(logging.ERROR, logger="charmcraft")
 
-    cmd = ['python3', '-c', "exit(3)"]
+    cmd = [sys.executable, '-c', "exit(3)"]
     retcode = polite_exec(cmd)
     assert retcode == 3
-    assert any("Execution ended in 3" in rec.message for rec in caplog.records)
+    expected_msg = "Executing {} failed with return code 3".format(cmd)
+    assert any(expected_msg in rec.message for rec in caplog.records)
 
 
 def test_politeexec_crashed(caplog, tmp_path):
@@ -345,7 +347,8 @@ def test_politeexec_crashed(caplog, tmp_path):
     cmd = [str(nonexistent)]
     retcode = polite_exec(cmd)
     assert retcode == -1
-    assert any("Execution crashed with FileNotFoundError" in rec.message for rec in caplog.records)
+    expected_msg = "Executing {} crashed with FileNotFoundError".format(cmd)
+    assert any(expected_msg in rec.message for rec in caplog.records)
 
 
 # --- (real) build tests
@@ -416,7 +419,7 @@ def test_build_code_simple(tmp_path):
     assert built_metadata.is_symlink()
     assert built_metadata.resolve() == metadata
 
-    built_entrypoint = build_dir / 'src' / 'crazycharm.py'  # note it's inside 'src'
+    built_entrypoint = build_dir / 'crazycharm.py'
     assert built_entrypoint.is_symlink()
     assert built_entrypoint.resolve() == entrypoint
 
@@ -628,7 +631,7 @@ def test_build_dependencies_virtualenv_error(tmp_path):
 
     with patch('charmcraft.commands.build.polite_exec') as mock:
         mock.return_value = -7
-        with pytest.raises(CommandError, match="problems installing the dependencies"):
+        with pytest.raises(CommandError, match="problems installing dependencies"):
             builder.handle_dependencies()
 
 

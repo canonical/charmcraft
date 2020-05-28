@@ -36,7 +36,7 @@ VENV_DIRNAME = 'venv'
 DISPATCH_FILENAME = 'dispatch'
 DISPATCH_CONTENT = """#!/bin/sh
 
-PYTHONPATH=lib:venv {entrypoint_relative_path}
+PYTHONPATH=lib:venv ./{entrypoint_relative_path}
 """
 
 # The minimum set of hooks to be provided for compatibility with old Juju
@@ -53,7 +53,7 @@ def polite_exec(cmd):
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     except Exception as err:
-        logger.error("Execution crashed with %r for cmd %s", err, cmd)
+        logger.error("Executing %s crashed with %r", cmd, err)
         return -1
 
     for line in proc.stdout:
@@ -61,7 +61,7 @@ def polite_exec(cmd):
     retcode = proc.wait()
 
     if retcode:
-        logger.error("Execution ended in %d for cmd %s", retcode, cmd)
+        logger.error("Executing %s failed with return code %d", cmd, retcode)
     return retcode
 
 
@@ -91,15 +91,9 @@ class Builder:
         logger.info("Done, charm left in %r", zipname)
         return zipname
 
-    def _link(self, srcpath, destdir=None):
-        """Link a file."""
-        if destdir is None:
-            destdir = self.buildpath
-        else:
-            if not destdir.exists():
-                destdir.mkdir()
-
-        destpath = destdir / srcpath.name
+    def _link_to_buildpath(self, srcpath):
+        """Link a file to the build directory."""
+        destpath = self.buildpath / srcpath.name
         destpath.symlink_to(srcpath)
         return destpath
 
@@ -107,16 +101,17 @@ class Builder:
         """Handle basic files and the charm source code."""
         # basic files
         logger.debug("Linking in basic files and charm code")
-        self._link(self.charmdir / CHARM_METADATA)
+        self._link_to_buildpath(self.charmdir / CHARM_METADATA)
 
         # the whole dir/tree if entry point is in a project's subdir, itself alone otherwise
         if self.charmdir in self.entrypoint.parents and self.charmdir != self.entrypoint.parent:
             # link the whole dir
-            linked_subdir = self._link(self.entrypoint.parent)
+            linked_subdir = self._link_to_buildpath(self.entrypoint.parent)
             linked_entrypoint = linked_subdir / self.entrypoint.name
         else:
-            # just the entry point, putting it under a src dir for juju compliance
-            linked_entrypoint = self._link(self.entrypoint, self.buildpath / 'src')
+            # just the entry point
+            linked_entrypoint = self._link_to_buildpath(self.entrypoint)
+
         return linked_entrypoint
 
     def handle_dispatcher(self, linked_entrypoint):
@@ -125,7 +120,7 @@ class Builder:
         current_dispatch = self.charmdir / DISPATCH_FILENAME
         if current_dispatch.exists():
             logger.debug("Including the current dispatch script")
-            dispatch_path = self._link(current_dispatch)
+            dispatch_path = self._link_to_buildpath(current_dispatch)
         else:
             logger.debug("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
@@ -158,7 +153,7 @@ class Builder:
         for depdir in ('lib', 'mod'):
             from_dir = self.charmdir / depdir
             if from_dir.exists():
-                self._link(from_dir)
+                self._link_to_buildpath(from_dir)
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
@@ -172,7 +167,7 @@ class Builder:
                 cmd.append('--requirement={}'.format(reqspath))  # the dependencies file(s)
             retcode = polite_exec(cmd)
             if retcode:
-                raise CommandError("problems installing the dependencies")
+                raise CommandError("problems installing dependencies")
 
     def handle_package(self):
         """Handle the final package creation."""

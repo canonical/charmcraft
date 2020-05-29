@@ -603,7 +603,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
 
     envpath = build_dir / VENV_DIRNAME
     mock.assert_called_once_with(
-        ['pip3', 'install', '--system', '--target={}'.format(envpath), '--requirement=reqs.txt'])
+        ['pip3', 'install', '--target={}'.format(envpath), '--requirement=reqs.txt'])
 
 
 def test_build_dependencies_virtualenv_multiple(tmp_path):
@@ -623,7 +623,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
 
     envpath = build_dir / VENV_DIRNAME
     mock.assert_called_once_with(
-        ['pip3', 'install', '--system', '--target={}'.format(envpath),
+        ['pip3', 'install', '--target={}'.format(envpath),
             '--requirement=reqs1.txt', '--requirement=reqs2.txt'])
 
 

@@ -165,7 +165,6 @@ class Builder:
             venvpath = self.buildpath / VENV_DIRNAME
             cmd = [
                 'pip3', 'install',  # base command
-                '--system',  # indicates to use the system file structure
                 '--target={}'.format(venvpath),  # put all the resulting files in that specific dir
             ]
             for reqspath in self.requirement_paths:

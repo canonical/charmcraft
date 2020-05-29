@@ -19,7 +19,6 @@ metadata), and `charmcraft` will fill in the boring bits for you.
 For example, given a charm that consists exclusively of
 
     my-charm
-    ├── config.yaml
     ├── metadata.yaml
     ├── requirements.txt
     └── src/
@@ -34,7 +33,6 @@ will produce a charm that looks like
     │   ├── install -> ../dispatch
     │   ├── start -> ../dispatch
     │   └── upgrade-charm -> ../dispatch
-    ├── config.yaml
     ├── metadata.yaml
     ├── src/
     │   └── charm.py

@@ -23,6 +23,7 @@ from collections import namedtuple
 from unittest.mock import patch
 
 import pytest
+import yaml
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
@@ -360,10 +361,13 @@ def test_build_basic_complete_structure(tmp_path):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
-    # the metadata
-    metadata = tmp_path / 'metadata.yaml'
-    with metadata.open('wb') as fh:
-        fh.write(b'lot of yaml config')
+    # the metadata (save it and restore to later check)
+    metadata_data = {'name': 'name-from-metadata'}
+    metadata_file = tmp_path / 'metadata.yaml'
+    with metadata_file.open('wt', encoding='ascii') as fh:
+        yaml.dump(metadata_data, fh)
+    with metadata_file.open('rb') as fh:
+        metadata_raw = fh.read()
 
     # a lib dir
     lib_dir = tmp_path / 'lib'
@@ -391,7 +395,7 @@ def test_build_basic_complete_structure(tmp_path):
     # check all is properly inside the zip
     # contents!), and all relative to build dir
     zf = zipfile.ZipFile(zipname)
-    assert zf.read('metadata.yaml') == b"lot of yaml config"
+    assert zf.read('metadata.yaml') == metadata_raw
     assert zf.read('src/charm.py') == b"all the magic"
     dispatch = DISPATCH_CONTENT.format(entrypoint_relative_path='src/charm.py').encode('ascii')
     assert zf.read('dispatch') == dispatch
@@ -663,6 +667,12 @@ def test_build_dependencies_virtualenv_error(tmp_path):
 
 def test_build_package_tree_structure(tmp_path, monkeypatch):
     """The zip file is properly built internally."""
+    # the metadata
+    metadata_data = {'name': 'name-from-metadata'}
+    metadata_file = tmp_path / 'metadata.yaml'
+    with metadata_file.open('wt', encoding='ascii') as fh:
+        yaml.dump(metadata_data, fh)
+
     # create some dirs and files! a couple of files outside, and the dir we'll zip...
     file_outside_1 = tmp_path / 'file_outside_1'
     with file_outside_1.open('wb') as fh:
@@ -719,3 +729,26 @@ def test_build_package_tree_structure(tmp_path, monkeypatch):
     assert zf.read('somedir/file_deep_2') == b"content_in"  # from file inside
     assert zf.read('somedir/file_deep_3') == b"content_out_1"  # from file outside 1
     assert zf.read('linkeddir/file_ext') == b"external file"  # from file in the outside linked dir
+
+
+def test_build_package_name(tmp_path, monkeypatch):
+    """The zip file name comes from the metadata."""
+    to_be_zipped_dir = tmp_path / BUILD_DIRNAME
+    to_be_zipped_dir.mkdir()
+
+    # the metadata
+    metadata_data = {'name': 'name-from-metadata'}
+    metadata_file = tmp_path / 'metadata.yaml'
+    with metadata_file.open('wt', encoding='ascii') as fh:
+        yaml.dump(metadata_data, fh)
+
+    # zip it
+    monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
+    builder = Builder({
+        'from': pathlib.Path(str(tmp_path)),  # bad support for tmp_path's pathlib2 in Py3.5
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    zipname = builder.handle_package()
+
+    assert zipname == "name-from-metadata.charm"

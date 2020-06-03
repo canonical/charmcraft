@@ -364,10 +364,9 @@ def test_build_basic_complete_structure(tmp_path):
     # the metadata (save it and restore to later check)
     metadata_data = {'name': 'name-from-metadata'}
     metadata_file = tmp_path / 'metadata.yaml'
-    with metadata_file.open('wt', encoding='ascii') as fh:
-        yaml.dump(metadata_data, fh)
-    with metadata_file.open('rb') as fh:
-        metadata_raw = fh.read()
+    metadata_raw = yaml.dump(metadata_data).encode('ascii')
+    with metadata_file.open('wb') as fh:
+        fh.write(metadata_raw)
 
     # a lib dir
     lib_dir = tmp_path / 'lib'

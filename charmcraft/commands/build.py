@@ -36,7 +36,7 @@ VENV_DIRNAME = 'venv'
 DISPATCH_FILENAME = 'dispatch'
 DISPATCH_CONTENT = """#!/bin/sh
 
-PYTHONPATH=lib:venv ./{entrypoint_relative_path}
+JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoint_relative_path}
 """
 
 # The minimum set of hooks to be provided for compatibility with old Juju

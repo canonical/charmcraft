@@ -24,6 +24,9 @@ import charmcraft
 with open("README.md", "rt", encoding='utf8') as fh:
     long_description = fh.read()
 
+with open("requirements.txt", "rt", encoding='utf8') as fh:
+    requirements = fh.read().split('\n')
+
 setuptools.setup(
     name="charmcraft",
     version=charmcraft.__version__,
@@ -35,7 +38,6 @@ setuptools.setup(
     url="https://github.com/canonical/charmcraft",
     license="Apache-2.0",
     packages=['charmcraft', 'charmcraft.commands'],
-    package_data={'': ["LICENSE", "README.md"]},
     classifiers=[
         "Environment :: Console",
         "License :: OSI Approved :: Apache Software License",
@@ -46,4 +48,5 @@ setuptools.setup(
         'console_scripts': ["charmcraft = charmcraft.main:main"],
     },
     python_requires='>=3',
+    install_requires=requirements,
 )

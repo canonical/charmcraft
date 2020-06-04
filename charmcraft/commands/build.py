@@ -23,6 +23,8 @@ import stat
 import subprocess
 import zipfile
 
+import yaml
+
 from charmcraft.cmdbase import BaseCommand, CommandError
 
 logger = logging.getLogger(__name__)
@@ -179,8 +181,12 @@ class Builder:
 
     def handle_package(self):
         """Handle the final package creation."""
+        logger.debug("Parsing the project's metadata")
+        with (self.charmdir / CHARM_METADATA).open('rt', encoding='utf8') as fh:
+            metadata = yaml.safe_load(fh)
+
         logger.debug("Creating the package itself")
-        zipname = self.charmdir.name + '.charm'
+        zipname = metadata['name'] + '.charm'
         zipfh = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
         buildpath_str = str(self.buildpath)  # os.walk does not support pathlib in 3.5
         for dirpath, dirnames, filenames in os.walk(buildpath_str, followlinks=True):

@@ -356,7 +356,7 @@ def test_politeexec_crashed(caplog, tmp_path):
 # --- (real) build tests
 
 
-def test_build_basic_complete_structure(tmp_path):
+def test_build_basic_complete_structure(tmp_path, monkeypatch):
     """Integration test: a simple structure with custom lib and normal src dir."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -384,6 +384,7 @@ def test_build_basic_complete_structure(tmp_path):
     with charm_script.open('wb') as fh:
         fh.write(b'all the magic')
 
+    monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder({
         'from': pathlib.Path(str(tmp_path)),  # bad support for tmp_path's pathlib2 in Py3.5
         'entrypoint': pathlib.Path(str(charm_script)),

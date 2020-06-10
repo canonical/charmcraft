@@ -29,6 +29,7 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
     Builder,
+    CHARM_CONFIG,
     CHARM_METADATA,
     DISPATCH_CONTENT,
     DISPATCH_FILENAME,
@@ -405,13 +406,17 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch):
     assert zf.read('lib/ops/stuff.txt') == b"ops stuff"
 
 
-def test_build_code_simple(tmp_path):
+@pytest.mark.parametrize('has_config', [False, True], ids=lambda val: f'has_config={val}')
+def test_build_code_simple(tmp_path, has_config):
     """Check transferred metadata and simple entrypoint."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
     metadata = tmp_path / CHARM_METADATA
     entrypoint = tmp_path / 'crazycharm.py'
+    if has_config:
+        config = tmp_path / CHARM_CONFIG
+        config.touch()
 
     builder = Builder({
         'from': tmp_path,
@@ -427,6 +432,12 @@ def test_build_code_simple(tmp_path):
     built_entrypoint = build_dir / 'crazycharm.py'
     assert built_entrypoint.is_symlink()
     assert built_entrypoint.resolve() == entrypoint
+
+    built_config = build_dir / CHARM_CONFIG
+    assert has_config == built_config.exists()
+    if has_config:
+        assert built_config.is_symlink()
+        assert built_config.resolve() == config
 
     assert linked_entrypoint == built_entrypoint
 

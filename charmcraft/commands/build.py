@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Some constants that are used through the code.
 CHARM_METADATA = 'metadata.yaml'
+CHARM_CONFIG = 'config.yaml'
 BUILD_DIRNAME = 'build'
 VENV_DIRNAME = 'venv'
 
@@ -104,6 +105,9 @@ class Builder:
         # basic files
         logger.debug("Linking in basic files and charm code")
         self._link_to_buildpath(self.charmdir / CHARM_METADATA)
+        config_yaml = self.charmdir / CHARM_CONFIG
+        if config_yaml.exists():
+            self._link_to_buildpath(config_yaml)
 
         # the whole dir/tree if entry point is in a project's subdir, itself alone otherwise
         if self.charmdir in self.entrypoint.parents and self.charmdir != self.entrypoint.parent:

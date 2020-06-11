@@ -406,7 +406,7 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch):
     assert zf.read('lib/ops/stuff.txt') == b"ops stuff"
 
 
-@pytest.mark.parametrize('has_config', [False, True], ids=lambda val: f'has_config={val}')
+@pytest.mark.parametrize('has_config', [False, True], ids=lambda val: 'has_config={}'.format(val))
 def test_build_code_simple(tmp_path, has_config):
     """Check transferred metadata and simple entrypoint."""
     build_dir = tmp_path / BUILD_DIRNAME

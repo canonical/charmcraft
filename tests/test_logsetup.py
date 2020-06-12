@@ -57,7 +57,7 @@ def create_message_handler(tmp_path):
 def test_mode_setting_init(create_message_handler):
     """The internal mode is set on init and logger properly changed."""
     test_level = 123
-    test_format = "this is a format"
+    test_format = "test:: %(message)s"
     mh = create_message_handler({'foo': (test_level, test_format)})
     mh.init(mh.FOO)
 
@@ -69,7 +69,7 @@ def test_mode_setting_init(create_message_handler):
 def test_mode_setting_changed(create_message_handler):
     """The internal mode can be set later and logger properly changed."""
     test_level = 123
-    test_format = "this is a format"
+    test_format = "test:: %(message)s"
     mh = create_message_handler({'foo': (0, ''), 'bar': (test_level, test_format)})
     mh.init(mh.FOO)
     mh.set_mode(mh.BAR)

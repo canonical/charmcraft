@@ -432,13 +432,12 @@ def test_build_code_simple(tmp_path):
     assert linked_entrypoint == built_entrypoint
 
 
-def test_build_code_simple_with_config(tmp_path):
-    """Check transferred metadata, config, and simple entrypoint."""
+def test_build_config(tmp_path):
+    """Check config.yaml included when present."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
-
-    metadata = tmp_path / CHARM_METADATA
     entrypoint = tmp_path / 'crazycharm.py'
+
     config = tmp_path / CHARM_CONFIG
     config.touch()
 
@@ -447,21 +446,11 @@ def test_build_code_simple_with_config(tmp_path):
         'entrypoint': entrypoint,
         'requirement': [],
     })
-    linked_entrypoint = builder.handle_code()
-
-    built_metadata = build_dir / CHARM_METADATA
-    assert built_metadata.is_symlink()
-    assert built_metadata.resolve() == metadata
-
-    built_entrypoint = build_dir / 'crazycharm.py'
-    assert built_entrypoint.is_symlink()
-    assert built_entrypoint.resolve() == entrypoint
+    builder.handle_code()
 
     built_config = build_dir / CHARM_CONFIG
     assert built_config.is_symlink()
     assert built_config.resolve() == config
-
-    assert linked_entrypoint == built_entrypoint
 
 
 def test_build_code_tree(tmp_path):

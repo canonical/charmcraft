@@ -34,6 +34,15 @@ CHARM_METADATA = 'metadata.yaml'
 BUILD_DIRNAME = 'build'
 VENV_DIRNAME = 'venv'
 
+# copy these if they exist
+CHARM_OPTIONAL = [
+    'config.yaml',
+    'metrics.yaml',
+    'actions.yaml',
+    'lxd-profile.yaml',
+    'version'
+]
+
 # The file name and template for the dispatch script
 DISPATCH_FILENAME = 'dispatch'
 # If Juju doesn't support the dispatch mechanism, it will execute the
@@ -104,6 +113,10 @@ class Builder:
         # basic files
         logger.debug("Linking in basic files and charm code")
         self._link_to_buildpath(self.charmdir / CHARM_METADATA)
+        for fn in CHARM_OPTIONAL:
+            path = self.charmdir / fn
+            if path.exists():
+                self._link_to_buildpath(path)
 
         # the whole dir/tree if entry point is in a project's subdir, itself alone otherwise
         if self.charmdir in self.entrypoint.parents and self.charmdir != self.entrypoint.parent:

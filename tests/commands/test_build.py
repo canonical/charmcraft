@@ -430,6 +430,42 @@ def test_build_code_simple(tmp_path):
     assert linked_entrypoint == built_entrypoint
 
 
+@pytest.mark.parametrize("optional", ["", "config", "actions", "config,actions"])
+def test_build_code_optional(tmp_path, optional):
+    """Check transferred actions."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+    entrypoint = tmp_path / 'charm.py'
+
+    config = tmp_path / 'config.yaml'
+    actions = tmp_path / 'actions.yaml'
+    if 'config' in optional:
+        config.touch()
+    if 'actions' in optional:
+        actions.touch()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_code()
+
+    built_config = build_dir / 'config.yaml'
+    built_actions = build_dir / 'actions.yaml'
+
+    if 'config' in optional:
+        assert built_config.is_symlink()
+        assert built_config.resolve() == config
+    else:
+        assert not built_config.exists()
+    if 'actions' in optional:
+        assert built_actions.is_symlink()
+        assert built_actions.resolve() == actions
+    else:
+        assert not built_actions.exists()
+
+
 def test_build_code_tree(tmp_path):
     """The whole source code tree is built if entrypoint not at root."""
     build_dir = tmp_path / BUILD_DIRNAME

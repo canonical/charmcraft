@@ -31,9 +31,17 @@ logger = logging.getLogger(__name__)
 
 # Some constants that are used through the code.
 CHARM_METADATA = 'metadata.yaml'
-CHARM_OPTIONAL = ['config.yaml', 'actions.yaml']  # copy these if they exist
 BUILD_DIRNAME = 'build'
 VENV_DIRNAME = 'venv'
+
+# copy these if they exist
+CHARM_OPTIONAL = [
+    'config.yaml',
+    'metrics.yaml',
+    'actions.yaml',
+    'lxd-profile.yaml',
+    'version'
+]
 
 # The file name and template for the dispatch script
 DISPATCH_FILENAME = 'dispatch'

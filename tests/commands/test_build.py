@@ -26,6 +26,7 @@ import pytest
 import yaml
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.commands import build
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
     Builder,
@@ -432,7 +433,7 @@ def test_build_code_simple(tmp_path):
 
 @pytest.mark.parametrize("optional", ["", "config", "actions", "config,actions"])
 def test_build_code_optional(tmp_path, optional):
-    """Check transferred actions."""
+    """Check transferred 'optional' files."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
     entrypoint = tmp_path / 'charm.py'
@@ -464,6 +465,36 @@ def test_build_code_optional(tmp_path, optional):
         assert built_actions.resolve() == actions
     else:
         assert not built_actions.exists()
+
+
+def test_build_code_optional_bogus(tmp_path, monkeypatch):
+    """Check that CHARM_OPTIONAL controls what gets copied."""
+    monkeypatch.setattr(build, 'CHARM_OPTIONAL', ['foo.yaml'])
+
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+    entrypoint = tmp_path / 'charm.py'
+
+    config = tmp_path / 'config.yaml'
+    config.touch()
+    foo = tmp_path / 'foo.yaml'
+    foo.touch()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_code()
+
+    built_config = build_dir / 'config.yaml'
+    built_foo = build_dir / 'foo.yaml'
+
+    # config.yaml is not in the build
+    assert not built_config.exists()
+    # but foo.yaml is
+    assert built_foo.is_symlink()
+    assert built_foo.resolve() == foo
 
 
 def test_build_code_tree(tmp_path):

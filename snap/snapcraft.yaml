@@ -1,0 +1,64 @@
+name: charmcraft
+base: core20
+summary: The charming tool
+license: Apache-2.0
+description: |
+  Charmcraft provides a streamlined, powerful, opinionated, and
+  flexible tool to develop, package, and manage the lifecycle of Juju
+  charm publication, focused particularly on charms written within the
+  Operator Framework.
+
+  It is still in heavy, initial development and so a lot is still To
+  Be Done. However it is already useful, and already simplifies the
+  life of the charmer.
+
+adopt-info: charmcraft  # look for 'snapcraftctl set-*' in the charmcraft part
+architectures: [all]    # nothing platform-dependent here (for now at least)
+
+apps:
+  charmcraft:
+    command: bin/charmcraft
+    plugs:
+      - home            # so it can acess files under the user's home
+      - removable-media # so it can access things in /media, etc. (manually connected)
+      - network         # so 'pip install' can download things
+    environment:
+      # help python pick up useful things from the base snap
+      PYTHONPATH: /usr/lib/python3/dist-packages:$SNAP/lib
+      # have the cache outside of the version dirs (avoids keeping N copies)
+      XDG_CACHE_HOME: $SNAP_USER_COMMON/cache
+
+grade: stable
+confinement: strict
+
+parts:
+  charmcraft:
+    source: .
+    plugin: python
+    # snapcraft uses venv, which doesn't pull in wheel (as opposed to virtualenv)
+    # so then 'pip install PyYAML' gets cross.
+    python-packages: [wheel]
+    override-pull: |
+      # do the usual pull stuff
+      snapcraftctl pull
+      # set the version
+      snapcraftctl set-version "$( python3 -c 'import charmcraft; print(charmcraft.__version__)' )"
+    stage:
+      # copy in only what we need. Comment out this whole section to grab
+      # everything if something stops working, and then once you've spotted what
+      # it was we needed, add it back in here. This keeps the snap lean, and us
+      # aware of our actual dependencies (more or less -- look at what pip does
+      # wrt vendoring).
+      - bin/charmcraft
+      - bin/python3
+      - bin/pip3
+      - pyvenv.cfg
+      - lib/python3.8/site-packages/charmcraft
+      - lib/python3.8/site-packages/charmcraft-*.egg-info
+      - lib/python3.8/site-packages/pip
+      - lib/python3.8/site-packages/pip-*.dist-info
+      - lib/python3.8/site-packages/wheel
+      - lib/python3.8/site-packages/wheel-*.dist-info
+      # this effectively means we're shipping pip and wheel twice (once above,
+      # and once below), but untangling that is probably not worth it.
+      - share/python-wheels

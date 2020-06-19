@@ -26,6 +26,7 @@ import pytest
 import yaml
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.commands import build
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
     Builder,
@@ -428,6 +429,72 @@ def test_build_code_simple(tmp_path):
     assert built_entrypoint.resolve() == entrypoint
 
     assert linked_entrypoint == built_entrypoint
+
+
+@pytest.mark.parametrize("optional", ["", "config", "actions", "config,actions"])
+def test_build_code_optional(tmp_path, optional):
+    """Check transferred 'optional' files."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+    entrypoint = tmp_path / 'charm.py'
+
+    config = tmp_path / 'config.yaml'
+    actions = tmp_path / 'actions.yaml'
+    if 'config' in optional:
+        config.touch()
+    if 'actions' in optional:
+        actions.touch()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_code()
+
+    built_config = build_dir / 'config.yaml'
+    built_actions = build_dir / 'actions.yaml'
+
+    if 'config' in optional:
+        assert built_config.is_symlink()
+        assert built_config.resolve() == config
+    else:
+        assert not built_config.exists()
+    if 'actions' in optional:
+        assert built_actions.is_symlink()
+        assert built_actions.resolve() == actions
+    else:
+        assert not built_actions.exists()
+
+
+def test_build_code_optional_bogus(tmp_path, monkeypatch):
+    """Check that CHARM_OPTIONAL controls what gets copied."""
+    monkeypatch.setattr(build, 'CHARM_OPTIONAL', ['foo.yaml'])
+
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+    entrypoint = tmp_path / 'charm.py'
+
+    config = tmp_path / 'config.yaml'
+    config.touch()
+    foo = tmp_path / 'foo.yaml'
+    foo.touch()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_code()
+
+    built_config = build_dir / 'config.yaml'
+    built_foo = build_dir / 'foo.yaml'
+
+    # config.yaml is not in the build
+    assert not built_config.exists()
+    # but foo.yaml is
+    assert built_foo.is_symlink()
+    assert built_foo.resolve() == foo
 
 
 def test_build_code_tree(tmp_path):

@@ -18,22 +18,27 @@
 
 import logging
 import os
+import webbrowser
 from http.cookiejar import MozillaCookieJar
 
+import appdirs
 from macaroonbakery import httpbakery
 
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger(__name__)
 
-
-# XXX Facundo 2020-06-19: put this in the user's config directory, with proper permissions, if
-# we finally decide to save credentials to a file
-COOKIE_JAR_FILE = '.charmcraft_credentials'
-
 # XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
 # functionality in Store's production
 BASE_URL = 'https://api.staging.snapcraft.io/publisher/api'
+
+
+def visit_page_with_browser(visit_url):
+    """Open a browser so the user can validate its identity."""
+    logger.warning(
+        "Opening an authorization web page in your browser; if it does not open, "
+        "please open this URL: %s", visit_url)
+    webbrowser.open(visit_url, new=1)
 
 
 class _AuthHolder:
@@ -51,21 +56,39 @@ class _AuthHolder:
     """
 
     def __init__(self):
+        self._cookiejar_filepath = appdirs.user_config_dir('charmcraft.credentials')
         self._client = None
 
-    def _load_credentials(self):
-        self._client = httpbakery.Client(cookies=MozillaCookieJar(COOKIE_JAR_FILE))
+    def clear_credentials(self):
+        """Clear stored credentials."""
+        if os.path.exists(self._cookiejar_filepath):
+            os.unlink(self._cookiejar_filepath)
+            logger.debug("Credentials cleared: file %r removed", self._cookiejar_filepath)
+        else:
+            logger.debug("Credentials file not found to be removed: %r", self._cookiejar_filepath)
 
-        if os.path.exists(COOKIE_JAR_FILE):
-            logger.debug("Loading credentials from file: %r", COOKIE_JAR_FILE)
+    def _save_credentials(self):
+        """Save credentials if changed."""
+        if list(self._client.cookies) != self._old_cookies:
+            logger.debug("Saving credentials to file: %r", self._cookiejar_filepath)
+            self._client.cookies.save()
+
+    def _load_credentials(self):
+        """Load credentials."""
+        wbi = httpbakery.WebBrowserInteractor(open=visit_page_with_browser)
+        self._client = httpbakery.Client(
+            cookies=MozillaCookieJar(self._cookiejar_filepath), interaction_methods=[wbi])
+
+        if os.path.exists(self._cookiejar_filepath):
+            logger.debug("Loading credentials from file: %r", self._cookiejar_filepath)
             try:
                 self._client.cookies.load()
             except Exception as err:
                 # alert and continue processing (without having credentials, of course, the user
-                # will be asked to authenticate
+                # will be asked to authenticate)
                 logger.warning("Failed to read credentials: %r", err)
         else:
-            logger.debug("Credentials file not found: %r", COOKIE_JAR_FILE)
+            logger.debug("Credentials file not found: %r", self._cookiejar_filepath)
 
         # iterates the cookiejar (which is mutable, may change later) and get the cookies
         # for comparison after hitting the endpoint
@@ -78,15 +101,12 @@ class _AuthHolder:
             self._load_credentials()
 
         # this request through the bakery lib will automatically catch any authentication
-        # problem and (if any) ask the user to authenticate and retry the original request
-        # XXX Facundo 2020-06-19: this will dirty our stdout, we would need to capture it
-        # and properly log it; related:
-        # https://github.com/go-macaroon-bakery/py-macaroon-bakery/issues/85
-        resp = self._client.request(method, url)
-
-        if list(self._client.cookies) != self._old_cookies:
-            logger.debug("Saving credentials to file: %r", COOKIE_JAR_FILE)
-            self._client.cookies.save()
+        # problem and (if any) ask the user to authenticate and retry the original request; if
+        # that fails we capture it and raise a proper error
+        try:
+            resp = self._client.request(method, url)
+        except httpbakery.InteractionError as err:
+            raise CommandError("Authentication failure: {}".format(err))
 
         return resp
 
@@ -94,6 +114,10 @@ class _AuthHolder:
 class Client:
     def __init__(self):
         self._auth_client = _AuthHolder()
+
+    def clear_credentials(self):
+        """Clear stored credentials."""
+        self._auth_client.clear_credentials()
 
     def _hit(self, method, urlpath):
         """Generic hit to the Store."""

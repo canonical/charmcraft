@@ -27,11 +27,18 @@ logger = logging.getLogger(__name__)
 class LoginCommand(BaseCommand):
     """Log into the store."""
     name = 'login'
-    help_msg = "login with your Ubuntu One e-mail address and password"
+    help_msg = "login in the Ubuntu Single Sign On"
 
     def run(self, parsed_args):
-        """Run the command."""
-        # FIXME: implement! call whoami (to trigger login) AFTER removing current credentials
+        """Run the command.
+
+        The login happens on every request to the Store (if current credentials were not
+        enough), so here we just exercise the simplest command regarding developer identity.
+        """
+        client = Client()
+        client.clear_credentials()
+        client.get('/v1/whoami')
+        logger.info("Login successful")
 
 
 class LogoutCommand(BaseCommand):
@@ -41,7 +48,9 @@ class LogoutCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        # FIXME: implement! remove current credentials
+        client = Client()
+        client.clear_credentials()
+        logger.info("Credentials cleared.")
 
 
 class WhoamiCommand(BaseCommand):

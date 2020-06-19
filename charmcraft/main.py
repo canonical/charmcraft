@@ -21,9 +21,10 @@ import operator
 import os
 import sys
 
-from charmcraft import logsetup, __version__
+from charmcraft import __version__
 from charmcraft.commands import version, build
 from charmcraft.cmdbase import CommandError
+from charmcraft.logsetup import message_handler
 
 logger = logging.getLogger(__name__)
 
@@ -101,19 +102,14 @@ class Dispatcher:
             return -1
 
         command = self.parsed_args._command
-        try:
-            command.run(self.parsed_args)
-        except CommandError as err:
-            logger.error(str(err))
-            return err.retcode
-        return 0
+        command.run(self.parsed_args)
 
     def _handle_global_params(self):
         """Set up and process global parameters."""
         if self.parsed_args.verbose:
-            logsetup.configure('verbose')
+            message_handler.set_mode(message_handler.VERBOSE)
         elif self.parsed_args.quiet:
-            logsetup.configure('quiet')
+            message_handler.set_mode(message_handler.QUIET)
 
     def _load_commands(self, commands_groups):
         """Init the commands and store them by name."""
@@ -156,17 +152,29 @@ class Dispatcher:
         return parser
 
 
-def main():
+def main(argv):
     """Main entry point."""
     # Setup logging, using DEBUG envvar in case dev wants to show info before
     # command parsing.
-    mode = 'verbose' if 'DEBUG' in os.environ else 'normal'
-    logsetup.configure(mode)
+    mode = message_handler.VERBOSE if 'DEBUG' in os.environ else message_handler.NORMAL
+    message_handler.init(mode)
 
     # process
-    dispatcher = Dispatcher(sys.argv[1:], COMMAND_GROUPS)
-    sys.exit(dispatcher.run())
+    try:
+        dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
+        dispatcher.run()
+    except CommandError as err:
+        message_handler.ended_cmderror(err)
+        retcode = err.retcode
+    except Exception as err:
+        message_handler.ended_crash(err)
+        retcode = -1
+    else:
+        message_handler.ended_ok()
+        retcode = 0
+
+    return retcode
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main(sys.argv))

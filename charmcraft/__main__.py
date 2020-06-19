@@ -16,5 +16,8 @@
 
 """Init file to allow execution of charmcraft as a module."""
 
+import sys
+
 from charmcraft import main
-main.main()
+
+sys.exit(main.main(sys.argv))

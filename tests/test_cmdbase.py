@@ -24,13 +24,13 @@ from charmcraft.cmdbase import CommandError, BaseCommand
 def test_commanderror_retcode_default():
     """The CommandError return code default."""
     err = CommandError('problem')
-    assert err.retcode == -1
+    assert err.retcode == 1
 
 
 def test_commanderror_retcode_given():
     """The CommandError holds the return code."""
-    err = CommandError('problem', retcode=-4)
-    assert err.retcode == -4
+    err = CommandError('problem', retcode=4)
+    assert err.retcode == 4
 
 
 def test_basecommand_mandatory_name():

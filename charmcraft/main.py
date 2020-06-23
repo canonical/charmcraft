@@ -99,7 +99,7 @@ class Dispatcher:
 
         if not hasattr(self.parsed_args, '_command'):
             self.main_parser.print_help()
-            return -1
+            return 1
 
         command = self.parsed_args._command
         command.run(self.parsed_args)
@@ -166,9 +166,12 @@ def main(argv):
     except CommandError as err:
         message_handler.ended_cmderror(err)
         retcode = err.retcode
+    except KeyboardInterrupt:
+        message_handler.ended_interrupt()
+        retcode = 1
     except Exception as err:
         message_handler.ended_crash(err)
-        retcode = -1
+        retcode = 1
     else:
         message_handler.ended_ok()
         retcode = 0

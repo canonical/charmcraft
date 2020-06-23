@@ -349,7 +349,7 @@ def test_politeexec_crashed(caplog, tmp_path):
 
     cmd = [str(nonexistent)]
     retcode = polite_exec(cmd)
-    assert retcode == -1
+    assert retcode == 1
     expected_msg = "Executing {} crashed with FileNotFoundError".format(cmd)
     assert any(expected_msg in rec.message for rec in caplog.records)
 

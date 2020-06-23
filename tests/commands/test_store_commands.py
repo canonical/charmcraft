@@ -62,5 +62,9 @@ def test_whoami(caplog, client_mock):
     assert client_mock.mock_calls == [
         call.get('/v1/whoami'),
     ]
-    expected = "You are John Doe (username='jdoe', id='-1')"
-    assert [expected] == [rec.message for rec in caplog.records]
+    expected = [
+        'name:     John Doe',
+        'username: jdoe',
+        'id:       -1',
+    ]
+    assert expected == [rec.message for rec in caplog.records]

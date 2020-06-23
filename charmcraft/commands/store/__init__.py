@@ -58,10 +58,17 @@ class WhoamiCommand(BaseCommand):
     name = 'whoami'
     help_msg = "returns your login information relevant to the store"
 
+    _titles = [
+        ('name:', 'display-name'),
+        ('username:', 'username'),
+        ('id:', 'id'),
+    ]
+
     def run(self, parsed_args):
         """Run the command."""
         client = Client()
         result = client.get('/v1/whoami')
-        logger.info(
-            "You are %s (username=%r, id=%r)",
-            result['display-name'], result['username'], result['id'])
+
+        longest_title = max(len(t[0]) for t in self._titles)
+        for title, key in self._titles:
+            logger.info("%-*s %s", longest_title, title, result[key])

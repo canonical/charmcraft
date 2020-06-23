@@ -182,6 +182,20 @@ def test_authholder_credentials_save_reallysave(auth_holder):
     assert new_file_content != prv_file_content
 
 
+def test_authholder_credentials_save_createsdir(auth_holder, tmp_path):
+    """Save creates the directory if not there."""
+    weird_filepath = tmp_path / 'not_created_dir' / 'deep' / 'credentials'
+    auth_holder._cookiejar_filepath = str(weird_filepath)
+    auth_holder._load_credentials()
+
+    # set a cookie and ask for saving it
+    auth_holder._cookiejar.set_cookie(get_cookie(value='different'))
+    auth_holder._save_credentials()
+
+    # file should be there
+    assert weird_filepath.exists()
+
+
 def test_authholder_request_simple(auth_holder):
     """Load credentials the first time, hit the network, save credentials."""
     # save a cookie to be used

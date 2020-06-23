@@ -154,7 +154,7 @@ class Dispatcher:
         return parser
 
 
-def main(argv):
+def main(argv=sys.argv):
     """Main entry point."""
     # Setup logging, using DEBUG envvar in case dev wants to show info before
     # command parsing.

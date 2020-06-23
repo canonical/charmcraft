@@ -20,4 +20,4 @@ import sys
 
 from charmcraft import main
 
-sys.exit(main.main(sys.argv))
+sys.exit(main.main())

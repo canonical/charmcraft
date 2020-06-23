@@ -21,7 +21,7 @@ import logging
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands.store.client import Client
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('charmcraft.commands.store')
 
 
 class LoginCommand(BaseCommand):
@@ -50,7 +50,7 @@ class LogoutCommand(BaseCommand):
         """Run the command."""
         client = Client()
         client.clear_credentials()
-        logger.info("Credentials cleared.")
+        logger.info("Credentials cleared")
 
 
 class WhoamiCommand(BaseCommand):

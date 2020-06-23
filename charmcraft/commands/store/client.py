@@ -26,7 +26,7 @@ from macaroonbakery import httpbakery
 
 from charmcraft.cmdbase import CommandError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('charmcraft.commands.store')
 
 # XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
 # functionality in Store's production
@@ -57,6 +57,7 @@ class _AuthHolder:
 
     def __init__(self):
         self._cookiejar_filepath = appdirs.user_config_dir('charmcraft.credentials')
+        self._cookiejar = None
         self._client = None
 
     def clear_credentials(self):
@@ -69,20 +70,20 @@ class _AuthHolder:
 
     def _save_credentials(self):
         """Save credentials if changed."""
-        if list(self._client.cookies) != self._old_cookies:
+        if list(self._cookiejar) != self._old_cookies:
             logger.debug("Saving credentials to file: %r", self._cookiejar_filepath)
-            self._client.cookies.save()
+            self._cookiejar.save()
 
     def _load_credentials(self):
-        """Load credentials."""
+        """Load credentials and set up internal auth request objects."""
         wbi = httpbakery.WebBrowserInteractor(open=visit_page_with_browser)
-        self._client = httpbakery.Client(
-            cookies=MozillaCookieJar(self._cookiejar_filepath), interaction_methods=[wbi])
+        self._cookiejar = MozillaCookieJar(self._cookiejar_filepath)
+        self._client = httpbakery.Client(cookies=self._cookiejar, interaction_methods=[wbi])
 
         if os.path.exists(self._cookiejar_filepath):
             logger.debug("Loading credentials from file: %r", self._cookiejar_filepath)
             try:
-                self._client.cookies.load()
+                self._cookiejar.load()
             except Exception as err:
                 # alert and continue processing (without having credentials, of course, the user
                 # will be asked to authenticate)
@@ -92,7 +93,7 @@ class _AuthHolder:
 
         # iterates the cookiejar (which is mutable, may change later) and get the cookies
         # for comparison after hitting the endpoint
-        self._old_cookies = list(self._client.cookies)
+        self._old_cookies = list(self._cookiejar)
 
     def request(self, method, url):
         """Do a request."""
@@ -108,10 +109,13 @@ class _AuthHolder:
         except httpbakery.InteractionError as err:
             raise CommandError("Authentication failure: {}".format(err))
 
+        self._save_credentials()
         return resp
 
 
 class Client:
+    """Lightweight layer above _AuthHolder to present a more network oriented interface."""
+
     def __init__(self):
         self._auth_client = _AuthHolder()
 
@@ -126,7 +130,7 @@ class Client:
         resp = self._auth_client.request(method, url)
         if not resp.ok:
             raise CommandError(
-                "Failure working with the Store: [{}] {}".format(resp.status_code, resp.content))
+                "Failure working with the Store: [{}] {!r}".format(resp.status_code, resp.content))
 
         data = resp.json()
         return data

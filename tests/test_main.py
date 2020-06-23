@@ -267,6 +267,18 @@ def test_main_ok():
     assert mh_mock.ended_ok.called_once()
 
 
+def test_main_no_args():
+    """The setup.py entry_point function needs to work with no arguments."""
+    with patch('sys.argv', ['charmcraft']):
+        with patch.object(logsetup, 'message_handler') as mh_mock:
+            with patch('charmcraft.main.Dispatcher.run') as d_mock:
+                d_mock.side_effect = CommandError('boom', retcode=42)
+                retcode = main()
+
+    assert retcode == 42
+    assert mh_mock.ended_ok.called_once()
+
+
 def test_main_controlled_error():
     """Work raised CommandError: message handler notified properly, use indicated return code."""
     simulated_exception = CommandError('boom', retcode=-33)

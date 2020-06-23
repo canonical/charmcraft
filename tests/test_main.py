@@ -20,8 +20,8 @@ import logging
 import textwrap
 from unittest.mock import patch
 
-from charmcraft import __version__
-from charmcraft.main import Dispatcher
+from charmcraft import __version__, logsetup
+from charmcraft.main import Dispatcher, main
 from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
 
@@ -165,14 +165,13 @@ def test_dispatcher_command_execution_ok():
 
     groups = [('test-group', 'title', [MyCommand1, MyCommand2])]
     dispatcher = Dispatcher(['name2'], groups)
-    retcode = dispatcher.run()
+    dispatcher.run()
     assert dispatcher.commands['name1'].executed is None
     assert isinstance(dispatcher.commands['name2'].executed, argparse.Namespace)
-    assert retcode == 0
 
 
 def test_dispatcher_command_execution_crash():
-    """Command crashing is let pass through."""
+    """Command crashing doesn't pass through, we inform nicely"""
     class MyCommand(BaseCommand):
         help_msg = "some help"
         name = 'cmdname'
@@ -186,40 +185,22 @@ def test_dispatcher_command_execution_crash():
         dispatcher.run()
 
 
-def test_dispatcher_command_execution_controlled_error(caplog):
-    """Commands can indicate "fatal error" through a specific exception."""
-    caplog.set_level(logging.ERROR, logger="charmcraft")
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = 'cmdname'
-
-        def run(self, parsed_args):
-            raise CommandError("boom", retcode=-13)
-
-    groups = [('test-group', 'title', [MyCommand])]
-    dispatcher = Dispatcher(['cmdname'], groups)
-    retcode = dispatcher.run()
-    assert retcode == -13
-    assert ["boom"] == [rec.message for rec in caplog.records]
-
-
 @pytest.mark.parametrize("option", ['--verbose', '-v'])
 def test_dispatcher_generic_setup_verbose(option):
     """Generic parameter handling for verbose log setup."""
     dispatcher = Dispatcher([option], [])
-    with patch('charmcraft.logsetup.configure') as mock:
-        dispatcher.run()
-    mock.assert_called_with('verbose')
+    logsetup.message_handler.mode = None
+    dispatcher.run()
+    assert logsetup.message_handler.mode == logsetup.message_handler.VERBOSE
 
 
 @pytest.mark.parametrize("option", ['--quiet', '-q'])
 def test_dispatcher_generic_setup_quiet(option):
     """Generic parameter handling for silent log setup."""
     dispatcher = Dispatcher([option], [])
-    with patch('charmcraft.logsetup.configure') as mock:
-        dispatcher.run()
-    mock.assert_called_with('quiet')
+    logsetup.message_handler.mode = None
+    dispatcher.run()
+    assert logsetup.message_handler.mode == logsetup.message_handler.QUIET
 
 
 def test_dispatcher_load_commands_ok():
@@ -266,3 +247,45 @@ def test_dispatcher_log_startup(caplog):
     Dispatcher([], [])
     expected = "Starting charmcraft version " + __version__
     assert expected in [rec.message for rec in caplog.records]
+
+
+# --- Tests for the main entry point
+
+# In all the test methods below we patch Dispatcher.run so we don't really exercise any
+# command machinery, even if we call to main using a real command (which is to just
+# make argument parsing system happy).
+
+
+def test_main_ok():
+    """Work ended ok: message handler notified properly, return code in 0."""
+    with patch.object(logsetup, 'message_handler') as mh_mock:
+        with patch('charmcraft.main.Dispatcher.run') as d_mock:
+            d_mock.return_value = None
+            retcode = main(['charmcraft', 'version'])
+
+    assert retcode == 0
+    assert mh_mock.ended_ok.called_once()
+
+
+def test_main_controlled_error():
+    """Work raised CommandError: message handler notified properly, use indicated return code."""
+    simulated_exception = CommandError('boom', retcode=-33)
+    with patch.object(logsetup, 'message_handler') as mh_mock:
+        with patch('charmcraft.main.Dispatcher.run') as d_mock:
+            d_mock.side_effect = simulated_exception
+            retcode = main(['charmcraft', 'version'])
+
+    assert retcode == -33
+    assert mh_mock.ended_cmderror.called_once_with(simulated_exception)
+
+
+def test_main_crash():
+    """Work crashed: message handler notified properly, return code in -1."""
+    simulated_exception = ValueError('boom')
+    with patch.object(logsetup, 'message_handler') as mh_mock:
+        with patch('charmcraft.main.Dispatcher.run') as d_mock:
+            d_mock.side_effect = simulated_exception
+            retcode = main(['charmcraft', 'version'])
+
+    assert retcode == -1
+    assert mh_mock.ended_crash.called_once_with(simulated_exception)

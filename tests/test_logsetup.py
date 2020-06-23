@@ -112,6 +112,19 @@ def test_ended_success(caplog, create_message_handler):
     assert not caplog.records
 
 
+def test_ended_interrupt(caplog, create_message_handler):
+    """Reports ^C, removes log file."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    mh = create_message_handler()
+    mh.init(mh.NORMAL)
+    mh.ended_interrupt()
+
+    # file is removed, no particular message emitted
+    assert not os.path.exists(mh._log_filepath)
+    assert "Exiting on keyboard interrupt." in [rec.message for rec in caplog.records]
+
+
 def test_ended_commanderror(caplog, create_message_handler):
     """Reports just the message, including the log file (not removed)."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")

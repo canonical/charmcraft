@@ -27,14 +27,12 @@ logger = logging.getLogger('charmcraft.commands.store')
 class LoginCommand(BaseCommand):
     """Log into the store."""
     name = 'login'
-    help_msg = "login in the Ubuntu Single Sign On"
+    help_msg = "login to Ubuntu Single Sign On"
 
     def run(self, parsed_args):
-        """Run the command.
-
-        The login happens on every request to the Store (if current credentials were not
-        enough), so here we just exercise the simplest command regarding developer identity.
-        """
+        """Run the command."""
+        # The login happens on every request to the Store (if current credentials were not
+        # enough), so here we just exercise the simplest command regarding developer identity.
         client = Client()
         client.clear_credentials()
         client.get('/v1/whoami')

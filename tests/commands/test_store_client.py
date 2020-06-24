@@ -164,22 +164,28 @@ def test_authholder_credentials_save_reallysave(auth_holder):
     fake_cookiejar.set_cookie(fake_cookie)
     fake_cookiejar.save()
 
+    # make auth holder to have those credentials loaded, and also load them ourselves for
+    # later comparison
     auth_holder._load_credentials()
-
     with open(auth_holder._cookiejar_filepath, 'rb') as fh:
         prv_file_content = fh.read()
 
+    # set a different credential in the auth_holder (mimickin that the user authenticated
+    # while doing the request)
     other_cookie = get_cookie(value='different')
     auth_holder._cookiejar.set_cookie(other_cookie)
+
+    # call the tested method and ensure that file changed!
     auth_holder._save_credentials()
-
-    with patch.object(auth_holder._cookiejar, 'save') as mock:
-        auth_holder._save_credentials()
-    assert mock.call_count == 1
-
     with open(auth_holder._cookiejar_filepath, 'rb') as fh:
         new_file_content = fh.read()
     assert new_file_content != prv_file_content
+
+    # call the tested method again, to verify that it was calling save on the cookiejar (and
+    # not that the file changed as other side effect)
+    with patch.object(auth_holder._cookiejar, 'save') as mock:
+        auth_holder._save_credentials()
+    assert mock.call_count == 1
 
 
 def test_authholder_credentials_save_createsdir(auth_holder, tmp_path):

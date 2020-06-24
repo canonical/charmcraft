@@ -73,8 +73,7 @@ class _AuthHolder:
         if list(self._cookiejar) != self._old_cookies:
             logger.debug("Saving credentials to file: %r", self._cookiejar_filepath)
             dirpath = os.path.dirname(self._cookiejar_filepath)
-            if not os.path.exists(dirpath):
-                os.makedirs(dirpath)
+            os.makedirs(dirpath, exist_ok=True)
 
             self._cookiejar.save()
 

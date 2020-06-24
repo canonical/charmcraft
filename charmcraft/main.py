@@ -22,7 +22,7 @@ import os
 import sys
 
 from charmcraft import __version__
-from charmcraft.commands import version, build
+from charmcraft.commands import version, build, store
 from charmcraft.cmdbase import CommandError
 from charmcraft.logsetup import message_handler
 
@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 # central place and not distributed in several classes/files.
 COMMAND_GROUPS = [
     ('basic', "basics", [version.VersionCommand, build.BuildCommand]),
+    ('store', "interaction with the store", [
+        store.LoginCommand, store.LogoutCommand, store.WhoamiCommand]),
 ]
 
 

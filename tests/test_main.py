@@ -292,7 +292,7 @@ def test_main_controlled_error():
 
 
 def test_main_crash():
-    """Work crashed: message handler notified properly, return code in -1."""
+    """Work crashed: message handler notified properly, return code in 1."""
     simulated_exception = ValueError('boom')
     with patch.object(logsetup, 'message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
@@ -304,7 +304,7 @@ def test_main_crash():
 
 
 def test_main_interrupted():
-    """Work crashed: message handler notified properly, return code in -1."""
+    """Work interrupted: message handler notified properly, return code in 1."""
     with patch.object(logsetup, 'message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.side_effect = KeyboardInterrupt

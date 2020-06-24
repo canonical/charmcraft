@@ -84,7 +84,10 @@ class _MessageHandler:
 
     def ended_interrupt(self):
         """Clean up on keyboard interrupt."""
-        _logger.error("Exiting on keyboard interrupt.")
+        if self.mode == self.VERBOSE:
+            _logger.exception("Interrupted.")
+        else:
+            _logger.error("Interrupted.")
         os.unlink(self._log_filepath)
 
     def ended_cmderror(self, err):

@@ -82,6 +82,11 @@ class _MessageHandler:
         """Cleanup after successful execution."""
         os.unlink(self._log_filepath)
 
+    def ended_interrupt(self):
+        """Clean up on keyboard interrupt."""
+        _logger.error("Exiting on keyboard interrupt.")
+        os.unlink(self._log_filepath)
+
     def ended_cmderror(self, err):
         """Report the (expected) problem and logfile location."""
         msg = "{} (full execution logs in {})".format(err, self._log_filepath)

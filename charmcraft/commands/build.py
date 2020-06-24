@@ -65,7 +65,7 @@ def polite_exec(cmd):
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     except Exception as err:
         logger.error("Executing %s crashed with %r", cmd, err)
-        return -1
+        return 1
 
     for line in proc.stdout:
         logger.debug(":: %s", line.rstrip())

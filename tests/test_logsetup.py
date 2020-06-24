@@ -122,7 +122,26 @@ def test_ended_interrupt(caplog, create_message_handler):
 
     # file is removed, no particular message emitted
     assert not os.path.exists(mh._log_filepath)
-    assert "Exiting on keyboard interrupt." in [rec.message for rec in caplog.records]
+    # a single None for exc_info means no traceback would be printed
+    assert ("ERROR", "Interrupted.", None) in [
+        (rec.levelname, rec.message, rec.exc_info) for rec in caplog.records
+    ]
+
+
+def test_ended_verbose_interrupt(caplog, create_message_handler):
+    """Reports ^C, including traceback, removes log file."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    mh = create_message_handler()
+    mh.init(mh.VERBOSE)
+    mh.ended_interrupt()
+
+    # file is removed, no particular message emitted
+    assert not os.path.exists(mh._log_filepath)
+    # the (None, None, None) here indicates that it'd be printing a traceback
+    assert ("ERROR", "Interrupted.", (None, None, None)) in [
+        (rec.levelname, rec.message, rec.exc_info) for rec in caplog.records
+    ]
 
 
 def test_ended_commanderror(caplog, create_message_handler):

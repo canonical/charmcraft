@@ -29,7 +29,7 @@ from charmcraft.cmdbase import CommandError
 logger = logging.getLogger('charmcraft.commands.store')
 
 # XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
-# functionality in Store's production
+# functionality in Store's production (related: issue #51)
 BASE_URL = 'https://api.staging.snapcraft.io/publisher/api'
 
 
@@ -52,7 +52,7 @@ class _AuthHolder:
 
     XXX Facundo 2020-06-18: right now for functionality bootstrapping we're storing credentials
     on disk, we may move to a keyring, wallet, other solution, or firmly remain here when we
-    get a "security" recommendation.
+    get a "security" recommendation (related: issue #52).
     """
 
     def __init__(self):
@@ -68,7 +68,7 @@ class _AuthHolder:
         else:
             logger.debug("Credentials file not found to be removed: %r", self._cookiejar_filepath)
 
-    def _save_credentials(self):
+    def _save_credentials_if_changed(self):
         """Save credentials if changed."""
         if list(self._cookiejar) != self._old_cookies:
             logger.debug("Saving credentials to file: %r", self._cookiejar_filepath)
@@ -112,7 +112,7 @@ class _AuthHolder:
         except httpbakery.InteractionError as err:
             raise CommandError("Authentication failure: {}".format(err))
 
-        self._save_credentials()
+        self._save_credentials_if_changed()
         return resp
 
 

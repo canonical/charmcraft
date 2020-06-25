@@ -12,8 +12,22 @@ description: |
   Be Done. However it is already useful, and already simplifies the
   life of the charmer.
 
+  ---
+
+  This release ships with git to the point that you can have a
+  git+https line in your requirements.txt (tested against github and
+  launchpad, including some limited submodule support), but without
+  the work needed for it to access your home's git config. More work
+  is still needed on this front.
+
 adopt-info: charmcraft  # look for 'snapcraftctl set-*' in the charmcraft part
-architectures: [all]    # nothing platform-dependent here (for now at least)
+architectures:
+  - build-on: s390x
+  - build-on: ppc64el
+  - build-on: arm64
+  - build-on: armhf
+  - build-on: amd64
+  # - build-on: i386  # there is no i386 core20
 
 apps:
   charmcraft:
@@ -22,11 +36,19 @@ apps:
       - home            # so it can acess files under the user's home
       - removable-media # so it can access things in /media, etc. (manually connected)
       - network         # so 'pip install' can download things
+      - desktop         # so the right default browser can be used
     environment:
       # help python pick up useful things from the base snap
       PYTHONPATH: /usr/lib/python3/dist-packages:$SNAP/lib
       # have the cache outside of the version dirs (avoids keeping N copies)
       XDG_CACHE_HOME: $SNAP_USER_COMMON/cache
+      # same for config
+      XDG_CONFIG_HOME: $SNAP_USER_COMMON/config
+      # just drop the logs here for now (this will change; see #53)
+      TMPDIR: $SNAP_USER_COMMON
+      # help git find its stuff
+      GIT_TEMPLATE_DIR: $SNAP/git/templates
+      GIT_EXEC_PATH: $SNAP/git/git-core
 
 grade: stable
 confinement: strict
@@ -35,6 +57,10 @@ parts:
   charmcraft:
     source: .
     plugin: python
+    build-packages:
+      - libffi-dev
+    stage-packages:
+      - git
     # snapcraft uses venv, which doesn't pull in wheel (as opposed to virtualenv)
     # so then 'pip install PyYAML' gets cross.
     python-packages: [wheel]
@@ -43,6 +69,12 @@ parts:
       snapcraftctl pull
       # set the version
       snapcraftctl set-version "$( python3 -c 'import charmcraft; print(charmcraft.__version__)' )"
+    organize:
+      # move things around so they're tidier
+      usr/lib/git-core: git/git-core
+      usr/share/git-core/templates: git/templates
+      usr/bin/git: bin/git
+      lib/python3.8/site-packages: lib/
     stage:
       # copy in only what we need. Comment out this whole section to grab
       # everything if something stops working, and then once you've spotted what
@@ -52,13 +84,79 @@ parts:
       - bin/charmcraft
       - bin/python3
       - bin/pip3
+      - bin/git
       - pyvenv.cfg
-      - lib/python3.8/site-packages/charmcraft
-      - lib/python3.8/site-packages/charmcraft-*.egg-info
-      - lib/python3.8/site-packages/pip
-      - lib/python3.8/site-packages/pip-*.dist-info
-      - lib/python3.8/site-packages/wheel
-      - lib/python3.8/site-packages/wheel-*.dist-info
+      - lib/charmcraft
+      - lib/charmcraft-*.egg-info
+      - lib/pip
+      - lib/pip-*.dist-info
+      - lib/wheel
+      - lib/wheel-*.dist-info
+      - lib/appdirs.py
+      - lib/appdirs-*.dist-info
+      - lib/macaroonbakery
+      - lib/macaroonbakery-*.dist-info
+      - lib/pyrfc3339
+      - lib/pyRFC3339-*.dist-info
+      - lib/pytz
+      - lib/pytz-*.dist-info
+      - lib/nacl
+      - lib/PyNaCl-*.dist-info
+      - lib/pymacaroons
+      - lib/pymacaroons-*.dist-info
+      - lib/google
+      - lib/protobuf-*.pth
+      - lib/protobuf-*.dist-info
       # this effectively means we're shipping pip and wheel twice (once above,
       # and once below), but untangling that is probably not worth it.
       - share/python-wheels
+      # 'git clone' complains if it can't find these
+      - git/templates
+      # regular git+http or https (it's a single file ;)
+      - git/git-core/git-remote-http
+      - git/git-core/git-remote-https
+      # all the following bits of git-core needed for git submodules support
+      - git/git-core/git-submodule
+      - git/git-core/git-sh-setup
+      - git/git-core/git-sh-i18n
+      - git/git-core/git-sh-i18n--envsubst
+      - git/git-core/git-parse-remote
+      # *all* the following libs needed for git-remote-http /o\
+      - "**/libcurl-gnutls.so.4"
+      - "**/libcurl-gnutls.so.4.*"
+      - "**/libnghttp2.so.14"
+      - "**/libnghttp2.so.14.*"
+      - "**/libasn1.so.8"
+      - "**/libasn1.so.8.*"
+      - "**/libbrotlicommon.so.1"
+      - "**/libbrotlicommon.so.1.*"
+      - "**/libbrotlidec.so.1"
+      - "**/libbrotlidec.so.1.*"
+      - "**/libgssapi.so.3"
+      - "**/libgssapi.so.3.*"
+      - "**/libhcrypto.so.4"
+      - "**/libhcrypto.so.4.*"
+      - "**/libheimbase.so.1"
+      - "**/libheimbase.so.1.*"
+      - "**/libheimntlm.so.0"
+      - "**/libheimntlm.so.0.*"
+      - "**/libhx509.so.5"
+      - "**/libhx509.so.5.*"
+      - "**/libkrb5.so.26"
+      - "**/libkrb5.so.26.*"
+      - "**/liblber-2.4.so.2"
+      - "**/liblber-2.4.so.2.*"
+      - "**/libldap_r-2.4.so.2"
+      - "**/libldap_r-2.4.so.2.*"
+      - "**/libpsl.so.5"
+      - "**/libpsl.so.5.*"
+      - "**/libroken.so.18"
+      - "**/libroken.so.18.*"
+      - "**/librtmp.so.1"
+      - "**/librtmp.so.1.*"
+      - "**/libsasl2.so.2"
+      - "**/libsasl2.so.2.*"
+      - "**/libssh.so.4"
+      - "**/libssh.so.4.*"
+      - "**/libwind.so.0"
+      - "**/libwind.so.0.*"

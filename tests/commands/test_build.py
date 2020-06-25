@@ -20,7 +20,7 @@ import os
 import sys
 import zipfile
 from collections import namedtuple
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 import pytest
 import yaml
@@ -319,7 +319,11 @@ def test_politeexec_stdout_logged(caplog):
 
     cmd = ['echo', 'HELO']
     polite_exec(cmd)
-    assert [":: HELO"] == [rec.message for rec in caplog.records]
+    expected = [
+        "Running external command ['echo', 'HELO']",
+        ":: HELO",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
 
 
 def test_politeexec_stderr_logged(caplog):
@@ -328,7 +332,11 @@ def test_politeexec_stderr_logged(caplog):
 
     cmd = [sys.executable, '-c', "import sys; print('weird, huh?', file=sys.stderr)"]
     polite_exec(cmd)
-    assert [":: weird, huh?"] == [rec.message for rec in caplog.records]
+    expected = [
+        "Running external command " + str(cmd),
+        ":: weird, huh?",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
 
 
 def test_politeexec_failed(caplog):
@@ -672,8 +680,10 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
         builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
-    mock.assert_called_once_with(
-        ['pip3', 'install', '--target={}'.format(envpath), '--requirement=reqs.txt'])
+    assert mock.mock_calls == [
+        call(['pip3', 'list']),
+        call(['pip3', 'install', '--target={}'.format(envpath), '--requirement=reqs.txt']),
+    ]
 
 
 def test_build_dependencies_virtualenv_multiple(tmp_path):
@@ -692,9 +702,11 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
         builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
-    mock.assert_called_once_with(
-        ['pip3', 'install', '--target={}'.format(envpath),
-            '--requirement=reqs1.txt', '--requirement=reqs2.txt'])
+    assert mock.mock_calls == [
+        call(['pip3', 'list']),
+        call(['pip3', 'install', '--target={}'.format(envpath),
+              '--requirement=reqs1.txt', '--requirement=reqs2.txt']),
+    ]
 
 
 def test_build_dependencies_virtualenv_none(tmp_path):
@@ -714,8 +726,8 @@ def test_build_dependencies_virtualenv_none(tmp_path):
     mock.assert_not_called()
 
 
-def test_build_dependencies_virtualenv_error(tmp_path):
-    """Process is properly interrupted if virtualenv creation fails."""
+def test_build_dependencies_virtualenv_error_basicpip(tmp_path):
+    """Process is properly interrupted if using pip fails."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -727,6 +739,23 @@ def test_build_dependencies_virtualenv_error(tmp_path):
 
     with patch('charmcraft.commands.build.polite_exec') as mock:
         mock.return_value = -7
+        with pytest.raises(CommandError, match="problems using pip"):
+            builder.handle_dependencies()
+
+
+def test_build_dependencies_virtualenv_error_installing(tmp_path):
+    """Process is properly interrupted if virtualenv creation fails."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': ['something'],
+    })
+
+    with patch('charmcraft.commands.build.polite_exec') as mock:
+        mock.side_effect = [0, -7]
         with pytest.raises(CommandError, match="problems installing dependencies"):
             builder.handle_dependencies()
 

@@ -104,7 +104,7 @@ class ListRegisteredCommand(BaseCommand):
         data = []
         for item in result:
             visibility = 'private' if item.private else 'public'
-            data.append([  # FIXME, tuple?
+            data.append([
                 item.name,
                 visibility,
                 item.status,

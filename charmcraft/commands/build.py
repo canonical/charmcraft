@@ -60,6 +60,7 @@ MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
 
 def polite_exec(cmd):
     """Execute a command, only showing output if error."""
+    logger.debug("Running external command %s", cmd)
     try:
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
@@ -181,6 +182,10 @@ class Builder:
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
+            retcode = polite_exec(['pip3', 'list'])
+            if retcode:
+                raise CommandError("problems using pip")
+
             venvpath = self.buildpath / VENV_DIRNAME
             cmd = [
                 'pip3', 'install',  # base command

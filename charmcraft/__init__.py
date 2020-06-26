@@ -14,5 +14,5 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-VERSION = (0, 1, 3)
-__version__ = "0.1.3"
+VERSION = (0, 2, 0)
+__version__ = "0.2.0"

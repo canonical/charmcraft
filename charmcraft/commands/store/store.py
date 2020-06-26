@@ -16,21 +16,59 @@
 
 """The Store API handling."""
 
+from collections import namedtuple
+
 from charmcraft.commands.store.client import Client
+
+# helpers to build responses from this layer
+User = namedtuple('User', 'name username userid')
+Charm = namedtuple('Charm', 'name private status')
 
 
 class Store:
     """The main interface to the Store's API."""
 
     def __init__(self):
-        self.client = Client()
+        self._client = Client()
+
+    def login(self):
+        """Login into the store.
+
+        The login happens on every request to the Store (if current credentials were not
+        enough), so to trigger a new login we...
+
+            - remove local credentials
+
+            - exercise the simplest command regarding developer identity
+        """
+        self._client.clear_credentials()
+        self._client.get('/v1/whoami')
+
+    def logout(self):
+        """Logout from the store.
+
+        There's no action really in the Store to logout, we just remove local credentials.
+        """
+        self._client.clear_credentials()
+
+    def whoami(self):
+        """Return authenticated user details."""
+        response = self._client.get('/v1/whoami')
+        result = User(
+            name=response['display-name'],
+            username=response['username'],
+            userid=response['id'],
+        )
+        return result
 
     def register_name(self, name):
         """Register the specified name for the authenticated user."""
-        resp = self.client.post('/v1/charm', {'name': name})
-        return resp['charm-id']
+        self._client.post('/v1/charm', {'name': name})
 
     def list_registered_names(self):
         """Return names registered by the authenticated user."""
-        resp = self.client.get('/v1/charm')
-        return resp['charms']  #FIXME: consider having a hard-interface here
+        response = self._client.get('/v1/charm')
+        result = []
+        for item in response['charms']:
+            result.append(Charm(name=item['name'], private=item['private'], status=item['status']))
+        return result

@@ -126,7 +126,7 @@ class Client:
         """Clear stored credentials."""
         self._auth_client.clear_credentials()
 
-    def _parse_store_error(self, response): #FIXME test TODAAAAAAAAAAAA
+    def _parse_store_error(self, response):
         """Get the proper error from the Store response."""
         default_msg = "Failure working with the Store: [{}] {!r}".format(
             response.status_code, response.content)
@@ -137,19 +137,20 @@ class Client:
 
         try:
             error = error_data['error-list'][0]
-        except (KeyError, IndexError):
+            message = error['message']
+            code = error['code']
+        except (KeyError, IndexError, TypeError):
             return default_msg
 
-        msg = error['message']
-        if error['code']:
-            msg += " [code: {}]".format(error['code'])
-        return msg
+        if code:
+            message += " [code: {}]".format(code)
+        return message
 
-    def _hit(self, method, urlpath, body=None): #FIXME test
+    def _hit(self, method, urlpath, body=None):
         """Generic hit to the Store."""
         url = BASE_URL + urlpath
         logger.debug("Hitting the store: %s %s %s", method, url, body)
-        resp = self._auth_client.request(method, url, body) #FIXME test
+        resp = self._auth_client.request(method, url, body)
         if not resp.ok:
             raise CommandError(self._parse_store_error(resp))
 
@@ -160,6 +161,6 @@ class Client:
         """GET something from the Store."""
         return self._hit('GET', urlpath)
 
-    def post(self, urlpath, body): #FIXME test
+    def post(self, urlpath, body):
         """POST a body (json-encoded) to the Store."""
         return self._hit('POST', urlpath, body)

@@ -33,11 +33,8 @@ class LoginCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        # The login happens on every request to the Store (if current credentials were not
-        # enough), so here we just exercise the simplest command regarding developer identity.
-        client = Client()  #FIXME: use the store
-        client.clear_credentials()
-        client.get('/v1/whoami')
+        store = Store()
+        store.login()
         logger.info("Login successful")
 
 
@@ -48,8 +45,8 @@ class LogoutCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        client = Client()  #FIXME: use the store
-        client.clear_credentials()
+        store = Store()
+        store.logout()
         logger.info("Credentials cleared")
 
 
@@ -59,19 +56,19 @@ class WhoamiCommand(BaseCommand):
     help_msg = "returns your login information relevant to the store"
 
     _titles = [
-        ('name:', 'display-name'),
+        ('name:', 'name'),
         ('username:', 'username'),
-        ('id:', 'id'),
+        ('id:', 'userid'),
     ]
 
     def run(self, parsed_args):
         """Run the command."""
-        client = Client()  #FIXME: use the store
-        result = client.get('/v1/whoami')
+        store = Store()
+        result = store.whoami()
 
         longest_title = max(len(t[0]) for t in self._titles)
-        for title, key in self._titles:
-            logger.info("%-*s %s", longest_title, title, result[key])
+        for title, attr in self._titles:
+            logger.info("%-*s %s", longest_title, title, getattr(result, attr))
 
 
 class RegisterNameCommand(BaseCommand):
@@ -86,7 +83,7 @@ class RegisterNameCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store()
-        store.register_name(name=parsed_args.name)
+        store.register_name(parsed_args.name)
         logger.info("Congrats! You are now the publisher of %r", parsed_args.name)
 
 
@@ -99,15 +96,18 @@ class ListRegisteredCommand(BaseCommand):
         """Run the command."""
         store = Store()
         result = store.list_registered_names()
+        if not result:
+            logger.info("Nothing found")
+            return
 
         headers = ['Name', 'Visibility', 'Status']
         data = []
         for item in result:
-            visibility = 'private' if item['private'] else 'public'
+            visibility = 'private' if item.private else 'public'
             data.append([  # FIXME, tuple?
-                item['name'],
+                item.name,
                 visibility,
-                item['status'],
+                item.status,
             ])
 
         table = tabulate(data, headers=headers, tablefmt='plain')

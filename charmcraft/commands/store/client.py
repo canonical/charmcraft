@@ -98,7 +98,7 @@ class _AuthHolder:
         # for comparison after hitting the endpoint
         self._old_cookies = list(self._cookiejar)
 
-    def request(self, method, url):
+    def request(self, method, url, body):
         """Do a request."""
         if self._client is None:
             # load everything on first usage
@@ -108,7 +108,7 @@ class _AuthHolder:
         # problem and (if any) ask the user to authenticate and retry the original request; if
         # that fails we capture it and raise a proper error
         try:
-            resp = self._client.request(method, url)
+            resp = self._client.request(method, url, json=body)
         except httpbakery.InteractionError as err:
             raise CommandError("Authentication failure: {}".format(err))
 
@@ -126,14 +126,32 @@ class Client:
         """Clear stored credentials."""
         self._auth_client.clear_credentials()
 
-    def _hit(self, method, urlpath):
+    def _parse_store_error(self, response): #FIXME test TODAAAAAAAAAAAA
+        """Get the proper error from the Store response."""
+        default_msg = "Failure working with the Store: [{}] {!r}".format(
+            response.status_code, response.content)
+        try:
+            error_data = response.json()
+        except ValueError:
+            return default_msg
+
+        try:
+            error = error_data['error-list'][0]
+        except (KeyError, IndexError):
+            return default_msg
+
+        msg = error['message']
+        if error['code']:
+            msg += " [code: {}]".format(error['code'])
+        return msg
+
+    def _hit(self, method, urlpath, body=None): #FIXME test
         """Generic hit to the Store."""
         url = BASE_URL + urlpath
-        logger.debug("Hitting the store: %s %s", method, url)
-        resp = self._auth_client.request(method, url)
+        logger.debug("Hitting the store: %s %s %s", method, url, body)
+        resp = self._auth_client.request(method, url, body) #FIXME test
         if not resp.ok:
-            raise CommandError(
-                "Failure working with the Store: [{}] {!r}".format(resp.status_code, resp.content))
+            raise CommandError(self._parse_store_error(resp))
 
         data = resp.json()
         return data
@@ -141,3 +159,7 @@ class Client:
     def get(self, urlpath):
         """GET something from the Store."""
         return self._hit('GET', urlpath)
+
+    def post(self, urlpath, body): #FIXME test
+        """POST a body (json-encoded) to the Store."""
+        return self._hit('POST', urlpath, body)

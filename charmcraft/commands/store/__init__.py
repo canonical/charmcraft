@@ -18,8 +18,10 @@
 
 import logging
 
+from tabulate import tabulate
+
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.commands.store.client import Client
+from charmcraft.commands.store.store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
@@ -33,7 +35,7 @@ class LoginCommand(BaseCommand):
         """Run the command."""
         # The login happens on every request to the Store (if current credentials were not
         # enough), so here we just exercise the simplest command regarding developer identity.
-        client = Client()
+        client = Client()  #FIXME: use the store
         client.clear_credentials()
         client.get('/v1/whoami')
         logger.info("Login successful")
@@ -46,7 +48,7 @@ class LogoutCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        client = Client()
+        client = Client()  #FIXME: use the store
         client.clear_credentials()
         logger.info("Credentials cleared")
 
@@ -64,9 +66,50 @@ class WhoamiCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        client = Client()
+        client = Client()  #FIXME: use the store
         result = client.get('/v1/whoami')
 
         longest_title = max(len(t[0]) for t in self._titles)
         for title, key in self._titles:
             logger.info("%-*s %s", longest_title, title, result[key])
+
+
+class RegisterNameCommand(BaseCommand):
+    """Register a name in the store."""
+    name = 'register'
+    help_msg = "register a name in the store"
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('name', help="the name to register in the Store")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store()
+        store.register_name(name=parsed_args.name)
+        logger.info("Congrats! You are now the publisher of %r", parsed_args.name)
+
+
+class ListRegisteredCommand(BaseCommand):
+    """List the charms registered in the store."""
+    name = 'list'
+    help_msg = "list the charms registered the store"
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store()
+        result = store.list_registered_names()
+
+        headers = ['Name', 'Visibility', 'Status']
+        data = []
+        for item in result:
+            visibility = 'private' if item['private'] else 'public'
+            data.append([  # FIXME, tuple?
+                item['name'],
+                visibility,
+                item['status'],
+            ])
+
+        table = tabulate(data, headers=headers, tablefmt='plain')
+        for line in table.split('\n'):
+            logger.info(line)

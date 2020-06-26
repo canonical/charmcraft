@@ -35,7 +35,11 @@ logger = logging.getLogger(__name__)
 COMMAND_GROUPS = [
     ('basic', "basics", [version.VersionCommand, build.BuildCommand]),
     ('store', "interaction with the store", [
-        store.LoginCommand, store.LogoutCommand, store.WhoamiCommand]),
+        # auth
+        store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
+        # name handling
+        store.RegisterNameCommand, store.ListRegisteredCommand,
+    ]),
 ]
 
 

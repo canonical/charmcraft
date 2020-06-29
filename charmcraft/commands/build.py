@@ -51,7 +51,7 @@ DISPATCH_FILENAME = 'dispatch'
 # to be the value it would've otherwise been.
 DISPATCH_CONTENT = """#!/bin/sh
 
-JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoint_relative_path}
+JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=src:lib:venv ./{entrypoint_rel_path}
 """
 
 # The minimum set of hooks to be provided for compatibility with old Juju
@@ -140,7 +140,7 @@ class Builder:
         else:
             logger.debug("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
-                entrypoint_relative_path=linked_entrypoint.relative_to(self.buildpath))
+                entrypoint_rel_path=linked_entrypoint.relative_to(self.buildpath))
             dispatch_path = self.buildpath / DISPATCH_FILENAME
             with dispatch_path.open("wt", encoding="utf8") as fh:
                 fh.write(dispatch_content)

@@ -17,6 +17,7 @@
 import logging
 import pathlib
 import os
+import re
 import sys
 import zipfile
 from collections import namedtuple
@@ -37,6 +38,13 @@ from charmcraft.commands.build import (
     Validator,
     polite_exec,
 )
+
+
+def test_dispatcher_pythonpath():
+    """The dispatcher content sets some dirs in PYTHONPATH."""
+    (pypath,) = re.search('PYTHONPATH=([^ ]*)', DISPATCH_CONTENT).groups()
+    dirs = pypath.split(':')
+    assert dirs == ['src', 'lib', 'venv']
 
 
 # --- Validator tests
@@ -405,7 +413,7 @@ def test_build_basic_complete_structure(tmp_path):
     zf = zipfile.ZipFile(zipname)
     assert zf.read('metadata.yaml') == metadata_raw
     assert zf.read('src/charm.py') == b"all the magic"
-    dispatch = DISPATCH_CONTENT.format(entrypoint_relative_path='src/charm.py').encode('ascii')
+    dispatch = DISPATCH_CONTENT.format(entrypoint_rel_path='src/charm.py').encode('ascii')
     assert zf.read('dispatch') == dispatch
     assert zf.read('hooks/install') == dispatch
     assert zf.read('hooks/start') == dispatch
@@ -544,7 +552,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     included_dispatcher = build_dir / DISPATCH_FILENAME
     with included_dispatcher.open('rt', encoding='utf8') as fh:
         dispatcher_code = fh.read()
-    assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path='somestuff.py')
+    assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_rel_path='somestuff.py')
 
 
 def test_build_dispatcher_modern_dispatch_respected(tmp_path):

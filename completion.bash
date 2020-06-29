@@ -67,8 +67,11 @@ _charmcraft()
     case "$cmd" in
         "build")
             case "$prev" in
-                -r|--requirement|-e|--entrypoint)
-                    _filedir
+                -r|--requirement)
+                    _filedir txt
+                    ;;
+                -e|--entrypoint)
+                    _filedir py
                     ;;
                 -f|--from)
                     _filedir -d

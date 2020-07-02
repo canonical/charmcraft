@@ -14,6 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Tests for the Store client and authentication (code in store/client.py)."""
+
 import json
 import logging
 import os

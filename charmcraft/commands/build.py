@@ -240,8 +240,9 @@ class Validator:
     def validate_from(self, arg):
         """Validate that the charm dir is there and yes, a directory."""
         if arg is None:
-            arg = '.'
-        arg = pathlib.Path(arg).expanduser().absolute()
+            arg = pathlib.Path.cwd()
+        else:
+            arg = arg.expanduser().absolute()
 
         if not arg.exists():
             raise CommandError("the charm directory was not found: {!r}".format(str(arg)))
@@ -256,7 +257,8 @@ class Validator:
         """Validate that the entrypoint exists and is executable."""
         if arg is None:
             arg = self.basedir / 'src' / 'charm.py'
-        arg = pathlib.Path(arg).expanduser().absolute()
+        else:
+            arg = arg.expanduser().absolute()
 
         if not arg.exists():
             raise CommandError("the charm entry point was not found: {!r}".format(str(arg)))
@@ -275,7 +277,7 @@ class Validator:
                 return [arg]
             return []
 
-        arg = [pathlib.Path(x).expanduser().absolute() for x in arg]
+        arg = [x.expanduser().absolute() for x in arg]
         for fpath in arg:
             if not fpath.exists():
                 raise CommandError("the requirements file was not found: {!r}".format(str(fpath)))
@@ -290,15 +292,15 @@ class BuildCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            '-f', '--from',
+            '-f', '--from', type=pathlib.Path,
             help="the directory where the charm project is located, from where the build "
                  "is done; defaults to '.'")
         parser.add_argument(
-            '-e', '--entrypoint',
+            '-e', '--entrypoint', type=pathlib.Path,
             help="the executable script or program which is the entry point to all the "
                  "charm code; defaults to 'src/charm.py'")
         parser.add_argument(
-            '-r', '--requirement', action='append',
+            '-r', '--requirement', action='append', type=pathlib.Path,
             help="the file(s) with the needed dependencies (this option can be used multiple "
                   "times); defaults to 'requirements.txt'")
 

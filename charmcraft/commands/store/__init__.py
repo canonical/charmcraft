@@ -69,5 +69,5 @@ class WhoamiCommand(BaseCommand):
 
         data = [(title, getattr(result, attr)) for title, attr in self._titles]
         table = tabulate(data, tablefmt='plain')
-        for line in table.split('\n'):
+        for line in table.splitlines():
             logger.info(line)

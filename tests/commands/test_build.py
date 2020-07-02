@@ -215,7 +215,6 @@ def test_validator_requirement_simple(tmp_path):
 
     validator = Validator()
     resp = validator.validate_requirement([testfile])
-    testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
     assert resp == [testfile]
 
 
@@ -228,8 +227,6 @@ def test_validator_requirement_multiple(tmp_path):
 
     validator = Validator()
     resp = validator.validate_requirement([testfile1, testfile2])
-    testfile1 = pathlib.Path(str(testfile1))  # comparison below don't work well in Py3.5
-    testfile2 = pathlib.Path(str(testfile2))  # comparison below don't work well in Py3.5
     assert resp == [testfile1, testfile2]
 
 

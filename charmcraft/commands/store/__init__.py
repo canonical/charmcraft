@@ -18,8 +18,11 @@
 
 import logging
 
+from tabulate import tabulate
+
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.commands.store.client import Client
+
+from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
@@ -31,11 +34,8 @@ class LoginCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        # The login happens on every request to the Store (if current credentials were not
-        # enough), so here we just exercise the simplest command regarding developer identity.
-        client = Client()
-        client.clear_credentials()
-        client.get('/v1/whoami')
+        store = Store()
+        store.login()
         logger.info("Login successful")
 
 
@@ -46,8 +46,8 @@ class LogoutCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        client = Client()
-        client.clear_credentials()
+        store = Store()
+        store.logout()
         logger.info("Credentials cleared")
 
 
@@ -56,17 +56,16 @@ class WhoamiCommand(BaseCommand):
     name = 'whoami'
     help_msg = "returns your login information relevant to the store"
 
-    _titles = [
-        ('name:', 'display-name'),
-        ('username:', 'username'),
-        ('id:', 'id'),
-    ]
-
     def run(self, parsed_args):
         """Run the command."""
-        client = Client()
-        result = client.get('/v1/whoami')
+        store = Store()
+        result = store.whoami()
 
-        longest_title = max(len(t[0]) for t in self._titles)
-        for title, key in self._titles:
-            logger.info("%-*s %s", longest_title, title, result[key])
+        data = [
+            ('name:', result.name),
+            ('username:', result.username),
+            ('id:', result.userid),
+        ]
+        table = tabulate(data, tablefmt='plain')
+        for line in table.splitlines():
+            logger.info(line)

@@ -77,9 +77,9 @@ def test_whoami(caplog, store_mock):
         call.whoami(),
     ]
     expected = [
-        'name:     John Doe',
-        'username: jdoe',
-        'id:       -1',
+        'name:      John Doe',
+        'username:  jdoe',
+        'id:        -1',
     ]
     assert expected == [rec.message for rec in caplog.records]
 

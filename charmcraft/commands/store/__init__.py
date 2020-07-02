@@ -21,7 +21,8 @@ import logging
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.commands.store.store import Store
+
+from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
@@ -66,9 +67,10 @@ class WhoamiCommand(BaseCommand):
         store = Store()
         result = store.whoami()
 
-        longest_title = max(len(t[0]) for t in self._titles)
-        for title, attr in self._titles:
-            logger.info("%-*s %s", longest_title, title, getattr(result, attr))
+        data = [(title, getattr(result, attr)) for title, attr in self._titles]
+        table = tabulate(data, tablefmt='plain')
+        for line in table.split('\n'):
+            logger.info(line)
 
 
 class RegisterNameCommand(BaseCommand):

@@ -79,7 +79,7 @@ def test_validator_from_simple(tmp_path):
     """'from' param: simple validation and setting in Validation."""
     tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     validator = Validator()
-    resp = validator.validate_from(str(tmp_path))
+    resp = validator.validate_from(tmp_path)
     assert resp == tmp_path
     assert validator.basedir == tmp_path
 
@@ -102,15 +102,15 @@ def test_validator_from_absolutized(tmp_path, monkeypatch):
 
     dir2 = pathlib.Path(str(dir2))  # comparisons below don't work well in Py3.5
     validator = Validator()
-    resp = validator.validate_from('dir1/dir2')
+    resp = validator.validate_from(pathlib.Path('dir1/dir2'))
     assert resp == dir2
 
 
 def test_validator_from_expanded():
     """'from' param: expands the user-home prefix."""
     validator = Validator()
-    resp = validator.validate_from('~')
-    assert resp == pathlib.Path('~').expanduser().absolute()
+    resp = validator.validate_from(pathlib.Path('~'))
+    assert resp == pathlib.Path.home()
 
 
 def test_validator_from_exist():
@@ -118,7 +118,7 @@ def test_validator_from_exist():
     validator = Validator()
     expected_msg = "the charm directory was not found: '/not_really_there'"
     with pytest.raises(CommandError, match=expected_msg):
-        validator.validate_from('/not_really_there')
+        validator.validate_from(pathlib.Path('/not_really_there'))
 
 
 def test_validator_from_isdir(tmp_path):
@@ -129,7 +129,7 @@ def test_validator_from_isdir(tmp_path):
     validator = Validator()
     expected_msg = "the charm directory is not really a directory: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
-        validator.validate_from(str(testfile))
+        validator.validate_from(testfile)
 
 
 def test_validator_entrypoint_simple(tmp_path):
@@ -139,7 +139,7 @@ def test_validator_entrypoint_simple(tmp_path):
     testfile.touch(mode=0o777)
 
     validator = Validator()
-    resp = validator.validate_entrypoint(str(testfile))
+    resp = validator.validate_entrypoint(testfile)
     assert resp == testfile
 
 
@@ -166,7 +166,7 @@ def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     validator = Validator()
-    resp = validator.validate_entrypoint('dirX/file.py')
+    resp = validator.validate_entrypoint(pathlib.Path('dirX/file.py'))
     testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
     assert resp == testfile
 
@@ -184,7 +184,7 @@ def test_validator_entrypoint_expanded(tmp_path):
     validator = Validator()
 
     with patch.dict(os.environ, {'HOME': str(fake_home)}):
-        resp = validator.validate_entrypoint('~/testfile')
+        resp = validator.validate_entrypoint(pathlib.Path('~/testfile'))
     assert resp == testfile
 
 
@@ -193,7 +193,7 @@ def test_validator_entrypoint_exist():
     validator = Validator()
     expected_msg = "the charm entry point was not found: '/not_really_there.py'"
     with pytest.raises(CommandError, match=expected_msg):
-        validator.validate_entrypoint('/not_really_there.py')
+        validator.validate_entrypoint(pathlib.Path('/not_really_there.py'))
 
 
 def test_validator_entrypoint_exec(tmp_path):
@@ -205,7 +205,7 @@ def test_validator_entrypoint_exec(tmp_path):
     validator = Validator()
     expected_msg = "the charm entry point must be executable: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
-        validator.validate_entrypoint(str(testfile))
+        validator.validate_entrypoint(testfile)
 
 
 def test_validator_requirement_simple(tmp_path):
@@ -214,8 +214,7 @@ def test_validator_requirement_simple(tmp_path):
     testfile.touch()
 
     validator = Validator()
-    resp = validator.validate_requirement([str(testfile)])
-    testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
+    resp = validator.validate_requirement([testfile])
     assert resp == [testfile]
 
 
@@ -227,9 +226,7 @@ def test_validator_requirement_multiple(tmp_path):
     testfile2.touch()
 
     validator = Validator()
-    resp = validator.validate_requirement([str(testfile1), str(testfile2)])
-    testfile1 = pathlib.Path(str(testfile1))  # comparison below don't work well in Py3.5
-    testfile2 = pathlib.Path(str(testfile2))  # comparison below don't work well in Py3.5
+    resp = validator.validate_requirement([testfile1, testfile2])
     assert resp == [testfile1, testfile2]
 
 
@@ -271,7 +268,7 @@ def test_validator_requirement_absolutized(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     validator = Validator()
-    resp = validator.validate_requirement(['reqs.txt'])
+    resp = validator.validate_requirement([pathlib.Path('reqs.txt')])
     testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
     assert resp == [testfile]
 
@@ -289,7 +286,7 @@ def test_validator_requirement_expanded(tmp_path):
     validator = Validator()
 
     with patch.dict(os.environ, {'HOME': str(fake_home)}):
-        resp = validator.validate_requirement(['~/requirements.txt'])
+        resp = validator.validate_requirement([pathlib.Path('~/requirements.txt')])
     assert resp == [requirement]
 
 
@@ -298,7 +295,7 @@ def test_validator_requirement_exist():
     validator = Validator()
     expected_msg = "the requirements file was not found: '/not_really_there.txt'"
     with pytest.raises(CommandError, match=expected_msg):
-        validator.validate_requirement(['/not_really_there.txt'])
+        validator.validate_requirement([pathlib.Path('/not_really_there.txt')])
 
 
 # --- Polite Executor tests

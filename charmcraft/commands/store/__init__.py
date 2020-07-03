@@ -67,9 +67,13 @@ class WhoamiCommand(BaseCommand):
         store = Store()
         result = store.whoami()
 
-        data = [(title, getattr(result, attr)) for title, attr in self._titles]
+        data = [
+            ('name:', result.name),
+            ('username:', result.username),
+            ('id:', result.userid),
+        ]
         table = tabulate(data, tablefmt='plain')
-        for line in table.split('\n'):
+        for line in table.splitlines():
             logger.info(line)
 
 

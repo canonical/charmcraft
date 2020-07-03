@@ -237,49 +237,52 @@ class Validator:
             result[opt] = meth(getattr(parsed_args, opt, None))
         return result
 
-    def validate_from(self, arg):
+    def validate_from(self, dirpath):
         """Validate that the charm dir is there and yes, a directory."""
-        if arg is None:
-            arg = '.'
-        arg = pathlib.Path(arg).expanduser().absolute()
+        if dirpath is None:
+            dirpath = pathlib.Path.cwd()
+        else:
+            dirpath = dirpath.expanduser().absolute()
 
-        if not arg.exists():
-            raise CommandError("the charm directory was not found: {!r}".format(str(arg)))
-        if not arg.is_dir():
+        if not dirpath.exists():
+            raise CommandError("the charm directory was not found: {!r}".format(str(dirpath)))
+        if not dirpath.is_dir():
             raise CommandError(
-                "the charm directory is not really a directory: {!r}".format(str(arg)))
+                "the charm directory is not really a directory: {!r}".format(str(dirpath)))
 
-        self.basedir = arg
-        return arg
+        self.basedir = dirpath
+        return dirpath
 
-    def validate_entrypoint(self, arg):
+    def validate_entrypoint(self, filepath):
         """Validate that the entrypoint exists and is executable."""
-        if arg is None:
-            arg = self.basedir / 'src' / 'charm.py'
-        arg = pathlib.Path(arg).expanduser().absolute()
+        if filepath is None:
+            filepath = self.basedir / 'src' / 'charm.py'
+        else:
+            filepath = filepath.expanduser().absolute()
 
-        if not arg.exists():
-            raise CommandError("the charm entry point was not found: {!r}".format(str(arg)))
-        if not os.access(str(arg), os.X_OK):  # access does not support pathlib in 3.5
-            raise CommandError("the charm entry point must be executable: {!r}".format(str(arg)))
-        return arg
+        if not filepath.exists():
+            raise CommandError("the charm entry point was not found: {!r}".format(str(filepath)))
+        if not os.access(str(filepath), os.X_OK):  # access does not support pathlib in 3.5
+            raise CommandError(
+                "the charm entry point must be executable: {!r}".format(str(filepath)))
+        return filepath
 
-    def validate_requirement(self, arg):
+    def validate_requirement(self, filepaths):
         """Validate that the given requirement(s) (if any) exist.
 
         If not specified, default to requirements.txt if there.
         """
-        if arg is None:
-            arg = self.basedir / 'requirements.txt'
-            if arg.exists() and os.access(str(arg), os.R_OK):  # access doesn't support pathlib 3.5
-                return [arg]
+        if filepaths is None:
+            req = self.basedir / 'requirements.txt'
+            if req.exists() and os.access(str(req), os.R_OK):  # access doesn't support pathlib 3.5
+                return [req]
             return []
 
-        arg = [pathlib.Path(x).expanduser().absolute() for x in arg]
-        for fpath in arg:
+        filepaths = [x.expanduser().absolute() for x in filepaths]
+        for fpath in filepaths:
             if not fpath.exists():
                 raise CommandError("the requirements file was not found: {!r}".format(str(fpath)))
-        return arg
+        return filepaths
 
 
 class BuildCommand(BaseCommand):
@@ -290,15 +293,15 @@ class BuildCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            '-f', '--from',
+            '-f', '--from', type=pathlib.Path,
             help="the directory where the charm project is located, from where the build "
                  "is done; defaults to '.'")
         parser.add_argument(
-            '-e', '--entrypoint',
+            '-e', '--entrypoint', type=pathlib.Path,
             help="the executable script or program which is the entry point to all the "
                  "charm code; defaults to 'src/charm.py'")
         parser.add_argument(
-            '-r', '--requirement', action='append',
+            '-r', '--requirement', action='append', type=pathlib.Path,
             help="the file(s) with the needed dependencies (this option can be used multiple "
                   "times); defaults to 'requirements.txt'")
 

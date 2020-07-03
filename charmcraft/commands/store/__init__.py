@@ -111,5 +111,5 @@ class ListRegisteredCommand(BaseCommand):
             ])
 
         table = tabulate(data, headers=headers, tablefmt='plain')
-        for line in table.split('\n'):
+        for line in table.splitlines():
             logger.info(line)

@@ -56,12 +56,6 @@ class WhoamiCommand(BaseCommand):
     name = 'whoami'
     help_msg = "returns your login information relevant to the store"
 
-    _titles = [
-        ('name:', 'name'),
-        ('username:', 'username'),
-        ('id:', 'userid'),
-    ]
-
     def run(self, parsed_args):
         """Run the command."""
         store = Store()

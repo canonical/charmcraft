@@ -136,15 +136,19 @@ class Client:
             return default_msg
 
         try:
-            error = error_data['error-list'][0]
-            message = error['message']
-            code = error['code']
-        except (KeyError, IndexError, TypeError):
+            error_info = [(error['message'], error['code']) for error in error_data['error-list']]
+        except (KeyError, TypeError):
             return default_msg
 
-        if code:
-            message += " [code: {}]".format(code)
-        return message
+        if not error_info:
+            return default_msg
+
+        messages = []
+        for msg, code in error_info:
+            if code:
+                msg += " [code: {}]".format(code)
+            messages.append(msg)
+        return "; ".join(messages)
 
     def _hit(self, method, urlpath, body=None):
         """Generic hit to the Store."""

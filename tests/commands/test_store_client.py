@@ -357,7 +357,7 @@ def test_client_clear_credentials():
 
 
 def test_client_errorparsing_complete():
-    """Produce a default message if response is not a json."""
+    """Build the error message using original message and code."""
     content = json.dumps({"error-list": [{'message': 'error message', 'code': 'test-error'}]})
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)
@@ -365,11 +365,22 @@ def test_client_errorparsing_complete():
 
 
 def test_client_errorparsing_no_code():
-    """Produce a default message if response is not a json."""
+    """Build the error message using original message (even when code in None)."""
     content = json.dumps({"error-list": [{'message': 'error message', 'code': None}]})
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)
     assert result == "error message"
+
+
+def test_client_errorparsing_multiple():
+    """Build the error message coumpounding the different received ones."""
+    content = json.dumps({"error-list": [
+        {'message': 'error 1', 'code': 'test-error-1'},
+        {'message': 'error 2', 'code': None},
+    ]})
+    response = FakeResponse(content=content, status_code=404)
+    result = Client()._parse_store_error(response)
+    assert result == "error 1 [code: test-error-1]; error 2"
 
 
 def test_client_errorparsing_nojson():
@@ -380,7 +391,7 @@ def test_client_errorparsing_nojson():
 
 
 def test_client_errorparsing_no_errors_inside():
-    """Produce a default message if response is not a json."""
+    """Produce a default message if response has no errors list."""
     content = json.dumps({"another-error-key": "stuff"})
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)
@@ -388,7 +399,7 @@ def test_client_errorparsing_no_errors_inside():
 
 
 def test_client_errorparsing_empty_errors():
-    """Produce a default message if response is not a json."""
+    """Produce a default message if error list is empty."""
     content = json.dumps({"error-list": []})
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)
@@ -396,7 +407,7 @@ def test_client_errorparsing_empty_errors():
 
 
 def test_client_errorparsing_bad_structure():
-    """Produce a default message if response is not a json."""
+    """Produce a default message if error list has a bad format."""
     content = json.dumps({"error-list": ['whatever']})
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)

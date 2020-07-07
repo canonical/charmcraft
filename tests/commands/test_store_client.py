@@ -213,10 +213,11 @@ def test_authholder_request_simple(auth_holder):
 
     other_cookie = get_cookie(value='different')
 
-    def fake_request(self, method, url):
+    def fake_request(self, method, url, json):
         # check it was properly called
         assert method == 'testmethod'
         assert url == 'testurl'
+        assert json == 'testbody'
 
         # check credentials were loaded at this time
         assert auth_holder._cookiejar is not None
@@ -227,7 +228,7 @@ def test_authholder_request_simple(auth_holder):
         return 'raw request response'
 
     with patch('macaroonbakery.httpbakery.Client.request', fake_request):
-        resp = auth_holder.request('testmethod', 'testurl')
+        resp = auth_holder.request('testmethod', 'testurl', 'testbody')
 
     # verify response (the calling checks were done above in fake_request helper)
     assert resp == 'raw request response'
@@ -250,7 +251,7 @@ def test_authholder_request_credentials_already_loaded(auth_holder):
     auth_holder._load_credentials = None
 
     with patch('macaroonbakery.httpbakery.Client.request'):
-        auth_holder.request('testmethod', 'testurl')
+        auth_holder.request('testmethod', 'testurl', 'testbody')
 
 
 def test_authholder_request_interaction_error(auth_holder):
@@ -264,7 +265,7 @@ def test_authholder_request_interaction_error(auth_holder):
         mock.side_effect = httpbakery.InteractionError('bad auth!!')
         expected = "Authentication failure: cannot start interactive session: bad auth!!"
         with pytest.raises(CommandError, match=expected):
-            auth_holder.request('testmethod', 'testurl')
+            auth_holder.request('testmethod', 'testurl', 'testbody')
 
 
 # --- Client tests
@@ -291,7 +292,16 @@ def test_client_get():
     assert mock_auth.request.called_once_with('GET', BASE_URL + '/somepath')
 
 
-def test_client_hit_success(caplog):
+def test_client_post():
+    """Passes the correct method."""
+    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
+        client = Client()
+    client.post('/somepath', 'somebody')
+
+    assert mock_auth.request.called_once_with('POST', BASE_URL + '/somepath', 'somebody')
+
+
+def test_client_hit_success_simple(caplog):
     """Hits the server, all ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
@@ -304,7 +314,24 @@ def test_client_hit_success(caplog):
 
     assert mock_auth.request.called_once_with('GET', BASE_URL + '/somepath')
     assert result == response_value
-    expected = "Hitting the store: GET {}/somepath".format(BASE_URL)
+    expected = "Hitting the store: GET {}/somepath None".format(BASE_URL)
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_client_hit_success_withbody(caplog):
+    """Hits the server including a body, all ok."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    response_value = {"foo": "bar"}
+    fake_response = FakeResponse(content=json.dumps(response_value), status_code=200)
+    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
+        mock_auth().request.return_value = fake_response
+        client = Client()
+    result = client._hit('POST', '/somepath', 'somebody')
+
+    assert mock_auth.request.called_once_with('POST', BASE_URL + '/somepath', 'somebody')
+    assert result == response_value
+    expected = "Hitting the store: POST {}/somepath somebody".format(BASE_URL)
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -327,3 +354,61 @@ def test_client_clear_credentials():
     client.clear_credentials()
 
     assert mock_auth.clear_credentials.called_once_with()
+
+
+def test_client_errorparsing_complete():
+    """Build the error message using original message and code."""
+    content = json.dumps({"error-list": [{'message': 'error message', 'code': 'test-error'}]})
+    response = FakeResponse(content=content, status_code=404)
+    result = Client()._parse_store_error(response)
+    assert result == "error message [code: test-error]"
+
+
+def test_client_errorparsing_no_code():
+    """Build the error message using original message (even when code in None)."""
+    content = json.dumps({"error-list": [{'message': 'error message', 'code': None}]})
+    response = FakeResponse(content=content, status_code=404)
+    result = Client()._parse_store_error(response)
+    assert result == "error message"
+
+
+def test_client_errorparsing_multiple():
+    """Build the error message coumpounding the different received ones."""
+    content = json.dumps({"error-list": [
+        {'message': 'error 1', 'code': 'test-error-1'},
+        {'message': 'error 2', 'code': None},
+    ]})
+    response = FakeResponse(content=content, status_code=404)
+    result = Client()._parse_store_error(response)
+    assert result == "error 1 [code: test-error-1]; error 2"
+
+
+def test_client_errorparsing_nojson():
+    """Produce a default message if response is not a json."""
+    response = FakeResponse(content='this is not a json', status_code=404)
+    result = Client()._parse_store_error(response)
+    assert result == "Failure working with the Store: [404] 'this is not a json'"
+
+
+def test_client_errorparsing_no_errors_inside():
+    """Produce a default message if response has no errors list."""
+    content = json.dumps({"another-error-key": "stuff"})
+    response = FakeResponse(content=content, status_code=404)
+    result = Client()._parse_store_error(response)
+    assert result == "Failure working with the Store: [404] " + repr(content)
+
+
+def test_client_errorparsing_empty_errors():
+    """Produce a default message if error list is empty."""
+    content = json.dumps({"error-list": []})
+    response = FakeResponse(content=content, status_code=404)
+    result = Client()._parse_store_error(response)
+    assert result == "Failure working with the Store: [404] " + repr(content)
+
+
+def test_client_errorparsing_bad_structure():
+    """Produce a default message if error list has a bad format."""
+    content = json.dumps({"error-list": ['whatever']})
+    response = FakeResponse(content=content, status_code=404)
+    result = Client()._parse_store_error(response)
+    assert result == "Failure working with the Store: [404] " + repr(content)

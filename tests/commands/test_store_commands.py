@@ -23,11 +23,13 @@ from unittest.mock import patch, call, MagicMock
 import pytest
 
 from charmcraft.commands.store import (
+    ListRegisteredCommand,
     LoginCommand,
     LogoutCommand,
+    RegisterNameCommand,
     WhoamiCommand,
 )
-from charmcraft.commands.store.store import User
+from charmcraft.commands.store.store import User, Charm
 
 
 # used a lot!
@@ -78,5 +80,97 @@ def test_whoami(caplog, store_mock):
         'name:      John Doe',
         'username:  jdoe',
         'id:        -1',
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_register_name(caplog, store_mock):
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    args = Namespace(name='testname')
+    RegisterNameCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.register_name('testname'),
+    ]
+    expected = "Congrats! You are now the publisher of 'testname'"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_list_registered_empty(caplog, store_mock):
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = []
+    store_mock.list_registered_names.return_value = store_response
+
+    ListRegisteredCommand('group').run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.list_registered_names(),
+    ]
+    expected = "Nothing found"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_list_registered_one_private(caplog, store_mock):
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Charm(name='charm', private=True, status='status'),
+    ]
+    store_mock.list_registered_names.return_value = store_response
+
+    ListRegisteredCommand('group').run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.list_registered_names(),
+    ]
+    expected = [
+        "Name    Visibility    Status",
+        "charm   private       status",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_list_registered_one_public(caplog, store_mock):
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Charm(name='charm', private=False, status='status'),
+    ]
+    store_mock.list_registered_names.return_value = store_response
+
+    ListRegisteredCommand('group').run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.list_registered_names(),
+    ]
+    expected = [
+        "Name    Visibility    Status",
+        "charm   public        status",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_list_registered_several(caplog, store_mock):
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Charm(name='charm1', private=True, status='simple status'),
+        Charm(name='charm2-long-name', private=False, status='other'),
+        Charm(name='charm3', private=True, status='super long status'),
+    ]
+    store_mock.list_registered_names.return_value = store_response
+
+    ListRegisteredCommand('group').run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.list_registered_names(),
+    ]
+    expected = [
+        "Name              Visibility    Status",
+        "charm1            private       simple status",
+        "charm2-long-name  public        other",
+        "charm3            private       super long status",
     ]
     assert expected == [rec.message for rec in caplog.records]

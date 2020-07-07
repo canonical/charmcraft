@@ -37,6 +37,8 @@ COMMAND_GROUPS = [
     ('store', "interaction with the store", [
         # auth
         store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
+        # name handling
+        store.RegisterNameCommand, store.ListRegisteredCommand,
     ]),
 ]
 

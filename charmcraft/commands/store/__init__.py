@@ -69,3 +69,47 @@ class WhoamiCommand(BaseCommand):
         table = tabulate(data, tablefmt='plain')
         for line in table.splitlines():
             logger.info(line)
+
+
+class RegisterNameCommand(BaseCommand):
+    """Register a name in the store."""
+    name = 'register'
+    help_msg = "register a name in the store"
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('name', help="the name to register in the Store")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store()
+        store.register_name(parsed_args.name)
+        logger.info("Congrats! You are now the publisher of %r", parsed_args.name)
+
+
+class ListRegisteredCommand(BaseCommand):
+    """List the charms registered in the store."""
+    name = 'list'
+    help_msg = "list the charms registered the store"
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store()
+        result = store.list_registered_names()
+        if not result:
+            logger.info("Nothing found")
+            return
+
+        headers = ['Name', 'Visibility', 'Status']
+        data = []
+        for item in result:
+            visibility = 'private' if item.private else 'public'
+            data.append([
+                item.name,
+                visibility,
+                item.status,
+            ])
+
+        table = tabulate(data, headers=headers, tablefmt='plain')
+        for line in table.splitlines():
+            logger.info(line)

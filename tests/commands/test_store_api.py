@@ -62,3 +62,50 @@ def test_whoami(client_mock):
     assert result.name == 'John Doe'
     assert result.username == 'jdoe'
     assert result.userid == '-1'
+
+
+def test_register_name(client_mock):
+    store = Store()
+    result = store.register_name('testname')
+
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm', {'name': 'testname'}),
+    ]
+    assert result is None
+
+
+def test_list_registered_names_empty(client_mock):
+    store = Store()
+
+    auth_response = {'charms': []}
+    client_mock.get.return_value = auth_response
+
+    result = store.list_registered_names()
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm')
+    ]
+    assert result == []
+
+
+def test_list_registered_names_multiple(client_mock):
+    store = Store()
+
+    auth_response = {'charms': [
+        {'name': 'name1', 'private': False, 'status': 'status1'},
+        {'name': 'name2', 'private': True, 'status': 'status2'},
+    ]}
+    client_mock.get.return_value = auth_response
+
+    result = store.list_registered_names()
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm')
+    ]
+    item1, item2 = result
+    assert item1.name == 'name1'
+    assert not item1.private
+    assert item1.status == 'status1'
+    assert item2.name == 'name2'
+    assert item2.private
+    assert item2.status == 'status2'

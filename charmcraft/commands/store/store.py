@@ -20,8 +20,9 @@ from collections import namedtuple
 
 from charmcraft.commands.store.client import Client
 
-# helper to build responses from this layer
+# helpers to build responses from this layer
 User = namedtuple('User', 'name username userid')
+Charm = namedtuple('Charm', 'name private status')
 
 
 class Store:
@@ -58,4 +59,16 @@ class Store:
             username=response['username'],
             userid=response['id'],
         )
+        return result
+
+    def register_name(self, name):
+        """Register the specified name for the authenticated user."""
+        self._client.post('/v1/charm', {'name': name})
+
+    def list_registered_names(self):
+        """Return names registered by the authenticated user."""
+        response = self._client.get('/v1/charm')
+        result = []
+        for item in response['charms']:
+            result.append(Charm(name=item['name'], private=item['private'], status=item['status']))
         return result

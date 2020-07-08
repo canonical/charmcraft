@@ -33,8 +33,12 @@ logger = logging.getLogger('charmcraft.commands.store')
 # functionality in Store's production (related: issue #51)
 API_BASE_URL = 'https://api.staging.snapcraft.io/publisher/api'
 
-# XXX Facundo 2020-06-29: we need to include here at least the platform, maybe architecture, etc
-USER_AGENT = "charmcraft/{}".format(__version__)
+
+def build_user_agent():
+    """Build the charmcraft's user agent."""
+    # XXX Facundo 2020-06-29: we need to include here at least the platform, maybe
+    # architecture, etc. Related: issue #74.
+    return "charmcraft/{}".format(__version__)
 
 
 def visit_page_with_browser(visit_url):
@@ -108,7 +112,7 @@ class _AuthHolder:
             # load everything on first usage
             self._load_credentials()
 
-        headers = {"User-Agent": USER_AGENT}
+        headers = {"User-Agent": build_user_agent()}
 
         # this request through the bakery lib will automatically catch any authentication
         # problem and (if any) ask the user to authenticate and retry the original request; if

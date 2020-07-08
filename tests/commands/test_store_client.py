@@ -29,10 +29,18 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.client import (
     API_BASE_URL,
     Client,
-    USER_AGENT,
     _AuthHolder,
+    build_user_agent,
     visit_page_with_browser,
 )
+
+
+# --- General tests
+
+def test_useragent():
+    with patch('charmcraft.commands.store.client.__version__', '1.2.3'):
+        ua = build_user_agent()
+    assert ua == "charmcraft/1.2.3"
 
 
 # --- AuthHolder tests
@@ -224,7 +232,7 @@ def test_authholder_request_simple(auth_holder):
         assert method == 'testmethod'
         assert url == 'testurl'
         assert json == 'testbody'
-        assert headers == {'User-Agent': USER_AGENT}
+        assert headers == {'User-Agent': build_user_agent()}
 
         # check credentials were loaded at this time
         assert auth_holder._cookiejar is not None
@@ -340,7 +348,7 @@ def test_client_hit_success_withbody(caplog):
     result = client._hit('POST', '/somepath', 'somebody')
 
     assert mock_auth.request.called_once_with(
-        'POST', API_BASE_URL + '/somepath', 'somebody', headers={'User-Agent': USER_AGENT})
+        'POST', API_BASE_URL + '/somepath', 'somebody', headers={'User-Agent': build_user_agent()})
     assert result == response_value
     expected = [
         "Hitting the store: POST {}/somepath somebody".format(API_BASE_URL),

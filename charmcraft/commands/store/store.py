@@ -57,7 +57,7 @@ class Store:
         # XXX Facundo 2020-06-30: Every time we consume data from the Store (after a succesful
         # call) we need to wrap it with a context manager that will raise UnknownError (after
         # logging in debug the received response). This would catch API changes, for example,
-        # without making charmcraft to badly crash.
+        # without making charmcraft to badly crash. Related: issue #73.
         result = User(
             name=response['display-name'],
             username=response['username'],

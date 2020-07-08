@@ -167,7 +167,7 @@ class Client:
         logger.debug("Store ok: %s", resp.status_code)
         # XXX Facundo 2020-06-30: we need to wrap this .json() call, and raise UnknownError (after
         # logging in debug the received raw response). This would catch weird "html" responses,
-        # for example, without making charmcraft to badly crash.
+        # for example, without making charmcraft to badly crash. Related: issue #73.
         data = resp.json()
         return data
 

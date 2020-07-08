@@ -44,6 +44,7 @@ def store_mock():
 
 
 def test_login(caplog, store_mock):
+    """Simple login case."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     LoginCommand('group').run(noargs)
@@ -55,6 +56,7 @@ def test_login(caplog, store_mock):
 
 
 def test_logout(caplog, store_mock):
+    """Simple logout case."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     LogoutCommand('group').run(noargs)
@@ -66,6 +68,7 @@ def test_logout(caplog, store_mock):
 
 
 def test_whoami(caplog, store_mock):
+    """Simple whoami case."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = User(name='John Doe', username='jdoe', userid='-1')
@@ -85,6 +88,7 @@ def test_whoami(caplog, store_mock):
 
 
 def test_register_name(caplog, store_mock):
+    """Simple register_name case."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     args = Namespace(name='testname')
@@ -98,6 +102,7 @@ def test_register_name(caplog, store_mock):
 
 
 def test_list_registered_empty(caplog, store_mock):
+    """List registered with empty response."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = []
@@ -113,6 +118,7 @@ def test_list_registered_empty(caplog, store_mock):
 
 
 def test_list_registered_one_private(caplog, store_mock):
+    """List registered with one private item in the response."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = [
@@ -133,6 +139,7 @@ def test_list_registered_one_private(caplog, store_mock):
 
 
 def test_list_registered_one_public(caplog, store_mock):
+    """List registered with one public item in the response."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = [
@@ -153,6 +160,7 @@ def test_list_registered_one_public(caplog, store_mock):
 
 
 def test_list_registered_several(caplog, store_mock):
+    """List registered with several itemsssssssss in the response."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = [

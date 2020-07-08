@@ -31,6 +31,7 @@ def client_mock():
 
 
 def test_login(client_mock):
+    """Simple login case."""
     store = Store()
     result = store.login()
     assert client_mock.mock_calls == [
@@ -41,6 +42,7 @@ def test_login(client_mock):
 
 
 def test_logout(client_mock):
+    """Simple logout case."""
     store = Store()
     result = store.logout()
     assert client_mock.mock_calls == [
@@ -50,6 +52,7 @@ def test_logout(client_mock):
 
 
 def test_whoami(client_mock):
+    """Simple whoami case."""
     store = Store()
     auth_response = {'display-name': 'John Doe', 'username': 'jdoe', 'id': '-1'}
     client_mock.get.return_value = auth_response
@@ -65,6 +68,7 @@ def test_whoami(client_mock):
 
 
 def test_register_name(client_mock):
+    """Simple whoami case."""
     store = Store()
     result = store.register_name('testname')
 
@@ -75,6 +79,7 @@ def test_register_name(client_mock):
 
 
 def test_list_registered_names_empty(client_mock):
+    """List registered names getting an empty response."""
     store = Store()
 
     auth_response = {'charms': []}
@@ -89,6 +94,7 @@ def test_list_registered_names_empty(client_mock):
 
 
 def test_list_registered_names_multiple(client_mock):
+    """List registered names getting a multiple response."""
     store = Store()
 
     auth_response = {'charms': [

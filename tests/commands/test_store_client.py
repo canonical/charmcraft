@@ -26,7 +26,13 @@ import pytest
 from macaroonbakery import httpbakery
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.commands.store.client import Client, BASE_URL, _AuthHolder, visit_page_with_browser
+from charmcraft.commands.store.client import (
+    API_BASE_URL,
+    Client,
+    USER_AGENT,
+    _AuthHolder,
+    visit_page_with_browser,
+)
 
 
 # --- AuthHolder tests
@@ -213,11 +219,12 @@ def test_authholder_request_simple(auth_holder):
 
     other_cookie = get_cookie(value='different')
 
-    def fake_request(self, method, url, json):
+    def fake_request(self, method, url, json, headers):
         # check it was properly called
         assert method == 'testmethod'
         assert url == 'testurl'
         assert json == 'testbody'
+        assert headers == {'User-Agent': USER_AGENT}
 
         # check credentials were loaded at this time
         assert auth_holder._cookiejar is not None
@@ -289,7 +296,7 @@ def test_client_get():
         client = Client()
     client.get('/somepath')
 
-    assert mock_auth.request.called_once_with('GET', BASE_URL + '/somepath')
+    assert mock_auth.request.called_once_with('GET', API_BASE_URL + '/somepath')
 
 
 def test_client_post():
@@ -298,7 +305,7 @@ def test_client_post():
         client = Client()
     client.post('/somepath', 'somebody')
 
-    assert mock_auth.request.called_once_with('POST', BASE_URL + '/somepath', 'somebody')
+    assert mock_auth.request.called_once_with('POST', API_BASE_URL + '/somepath', 'somebody')
 
 
 def test_client_hit_success_simple(caplog):
@@ -312,10 +319,13 @@ def test_client_hit_success_simple(caplog):
         client = Client()
     result = client._hit('GET', '/somepath')
 
-    assert mock_auth.request.called_once_with('GET', BASE_URL + '/somepath')
+    assert mock_auth.request.called_once_with('GET', API_BASE_URL + '/somepath')
     assert result == response_value
-    expected = "Hitting the store: GET {}/somepath None".format(BASE_URL)
-    assert [expected] == [rec.message for rec in caplog.records]
+    expected = [
+        "Hitting the store: GET {}/somepath None".format(API_BASE_URL),
+        "Store ok: 200",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
 
 
 def test_client_hit_success_withbody(caplog):
@@ -329,10 +339,14 @@ def test_client_hit_success_withbody(caplog):
         client = Client()
     result = client._hit('POST', '/somepath', 'somebody')
 
-    assert mock_auth.request.called_once_with('POST', BASE_URL + '/somepath', 'somebody')
+    assert mock_auth.request.called_once_with(
+        'POST', API_BASE_URL + '/somepath', 'somebody', headers={'User-Agent': USER_AGENT})
     assert result == response_value
-    expected = "Hitting the store: POST {}/somepath somebody".format(BASE_URL)
-    assert [expected] == [rec.message for rec in caplog.records]
+    expected = [
+        "Hitting the store: POST {}/somepath somebody".format(API_BASE_URL),
+        "Store ok: 200",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
 
 
 def test_client_hit_failure():
@@ -361,7 +375,7 @@ def test_client_errorparsing_complete():
     content = json.dumps({"error-list": [{'message': 'error message', 'code': 'test-error'}]})
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)
-    assert result == "error message [code: test-error]"
+    assert result == "Store failure! error message [code: test-error]"
 
 
 def test_client_errorparsing_no_code():
@@ -369,7 +383,7 @@ def test_client_errorparsing_no_code():
     content = json.dumps({"error-list": [{'message': 'error message', 'code': None}]})
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)
-    assert result == "error message"
+    assert result == "Store failure! error message"
 
 
 def test_client_errorparsing_multiple():
@@ -380,7 +394,7 @@ def test_client_errorparsing_multiple():
     ]})
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)
-    assert result == "error 1 [code: test-error-1]; error 2"
+    assert result == "Store failure! error 1 [code: test-error-1]; error 2"
 
 
 def test_client_errorparsing_nojson():

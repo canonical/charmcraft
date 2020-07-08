@@ -54,6 +54,10 @@ class Store:
     def whoami(self):
         """Return authenticated user details."""
         response = self._client.get('/v1/whoami')
+        # XXX Facundo 2020-06-30: Every time we consume data from the Store (after a succesful
+        # call) we need to wrap it with a context manager that will raise UnknownError (after
+        # logging in debug the received response). This would catch API changes, for example,
+        # without making charmcraft to badly crash.
         result = User(
             name=response['display-name'],
             username=response['username'],

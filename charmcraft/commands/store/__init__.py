@@ -54,7 +54,7 @@ class LogoutCommand(BaseCommand):
 class WhoamiCommand(BaseCommand):
     """Show login information."""
     name = 'whoami'
-    help_msg = "returns your login information relevant to the store"
+    help_msg = "returns your login information relevant to the Store"
 
     def run(self, parsed_args):
         """Run the command."""
@@ -72,9 +72,9 @@ class WhoamiCommand(BaseCommand):
 
 
 class RegisterNameCommand(BaseCommand):
-    """Register a name in the store."""
+    """Register a name in the Store."""
     name = 'register'
-    help_msg = "register a name in the store"
+    help_msg = "register a name in the Store"
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -88,9 +88,9 @@ class RegisterNameCommand(BaseCommand):
 
 
 class ListRegisteredCommand(BaseCommand):
-    """List the charms registered in the store."""
+    """List the charms registered in the Store."""
     name = 'list'
-    help_msg = "list the charms registered the store"
+    help_msg = "list the charms registered the Store"
 
     def run(self, parsed_args):
         """Run the command."""

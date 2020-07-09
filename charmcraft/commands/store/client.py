@@ -24,13 +24,21 @@ from http.cookiejar import MozillaCookieJar
 import appdirs
 from macaroonbakery import httpbakery
 
+from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger('charmcraft.commands.store')
 
 # XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
 # functionality in Store's production (related: issue #51)
-BASE_URL = 'https://api.staging.snapcraft.io/publisher/api'
+API_BASE_URL = 'https://api.staging.snapcraft.io/publisher/api'
+
+
+def build_user_agent():
+    """Build the charmcraft's user agent."""
+    # XXX Facundo 2020-06-29: we need to include here at least the platform, maybe
+    # architecture, etc. Related: issue #74.
+    return "charmcraft/{}".format(__version__)
 
 
 def visit_page_with_browser(visit_url):
@@ -104,11 +112,13 @@ class _AuthHolder:
             # load everything on first usage
             self._load_credentials()
 
+        headers = {"User-Agent": build_user_agent()}
+
         # this request through the bakery lib will automatically catch any authentication
         # problem and (if any) ask the user to authenticate and retry the original request; if
         # that fails we capture it and raise a proper error
         try:
-            resp = self._client.request(method, url, json=body)
+            resp = self._client.request(method, url, json=body, headers=headers)
         except httpbakery.InteractionError as err:
             raise CommandError("Authentication failure: {}".format(err))
 
@@ -148,16 +158,20 @@ class Client:
             if code:
                 msg += " [code: {}]".format(code)
             messages.append(msg)
-        return "; ".join(messages)
+        return "Store failure! " + "; ".join(messages)
 
     def _hit(self, method, urlpath, body=None):
         """Generic hit to the Store."""
-        url = BASE_URL + urlpath
+        url = API_BASE_URL + urlpath
         logger.debug("Hitting the store: %s %s %s", method, url, body)
         resp = self._auth_client.request(method, url, body)
         if not resp.ok:
             raise CommandError(self._parse_store_error(resp))
 
+        logger.debug("Store ok: %s", resp.status_code)
+        # XXX Facundo 2020-06-30: we need to wrap this .json() call, and raise UnknownError (after
+        # logging in debug the received raw response). This would catch weird "html" responses,
+        # for example, without making charmcraft to badly crash. Related: issue #73.
         data = resp.json()
         return data
 

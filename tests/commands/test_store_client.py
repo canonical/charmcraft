@@ -549,5 +549,5 @@ def test_storage_push_network_error():
         mock.side_effect = RequestException("naughty error")
         with pytest.raises(CommandError) as cm:
             _storage_push(test_monitor)
-        expected = "Network error when pushing file: RequestException('naughty error',)"
+        expected = "Network error when pushing file: RequestException('naughty error')"
         assert str(cm.value) == expected

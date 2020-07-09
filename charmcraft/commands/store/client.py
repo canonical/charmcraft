@@ -151,7 +151,8 @@ def _storage_push(monitor):
     try:
         response = session.request('POST', url, headers=headers, data=monitor)
     except RequestException as err:
-        raise CommandError("Network error when pushing file: {!r}".format(err))
+        raise CommandError("Network error when pushing file: {}({!r})".format(
+            err.__class__.__name__, str(err)))
 
     return response
 

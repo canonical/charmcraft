@@ -446,7 +446,7 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
 
     # fake some bytes to push
     test_filepath = tmp_path / 'supercharm.bin'
-    with open(test_filepath, 'wb') as fh:
+    with test_filepath.open('wb') as fh:
         fh.write(b"abcdefgh")
 
     def fake_pusher(monitor):
@@ -488,7 +488,7 @@ def test_client_push_response_not_ok(tmp_path):
     """Didn't get a 200 from the Storage."""
     # fake some bytes to push
     test_filepath = tmp_path / 'supercharm.bin'
-    with open(test_filepath, 'wb') as fh:
+    with test_filepath.open('wb') as fh:
         fh.write(b"abcdefgh")
 
     with patch('charmcraft.commands.store.client._storage_push') as mock:
@@ -502,7 +502,7 @@ def test_client_push_response_unsuccessful(tmp_path):
     """Didn't get a 200 from the Storage."""
     # fake some bytes to push
     test_filepath = tmp_path / 'supercharm.bin'
-    with open(test_filepath, 'wb') as fh:
+    with test_filepath.open('wb') as fh:
         fh.write(b"abcdefgh")
 
     with patch('charmcraft.commands.store.client._storage_push') as mock:

@@ -41,7 +41,7 @@ logger = logging.getLogger('charmcraft.commands.store')
 # XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
 # functionality in Store's production (related: issue #51)
 API_BASE_URL = 'https://api.staging.snapcraft.io/publisher/api'
-STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com/'
+STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com'
 
 
 def build_user_agent():
@@ -138,20 +138,22 @@ class _AuthHolder:
 
 def _storage_push(monitor):
     """Push bytes to the storage."""
-    session = requests.Session()
-    retries = Retry(total=5, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
-    session.mount("https://", HTTPAdapter(max_retries=retries))
-
-    url = STORAGE_BASE_URL + 'unscanned-upload/'
+    url = STORAGE_BASE_URL + '/unscanned-upload/'
     headers = {
         'Content-Type': monitor.content_type,
         'Accept': 'application/json',
         'User-Agent': build_user_agent(),
     }
-    try:
-        response = session.request('POST', url, headers=headers, data=monitor)
-    except RequestException as err:
-        raise CommandError("Network error when pushing file: {!r}".format(err))
+    retries = Retry(total=5, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
+
+    with requests.Session() as session:
+        session.mount("https://", HTTPAdapter(max_retries=retries))
+
+        try:
+            response = session.post(url, headers=headers, data=monitor)
+        except RequestException as err:
+            raise CommandError("Network error when pushing file: {}({!r})".format(
+                err.__class__.__name__, str(err)))
 
     return response
 
@@ -225,19 +227,19 @@ class Client:
 
         with filepath.open('rb') as fh:
             encoder = MultipartEncoder(
-                fields={"binary": ("filename", fh, "application/octet-stream")})
+                fields={"binary": (filepath.name, fh, "application/octet-stream")})
 
             # create a monitor (so that progress can be displayed) as call the real pusher
             monitor = MultipartEncoderMonitor(encoder, _progress)
             response = _storage_push(monitor)
 
         if not response.ok:
-            raise CommandError("Failure when pushing file: [{}] {!r}".format(
+            raise CommandError("Failure while pushing file: [{}] {!r}".format(
                 response.status_code, response.content))
 
         result = response.json()
         if not result['successful']:
-            raise CommandError("Server error when pushing file: {}".format(result))
+            raise CommandError("Server error while pushing file: {}".format(result))
 
         upload_id = result['upload_id']
         logger.debug("Uploading bytes ended, id %s", upload_id)

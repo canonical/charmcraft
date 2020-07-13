@@ -288,7 +288,7 @@ class Validator:
 class BuildCommand(BaseCommand):
     """Build the charm."""
     name = 'build'
-    help_msg = "build the charm"
+    help_msg = "Build the charm."
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

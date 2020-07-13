@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class VersionCommand(BaseCommand):
     """Show the version."""
     name = 'version'
-    help_msg = "show the version"
+    help_msg = "Show the version."
 
     def run(self, parsed_args):
         """Run the command."""

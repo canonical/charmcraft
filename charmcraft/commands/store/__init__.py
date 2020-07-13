@@ -30,7 +30,7 @@ logger = logging.getLogger('charmcraft.commands.store')
 class LoginCommand(BaseCommand):
     """Log into the store."""
     name = 'login'
-    help_msg = "login to Ubuntu Single Sign On"
+    help_msg = "Login to Ubuntu Single Sign On."
 
     def run(self, parsed_args):
         """Run the command."""
@@ -42,7 +42,7 @@ class LoginCommand(BaseCommand):
 class LogoutCommand(BaseCommand):
     """Clear store-related credentials."""
     name = 'logout'
-    help_msg = "clear session credentials"
+    help_msg = "Clear session credentials."
 
     def run(self, parsed_args):
         """Run the command."""
@@ -54,7 +54,7 @@ class LogoutCommand(BaseCommand):
 class WhoamiCommand(BaseCommand):
     """Show login information."""
     name = 'whoami'
-    help_msg = "returns your login information relevant to the Store"
+    help_msg = "Returns your login information relevant to the Store."
 
     def run(self, parsed_args):
         """Run the command."""
@@ -74,7 +74,7 @@ class WhoamiCommand(BaseCommand):
 class RegisterNameCommand(BaseCommand):
     """Register a name in the Store."""
     name = 'register'
-    help_msg = "register a name in the Store"
+    help_msg = "Register a name in the Store."
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -90,7 +90,7 @@ class RegisterNameCommand(BaseCommand):
 class ListRegisteredCommand(BaseCommand):
     """List the charms registered in the Store."""
     name = 'list'
-    help_msg = "list the charms registered the Store"
+    help_msg = "List the charms registered the Store."
 
     def run(self, parsed_args):
         """Run the command."""

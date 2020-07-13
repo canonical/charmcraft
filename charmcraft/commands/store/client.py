@@ -22,16 +22,26 @@ import webbrowser
 from http.cookiejar import MozillaCookieJar
 
 import appdirs
+import requests
 from macaroonbakery import httpbakery
+from requests.adapters import HTTPAdapter
+from requests.exceptions import RequestException
+from requests.packages.urllib3.util.retry import Retry
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
+
+# set urllib3's logger to only emit errors, not warnings. Otherwise even
+# retries are printed, and they're nasty.
+logging.getLogger(requests.packages.urllib3.__package__).setLevel(logging.ERROR)
 
 logger = logging.getLogger('charmcraft.commands.store')
 
 # XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
 # functionality in Store's production (related: issue #51)
 API_BASE_URL = 'https://api.staging.snapcraft.io/publisher/api'
+STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com'
 
 
 def build_user_agent():
@@ -126,6 +136,28 @@ class _AuthHolder:
         return resp
 
 
+def _storage_push(monitor):
+    """Push bytes to the storage."""
+    url = STORAGE_BASE_URL + '/unscanned-upload/'
+    headers = {
+        'Content-Type': monitor.content_type,
+        'Accept': 'application/json',
+        'User-Agent': build_user_agent(),
+    }
+    retries = Retry(total=5, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
+
+    with requests.Session() as session:
+        session.mount("https://", HTTPAdapter(max_retries=retries))
+
+        try:
+            response = session.post(url, headers=headers, data=monitor)
+        except RequestException as err:
+            raise CommandError("Network error when pushing file: {}({!r})".format(
+                err.__class__.__name__, str(err)))
+
+    return response
+
+
 class Client:
     """Lightweight layer above _AuthHolder to present a more network oriented interface."""
 
@@ -182,3 +214,33 @@ class Client:
     def post(self, urlpath, body):
         """POST a body (json-encoded) to the Store."""
         return self._hit('POST', urlpath, body)
+
+    def push(self, filepath):
+        """Push the bytes from filepath to the Storage."""
+        logger.debug("Starting to push %s", filepath)
+
+        def _progress(monitor):
+            # XXX Facundo 2020-07-01: use a real progress bar
+            if monitor.bytes_read <= monitor.len:
+                progress = 100 * monitor.bytes_read / monitor.len
+                print("Uploading... {:.2f}%\r".format(progress), end='', flush=True)
+
+        with filepath.open('rb') as fh:
+            encoder = MultipartEncoder(
+                fields={"binary": (filepath.name, fh, "application/octet-stream")})
+
+            # create a monitor (so that progress can be displayed) as call the real pusher
+            monitor = MultipartEncoderMonitor(encoder, _progress)
+            response = _storage_push(monitor)
+
+        if not response.ok:
+            raise CommandError("Failure while pushing file: [{}] {!r}".format(
+                response.status_code, response.content))
+
+        result = response.json()
+        if not result['successful']:
+            raise CommandError("Server error while pushing file: {}".format(result))
+
+        upload_id = result['upload_id']
+        logger.debug("Uploading bytes ended, id %s", upload_id)
+        return upload_id

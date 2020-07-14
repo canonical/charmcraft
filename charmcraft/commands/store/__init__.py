@@ -152,7 +152,7 @@ class UploadCommand(BaseCommand):
         else:
             # the path is given, asume the charm name is part of the file name
             # XXX Facundo 2020-06-30: Actually, we need to open the ZIP file, extract the
-            # included metadata.yaml file, and read the name from there
+            # included metadata.yaml file, and read the name from there. Issue: #77.
             charm_filepath = charm_filepath.expanduser()
             if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
                 raise CommandError(
@@ -180,5 +180,5 @@ class UploadCommand(BaseCommand):
             logger.info("Revision %s of %r created", result.revision, str(name))
         else:
             # XXX Facundo 2020-06-30: at some point in the future the Store will give us also a
-            # reason why it failed, to improve the message.
+            # reason why it failed, to improve the message. Issue: #78.
             logger.info("Upload failed: got status %r", result.status)

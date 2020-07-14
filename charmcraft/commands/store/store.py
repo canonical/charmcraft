@@ -112,5 +112,5 @@ class Store:
                     status=status, revision=revision['revision'])
 
             # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after
-            # N attempts (which should be big, as per snapcraft experience)
+            # N attempts (which should be big, as per snapcraft experience). Issue: #79.
             time.sleep(POLL_DELAY)

@@ -96,7 +96,7 @@ class Store:
         endpoint = '/v1/charm/{}/revisions'.format(name)
         response = self._client.post(endpoint, {'upload-id': upload_id})
         status_url = response['status-url']
-        logger.debug("Upload id indicated to the Store, got status url %s", status_url)
+        logger.debug("Upload %s started, got status url %s", upload_id, status_url)
 
         while True:
             response = self._client.get(status_url)

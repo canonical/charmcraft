@@ -16,6 +16,7 @@
 
 """Tests for the Store API layer (code in store/store.py)."""
 
+import logging
 from unittest.mock import patch, call, MagicMock
 
 import pytest
@@ -117,8 +118,9 @@ def test_list_registered_names_multiple(client_mock):
     assert item2.status == 'status2'
 
 
-def test_upload_straightforward(client_mock):
+def test_upload_straightforward(client_mock, caplog):
     """The full and successful upload case."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
     store = Store()
 
     # the first response, for when pushing bytes
@@ -132,8 +134,8 @@ def test_upload_straightforward(client_mock):
     # the third response, status ok (note the patched UPLOAD_ENDING_STATUSES below)
     test_revision = 123
     test_status_ok = 'test-status'
-    client_mock.get.return_value = {
-        'revisions': [{'status': test_status_ok, 'revision': test_revision}]}
+    status_response = {'revisions': [{'status': test_status_ok, 'revision': test_revision}]}
+    client_mock.get.return_value = status_response
 
     test_status_resolution = 'test-ok-or-not'
     fake_statuses = {test_status_ok: test_status_resolution}
@@ -154,9 +156,17 @@ def test_upload_straightforward(client_mock):
     assert result.status == test_status_ok
     assert result.revision == test_revision
 
+    # check logs
+    expected = [
+        "Upload test-upload-id started, got status url https://store.c.c/status",
+        "Status checked: " + str(status_response),
+    ]
+    assert expected == [rec.message for rec in caplog.records]
 
-def test_upload_polls_status(client_mock):
+
+def test_upload_polls_status(client_mock, caplog):
     """Upload polls status url until the end is indicated."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
     store = Store()
 
     # first and second response, for pushing bytes and let the store know about it
@@ -168,11 +178,10 @@ def test_upload_polls_status(client_mock):
     # the status checking response, will answer something not done yet twice, then ok
     test_revision = 123
     test_status_ok = 'test-status'
-    client_mock.get.side_effect = [
-        {'revisions': [{'status': 'still-scanning', 'revision': None}]},
-        {'revisions': [{'status': 'more-revisions', 'revision': None}]},
-        {'revisions': [{'status': test_status_ok, 'revision': test_revision}]},
-    ]
+    status_response_1 = {'revisions': [{'status': 'still-scanning', 'revision': None}]}
+    status_response_2 = {'revisions': [{'status': 'more-revisions', 'revision': None}]}
+    status_response_3 = {'revisions': [{'status': test_status_ok, 'revision': test_revision}]}
+    client_mock.get.side_effect = [status_response_1, status_response_2, status_response_3]
 
     test_status_resolution = 'clean and crispy'
     fake_statuses = {test_status_ok: test_status_resolution}
@@ -191,3 +200,12 @@ def test_upload_polls_status(client_mock):
     assert result.ok == test_status_resolution
     assert result.status == test_status_ok
     assert result.revision == test_revision
+
+    # check logs
+    expected = [
+        "Upload test-upload-id started, got status url https://store.c.c/status",
+        "Status checked: " + str(status_response_1),
+        "Status checked: " + str(status_response_2),
+        "Status checked: " + str(status_response_3),
+    ]
+    assert expected == [rec.message for rec in caplog.records]

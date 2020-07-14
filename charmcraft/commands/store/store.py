@@ -16,13 +16,25 @@
 
 """The Store API handling."""
 
+import logging
+import time
 from collections import namedtuple
 
 from charmcraft.commands.store.client import Client
 
+logger = logging.getLogger('charmcraft.commands.store')
+
 # helpers to build responses from this layer
 User = namedtuple('User', 'name username userid')
 Charm = namedtuple('Charm', 'name private status')
+Uploaded = namedtuple('Uploaded', 'ok status revision')
+
+# those statuses after upload that flag that the review ended (and if it ended succesfully or not)
+UPLOAD_ENDING_STATUSES = {
+    'approved': True,
+    'rejected': False,
+}
+POLL_DELAY = 1
 
 
 class Store:
@@ -76,3 +88,29 @@ class Store:
         for item in response['charms']:
             result.append(Charm(name=item['name'], private=item['private'], status=item['status']))
         return result
+
+    def upload(self, name, filepath):
+        """Upload the content of filepath to the indicated charm."""
+        upload_id = self._client.push(filepath)
+
+        endpoint = '/v1/charm/{}/revisions'.format(name)
+        response = self._client.post(endpoint, {'upload-id': upload_id})
+        status_url = response['status-url']
+        logger.debug("Upload %s started, got status url %s", upload_id, status_url)
+
+        while True:
+            response = self._client.get(status_url)
+            logger.debug("Status checked: %s", response)
+
+            # as we're asking for a single upload_id, the response will always have only one item
+            (revision,) = response['revisions']
+            status = revision['status']
+
+            if status in UPLOAD_ENDING_STATUSES:
+                return Uploaded(
+                    ok=UPLOAD_ENDING_STATUSES[status],
+                    status=status, revision=revision['revision'])
+
+            # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after
+            # N attempts (which should be big, as per snapcraft experience). Issue: #79.
+            time.sleep(POLL_DELAY)

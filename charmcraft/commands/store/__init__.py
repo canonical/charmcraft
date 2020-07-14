@@ -144,7 +144,7 @@ class UploadCommand(BaseCommand):
                     "the --charm-file option.")
 
             charm_filepath = pathlib.Path(charm_name + '.charm').absolute()
-            if not os.access(charm_filepath, os.R_OK):  # access does not support pathlib in 3.5
+            if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
                 raise CommandError(
                     "Can't access charm file {!r}. You can indicate a charm file with "
                     "the --charm-file option.".format(str(charm_filepath)))
@@ -154,7 +154,7 @@ class UploadCommand(BaseCommand):
             # XXX Facundo 2020-06-30: Actually, we need to open the ZIP file, extract the
             # included metadata.yaml file, and read the name from there
             charm_filepath = charm_filepath.expanduser()
-            if not os.access(charm_filepath, os.R_OK):  # access does not support pathlib in 3.5
+            if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
                 raise CommandError(
                     "Can't access the indicated charm file: {!r}".format(str(charm_filepath)))
             if not charm_filepath.is_file():

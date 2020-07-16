@@ -27,7 +27,7 @@ import yaml
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
-    ListRegisteredCommand,
+    ListNamesCommand,
     LoginCommand,
     LogoutCommand,
     RegisterNameCommand,
@@ -169,7 +169,7 @@ def test_list_registered_empty(caplog, store_mock):
     store_response = []
     store_mock.list_registered_names.return_value = store_response
 
-    ListRegisteredCommand('group').run(noargs)
+    ListNamesCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -187,7 +187,7 @@ def test_list_registered_one_private(caplog, store_mock):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListRegisteredCommand('group').run(noargs)
+    ListNamesCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -208,7 +208,7 @@ def test_list_registered_one_public(caplog, store_mock):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListRegisteredCommand('group').run(noargs)
+    ListNamesCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -231,7 +231,7 @@ def test_list_registered_several(caplog, store_mock):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListRegisteredCommand('group').run(noargs)
+    ListNamesCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),

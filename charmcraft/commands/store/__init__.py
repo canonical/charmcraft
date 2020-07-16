@@ -101,10 +101,10 @@ class RegisterNameCommand(BaseCommand):
         logger.info("Congrats! You are now the publisher of %r", parsed_args.name)
 
 
-class ListRegisteredCommand(BaseCommand):
+class ListNamesCommand(BaseCommand):
     """List the charms registered in the Store."""
-    name = 'list'
-    help_msg = "list the charms registered the Store"
+    name = 'names'
+    help_msg = "list the charm names registered the Store"
 
     def run(self, parsed_args):
         """Run the command."""

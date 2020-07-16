@@ -658,11 +658,11 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path):
     included_dispatcher = build_dir / DISPATCH_FILENAME
 
     builder = Builder({
-        'from': tmp_path,
+        'from': pathlib.Path(str(tmp_path)),
         'entrypoint': pathlib.Path(str(charm_script)),
         'requirement': [],
     })
-    builder.handle_dispatcher(linked_entrypoint)
+    builder.handle_dispatcher(pathlib.Path(str(linked_entrypoint)))
 
     test_hook = build_dir / 'hooks' / 'somehook'
     assert test_hook.is_symlink()

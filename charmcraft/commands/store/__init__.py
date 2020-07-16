@@ -250,7 +250,7 @@ class ReleaseCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'channel', nargs='+',
+            'channels', metavar='channel', nargs='+',
             help="the channel(s) to release to")
         parser.add_argument('--name', help="the name of the charm to get revisions")
         parser.add_argument(
@@ -275,10 +275,14 @@ class ReleaseCommand(BaseCommand):
             revision = parsed_args.revision
         else:
             # find out which is the latest revision for the charm
-            result = store.list_revisions(charm_name)
-            revision = max(item.revision for item in result)
+            revisions = store.list_revisions(charm_name)
+            if not revisions:
+                raise CommandError(
+                    "The charm {!r} doesn't have any uploaded revision to release."
+                    .format(charm_name))
+            revision = max(rev.revision for rev in revisions)
 
         store.release(charm_name, revision, parsed_args.channels)
         logger.info(
-            "Revision %d of charm %s released ok to %s",
+            "Revision %d of charm %r released ok to %s",
             revision, charm_name, ", ".join(parsed_args.channels))

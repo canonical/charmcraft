@@ -240,3 +240,45 @@ class ListRevisionsCommand(BaseCommand):
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():
             logger.info(line)
+
+
+class ReleaseCommand(BaseCommand):
+    """Release a charm revision to specific channels."""
+    name = 'release'
+    help_msg = "relase a charm revision to one or more channels"
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            'channel', nargs='+',
+            help="the channel(s) to release to")
+        parser.add_argument('--name', help="the name of the charm to get revisions")
+        parser.add_argument(
+            '--revision', type=int,
+            help="the revision to release (defaults to latest)")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store()
+
+        if parsed_args.name:
+            charm_name = parsed_args.name
+        else:
+            charm_name = get_name_from_metadata()
+            if charm_name is None:
+                raise CommandError(
+                    "Can't access name in 'metadata.yaml' file. The 'release' command needs to "
+                    "be executed in a valid project's directory, or indicate the charm name with "
+                    "the --name option.")
+
+        if parsed_args.revision:
+            revision = parsed_args.revision
+        else:
+            # find out which is the latest revision for the charm
+            result = store.list_revisions(charm_name)
+            revision = max(item.revision for item in result)
+
+        store.release(charm_name, revision, parsed_args.channels)
+        logger.info(
+            "Revision %d of charm %s released ok to %s",
+            revision, charm_name, ", ".join(parsed_args.channels))

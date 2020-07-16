@@ -16,10 +16,11 @@
 
 """The Store API handling."""
 
-import datetime
 import logging
 import time
 from collections import namedtuple
+
+from dateutil import parser
 
 from charmcraft.commands.store.client import Client
 
@@ -127,7 +128,8 @@ class Store:
             result.append(Revision(
                 revision=item['revision'],
                 version=item['version'],
-                created_at=datetime.datetime.fromisoformat(item['created-at']),
+                # we could use `datetime.datetime.fromisoformat` after we drop Py35 support
+                created_at=parser.parse(item['created-at']),
                 status=item['status'],
                 errors=errors,
             ))

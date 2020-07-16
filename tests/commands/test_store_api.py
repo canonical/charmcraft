@@ -16,11 +16,11 @@
 
 """Tests for the Store API layer (code in store/store.py)."""
 
-import datetime
 import logging
 from unittest.mock import patch, call, MagicMock
 
 import pytest
+from dateutil import parser
 
 from charmcraft.commands.store.store import Store
 
@@ -234,7 +234,7 @@ def test_list_revisions_ok(client_mock):
     (item,) = result
     assert item.revision == 7
     assert item.version == 'v7'
-    assert item.created_at == datetime.datetime.fromisoformat('2020-06-29T22:11:00.123')
+    assert item.created_at == parser.parse('2020-06-29T22:11:00.123')
     assert item.status == 'approved'
     assert item.errors == []
 
@@ -310,7 +310,7 @@ def test_list_revisions_several_mixed(client_mock):
 
     assert item1.revision == 1
     assert item1.version == 'v1'
-    assert item1.created_at == datetime.datetime.fromisoformat('2020-06-29T22:11:01')
+    assert item1.created_at == parser.parse('2020-06-29T22:11:01')
     assert item1.status == 'rejected'
     (error,) = item1.errors
     assert error.message == "error"
@@ -318,6 +318,6 @@ def test_list_revisions_several_mixed(client_mock):
 
     assert item2.revision == 2
     assert item2.version == 'v2'
-    assert item2.created_at == datetime.datetime.fromisoformat('2020-06-29T22:11:02')
+    assert item2.created_at == parser.parse('2020-06-29T22:11:02')
     assert item2.status == 'approved'
     assert item2.errors == []

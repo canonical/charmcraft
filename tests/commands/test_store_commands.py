@@ -27,12 +27,13 @@ import yaml
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
-    ListRegisteredCommand,
+    ListNamesCommand,
     LoginCommand,
     LogoutCommand,
     RegisterNameCommand,
     UploadCommand,
     WhoamiCommand,
+    get_name_from_metadata,
 )
 from charmcraft.commands.store.store import User, Charm, Uploaded
 
@@ -42,9 +43,62 @@ noargs = Namespace()
 
 @pytest.fixture
 def store_mock():
+    """The fixture to fake the store layer in all the tests."""
     store_mock = MagicMock()
     with patch('charmcraft.commands.store.Store', lambda: store_mock):
         yield store_mock
+
+
+# -- tests for helpers
+
+
+def test_get_name_from_metadata_ok(tmp_path, monkeypatch):
+    """The metadata file is valid yaml, but there is no name."""
+    monkeypatch.chdir(tmp_path)
+
+    # put a valid metadata
+    metadata_file = tmp_path / 'metadata.yaml'
+    with metadata_file.open('wb') as fh:
+        fh.write(b"name: test-name")
+
+    result = get_name_from_metadata()
+    assert result == "test-name"
+
+
+def test_get_name_from_metadata_no_file(tmp_path, monkeypatch):
+    """No metadata file to get info."""
+    monkeypatch.chdir(tmp_path)
+    result = get_name_from_metadata()
+    assert result is None
+
+
+def test_get_name_from_metadata_bad_content_garbage(tmp_path, monkeypatch):
+    """The metadata file is broken."""
+    monkeypatch.chdir(tmp_path)
+
+    # put a broken metadata
+    metadata_file = tmp_path / 'metadata.yaml'
+    with metadata_file.open('wb') as fh:
+        fh.write(b"\b00\bff -- not a realy yaml stuff")
+
+    result = get_name_from_metadata()
+    assert result is None
+
+
+def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
+    """The metadata file is valid yaml, but there is no name."""
+    monkeypatch.chdir(tmp_path)
+
+    # put a broken metadata
+    metadata_file = tmp_path / 'metadata.yaml'
+    with metadata_file.open('wb') as fh:
+        fh.write(b"{}")
+
+    result = get_name_from_metadata()
+    assert result is None
+
+
+# -- tests for auth commands
 
 
 def test_login(caplog, store_mock):
@@ -91,6 +145,9 @@ def test_whoami(caplog, store_mock):
     assert expected == [rec.message for rec in caplog.records]
 
 
+# -- tests for name-related commands
+
+
 def test_register_name(caplog, store_mock):
     """Simple register_name case."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
@@ -112,7 +169,7 @@ def test_list_registered_empty(caplog, store_mock):
     store_response = []
     store_mock.list_registered_names.return_value = store_response
 
-    ListRegisteredCommand('group').run(noargs)
+    ListNamesCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -130,7 +187,7 @@ def test_list_registered_one_private(caplog, store_mock):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListRegisteredCommand('group').run(noargs)
+    ListNamesCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -151,7 +208,7 @@ def test_list_registered_one_public(caplog, store_mock):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListRegisteredCommand('group').run(noargs)
+    ListNamesCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -174,7 +231,7 @@ def test_list_registered_several(caplog, store_mock):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListRegisteredCommand('group').run(noargs)
+    ListNamesCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -186,6 +243,9 @@ def test_list_registered_several(caplog, store_mock):
         "charm3            private       super long status",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for upload command
 
 
 def test_upload_call_ok(caplog, store_mock):
@@ -272,54 +332,23 @@ def test_upload_discover_default_ok(tmp_path, monkeypatch):
     charm_file.touch()
 
     # fake the metadata to point to that file
-    metadata_data = {'name': 'testcharm'}
-    metadata_file = tmp_path / 'metadata.yaml'
-    metadata_raw = yaml.dump(metadata_data).encode('ascii')
-    with metadata_file.open('wb') as fh:
-        fh.write(metadata_raw)
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
 
-    name, path = UploadCommand('group')._discover_charm(None)
+        name, path = UploadCommand('group')._discover_charm(None)
+
     assert name == 'testcharm'
     assert path == pathlib.Path(str(charm_file))
 
 
-def test_upload_discover_default_no_metadata(tmp_path, monkeypatch):
+def test_upload_discover_default_no_metadata(tmp_path):
     """Discover charm name/path, no metadata file to get info."""
-    monkeypatch.chdir(tmp_path)
-    with pytest.raises(CommandError) as cm:
-        UploadCommand('group')._discover_charm(None)
-    assert str(cm.value) == (
-        "Can't access name in 'metadata.yaml' file. The 'upload' command needs to be executed in "
-        "a valid project's directory, or point to a charm file with the --charm-file option.")
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
 
+        with pytest.raises(CommandError) as cm:
+            UploadCommand('group')._discover_charm(None)
 
-def test_upload_discover_default_bad_metadata_garbage(tmp_path, monkeypatch):
-    """Discover charm name/path, the metadata file is broken."""
-    monkeypatch.chdir(tmp_path)
-
-    # put a broken metadata
-    metadata_file = tmp_path / 'metadata.yaml'
-    with metadata_file.open('wb') as fh:
-        fh.write(b"\b00\bff -- not a realy yaml stuff")
-
-    with pytest.raises(CommandError) as cm:
-        UploadCommand('group')._discover_charm(None)
-    assert str(cm.value) == (
-        "Can't access name in 'metadata.yaml' file. The 'upload' command needs to be executed in "
-        "a valid project's directory, or point to a charm file with the --charm-file option.")
-
-
-def test_upload_discover_default_bad_metadata_no_name(tmp_path, monkeypatch):
-    """Discover charm name/path, the metadata file is valid yaml, but there is no name."""
-    monkeypatch.chdir(tmp_path)
-
-    # put a broken metadata
-    metadata_file = tmp_path / 'metadata.yaml'
-    with metadata_file.open('wb') as fh:
-        fh.write(b"{}")
-
-    with pytest.raises(CommandError) as cm:
-        UploadCommand('group')._discover_charm(None)
     assert str(cm.value) == (
         "Can't access name in 'metadata.yaml' file. The 'upload' command needs to be executed in "
         "a valid project's directory, or point to a charm file with the --charm-file option.")

@@ -30,6 +30,17 @@ from .store import Store
 logger = logging.getLogger('charmcraft.commands.store')
 
 
+def get_name_from_metadata():
+    """Return the name (if present) from metadata file (if there and readable and sane)."""
+    try:
+        with open('metadata.yaml', 'rb') as fh:
+            metadata = yaml.safe_load(fh)
+        charm_name = metadata['name']
+    except (yaml.error.YAMLError, OSError, KeyError):
+        return
+    return charm_name
+
+
 class LoginCommand(BaseCommand):
     """Log into the store."""
     name = 'login'
@@ -90,10 +101,10 @@ class RegisterNameCommand(BaseCommand):
         logger.info("Congrats! You are now the publisher of %r", parsed_args.name)
 
 
-class ListRegisteredCommand(BaseCommand):
+class ListNamesCommand(BaseCommand):
     """List the charms registered in the Store."""
-    name = 'list'
-    help_msg = "list the charms registered the Store"
+    name = 'names'
+    help_msg = "list the charm names registered the Store"
 
     def run(self, parsed_args):
         """Run the command."""
@@ -133,11 +144,8 @@ class UploadCommand(BaseCommand):
         if charm_filepath is None:
             # discover the info using project's metadata, asume the file has the project's name
             # with a .charm extension
-            try:
-                with open('metadata.yaml', 'rb') as fh:
-                    metadata = yaml.safe_load(fh)
-                charm_name = metadata['name']
-            except (yaml.error.YAMLError, OSError, KeyError):
+            charm_name = get_name_from_metadata()
+            if charm_name is None:
                 raise CommandError(
                     "Can't access name in 'metadata.yaml' file. The 'upload' command needs to be "
                     "executed in a valid project's directory, or point to a charm file with "

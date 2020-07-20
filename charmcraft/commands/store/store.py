@@ -128,7 +128,7 @@ class Store:
             result.append(Revision(
                 revision=item['revision'],
                 version=item['version'],
-                # we could use `datetime.datetime.fromisoformat` after we drop Py35 support
+                # `datetime.datetime.fromisoformat` is available only since Py3.7
                 created_at=parser.parse(item['created-at']),
                 status=item['status'],
                 errors=errors,

@@ -449,16 +449,11 @@ def test_revisions_ordered_by_revision(caplog, store_mock):
 
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
+    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
     store_response = [
-        Revision(
-            revision=1, version='v1', created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
-            status='accepted', errors=[]),
-        Revision(
-            revision=3, version='v1', created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
-            status='accepted', errors=[]),
-        Revision(
-            revision=2, version='v1', created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
-            status='accepted', errors=[]),
+        Revision(revision=1, version='v1', created_at=tstamp, status='accepted', errors=[]),
+        Revision(revision=3, version='v1', created_at=tstamp, status='accepted', errors=[]),
+        Revision(revision=2, version='v1', created_at=tstamp, status='accepted', errors=[]),
     ]
     store_mock.list_revisions.return_value = store_response
 

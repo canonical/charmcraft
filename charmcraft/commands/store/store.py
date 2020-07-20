@@ -20,6 +20,8 @@ import logging
 import time
 from collections import namedtuple
 
+from dateutil import parser
+
 from charmcraft.commands.store.client import Client
 
 logger = logging.getLogger('charmcraft.commands.store')
@@ -28,6 +30,8 @@ logger = logging.getLogger('charmcraft.commands.store')
 User = namedtuple('User', 'name username userid')
 Charm = namedtuple('Charm', 'name private status')
 Uploaded = namedtuple('Uploaded', 'ok status revision')
+Revision = namedtuple('Revision', 'revision version created_at status errors')
+Error = namedtuple('Error', 'message code')
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -114,3 +118,19 @@ class Store:
             # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after
             # N attempts (which should be big, as per snapcraft experience). Issue: #79.
             time.sleep(POLL_DELAY)
+
+    def list_revisions(self, name):
+        """Return charm revisions for the indicated charm."""
+        response = self._client.get('/v1/charm/{}/revisions'.format(name))
+        result = []
+        for item in response['revisions']:
+            errors = [Error(message=e['message'], code=e['code']) for e in (item['errors'] or [])]
+            result.append(Revision(
+                revision=item['revision'],
+                version=item['version'],
+                # `datetime.datetime.fromisoformat` is available only since Py3.7
+                created_at=parser.parse(item['created-at']),
+                status=item['status'],
+                errors=errors,
+            ))
+        return result

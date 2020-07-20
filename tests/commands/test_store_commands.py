@@ -538,3 +538,37 @@ def test_revisions_errors_multiple(caplog, store_mock):
         "1                      2020-07-03    rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for the release command
+
+
+def test_release_simple_ok(capslog, store_mock):
+    """Simple case of releasing a revision ok."""
+    fixme
+    # este con todos los opcionales
+
+
+def test_release_simple_multiple_channels(capslog, store_mock):
+    """Releasing to multiple channels."""
+    fixme
+
+
+def test_release_name_guessing_ok(capslog, store_mock):
+    """Release after guessing the charm's name correctly."""
+    fixme
+
+
+def test_release_name_guessing_bad(capslog, store_mock):
+    """The charm name couldn't be guessed."""
+    fixme
+
+
+def test_release_revision_guessing_ok(capslog, store_mock):
+    """Release after guessing the revision."""
+    fixme
+
+
+def test_release_revision_guessing_bad(capslog, store_mock):
+    """Can not release because the charm doesn't have revisions published."""
+    fixme

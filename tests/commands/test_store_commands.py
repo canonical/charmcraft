@@ -33,6 +33,7 @@ from charmcraft.commands.store import (
     LoginCommand,
     LogoutCommand,
     RegisterNameCommand,
+    ReleaseCommand,
     UploadCommand,
     WhoamiCommand,
     get_name_from_metadata,
@@ -543,32 +544,98 @@ def test_revisions_errors_multiple(caplog, store_mock):
 # -- tests for the release command
 
 
-def test_release_simple_ok(capslog, store_mock):
+def test_release_simple_ok(caplog, store_mock):
     """Simple case of releasing a revision ok."""
-    fixme
-    # este con todos los opcionales
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channels = ['somechannel']
+    args = Namespace(name='testcharm', revision=7, channels=channels)
+    ReleaseCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.release('testcharm', 7, channels),
+    ]
+
+    expected = "Revision 7 of charm 'testcharm' released ok to somechannel"
+    assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_release_simple_multiple_channels(capslog, store_mock):
+def test_release_simple_multiple_channels(caplog, store_mock):
     """Releasing to multiple channels."""
-    fixme
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    args = Namespace(name='testcharm', revision=7, channels=['channel1', 'channel2', 'channel3'])
+    ReleaseCommand('group').run(args)
+
+    expected = "Revision 7 of charm 'testcharm' released ok to channel1, channel2, channel3"
+    assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_release_name_guessing_ok(capslog, store_mock):
+def test_release_name_guessing_ok(caplog, store_mock):
     """Release after guessing the charm's name correctly."""
-    fixme
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    args = Namespace(name=None, revision=7, channels=['somechannel'])
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'guessed-name'
+        ReleaseCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.release('guessed-name', 7, ['somechannel']),
+    ]
+    expected = "Revision 7 of charm 'guessed-name' released ok to somechannel"
+    assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_release_name_guessing_bad(capslog, store_mock):
+def test_release_name_guessing_bad():
     """The charm name couldn't be guessed."""
-    fixme
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
+
+        args = Namespace(name=None, revision=7, channels=['somechannel'])
+        with pytest.raises(CommandError) as cm:
+            ReleaseCommand('group').run(args)
+
+        assert str(cm.value) == (
+            "Can't access name in 'metadata.yaml' file. The 'release' command needs to "
+            "be executed in a valid project's directory, or indicate the charm name with "
+            "the --name option.")
 
 
-def test_release_revision_guessing_ok(capslog, store_mock):
+def test_release_revision_guessing_ok(caplog, store_mock):
     """Release after guessing the revision."""
-    fixme
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    # make the store to return some revisions badly ordered so we're sure we're getting the max
+    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    store_response = [
+        Revision(revision=1, version='v1', created_at=tstamp, status='accepted', errors=[]),
+        Revision(revision=3, version='v1', created_at=tstamp, status='accepted', errors=[]),
+        Revision(revision=2, version='v1', created_at=tstamp, status='accepted', errors=[]),
+    ]
+    store_mock.list_revisions.return_value = store_response
+
+    channels = ['somechannel']
+    args = Namespace(name='testcharm', revision=None, channels=channels)
+    ReleaseCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_revisions('testcharm'),
+        call.release('testcharm', 3, channels),
+    ]
+
+    expected = "Revision 3 of charm 'testcharm' released ok to somechannel"
+    assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_release_revision_guessing_bad(capslog, store_mock):
+def test_release_revision_guessing_bad(store_mock):
     """Can not release because the charm doesn't have revisions published."""
-    fixme
+    store_mock.list_revisions.return_value = []
+
+    channels = ['somechannel']
+    args = Namespace(name='testcharm', revision=None, channels=channels)
+
+    with pytest.raises(CommandError) as cm:
+        ReleaseCommand('group').run(args)
+
+    assert str(cm.value) == "The charm 'testcharm' doesn't have any uploaded revision to release."

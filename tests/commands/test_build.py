@@ -636,8 +636,10 @@ def test_build_dispatcher_classic_hooks_whatever_respected(tmp_path):
     assert test_stuff.resolve() == charm_test_extra_stuff
 
 
-def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path):
+def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog):
     """Hooks that are just a symlink to the entrypoint are kept but replaced."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -667,6 +669,8 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path):
     test_hook = build_dir / 'hooks' / 'somehook'
     assert test_hook.is_symlink()
     assert test_hook.resolve() == included_dispatcher
+    expected = "Ignoring existing hook 'somehook' as it's a symlink to the entrypoint"
+    assert expected in [rec.message for rec in caplog.records]
 
 
 def test_build_dependencies_copied_dirs(tmp_path):

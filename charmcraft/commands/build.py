@@ -163,6 +163,8 @@ class Builder:
             for node in current_hookpath.iterdir():
                 if node.resolve() == self.entrypoint:
                     current_hooks_to_replace.append(node)
+                    logger.debug(
+                        "Ignoring existing hook %r as it's a symlink to the entrypoint", node.name)
                 else:
                     current_hooks_ok.append(node)
 

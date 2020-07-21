@@ -17,7 +17,8 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 from pathlib import Path
-import setuptools
+from textwrap import dedent
+from setuptools import setup
 
 import charmcraft
 
@@ -33,13 +34,13 @@ version_backup = Path("charmcraft/version.py~")
 version_path.rename(version_backup)
 try:
     with version_path.open("wt", encoding="utf8") as fh:
-        fh.write('''\
-# this is a generated file
+        fh.write(dedent('''
+            # this is a generated file
 
-version = {!r}
-'''.format(charmcraft.__version__))
+            version = {!r}
+            ''').format(charmcraft.__version__))
 
-    setuptools.setup(
+    setup(
         name="charmcraft",
         version=charmcraft.__version__,
         author="Facundo Batista",

@@ -20,6 +20,7 @@ import logging
 from unittest.mock import patch, call, MagicMock
 
 import pytest
+from dateutil import parser
 
 from charmcraft.commands.store.store import Store
 
@@ -209,3 +210,114 @@ def test_upload_polls_status(client_mock, caplog):
         "Status checked: " + str(status_response_3),
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+def test_list_revisions_ok(client_mock):
+    """One revision ok."""
+    store = Store()
+    client_mock.get.return_value = {'revisions': [
+        {
+            'revision': 7,
+            'version': 'v7',
+            'created-at': '2020-06-29T22:11:00.123',
+            'status': 'approved',
+            'errors': None,
+        }
+    ]}
+
+    result = store.list_revisions('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/revisions')
+    ]
+
+    (item,) = result
+    assert item.revision == 7
+    assert item.version == 'v7'
+    assert item.created_at == parser.parse('2020-06-29T22:11:00.123')
+    assert item.status == 'approved'
+    assert item.errors == []
+
+
+def test_list_revisions_empty(client_mock):
+    """No revisions listed."""
+    store = Store()
+    client_mock.get.return_value = {'revisions': []}
+
+    result = store.list_revisions('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/revisions')
+    ]
+    assert result == []
+
+
+def test_list_revisions_errors(client_mock):
+    """One revision with errors."""
+    store = Store()
+    client_mock.get.return_value = {'revisions': [
+        {
+            'revision': 7,
+            'version': 'v7',
+            'created-at': '2020-06-29T22:11:00.123',
+            'status': 'rejected',
+            'errors': [
+                {'message': "error text 1", 'code': "error-code-1"},
+                {'message': "error text 2", 'code': "error-code-2"},
+            ],
+        }
+    ]}
+
+    result = store.list_revisions('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/revisions')
+    ]
+
+    (item,) = result
+    error1, error2 = item.errors
+    assert error1.message == "error text 1"
+    assert error1.code == "error-code-1"
+    assert error2.message == "error text 2"
+    assert error2.code == "error-code-2"
+
+
+def test_list_revisions_several_mixed(client_mock):
+    """All cases mixed."""
+    client_mock.get.return_value = {'revisions': [
+        {
+            'revision': 1,
+            'version': 'v1',
+            'created-at': '2020-06-29T22:11:01',
+            'status': 'rejected',
+            'errors': [
+                {'message': "error", 'code': "code"},
+            ],
+        },
+        {
+            'revision': 2,
+            'version': 'v2',
+            'created-at': '2020-06-29T22:11:02',
+            'status': 'approved',
+            'errors': None,
+        },
+    ]}
+
+    store = Store()
+    result = store.list_revisions('some-name')
+
+    (item1, item2) = result
+
+    assert item1.revision == 1
+    assert item1.version == 'v1'
+    assert item1.created_at == parser.parse('2020-06-29T22:11:01')
+    assert item1.status == 'rejected'
+    (error,) = item1.errors
+    assert error.message == "error"
+    assert error.code == "code"
+
+    assert item2.revision == 2
+    assert item2.version == 'v2'
+    assert item2.created_at == parser.parse('2020-06-29T22:11:02')
+    assert item2.status == 'approved'
+    assert item2.errors == []

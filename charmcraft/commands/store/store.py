@@ -32,6 +32,8 @@ Charm = namedtuple('Charm', 'name private status')
 Uploaded = namedtuple('Uploaded', 'ok status revision')
 Revision = namedtuple('Revision', 'revision version created_at status errors')
 Error = namedtuple('Error', 'message code')
+Release = namedtuple('Release', 'revision channel expires_at')
+Channel = namedtuple('Channel', 'name track risk branch')
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -140,3 +142,27 @@ class Store:
         endpoint = '/v1/charm/{}/releases'.format(name)
         items = [{'revision': revision, 'channel': channel} for channel in channels]
         self._client.post(endpoint, items)
+
+    def list_releases(self, name):
+        """List current releases for a package."""
+        endpoint = '/v1/charm/{}/releases'.format(name)
+        response = self._client.get(endpoint)
+
+        channel_map = []
+        for item in response['channel-map']:
+            expires_at = item['expiration-date']
+            if expires_at is not None:
+                # `datetime.datetime.fromisoformat` is available only since Py3.7
+                expires_at = parser.parse(expires_at)
+            channel_map.append(
+                Release(revision=item['revision'], channel=item['channel'], expires_at=expires_at))
+
+        channels = [
+            Channel(
+                name=item['name'],
+                track=item['track'],
+                risk=item['risk'],
+                branch=item['branch'],
+            ) for item in response['charm']['channels']]
+
+        return channel_map, channels

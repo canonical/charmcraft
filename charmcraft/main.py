@@ -41,8 +41,8 @@ COMMAND_GROUPS = [
         store.RegisterNameCommand, store.ListNamesCommand,
         # pushing files and checking revisions
         store.UploadCommand, store.ListRevisionsCommand,
-        # release process
-        store.ReleaseCommand,
+        # release process, and show status
+        store.ReleaseCommand, store.StatusCommand,
     ]),
 ]
 

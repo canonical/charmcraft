@@ -286,3 +286,106 @@ class ReleaseCommand(BaseCommand):
         logger.info(
             "Revision %d of charm %r released ok to %s",
             revision, charm_name, ", ".join(parsed_args.channels))
+
+
+class StatusCommand(BaseCommand):
+    """List released revisions for a charm."""
+    name = 'status'
+    help_msg = "list released revisions for a charm in the Store"
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('--name', help="the name of the charm to get revisions")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        if parsed_args.name:
+            charm_name = parsed_args.name
+        else:
+            charm_name = get_name_from_metadata()
+            if charm_name is None:
+                raise CommandError(
+                    "Can't access name in 'metadata.yaml' file. The 'status' command needs to "
+                    "be executed in a valid project's directory, or indicate the charm name with "
+                    "the --name option.")
+
+        store = Store()
+        channel_map, channels = store.list_releases(charm_name)
+        print("======== command R m", channel_map)
+        print("======== command R c", channels)
+        if not channel_map:
+            logger.info("Nothing found")
+            return
+
+        headers = ['Revision', 'Version', 'Created at', 'Status']
+        data = []
+        for item in sorted(result, key=attrgetter('revision'), reverse=True):
+            # use just the status or include error message/code in it (if exist)
+            if item.errors:
+                errors = ("{0.message} [{0.code}]".format(e) for e in item.errors)
+                status = "{}: {}".format(item.status, '; '.join(errors))
+            else:
+                status = item.status
+
+            data.append([
+                item.revision,
+                item.version,
+                item.created_at.strftime('%Y-%m-%d'),
+                status,
+            ])
+
+        table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
+        for line in table.splitlines():
+            logger.info(line)
+#
+## XXX missing:
+## - arch, because we have "platform" now: architecture, os, series
+## - version: not comming in the store command (will be in the future)
+#
+#
+#Track    Channel    Version    Revision
+#latest   stable     9.0        375
+#         candidate  ↑          ↑
+#         beta       9.0        375
+#         edge       9.0        375
+#
+#
+#
+#{'channel-map': [{'channel': 'latest/beta',
+#                  'revision': 5,
+#
+#                 {'channel': 'latest/edge',
+#                  'revision': 10,
+#
+# 'charm': {'channels': [{'branch': None,
+#                         'fallback': None,
+#                         'name': 'latest/stable',
+#                         'risk': 'stable',
+#                         'track': 'latest'},
+#                        {'branch': None,
+#                         'fallback': 'latest/stable',
+#                         'name': 'latest/candidate',
+#                         'risk': 'candidate',
+#                         'track': 'latest'},
+#                        {'branch': None,
+#                         'fallback': 'latest/candidate',
+#                         'name': 'latest/beta',
+#                         'risk': 'beta',
+#                         'track': 'latest'},
+#                        {'branch': None,
+#                         'fallback': 'latest/beta',
+#                         'name': 'latest/edge',
+#                         'risk': 'edge',
+#                         'track': 'latest'}]}}
+#
+#Track    Arch    Channel            Version    Revision    Expires at
+#latest   amd64   stable             1.0        4
+#                 candidate          1.0        4
+#                 beta               ↑          ↑
+#                 edge               1.0        1
+#                 stable/branchitou  1.0        4           2020-08-19T20:29:40Z
+#2.0      amd64   stable             -          -
+#                 candidate          1.0        3
+#                 beta               1.0        3
+#                 edge               ↑          ↑
+#

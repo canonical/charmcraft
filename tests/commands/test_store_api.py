@@ -362,3 +362,74 @@ def test_release_multiple(client_mock):
     assert client_mock.mock_calls == [
         call.post('/v1/charm/testname/releases', expected_body),
     ]
+
+
+# -- tests for status
+
+
+def test_status_ok(client_mock):
+    """Get all the release information."""
+    client_mock.get.return_value = {
+        'channel-map': [
+            {
+                'channel': 'latest/beta',
+                'expiration-date': None,
+                'platform': {'architecture': 'all', 'os': 'all', 'series': 'all'},
+                'progressive': {'paused': None, 'percentage': None},
+                'revision': 5,
+                'when': '2020-07-16T18:45:24Z',
+            }, {
+                'channel': 'latest/edge/mybranch',
+                'expiration-date': '2020-08-16T18:46:02Z',
+                'platform': {'architecture': 'all', 'os': 'all', 'series': 'all'},
+                'progressive': {'paused': None, 'percentage': None},
+                'revision': 10,
+                'when': '2020-07-16T18:46:02Z',
+            }
+        ],
+        'charm': {
+            'channels': [
+                {
+                    'branch': None,
+                    'fallback': None,
+                    'name': 'latest/stable',
+                    'risk': 'stable',
+                    'track': 'latest',
+                }, {
+                    'branch': 'mybranch',
+                    'fallback':
+                    'latest/stable',
+                    'name': 'latest/edge/mybranch',
+                    'risk': 'edge',
+                    'track': 'latest',
+                },
+            ]
+        }
+    }
+
+    store = Store()
+    channel_map, channels = store.list_releases('testname')
+
+    # check how the client is used
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/testname/releases'),
+    ]
+
+    # check response
+    cmap1, cmap2 = channel_map
+    assert cmap1.revision == 5
+    assert cmap1.channel == 'latest/beta'
+    assert cmap1.expires_at is None
+    assert cmap2.revision == 10
+    assert cmap2.channel == 'latest/edge/mybranch'
+    assert cmap2.expires_at == parser.parse('2020-08-16T18:46:02Z')
+
+    channel1, channel2 = channels
+    assert channel1.name == 'latest/stable'
+    assert channel1.track == 'latest'
+    assert channel1.risk == 'stable'
+    assert channel1.branch is None
+    assert channel2.name == 'latest/edge/mybranch'
+    assert channel2.track == 'latest'
+    assert channel2.risk == 'edge'
+    assert channel2.branch == 'mybranch'

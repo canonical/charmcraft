@@ -19,6 +19,7 @@
 import logging
 import os
 import pathlib
+from operator import attrgetter
 
 import yaml
 from tabulate import tabulate
@@ -190,3 +191,52 @@ class UploadCommand(BaseCommand):
             # XXX Facundo 2020-06-30: at some point in the future the Store will give us also a
             # reason why it failed, to improve the message. Issue: #78.
             logger.info("Upload failed: got status %r", result.status)
+
+
+class ListRevisionsCommand(BaseCommand):
+    """List existing revisions for a charm."""
+    name = 'revisions'
+    help_msg = "list existing revisions for a charm in the Store"
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('--name', help="the name of the charm to get revisions")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        if parsed_args.name:
+            charm_name = parsed_args.name
+        else:
+            charm_name = get_name_from_metadata()
+            if charm_name is None:
+                raise CommandError(
+                    "Can't access name in 'metadata.yaml' file. The 'revisions' command needs to "
+                    "be executed in a valid project's directory, or indicate the charm name with "
+                    "the --name option.")
+
+        store = Store()
+        result = store.list_revisions(charm_name)
+        if not result:
+            logger.info("Nothing found")
+            return
+
+        headers = ['Revision', 'Version', 'Created at', 'Status']
+        data = []
+        for item in sorted(result, key=attrgetter('revision'), reverse=True):
+            # use just the status or include error message/code in it (if exist)
+            if item.errors:
+                errors = ("{0.message} [{0.code}]".format(e) for e in item.errors)
+                status = "{}: {}".format(item.status, '; '.join(errors))
+            else:
+                status = item.status
+
+            data.append([
+                item.revision,
+                item.version,
+                item.created_at.strftime('%Y-%m-%d'),
+                status,
+            ])
+
+        table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
+        for line in table.splitlines():
+            logger.info(line)

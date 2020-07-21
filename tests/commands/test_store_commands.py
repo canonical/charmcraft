@@ -16,6 +16,7 @@
 
 """Tests for the Store commands (code in store/__init__.py)."""
 
+import datetime
 import logging
 import os
 import pathlib
@@ -28,6 +29,7 @@ import yaml
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     ListNamesCommand,
+    ListRevisionsCommand,
     LoginCommand,
     LogoutCommand,
     RegisterNameCommand,
@@ -35,7 +37,7 @@ from charmcraft.commands.store import (
     WhoamiCommand,
     get_name_from_metadata,
 )
-from charmcraft.commands.store.store import User, Charm, Uploaded
+from charmcraft.commands.store.store import User, Charm, Uploaded, Revision, Error
 
 # used a lot!
 noargs = Namespace()
@@ -370,3 +372,164 @@ def test_upload_discover_default_no_charm_file(tmp_path, monkeypatch):
     assert str(cm.value) == (
         "Can't access charm file {!r}. You can indicate a charm file with "
         "the --charm-file option.".format(str(tmp_path / 'testcharm.charm')))
+
+
+# -- tests for list revisions command
+
+
+def test_revisions_simple(caplog, store_mock):
+    """Happy path of one result from the Store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Revision(
+            revision=1, version='v1', created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
+            status='accepted', errors=[]),
+    ]
+    store_mock.list_revisions.return_value = store_response
+
+    args = Namespace(name='testcharm')
+    ListRevisionsCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_revisions('testcharm'),
+    ]
+    expected = [
+        "Revision    Version    Created at    Status",
+        "1           v1         2020-07-03    accepted",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_revisions_name_from_metadata_ok(store_mock):
+    """The charm name is retrieved succesfully from the metadata."""
+    store_mock.list_revisions.return_value = []
+    args = Namespace(name=None)
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'test-name'
+        ListRevisionsCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_revisions('test-name'),
+    ]
+
+
+def test_revisions_name_from_metadata_problem(store_mock):
+    """The metadata wasn't there to get the name."""
+    args = Namespace(name=None)
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
+        with pytest.raises(CommandError) as cm:
+            ListRevisionsCommand('group').run(args)
+        assert str(cm.value) == (
+            "Can't access name in 'metadata.yaml' file. The 'revisions' command needs to "
+            "be executed in a valid project's directory, or indicate the charm name with "
+            "the --name option.")
+
+
+def test_revisions_empty(caplog, store_mock):
+    """No results from the store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = []
+    store_mock.list_revisions.return_value = store_response
+
+    args = Namespace(name='testcharm')
+    ListRevisionsCommand('group').run(args)
+
+    expected = [
+        "Nothing found",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_revisions_ordered_by_revision(caplog, store_mock):
+    """Results are presented ordered by revision in the table."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    # three Revisions with all values weirdly similar, the only difference is revision, so
+    # we really assert later that it was used for ordering
+    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    store_response = [
+        Revision(revision=1, version='v1', created_at=tstamp, status='accepted', errors=[]),
+        Revision(revision=3, version='v1', created_at=tstamp, status='accepted', errors=[]),
+        Revision(revision=2, version='v1', created_at=tstamp, status='accepted', errors=[]),
+    ]
+    store_mock.list_revisions.return_value = store_response
+
+    args = Namespace(name='testcharm')
+    ListRevisionsCommand('group').run(args)
+
+    expected = [
+        "Revision    Version    Created at    Status",
+        "3           v1         2020-07-03    accepted",
+        "2           v1         2020-07-03    accepted",
+        "1           v1         2020-07-03    accepted",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_revisions_version_null(caplog, store_mock):
+    """Support the case of version being None."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Revision(
+            revision=1, version=None, created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
+            status='accepted', errors=[]),
+    ]
+    store_mock.list_revisions.return_value = store_response
+
+    args = Namespace(name='testcharm')
+    ListRevisionsCommand('group').run(args)
+
+    expected = [
+        "Revision    Version    Created at    Status",
+        "1                      2020-07-03    accepted",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_revisions_errors_simple(caplog, store_mock):
+    """Support having one case with a simple error."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Revision(
+            revision=1, version=None, created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
+            status='rejected', errors=[Error(message="error text", code='broken')]),
+    ]
+    store_mock.list_revisions.return_value = store_response
+
+    args = Namespace(name='testcharm')
+    ListRevisionsCommand('group').run(args)
+
+    expected = [
+        "Revision    Version    Created at    Status",
+        "1                      2020-07-03    rejected: error text [broken]",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_revisions_errors_multiple(caplog, store_mock):
+    """Support having one case with multiple errors."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Revision(
+            revision=1, version=None, created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
+            status='rejected', errors=[
+                Error(message="text 1", code='missing-stuff'),
+                Error(message="other long error text", code='broken'),
+            ]),
+    ]
+    store_mock.list_revisions.return_value = store_response
+
+    args = Namespace(name='testcharm')
+    ListRevisionsCommand('group').run(args)
+
+    expected = [
+        "Revision    Version    Created at    Status",
+        "1                      2020-07-03    rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
+    ]
+    assert expected == [rec.message for rec in caplog.records]

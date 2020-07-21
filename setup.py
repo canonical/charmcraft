@@ -49,4 +49,5 @@ setuptools.setup(
     },
     python_requires='>=3',
     install_requires=requirements,
+    zip_safe=False,
 )

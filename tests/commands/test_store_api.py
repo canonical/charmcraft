@@ -16,9 +16,11 @@
 
 """Tests for the Store API layer (code in store/store.py)."""
 
+import logging
 from unittest.mock import patch, call, MagicMock
 
 import pytest
+from dateutil import parser
 
 from charmcraft.commands.store.store import Store
 
@@ -115,3 +117,207 @@ def test_list_registered_names_multiple(client_mock):
     assert item2.name == 'name2'
     assert item2.private
     assert item2.status == 'status2'
+
+
+def test_upload_straightforward(client_mock, caplog):
+    """The full and successful upload case."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    store = Store()
+
+    # the first response, for when pushing bytes
+    test_upload_id = 'test-upload-id'
+    client_mock.push.return_value = test_upload_id
+
+    # the second response, for telling the store it was pushed
+    test_status_url = 'https://store.c.c/status'
+    client_mock.post.return_value = {'status-url': test_status_url}
+
+    # the third response, status ok (note the patched UPLOAD_ENDING_STATUSES below)
+    test_revision = 123
+    test_status_ok = 'test-status'
+    status_response = {'revisions': [{'status': test_status_ok, 'revision': test_revision}]}
+    client_mock.get.return_value = status_response
+
+    test_status_resolution = 'test-ok-or-not'
+    fake_statuses = {test_status_ok: test_status_resolution}
+    test_charm_name = 'test-name'
+    test_filepath = 'test-filepath'
+    with patch.dict('charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES', fake_statuses):
+        result = store.upload(test_charm_name, test_filepath)
+
+    # check all client calls
+    assert client_mock.mock_calls == [
+        call.push(test_filepath),
+        call.post('/v1/charm/{}/revisions'.format(test_charm_name), {'upload-id': test_upload_id}),
+        call.get(test_status_url),
+    ]
+
+    # check result (build after patched ending struct)
+    assert result.ok == test_status_resolution
+    assert result.status == test_status_ok
+    assert result.revision == test_revision
+
+    # check logs
+    expected = [
+        "Upload test-upload-id started, got status url https://store.c.c/status",
+        "Status checked: " + str(status_response),
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_upload_polls_status(client_mock, caplog):
+    """Upload polls status url until the end is indicated."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    store = Store()
+
+    # first and second response, for pushing bytes and let the store know about it
+    test_upload_id = 'test-upload-id'
+    client_mock.push.return_value = test_upload_id
+    test_status_url = 'https://store.c.c/status'
+    client_mock.post.return_value = {'status-url': test_status_url}
+
+    # the status checking response, will answer something not done yet twice, then ok
+    test_revision = 123
+    test_status_ok = 'test-status'
+    status_response_1 = {'revisions': [{'status': 'still-scanning', 'revision': None}]}
+    status_response_2 = {'revisions': [{'status': 'more-revisions', 'revision': None}]}
+    status_response_3 = {'revisions': [{'status': test_status_ok, 'revision': test_revision}]}
+    client_mock.get.side_effect = [status_response_1, status_response_2, status_response_3]
+
+    test_status_resolution = 'clean and crispy'
+    fake_statuses = {test_status_ok: test_status_resolution}
+    with patch.dict('charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES', fake_statuses):
+        with patch('charmcraft.commands.store.store.POLL_DELAY', 0.01):
+            result = store.upload('some-name', 'some-filepath')
+
+    # check the status-checking client calls (kept going until third one)
+    assert client_mock.mock_calls[2:] == [
+        call.get(test_status_url),
+        call.get(test_status_url),
+        call.get(test_status_url),
+    ]
+
+    # check result which must have values from final result
+    assert result.ok == test_status_resolution
+    assert result.status == test_status_ok
+    assert result.revision == test_revision
+
+    # check logs
+    expected = [
+        "Upload test-upload-id started, got status url https://store.c.c/status",
+        "Status checked: " + str(status_response_1),
+        "Status checked: " + str(status_response_2),
+        "Status checked: " + str(status_response_3),
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_list_revisions_ok(client_mock):
+    """One revision ok."""
+    store = Store()
+    client_mock.get.return_value = {'revisions': [
+        {
+            'revision': 7,
+            'version': 'v7',
+            'created-at': '2020-06-29T22:11:00.123',
+            'status': 'approved',
+            'errors': None,
+        }
+    ]}
+
+    result = store.list_revisions('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/revisions')
+    ]
+
+    (item,) = result
+    assert item.revision == 7
+    assert item.version == 'v7'
+    assert item.created_at == parser.parse('2020-06-29T22:11:00.123')
+    assert item.status == 'approved'
+    assert item.errors == []
+
+
+def test_list_revisions_empty(client_mock):
+    """No revisions listed."""
+    store = Store()
+    client_mock.get.return_value = {'revisions': []}
+
+    result = store.list_revisions('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/revisions')
+    ]
+    assert result == []
+
+
+def test_list_revisions_errors(client_mock):
+    """One revision with errors."""
+    store = Store()
+    client_mock.get.return_value = {'revisions': [
+        {
+            'revision': 7,
+            'version': 'v7',
+            'created-at': '2020-06-29T22:11:00.123',
+            'status': 'rejected',
+            'errors': [
+                {'message': "error text 1", 'code': "error-code-1"},
+                {'message': "error text 2", 'code': "error-code-2"},
+            ],
+        }
+    ]}
+
+    result = store.list_revisions('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/revisions')
+    ]
+
+    (item,) = result
+    error1, error2 = item.errors
+    assert error1.message == "error text 1"
+    assert error1.code == "error-code-1"
+    assert error2.message == "error text 2"
+    assert error2.code == "error-code-2"
+
+
+def test_list_revisions_several_mixed(client_mock):
+    """All cases mixed."""
+    client_mock.get.return_value = {'revisions': [
+        {
+            'revision': 1,
+            'version': 'v1',
+            'created-at': '2020-06-29T22:11:01',
+            'status': 'rejected',
+            'errors': [
+                {'message': "error", 'code': "code"},
+            ],
+        },
+        {
+            'revision': 2,
+            'version': 'v2',
+            'created-at': '2020-06-29T22:11:02',
+            'status': 'approved',
+            'errors': None,
+        },
+    ]}
+
+    store = Store()
+    result = store.list_revisions('some-name')
+
+    (item1, item2) = result
+
+    assert item1.revision == 1
+    assert item1.version == 'v1'
+    assert item1.created_at == parser.parse('2020-06-29T22:11:01')
+    assert item1.status == 'rejected'
+    (error,) = item1.errors
+    assert error.message == "error"
+    assert error.code == "code"
+
+    assert item2.revision == 2
+    assert item2.version == 'v2'
+    assert item2.created_at == parser.parse('2020-06-29T22:11:02')
+    assert item2.status == 'approved'
+    assert item2.errors == []

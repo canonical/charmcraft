@@ -38,7 +38,9 @@ COMMAND_GROUPS = [
         # auth
         store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
         # name handling
-        store.RegisterNameCommand, store.ListRegisteredCommand,
+        store.RegisterNameCommand, store.ListNamesCommand,
+        # pushing files and checking revisions
+        store.UploadCommand, store.ListRevisionsCommand,
     ]),
 ]
 

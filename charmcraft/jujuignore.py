@@ -131,7 +131,8 @@ def _rule_to_regex(rule):
                 res = res + '/'
         else:
             res += re.escape(c)
-    return r'(?s:%s)\Z' % res
+    res += r'\Z'
+    return res
 
 
 class _Matcher:
@@ -143,7 +144,7 @@ class _Matcher:
         self.orig_rule = orig_rule
         self.invert = invert
         self.only_dirs = only_dirs
-        self.compiled = re.compile(regex)
+        self.compiled = re.compile(regex, re.DOTALL)
 
     def match(self, path: str, is_dir: bool) -> str:
         """Checks if a path matches.

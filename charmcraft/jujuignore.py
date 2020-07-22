@@ -25,7 +25,7 @@ SKIP = 'skip'
 FORCEKEEP = 'forcekeep'
 
 
-_escapes = {
+_unescapes = {
     r'\!': '!',
     r'\ ': ' ',
     r'\#': '#',
@@ -33,15 +33,15 @@ _escapes = {
 }
 
 
-def _rstrip_whitespace(rule):
-    """Remove trailing whitespace that isn't escaped"""
+def _rstrip_unescaped(rule):
+    """Remove trailing whitespace that isn't escaped."""
     i = len(rule) - 1
-    while i > 0:
+    while i >= 0:
         if rule[i] == '\n' or rule[i] == '\r':
             rule = rule[:i]
         elif rule[i] != ' ':
             break
-        elif rule[i - 1] != '\\':
+        elif i == 0 or rule[i - 1] != '\\':
             rule = rule[:i]
         i -= 1
     return rule
@@ -50,8 +50,8 @@ def _rstrip_whitespace(rule):
 def _unescape_rule(rule):
     """Take out escape characters and trailing unescaped whitespace from the rule"""
     rule = rule.lstrip()
-    rule = _rstrip_whitespace(rule)
-    for old, new in _escapes.items():
+    rule = _rstrip_unescaped(rule)
+    for old, new in _unescapes.items():
         rule = rule.replace(old, new)
     return rule
 
@@ -74,25 +74,25 @@ def _rule_to_regex(rule):
     res = ''
     while i < n:
         c = rule[i]
-        i = i + 1
+        i += 1
         if c == '*':
             if i < n and rule[i] == '*':
-                i = i + 1
-                res = res + '.*'
+                i += 1
+                res += '.*'
             else:
-                res = res + '[^/]*'
+                res += '[^/]*'
         elif c == '?':
-            res = res + '.'
+            res += '.'
         elif c == '[':
             j = i
             if j < n and rule[j] == '!':
-                j = j + 1
+                j += 1
             if j < n and rule[j] == ']':
-                j = j + 1
+                j += 1
             while j < n and rule[j] != ']':
-                j = j + 1
+                j += 1
             if j >= n:
-                res = res + '\\['
+                res += '\\['
             else:
                 stuff = rule[i:j]
                 if '--' not in stuff:
@@ -106,12 +106,14 @@ def _rule_to_regex(rule):
                             break
                         chunks.append(rule[i:k])
                         i = k + 1
-                        k = k + 3
+                        k += 3
                     chunks.append(rule[i:j])
                     # Escape backslashes and hyphens for set difference (--).
                     # Hyphens that create ranges shouldn't be escaped.
-                    stuff = '-'.join(s.replace('\\', r'\\').replace('-', r'\-')
-                                     for s in chunks)
+                    stuff = '-'.join(s.translate({
+                        ord('\\'): r'\\',
+                        ord('-'): r'\-',
+                    }) for s in chunks)
                 # Escape set operations (&&, ~~ and ||).
                 stuff = re.sub(r'([&~|])', r'\\\1', stuff)
                 i = j + 1
@@ -123,12 +125,12 @@ def _rule_to_regex(rule):
         elif c == '/':
             # Special case of '/**/' which can match a single '/'
             if i < n and rule[i] == '*' and rule[i - 1:i + 3] == '/**/':
-                i = i + 3
+                i += 3
                 res = res + '.*/'
             else:
                 res = res + '/'
         else:
-            res = res + re.escape(c)
+            res += re.escape(c)
     return r'(?s:%s)\Z' % res
 
 
@@ -141,7 +143,6 @@ class _Matcher:
         self.orig_rule = orig_rule
         self.invert = invert
         self.only_dirs = only_dirs
-        self.regex = regex
         self.compiled = re.compile(regex)
 
     def match(self, path: str, is_dir: bool) -> str:
@@ -169,7 +170,7 @@ class JujuIgnore:
     def _compile_from(self, patterns):
         for line_num, rule in enumerate(patterns):
             # humans like line numbers to start from 1
-            line_num = line_num + 1
+            line_num += 1
             orig_rule = rule
             rule = rule.lstrip().rstrip('\r\n')
             if not rule or rule.startswith('#'):
@@ -177,7 +178,7 @@ class JujuIgnore:
             invert = False
             if rule.startswith('!'):
                 invert = True
-                rule = rule[1:]
+                rule = rule.lstrip('!')
             rule = _unescape_rule(rule)
             only_dirs = False
             if rule.endswith('/'):

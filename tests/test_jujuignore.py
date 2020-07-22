@@ -152,6 +152,20 @@ def test_jujuignore_everything_under_foo_but_readme():
     assert not ignore.match('/foo/README.md', is_dir=False)
 
 
+def test_jujuignore_negation():
+    ignore = jujuignore.JujuIgnore([
+        '*.py',
+        '!foo.py',
+        '!!!bar.py',
+    ])
+    assert not ignore.match('bar.py', is_dir=False)
+    assert not ignore.match('foo.py', is_dir=False)
+    assert ignore.match('baz.py', is_dir=False)
+    assert not ignore.match('foo/bar.py', is_dir=False)
+    assert not ignore.match('foo/foo.py', is_dir=False)
+    assert ignore.match('foo/baz.py', is_dir=False)
+
+
 def test_jujuignore_multiple_doublestar():
     ignore = jujuignore.JujuIgnore(['foo/**/bar/**/baz'])
     assert ignore.match('/foo/1/2/bar/baz', is_dir=True)
@@ -226,16 +240,14 @@ def test_jujuignore_star_match():
     assert not ignore.match('/foo/2.py', is_dir=False)
 
 
-def test_rstrip_whitespace():
-    assert jujuignore._rstrip_whitespace(r'') == ''
-    # We don't care about this case, because an earlier lstrip will handle it
-    # but we shouldn't break
-    assert jujuignore._rstrip_whitespace(r' ') == ' '
-    assert jujuignore._rstrip_whitespace(r'a') == 'a'
-    assert jujuignore._rstrip_whitespace(r'a ') == 'a'
-    assert jujuignore._rstrip_whitespace(r'a  ') == 'a'
-    assert jujuignore._rstrip_whitespace(r'a\  ') == r'a\ '
-    assert jujuignore._rstrip_whitespace(r'a foo\  ') == r'a foo\ '
+def test_rstrip_unescaped():
+    assert jujuignore._rstrip_unescaped(r'') == ''
+    assert jujuignore._rstrip_unescaped(r' ') == ''
+    assert jujuignore._rstrip_unescaped(r'a') == 'a'
+    assert jujuignore._rstrip_unescaped(r'a ') == 'a'
+    assert jujuignore._rstrip_unescaped(r'a  ') == 'a'
+    assert jujuignore._rstrip_unescaped(r'a\  ') == r'a\ '
+    assert jujuignore._rstrip_unescaped(r'a foo\  ') == r'a foo\ '
 
 
 def test_unescape_rule():

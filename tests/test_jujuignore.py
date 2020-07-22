@@ -195,6 +195,16 @@ def test_jujuignore_leading_whitespace():
     assert not ignore.match('comment', is_dir=True)
 
 
+def test_jujuignore_bracket():
+    ignore = jujuignore.JujuIgnore([
+        r'*.py[cod]',
+    ])
+    assert not ignore.match('foo.py', is_dir=False)
+    assert ignore.match('foo.pyc', is_dir=False)
+    assert ignore.match('foo.pyo', is_dir=False)
+    assert ignore.match('foo.pyd', is_dir=False)
+
+
 def test_jujuignore_simple_match():
     ignore = jujuignore.JujuIgnore([
         r'foo',

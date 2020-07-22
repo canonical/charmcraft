@@ -2,3 +2,5 @@
 
 pytest == 5.4.1
 flake8 == 3.7.9
+git+https://github.com/canonical/operator
+

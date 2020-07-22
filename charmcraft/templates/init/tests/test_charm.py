@@ -9,8 +9,7 @@ from charm import {{ class_name }}
 class TestCharm(unittest.TestCase):
     def test_config_changed(self):
         harness = Harness({{ class_name }})
-        # from ops 0.7,
-        # self.addCleanup(harness.cleanup)
+        self.addCleanup(harness.cleanup)
         harness.begin()
         self.assertEqual(list(harness.charm._stored.things), [])
         harness.update_config({"thing": "foo"})

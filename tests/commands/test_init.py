@@ -27,7 +27,9 @@ def test_init_pep8(tmp_path, *, name=None, author="J Doe"):
         name = tmp_path.name
     cmd = InitCommand('group')
     cmd.run(Namespace(directory=tmp_path, name=name, author=author))
-    paths = get_python_filepaths(roots=[tmp_path / "src", tmp_path / "tests"], python_paths=[])
+    paths = get_python_filepaths(
+        roots=[str(tmp_path / "src"), str(tmp_path / "tests")],
+        python_paths=[])
     pep8_test(paths)
 
 
@@ -68,4 +70,4 @@ def test_executables(tmp_path):
 def test_tests(tmp_path):
     cmd = InitCommand('group')
     cmd.run(Namespace(directory=tmp_path, name=tmp_path.name, author="홍길동"))
-    subprocess.run(["./run_tests"], cwd=tmp_path, check=True)
+    subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True)

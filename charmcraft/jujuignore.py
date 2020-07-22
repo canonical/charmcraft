@@ -216,3 +216,20 @@ class JujuIgnore:
                 keep = True
                 break
         return not keep
+
+
+# default_juju_ignore is the initial set of ignores.
+# juju itself always includes these before adding the contents of .jujuignore
+default_juju_ignore = '''
+.git
+.svn
+.hg
+.bzr
+.tox
+
+/build/
+/revision
+/version
+
+.jujuignore
+'''.split('\n')

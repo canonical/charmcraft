@@ -317,10 +317,16 @@ class StatusCommand(BaseCommand):
 
         releases_by_channel = {item.channel: item for item in channel_map}
 
-        # process and order the channels
+        # process and order the channels, while preserving the tracks order
+        all_tracks = []
         per_track = {}
         branch_present = False
         for channel in channels:
+            # it's super rare to have a more than just a bunch of tracks (furthermore, normally
+            # there's only one), so it's ok to do this sequential search
+            if channel.track not in all_tracks:
+                all_tracks.append(channel.track)
+
             nonbranches_list, branches_list = per_track.setdefault(channel.track, ([], []))
             if channel.branch is None:
                 # insert branch rigth after its fallback
@@ -333,10 +339,6 @@ class StatusCommand(BaseCommand):
             else:
                 branches_list.append(channel)
                 branch_present = True
-        tracks = sorted(per_track.keys())
-        tracks.remove('latest')
-        tracks.insert(0, 'latest')
-        #FIXME: needs to preserve the order here
 
         headers = ['Track', 'Channel', 'Revision']
         if branch_present:
@@ -345,7 +347,7 @@ class StatusCommand(BaseCommand):
         # show everything, grouped by tracks, with regular channels at first and
         # branches (if any) after those
         data = []
-        for track in tracks:
+        for track in all_tracks:
             release_shown_for_this_track = False
             shown_track = track
             channels, branches = per_track[track]

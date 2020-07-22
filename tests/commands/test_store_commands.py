@@ -820,6 +820,52 @@ def test_status_multiple_tracks(caplog, store_mock):
     assert expected == [rec.message for rec in caplog.records]
 
 
+def test_status_tracks_order(caplog, store_mock):
+    """Respect the track ordering from the store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channel_map = [
+        Release(revision=1, channel='latest/edge', expires_at=None),
+        Release(revision=2, channel='aaa/edge', expires_at=None),
+        Release(revision=3, channel='2.0/edge', expires_at=None),
+        Release(revision=4, channel='zzz/edge', expires_at=None),
+    ]
+    channels_latest = _build_channels()
+    channels_track_1 = _build_channels(track='zzz')
+    channels_track_2 = _build_channels(track='2.0')
+    channels_track_3 = _build_channels(track='aaa')
+    channels = channels_latest + channels_track_1 + channels_track_2 + channels_track_3
+    store_mock.list_releases.return_value = (channel_map, channels)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('testcharm'),
+    ]
+
+    expected = [
+        "Track    Channel    Revision",
+        "latest   stable     -",
+        "         candidate  -",
+        "         beta       -",
+        "         edge       1",
+        "zzz      stable     -",
+        "         candidate  -",
+        "         beta       -",
+        "         edge       4",
+        "2.0      stable     -",
+        "         candidate  -",
+        "         beta       -",
+        "         edge       3",
+        "aaa      stable     -",
+        "         candidate  -",
+        "         beta       -",
+        "         edge       2",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
 def test_status_with_one_branch(caplog, store_mock):
     """Support having one branch."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")

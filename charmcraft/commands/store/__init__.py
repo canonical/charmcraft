@@ -311,81 +311,67 @@ class StatusCommand(BaseCommand):
 
         store = Store()
         channel_map, channels = store.list_releases(charm_name)
-        print("======== command R m", channel_map)
-        print("======== command R c", channels)
         if not channel_map:
             logger.info("Nothing found")
             return
 
-        headers = ['Revision', 'Version', 'Created at', 'Status']
-        data = []
-        for item in sorted(result, key=attrgetter('revision'), reverse=True):
-            # use just the status or include error message/code in it (if exist)
-            if item.errors:
-                errors = ("{0.message} [{0.code}]".format(e) for e in item.errors)
-                status = "{}: {}".format(item.status, '; '.join(errors))
-            else:
-                status = item.status
+        releases_by_channel = {item.channel: item for item in channel_map}
 
-            data.append([
-                item.revision,
-                item.version,
-                item.created_at.strftime('%Y-%m-%d'),
-                status,
-            ])
+        # process and order the channels
+        per_track = {}
+        branch_present = False
+        for channel in channels:
+            nonbranches_list, branches_list = per_track.setdefault(channel.track, ([], []))
+            if channel.branch is None:
+                # insert branch rigth after its fallback
+                for idx, stored in enumerate(nonbranches_list, 1):
+                    if stored.name == channel.fallback:
+                        nonbranches_list.insert(idx, channel)
+                        break
+                else:
+                    nonbranches_list.append(channel)
+            else:
+                branches_list.append(channel)
+                branch_present = True
+        tracks = sorted(per_track.keys())
+        tracks.remove('latest')
+        tracks.insert(0, 'latest')
+        #FIXME: needs to preserve the order here
+
+        headers = ['Track', 'Channel', 'Revision']
+        if branch_present:
+            headers.append('Expires at')
+
+        # show everything, grouped by tracks, with regular channels at first and
+        # branches (if any) after those
+        data = []
+        for track in tracks:
+            release_shown_for_this_track = False
+            shown_track = track
+            channels, branches = per_track[track]
+
+            for channel in channels:
+                description = channel.risk
+
+                # get the release of the channel, fallbacking accordingly
+                release = releases_by_channel.get(channel.name)
+                if release is None:
+                    revision = '↑' if release_shown_for_this_track else '-'
+                else:
+                    revision = release.revision
+                    release_shown_for_this_track = True
+
+                data.append([shown_track, description, revision])
+
+                # stop showing the track name for the rest of the track
+                shown_track = ''
+
+            for branch in branches:
+                description = '/'.join((branch.risk, branch.branch))
+                release = releases_by_channel[branch.name]
+                expiration = release.expires_at.isoformat()
+                data.append(['', description, release.revision, expiration])
 
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():
             logger.info(line)
-#
-## XXX missing:
-## - arch, because we have "platform" now: architecture, os, series
-## - version: not comming in the store command (will be in the future)
-#
-#
-#Track    Channel    Version    Revision
-#latest   stable     9.0        375
-#         candidate  ↑          ↑
-#         beta       9.0        375
-#         edge       9.0        375
-#
-#
-#
-#{'channel-map': [{'channel': 'latest/beta',
-#                  'revision': 5,
-#
-#                 {'channel': 'latest/edge',
-#                  'revision': 10,
-#
-# 'charm': {'channels': [{'branch': None,
-#                         'fallback': None,
-#                         'name': 'latest/stable',
-#                         'risk': 'stable',
-#                         'track': 'latest'},
-#                        {'branch': None,
-#                         'fallback': 'latest/stable',
-#                         'name': 'latest/candidate',
-#                         'risk': 'candidate',
-#                         'track': 'latest'},
-#                        {'branch': None,
-#                         'fallback': 'latest/candidate',
-#                         'name': 'latest/beta',
-#                         'risk': 'beta',
-#                         'track': 'latest'},
-#                        {'branch': None,
-#                         'fallback': 'latest/beta',
-#                         'name': 'latest/edge',
-#                         'risk': 'edge',
-#                         'track': 'latest'}]}}
-#
-#Track    Arch    Channel            Version    Revision    Expires at
-#latest   amd64   stable             1.0        4
-#                 candidate          1.0        4
-#                 beta               ↑          ↑
-#                 edge               1.0        1
-#                 stable/branchitou  1.0        4           2020-08-19T20:29:40Z
-#2.0      amd64   stable             -          -
-#                 candidate          1.0        3
-#                 beta               1.0        3
-#                 edge               ↑          ↑
-#

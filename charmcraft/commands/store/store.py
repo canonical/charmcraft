@@ -33,7 +33,7 @@ Uploaded = namedtuple('Uploaded', 'ok status revision')
 Revision = namedtuple('Revision', 'revision version created_at status errors')
 Error = namedtuple('Error', 'message code')
 Release = namedtuple('Release', 'revision channel expires_at')
-Channel = namedtuple('Channel', 'name track risk branch')
+Channel = namedtuple('Channel', 'name fallback track risk branch')
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -160,6 +160,7 @@ class Store:
         channels = [
             Channel(
                 name=item['name'],
+                fallback=item['fallback'],
                 track=item['track'],
                 risk=item['risk'],
                 branch=item['branch'],

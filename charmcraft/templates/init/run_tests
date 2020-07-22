@@ -1,0 +1,6 @@
+#!/bin/sh -e
+# Copyright (c) {{ year }} {{ author }}
+# See LICENSE file for licensing details.
+
+flake8 --max-line-length=99
+PYTHONPATH=src${PYTHONPATH:+:}$PYTHONPATH python3 -m unittest -v "$@"

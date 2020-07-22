@@ -19,13 +19,13 @@ import logging
 import os
 import pathlib
 import shutil
-import stat
 import subprocess
 import zipfile
 
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
+from ._utils import make_executable
 
 logger = logging.getLogger(__name__)
 
@@ -144,8 +144,7 @@ class Builder:
             dispatch_path = self.buildpath / DISPATCH_FILENAME
             with dispatch_path.open("wt", encoding="utf8") as fh:
                 fh.write(dispatch_content)
-                fileno = fh.fileno()
-                os.fchmod(fileno, os.fstat(fileno).st_mode | stat.S_IXUSR)
+                make_executable(fh)
 
         # bunch of symlinks, to support old juju: whatever is in the charm's hooks directory
         # is respected (unless links to the entrypoint), but also the mandatory ones are

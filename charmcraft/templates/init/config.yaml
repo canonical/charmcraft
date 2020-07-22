@@ -1,0 +1,7 @@
+# Copyright (c) {{ year }} {{ author }}
+# See LICENSE file for licensing details.
+options:
+  thing:
+    default: 🪄
+    description: A thing used by the charm.
+    type: string

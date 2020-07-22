@@ -29,20 +29,29 @@ from charmcraft import __version__
 FLAKE8_OPTIONS = {'max_line_length': 99, 'select': ['E', 'W', 'F', 'C', 'N']}
 
 
-def _get_python_filepaths():
+def get_python_filepaths(*, roots=None, python_paths=None):
     """Helper to retrieve paths of Python files."""
-    python_paths = ['setup.py']
-    for root in ['charmcraft', 'tests']:
+    if python_paths is None:
+        python_paths = ['setup.py']
+    if roots is None:
+        roots = ['charmcraft', 'tests']
+    for root in roots:
         for dirpath, dirnames, filenames in os.walk(root):
             for filename in filenames:
                 if filename.endswith(".py"):
                     python_paths.append(os.path.join(dirpath, filename))
+            for i, dirname in enumerate(dirnames):
+                if dirname == "templates":
+                    del dirnames[i]
     return python_paths
 
 
 def test_pep8():
     """Verify all files are nicely styled."""
-    python_filepaths = _get_python_filepaths()
+    pep8_test(get_python_filepaths())
+
+
+def pep8_test(python_filepaths):
     style_guide = get_style_guide(**FLAKE8_OPTIONS)
     fake_stdout = io.StringIO()
     with patch('sys.stdout', fake_stdout):
@@ -64,7 +73,7 @@ def test_ensure_copyright():
     """Check that all non-empty Python files have copyright somewhere in the first 5 lines."""
     issues = []
     regex = re.compile(r"# Copyright \d{4}(-\d{4})? Canonical Ltd.$")
-    for filepath in _get_python_filepaths():
+    for filepath in get_python_filepaths():
         if os.stat(filepath).st_size == 0:
             continue
 

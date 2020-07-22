@@ -37,9 +37,11 @@ def _rstrip_whitespace(rule):
     """Remove trailing whitespace that isn't escaped"""
     i = len(rule) - 1
     while i > 0:
-        if rule[i] != ' ':
+        if rule[i] == '\n' or rule[i] == '\r':
+            rule = rule[:i]
+        elif rule[i] != ' ':
             break
-        if rule[i - 1] != '\\':
+        elif rule[i - 1] != '\\':
             rule = rule[:i]
         i -= 1
     return rule
@@ -169,7 +171,7 @@ class JujuIgnore:
             # humans like line numbers to start from 1
             line_num = line_num + 1
             orig_rule = rule
-            rule = rule.lstrip()
+            rule = rule.lstrip().rstrip('\r\n')
             if not rule or rule.startswith('#'):
                 continue
             invert = False
@@ -198,7 +200,6 @@ class JujuIgnore:
                 'Translated .jujuignore %d "%s" => "%s"',
                 line_num,
                 orig_rule,
-                rule,
                 regex)
 
     def match(self, path: str, is_dir: bool) -> bool:

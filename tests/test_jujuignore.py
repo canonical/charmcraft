@@ -15,14 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import io
-import itertools
-import os
-import re
-import subprocess
-from unittest.mock import patch
-
-import pytest
-from flake8.api.legacy import get_style_guide
+import textwrap
 
 from charmcraft import jujuignore
 
@@ -242,3 +235,15 @@ def test_unescape_rule():
     assert jujuignore._unescape_rule(r'\!') == '!'
     assert jujuignore._unescape_rule(r'\ ') == ' '
     assert jujuignore._unescape_rule(r' foo\ ') == 'foo '
+
+
+def test_from_file():
+    content = io.StringIO(textwrap.dedent('''\
+    foo
+    /bar
+    '''))
+    ignore = jujuignore.JujuIgnore(content)
+    assert ignore.match('foo', is_dir=False)
+    assert ignore.match('/foo', is_dir=False)
+    assert ignore.match('/bar', is_dir=False)
+    assert not ignore.match('/foo/bar', is_dir=False)

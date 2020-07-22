@@ -551,7 +551,7 @@ def test_release_simple_ok(caplog, store_mock):
         call.release('testcharm', 7, channels),
     ]
 
-    expected = "Revision 7 of charm 'testcharm' released ok to somechannel"
+    expected = "Revision 7 of charm 'testcharm' released to somechannel"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -562,7 +562,7 @@ def test_release_simple_multiple_channels(caplog, store_mock):
     args = Namespace(name='testcharm', revision=7, channels=['channel1', 'channel2', 'channel3'])
     ReleaseCommand('group').run(args)
 
-    expected = "Revision 7 of charm 'testcharm' released ok to channel1, channel2, channel3"
+    expected = "Revision 7 of charm 'testcharm' released to channel1, channel2, channel3"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -578,7 +578,7 @@ def test_release_name_guessing_ok(caplog, store_mock):
     assert store_mock.mock_calls == [
         call.release('guessed-name', 7, ['somechannel']),
     ]
-    expected = "Revision 7 of charm 'guessed-name' released ok to somechannel"
+    expected = "Revision 7 of charm 'guessed-name' released to somechannel"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -619,7 +619,7 @@ def test_release_revision_guessing_ok(caplog, store_mock):
         call.release('testcharm', 3, channels),
     ]
 
-    expected = "Revision 3 of charm 'testcharm' released ok to somechannel"
+    expected = "Revision 3 of charm 'testcharm' released to somechannel"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -633,4 +633,4 @@ def test_release_revision_guessing_bad(store_mock):
     with pytest.raises(CommandError) as cm:
         ReleaseCommand('group').run(args)
 
-    assert str(cm.value) == "The charm 'testcharm' doesn't have any uploaded revision to release."
+    assert str(cm.value) == "The charm 'testcharm' doesn't have any uploaded revisions."

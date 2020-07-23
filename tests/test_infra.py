@@ -26,8 +26,6 @@ from flake8.api.legacy import get_style_guide
 
 from charmcraft import __version__
 
-FLAKE8_OPTIONS = {'max_line_length': 99, 'select': ['E', 'W', 'F', 'C', 'N']}
-
 
 def _get_python_filepaths():
     """Helper to retrieve paths of Python files."""
@@ -43,7 +41,7 @@ def _get_python_filepaths():
 def test_pep8():
     """Verify all files are nicely styled."""
     python_filepaths = _get_python_filepaths()
-    style_guide = get_style_guide(**FLAKE8_OPTIONS)
+    style_guide = get_style_guide()
     fake_stdout = io.StringIO()
     with patch('sys.stdout', fake_stdout):
         report = style_guide.check_files(python_filepaths)

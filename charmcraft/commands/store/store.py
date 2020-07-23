@@ -134,3 +134,9 @@ class Store:
                 errors=errors,
             ))
         return result
+
+    def release(self, name, revision, channels):
+        """Release one or more revisions for a package."""
+        endpoint = '/v1/charm/{}/releases'.format(name)
+        items = [{'revision': revision, 'channel': channel} for channel in channels]
+        self._client.post(endpoint, items)

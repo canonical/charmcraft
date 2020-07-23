@@ -1,7 +1,0 @@
-# Copyright (c) {{ year }} {{ author }}
-# See LICENSE file for licensing details.
-name: {{ name }}
-description: |
-  XXX: fill out the charm's description
-summary: |
-  XXX: fill out the charm's summary

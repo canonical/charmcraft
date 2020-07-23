@@ -42,8 +42,26 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "--help" -- "$cur") )
             return
             ;;
+
+        # store related commands
         build)
             COMPREPLY=( $(compgen -W "--help --from --entrypoint --requirement" -- "$cur") )
+            return
+            ;;
+        names)
+            COMPREPLY=( $(compgen -W "--help" -- "$cur") )
+            return
+            ;;
+        upload)
+            COMPREPLY=( $(compgen -W "--help --charm-file" -- "$cur") )
+            return
+            ;;
+        revisions|status)
+            COMPREPLY=( $(compgen -W "--help --name" -- "$cur") )
+            return
+            ;;
+        release)
+            COMPREPLY=( $(compgen -W "--help --name --revision" -- "$cur") )
             return
             ;;
     esac
@@ -75,6 +93,13 @@ _charmcraft()
                     ;;
                 -f|--from)
                     _filedir -d
+                    ;;
+            esac
+            ;;
+        "upload")
+            case "$prev" in
+                --charm-file)
+                    _filedir charm
                     ;;
             esac
             ;;

@@ -25,7 +25,7 @@ import zipfile
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from ._utils import make_executable
+from .utils import make_executable
 
 logger = logging.getLogger(__name__)
 

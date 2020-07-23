@@ -15,12 +15,17 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import os
-from stat import S_IXUSR, S_IXGRP, S_IXOTH
+from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
 
 S_IXALL = S_IXUSR | S_IXGRP | S_IXOTH
+S_IRALL = S_IRUSR | S_IRGRP | S_IROTH
 
 
 def make_executable(fh):
     """make open file fh executable"""
     fileno = fh.fileno()
-    os.fchmod(fileno, os.fstat(fileno).st_mode | S_IXALL)
+    mode = os.fstat(fileno).st_mode
+    mode_r = mode & S_IRALL
+    mode_x = mode_r >> 2
+    mode = mode | mode_x
+    os.fchmod(fileno, mode)

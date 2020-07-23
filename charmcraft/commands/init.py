@@ -24,7 +24,7 @@ import re
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from ._utils import make_executable
+from .utils import make_executable
 
 logger = logging.getLogger(__name__)
 

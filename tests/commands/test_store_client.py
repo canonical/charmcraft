@@ -509,7 +509,11 @@ def test_client_push_response_unsuccessful(tmp_path):
         mock.return_value = FakeResponse(content=json.dumps(raw_content), status_code=200)
         with pytest.raises(CommandError) as cm:
             Client().push(test_filepath)
-        assert str(cm.value) == "Server error while pushing file: " + repr(raw_content)
+        # checking all this separatedly as in Py3.5 dicts order is not deterministic
+        message = str(cm.value)
+        assert "Server error while pushing file:" in message
+        assert "'successful': False" in message
+        assert "'upload_id': None" in message
 
 
 def test_storage_push_succesful():

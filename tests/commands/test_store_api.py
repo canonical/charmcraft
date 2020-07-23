@@ -404,11 +404,26 @@ def test_status_ok(client_mock):
                     'track': 'latest',
                 },
             ]
-        }
+        },
+        'revisions': [
+            {
+                'revision': 5,
+                'version': '5',
+                'created-at': '2020-06-29T22:11:05',
+                'status': 'approved',
+                'errors': None,
+            }, {
+                'revision': 10,
+                'version': '63a852b',
+                'created-at': '2020-06-29T22:11:10',
+                'status': 'approved',
+                'errors': None,
+            },
+        ],
     }
 
     store = Store()
-    channel_map, channels = store.list_releases('testname')
+    channel_map, channels, revisions = store.list_releases('testname')
 
     # check how the client is used
     assert client_mock.mock_calls == [
@@ -433,3 +448,15 @@ def test_status_ok(client_mock):
     assert channel2.track == 'latest'
     assert channel2.risk == 'edge'
     assert channel2.branch == 'mybranch'
+
+    rev1, rev2 = revisions
+    assert rev1.revision == 5
+    assert rev1.version == '5'
+    assert rev1.created_at == parser.parse('2020-06-29T22:11:05')
+    assert rev1.status == 'approved'
+    assert rev1.errors == []
+    assert rev2.revision == 10
+    assert rev2.version == '63a852b'
+    assert rev2.created_at == parser.parse('2020-06-29T22:11:10')
+    assert rev2.status == 'approved'
+    assert rev2.errors == []

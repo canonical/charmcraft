@@ -310,12 +310,14 @@ class StatusCommand(BaseCommand):
                     "the --name option.")
 
         store = Store()
-        channel_map, channels = store.list_releases(charm_name)
+        channel_map, channels, revisions = store.list_releases(charm_name)
         if not channel_map:
             logger.info("Nothing found")
             return
 
+        # build easier to access structures
         releases_by_channel = {item.channel: item for item in channel_map}
+        revisions_by_revno = {item.revision: item for item in revisions}
 
         # process and order the channels, while preserving the tracks order
         all_tracks = []
@@ -340,7 +342,7 @@ class StatusCommand(BaseCommand):
                 branches_list.append(channel)
                 branch_present = True
 
-        headers = ['Track', 'Channel', 'Revision']
+        headers = ['Track', 'Channel', 'Version', 'Revision']
         if branch_present:
             headers.append('Expires at')
 
@@ -358,12 +360,14 @@ class StatusCommand(BaseCommand):
                 # get the release of the channel, fallbacking accordingly
                 release = releases_by_channel.get(channel.name)
                 if release is None:
-                    revision = '↑' if release_shown_for_this_track else '-'
+                    version = revno = '↑' if release_shown_for_this_track else '-'
                 else:
-                    revision = release.revision
                     release_shown_for_this_track = True
+                    revno = release.revision
+                    revision = revisions_by_revno[revno]
+                    version = revision.version
 
-                data.append([shown_track, description, revision])
+                data.append([shown_track, description, version, revno])
 
                 # stop showing the track name for the rest of the track
                 shown_track = ''
@@ -372,7 +376,8 @@ class StatusCommand(BaseCommand):
                 description = '/'.join((branch.risk, branch.branch))
                 release = releases_by_channel[branch.name]
                 expiration = release.expires_at.isoformat()
-                data.append(['', description, release.revision, expiration])
+                revision = revisions_by_revno[release.revision]
+                data.append(['', description, revision.version, release.revision, expiration])
 
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():

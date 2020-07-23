@@ -30,6 +30,9 @@ logger = logging.getLogger('charmcraft.commands.store')
 User = namedtuple('User', 'name username userid')
 Charm = namedtuple('Charm', 'name private status')
 Uploaded = namedtuple('Uploaded', 'ok status revision')
+# XXX Facundo 2020-07-23: Need to do a massive rename to call `revno` to the "revision as
+# the number" inside the "revision as the structure", this gets super confusing in the code with
+# time, and now it's the moment to do it (also in Release below!)
 Revision = namedtuple('Revision', 'revision version created_at status errors')
 Error = namedtuple('Error', 'message code')
 Release = namedtuple('Release', 'revision channel expires_at')
@@ -41,6 +44,19 @@ UPLOAD_ENDING_STATUSES = {
     'rejected': False,
 }
 POLL_DELAY = 1
+
+
+def _build_revision(item):
+    """Build a Revision from a response item."""
+    errors = [Error(message=e['message'], code=e['code']) for e in (item['errors'] or [])]
+    rev = Revision(
+        revision=item['revision'],
+        version=item['version'],
+        created_at=parser.parse(item['created-at']),
+        status=item['status'],
+        errors=errors,
+    )
+    return rev
 
 
 class Store:
@@ -124,17 +140,7 @@ class Store:
     def list_revisions(self, name):
         """Return charm revisions for the indicated charm."""
         response = self._client.get('/v1/charm/{}/revisions'.format(name))
-        result = []
-        for item in response['revisions']:
-            errors = [Error(message=e['message'], code=e['code']) for e in (item['errors'] or [])]
-            result.append(Revision(
-                revision=item['revision'],
-                version=item['version'],
-                # `datetime.datetime.fromisoformat` is available only since Py3.7
-                created_at=parser.parse(item['created-at']),
-                status=item['status'],
-                errors=errors,
-            ))
+        result = [_build_revision(item) for item in response['revisions']]
         return result
 
     def release(self, name, revision, channels):
@@ -166,4 +172,6 @@ class Store:
                 branch=item['branch'],
             ) for item in response['charm']['channels']]
 
-        return channel_map, channels
+        revisions = [_build_revision(item) for item in response['revisions']]
+
+        return channel_map, channels, revisions

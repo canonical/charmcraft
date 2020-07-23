@@ -14,5 +14,4 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-VERSION = (0, 2, 0)
-__version__ = "0.2.0"
+from .version import version as __version__  # noqa: F401 (imported but unused)

@@ -279,3 +279,21 @@ def test_from_file():
     assert ignore.match('/foo', is_dir=False)
     assert ignore.match('/bar', is_dir=False)
     assert not ignore.match('/foo/bar', is_dir=False)
+
+
+def assertMatchedAndNonMatched(globs, matched, unmatched):
+    """For a given set of globs, check that it does and doesn't match as expected"""
+    ignore = jujuignore.JujuIgnore(globs)
+    for m in matched:
+        assert ignore.match(m, is_dir=False)
+    for m in unmatched:
+        assert not ignore.match(m, is_dir=False)
+
+
+def test_star_vs_star_start():
+    assertMatchedAndNonMatched(
+        ['/*.py', '**/foo'],
+        # Only top level .py files, but foo at any level
+        ['a.py', 'b.py', 'foo', 'bar/foo'],
+        ['foo/a.py', 'bar/b.py']
+    )

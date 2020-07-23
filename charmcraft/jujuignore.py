@@ -36,14 +36,16 @@ _unescapes = {
 def _rstrip_unescaped(rule):
     """Remove trailing whitespace that isn't escaped."""
     i = len(rule) - 1
+    last = len(rule)
     while i >= 0:
         if rule[i] == '\n' or rule[i] == '\r':
-            rule = rule[:i]
+            last = i
         elif rule[i] != ' ':
             break
         elif i == 0 or rule[i - 1] != '\\':
-            rule = rule[:i]
+            last = i
         i -= 1
+    rule = rule[:last]
     return rule
 
 
@@ -169,9 +171,7 @@ class JujuIgnore:
         self._compile_from(patterns)
 
     def _compile_from(self, patterns):
-        for line_num, rule in enumerate(patterns):
-            # humans like line numbers to start from 1
-            line_num += 1
+        for line_num, rule in enumerate(patterns, 1):
             orig_rule = rule
             rule = rule.lstrip().rstrip('\r\n')
             if not rule or rule.startswith('#'):
@@ -198,13 +198,19 @@ class JujuIgnore:
                 regex=regex,
             )
             self._matchers.append(m)
-            logger.debug(
-                'Translated .jujuignore %d "%s" => "%s"',
-                line_num,
-                orig_rule,
-                regex)
+            logger.debug('Translated .jujuignore %d "%s" => "%s"', line_num, orig_rule, regex)
 
     def match(self, path: str, is_dir: bool) -> bool:
+        """Check if the given path should be ignored.
+
+        Args:
+            path: A local path (eg /foo/bar or foo/bar) from the root directory of the project.
+            is_dir: Indicate whether the given path is a directory (because of special handling
+            from ignore files when the path ends with a '/')
+        Return:
+            A boolean indicating whether the ignore rules matched the given path (thus the path
+            should be ignored).
+        """
         if not path.startswith('/'):
             path = '/' + path
         keep = True

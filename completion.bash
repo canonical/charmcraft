@@ -19,7 +19,7 @@
 _charmcraft()
 {
     local cur prev words cword cmd cmds
-    cmds=(build version login logout whoami)
+    cmds=(build version login logout whoami names upload revisions status release)
     _init_completion || return
 
     # only offer long options, as they should be self-explanatory (and
@@ -38,18 +38,12 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${cmds[*]}" -- "$cur") )
             return
             ;;
-        login|logout|whoami|version)
+        login|logout|whoami|version|names)
             COMPREPLY=( $(compgen -W "--help" -- "$cur") )
             return
             ;;
-
-        # store related commands
         build)
             COMPREPLY=( $(compgen -W "--help --from --entrypoint --requirement" -- "$cur") )
-            return
-            ;;
-        names)
-            COMPREPLY=( $(compgen -W "--help" -- "$cur") )
             return
             ;;
         upload)

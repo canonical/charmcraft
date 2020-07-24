@@ -40,9 +40,6 @@ def get_python_filepaths(*, roots=None, python_paths=None):
             for filename in filenames:
                 if filename.endswith(".py"):
                     python_paths.append(os.path.join(dirpath, filename))
-            for i, dirname in enumerate(dirnames):
-                if dirname == "templates":
-                    del dirnames[i]
     return python_paths
 
 

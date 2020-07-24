@@ -62,7 +62,7 @@ try:
         },
         python_requires='>=3',
         install_requires=requirements,
-        include_package_data=True,
+        include_package_data=True,  # so we get templates in the wheel
     )
 
 finally:

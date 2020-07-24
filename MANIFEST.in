@@ -2,4 +2,4 @@ include README.md
 include LICENSE
 include requirements.txt
 include completion.bash
-recursive-include charmcraft/templates *
+recursive-include charmcraft/templates *.j2

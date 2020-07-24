@@ -330,7 +330,7 @@ class StatusCommand(BaseCommand):
 
             nonbranches_list, branches_list = per_track.setdefault(channel.track, ([], []))
             if channel.branch is None:
-                # insert branch rigth after its fallback
+                # insert branch right after its fallback
                 for idx, stored in enumerate(nonbranches_list, 1):
                     if stored.name == channel.fallback:
                         nonbranches_list.insert(idx, channel)

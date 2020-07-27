@@ -290,7 +290,7 @@ class ReleaseCommand(BaseCommand):
 class StatusCommand(BaseCommand):
     """List released revisions for a charm."""
     name = 'status'
-    help_msg = "list released revisions for a charm in the Store"
+    help_msg = "list released revisions of a charm"
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

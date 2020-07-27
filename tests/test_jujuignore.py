@@ -15,7 +15,10 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import io
+import pathlib
+import subprocess
 import textwrap
+import tempfile
 
 from charmcraft import jujuignore
 
@@ -285,9 +288,21 @@ def assertMatchedAndNonMatched(globs, matched, unmatched):
     """For a given set of globs, check that it does and doesn't match as expected"""
     ignore = jujuignore.JujuIgnore(globs)
     for m in matched:
-        assert ignore.match(m, is_dir=False)
+        assert ignore.match(m, is_dir=False), '{} should have matched'.format(m)
     for m in unmatched:
-        assert not ignore.match(m, is_dir=False)
+        assert not ignore.match(m, is_dir=False), '{} should not have matched'.format(m)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        subprocess.run(['git', 'init', tmpdir], check=True)
+        with open(pathlib.Path(tmpdir) / '.gitignore', 'wt') as gitignore:
+            gitignore.writelines([g + '\n' for g in globs])
+        input = ''.join(
+            [m.lstrip('/') + '\n' for m in matched + unmatched])
+        p = subprocess.run(
+            ['git', 'check-ignore', '--stdin'],
+            check=True, input=input, stdout=subprocess.PIPE, cwd=tmpdir, universal_newlines=True)
+    matched_out = p.stdout.splitlines()
+    assert sorted(matched) == sorted(matched_out),\
+        'expected exactly {} to match not {}'.format(matched, matched_out)
 
 
 def test_star_vs_star_start():
@@ -295,5 +310,39 @@ def test_star_vs_star_start():
         ['/*.py', '**/foo'],
         # Only top level .py files, but foo at any level
         ['a.py', 'b.py', 'foo', 'bar/foo'],
-        ['foo/a.py', 'bar/b.py']
+        ['bar/b.py'],
+        # 'foo/a.py',  git matches foo/a.py because of foo, ours doesn't but I don't think it
+        # matters because the whole directory would have already been skipped
+    )
+
+
+def test_questionmark():
+    assertMatchedAndNonMatched(
+        ['foo?.py'],
+        ['fooa.py', 'foob.py'],
+        ['foo.py', 'footwo.py', 'foo/.py'],
+    )
+
+
+def test_brackets():
+    assertMatchedAndNonMatched(
+        ['*.py[cod]'],
+        ['a.pyc', 'b.pyo', 'd.pyd', 'foo/.pyc', 'bar/__pycache__.pyc'],
+        ['a.py', 'b.pyq', 'c.so', 'foo/__pycache__/bar.py'],
+    )
+
+
+def test_bracket_ranges():
+    assertMatchedAndNonMatched(
+        ['foo[1-9].py'],
+        ['foo1.py', 'foo2.py', 'foo9.py'],
+        ['foo0.py', 'foo10.py', 'fooa.py'],
+    )
+
+
+def test_bracket_inverted():
+    assertMatchedAndNonMatched(
+        ['foo[!1-9].py', 'bar[!a].py'],
+        ['fooa.py', 'foob.py', 'fooc.py', 'barb.py', 'barc.py'],
+        ['foo1.py', 'foo2.py', 'foo10.py', 'bara.py'],
     )

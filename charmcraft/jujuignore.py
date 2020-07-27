@@ -84,7 +84,7 @@ def _rule_to_regex(rule):
             else:
                 res += '[^/]*'
         elif c == '?':
-            res += '.'
+            res += '[^/]'
         elif c == '[':
             j = i
             if j < n and rule[j] == '!':

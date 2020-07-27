@@ -1,13 +1,13 @@
 Steps:
 
-- First check snapcraft is currently building something fine:
+- First check that snapcraft is able build something:
 
 ```
 snapcraft
 ```
 
 - Install it and try it, something like the following, replacing 
-  for what you just built:
+  the snap name with the one you just built:
 
 ```
 sudo snap install --dangerous charmcraft_0.2.0+95.g6f8c4cc_amd64.snap
@@ -19,7 +19,7 @@ sudo snap install --dangerous charmcraft_0.2.0+95.g6f8c4cc_amd64.snap
 ## How to add new Python dependencies
 
 If trying a new snap fails because import errors, you need to include new 
-dependencies. Easiest way to do this is to open the snap, copy manually the 
+dependencies. Easiest way to do this is to open the snap, manually copy the 
 needed dependency, and try it: if it keeps failing, keep adding more dependencies, 
 else you're done and just update the `stage` section in `snapcraft.yaml` 
 with what you brought in.

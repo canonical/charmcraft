@@ -128,12 +128,12 @@ parts:
       - lib/google
       - lib/protobuf-*.pth
       - lib/protobuf-*.dist-info
-      - lib/tabulate-*.dist-info
       - lib/tabulate.py
-      - lib/python_dateutil-*.dist-info
+      - lib/tabulate-*.dist-info
       - lib/dateutil
-      - lib/requests_toolbelt-*.dist-info
+      - lib/python_dateutil-*.dist-info
       - lib/requests_toolbelt
+      - lib/requests_toolbelt-*.dist-info
       # this effectively means we're shipping pip and wheel twice (once above,
       # and once below), but untangling that is probably not worth it.
       - share/python-wheels

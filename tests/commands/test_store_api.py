@@ -32,6 +32,9 @@ def client_mock():
         yield client_mock
 
 
+# -- tests for auth
+
+
 def test_login(client_mock):
     """Simple login case."""
     store = Store()
@@ -69,8 +72,11 @@ def test_whoami(client_mock):
     assert result.userid == '-1'
 
 
+# -- tests for register and list names
+
+
 def test_register_name(client_mock):
-    """Simple whoami case."""
+    """Simple register case."""
     store = Store()
     result = store.register_name('testname')
 
@@ -117,6 +123,9 @@ def test_list_registered_names_multiple(client_mock):
     assert item2.name == 'name2'
     assert item2.private
     assert item2.status == 'status2'
+
+
+# -- tests for upload
 
 
 def test_upload_straightforward(client_mock, caplog):
@@ -210,6 +219,9 @@ def test_upload_polls_status(client_mock, caplog):
         "Status checked: " + str(status_response_3),
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for list revisions
 
 
 def test_list_revisions_ok(client_mock):
@@ -321,3 +333,32 @@ def test_list_revisions_several_mixed(client_mock):
     assert item2.created_at == parser.parse('2020-06-29T22:11:02')
     assert item2.status == 'approved'
     assert item2.errors == []
+
+
+# -- tests for release
+
+
+def test_release_simple(client_mock):
+    """Releasing a revision into one channel."""
+    store = Store()
+    store.release('testname', 123, ['somechannel'])
+
+    expected_body = [{'revision': 123, 'channel': 'somechannel'}]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/testname/releases', expected_body),
+    ]
+
+
+def test_release_multiple(client_mock):
+    """Releasing a revision into multiple channels."""
+    store = Store()
+    store.release('testname', 123, ['channel1', 'channel2', 'channel3'])
+
+    expected_body = [
+        {'revision': 123, 'channel': 'channel1'},
+        {'revision': 123, 'channel': 'channel2'},
+        {'revision': 123, 'channel': 'channel3'},
+    ]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/testname/releases', expected_body),
+    ]

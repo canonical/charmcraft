@@ -295,7 +295,7 @@ def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):
         return
     with tempfile.TemporaryDirectory() as tmpdir:
         subprocess.run(['git', 'init', tmpdir], check=True)
-        with open(pathlib.Path(tmpdir) / '.gitignore', 'wt') as gitignore:
+        with open(str(pathlib.Path(tmpdir) / '.gitignore'), 'wt') as gitignore:
             gitignore.writelines([g + '\n' for g in globs])
         input = ''.join(
             [m.lstrip('/') + '\n' for m in matched + unmatched])

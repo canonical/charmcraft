@@ -19,13 +19,13 @@ import logging
 import os
 import pathlib
 import shutil
-import stat
 import subprocess
 import zipfile
 
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
+from .utils import make_executable
 
 logger = logging.getLogger(__name__)
 
@@ -144,28 +144,39 @@ class Builder:
             dispatch_path = self.buildpath / DISPATCH_FILENAME
             with dispatch_path.open("wt", encoding="utf8") as fh:
                 fh.write(dispatch_content)
-                fileno = fh.fileno()
-                os.fchmod(fileno, os.fstat(fileno).st_mode | stat.S_IXUSR)
+                make_executable(fh)
 
-        # bunch of symlinks, to support old juju; whatever is in the charm's hooks directory
-        # is respected, but also the mandatory ones are created if missing
+        # bunch of symlinks, to support old juju: whatever is in the charm's hooks directory
+        # is respected (unless links to the entrypoint), but also the mandatory ones are
+        # created if missing
         current_hookpath = self.charmdir / 'hooks'
         dest_hookpath = self.buildpath / 'hooks'
         dest_hookpath.mkdir()
+
+        # get current hooks, separating those to be respected verbatim, and those that we need
+        # to replace (because they are pointing to the entrypoint and we need to fix the
+        # environment in the middle)
+        current_hooks_ok = []
+        current_hooks_to_replace = []
         if current_hookpath.exists():
-            current_hooks = list(current_hookpath.iterdir())
-        else:
-            current_hooks = []
+            for node in current_hookpath.iterdir():
+                if node.resolve() == self.entrypoint:
+                    current_hooks_to_replace.append(node)
+                    logger.debug(
+                        "Ignoring existing hook %r as it's a symlink to the entrypoint", node.name)
+                else:
+                    current_hooks_ok.append(node)
 
         # respect current nodes
-        for current_hook in current_hooks:
+        for current_hook in current_hooks_ok:
             logger.debug("Including current %r hook", current_hook.name)
             dest_hook = dest_hookpath / current_hook.name
             dest_hook.symlink_to(current_hook)
 
-        # include mandatory ones if missing
-        missing_mandatory = MANDATORY_HOOK_NAMES - {x.name for x in current_hooks}
-        for hookname in missing_mandatory:
+        # include the mandatory ones (if missing) and those we need to replace
+        missing = MANDATORY_HOOK_NAMES - {x.name for x in current_hooks_ok}
+        missing |= {x.name for x in current_hooks_to_replace}
+        for hookname in missing:
             logger.debug("Creating the %r hook script pointing to dispatch", hookname)
             dest_hook = dest_hookpath / hookname
             dest_hook.symlink_to(dispatch_path)

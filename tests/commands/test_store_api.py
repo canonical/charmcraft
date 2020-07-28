@@ -32,6 +32,9 @@ def client_mock():
         yield client_mock
 
 
+# -- tests for auth
+
+
 def test_login(client_mock):
     """Simple login case."""
     store = Store()
@@ -69,8 +72,11 @@ def test_whoami(client_mock):
     assert result.userid == '-1'
 
 
+# -- tests for register and list names
+
+
 def test_register_name(client_mock):
-    """Simple whoami case."""
+    """Simple register case."""
     store = Store()
     result = store.register_name('testname')
 
@@ -117,6 +123,9 @@ def test_list_registered_names_multiple(client_mock):
     assert item2.name == 'name2'
     assert item2.private
     assert item2.status == 'status2'
+
+
+# -- tests for upload
 
 
 def test_upload_straightforward(client_mock, caplog):
@@ -210,6 +219,9 @@ def test_upload_polls_status(client_mock, caplog):
         "Status checked: " + str(status_response_3),
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for list revisions
 
 
 def test_list_revisions_ok(client_mock):
@@ -321,3 +333,130 @@ def test_list_revisions_several_mixed(client_mock):
     assert item2.created_at == parser.parse('2020-06-29T22:11:02')
     assert item2.status == 'approved'
     assert item2.errors == []
+
+
+# -- tests for release
+
+
+def test_release_simple(client_mock):
+    """Releasing a revision into one channel."""
+    store = Store()
+    store.release('testname', 123, ['somechannel'])
+
+    expected_body = [{'revision': 123, 'channel': 'somechannel'}]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/testname/releases', expected_body),
+    ]
+
+
+def test_release_multiple(client_mock):
+    """Releasing a revision into multiple channels."""
+    store = Store()
+    store.release('testname', 123, ['channel1', 'channel2', 'channel3'])
+
+    expected_body = [
+        {'revision': 123, 'channel': 'channel1'},
+        {'revision': 123, 'channel': 'channel2'},
+        {'revision': 123, 'channel': 'channel3'},
+    ]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/testname/releases', expected_body),
+    ]
+
+
+# -- tests for status
+
+
+def test_status_ok(client_mock):
+    """Get all the release information."""
+    client_mock.get.return_value = {
+        'channel-map': [
+            {
+                'channel': 'latest/beta',
+                'expiration-date': None,
+                'platform': {'architecture': 'all', 'os': 'all', 'series': 'all'},
+                'progressive': {'paused': None, 'percentage': None},
+                'revision': 5,
+                'when': '2020-07-16T18:45:24Z',
+            }, {
+                'channel': 'latest/edge/mybranch',
+                'expiration-date': '2020-08-16T18:46:02Z',
+                'platform': {'architecture': 'all', 'os': 'all', 'series': 'all'},
+                'progressive': {'paused': None, 'percentage': None},
+                'revision': 10,
+                'when': '2020-07-16T18:46:02Z',
+            }
+        ],
+        'charm': {
+            'channels': [
+                {
+                    'branch': None,
+                    'fallback': None,
+                    'name': 'latest/stable',
+                    'risk': 'stable',
+                    'track': 'latest',
+                }, {
+                    'branch': 'mybranch',
+                    'fallback':
+                    'latest/stable',
+                    'name': 'latest/edge/mybranch',
+                    'risk': 'edge',
+                    'track': 'latest',
+                },
+            ]
+        },
+        'revisions': [
+            {
+                'revision': 5,
+                'version': '5',
+                'created-at': '2020-06-29T22:11:05',
+                'status': 'approved',
+                'errors': None,
+            }, {
+                'revision': 10,
+                'version': '63a852b',
+                'created-at': '2020-06-29T22:11:10',
+                'status': 'approved',
+                'errors': None,
+            },
+        ],
+    }
+
+    store = Store()
+    channel_map, channels, revisions = store.list_releases('testname')
+
+    # check how the client is used
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/testname/releases'),
+    ]
+
+    # check response
+    cmap1, cmap2 = channel_map
+    assert cmap1.revision == 5
+    assert cmap1.channel == 'latest/beta'
+    assert cmap1.expires_at is None
+    assert cmap2.revision == 10
+    assert cmap2.channel == 'latest/edge/mybranch'
+    assert cmap2.expires_at == parser.parse('2020-08-16T18:46:02Z')
+
+    channel1, channel2 = channels
+    assert channel1.name == 'latest/stable'
+    assert channel1.track == 'latest'
+    assert channel1.risk == 'stable'
+    assert channel1.branch is None
+    assert channel2.name == 'latest/edge/mybranch'
+    assert channel2.track == 'latest'
+    assert channel2.risk == 'edge'
+    assert channel2.branch == 'mybranch'
+
+    rev1, rev2 = revisions
+    assert rev1.revision == 5
+    assert rev1.version == '5'
+    assert rev1.created_at == parser.parse('2020-06-29T22:11:05')
+    assert rev1.status == 'approved'
+    assert rev1.errors == []
+    assert rev2.revision == 10
+    assert rev2.version == '63a852b'
+    assert rev2.created_at == parser.parse('2020-06-29T22:11:10')
+    assert rev2.status == 'approved'
+    assert rev2.errors == []

@@ -25,6 +25,7 @@ from unittest.mock import patch, call, MagicMock
 
 import pytest
 import yaml
+from dateutil import parser
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
@@ -33,11 +34,21 @@ from charmcraft.commands.store import (
     LoginCommand,
     LogoutCommand,
     RegisterNameCommand,
+    ReleaseCommand,
+    StatusCommand,
     UploadCommand,
     WhoamiCommand,
     get_name_from_metadata,
 )
-from charmcraft.commands.store.store import User, Charm, Uploaded, Revision, Error
+from charmcraft.commands.store.store import (
+    Channel,
+    Charm,
+    Error,
+    Release,
+    Revision,
+    Uploaded,
+    User,
+)
 
 # used a lot!
 noargs = Namespace()
@@ -531,5 +542,439 @@ def test_revisions_errors_multiple(caplog, store_mock):
     expected = [
         "Revision    Version    Created at    Status",
         "1                      2020-07-03    rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for the release command
+
+
+def test_release_simple_ok(caplog, store_mock):
+    """Simple case of releasing a revision ok."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channels = ['somechannel']
+    args = Namespace(name='testcharm', revision=7, channels=channels)
+    ReleaseCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.release('testcharm', 7, channels),
+    ]
+
+    expected = "Revision 7 of charm 'testcharm' released to somechannel"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_release_simple_multiple_channels(caplog, store_mock):
+    """Releasing to multiple channels."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    args = Namespace(name='testcharm', revision=7, channels=['channel1', 'channel2', 'channel3'])
+    ReleaseCommand('group').run(args)
+
+    expected = "Revision 7 of charm 'testcharm' released to channel1, channel2, channel3"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_release_name_guessing_ok(caplog, store_mock):
+    """Release after guessing the charm's name correctly."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    args = Namespace(name=None, revision=7, channels=['somechannel'])
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'guessed-name'
+        ReleaseCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.release('guessed-name', 7, ['somechannel']),
+    ]
+    expected = "Revision 7 of charm 'guessed-name' released to somechannel"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_release_name_guessing_bad():
+    """The charm name couldn't be guessed."""
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
+
+        args = Namespace(name=None, revision=7, channels=['somechannel'])
+        with pytest.raises(CommandError) as cm:
+            ReleaseCommand('group').run(args)
+
+        assert str(cm.value) == (
+            "Can't access name in 'metadata.yaml' file. The 'release' command needs to "
+            "be executed in a valid project's directory, or indicate the charm name with "
+            "the --name option.")
+
+
+def test_release_revision_guessing_ok(caplog, store_mock):
+    """Release after guessing the revision."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    # make the store to return some revisions badly ordered so we're sure we're getting the max
+    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    store_response = [
+        Revision(revision=1, version='v1', created_at=tstamp, status='accepted', errors=[]),
+        Revision(revision=3, version='v1', created_at=tstamp, status='accepted', errors=[]),
+        Revision(revision=2, version='v1', created_at=tstamp, status='accepted', errors=[]),
+    ]
+    store_mock.list_revisions.return_value = store_response
+
+    channels = ['somechannel']
+    args = Namespace(name='testcharm', revision=None, channels=channels)
+    ReleaseCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_revisions('testcharm'),
+        call.release('testcharm', 3, channels),
+    ]
+
+    expected = "Revision 3 of charm 'testcharm' released to somechannel"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_release_revision_guessing_bad(store_mock):
+    """Can not release because the charm doesn't have revisions published."""
+    store_mock.list_revisions.return_value = []
+
+    channels = ['somechannel']
+    args = Namespace(name='testcharm', revision=None, channels=channels)
+
+    with pytest.raises(CommandError) as cm:
+        ReleaseCommand('group').run(args)
+
+    assert str(cm.value) == "The charm 'testcharm' doesn't have any uploaded revisions."
+
+
+# -- tests for the status command
+
+def _build_channels(track='latest'):
+    """Helper to build simple channels structure."""
+    channels = []
+    risks = ['stable', 'candidate', 'beta', 'edge']
+    for risk, fback in zip(risks, [None] + risks):
+        name = "/".join((track, risk))
+        fallback = None if fback is None else "/".join((track, fback))
+        channels.append(Channel(name=name, fallback=fallback, track=track, risk=risk, branch=None))
+    return channels
+
+
+def _build_revision(revno, version):
+    """Helper to build a revision."""
+    return Revision(
+        revision=revno, version=version, created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
+        status='accepted', errors=[])
+
+
+def test_status_simple_ok(caplog, store_mock):
+    """Simple happy case of getting a status."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channel_map = [
+        Release(revision=7, channel='latest/stable', expires_at=None),
+        Release(revision=7, channel='latest/candidate', expires_at=None),
+        Release(revision=80, channel='latest/beta', expires_at=None),
+        Release(revision=156, channel='latest/edge', expires_at=None),
+    ]
+    channels = _build_channels()
+    revisions = [
+        _build_revision(revno=7, version='v7'),
+        _build_revision(revno=80, version='2.0'),
+        _build_revision(revno=156, version='git-0db35ea1'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('testcharm'),
+    ]
+
+    expected = [
+        "Track    Channel    Version       Revision",
+        "latest   stable     v7            7",
+        "         candidate  v7            7",
+        "         beta       2.0           80",
+        "         edge       git-0db35ea1  156",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_empty(caplog, store_mock):
+    """Empty response from the store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_mock.list_releases.return_value = [], [], []
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    expected = "Nothing found"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_status_name_guessing_ok(caplog, store_mock):
+    """Get the status after guessing the charm's name correctly."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    store_mock.list_releases.return_value = [], [], []
+
+    args = Namespace(name=None)
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'guessed-name'
+        StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('guessed-name'),
+    ]
+
+
+def test_status_name_guessing_bad():
+    """The charm name couldn't be guessed."""
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
+
+        args = Namespace(name=None)
+        with pytest.raises(CommandError) as cm:
+            StatusCommand('group').run(args)
+
+        assert str(cm.value) == (
+            "Can't access name in 'metadata.yaml' file. The 'status' command needs to "
+            "be executed in a valid project's directory, or indicate the charm name with "
+            "the --name option.")
+
+
+def test_status_channels_not_released_with_fallback(caplog, store_mock):
+    """Support gaps in channel releases, having fallbacks."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channel_map = [
+        Release(revision=7, channel='latest/stable', expires_at=None),
+        Release(revision=80, channel='latest/edge', expires_at=None),
+    ]
+    channels = _build_channels()
+    revisions = [
+        _build_revision(revno=7, version='v7'),
+        _build_revision(revno=80, version='2.0'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('testcharm'),
+    ]
+
+    expected = [
+        "Track    Channel    Version    Revision",
+        "latest   stable     v7         7",
+        "         candidate  ↑          ↑",
+        "         beta       ↑          ↑",
+        "         edge       2.0        80",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_channels_not_released_without_fallback(caplog, store_mock):
+    """Support gaps in channel releases, nothing released in more stable ones."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channel_map = [
+        Release(revision=5, channel='latest/beta', expires_at=None),
+        Release(revision=12, channel='latest/edge', expires_at=None),
+    ]
+    channels = _build_channels()
+    revisions = [
+        _build_revision(revno=5, version='5.1'),
+        _build_revision(revno=12, version='almostready'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('testcharm'),
+    ]
+
+    expected = [
+        "Track    Channel    Version      Revision",
+        "latest   stable     -            -",
+        "         candidate  -            -",
+        "         beta       5.1          5",
+        "         edge       almostready  12",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_multiple_tracks(caplog, store_mock):
+    """Support multiple tracks."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channel_map = [
+        Release(revision=503, channel='latest/stable', expires_at=None),
+        Release(revision=1, channel='2.0/edge', expires_at=None),
+    ]
+    channels_latest = _build_channels()
+    channels_track = _build_channels(track='2.0')
+    channels = channels_latest + channels_track
+    revisions = [
+        _build_revision(revno=503, version='7.5.3'),
+        _build_revision(revno=1, version='1'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('testcharm'),
+    ]
+
+    expected = [
+        "Track    Channel    Version    Revision",
+        "latest   stable     7.5.3      503",
+        "         candidate  ↑          ↑",
+        "         beta       ↑          ↑",
+        "         edge       ↑          ↑",
+        "2.0      stable     -          -",
+        "         candidate  -          -",
+        "         beta       -          -",
+        "         edge       1          1",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_tracks_order(caplog, store_mock):
+    """Respect the track ordering from the store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channel_map = [
+        Release(revision=1, channel='latest/edge', expires_at=None),
+        Release(revision=2, channel='aaa/edge', expires_at=None),
+        Release(revision=3, channel='2.0/edge', expires_at=None),
+        Release(revision=4, channel='zzz/edge', expires_at=None),
+    ]
+    channels_latest = _build_channels()
+    channels_track_1 = _build_channels(track='zzz')
+    channels_track_2 = _build_channels(track='2.0')
+    channels_track_3 = _build_channels(track='aaa')
+    channels = channels_latest + channels_track_1 + channels_track_2 + channels_track_3
+    revisions = [
+        _build_revision(revno=1, version='v1'),
+        _build_revision(revno=2, version='v2'),
+        _build_revision(revno=3, version='v3'),
+        _build_revision(revno=4, version='v4'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('testcharm'),
+    ]
+
+    expected = [
+        "Track    Channel    Version    Revision",
+        "latest   stable     -          -",
+        "         candidate  -          -",
+        "         beta       -          -",
+        "         edge       v1         1",
+        "zzz      stable     -          -",
+        "         candidate  -          -",
+        "         beta       -          -",
+        "         edge       v4         4",
+        "2.0      stable     -          -",
+        "         candidate  -          -",
+        "         beta       -          -",
+        "         edge       v3         3",
+        "aaa      stable     -          -",
+        "         candidate  -          -",
+        "         beta       -          -",
+        "         edge       v2         2",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_with_one_branch(caplog, store_mock):
+    """Support having one branch."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    tstamp_with_timezone = parser.parse('2020-07-03T20:30:40Z')
+    channel_map = [
+        Release(revision=5, channel='latest/beta', expires_at=None),
+        Release(revision=12, channel='latest/beta/mybranch', expires_at=tstamp_with_timezone),
+    ]
+    channels = _build_channels()
+    channels.append(
+        Channel(
+            name='latest/beta/mybranch', fallback='latest/beta',
+            track='latest', risk='beta', branch='mybranch'))
+    revisions = [
+        _build_revision(revno=5, version='5.1'),
+        _build_revision(revno=12, version='ver.12'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('testcharm'),
+    ]
+
+    expected = [
+        "Track    Channel        Version    Revision    Expires at",
+        "latest   stable         -          -",
+        "         candidate      -          -",
+        "         beta           5.1        5",
+        "         edge           ↑          ↑",
+        "         beta/mybranch  ver.12     12          2020-07-03T20:30:40+00:00",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_with_multiple_branches(caplog, store_mock):
+    """Support having multiple branches."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    tstamp_with_timezone = parser.parse('2020-07-03T20:30:40Z')
+    channel_map = [
+        Release(revision=5, channel='latest/beta', expires_at=None),
+        Release(revision=12, channel='latest/beta/branch-1', expires_at=tstamp_with_timezone),
+        Release(revision=15, channel='latest/beta/branch-2', expires_at=tstamp_with_timezone),
+    ]
+    channels = _build_channels()
+    channels.extend([
+        Channel(
+            name='latest/beta/branch-1', fallback='latest/beta',
+            track='latest', risk='beta', branch='branch-1'),
+        Channel(
+            name='latest/beta/branch-2', fallback='latest/beta',
+            track='latest', risk='beta', branch='branch-2'),
+    ])
+    revisions = [
+        _build_revision(revno=5, version='5.1'),
+        _build_revision(revno=12, version='ver.12'),
+        _build_revision(revno=15, version='15.0.0'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases('testcharm'),
+    ]
+
+    expected = [
+        "Track    Channel        Version    Revision    Expires at",
+        "latest   stable         -          -",
+        "         candidate      -          -",
+        "         beta           5.1        5",
+        "         edge           ↑          ↑",
+        "         beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",
+        "         beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",
     ]
     assert expected == [rec.message for rec in caplog.records]

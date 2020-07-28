@@ -21,6 +21,7 @@ class CommandError(Exception):
     It optionally receives a `retcode` parameter that will be the returned code
     by the process on exit.
     """
+
     def __init__(self, message, retcode=1):
         self.retcode = retcode
         super().__init__(message)

@@ -406,7 +406,9 @@ def test_build_code_simple(tmp_path):
     build_dir.mkdir()
 
     metadata = tmp_path / CHARM_METADATA
+    metadata.touch()
     entrypoint = tmp_path / 'crazycharm.py'
+    entrypoint.touch()
 
     builder = Builder({
         'from': tmp_path,
@@ -498,7 +500,9 @@ def test_build_code_tree(tmp_path):
     build_dir.mkdir()
 
     src_dir = tmp_path / 'code_source'
+    src_dir.mkdir()
     entrypoint = src_dir / 'crazycharm.py'
+    entrypoint.touch()
 
     builder = Builder({
         'from': tmp_path,

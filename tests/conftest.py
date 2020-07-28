@@ -32,3 +32,25 @@ def tmp_path(tmp_path):
     changes needed).
     """
     return pathlib.Path(str(tmp_path))
+
+
+@pytest.fixture
+def monkeypatch(monkeypatch):
+    """Adapt pytest's monkeypatch to support stdlib's pathlib."""
+
+    class Monkeypatcher:
+        """Middle man for chdir."""
+        def _chdir(self, value):
+            """Change dir, but converting to str first.
+
+            This is because Py35 monkeypatch doesn't support stdlib's pathlib.
+            """
+            return monkeypatch.chdir(str(value))
+
+        def __getattribute__(self, name):
+            if name == 'chdir':
+                return object.__getattribute__(self, '_chdir')
+            else:
+                return getattr(monkeypatch, name)
+
+    return Monkeypatcher()

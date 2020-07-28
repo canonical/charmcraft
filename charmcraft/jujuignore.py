@@ -97,31 +97,12 @@ def _rule_to_regex(rule):
                 res += '\\['
             else:
                 stuff = rule[i:j]
-                if '--' not in stuff:
-                    stuff = stuff.replace('\\', r'\\')
-                else:
-                    chunks = []
-                    k = i + 2 if rule[i] == '!' else i + 1
-                    while True:
-                        k = rule.find('-', k, j)
-                        if k < 0:
-                            break
-                        chunks.append(rule[i:k])
-                        i = k + 1
-                        k += 3
-                    chunks.append(rule[i:j])
-                    # Escape backslashes and hyphens for set difference (--).
-                    # Hyphens that create ranges shouldn't be escaped.
-                    stuff = '-'.join(s.translate({
-                        ord('\\'): r'\\',
-                        ord('-'): r'\-',
-                    }) for s in chunks)
-                # Escape set operations (&&, ~~ and ||).
+                # Escape regex set operations (&~|).
                 stuff = re.sub(r'([&~|])', r'\\\1', stuff)
                 i = j + 1
                 if stuff[0] == '!':
                     stuff = '^' + stuff[1:]
-                elif stuff[0] in ('^', '['):
+                elif stuff[0] in ('['):
                     stuff = '\\' + stuff
                 res = '%s[%s]' % (res, stuff)
         elif c == '/':

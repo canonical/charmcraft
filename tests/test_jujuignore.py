@@ -284,22 +284,28 @@ def test_from_file():
     assert not ignore.match('/foo/bar', is_dir=False)
 
 
-def assertMatchedAndNonMatched(globs, matched, unmatched):
+def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):
     """For a given set of globs, check that it does and doesn't match as expected"""
     ignore = jujuignore.JujuIgnore(globs)
     for m in matched:
         assert ignore.match(m, is_dir=False), '{} should have matched'.format(m)
     for m in unmatched:
         assert not ignore.match(m, is_dir=False), '{} should not have matched'.format(m)
+    if skip_git:
+        return
     with tempfile.TemporaryDirectory() as tmpdir:
         subprocess.run(['git', 'init', tmpdir], check=True)
         with open(pathlib.Path(tmpdir) / '.gitignore', 'wt') as gitignore:
             gitignore.writelines([g + '\n' for g in globs])
         input = ''.join(
             [m.lstrip('/') + '\n' for m in matched + unmatched])
+        check = True
+        if len(matched) == 0:
+            # We don't check git return value because it returns nonzero if no paths match
+            check = False
         p = subprocess.run(
             ['git', 'check-ignore', '--stdin'],
-            check=True, input=input, stdout=subprocess.PIPE, cwd=tmpdir, universal_newlines=True)
+            check=check, input=input, stdout=subprocess.PIPE, cwd=tmpdir, universal_newlines=True)
     matched_out = p.stdout.splitlines()
     assert sorted(matched) == sorted(matched_out),\
         'expected exactly {} to match not {}'.format(matched, matched_out)
@@ -345,4 +351,49 @@ def test_bracket_inverted():
         ['foo[!1-9].py', 'bar[!a].py'],
         ['fooa.py', 'foob.py', 'fooc.py', 'barb.py', 'barc.py'],
         ['foo1.py', 'foo2.py', 'foo10.py', 'bara.py'],
+    )
+
+
+def test_slashes_in_brackets():
+    assertMatchedAndNonMatched(
+        [r'foo[\\].py'],
+        [r'foo\.py'],
+        [r'fooa.py'],
+        # We don't test against git here, because it replies with "foo\\.py"
+        # which is an escaped form that we'd have to interpret
+        skip_git=True)
+
+
+def test_special_chars_in_brackets():
+    assertMatchedAndNonMatched(
+        [r'foo[a|b].py'],
+        [r'fooa.py', 'foob.py', 'foo|.py'],
+        [r'foo.py', r'fooc.py'],
+    )
+    assertMatchedAndNonMatched(
+        [r'foo[ab|cd].py'],
+        [r'fooa.py', 'foob.py', 'fooc.py', 'food.py', 'foo|.py'],
+        [r'foo.py', 'fooe.py', 'fooab.py', 'fooac.py'],
+    )
+    assertMatchedAndNonMatched(
+        [r'foo[a&].py'],
+        [r'fooa.py', r'foo&.py'],
+        [r'foo.py', r'fooa&.py', 'foob.py'],
+
+    )
+    assertMatchedAndNonMatched(
+        [r'foo[a~].py'],
+        [r'fooa.py', r'foo~.py'],
+        [r'foo.py', r'fooa~.py', 'foob.py'],
+    )
+    assertMatchedAndNonMatched(
+        [r'foo[[a].py'],
+        [r'fooa.py', r'foo[.py'],
+        [r'foo.py', r'fooa[.py', 'foob.py'],
+    )
+    # Git allows ! or ^ to mean negate the glob
+    assertMatchedAndNonMatched(
+        [r'foo[^a].py'],
+        ['foob.py', 'fooc.py', 'foo^.py'],
+        [r'foo.py', r'fooa.py', r'fooa^.py'],
     )

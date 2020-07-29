@@ -24,6 +24,7 @@ import zipfile
 
 import yaml
 
+from charmcraft import jujuignore
 from charmcraft.cmdbase import BaseCommand, CommandError
 from .utils import make_executable
 
@@ -33,15 +34,7 @@ logger = logging.getLogger(__name__)
 CHARM_METADATA = 'metadata.yaml'
 BUILD_DIRNAME = 'build'
 VENV_DIRNAME = 'venv'
-
-# copy these if they exist
-CHARM_OPTIONAL = [
-    'config.yaml',
-    'metrics.yaml',
-    'actions.yaml',
-    'lxd-profile.yaml',
-    'version'
-]
+JUJUIGNORE_SPECFILENAME = '.jujuignore'
 
 # The file name and template for the dispatch script
 DISPATCH_FILENAME = 'dispatch'
@@ -56,6 +49,7 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
+HOOKS_DIR = 'hooks'
 
 
 def polite_exec(cmd):
@@ -95,7 +89,16 @@ class Builder:
             shutil.rmtree(str(self.buildpath))
         self.buildpath.mkdir()
 
-        linked_entrypoint = self.handle_code()
+        # prepare the ignore machinery
+        jujuignore_specfilepath = self.charmdir / JUJUIGNORE_SPECFILENAME
+        if jujuignore_specfilepath.exists():
+            with open(jujuignore_specfilepath, 'rt', encoding='utf8') as fh:
+                raw_jujuignore_content = fh.readlines()
+        else:
+            raw_jujuignore_content = jujuignore.default_juju_ignore
+        self.ignorer = jujuignore.JujuIgnore(raw_jujuignore_content)
+
+        linked_entrypoint = self.handle_generic_paths()
         self.handle_dispatcher(linked_entrypoint)
         self.handle_dependencies()
         zipname = self.handle_package()
@@ -104,30 +107,75 @@ class Builder:
         return zipname
 
     def _link_to_buildpath(self, srcpath):
-        """Link a file to the build directory."""
-        destpath = self.buildpath / srcpath.name
-        destpath.symlink_to(srcpath)
-        return destpath
+        """Link a path to the build directory, recursive on the given structure.
 
-    def handle_code(self):
-        """Handle basic files and the charm source code."""
-        # basic files
-        logger.debug("Linking in basic files and charm code")
-        self._link_to_buildpath(self.charmdir / CHARM_METADATA)
-        for fn in CHARM_OPTIONAL:
-            path = self.charmdir / fn
-            if path.exists():
-                self._link_to_buildpath(path)
+        Works differently for the different file types:
+        - regular files: hard links
+        - directories: created
+        - symlinks: respected if are internal to the project
+        - other types (blocks, mount points, etc): ignored
+        """
+        base_destpath = self.buildpath / srcpath.name
 
-        # the whole dir/tree if entry point is in a project's subdir, itself alone otherwise
-        if self.charmdir in self.entrypoint.parents and self.charmdir != self.entrypoint.parent:
-            # link the whole dir
-            linked_subdir = self._link_to_buildpath(self.entrypoint.parent)
-            linked_entrypoint = linked_subdir / self.entrypoint.name
-        else:
-            # just the entry point
-            linked_entrypoint = self._link_to_buildpath(self.entrypoint)
+        for dirpath, dirnames, filenames in os.walk(str(srcpath)):
+            dirpath = pathlib.Path(dirpath)
+            print("==== link walk", dirpath, dirnames, filenames)
+            relative_destpath = base_destpath / pathlib.Path(dirpath).relative_to(srcpath)
+            print("==== relative destpath", relative_destpath)
 
+            # process the directories
+            newdirnames = []
+            for name in dirnames:
+                path = dirpath / name
+                if self.ignorer.match(str(path), is_dir=True):
+                    logger.debug("Ignoring the directory because of rules: {!r}".format(path))
+                else:
+                    destpath = relative_destpath / path
+                    print("==== creating dir", destpath)
+                    destpath.mkdir()
+                    newdirnames.append(name)
+
+            # in the future don't go inside ignored directories
+            dirnames[:] = newdirnames
+
+            # process the files
+            for name in filenames:
+                path = dirpath / name
+                if self.ignorer.match(str(path), is_dir=False):
+                    logger.debug("Ignoring the file because of rules: {!r}".format(path))
+                elif path.is_file():
+                    destpath = relative_destpath / path
+                    print("==== linking file", destpath)
+                    destpath.link(srcpath / path)
+                elif path.is_symlink():
+                    #FIXME: implement!!!
+                    fixme
+                else:
+                    logger.debug("Ignoring the file because of type: {!r}".format(path))
+
+        return base_destpath
+
+    def handle_generic_paths(self):
+        """Handle all files and dirs except what's ignored and what will be handled later."""
+        logger.debug("Linking in generic paths")
+
+        # link all the paths
+        for path in self.charmdir.iterdir():
+            print("============= link?", path)
+            if path.name in (DISPATCH_FILENAME, HOOKS_DIR, BUILD_DIRNAME):
+                # these will be handled later or shall be plainly ignored
+                print("=========== ignoring! later", path)
+                continue
+            if self.ignorer.match(str(path), path.is_dir()):
+                logger.debug("Ignored per jujuignore config: {!r}".format(str(path)))
+                print("=========== ignoring! juju", path)
+                continue
+
+            print("=========== linking!", path)
+            self._link_to_buildpath(path)
+
+        # the linked entrypoint is calculated here because it's when it's really in the build dir
+        linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
         return linked_entrypoint
 
     def handle_dispatcher(self, linked_entrypoint):
@@ -136,7 +184,7 @@ class Builder:
         current_dispatch = self.charmdir / DISPATCH_FILENAME
         if current_dispatch.exists():
             logger.debug("Including the current dispatch script")
-            dispatch_path = self._link_to_buildpath(current_dispatch)
+            dispatch_path = self._link_to_buildpath(current_dispatch) #FIXME: hacer hardlink directo
         else:
             logger.debug("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
@@ -149,8 +197,8 @@ class Builder:
         # bunch of symlinks, to support old juju: whatever is in the charm's hooks directory
         # is respected (unless links to the entrypoint), but also the mandatory ones are
         # created if missing
-        current_hookpath = self.charmdir / 'hooks'
-        dest_hookpath = self.buildpath / 'hooks'
+        current_hookpath = self.charmdir / HOOKS_DIR
+        dest_hookpath = self.buildpath / HOOKS_DIR
         dest_hookpath.mkdir()
 
         # get current hooks, separating those to be respected verbatim, and those that we need
@@ -185,6 +233,7 @@ class Builder:
         """Handle from-directory and virtualenv dependencies."""
         logger.debug("Installing dependencies")
 
+        #FIXME: esto vuela
         # whole-dirs dependencies
         for depdir in ('lib', 'mod'):
             from_dir = self.charmdir / depdir
@@ -216,6 +265,8 @@ class Builder:
 
         logger.debug("Creating the package itself")
         zipname = metadata['name'] + '.charm'
+        fixme
+        #FIXME: convertir links!!!!!
         zipfh = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
         buildpath_str = str(self.buildpath)  # os.walk does not support pathlib in 3.5
         for dirpath, dirnames, filenames in os.walk(buildpath_str, followlinks=True):
@@ -273,6 +324,7 @@ class Validator:
 
         if not filepath.exists():
             raise CommandError("the charm entry point was not found: {!r}".format(str(filepath)))
+        #FIXME: ensure inside project
         if not os.access(str(filepath), os.X_OK):  # access does not support pathlib in 3.5
             raise CommandError(
                 "the charm entry point must be executable: {!r}".format(str(filepath)))

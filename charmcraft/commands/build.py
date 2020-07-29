@@ -26,6 +26,7 @@ import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from .utils import make_executable
+from .jujuignore import JujuIgnore, default_juju_ignore
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,7 @@ class Builder:
         self.requirement_paths = args['requirement']
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
+        self.ignore_rules = self._load_juju_ignore()
 
     def run(self):
         """Main building process."""
@@ -110,11 +112,38 @@ class Builder:
         destpath.symlink_to(srcpath)
         return destpath
 
+    def _load_juju_ignore(self):
+        ignore = JujuIgnore(default_juju_ignore)
+        path = self.charmdir / '.jujuignore'
+        if path.exists():
+            with path.open() as ignores:
+                ignore.extend_patterns(ignores)
+        return ignore
+
+    def _walk_unignored(self, topdir):
+        """Same as os.walk but filter out ignored items."""
+        for top, dirs, nondirs in os.walk(str(topdir)):
+            relpath = pathlib.Path(top).relative_to(topdir)
+            i = 0
+            for d in dirs[:]:
+                if self.ignore_rules.match(str(relpath / d), is_dir=True):
+                    del dirs[i]
+                else:
+                    i++
+            remaining = []
+            for nondir in nondirs:
+                rel = relpath / nondir
+                if not self.ignore_rules.match(rel, is_dir=False):
+                    remaining.append(nondir)
+            yield top, dir, remaining
+
     def handle_code(self):
         """Handle basic files and the charm source code."""
         # basic files
         logger.debug("Linking in basic files and charm code")
         self._link_to_buildpath(self.charmdir / CHARM_METADATA)
+
+
         for fn in CHARM_OPTIONAL:
             path = self.charmdir / fn
             if path.exists():

@@ -16,7 +16,9 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import setuptools
+from pathlib import Path
+from textwrap import dedent
+from setuptools import setup
 
 import charmcraft
 
@@ -27,26 +29,41 @@ with open("README.md", "rt", encoding='utf8') as fh:
 with open("requirements.txt", "rt", encoding='utf8') as fh:
     requirements = fh.read().split('\n')
 
-setuptools.setup(
-    name="charmcraft",
-    version=charmcraft.__version__,
-    author="Facundo Batista",
-    author_email="facundo.batista@canonical.com",
-    description="The main tool to build, upload, and develop in general the Juju charms.",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/canonical/charmcraft",
-    license="Apache-2.0",
-    packages=['charmcraft', 'charmcraft.commands', 'charmcraft.commands.store'],
-    classifiers=[
-        "Environment :: Console",
-        "License :: OSI Approved :: Apache Software License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3",
-    ],
-    entry_points={
-        'console_scripts': ["charmcraft = charmcraft.main:main"],
-    },
-    python_requires='>=3',
-    install_requires=requirements,
-)
+version_path = Path("charmcraft/version.py")
+version_backup = Path("charmcraft/version.py~")
+version_path.rename(version_backup)
+try:
+    with version_path.open("wt", encoding="utf8") as fh:
+        fh.write(dedent('''
+            # this is a generated file
+
+            version = {!r}
+            ''').format(charmcraft.__version__))
+
+    setup(
+        name="charmcraft",
+        version=charmcraft.__version__,
+        author="Facundo Batista",
+        author_email="facundo.batista@canonical.com",
+        description="The main tool to build, upload, and develop in general the Juju charms.",
+        long_description=long_description,
+        long_description_content_type="text/markdown",
+        url="https://github.com/canonical/charmcraft",
+        license="Apache-2.0",
+        packages=['charmcraft', 'charmcraft.commands', 'charmcraft.commands.store'],
+        classifiers=[
+            "Environment :: Console",
+            "License :: OSI Approved :: Apache Software License",
+            "Operating System :: OS Independent",
+            "Programming Language :: Python :: 3",
+        ],
+        entry_points={
+            'console_scripts': ["charmcraft = charmcraft.main:main"],
+        },
+        python_requires='>=3',
+        install_requires=requirements,
+        include_package_data=True,  # so we get templates in the wheel
+    )
+
+finally:
+    version_backup.rename(version_path)

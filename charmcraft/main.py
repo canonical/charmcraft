@@ -22,7 +22,7 @@ import os
 import sys
 
 from charmcraft import __version__
-from charmcraft.commands import version, build, store
+from charmcraft.commands import version, build, store, init
 from charmcraft.cmdbase import CommandError
 from charmcraft.logsetup import message_handler
 
@@ -33,12 +33,16 @@ logger = logging.getLogger(__name__)
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files.
 COMMAND_GROUPS = [
-    ('basic', "basics", [version.VersionCommand, build.BuildCommand]),
+    ('basic', "basics", [version.VersionCommand, build.BuildCommand, init.InitCommand]),
     ('store', "interaction with the store", [
         # auth
         store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
         # name handling
-        store.RegisterNameCommand, store.ListRegisteredCommand,
+        store.RegisterNameCommand, store.ListNamesCommand,
+        # pushing files and checking revisions
+        store.UploadCommand, store.ListRevisionsCommand,
+        # release process, and show status
+        store.ReleaseCommand, store.StatusCommand,
     ]),
 ]
 
@@ -158,12 +162,15 @@ class Dispatcher:
         return parser
 
 
-def main(argv=sys.argv):
+def main(argv=None):
     """Main entry point."""
     # Setup logging, using DEBUG envvar in case dev wants to show info before
     # command parsing.
     mode = message_handler.VERBOSE if 'DEBUG' in os.environ else message_handler.NORMAL
     message_handler.init(mode)
+
+    if argv is None:
+        argv = sys.argv
 
     # process
     try:

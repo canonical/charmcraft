@@ -525,6 +525,25 @@ def test_build_code_tree(tmp_path):
     assert linked_entrypoint == build_dir / 'code_source' / 'crazycharm.py'
 
 
+def test_build_code_includes_templates(tmp_path):
+    """If 'templates' exists, it is included in the build tree."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    source_dir = tmp_path / "templates"
+    entrypoint = tmp_path / 'charm.py'
+    source_dir.mkdir()
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_code()
+    built_dir = build_dir / 'templates'
+    assert built_dir.is_symlink()
+    assert built_dir.resolve() == source_dir
+
+
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
     """The dispatcher script is properly built."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -634,6 +653,43 @@ def test_build_dispatcher_classic_hooks_whatever_respected(tmp_path):
     test_stuff = build_dir / 'hooks' / 'extra-stuff'
     assert test_stuff.is_symlink()
     assert test_stuff.resolve() == charm_test_extra_stuff
+
+
+def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog):
+    """Hooks that are just a symlink to the entrypoint are kept but replaced."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    # simple source code
+    src_dir = tmp_path / 'src'
+    src_dir.mkdir()
+    charm_script = src_dir / 'charm.py'
+    with charm_script.open('wb') as fh:
+        fh.write(b'all the magic')
+
+    # a test hook, just a symlink to the charm
+    charm_hooks_dir = tmp_path / 'hooks'
+    charm_hooks_dir.mkdir()
+    charm_test_hook = charm_hooks_dir / 'somehook'
+    charm_test_hook.symlink_to(charm_script)
+
+    linked_entrypoint = build_dir / 'somestuff.py'
+    included_dispatcher = build_dir / DISPATCH_FILENAME
+
+    builder = Builder({
+        'from': pathlib.Path(str(tmp_path)),
+        'entrypoint': pathlib.Path(str(charm_script)),
+        'requirement': [],
+    })
+    builder.handle_dispatcher(pathlib.Path(str(linked_entrypoint)))
+
+    test_hook = build_dir / 'hooks' / 'somehook'
+    assert test_hook.is_symlink()
+    assert test_hook.resolve() == included_dispatcher
+    expected = "Ignoring existing hook 'somehook' as it's a symlink to the entrypoint"
+    assert expected in [rec.message for rec in caplog.records]
 
 
 def test_build_dependencies_copied_dirs(tmp_path):

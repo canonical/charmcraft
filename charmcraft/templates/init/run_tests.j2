@@ -1,0 +1,16 @@
+#!/bin/sh -e
+# Copyright {{ year }} {{ author }}
+# See LICENSE file for licensing details.
+
+if [ -z "$VIRTUAL_ENV" -a -d venv/ ]; then
+    . venv/bin/activate
+fi
+
+if [ -z "$PYTHONPATH" ]; then
+    export PYTHONPATH=src
+else
+    export PYTHONPATH="src:$PYTHONPATH"
+fi
+
+flake8
+python3 -m unittest -v "$@"

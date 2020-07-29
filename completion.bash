@@ -19,7 +19,7 @@
 _charmcraft()
 {
     local cur prev words cword cmd cmds
-    cmds=(build version login logout whoami)
+    cmds=(build version login logout whoami names upload revisions status release)
     _init_completion || return
 
     # only offer long options, as they should be self-explanatory (and
@@ -38,12 +38,24 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${cmds[*]}" -- "$cur") )
             return
             ;;
-        login|logout|whoami|version)
+        login|logout|whoami|version|names)
             COMPREPLY=( $(compgen -W "--help" -- "$cur") )
             return
             ;;
         build)
             COMPREPLY=( $(compgen -W "--help --from --entrypoint --requirement" -- "$cur") )
+            return
+            ;;
+        upload)
+            COMPREPLY=( $(compgen -W "--help --charm-file" -- "$cur") )
+            return
+            ;;
+        revisions|status)
+            COMPREPLY=( $(compgen -W "--help --name" -- "$cur") )
+            return
+            ;;
+        release)
+            COMPREPLY=( $(compgen -W "--help --name --revision" -- "$cur") )
             return
             ;;
     esac
@@ -75,6 +87,13 @@ _charmcraft()
                     ;;
                 -f|--from)
                     _filedir -d
+                    ;;
+            esac
+            ;;
+        "upload")
+            case "$prev" in
+                --charm-file)
+                    _filedir charm
                     ;;
             esac
             ;;

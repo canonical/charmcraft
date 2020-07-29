@@ -24,12 +24,16 @@ from unittest.mock import patch
 
 import pytest
 from macaroonbakery import httpbakery
+from requests.adapters import HTTPAdapter
+from requests.exceptions import RequestException
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.client import (
     API_BASE_URL,
     Client,
     _AuthHolder,
+    _storage_push,
     build_user_agent,
     visit_page_with_browser,
 )
@@ -79,7 +83,7 @@ def test_authholder_cookiejar_filepath():
         ah = _AuthHolder()
 
     assert ah._cookiejar_filepath == 'testpath'
-    assert mock.called_once_with('charmcraft.credentials')
+    mock.assert_called_once_with('charmcraft.credentials')
 
 
 def test_authholder_clear_credentials_ok(auth_holder, caplog):
@@ -304,7 +308,7 @@ def test_client_get():
         client = Client()
     client.get('/somepath')
 
-    assert mock_auth.request.called_once_with('GET', API_BASE_URL + '/somepath')
+    mock_auth().request.assert_called_once_with('GET', API_BASE_URL + '/somepath', None)
 
 
 def test_client_post():
@@ -313,7 +317,7 @@ def test_client_post():
         client = Client()
     client.post('/somepath', 'somebody')
 
-    assert mock_auth.request.called_once_with('POST', API_BASE_URL + '/somepath', 'somebody')
+    mock_auth().request.assert_called_once_with('POST', API_BASE_URL + '/somepath', 'somebody')
 
 
 def test_client_hit_success_simple(caplog):
@@ -327,7 +331,7 @@ def test_client_hit_success_simple(caplog):
         client = Client()
     result = client._hit('GET', '/somepath')
 
-    assert mock_auth.request.called_once_with('GET', API_BASE_URL + '/somepath')
+    mock_auth().request.assert_called_once_with('GET', API_BASE_URL + '/somepath', None)
     assert result == response_value
     expected = [
         "Hitting the store: GET {}/somepath None".format(API_BASE_URL),
@@ -347,8 +351,7 @@ def test_client_hit_success_withbody(caplog):
         client = Client()
     result = client._hit('POST', '/somepath', 'somebody')
 
-    assert mock_auth.request.called_once_with(
-        'POST', API_BASE_URL + '/somepath', 'somebody', headers={'User-Agent': build_user_agent()})
+    mock_auth().request.assert_called_once_with('POST', API_BASE_URL + '/somepath', 'somebody')
     assert result == response_value
     expected = [
         "Hitting the store: POST {}/somepath somebody".format(API_BASE_URL),
@@ -375,7 +378,7 @@ def test_client_clear_credentials():
         client = Client()
     client.clear_credentials()
 
-    assert mock_auth.clear_credentials.called_once_with()
+    mock_auth().clear_credentials.assert_called_once_with()
 
 
 def test_client_errorparsing_complete():
@@ -434,3 +437,120 @@ def test_client_errorparsing_bad_structure():
     response = FakeResponse(content=content, status_code=404)
     result = Client()._parse_store_error(response)
     assert result == "Failure working with the Store: [404] " + repr(content)
+
+
+def test_client_push_simple_ok(caplog, tmp_path, capsys):
+    """Happy path for pushing bytes."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    # fake some bytes to push
+    test_filepath = tmp_path / 'supercharm.bin'
+    with test_filepath.open('wb') as fh:
+        fh.write(b"abcdefgh")
+
+    def fake_pusher(monitor):
+        """Push bytes in sequence, doing verifications in the middle."""
+        total_to_push = monitor.len  # not only the saved bytes, but also headers and stuff
+
+        # one batch
+        monitor.read(20)
+        captured = capsys.readouterr()
+        assert captured.out == "Uploading... {:.2f}%\r".format(100 * 20 / total_to_push)
+
+        # another batch
+        monitor.read(20)
+        captured = capsys.readouterr()
+        assert captured.out == "Uploading... {:.2f}%\r".format(100 * 40 / total_to_push)
+
+        # check monitor is properly built
+        assert isinstance(monitor.encoder, MultipartEncoder)
+        filename, fh, ctype = monitor.encoder.fields['binary']
+        assert filename == 'supercharm.bin'
+        assert fh.name == str(test_filepath)
+        assert ctype == "application/octet-stream"
+
+        content = json.dumps(dict(successful=True, upload_id='test-upload-id'))
+        return FakeResponse(content=content, status_code=200)
+
+    with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
+        Client().push(test_filepath)
+
+    # check proper logs
+    expected = [
+        "Starting to push {}".format(str(test_filepath)),
+        "Uploading bytes ended, id test-upload-id",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_client_push_response_not_ok(tmp_path):
+    """Didn't get a 200 from the Storage."""
+    # fake some bytes to push
+    test_filepath = tmp_path / 'supercharm.bin'
+    with test_filepath.open('wb') as fh:
+        fh.write(b"abcdefgh")
+
+    with patch('charmcraft.commands.store.client._storage_push') as mock:
+        mock.return_value = FakeResponse(content='had a problem', status_code=500)
+        with pytest.raises(CommandError) as cm:
+            Client().push(test_filepath)
+        assert str(cm.value) == "Failure while pushing file: [500] 'had a problem'"
+
+
+def test_client_push_response_unsuccessful(tmp_path):
+    """Didn't get a 200 from the Storage."""
+    # fake some bytes to push
+    test_filepath = tmp_path / 'supercharm.bin'
+    with test_filepath.open('wb') as fh:
+        fh.write(b"abcdefgh")
+
+    with patch('charmcraft.commands.store.client._storage_push') as mock:
+        raw_content = dict(successful=False, upload_id=None)
+        mock.return_value = FakeResponse(content=json.dumps(raw_content), status_code=200)
+        with pytest.raises(CommandError) as cm:
+            Client().push(test_filepath)
+        # checking all this separatedly as in Py3.5 dicts order is not deterministic
+        message = str(cm.value)
+        assert "Server error while pushing file:" in message
+        assert "'successful': False" in message
+        assert "'upload_id': None" in message
+
+
+def test_storage_push_succesful():
+    """Bytes are properly pushed to the Storage."""
+    test_monitor = MultipartEncoderMonitor(MultipartEncoder(
+        fields={"binary": ("filename", 'somefile', "application/octet-stream")}))
+
+    with patch('requests.Session') as mock:
+        _storage_push(test_monitor)
+    cm_session_mock = mock().__enter__()
+
+    # check request was properly called
+    url = 'https://storage.staging.snapcraftcontent.com/unscanned-upload/'
+    headers = {
+        'Content-Type': test_monitor.content_type,
+        'Accept': 'application/json',
+        'User-Agent': build_user_agent(),
+    }
+    cm_session_mock.post.assert_called_once_with(url, headers=headers, data=test_monitor)
+
+    # check the retries were properly setup
+    (protocol, adapter), _ = cm_session_mock.mount.call_args
+    assert protocol == 'https://'
+    assert isinstance(adapter, HTTPAdapter)
+    assert adapter.max_retries.backoff_factor == 2
+    assert adapter.max_retries.total == 5
+    assert adapter.max_retries.status_forcelist == [500, 502, 503, 504]
+
+
+def test_storage_push_network_error():
+    """A generic network error happened."""
+    test_monitor = MultipartEncoderMonitor(MultipartEncoder(
+        fields={"binary": ("filename", 'somefile', "application/octet-stream")}))
+
+    with patch('requests.Session.post') as mock:
+        mock.side_effect = RequestException("naughty error")
+        with pytest.raises(CommandError) as cm:
+            _storage_push(test_monitor)
+        expected = "Network error when pushing file: RequestException('naughty error')"
+        assert str(cm.value) == expected

@@ -19,11 +19,11 @@
 from charmcraft.cmdbase import BaseCommand
 
 
-def create_command(name_, help_msg_, common=False):
+def create_command(name_, help_msg_, common_=False):
     """Helper to create commands."""
     class MyCommand(BaseCommand):
         name = name_
         help_msg = help_msg_
-        common = True  #FIXME: set commands to "common" IRL
+        common = common_  #FIXME: set commands to "common" IRL
 
     return MyCommand

@@ -24,6 +24,6 @@ def create_command(name_, help_msg_, common_=False):
     class MyCommand(BaseCommand):
         name = name_
         help_msg = help_msg_
-        common = common_  #FIXME: set commands to "common" IRL
+        common = common_
 
     return MyCommand

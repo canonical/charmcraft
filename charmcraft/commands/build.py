@@ -301,6 +301,7 @@ class BuildCommand(BaseCommand):
     """Build the charm."""
     name = 'build'
     help_msg = "Build the charm."
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

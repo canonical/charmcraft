@@ -17,11 +17,12 @@
 import textwrap
 from unittest.mock import patch
 
+from charmcraft.main import COMMAND_GROUPS
 from charmcraft.help import get_full_help
 from tests.factory import create_command
 
 
-def test_default_help():
+def test_default_help_text():
     """All different parts for the default help."""
     cmd1 = create_command('cmd1', 'Cmd help which is very long but whatever.', common_=True)
     cmd2 = create_command('command-2', 'Cmd help.', common_=True)
@@ -40,13 +41,17 @@ def test_default_help():
         This is the summary for
         the whole program.
     """), "    ")
+    global_options = [
+        ('-h, --help', 'Show this help message and exit.'),
+        ('-q, --quiet', 'Only show warnings and errors, not progress.'),
+    ]
 
     with patch('charmcraft.help.SUMMARY', fake_summary):
-        text = get_full_help(command_groups)
-    print("===============??")
-    print(text)
-    print("===============!!")
+        text = get_full_help(command_groups, global_options)
 
+    # XXX Facundo 2020-07-30: As we're losing the "regular summary"...
+    #     usage: charmcraft [-h] [-v | -q] {version,build,init,lo...
+    # ...we're not expressing that -v and -q are mutually exclusive.
     expected = textwrap.dedent("""\
         Usage:
             charmcraft [help] <command>
@@ -54,6 +59,10 @@ def test_default_help():
         Summary:
             This is the summary for
             the whole program.
+
+        Global options:
+            -h, --help:        Show this help message and exit.
+            -q, --quiet:       Only show warnings and errors, not progress.
 
         Starter commands:
             cmd1:              Cmd help which is very long but whatever.
@@ -64,9 +73,9 @@ def test_default_help():
             command-2:         Cmd help.
 
         Commands can be classified as follows:
-             group1:           cmd6-really-long, command-2
-             group2:           cmd1, cmd3, cmd4, cmd5
-             group3:           cmd7
+            group1:            cmd6-really-long, command-2
+            group2:            cmd1, cmd3, cmd4, cmd5
+            group3:            cmd7
 
         For more information about a command, run 'charmcraft help <command>'.
         For a summary of all commands, run 'charmcraft help --all'.
@@ -74,6 +83,46 @@ def test_default_help():
     assert text == expected
 
 
-def test_aesthetic_validations():
+def test_aesthetic_help_msg():
     """All the real commands help msg start with uppercase and ends with a dot."""
+    for _, _, commands in COMMAND_GROUPS:
+        for cmd in commands:
+            msg = cmd.help_msg
+            assert msg[0].isupper() and msg[-1] == '.'
+
+
+def test_aesthetic_args_options_msg():
+    """All the real commands args/options help messages start and end with a dot."""
+    fixme
+
+
+# -- real execution outputs
+
+def test_tool_exec_barenaked():
+    """Execute charmcraft without any option at all."""
+    fixme
+
+
+def test_tool_exec_dash_help():
+    """Execute charmcraft asking for help."""
+    fixme
+
+
+def test_tool_exec_command_incorrect():
+    """Execute a command that doesn't exist."""
+    fixme
+
+
+def test_tool_exec_command_dash_help():
+    """Execute a command asking for help."""
+    fixme
+
+
+def test_tool_exec_command_wrong_option():
+    """Execute a correct command but with a wrong option."""
+    fixme
+
+
+def test_tool_exec_command_bad_option_type():
+    """Execute a correct command but giving the valid option a bad value."""
     fixme

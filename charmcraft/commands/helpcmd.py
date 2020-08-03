@@ -17,18 +17,28 @@
 
 import logging
 
-from charmcraft import __version__
+from charmcraft import help
 from charmcraft.cmdbase import BaseCommand
 
 logger = logging.getLogger(__name__)
 
+# FIXME: all untested
+# FIXME: missing the --all option
 
-class VersionCommand(BaseCommand):
+class HelpCommand(BaseCommand):
     """Show the version."""
-    name = 'version'
-    help_msg = "Show the version."
-    common = True
+    name = 'help'
+    help_msg = "Show these help messages."
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            'command', type=str, nargs='?',
+            help="the directory where the charm project is located, from where the build "
+                 "is done; defaults to '.'")
 
     def run(self, parsed_args):
         """Run the command."""
-        logger.info('Version: %s', __version__)
+        print("=========== h?", repr(parsed_args.command))
+        #logger.info('Version: %s', __version__)
+        # FIXME: implement

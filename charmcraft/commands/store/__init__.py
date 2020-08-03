@@ -90,6 +90,7 @@ class RegisterNameCommand(BaseCommand):
     """Register a name in the Store."""
     name = 'register'
     help_msg = "Register a name in the Store."
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -106,6 +107,7 @@ class ListNamesCommand(BaseCommand):
     """List the charms registered in the Store."""
     name = 'names'
     help_msg = "List the charm names registered the Store."
+    common = True
 
     def run(self, parsed_args):
         """Run the command."""
@@ -134,6 +136,7 @@ class UploadCommand(BaseCommand):
     """Upload a charm file to the Store."""
     name = 'upload'
     help_msg = "upload a charm file to the Store"
+    common = True
 
     def _discover_charm(self, charm_filepath):
         """Discover the charm name and file path.
@@ -197,6 +200,7 @@ class ListRevisionsCommand(BaseCommand):
     """List existing revisions for a charm."""
     name = 'revisions'
     help_msg = "list existing revisions for a charm in the Store"
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -246,6 +250,7 @@ class ReleaseCommand(BaseCommand):
     """Release a charm revision to specific channels."""
     name = 'release'
     help_msg = "relase a charm revision to one or more channels"
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -291,6 +296,7 @@ class StatusCommand(BaseCommand):
     """List released revisions for a charm."""
     name = 'status'
     help_msg = "list released revisions of a charm"
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

@@ -90,9 +90,16 @@ class _MessageHandler:
             _logger.error("Interrupted.")
         os.unlink(self._log_filepath)
 
+    def ended_argserror(self, err):
+        """Report a problem with program/commands arguments/options parsing."""
+        _logger.error(err)
+
     def ended_cmderror(self, err):
-        """Report the (expected) problem and logfile location."""
-        msg = "{} (full execution logs in {})".format(err, self._log_filepath)
+        """Report the (expected) problem and (maybe) logfile location."""
+        if err.argsparsing:
+            msg = str(err)
+        else:
+            msg = "{} (full execution logs in {})".format(err, self._log_filepath)
         _logger.error(msg)
 
     def ended_crash(self, err):

@@ -19,11 +19,13 @@ class CommandError(Exception):
     """Base exception for all error commands.
 
     It optionally receives a `retcode` parameter that will be the returned code
-    by the process on exit.
+    by the process on exit, and a `argsparsing` one to indicate that the problem
+    is in the command line usage.
     """
 
-    def __init__(self, message, retcode=1):
+    def __init__(self, message, retcode=1, argsparsing=False):
         self.retcode = retcode
+        self.argsparsing = argsparsing
         super().__init__(message)
 
 
@@ -34,6 +36,7 @@ class BaseCommand:
 
     - name: the identifier in the command line
     - help_msg: a one line help for user documentation
+    - common: if it's a common/starter command, which are prioritized in the help
 
     It also must/can override some methods for the proper command behaviour (see each
     method's docstring).
@@ -45,6 +48,7 @@ class BaseCommand:
 
     name = None
     help_msg = None
+    common = False
 
     def __init__(self, group):
         if self.name is None or self.help_msg is None:

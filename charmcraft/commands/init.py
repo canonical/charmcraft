@@ -33,6 +33,7 @@ class InitCommand(BaseCommand):
     """Initialize a directory to be a charm project."""
     name = "init"
     help_msg = "initialize a directory to be a charm project"
+    common = True
 
     def fill_parser(self, parser):
         parser.add_argument(

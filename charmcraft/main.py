@@ -17,11 +17,10 @@
 
 import argparse
 import logging
-import operator
 import os
 import sys
 
-from charmcraft import __version__
+from charmcraft import __version__, helptexts
 from charmcraft.commands import version, build, store, init
 from charmcraft.cmdbase import CommandError
 from charmcraft.logsetup import message_handler
@@ -50,41 +49,46 @@ COMMAND_GROUPS = [
 class CustomArgumentParser(argparse.ArgumentParser):
     """ArgumentParser with grouped commands help."""
 
-    # Flag to indicate action groups that will have custom docs
-    special_group = object()
-
     def __init__(self, **kwargs):
-        self.__commands_groups = kwargs.pop('commands_groups', ())
+        self._command_parser = kwargs.pop('command_parser', False)
         super().__init__(**kwargs)
 
-    def format_help(self):
-        """Produce normal help, but with grouped commands."""
-        main = False
-        for ag in self._action_groups:
-            if ag.title is self.special_group:
-                self._action_groups.remove(ag)
-                main = True
-                break
-        base = super().format_help()
-        if not main:
-            return base
+    def _check_value(self, action, value):
+        """Verify the command is a valid one.
 
-        # Get the size of the longest name so all help texts are aligned
-        # properly across the groups.
-        longest_name = 0
-        for _, _, cmd_classes in self.__commands_groups:
-            for cmd_class in cmd_classes:
-                longest_name = max(len(cmd_class.name), longest_name)
+        This overwrites ArgumentParser one to change the error text.
+        """
+        if action.choices is not None and value not in action.choices:
+            raise argparse.ArgumentError(action, "no such command {!r}".format(value))
 
-        extra = ['', 'commands:', '']
-        for group, group_title, cmd_classes in self.__commands_groups:
-            extra.append("    {}:".format(group_title))
-            for cmd_class in sorted(cmd_classes, key=operator.attrgetter('name')):
-                extra.append("        {:{longest}s}   {}".format(
-                    cmd_class.name, cmd_class.help_msg, longest=longest_name))
-            extra.append('')
+    def error(self, message):
+        """Show the usage, the error message, and no more."""
+        full_msg = helptexts.get_error_message(message)
+        raise CommandError(full_msg, argsparsing=True)
 
-        return base + '\n'.join(extra)
+
+def print_help(parser, parsed_args):
+    """Produce the complete (but not extensive) help message."""
+    command = getattr(parsed_args, '_command', None)
+    if command is not None:
+        # replace the generic parser for the command-specific one
+        (subparseraction,) = [
+            action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
+        parser = subparseraction.choices[command.name]
+
+    # get options from the global or command-specific parser
+    actions = [
+        action for action in parser._actions
+        if not isinstance(action, argparse._SubParsersAction)]
+    options = [(', '.join(action.option_strings), action.help) for action in actions]
+
+    # get general or specific help
+    if command is None:
+        help_text = helptexts.get_full_help(COMMAND_GROUPS, options)
+    else:
+        help_text = helptexts.get_command_help(command, options)
+
+    print(help_text)  # FIXME: print???
 
 
 class Dispatcher:
@@ -107,8 +111,8 @@ class Dispatcher:
         """Really run the command."""
         self._handle_global_params()
 
-        if not hasattr(self.parsed_args, '_command'):
-            self.main_parser.print_help()
+        if self.parsed_args.help:
+            print_help(self.main_parser, self.parsed_args)
             return 1
 
         command = self.parsed_args._command
@@ -137,26 +141,43 @@ class Dispatcher:
         """Build the generic argument parser."""
         parser = CustomArgumentParser(
             prog='charmcraft',
-            description="The main tool to build, upload, and develop in general the Juju Charms.",
-            commands_groups=commands_groups)
+            description="The main tool to build, upload and develop in general the Juju Charms.",
+            add_help=False)
 
         # basic general options
+        parser.add_argument(
+            '-h', '--help', action='store_true',
+            help="Show this help message and exit.")
         mutexg = parser.add_mutually_exclusive_group()
         mutexg.add_argument(
             '-v', '--verbose', action='store_true',
-            help="be more verbose and show debug information")
+            help="Be more verbose and show debug information.")
         mutexg.add_argument(
             '-q', '--quiet', action='store_true',
-            help="only show warnings and errors, not progress")
+            help="Only show warnings and errors, not progress.")
 
-        subparsers = parser.add_subparsers(title=CustomArgumentParser.special_group)
+        subparsers = parser.add_subparsers()
         for group_name, _, cmd_classes in commands_groups:
             for cmd_class in cmd_classes:
                 name = cmd_class.name
                 command = self.commands[name]
 
-                subparser = subparsers.add_parser(name, help=command.help_msg)
+                subparser = subparsers.add_parser(
+                    name, help=command.help_msg, command_parser=True, add_help=False)
                 subparser.set_defaults(_command=command)
+
+                # FIXME: this is a copy of above, let's not duplicate
+                subparser.add_argument(
+                    '-h', '--help', action='store_true',  # FIXME: this won't bypass mandatory args
+                    help="Show this help message and exit.")
+                mutexg = subparser.add_mutually_exclusive_group()
+                mutexg.add_argument(
+                    '-v', '--verbose', action='store_true',
+                    help="Be more verbose and show debug information.")
+                mutexg.add_argument(
+                    '-q', '--quiet', action='store_true',
+                    help="Only show warnings and errors, not progress.")
+
                 command.fill_parser(subparser)
 
         return parser

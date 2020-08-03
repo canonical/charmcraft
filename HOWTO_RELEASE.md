@@ -41,12 +41,12 @@ Release early, release often. Don't be lazy.
     cd ~  # wherever out of the project, to avoid any potential "file mispicking"
     fades -v -d file:///tmp/testrelease/charmcraft-0.3.0/ -x charmcraft version
 
-- back in the project, build a snap
+- back in the project, build all the snaps for different architectures
 
     snapcraft clean
-    snapcraft
+    snapcraft remote-build
 
-- try the snap
+- try the snap (for your arch)
 
     sudo snap install --dangerous charmcraft_0.3.0_amd64.snap
     cd ~  # wherever out of the project, to avoid any potential "file mispicking"
@@ -72,12 +72,11 @@ Release early, release often. Don't be lazy.
 
     fades -d twine -x twine upload --verbose dist/*
 
-- release to Snap Store
+- release to Snap Store (for all the archs)
 
-    snapcraft push charmcraft_0.3.0_amd64.snap
-    snapcraft release charmcraft 7 beta
-    # FIXME: what about other archs
-
+    snapcraft push charmcraft_0.3.0_amd64.snap --release=beta
+    snapcraft push charmcraft_0.3.0_s390x.snap --release=beta
+    ...
 
 ## Final details
 

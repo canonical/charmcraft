@@ -1,0 +1,12 @@
+[flake8]
+max-line-length = 99
+select: E,W,F,C,N
+exclude:
+    .git
+    __pycache__
+    .venv
+    venv
+    build
+    *.egg_info
+    dist
+    snap

@@ -40,7 +40,8 @@ CHARM_OPTIONAL = [
     'metrics.yaml',
     'actions.yaml',
     'lxd-profile.yaml',
-    'version'
+    'templates',
+    'version',
 ]
 
 # The file name and template for the dispatch script

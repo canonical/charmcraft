@@ -518,6 +518,25 @@ def test_build_code_tree(tmp_path):
     assert linked_entrypoint == build_dir / 'code_source' / 'crazycharm.py'
 
 
+def test_build_code_includes_templates(tmp_path):
+    """If 'templates' exists, it is included in the build tree."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    source_dir = tmp_path / "templates"
+    entrypoint = tmp_path / 'charm.py'
+    source_dir.mkdir()
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_code()
+    built_dir = build_dir / 'templates'
+    assert built_dir.is_symlink()
+    assert built_dir.resolve() == source_dir
+
+
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
     """The dispatcher script is properly built."""
     build_dir = tmp_path / BUILD_DIRNAME

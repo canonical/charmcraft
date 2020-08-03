@@ -319,7 +319,7 @@ def test_upload_discover_pathgiven_home_expanded(tmp_path):
     with patch.dict(os.environ, {'HOME': str(fake_home)}):
         name, path = UploadCommand('group')._discover_charm(pathlib.Path('~/testfile.charm'))
     assert name == 'testfile'
-    assert path == pathlib.Path(str(charm_file))
+    assert path == charm_file
 
 
 def test_upload_discover_pathgiven_missing(tmp_path):
@@ -351,7 +351,7 @@ def test_upload_discover_default_ok(tmp_path, monkeypatch):
         name, path = UploadCommand('group')._discover_charm(None)
 
     assert name == 'testcharm'
-    assert path == pathlib.Path(str(charm_file))
+    assert path == charm_file
 
 
 def test_upload_discover_default_no_metadata(tmp_path):

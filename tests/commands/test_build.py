@@ -77,7 +77,6 @@ def test_validator_process_notpresent():
 
 def test_validator_from_simple(tmp_path):
     """'from' param: simple validation and setting in Validation."""
-    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     validator = Validator()
     resp = validator.validate_from(tmp_path)
     assert resp == tmp_path
@@ -100,7 +99,6 @@ def test_validator_from_absolutized(tmp_path, monkeypatch):
     dir2.mkdir()
     monkeypatch.chdir(tmp_path)
 
-    dir2 = pathlib.Path(str(dir2))  # comparisons below don't work well in Py3.5
     validator = Validator()
     resp = validator.validate_from(pathlib.Path('dir1/dir2'))
     assert resp == dir2
@@ -134,7 +132,6 @@ def test_validator_from_isdir(tmp_path):
 
 def test_validator_entrypoint_simple(tmp_path):
     """'entrypoint' param: simple validation."""
-    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     testfile = tmp_path / 'testfile'
     testfile.touch(mode=0o777)
 
@@ -145,7 +142,6 @@ def test_validator_entrypoint_simple(tmp_path):
 
 def test_validator_entrypoint_default(tmp_path):
     """'entrypoint' param: default value."""
-    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     default_entrypoint = tmp_path / 'src' / 'charm.py'
     default_entrypoint.parent.mkdir()
     default_entrypoint.touch(mode=0o777)
@@ -167,14 +163,11 @@ def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
 
     validator = Validator()
     resp = validator.validate_entrypoint(pathlib.Path('dirX/file.py'))
-    testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
     assert resp == testfile
 
 
 def test_validator_entrypoint_expanded(tmp_path):
     """'entrypoint' param: expands the user-home prefix."""
-    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
-
     fake_home = tmp_path / 'homedir'
     fake_home.mkdir()
 
@@ -198,7 +191,6 @@ def test_validator_entrypoint_exist():
 
 def test_validator_entrypoint_exec(tmp_path):
     """'entrypoint' param: checks that the file is executable."""
-    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
     testfile = tmp_path / 'testfile'
     testfile.touch(mode=0o444)
 
@@ -269,14 +261,11 @@ def test_validator_requirement_absolutized(tmp_path, monkeypatch):
 
     validator = Validator()
     resp = validator.validate_requirement([pathlib.Path('reqs.txt')])
-    testfile = pathlib.Path(str(testfile))  # comparison below don't work well in Py3.5
     assert resp == [testfile]
 
 
 def test_validator_requirement_expanded(tmp_path):
     """'requirement' param: expands the user-home prefix."""
-    tmp_path = pathlib.Path(str(tmp_path))  # comparisons below don't work well in Py3.5
-
     fake_home = tmp_path / 'homedir'
     fake_home.mkdir()
 
@@ -392,8 +381,8 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch):
 
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder({
-        'from': pathlib.Path(str(tmp_path)),  # bad support for tmp_path's pathlib2 in Py3.5
-        'entrypoint': pathlib.Path(str(charm_script)),
+        'from': tmp_path,
+        'entrypoint': charm_script,
         'requirement': [],
     })
     zipname = builder.run()
@@ -417,7 +406,9 @@ def test_build_code_simple(tmp_path):
     build_dir.mkdir()
 
     metadata = tmp_path / CHARM_METADATA
+    metadata.touch()
     entrypoint = tmp_path / 'crazycharm.py'
+    entrypoint.touch()
 
     builder = Builder({
         'from': tmp_path,
@@ -509,7 +500,9 @@ def test_build_code_tree(tmp_path):
     build_dir.mkdir()
 
     src_dir = tmp_path / 'code_source'
+    src_dir.mkdir()
     entrypoint = src_dir / 'crazycharm.py'
+    entrypoint.touch()
 
     builder = Builder({
         'from': tmp_path,
@@ -523,6 +516,25 @@ def test_build_code_tree(tmp_path):
     assert built_src.resolve() == src_dir
 
     assert linked_entrypoint == build_dir / 'code_source' / 'crazycharm.py'
+
+
+def test_build_code_includes_templates(tmp_path):
+    """If 'templates' exists, it is included in the build tree."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    source_dir = tmp_path / "templates"
+    entrypoint = tmp_path / 'charm.py'
+    source_dir.mkdir()
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_code()
+    built_dir = build_dir / 'templates'
+    assert built_dir.is_symlink()
+    assert built_dir.resolve() == source_dir
 
 
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
@@ -660,11 +672,11 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog)
     included_dispatcher = build_dir / DISPATCH_FILENAME
 
     builder = Builder({
-        'from': pathlib.Path(str(tmp_path)),
-        'entrypoint': pathlib.Path(str(charm_script)),
+        'from': tmp_path,
+        'entrypoint': charm_script,
         'requirement': [],
     })
-    builder.handle_dispatcher(pathlib.Path(str(linked_entrypoint)))
+    builder.handle_dispatcher(linked_entrypoint)
 
     test_hook = build_dir / 'hooks' / 'somehook'
     assert test_hook.is_symlink()
@@ -843,7 +855,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch):
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder({
-        'from': pathlib.Path(str(tmp_path)),  # bad support for tmp_path's pathlib2 in Py3.5
+        'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
     })
@@ -875,7 +887,7 @@ def test_build_package_name(tmp_path, monkeypatch):
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder({
-        'from': pathlib.Path(str(tmp_path)),  # bad support for tmp_path's pathlib2 in Py3.5
+        'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
     })

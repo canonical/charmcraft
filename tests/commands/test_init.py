@@ -14,8 +14,10 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-from argparse import Namespace
+import os
 import subprocess
+import sys
+from argparse import Namespace
 
 import pytest
 
@@ -74,6 +76,15 @@ def test_executables(tmp_path):
 
 
 def test_tests(tmp_path):
+    # fix the PYTHONPATH so the tests in the initted environment use our own
+    # virtualenv (if any), as they need one, but we're not creating one for them; note
+    # that for CI this normally doesn't run under a venv, so this may fix nothing
+    env = os.environ.copy()
+    env_paths = [p for p in sys.path if 'env/lib/python' in p]
+    if env_paths:
+        (env_path,) = env_paths
+        env['PYTHONPATH'] += ':' + env_path
+
     cmd = InitCommand('group')
     cmd.run(Namespace(path=tmp_path, name='my-charm', author="だれだれ"))
-    subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True)
+    subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)

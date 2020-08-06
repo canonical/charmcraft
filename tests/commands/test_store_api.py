@@ -101,11 +101,14 @@ def test_list_registered_names_empty(client_mock):
     assert result == []
 
 
-def test_list_registered_names_multiple(client_mock):
+# XXX Facundo 2020-08-04: Simplify this only for second value when the Store
+# consolidates on this name (after getting to production)
+@pytest.mark.parametrize("field_name", ['charms', 'results'])
+def test_list_registered_names_multiple(client_mock, field_name):
     """List registered names getting a multiple response."""
     store = Store()
 
-    auth_response = {'charms': [
+    auth_response = {field_name: [
         {'name': 'name1', 'private': False, 'status': 'status1'},
         {'name': 'name2', 'private': True, 'status': 'status2'},
     ]}
@@ -367,7 +370,10 @@ def test_release_multiple(client_mock):
 # -- tests for status
 
 
-def test_status_ok(client_mock):
+# XXX Facundo 2020-08-04: Simplify this only for second value when the Store
+# consolidates on this name (after getting to production)
+@pytest.mark.parametrize("field_name", ['charm', 'package'])
+def test_status_ok(client_mock, field_name):
     """Get all the release information."""
     client_mock.get.return_value = {
         'channel-map': [
@@ -387,7 +393,7 @@ def test_status_ok(client_mock):
                 'when': '2020-07-16T18:46:02Z',
             }
         ],
-        'charm': {
+        field_name: {
             'channels': [
                 {
                     'branch': None,

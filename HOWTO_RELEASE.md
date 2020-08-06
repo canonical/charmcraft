@@ -43,7 +43,6 @@ Release early, release often. Don't be lazy.
 
 - back in the project, build all the snaps for different architectures
 
-    snapcraft clean
     snapcraft remote-build
 
 - try the snap (for your arch)

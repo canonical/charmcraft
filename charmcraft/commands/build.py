@@ -82,7 +82,7 @@ class Builder:
         self.buildpath = self.charmdir / BUILD_DIRNAME
 
         # prepare the ignore machinery
-        #FIXME: we need to make this easier (with jam's branch)
+        # FIXME: we need to make this easier (with jam's branch)
         jujuignore_specfilepath = self.charmdir / JUJUIGNORE_SPECFILENAME
         if jujuignore_specfilepath.exists():
             with open(jujuignore_specfilepath, 'rt', encoding='utf8') as fh:
@@ -118,16 +118,9 @@ class Builder:
         """
         logger.debug("Linking in generic paths")
 
-        # collection of paths incorporated to the build dir (relative to charmdir)
-        incorporated = []  #FIXME: define if we really want this
-
         for basedir, dirnames, filenames in os.walk(str(self.charmdir), followlinks=False):
             abs_basedir = pathlib.Path(basedir)
             rel_basedir = abs_basedir.relative_to(self.charmdir)
-            print("==== walk", abs_basedir, rel_basedir, dirnames, filenames)
-
-            #relative_destpath = base_destpath / pathlib.Path(dirpath).relative_to(srcpath)
-            #print("==== relative destpath", relative_destpath)
 
             # process the directories
             ignored = []
@@ -138,9 +131,7 @@ class Builder:
                     ignored.append(pos)
                 else:
                     abs_path = abs_basedir / name
-                    #incorporated.append(path)
                     dest_path = self.buildpath / rel_path
-                    print("==== creating dir", dest_path)
                     dest_path.mkdir()
 
             # in the future don't go inside ignored directories
@@ -175,14 +166,11 @@ class Builder:
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
-        #if linked_entrypoint not in incorporated:
-        #    raise CommandError("The indicated entrypoint is also set to be ignored.")
-        return linked_entrypoint#, incorporated
+        return linked_entrypoint
 
-    def handle_dispatcher(self, linked_entrypoint):#, incorporated):
+    def handle_dispatcher(self, linked_entrypoint):
         """Handle modern and classic dispatch mechanisms."""
         # dispatch mechanism, create one if wasn't provided by the project
-        current_dispatch = self.charmdir / DISPATCH_FILENAME
         dispatch_path = self.buildpath / DISPATCH_FILENAME
         if not dispatch_path.exists():
             logger.debug("Creating the dispatch mechanism")
@@ -192,41 +180,30 @@ class Builder:
                 fh.write(dispatch_content)
                 make_executable(fh)
 
-        # # bunch of symlinks, to support old juju: whatever is in the charm's hooks directory
-        # # is respected (unless links to the entrypoint), but also the mandatory ones are
-        # # created if missing
-        # current_hookpath = self.charmdir / HOOKS_DIR
+        # bunch of symlinks, to support old juju: verify that any of the already included hooks
+        # in the directory is not linking directly to the entrypoint, and also check all the
+        # mandatory ones are present
         dest_hookpath = self.buildpath / HOOKS_DIR
         if not dest_hookpath.exists():
             dest_hookpath.mkdir()
 
-        # # get current hooks, separating those to be respected verbatim, and those that we need
-        # # to replace (because they are pointing to the entrypoint and we need to fix the
-        # # environment in the middle)
-        # current_hooks_ok = []
-        # current_hooks_to_replace = []
-        # if current_hookpath.exists():
-        #     for node in current_hookpath.iterdir():
-        #         if node.resolve() == self.entrypoint:
-        #             current_hooks_to_replace.append(node)
-        #             logger.debug(
-        #                 "Ignoring existing hook %r as it's a symlink to the entrypoint", node.name)
-        #         else:
-        #             current_hooks_ok.append(node)
+        # get those built hooks that we need to replace because they are pointing to the
+        # entrypoint directly and we need to fix the environment in the middle
+        current_hooks_to_replace = []
+        for node in dest_hookpath.iterdir():
+            if node.resolve() == linked_entrypoint:
+                current_hooks_to_replace.append(node)
+                node.unlink()
+                logger.debug(
+                    "Replacing existing hook %r as it's a symlink to the entrypoint", node.name)
 
-        # # respect current nodes
-        # for current_hook in current_hooks_ok:
-        #     logger.debug("Including current %r hook", current_hook.name)
-        #     dest_hook = dest_hookpath / current_hook.name
-        #     dest_hook.symlink_to(current_hook)
-
-        ## include the mandatory ones (if missing) and those we need to replace
-        missing = MANDATORY_HOOK_NAMES #- {x.name for x in current_hooks_ok}
-        # missing |= {x.name for x in current_hooks_to_replace}
-        for hookname in missing:
+        # include the mandatory ones and those we need to replace
+        hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
+        for hookname in hooknames:
             logger.debug("Creating the %r hook script pointing to dispatch", hookname)
             dest_hook = dest_hookpath / hookname
-            dest_hook.symlink_to(dispatch_path)
+            if not dest_hook.exists():
+                dest_hook.symlink_to(dispatch_path)
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
@@ -314,7 +291,9 @@ class Validator:
 
         if not filepath.exists():
             raise CommandError("the charm entry point was not found: {!r}".format(str(filepath)))
-        #FIXME: ensure inside project
+        if self.basedir not in filepath.parents:
+            raise CommandError(
+                "the entry point must be inside the project: {!r}".format(str(filepath)))
         if not os.access(str(filepath), os.X_OK):  # access does not support pathlib in 3.5
             raise CommandError(
                 "the charm entry point must be executable: {!r}".format(str(filepath)))

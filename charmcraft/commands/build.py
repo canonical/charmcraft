@@ -81,15 +81,8 @@ class Builder:
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
 
-    def run(self):
-        """Main building process."""
-        logger.debug("Building charm in %r", str(self.buildpath))
-
-        if self.buildpath.exists():
-            shutil.rmtree(str(self.buildpath))
-        self.buildpath.mkdir()
-
         # prepare the ignore machinery
+        #FIXME: we need to make this easier (with jam's branch)
         jujuignore_specfilepath = self.charmdir / JUJUIGNORE_SPECFILENAME
         if jujuignore_specfilepath.exists():
             with open(jujuignore_specfilepath, 'rt', encoding='utf8') as fh:
@@ -97,6 +90,14 @@ class Builder:
         else:
             raw_jujuignore_content = jujuignore.default_juju_ignore
         self.ignorer = jujuignore.JujuIgnore(raw_jujuignore_content)
+
+    def run(self):
+        """Main building process."""
+        logger.debug("Building charm in %r", str(self.buildpath))
+
+        if self.buildpath.exists():
+            shutil.rmtree(str(self.buildpath))
+        self.buildpath.mkdir()
 
         linked_entrypoint = self.handle_generic_paths()
         self.handle_dispatcher(linked_entrypoint)
@@ -106,8 +107,8 @@ class Builder:
         logger.info("Done, charm left in %r", zipname)
         return zipname
 
-    def _link_to_buildpath(self, srcpath):
-        """Link a path to the build directory, recursive on the given structure.
+    def handle_generic_paths(self):
+        """Handle all files and dirs except what's ignored and what will be handled later.
 
         Works differently for the different file types:
         - regular files: hard links
@@ -115,115 +116,113 @@ class Builder:
         - symlinks: respected if are internal to the project
         - other types (blocks, mount points, etc): ignored
         """
-        base_destpath = self.buildpath / srcpath.name
+        logger.debug("Linking in generic paths")
 
-        for dirpath, dirnames, filenames in os.walk(str(srcpath)):
-            dirpath = pathlib.Path(dirpath)
-            print("==== link walk", dirpath, dirnames, filenames)
-            relative_destpath = base_destpath / pathlib.Path(dirpath).relative_to(srcpath)
-            print("==== relative destpath", relative_destpath)
+        # collection of paths incorporated to the build dir (relative to charmdir)
+        incorporated = []  #FIXME: define if we really want this
+
+        for basedir, dirnames, filenames in os.walk(str(self.charmdir), followlinks=False):
+            abs_basedir = pathlib.Path(basedir)
+            rel_basedir = abs_basedir.relative_to(self.charmdir)
+            print("==== walk", abs_basedir, rel_basedir, dirnames, filenames)
+
+            #relative_destpath = base_destpath / pathlib.Path(dirpath).relative_to(srcpath)
+            #print("==== relative destpath", relative_destpath)
 
             # process the directories
-            newdirnames = []
-            for name in dirnames:
-                path = dirpath / name
-                if self.ignorer.match(str(path), is_dir=True):
-                    logger.debug("Ignoring the directory because of rules: {!r}".format(path))
+            ignored = []
+            for pos, name in enumerate(dirnames):
+                rel_path = rel_basedir / name
+                if self.ignorer.match(str(rel_path), is_dir=True):
+                    logger.debug("Ignoring directory because of rules: %r", str(rel_path))
+                    ignored.append(pos)
                 else:
-                    destpath = relative_destpath / path
-                    print("==== creating dir", destpath)
-                    destpath.mkdir()
-                    newdirnames.append(name)
+                    abs_path = abs_basedir / name
+                    #incorporated.append(path)
+                    dest_path = self.buildpath / rel_path
+                    print("==== creating dir", dest_path)
+                    dest_path.mkdir()
 
             # in the future don't go inside ignored directories
-            dirnames[:] = newdirnames
+            for pos in reversed(ignored):
+                del dirnames[pos]
 
             # process the files
             for name in filenames:
-                path = dirpath / name
-                if self.ignorer.match(str(path), is_dir=False):
-                    logger.debug("Ignoring the file because of rules: {!r}".format(path))
-                elif path.is_file():
-                    destpath = relative_destpath / path
-                    print("==== linking file", destpath)
-                    destpath.link(srcpath / path)
-                elif path.is_symlink():
-                    #FIXME: implement!!!
-                    fixme
+                rel_path = rel_basedir / name
+                abs_path = abs_basedir / name
+
+                if self.ignorer.match(str(rel_path), is_dir=False):
+                    logger.debug("Ignoring file because of rules: %r", str(rel_path))
+
+                elif abs_path.is_symlink():
+                    if self.charmdir in abs_path.resolve().parents:
+                        dest_path = self.buildpath / rel_path
+                        linked_path = abs_path.resolve().relative_to(self.charmdir)
+                        linked_dest_path = self.buildpath / linked_path
+                        dest_path.symlink_to(linked_dest_path)
+                    else:
+                        logger.warning(
+                            "Ignoring symlink because targets outside the project: %r",
+                            str(rel_path))
+
+                elif abs_path.is_file():
+                    dest_path = self.buildpath / rel_path
+                    abs_path.link_to(dest_path)
+
                 else:
-                    logger.debug("Ignoring the file because of type: {!r}".format(path))
-
-        return base_destpath
-
-    def handle_generic_paths(self):
-        """Handle all files and dirs except what's ignored and what will be handled later."""
-        logger.debug("Linking in generic paths")
-
-        # link all the paths
-        for path in self.charmdir.iterdir():
-            print("============= link?", path)
-            if path.name in (DISPATCH_FILENAME, HOOKS_DIR, BUILD_DIRNAME):
-                # these will be handled later or shall be plainly ignored
-                print("=========== ignoring! later", path)
-                continue
-            if self.ignorer.match(str(path), path.is_dir()):
-                logger.debug("Ignored per jujuignore config: {!r}".format(str(path)))
-                print("=========== ignoring! juju", path)
-                continue
-
-            print("=========== linking!", path)
-            self._link_to_buildpath(path)
+                    logger.debug("Ignoring file because of type: %r", str(rel_path))
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
-        return linked_entrypoint
+        #if linked_entrypoint not in incorporated:
+        #    raise CommandError("The indicated entrypoint is also set to be ignored.")
+        return linked_entrypoint#, incorporated
 
-    def handle_dispatcher(self, linked_entrypoint):
+    def handle_dispatcher(self, linked_entrypoint):#, incorporated):
         """Handle modern and classic dispatch mechanisms."""
-        # dispatch mechanism
+        # dispatch mechanism, create one if wasn't provided by the project
         current_dispatch = self.charmdir / DISPATCH_FILENAME
-        if current_dispatch.exists():
-            logger.debug("Including the current dispatch script")
-            dispatch_path = self._link_to_buildpath(current_dispatch) #FIXME: hacer hardlink directo
-        else:
+        dispatch_path = self.buildpath / DISPATCH_FILENAME
+        if not dispatch_path.exists():
             logger.debug("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
                 entrypoint_relative_path=linked_entrypoint.relative_to(self.buildpath))
-            dispatch_path = self.buildpath / DISPATCH_FILENAME
             with dispatch_path.open("wt", encoding="utf8") as fh:
                 fh.write(dispatch_content)
                 make_executable(fh)
 
-        # bunch of symlinks, to support old juju: whatever is in the charm's hooks directory
-        # is respected (unless links to the entrypoint), but also the mandatory ones are
-        # created if missing
-        current_hookpath = self.charmdir / HOOKS_DIR
+        # # bunch of symlinks, to support old juju: whatever is in the charm's hooks directory
+        # # is respected (unless links to the entrypoint), but also the mandatory ones are
+        # # created if missing
+        # current_hookpath = self.charmdir / HOOKS_DIR
         dest_hookpath = self.buildpath / HOOKS_DIR
-        dest_hookpath.mkdir()
+        if not dest_hookpath.exists():
+            dest_hookpath.mkdir()
 
-        # get current hooks, separating those to be respected verbatim, and those that we need
-        # to replace (because they are pointing to the entrypoint and we need to fix the
-        # environment in the middle)
-        current_hooks_ok = []
-        current_hooks_to_replace = []
-        if current_hookpath.exists():
-            for node in current_hookpath.iterdir():
-                if node.resolve() == self.entrypoint:
-                    current_hooks_to_replace.append(node)
-                    logger.debug(
-                        "Ignoring existing hook %r as it's a symlink to the entrypoint", node.name)
-                else:
-                    current_hooks_ok.append(node)
+        # # get current hooks, separating those to be respected verbatim, and those that we need
+        # # to replace (because they are pointing to the entrypoint and we need to fix the
+        # # environment in the middle)
+        # current_hooks_ok = []
+        # current_hooks_to_replace = []
+        # if current_hookpath.exists():
+        #     for node in current_hookpath.iterdir():
+        #         if node.resolve() == self.entrypoint:
+        #             current_hooks_to_replace.append(node)
+        #             logger.debug(
+        #                 "Ignoring existing hook %r as it's a symlink to the entrypoint", node.name)
+        #         else:
+        #             current_hooks_ok.append(node)
 
-        # respect current nodes
-        for current_hook in current_hooks_ok:
-            logger.debug("Including current %r hook", current_hook.name)
-            dest_hook = dest_hookpath / current_hook.name
-            dest_hook.symlink_to(current_hook)
+        # # respect current nodes
+        # for current_hook in current_hooks_ok:
+        #     logger.debug("Including current %r hook", current_hook.name)
+        #     dest_hook = dest_hookpath / current_hook.name
+        #     dest_hook.symlink_to(current_hook)
 
-        # include the mandatory ones (if missing) and those we need to replace
-        missing = MANDATORY_HOOK_NAMES - {x.name for x in current_hooks_ok}
-        missing |= {x.name for x in current_hooks_to_replace}
+        ## include the mandatory ones (if missing) and those we need to replace
+        missing = MANDATORY_HOOK_NAMES #- {x.name for x in current_hooks_ok}
+        # missing |= {x.name for x in current_hooks_to_replace}
         for hookname in missing:
             logger.debug("Creating the %r hook script pointing to dispatch", hookname)
             dest_hook = dest_hookpath / hookname
@@ -232,13 +231,6 @@ class Builder:
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
         logger.debug("Installing dependencies")
-
-        #FIXME: esto vuela
-        # whole-dirs dependencies
-        for depdir in ('lib', 'mod'):
-            from_dir = self.charmdir / depdir
-            if from_dir.exists():
-                self._link_to_buildpath(from_dir)
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
@@ -265,8 +257,6 @@ class Builder:
 
         logger.debug("Creating the package itself")
         zipname = metadata['name'] + '.charm'
-        fixme
-        #FIXME: convertir links!!!!!
         zipfh = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
         buildpath_str = str(self.buildpath)  # os.walk does not support pathlib in 3.5
         for dirpath, dirnames, filenames in os.walk(buildpath_str, followlinks=True):

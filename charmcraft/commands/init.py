@@ -24,7 +24,7 @@ import re
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from .utils import make_executable
+from .utils import make_executable, parse_os_release
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +39,16 @@ class InitCommand(BaseCommand):
             "--project-dir", type=Path, default=Path("."), metavar="DIR", dest="path",
             help="the directory to initialize. Must be empty, or not exist; defaults to '.'")
         parser.add_argument(
-            "--name", type=str,
+            "--name",
             help="the name of the project; defaults to the directory name")
         parser.add_argument(
-            "--author", type=str,
+            "--author",
             help="the author of the project;"
             " defaults to the current user's name as present in the GECOS field.")
+        parser.add_argument(
+            "--series", action='append',
+            help="the series this charm will support;"
+            " defaults to the current machine's, if known.")
 
     def run(self, args):
         args.path = args.path.resolve()
@@ -72,11 +76,20 @@ class InitCommand(BaseCommand):
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
             raise CommandError("{} is not a valid charm name".format(args.name))
 
+        if not args.series:
+            try:
+                os_release = parse_os_release()
+                # TODO: support non-Ubuntu things
+                args.series = [os_release["UBUNTU_CODENAME"]]
+            except (UnicodeDecodeError, KeyError):
+                pass
+
         context = {
             "name": args.name,
             "author": args.author,
             "year": date.today().year,
             "class_name": "".join(re.split(r"\W+", args.name.title())) + "Charm",
+            "series": args.series,
         }
 
         env = Environment(

@@ -174,7 +174,7 @@ class Builder:
 
                 elif abs_path.is_file():
                     dest_path = self.buildpath / rel_path
-                    os.link(abs_path, dest_path)
+                    os.link(str(abs_path), str(dest_path))
 
                 else:
                     logger.debug("Ignoring file because of type: %r", str(rel_path))

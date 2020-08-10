@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 
+import itertools
 import logging
 import os
 import pathlib
@@ -69,6 +70,21 @@ def polite_exec(cmd):
     if retcode:
         logger.error("Executing %s failed with return code %d", cmd, retcode)
     return retcode
+
+
+def relativise(src, dst):
+    """Build a relative path from src to dst."""
+    src_rel_parts = []
+    dst_rel_parts = []
+    for src_part, dst_part in itertools.zip_longest(src.parent.parts, dst.parts):
+        if src_part != dst_part:
+            if src_part is not None:
+                src_rel_parts.append('..')
+            if dst_part is not None:
+                dst_rel_parts.append(dst_part)
+
+    link = pathlib.Path(os.path.join(*(src_rel_parts + dst_rel_parts)))
+    return link
 
 
 class Builder:
@@ -149,9 +165,8 @@ class Builder:
                 elif abs_path.is_symlink():
                     if self.charmdir in abs_path.resolve().parents:
                         dest_path = self.buildpath / rel_path
-                        linked_path = abs_path.resolve().relative_to(self.charmdir)
-                        linked_dest_path = self.buildpath / linked_path
-                        dest_path.symlink_to(linked_dest_path)
+                        relative_link = relativise(abs_path, abs_path.resolve())
+                        dest_path.symlink_to(relative_link)
                     else:
                         logger.warning(
                             "Ignoring symlink because targets outside the project: %r",
@@ -159,7 +174,7 @@ class Builder:
 
                 elif abs_path.is_file():
                     dest_path = self.buildpath / rel_path
-                    abs_path.link_to(dest_path)
+                    os.link(abs_path, dest_path)
 
                 else:
                     logger.debug("Ignoring file because of type: %r", str(rel_path))
@@ -203,7 +218,8 @@ class Builder:
             logger.debug("Creating the %r hook script pointing to dispatch", hookname)
             dest_hook = dest_hookpath / hookname
             if not dest_hook.exists():
-                dest_hook.symlink_to(dispatch_path)
+                relative_link = relativise(dest_hook, dispatch_path)
+                dest_hook.symlink_to(relative_link)
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""

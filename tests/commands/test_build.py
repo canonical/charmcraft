@@ -36,6 +36,7 @@ from charmcraft.commands.build import (
     VENV_DIRNAME,
     Validator,
     polite_exec,
+    relativise,
 )
 
 
@@ -592,6 +593,8 @@ def test_build_generics_symlink_ok(tmp_path):
     built_symlink = build_dir / 'somehook.py'
     assert built_symlink.is_symlink()
     assert built_symlink.resolve() == build_dir / 'crazycharm.py'
+    real_link = os.readlink(str(built_symlink))
+    assert real_link == 'crazycharm.py'
 
 
 def test_build_generics_symlink_deep(tmp_path):
@@ -620,6 +623,8 @@ def test_build_generics_symlink_deep(tmp_path):
     built_symlink = build_dir / 'dir2' / 'file.link'
     assert built_symlink.is_symlink()
     assert built_symlink.resolve() == build_dir / 'dir1' / 'file.real'
+    real_link = os.readlink(str(built_symlink))
+    assert real_link == '../dir1/file.real'
 
 
 def test_build_generics_symlink_outside(tmp_path, caplog):
@@ -735,6 +740,8 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     test_hook = build_dir / 'hooks' / 'testhook'
     assert test_hook.is_symlink()
     assert test_hook.resolve() == included_dispatcher
+    real_link = os.readlink(str(test_hook))
+    assert real_link == os.path.join('..', DISPATCH_FILENAME)
 
 
 def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
@@ -981,3 +988,45 @@ def test_build_package_name(tmp_path, monkeypatch):
     zipname = builder.handle_package()
 
     assert zipname == "name-from-metadata.charm"
+
+
+# --- tests for relativise helper
+
+def test_relativise_sameparent():
+    """Two files in the same dir."""
+    src = pathlib.Path("/tmp/foo/bar/src.txt")
+    dst = pathlib.Path("/tmp/foo/bar/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("dst.txt")
+
+
+def test_relativise_src_under():
+    """The src is in subdirectory of dst's parent."""
+    src = pathlib.Path("/tmp/foo/bar/baz/src.txt")
+    dst = pathlib.Path("/tmp/foo/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("../../dst.txt")
+
+
+def test_relativise_dst_under():
+    """The dst is in subdirectory of src's parent."""
+    src = pathlib.Path("/tmp/foo/src.txt")
+    dst = pathlib.Path("/tmp/foo/bar/baz/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("bar/baz/dst.txt")
+
+
+def test_relativise_different_parents_shallow():
+    """Different parents for src and dst, but shallow."""
+    src = pathlib.Path("/tmp/foo/bar/src.txt")
+    dst = pathlib.Path("/tmp/foo/baz/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("../baz/dst.txt")
+
+
+def test_relativise_different_parents_deep():
+    """Different parents for src and dst, in a deep structure."""
+    src = pathlib.Path("/tmp/foo/bar1/bar2/src.txt")
+    dst = pathlib.Path("/tmp/foo/baz1/baz2/baz3/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("../../baz1/baz2/baz3/dst.txt")

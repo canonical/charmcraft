@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-from charmcraft.commands.utils import make_executable, parse_os_release
+from charmcraft.commands.utils import make_executable
 
 
 def test_make_executable_read_bits(tmp_path):
@@ -26,10 +26,3 @@ def test_make_executable_read_bits(tmp_path):
         make_executable(fd)
         # only read bits got made executable
         assert pth.stat().st_mode & 0o777 == 0o750
-
-
-def test_parse_os_release(tmp_path):
-    pth = tmp_path / "test"
-    pth.write_text('foo=bar\nmeep="quux thing"\nzoo=\\$foo\n')
-    parsed = parse_os_release(str(pth))
-    assert parsed == {"foo": "bar", "meep": "quux thing", "zoo": "$foo"}

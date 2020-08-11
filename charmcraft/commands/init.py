@@ -24,7 +24,7 @@ import re
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from .utils import make_executable, parse_os_release
+from .utils import make_executable
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +47,7 @@ class InitCommand(BaseCommand):
             " defaults to the current user's name as present in the GECOS field.")
         parser.add_argument(
             "--series", action='append',
-            help="the series this charm will support;"
-            " defaults to the current machine's, if known.")
+            help="the series this charm will support; defaults to 'kubernetes'.")
 
     def run(self, args):
         args.path = args.path.resolve()
@@ -76,13 +75,8 @@ class InitCommand(BaseCommand):
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
             raise CommandError("{} is not a valid charm name".format(args.name))
 
-        if not args.series:
-            try:
-                os_release = parse_os_release()
-                # TODO: support non-Ubuntu things
-                args.series = [os_release["UBUNTU_CODENAME"]]
-            except (UnicodeDecodeError, KeyError):
-                pass
+        if args.series is None:
+            args.series = ['kubernetes']
 
         context = {
             "name": args.name,

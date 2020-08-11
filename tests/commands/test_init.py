@@ -19,7 +19,6 @@ import subprocess
 
 import pytest
 import yaml
-from unittest.mock import patch
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
@@ -29,7 +28,7 @@ from tests.test_infra import pep8_test, get_python_filepaths
 
 def test_init_pep8(tmp_path, *, author="J Doe"):
     cmd = InitCommand('group')
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author=author, series=[]))
+    cmd.run(Namespace(path=tmp_path, name='my-charm', author=author, series=None))
     paths = get_python_filepaths(
         roots=[str(tmp_path / "src"), str(tmp_path / "tests")],
         python_paths=[])
@@ -42,7 +41,7 @@ def test_init_non_ascii_author(tmp_path):
 
 def test_all_the_files(tmp_path):
     cmd = InitCommand('group')
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", series=[]))
+    cmd.run(Namespace(path=tmp_path, name='my-charm', author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", series=None))
     assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
         ".flake8",
         ".jujuignore",
@@ -65,43 +64,35 @@ def test_all_the_files(tmp_path):
 def test_bad_name(tmp_path):
     cmd = InitCommand('group')
     with pytest.raises(CommandError):
-        cmd.run(Namespace(path=tmp_path, name='1234', author="שראלה ישראל", series=[]))
+        cmd.run(Namespace(path=tmp_path, name='1234', author="שראלה ישראל", series=None))
 
 
 def test_executables(tmp_path):
     cmd = InitCommand('group')
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="홍길동", series=[]))
+    cmd.run(Namespace(path=tmp_path, name='my-charm', author="홍길동", series=None))
     assert (tmp_path / "run_tests").stat().st_mode & S_IXALL == S_IXALL
     assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
 
 
 def test_tests(tmp_path):
     cmd = InitCommand('group')
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="だれだれ", series=[]))
+    cmd.run(Namespace(path=tmp_path, name='my-charm', author="だれだれ", series=None))
     subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True)
 
 
-def _test_metadata_series(tmp_path, *, os_release=None, args=(), expected):
-    with patch('charmcraft.commands.init.parse_os_release') as osr:
-        osr.return_value = os_release
+def test_series_defaults_to_kubernetes(tmp_path):
+    cmd = InitCommand('group')
+    cmd.run(Namespace(path=tmp_path, name='my-charm', author="fred", series=None))
 
-        cmd = InitCommand('group')
-        cmd.run(Namespace(path=tmp_path, name='my-charm', author="fred", series=args))
-        subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True)
-
-        with (tmp_path / "metadata.yaml").open("rt", encoding="utf8") as f:
-            metadata = yaml.safe_load(f)
-        assert metadata.get("series") == expected
-
-
-def test_empty_os_release(tmp_path):
-    _test_metadata_series(tmp_path, os_release={}, expected=None)
-
-
-def test_series_defaults_to_os_release(tmp_path):
-    _test_metadata_series(tmp_path, os_release={"UBUNTU_CODENAME": "xeric"}, expected=["xeric"])
+    with (tmp_path / "metadata.yaml").open("rt", encoding="utf8") as f:
+        metadata = yaml.safe_load(f)
+    assert metadata.get("series") == ['kubernetes']
 
 
 def test_manual_overrides_defaults(tmp_path):
-    _test_metadata_series(
-        tmp_path, os_release={"UBUNTU_CODENAME": "xeric"}, args=["xenial"], expected=["xenial"])
+    cmd = InitCommand('group')
+    cmd.run(Namespace(path=tmp_path, name='my-charm', author="fred", series=['xenial', 'precise']))
+
+    with (tmp_path / "metadata.yaml").open("rt", encoding="utf8") as f:
+        metadata = yaml.safe_load(f)
+    assert metadata.get("series") == ['xenial', 'precise']

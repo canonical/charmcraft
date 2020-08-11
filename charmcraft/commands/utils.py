@@ -16,7 +16,6 @@
 
 import os
 from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
-from shlex import shlex
 
 S_IXALL = S_IXUSR | S_IXGRP | S_IXOTH
 S_IRALL = S_IRUSR | S_IRGRP | S_IROTH
@@ -30,16 +29,3 @@ def make_executable(fh):
     mode_x = mode_r >> 2
     mode = mode | mode_x
     os.fchmod(fileno, mode)
-
-
-def parse_os_release(filename="/etc/os-release"):
-    d = {}
-    with open(filename) as f:
-        x = shlex(instream=f, posix=True)
-        while 1:
-            k, eq, v = (x.get_token(), x.get_token(), x.get_token())
-            if k == '' or eq != '=':
-                # error, or eof
-                break
-            d[k] = v
-    return d

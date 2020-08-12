@@ -73,9 +73,14 @@ Release early, release often. Don't be lazy.
 
 - release to Snap Store (for all the archs)
 
-    snapcraft push charmcraft_0.3.0_amd64.snap --release=beta
-    snapcraft push charmcraft_0.3.0_s390x.snap --release=beta
+    snapcraft upload charmcraft_0.3.0_amd64.snap --release=edge,beta
+    snapcraft upload charmcraft_0.3.0_s390x.snap --release=edge,beta
     ...
+
+- verify all archs are consistent:
+
+    snapcraft status charmcraft 
+
 
 ## Final details
 

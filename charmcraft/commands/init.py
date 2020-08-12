@@ -14,13 +14,14 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-from datetime import date
 import logging
 import os
-from pathlib import Path
 import pwd
 import re
+from datetime import date
+from pathlib import Path
 
+import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -46,8 +47,9 @@ class InitCommand(BaseCommand):
             help="the author of the project;"
             " defaults to the current user's name as present in the GECOS field.")
         parser.add_argument(
-            "--series", action='append',
-            help="the series this charm will support; defaults to 'kubernetes'.")
+            "--series", default="kubernetes",
+            help="the comma-separated list of series this charm will support;"
+            " defaults to 'kubernetes'.")
 
     def run(self, args):
         args.path = args.path.resolve()
@@ -75,15 +77,12 @@ class InitCommand(BaseCommand):
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
             raise CommandError("{} is not a valid charm name".format(args.name))
 
-        if args.series is None:
-            args.series = ['kubernetes']
-
         context = {
             "name": args.name,
             "author": args.author,
             "year": date.today().year,
             "class_name": "".join(re.split(r"\W+", args.name.title())) + "Charm",
-            "series": args.series,
+            "series": yaml.dump(args.series.split(","), default_flow_style=True),
         }
 
         env = Environment(

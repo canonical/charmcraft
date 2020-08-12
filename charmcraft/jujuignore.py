@@ -152,8 +152,7 @@ class JujuIgnore:
         self._compile_from(patterns)
 
     def extend_patterns(self, patterns: typing.Iterable[str]) -> None:
-        """Add more patterns to the ignore list.
-        """
+        """Add more patterns to the ignore list."""
         self._compile_from(patterns)
 
     def _compile_from(self, patterns: typing.Iterable[str]):

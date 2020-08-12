@@ -656,22 +656,26 @@ def test_build_generics_symlink_outside(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_generics_different_filetype(tmp_path, caplog):
+def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
     """Ignores whatever is not a regular file, symlink or dir."""
     caplog.set_level(logging.DEBUG)
 
-    build_dir = tmp_path / BUILD_DIRNAME
+    # change into the tmp path and do everything locally, because otherwise the socket path
+    # will be too long for mac os
+    monkeypatch.chdir(tmp_path)
+
+    build_dir = pathlib.Path(BUILD_DIRNAME)
     build_dir.mkdir()
-    entrypoint = tmp_path / 'crazycharm.py'
+    entrypoint = pathlib.Path('crazycharm.py')
     entrypoint.touch()
 
     # create a socket
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.bind(str(tmp_path / 'test-socket'))
+    sock.bind('test-socket')
 
     builder = Builder({
         'from': tmp_path,
-        'entrypoint': entrypoint,
+        'entrypoint': tmp_path / entrypoint,
         'requirement': [],
     })
     builder.handle_generic_paths()

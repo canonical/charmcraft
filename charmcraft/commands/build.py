@@ -116,7 +116,7 @@ class Builder:
         ignore = JujuIgnore(default_juju_ignore)
         path = self.charmdir / '.jujuignore'
         if path.exists():
-            with path.open() as ignores:
+            with path.open('r', encoding='utf-8') as ignores:
                 ignore.extend_patterns(ignores)
         return ignore
 

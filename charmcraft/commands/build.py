@@ -25,8 +25,8 @@ import zipfile
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from .utils import make_executable
-from ..jujuignore import JujuIgnore, default_juju_ignore
 
 logger = logging.getLogger(__name__)
 

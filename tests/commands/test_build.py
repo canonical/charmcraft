@@ -468,7 +468,7 @@ def test_build_generics_ignored_file(tmp_path, caplog):
     })
 
     # set it up to ignore file 2 and make it work
-    builder.ignorer._compile_from(['file2.*'])  # FIXME: revisit this after jam's branch
+    builder.ignore_rules.extend_patterns(['file2.*'])
     builder.handle_generic_paths()
 
     assert (build_dir / 'file1.txt').exists()
@@ -499,7 +499,7 @@ def test_build_generics_ignored_dir(tmp_path, caplog):
     })
 
     # set it up to ignore dir 2 and make it work
-    builder.ignorer._compile_from(['dir2'])  # FIXME: revisit this after jam's branch
+    builder.ignore_rules.extend_patterns(['dir2'])
     builder.handle_generic_paths()
 
     assert (build_dir / 'dir1').exists()
@@ -555,11 +555,11 @@ def test_build_generics_tree(tmp_path, caplog):
     })
 
     # set it up to ignore some stuff and make it work
-    builder.ignorer._compile_from([
+    builder.ignore_rules.extend_patterns([
         'dir1/dir3',
         'dir2/file3.txt',
         'dir2/dir4',
-    ])  # FIXME: revisit this after jam's branch
+    ])
     builder.handle_generic_paths()
 
     assert (build_dir / 'crazycharm.py').exists()

@@ -25,7 +25,6 @@ import zipfile
 
 import yaml
 
-from charmcraft import jujuignore
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from .utils import make_executable
@@ -36,7 +35,6 @@ logger = logging.getLogger(__name__)
 CHARM_METADATA = 'metadata.yaml'
 BUILD_DIRNAME = 'build'
 VENV_DIRNAME = 'venv'
-JUJUIGNORE_SPECFILENAME = '.jujuignore'
 
 # The file name and template for the dispatch script
 DISPATCH_FILENAME = 'dispatch'
@@ -99,16 +97,6 @@ class Builder:
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.ignore_rules = self._load_juju_ignore()
 
-        # prepare the ignore machinery
-        # FIXME: we need to make this easier (with jam's branch)
-        jujuignore_specfilepath = self.charmdir / JUJUIGNORE_SPECFILENAME
-        if jujuignore_specfilepath.exists():
-            with open(jujuignore_specfilepath, 'rt', encoding='utf8') as fh:
-                raw_jujuignore_content = fh.readlines()
-        else:
-            raw_jujuignore_content = jujuignore.default_juju_ignore
-        self.ignorer = jujuignore.JujuIgnore(raw_jujuignore_content)
-
     def run(self):
         """Main building process."""
         logger.debug("Building charm in %r", str(self.buildpath))
@@ -152,7 +140,7 @@ class Builder:
             ignored = []
             for pos, name in enumerate(dirnames):
                 rel_path = rel_basedir / name
-                if self.ignorer.match(str(rel_path), is_dir=True):
+                if self.ignore_rules.match(str(rel_path), is_dir=True):
                     logger.debug("Ignoring directory because of rules: %r", str(rel_path))
                     ignored.append(pos)
                 else:
@@ -169,7 +157,7 @@ class Builder:
                 rel_path = rel_basedir / name
                 abs_path = abs_basedir / name
 
-                if self.ignorer.match(str(rel_path), is_dir=False):
+                if self.ignore_rules.match(str(rel_path), is_dir=False):
                     logger.debug("Ignoring file because of rules: %r", str(rel_path))
 
                 elif abs_path.is_symlink():

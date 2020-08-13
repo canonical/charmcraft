@@ -14,13 +14,14 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-from datetime import date
 import logging
 import os
-from pathlib import Path
 import pwd
 import re
+from datetime import date
+from pathlib import Path
 
+import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -39,12 +40,16 @@ class InitCommand(BaseCommand):
             "--project-dir", type=Path, default=Path("."), metavar="DIR", dest="path",
             help="the directory to initialize. Must be empty, or not exist; defaults to '.'")
         parser.add_argument(
-            "--name", type=str,
+            "--name",
             help="the name of the project; defaults to the directory name")
         parser.add_argument(
-            "--author", type=str,
+            "--author",
             help="the author of the project;"
             " defaults to the current user's name as present in the GECOS field.")
+        parser.add_argument(
+            "--series", default="kubernetes",
+            help="the comma-separated list of series this charm will support;"
+            " defaults to 'kubernetes'.")
 
     def run(self, args):
         args.path = args.path.resolve()
@@ -77,6 +82,7 @@ class InitCommand(BaseCommand):
             "author": args.author,
             "year": date.today().year,
             "class_name": "".join(re.split(r"\W+", args.name.title())) + "Charm",
+            "series": yaml.dump(args.series.split(","), default_flow_style=True),
         }
 
         env = Environment(

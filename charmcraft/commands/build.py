@@ -27,6 +27,7 @@ import yaml
 
 from charmcraft import jujuignore
 from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from .utils import make_executable
 
 logger = logging.getLogger(__name__)
@@ -96,6 +97,7 @@ class Builder:
         self.requirement_paths = args['requirement']
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
+        self.ignore_rules = self._load_juju_ignore()
 
         # prepare the ignore machinery
         # FIXME: we need to make this easier (with jam's branch)
@@ -122,6 +124,14 @@ class Builder:
 
         logger.info("Done, charm left in %r", zipname)
         return zipname
+
+    def _load_juju_ignore(self):
+        ignore = JujuIgnore(default_juju_ignore)
+        path = self.charmdir / '.jujuignore'
+        if path.exists():
+            with path.open('r', encoding='utf-8') as ignores:
+                ignore.extend_patterns(ignores)
+        return ignore
 
     def handle_generic_paths(self):
         """Handle all files and dirs except what's ignored and what will be handled later.

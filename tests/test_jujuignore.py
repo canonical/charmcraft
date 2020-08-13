@@ -397,3 +397,12 @@ def test_special_chars_in_brackets():
         ['foob.py', 'fooc.py', 'foo^.py'],
         [r'foo.py', r'fooa.py', r'fooa^.py'],
     )
+
+
+def test_extend_patterns():
+    ignore = jujuignore.JujuIgnore(['foo'])
+    assert ignore.match('foo', is_dir=False)
+    assert not ignore.match('bar', is_dir=False)
+    ignore.extend_patterns(['bar'])
+    assert ignore.match('foo', is_dir=False)
+    assert ignore.match('bar', is_dir=False)

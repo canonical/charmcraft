@@ -10,6 +10,15 @@ It is still in heavy, initial development and so a lot is still To Be
 Done. However it is already useful, and already simplifies the life of the
 charmer.
 
+## How do I install it?
+
+The easiest way is probably doing
+
+    snap info charmcraft
+
+and going from there, but some people with more esoteric needs not covered
+by the snap might need to instead go via `pip install charmcraft`.
+
 ## What can it do for me today?
 
 It can build your charm! No need for git submodules nor pesky hook symlinks, you

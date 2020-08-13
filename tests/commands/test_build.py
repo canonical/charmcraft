@@ -894,3 +894,43 @@ def test_build_package_name(tmp_path, monkeypatch):
     zipname = builder.handle_package()
 
     assert zipname == "name-from-metadata.charm"
+
+
+def test_builder_without_jujuignore(tmp_path):
+    """Without a .jujuignore we still have a default set of ignores"""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    ignore = builder._load_juju_ignore()
+    assert ignore.match('/.git', is_dir=True)
+    assert ignore.match('/build', is_dir=True)
+    assert not ignore.match('myfile.py', is_dir=False)
+
+
+def test_builder_with_jujuignore(tmp_path):
+    """With a .jujuignore we will include additional ignores."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+    with (tmp_path / '.jujuignore').open('w', encoding='utf-8') as ignores:
+        ignores.write(
+            '*.py\n'
+            '/h\xef.txt\n'
+        )
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': [],
+    })
+    ignore = builder._load_juju_ignore()
+    assert ignore.match('/.git', is_dir=True)
+    assert ignore.match('/build', is_dir=True)
+    assert ignore.match('myfile.py', is_dir=False)
+    assert not ignore.match('hi.txt', is_dir=False)
+    assert ignore.match('h\xef.txt', is_dir=False)
+    assert not ignore.match('myfile.c', is_dir=False)

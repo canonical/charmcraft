@@ -25,6 +25,7 @@ import zipfile
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from .utils import make_executable
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,7 @@ class Builder:
         self.requirement_paths = args['requirement']
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
+        self.ignore_rules = self._load_juju_ignore()
 
     def run(self):
         """Main building process."""
@@ -110,11 +112,20 @@ class Builder:
         destpath.symlink_to(srcpath)
         return destpath
 
+    def _load_juju_ignore(self):
+        ignore = JujuIgnore(default_juju_ignore)
+        path = self.charmdir / '.jujuignore'
+        if path.exists():
+            with path.open('r', encoding='utf-8') as ignores:
+                ignore.extend_patterns(ignores)
+        return ignore
+
     def handle_code(self):
         """Handle basic files and the charm source code."""
         # basic files
         logger.debug("Linking in basic files and charm code")
         self._link_to_buildpath(self.charmdir / CHARM_METADATA)
+
         for fn in CHARM_OPTIONAL:
             path = self.charmdir / fn
             if path.exists():

@@ -36,6 +36,7 @@ from charmcraft.commands.build import (
     VENV_DIRNAME,
     Validator,
     polite_exec,
+    relativise,
 )
 
 
@@ -136,6 +137,7 @@ def test_validator_entrypoint_simple(tmp_path):
     testfile.touch(mode=0o777)
 
     validator = Validator()
+    validator.basedir = tmp_path
     resp = validator.validate_entrypoint(testfile)
     assert resp == testfile
 
@@ -162,6 +164,7 @@ def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     validator = Validator()
+    validator.basedir = tmp_path
     resp = validator.validate_entrypoint(pathlib.Path('dirX/file.py'))
     assert resp == testfile
 
@@ -175,6 +178,7 @@ def test_validator_entrypoint_expanded(tmp_path):
     testfile.touch(mode=0o777)
 
     validator = Validator()
+    validator.basedir = tmp_path
 
     with patch.dict(os.environ, {'HOME': str(fake_home)}):
         resp = validator.validate_entrypoint(pathlib.Path('~/testfile'))
@@ -189,12 +193,27 @@ def test_validator_entrypoint_exist():
         validator.validate_entrypoint(pathlib.Path('/not_really_there.py'))
 
 
+def test_validator_entrypoint_inside_project(tmp_path):
+    """'entrypoint' param: checks that it's part of the project."""
+    project_dir = tmp_path / 'test-project'
+    testfile = tmp_path / 'testfile'
+    testfile.touch(mode=0o777)
+
+    validator = Validator()
+    validator.basedir = project_dir
+
+    expected_msg = "the entry point must be inside the project: '{}'".format(testfile)
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_entrypoint(testfile)
+
+
 def test_validator_entrypoint_exec(tmp_path):
     """'entrypoint' param: checks that the file is executable."""
     testfile = tmp_path / 'testfile'
     testfile.touch(mode=0o444)
 
     validator = Validator()
+    validator.basedir = tmp_path
     expected_msg = "the charm entry point must be executable: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_entrypoint(testfile)
@@ -934,3 +953,45 @@ def test_builder_with_jujuignore(tmp_path):
     assert not ignore.match('hi.txt', is_dir=False)
     assert ignore.match('h\xef.txt', is_dir=False)
     assert not ignore.match('myfile.c', is_dir=False)
+
+
+# --- tests for relativise helper
+
+def test_relativise_sameparent():
+    """Two files in the same dir."""
+    src = pathlib.Path("/tmp/foo/bar/src.txt")
+    dst = pathlib.Path("/tmp/foo/bar/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("dst.txt")
+
+
+def test_relativise_src_under():
+    """The src is in subdirectory of dst's parent."""
+    src = pathlib.Path("/tmp/foo/bar/baz/src.txt")
+    dst = pathlib.Path("/tmp/foo/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("../../dst.txt")
+
+
+def test_relativise_dst_under():
+    """The dst is in subdirectory of src's parent."""
+    src = pathlib.Path("/tmp/foo/src.txt")
+    dst = pathlib.Path("/tmp/foo/bar/baz/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("bar/baz/dst.txt")
+
+
+def test_relativise_different_parents_shallow():
+    """Different parents for src and dst, but shallow."""
+    src = pathlib.Path("/tmp/foo/bar/src.txt")
+    dst = pathlib.Path("/tmp/foo/baz/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("../baz/dst.txt")
+
+
+def test_relativise_different_parents_deep():
+    """Different parents for src and dst, in a deep structure."""
+    src = pathlib.Path("/tmp/foo/bar1/bar2/src.txt")
+    dst = pathlib.Path("/tmp/foo/baz1/baz2/baz3/dst.txt")
+    rel = relativise(src, dst)
+    assert rel == pathlib.Path("../../baz1/baz2/baz3/dst.txt")

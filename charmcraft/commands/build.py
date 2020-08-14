@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 
-import itertools
 import logging
 import os
 import pathlib
@@ -73,17 +72,7 @@ def polite_exec(cmd):
 
 def relativise(src, dst):
     """Build a relative path from src to dst."""
-    src_rel_parts = []
-    dst_rel_parts = []
-    for src_part, dst_part in itertools.zip_longest(src.parent.parts, dst.parts):
-        if src_part != dst_part:
-            if src_part is not None:
-                src_rel_parts.append('..')
-            if dst_part is not None:
-                dst_rel_parts.append(dst_part)
-
-    link = pathlib.Path(os.path.join(*(src_rel_parts + dst_rel_parts)))
-    return link
+    return pathlib.Path(os.path.relpath(str(dst), str(src.parent)))
 
 
 class Builder:

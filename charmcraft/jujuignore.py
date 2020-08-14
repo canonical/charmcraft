@@ -151,7 +151,11 @@ class JujuIgnore:
         self._matchers = []
         self._compile_from(patterns)
 
-    def _compile_from(self, patterns):
+    def extend_patterns(self, patterns: typing.Iterable[str]) -> None:
+        """Add more patterns to the ignore list."""
+        self._compile_from(patterns)
+
+    def _compile_from(self, patterns: typing.Iterable[str]):
         for line_num, rule in enumerate(patterns, 1):
             orig_rule = rule
             rule = rule.lstrip().rstrip('\r\n')

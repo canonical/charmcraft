@@ -25,6 +25,7 @@ import zipfile
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from .utils import make_executable
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
+HOOKS_DIR = 'hooks'
 
 
 def polite_exec(cmd):
@@ -78,6 +80,11 @@ def polite_exec(cmd):
     return retcode
 
 
+def relativise(src, dst):
+    """Build a relative path from src to dst."""
+    return pathlib.Path(os.path.relpath(str(dst), str(src.parent)))
+
+
 class Builder:
     """The package builder."""
 
@@ -87,6 +94,7 @@ class Builder:
         self.requirement_paths = args['requirement']
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
+        self.ignore_rules = self._load_juju_ignore()
 
     def run(self):
         """Main building process."""
@@ -110,11 +118,20 @@ class Builder:
         destpath.symlink_to(srcpath)
         return destpath
 
+    def _load_juju_ignore(self):
+        ignore = JujuIgnore(default_juju_ignore)
+        path = self.charmdir / '.jujuignore'
+        if path.exists():
+            with path.open('r', encoding='utf-8') as ignores:
+                ignore.extend_patterns(ignores)
+        return ignore
+
     def handle_code(self):
         """Handle basic files and the charm source code."""
         # basic files
         logger.debug("Linking in basic files and charm code")
         self._link_to_buildpath(self.charmdir / CHARM_METADATA)
+
         for fn in CHARM_OPTIONAL:
             path = self.charmdir / fn
             if path.exists():
@@ -150,8 +167,8 @@ class Builder:
         # bunch of symlinks, to support old juju: whatever is in the charm's hooks directory
         # is respected (unless links to the entrypoint), but also the mandatory ones are
         # created if missing
-        current_hookpath = self.charmdir / 'hooks'
-        dest_hookpath = self.buildpath / 'hooks'
+        current_hookpath = self.charmdir / HOOKS_DIR
+        dest_hookpath = self.buildpath / HOOKS_DIR
         dest_hookpath.mkdir()
 
         # get current hooks, separating those to be respected verbatim, and those that we need
@@ -274,6 +291,9 @@ class Validator:
 
         if not filepath.exists():
             raise CommandError("the charm entry point was not found: {!r}".format(str(filepath)))
+        if self.basedir not in filepath.parents:
+            raise CommandError(
+                "the entry point must be inside the project: {!r}".format(str(filepath)))
         if not os.access(str(filepath), os.X_OK):  # access does not support pathlib in 3.5
             raise CommandError(
                 "the charm entry point must be executable: {!r}".format(str(filepath)))

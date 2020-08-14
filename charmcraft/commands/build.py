@@ -58,6 +58,7 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
+HOOKS_DIR = 'hooks'
 
 
 def polite_exec(cmd):
@@ -77,6 +78,11 @@ def polite_exec(cmd):
     if retcode:
         logger.error("Executing %s failed with return code %d", cmd, retcode)
     return retcode
+
+
+def relativise(src, dst):
+    """Build a relative path from src to dst."""
+    return pathlib.Path(os.path.relpath(str(dst), str(src.parent)))
 
 
 class Builder:
@@ -161,8 +167,8 @@ class Builder:
         # bunch of symlinks, to support old juju: whatever is in the charm's hooks directory
         # is respected (unless links to the entrypoint), but also the mandatory ones are
         # created if missing
-        current_hookpath = self.charmdir / 'hooks'
-        dest_hookpath = self.buildpath / 'hooks'
+        current_hookpath = self.charmdir / HOOKS_DIR
+        dest_hookpath = self.buildpath / HOOKS_DIR
         dest_hookpath.mkdir()
 
         # get current hooks, separating those to be respected verbatim, and those that we need
@@ -285,6 +291,9 @@ class Validator:
 
         if not filepath.exists():
             raise CommandError("the charm entry point was not found: {!r}".format(str(filepath)))
+        if self.basedir not in filepath.parents:
+            raise CommandError(
+                "the entry point must be inside the project: {!r}".format(str(filepath)))
         if not os.access(str(filepath), os.X_OK):  # access does not support pathlib in 3.5
             raise CommandError(
                 "the charm entry point must be executable: {!r}".format(str(filepath)))

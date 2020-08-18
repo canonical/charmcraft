@@ -50,8 +50,23 @@ class CustomArgumentParser(argparse.ArgumentParser):
     """ArgumentParser with grouped commands help."""
 
     def __init__(self, **kwargs):
-        self._command_parser = kwargs.pop('command_parser', False)
+        self._command_parser = kwargs.pop('command_parser', False)  #FIXME: need tihs?
         super().__init__(**kwargs)
+
+    def parse_known_args(self, args, namespace):
+        """Hold the namespace to verify if help was requested."""
+        print("======== parse known args", self, args, namespace)
+        if namespace is None:
+            namespace = argparse.Namespace()
+        self._namespace = namespace
+        return super().parse_known_args(args, namespace)
+
+    #def print_help(*args):
+    #    print("================== print help", args)
+    #    super().print_help(*args)
+    #def print_usage(*args):
+    #    print("================== print usage", args)
+    #    super().print_usage(*args)
 
     def _check_value(self, action, value):
         """Verify the command is a valid one.
@@ -63,24 +78,57 @@ class CustomArgumentParser(argparse.ArgumentParser):
 
     def error(self, message):
         """Show the usage, the error message, and no more."""
-        full_msg = helptexts.get_error_message(message)
+        print("========== ERROR!", repr(message), self._namespace)
+        # if help was requested, no matter other errors (just provide help!)
+        if self._namespace.help:
+            #FIXME refactor
+            help_text = get_help(self, self._namespace)
+            raise CommandError(help_text, argsparsing=True)
+
+        #FIXME: join with below
+        fullcommand = self.prog
+        command = getattr(self._namespace, '_command', None)
+        if command:
+            subactions = [action for action in self._actions if isinstance(action, argparse._SubParsersAction)]
+            if subactions:
+                (subparseraction,) = subactions
+                parser = subparseraction.choices[command.name]
+                fullcommand = parser.prog
+
+        full_msg = helptexts.get_error_message(fullcommand, message)
         raise CommandError(full_msg, argsparsing=True)
 
 
-def print_help(parser, parsed_args):
+def get_help(parser, namespace):
     """Produce the complete (but not extensive) help message."""
-    command = getattr(parsed_args, '_command', None)
+    # we get here in three situations, for which we need different information
+    # - no command given: then 'command' is None, the received parser is just the global one
+    # - a command is given and asked for help: 'command' is the given command, we need to
+    #   get the subparser to present the help for the given command
+    # - a command is given but without a needed param: 'command' is the given command, and the
+    #   parser is already the one for the command (the "subparser")
+    command = getattr(namespace, '_command', None)
+    print("=========== namespace", namespace)
+    print("=========== actions", parser._actions)
     if command is not None:
-        # replace the generic parser for the command-specific one
-        (subparseraction,) = [
-            action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
-        parser = subparseraction.choices[command.name]
+        # if there is a subparser, replace the generic parser for that one
+        subactions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
+        if subactions:
+            (subparseraction,) = subactions
+            parser = subparseraction.choices[command.name]
+    print("=========== redones", parser._actions)
 
     # get options from the global or command-specific parser
     actions = [
         action for action in parser._actions
         if not isinstance(action, argparse._SubParsersAction)]
-    options = [(', '.join(action.option_strings), action.help) for action in actions]
+    options = []
+    for action in actions:
+        # store the different options if present, otherwise it's just the dest
+        if action.option_strings:
+            options.append((', '.join(action.option_strings), action.help))
+        else:
+            options.append((action.dest, action.help))
 
     # get general or specific help
     if command is None:
@@ -88,7 +136,7 @@ def print_help(parser, parsed_args):
     else:
         help_text = helptexts.get_command_help(command, options)
 
-    print(help_text)  # FIXME: print???
+    return help_text
 
 
 class Dispatcher:
@@ -111,9 +159,9 @@ class Dispatcher:
         """Really run the command."""
         self._handle_global_params()
 
-        if self.parsed_args.help:
-            print_help(self.main_parser, self.parsed_args)
-            return 1
+        if not hasattr(self.parsed_args, '_command') or self.parsed_args.help:
+            help_text = get_help(self.main_parser, self.parsed_args)
+            raise CommandError(help_text, argsparsing=True)
 
         command = self.parsed_args._command
         command.run(self.parsed_args)

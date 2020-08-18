@@ -45,15 +45,15 @@ For a summary of all commands, run 'charmcraft help --all'.
 
 USAGE = """\
 Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
-Try 'charmcraft -h' for help.
+Try '{fullcommand} -h' for help.
 
 Error: {error_message}
 """
 
 
-def get_error_message(error_message):  # FIXME: missing tests!!
+def get_error_message(fullcommand, error_message):  # FIXME: missing tests!!
     """Build a usage and error message."""
-    return USAGE.format(error_message=error_message)
+    return USAGE.format(fullcommand=fullcommand, error_message=error_message)
 
 
 def _build_item(title, text, title_space):

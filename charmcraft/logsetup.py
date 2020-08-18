@@ -97,10 +97,10 @@ class _MessageHandler:
     def ended_cmderror(self, err):
         """Report the (expected) problem and (maybe) logfile location."""
         if err.argsparsing:
-            msg = str(err)
+            print(err)
         else:
             msg = "{} (full execution logs in {})".format(err, self._log_filepath)
-        _logger.error(msg)
+            _logger.error(msg)
 
     def ended_crash(self, err):
         """Report the internal error and logfile location.

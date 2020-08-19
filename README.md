@@ -12,12 +12,13 @@ charmer.
 
 ## How do I install it?
 
-The easiest way is probably doing
+The easiest way to install `charmcraft` is by doing
 
-    snap info charmcraft
+    sudo snap install --beta charmcraft
 
-and going from there, but some people with more esoteric needs not covered
-by the snap might need to instead go via `pip install charmcraft`.
+(more options are available as per `snap info charmcraft`) but some
+people with more esoteric needs not covered by the snap might need to
+instead go via `pip3 install --user charmcraft`.
 
 ## What can it do for me today?
 

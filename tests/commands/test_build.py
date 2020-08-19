@@ -573,8 +573,8 @@ def test_build_generics_tree(tmp_path, caplog):
     assert (build_dir / 'dir2' / 'dir5').exists()
 
 
-def test_build_generics_symlink_ok(tmp_path):
-    """Respects a symlink."""
+def test_build_generics_symlink_file(tmp_path):
+    """Respects a symlinked file."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -595,6 +595,37 @@ def test_build_generics_symlink_ok(tmp_path):
     assert built_symlink.resolve() == build_dir / 'crazycharm.py'
     real_link = os.readlink(str(built_symlink))
     assert real_link == 'crazycharm.py'
+
+
+def test_build_generics_symlink_dir(tmp_path):
+    """Respects a symlinked dir."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    entrypoint = tmp_path / 'crazycharm.py'
+    entrypoint.touch()
+    somedir = tmp_path / 'somedir'
+    somedir.mkdir()
+    somefile = somedir / 'sanity check'
+    somefile.touch()
+    the_symlink = tmp_path / 'thelink'
+    the_symlink.symlink_to(somedir)
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_generic_paths()
+
+    built_symlink = build_dir / 'thelink'
+    assert built_symlink.is_symlink()
+    assert built_symlink.resolve() == build_dir / 'somedir'
+    real_link = os.readlink(str(built_symlink))
+    assert real_link == 'somedir'
+
+    # as a sanity check, the file inside the linked dir should exist
+    assert (build_dir / 'thelink' / 'sanity check').exists()
 
 
 def test_build_generics_symlink_deep(tmp_path):
@@ -627,8 +658,8 @@ def test_build_generics_symlink_deep(tmp_path):
     assert real_link == '../dir1/file.real'
 
 
-def test_build_generics_symlink_outside(tmp_path, caplog):
-    """Ignores (with warning) a symlink pointing outside projects dir."""
+def test_build_generics_symlink_file_outside(tmp_path, caplog):
+    """Ignores (with warning) a symlink pointing a file outside projects dir."""
     caplog.set_level(logging.WARNING)
 
     project_dir = tmp_path / 'test-project'
@@ -653,6 +684,35 @@ def test_build_generics_symlink_outside(tmp_path, caplog):
 
     assert not (build_dir / 'external-file').exists()
     expected = "Ignoring symlink because targets outside the project: 'external-file'"
+    assert expected in [rec.message for rec in caplog.records]
+
+
+def test_build_generics_symlink_directory_outside(tmp_path, caplog):
+    """Ignores (with warning) a symlink pointing a dir outside projects dir."""
+    caplog.set_level(logging.WARNING)
+
+    project_dir = tmp_path / 'test-project'
+    project_dir.mkdir()
+
+    build_dir = project_dir / BUILD_DIRNAME
+    build_dir.mkdir()
+    entrypoint = project_dir / 'crazycharm.py'
+    entrypoint.touch()
+
+    outside_project = tmp_path / 'dangerous'
+    outside_project.mkdir()
+    the_symlink = project_dir / 'external-dir'
+    the_symlink.symlink_to(outside_project)
+
+    builder = Builder({
+        'from': project_dir,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_generic_paths()
+
+    assert not (build_dir / 'external-dir').exists()
+    expected = "Ignoring symlink because targets outside the project: 'external-dir'"
     assert expected in [rec.message for rec in caplog.records]
 
 

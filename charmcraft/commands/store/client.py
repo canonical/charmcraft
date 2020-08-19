@@ -93,7 +93,9 @@ class _AuthHolder:
             dirpath = os.path.dirname(self._cookiejar_filepath)
             os.makedirs(dirpath, exist_ok=True)
 
-            self._cookiejar.save()
+            fd = os.open(self._cookiejar_filepath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            os.fchmod(fd, 0o600)
+            self._cookiejar.save(fd)
 
     def _load_credentials(self):
         """Load credentials and set up internal auth request objects."""

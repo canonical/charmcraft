@@ -319,10 +319,19 @@ class Validator:
         return filepaths
 
 
+_overview = """
+    Build the charm, leaving a .charm file as the result of the process.
+
+    You can `juju deploy` directly from the resulting .charm file, or upload
+    it to the store (see the "upload" command).
+"""
+
+
 class BuildCommand(BaseCommand):
     """Build the charm."""
     name = 'build'
     help_msg = "build the charm"
+    overview = _overview
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

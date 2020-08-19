@@ -832,7 +832,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
 
 
 def test_build_dependencies_bionic(tmp_path):
-    """A virtualenv is created with the specified requirements file."""
+    """pip3 is called with --system when pip3 is bionic-ish."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 

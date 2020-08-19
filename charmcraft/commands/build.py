@@ -52,6 +52,7 @@ HOOKS_DIR = 'hooks'
 
 
 def _pip_is_bionic():
+    """Determines whether pip3 defaults to --user, needing --system to turn it off."""
     try:
         from pip.commands.install import InstallCommand
         return InstallCommand().cmd_opts.get_option('--system') is not None

@@ -15,8 +15,14 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import pathlib
+import tempfile
 
 import pytest
+
+
+@pytest.fixture(autouse=True, scope="session")
+def tmpdir_under_tmpdir(tmpdir_factory):
+    tempfile.tempdir = str(tmpdir_factory.getbasetemp())
 
 
 @pytest.fixture

@@ -82,14 +82,15 @@ class _AuthHolder:
         """Clear stored credentials."""
         if os.path.exists(self._cookiejar_filepath):
             os.unlink(self._cookiejar_filepath)
-            logger.debug("Credentials cleared: file %r removed", self._cookiejar_filepath)
+            logger.debug("Credentials cleared: file '%s' removed", self._cookiejar_filepath)
         else:
-            logger.debug("Credentials file not found to be removed: %r", self._cookiejar_filepath)
+            logger.debug(
+                "Credentials file not found to be removed: '%s'", self._cookiejar_filepath)
 
     def _save_credentials_if_changed(self):
         """Save credentials if changed."""
         if list(self._cookiejar) != self._old_cookies:
-            logger.debug("Saving credentials to file: %r", self._cookiejar_filepath)
+            logger.debug("Saving credentials to file: '%s'", self._cookiejar_filepath)
             dirpath = os.path.dirname(self._cookiejar_filepath)
             os.makedirs(dirpath, exist_ok=True)
 
@@ -104,7 +105,7 @@ class _AuthHolder:
         self._client = httpbakery.Client(cookies=self._cookiejar, interaction_methods=[wbi])
 
         if os.path.exists(self._cookiejar_filepath):
-            logger.debug("Loading credentials from file: %r", self._cookiejar_filepath)
+            logger.debug("Loading credentials from file: '%s'", self._cookiejar_filepath)
             try:
                 self._cookiejar.load()
             except Exception as err:
@@ -112,7 +113,7 @@ class _AuthHolder:
                 # will be asked to authenticate)
                 logger.warning("Failed to read credentials: %r", err)
         else:
-            logger.debug("Credentials file not found: %r", self._cookiejar_filepath)
+            logger.debug("Credentials file not found: '%s'", self._cookiejar_filepath)
 
         # iterates the cookiejar (which is mutable, may change later) and get the cookies
         # for comparison after hitting the endpoint

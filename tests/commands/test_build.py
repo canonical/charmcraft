@@ -831,8 +831,8 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     ]
 
 
-def test_build_dependencies_bionic(tmp_path):
-    """pip3 is called with --system when pip3 is bionic-ish."""
+def test_build_dependencies_needs_system(tmp_path):
+    """pip3 is called with --system when pip3 needs it."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -842,7 +842,7 @@ def test_build_dependencies_bionic(tmp_path):
         'requirement': ['reqs'],
     })
 
-    with patch('charmcraft.commands.build._pip_is_bionic') as is_bionic:
+    with patch('charmcraft.commands.build._pip_needs_system') as is_bionic:
         is_bionic.return_value = True
         with patch('charmcraft.commands.build.polite_exec') as mock:
             mock.return_value = 0

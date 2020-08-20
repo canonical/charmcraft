@@ -139,7 +139,7 @@ class RegisterNameCommand(BaseCommand):
 class ListNamesCommand(BaseCommand):
     """List the charms registered in the Store."""
     name = 'names'
-    help_msg = "list the names registered the Store"
+    help_msg = "list the names registered in the Store"
     overview = textwrap.dedent("""
         List the names registered to the current Store user, together
         with each package's type, visibility and status.

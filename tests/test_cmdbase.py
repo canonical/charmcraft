@@ -35,6 +35,8 @@ def test_commanderror_retcode_given():
 
 
 all_commands = list.__add__(*[commands for _, _, commands in COMMAND_GROUPS])
+
+
 @pytest.mark.parametrize('command', all_commands)
 @pytest.mark.parametrize('attrib', ['name', 'help_msg', 'overview'])
 def test_basecommand_mandatory_attributes(command, attrib):

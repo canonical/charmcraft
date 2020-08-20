@@ -48,12 +48,12 @@ class LoginCommand(BaseCommand):
     name = 'login'
     help_msg = "login to Ubuntu Single Sign On"
     overview = textwrap.dedent("""
-        Login to the Store using the Ubuntu Single Sign On.
+        Log in to the Store using Ubuntu Single Sign On.
 
-        It will open a browser windows where you will need to provide the
+        It will open a browser window where you will need to provide the
         relevant credentials.
 
-        Check also the "whoami" command to verify you're proper logged in,
+        See also the "whoami" command to verify you're properly logged in,
         and the "logout" command to clear the session credentials.
     """)
 
@@ -69,12 +69,13 @@ class LogoutCommand(BaseCommand):
     name = 'logout'
     help_msg = "clear session credentials"
     overview = textwrap.dedent("""
-        Clear the session credentials from the local environment.
+        Clear the Store session credentials.
 
-        It will not affect any store-side configuration.
+        Because of the authentication mechanism used there is no Store-side state
+        to clear, so this operation does not contact the Store.
 
-        Check also the "whoami" command to verify you're proper logged in,
-        and the "login" command to login into the Store.
+        See also the "whoami" command to verify you're properly logged in,
+        and the "login" command to log in to the Store.
     """)
 
     def run(self, parsed_args):
@@ -89,10 +90,10 @@ class WhoamiCommand(BaseCommand):
     name = 'whoami'
     help_msg = "returns your login information relevant to the Store"
     overview = textwrap.dedent("""
-        Show your login information relevant to the Store
+        Show login information for the current Store user.
 
-        Check also the "login" and "logout" commands, relevant to the
-        authentication cycle.
+        See also the "login" and "logout" commands for more information about
+        the authentication cycle.
     """)
 
     def run(self, parsed_args):
@@ -120,7 +121,8 @@ class RegisterNameCommand(BaseCommand):
         This is the first step when developing a charm, and needed only once
         for that charm.
 
-        It will automatically request to login if credentials missing or too old.
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
     """)
 
     def fill_parser(self, parser):
@@ -139,10 +141,11 @@ class ListNamesCommand(BaseCommand):
     name = 'names'
     help_msg = "list the names registered the Store"
     overview = textwrap.dedent("""
-        List the names registered in the Store, together with each package's
-        type, visibility and status.
+        List the names registered to the current Store user, together
+        with each package's type, visibility and status.
 
-        It will automatically request to login if credentials missing or too old.
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
     """)
 
     def run(self, parsed_args):
@@ -175,12 +178,13 @@ class UploadCommand(BaseCommand):
     overview = textwrap.dedent("""
         Upload the charm file to the Store.
 
-        This command comprehends both pusing bytes and subsequent status
-        verification actions, and will end ok if the package is approved by
-        the Store (otherwise it will inform if the verification failure
-        reason).
+        This command covers both pushing the charm itelf, as well as the
+        subsequent status verification actions, and will finish successfully once
+        the package is approved by the Store (otherwise it will report the
+        verification failure reasons).
 
-        It will automatically request to login if credentials missing or too old.
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
     """)
 
     def _discover_charm(self, charm_filepath):
@@ -226,7 +230,7 @@ class UploadCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '--charm-file', type=pathlib.Path,
-            help="the path to the charm file to be uploaded")
+            help="the path to the charm file to upload")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -249,12 +253,13 @@ class ListRevisionsCommand(BaseCommand):
         List existing revisions for a package in the Store, along with the version
         and status for each, and when they were created.
 
-        It will automatically request to login if credentials missing or too old.
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
     """)
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="the name of the charm to get revisions")
+        parser.add_argument('--name', help="the name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -314,7 +319,8 @@ class ReleaseCommand(BaseCommand):
             2.0/candidate
             beta/hotfix
 
-        It will automatically request to login if credentials missing or too old.
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
     """)
 
     def fill_parser(self, parser):
@@ -322,7 +328,7 @@ class ReleaseCommand(BaseCommand):
         parser.add_argument(
             'channels', metavar='channel', nargs='+',
             help="the channel(s) to release to")
-        parser.add_argument('--name', help="the name of the charm to get revisions")
+        parser.add_argument('--name', help="the name of the charm")
         parser.add_argument(
             '--revision', type=int,
             help="the revision to release (defaults to latest)")
@@ -367,12 +373,13 @@ class StatusCommand(BaseCommand):
         It will show each risk (with all its relevant information) for the
         different tracks, series, etc.
 
-        It will automatically request to login if credentials missing or too old.
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
     """)
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="the name of the charm to get revisions")
+        parser.add_argument('--name', help="the name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""

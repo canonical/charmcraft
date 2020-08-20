@@ -32,24 +32,24 @@ logger = logging.getLogger(__name__)
 _overview = """
 Initialize a directory to be a charm project.
 
-It will leave several structures in the specified directory (the
-current one by default), including:
+It will leave a basic structure in the specified directory (the current one by
+default), including:
 
 - a README.md as basic documentation for the project (with some TODOs for
-  you to complete)
+  you to complete),
 
-- a metadata.yaml for the basic Juju related config (that you also need to
+- a metadata.yaml for the basic Juju-related config (that you also need to
   customize)
 
 - a src/charm.py with a basic structure for your charm
 
 - simple config.yaml and actions.yaml files, in case you need them in the charm
 
-- two requirement.txt and requirement-dev.txt pre-filled files that will hold
-  the Python dependencies (for production and development correspondingly), extend
-  as you need
+- a requirement.txt and a requirement-dev.txt files that will hold the Python
+  dependencies (for production and development correspondingly), extend as you
+  need
 
-- some example tests in the corresponding directory, and a script to run.
+- some example tests in the corresponding directory, and a script to run them.
 """
 
 

@@ -320,10 +320,10 @@ class Validator:
 
 
 _overview = """
-    Build the charm, leaving a .charm file as the result of the process.
+Build the charm, leaving a .charm file as the result of the process.
 
-    You can `juju deploy` directly from the resulting .charm file, or upload
-    it to the store (see the "upload" command).
+You can `juju deploy` directly from the resulting .charm file, or upload it to
+the store (see the "upload" command).
 """
 
 

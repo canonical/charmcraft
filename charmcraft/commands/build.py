@@ -98,7 +98,7 @@ class Builder:
 
     def run(self):
         """Main building process."""
-        logger.debug("Building charm in %r", str(self.buildpath))
+        logger.debug("Building charm in '%s'", self.buildpath)
 
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
@@ -109,7 +109,7 @@ class Builder:
         self.handle_dependencies()
         zipname = self.handle_package()
 
-        logger.info("Done, charm left in %r", zipname)
+        logger.info("Done, charm left in '%s'", zipname)
         return zipname
 
     def _load_juju_ignore(self):
@@ -140,7 +140,7 @@ class Builder:
             for pos, name in enumerate(dirnames):
                 rel_path = rel_basedir / name
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    logger.debug("Ignoring directory because of rules: %r", str(rel_path))
+                    logger.debug("Ignoring directory because of rules: '%s'", rel_path)
                     ignored.append(pos)
                 else:
                     abs_path = abs_basedir / name
@@ -157,7 +157,7 @@ class Builder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    logger.debug("Ignoring file because of rules: %r", str(rel_path))
+                    logger.debug("Ignoring file because of rules: '%s'", rel_path)
 
                 elif abs_path.is_symlink():
                     if self.charmdir in abs_path.resolve().parents:
@@ -166,15 +166,14 @@ class Builder:
                         dest_path.symlink_to(relative_link)
                     else:
                         logger.warning(
-                            "Ignoring symlink because targets outside the project: %r",
-                            str(rel_path))
+                            "Ignoring symlink because targets outside the project: '%s'", rel_path)
 
                 elif abs_path.is_file():
                     dest_path = self.buildpath / rel_path
                     os.link(str(abs_path), str(dest_path))
 
                 else:
-                    logger.debug("Ignoring file because of type: %r", str(rel_path))
+                    logger.debug("Ignoring file because of type: '%s'", rel_path)
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)

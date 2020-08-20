@@ -831,6 +831,30 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     ]
 
 
+def test_build_dependencies_needs_system(tmp_path):
+    """pip3 is called with --system when pip3 needs it."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': 'whatever',
+        'requirement': ['reqs'],
+    })
+
+    with patch('charmcraft.commands.build._pip_needs_system') as is_bionic:
+        is_bionic.return_value = True
+        with patch('charmcraft.commands.build.polite_exec') as mock:
+            mock.return_value = 0
+            builder.handle_dependencies()
+
+    envpath = build_dir / VENV_DIRNAME
+    assert mock.mock_calls == [
+        call(['pip3', 'list']),
+        call(['pip3', 'install', '--target={}'.format(envpath), '--system', '--requirement=reqs']),
+    ]
+
+
 def test_build_dependencies_virtualenv_multiple(tmp_path):
     """A virtualenv is created with multiple requirements files."""
     build_dir = tmp_path / BUILD_DIRNAME

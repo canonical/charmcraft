@@ -86,6 +86,10 @@ Release early, release often. Don't be lazy.
 
 - update IRC channel topic
 
+- send a mail with "Release X.Y.Z" title and release notes in the body to 
+
+    charmcraft@lists.launchpad.net 
+
 - finally change the version number in `charmcraft/version.py`
 
 - commit, push, create a PR for the branch

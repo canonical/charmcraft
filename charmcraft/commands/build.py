@@ -51,6 +51,16 @@ MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
 HOOKS_DIR = 'hooks'
 
 
+def _pip_needs_system():
+    """Determines whether pip3 defaults to --user, needing --system to turn it off."""
+    try:
+        from pip.commands.install import InstallCommand
+        return InstallCommand().cmd_opts.get_option('--system') is not None
+    except (ImportError, AttributeError, TypeError):
+        # probably not the bionic pip version then
+        return False
+
+
 def polite_exec(cmd):
     """Execute a command, only showing output if error."""
     logger.debug("Running external command %s", cmd)
@@ -222,6 +232,9 @@ class Builder:
                 'pip3', 'install',  # base command
                 '--target={}'.format(venvpath),  # put all the resulting files in that specific dir
             ]
+            if _pip_needs_system():
+                logger.debug("adding --system to work around pip3 defaulting to --user")
+                cmd.append("--system")
             for reqspath in self.requirement_paths:
                 cmd.append('--requirement={}'.format(reqspath))  # the dependencies file(s)
             retcode = polite_exec(cmd)

@@ -145,7 +145,7 @@ class Builder:
                 else:
                     abs_path = abs_basedir / name
                     dest_path = self.buildpath / rel_path
-                    dest_path.mkdir()
+                    dest_path.mkdir(mode=abs_path.stat().st_mode)
 
             # in the future don't go inside ignored directories
             for pos in reversed(ignored):

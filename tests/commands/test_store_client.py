@@ -218,8 +218,9 @@ def test_authholder_credentials_save_createsdir(auth_holder, tmp_path):
     auth_holder._cookiejar.set_cookie(get_cookie(value='different'))
     auth_holder._save_credentials_if_changed()
 
-    # file should be there
+    # file should be there, and have the right permissions
     assert weird_filepath.exists()
+    assert os.stat(str(weird_filepath)).st_mode & 0o777 == 0o600
 
 
 def test_authholder_request_simple(auth_holder):

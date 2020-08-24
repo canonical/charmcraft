@@ -51,6 +51,16 @@ MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
 HOOKS_DIR = 'hooks'
 
 
+def _pip_needs_system():
+    """Determines whether pip3 defaults to --user, needing --system to turn it off."""
+    try:
+        from pip.commands.install import InstallCommand
+        return InstallCommand().cmd_opts.get_option('--system') is not None
+    except (ImportError, AttributeError, TypeError):
+        # probably not the bionic pip version then
+        return False
+
+
 def polite_exec(cmd):
     """Execute a command, only showing output if error."""
     logger.debug("Running external command %s", cmd)
@@ -88,7 +98,7 @@ class Builder:
 
     def run(self):
         """Main building process."""
-        logger.debug("Building charm in %r", str(self.buildpath))
+        logger.debug("Building charm in '%s'", self.buildpath)
 
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
@@ -99,7 +109,7 @@ class Builder:
         self.handle_dependencies()
         zipname = self.handle_package()
 
-        logger.info("Done, charm left in %r", zipname)
+        logger.info("Done, charm left in '%s'", zipname)
         return zipname
 
     def _load_juju_ignore(self):
@@ -130,12 +140,12 @@ class Builder:
             for pos, name in enumerate(dirnames):
                 rel_path = rel_basedir / name
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    logger.debug("Ignoring directory because of rules: %r", str(rel_path))
+                    logger.debug("Ignoring directory because of rules: '%s'", rel_path)
                     ignored.append(pos)
                 else:
                     abs_path = abs_basedir / name
                     dest_path = self.buildpath / rel_path
-                    dest_path.mkdir()
+                    dest_path.mkdir(mode=abs_path.stat().st_mode)
 
             # in the future don't go inside ignored directories
             for pos in reversed(ignored):
@@ -147,7 +157,7 @@ class Builder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    logger.debug("Ignoring file because of rules: %r", str(rel_path))
+                    logger.debug("Ignoring file because of rules: '%s'", rel_path)
 
                 elif abs_path.is_symlink():
                     if self.charmdir in abs_path.resolve().parents:
@@ -156,15 +166,14 @@ class Builder:
                         dest_path.symlink_to(relative_link)
                     else:
                         logger.warning(
-                            "Ignoring symlink because targets outside the project: %r",
-                            str(rel_path))
+                            "Ignoring symlink because targets outside the project: '%s'", rel_path)
 
                 elif abs_path.is_file():
                     dest_path = self.buildpath / rel_path
                     os.link(str(abs_path), str(dest_path))
 
                 else:
-                    logger.debug("Ignoring file because of type: %r", str(rel_path))
+                    logger.debug("Ignoring file because of type: '%s'", rel_path)
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
@@ -223,6 +232,9 @@ class Builder:
                 'pip3', 'install',  # base command
                 '--target={}'.format(venvpath),  # put all the resulting files in that specific dir
             ]
+            if _pip_needs_system():
+                logger.debug("adding --system to work around pip3 defaulting to --user")
+                cmd.append("--system")
             for reqspath in self.requirement_paths:
                 cmd.append('--requirement={}'.format(reqspath))  # the dependencies file(s)
             retcode = polite_exec(cmd)

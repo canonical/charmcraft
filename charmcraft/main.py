@@ -133,14 +133,8 @@ class Dispatcher:
                 result[cmd_class.name] = cmd_class(cmd_group)
         return result
 
-    def _build_argument_parser(self, commands_groups):
-        """Build the generic argument parser."""
-        parser = CustomArgumentParser(
-            prog='charmcraft',
-            description="The main tool to build, upload, and develop in general the Juju Charms.",
-            commands_groups=commands_groups)
-
-        # basic general options
+    def _add_global_options(self, parser):
+        """Add the global options to the received parser."""
         mutexg = parser.add_mutually_exclusive_group()
         mutexg.add_argument(
             '-v', '--verbose', action='store_true',
@@ -149,14 +143,27 @@ class Dispatcher:
             '-q', '--quiet', action='store_true',
             help="only show warnings and errors, not progress")
 
+    def _build_argument_parser(self, commands_groups):
+        """Build the generic argument parser."""
+        parser = CustomArgumentParser(
+            prog='charmcraft',
+            description="The main tool to build, upload, and develop in general the Juju Charms.",
+            commands_groups=commands_groups)
+
+        # basic general options
+        self._add_global_options(parser)
+
         subparsers = parser.add_subparsers(title=CustomArgumentParser.special_group)
         for group_name, _, cmd_classes in commands_groups:
             for cmd_class in cmd_classes:
                 name = cmd_class.name
                 command = self.commands[name]
 
-                subparser = subparsers.add_parser(name, help=command.help_msg)
+                subparser = subparsers.add_parser(
+                    name, help=command.help_msg, description=command.overview,
+                    formatter_class=argparse.RawDescriptionHelpFormatter)
                 subparser.set_defaults(_command=command)
+                self._add_global_options(subparser)
                 command.fill_parser(subparser)
 
         return parser

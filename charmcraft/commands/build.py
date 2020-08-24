@@ -51,6 +51,16 @@ MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
 HOOKS_DIR = 'hooks'
 
 
+def _pip_needs_system():
+    """Determines whether pip3 defaults to --user, needing --system to turn it off."""
+    try:
+        from pip.commands.install import InstallCommand
+        return InstallCommand().cmd_opts.get_option('--system') is not None
+    except (ImportError, AttributeError, TypeError):
+        # probably not the bionic pip version then
+        return False
+
+
 def polite_exec(cmd):
     """Execute a command, only showing output if error."""
     logger.debug("Running external command %s", cmd)
@@ -153,7 +163,7 @@ class Builder:
                     self.create_symlink(abs_path, dest_path)
                 else:
                     dest_path = self.buildpath / rel_path
-                    dest_path.mkdir()
+                    dest_path.mkdir(mode=abs_path.stat().st_mode)
 
             # in the future don't go inside ignored directories
             for pos in reversed(ignored):
@@ -232,6 +242,9 @@ class Builder:
                 'pip3', 'install',  # base command
                 '--target={}'.format(venvpath),  # put all the resulting files in that specific dir
             ]
+            if _pip_needs_system():
+                logger.debug("adding --system to work around pip3 defaulting to --user")
+                cmd.append("--system")
             for reqspath in self.requirement_paths:
                 cmd.append('--requirement={}'.format(reqspath))  # the dependencies file(s)
             retcode = polite_exec(cmd)
@@ -329,10 +342,19 @@ class Validator:
         return filepaths
 
 
+_overview = """
+Build the charm, leaving a .charm file as the result of the process.
+
+You can `juju deploy` directly from the resulting .charm file, or upload it to
+the store (see the "upload" command).
+"""
+
+
 class BuildCommand(BaseCommand):
     """Build the charm."""
     name = 'build'
     help_msg = "build the charm"
+    overview = _overview
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

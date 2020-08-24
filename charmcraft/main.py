@@ -133,6 +133,16 @@ class Dispatcher:
                 result[cmd_class.name] = cmd_class(cmd_group)
         return result
 
+    def _add_global_options(self, parser):
+        """Add the global options to the received parser."""
+        mutexg = parser.add_mutually_exclusive_group()
+        mutexg.add_argument(
+            '-v', '--verbose', action='store_true',
+            help="be more verbose and show debug information")
+        mutexg.add_argument(
+            '-q', '--quiet', action='store_true',
+            help="only show warnings and errors, not progress")
+
     def _build_argument_parser(self, commands_groups):
         """Build the generic argument parser."""
         parser = CustomArgumentParser(
@@ -141,13 +151,7 @@ class Dispatcher:
             commands_groups=commands_groups)
 
         # basic general options
-        mutexg = parser.add_mutually_exclusive_group()
-        mutexg.add_argument(
-            '-v', '--verbose', action='store_true',
-            help="be more verbose and show debug information")
-        mutexg.add_argument(
-            '-q', '--quiet', action='store_true',
-            help="only show warnings and errors, not progress")
+        self._add_global_options(parser)
 
         subparsers = parser.add_subparsers(title=CustomArgumentParser.special_group)
         for group_name, _, cmd_classes in commands_groups:
@@ -159,6 +163,7 @@ class Dispatcher:
                     name, help=command.help_msg, description=command.overview,
                     formatter_class=argparse.RawDescriptionHelpFormatter)
                 subparser.set_defaults(_command=command)
+                self._add_global_options(subparser)
                 command.fill_parser(subparser)
 
         return parser

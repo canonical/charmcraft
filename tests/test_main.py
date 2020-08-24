@@ -185,19 +185,33 @@ def test_dispatcher_command_execution_crash():
         dispatcher.run()
 
 
-@pytest.mark.parametrize("option", ['--verbose', '-v'])
-def test_dispatcher_generic_setup_verbose(option):
-    """Generic parameter handling for verbose log setup."""
-    dispatcher = Dispatcher([option], [])
+@pytest.mark.parametrize("options", [
+    ['--verbose'],
+    ['-v'],
+    ['somecommand', '--verbose'],
+    ['somecommand', '-v'],
+])
+def test_dispatcher_generic_setup_verbose(options):
+    """Generic parameter handling for verbose log setup, directly of after the command."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    dispatcher = Dispatcher(options, groups)
     logsetup.message_handler.mode = None
     dispatcher.run()
     assert logsetup.message_handler.mode == logsetup.message_handler.VERBOSE
 
 
-@pytest.mark.parametrize("option", ['--quiet', '-q'])
-def test_dispatcher_generic_setup_quiet(option):
-    """Generic parameter handling for silent log setup."""
-    dispatcher = Dispatcher([option], [])
+@pytest.mark.parametrize("options", [
+    ['--quiet'],
+    ['-q'],
+    ['somecommand', '--quiet'],
+    ['somecommand', '-q'],
+])
+def test_dispatcher_generic_setup_quiet(options):
+    """Generic parameter handling for silent log setup, directly of after the command."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    dispatcher = Dispatcher(options, groups)
     logsetup.message_handler.mode = None
     dispatcher.run()
     assert logsetup.message_handler.mode == logsetup.message_handler.QUIET

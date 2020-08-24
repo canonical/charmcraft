@@ -19,6 +19,7 @@
 import pytest
 
 from charmcraft.cmdbase import CommandError, BaseCommand
+from charmcraft.main import COMMAND_GROUPS
 
 
 def test_commanderror_retcode_default():
@@ -33,22 +34,14 @@ def test_commanderror_retcode_given():
     assert err.retcode == 4
 
 
-def test_basecommand_mandatory_name():
-    """BaseCommand subclasses must provide a name."""
-    class TestClass(BaseCommand):
-        help_msg = "test help"
-
-    with pytest.raises(RuntimeError, match="Command not properly created: TestClass"):
-        TestClass('group')
+all_commands = list.__add__(*[commands for _, _, commands in COMMAND_GROUPS])
 
 
-def test_basecommand_mandatory_helpmsg():
-    """BaseCommand subclasses ."""
-    class TestClass(BaseCommand):
-        name = 'test'
-
-    with pytest.raises(RuntimeError, match="Command not properly created: TestClass"):
-        TestClass('group')
+@pytest.mark.parametrize('command', all_commands)
+@pytest.mark.parametrize('attrib', ['name', 'help_msg', 'overview'])
+def test_basecommand_mandatory_attributes(command, attrib):
+    """All commands must provide the mandatory attributes."""
+    assert getattr(command, attrib) is not None
 
 
 def test_basecommand_holds_the_indicated_group():

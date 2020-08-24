@@ -155,7 +155,9 @@ class Dispatcher:
                 name = cmd_class.name
                 command = self.commands[name]
 
-                subparser = subparsers.add_parser(name, help=command.help_msg)
+                subparser = subparsers.add_parser(
+                    name, help=command.help_msg, description=command.overview,
+                    formatter_class=argparse.RawDescriptionHelpFormatter)
                 subparser.set_defaults(_command=command)
                 command.fill_parser(subparser)
 

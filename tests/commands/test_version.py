@@ -25,5 +25,5 @@ def test_version_result(caplog):
     caplog.set_level(logging.INFO, logger="charmcraft.commands.version")
     cmd = VersionCommand('group')
     cmd.run([])
-    expected = "Version: " + __version__
+    expected = __version__
     assert [expected] == [rec.message for rec in caplog.records]

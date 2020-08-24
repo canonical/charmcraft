@@ -419,7 +419,7 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch):
     assert zf.read('lib/ops/stuff.txt') == b"ops stuff"
 
 
-def test_build_generics_simple(tmp_path):
+def test_build_generics_simple_files(tmp_path):
     """Check transferred metadata and simple entrypoint, also return proper linked entrypoint."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -436,6 +436,8 @@ def test_build_generics_simple(tmp_path):
     })
     linked_entrypoint = builder.handle_generic_paths()
 
+    # check files are there, are files, and are really hard links (so no
+    # check for permissions needed)
     built_metadata = build_dir / CHARM_METADATA
     assert built_metadata.is_file()
     assert built_metadata.stat().st_ino == metadata.stat().st_ino
@@ -445,6 +447,28 @@ def test_build_generics_simple(tmp_path):
     assert built_entrypoint.stat().st_ino == entrypoint.stat().st_ino
 
     assert linked_entrypoint == built_entrypoint
+
+
+def test_build_generics_simple_dir(tmp_path):
+    """Check transferred any directory, with proper permissions."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+    entrypoint = tmp_path / 'crazycharm.py'
+    entrypoint.touch()
+
+    somedir = tmp_path / 'somedir'
+    somedir.mkdir(mode=0o700)
+
+    builder = Builder({
+        'from': tmp_path,
+        'entrypoint': entrypoint,
+        'requirement': [],
+    })
+    builder.handle_generic_paths()
+
+    built_dir = build_dir / 'somedir'
+    assert built_dir.is_dir()
+    assert built_dir.stat().st_mode & 0xFFF == 0o700
 
 
 def test_build_generics_ignored_file(tmp_path, caplog):

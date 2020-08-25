@@ -190,6 +190,8 @@ def test_dispatcher_command_execution_crash():
     ['-v'],
     ['somecommand', '--verbose'],
     ['somecommand', '-v'],
+    ['-v', 'somecommand'],
+    ['--verbose', 'somecommand'],
 ])
 def test_dispatcher_generic_setup_verbose(options):
     """Generic parameter handling for verbose log setup, directly of after the command."""
@@ -206,6 +208,8 @@ def test_dispatcher_generic_setup_verbose(options):
     ['-q'],
     ['somecommand', '--quiet'],
     ['somecommand', '-q'],
+    ['-q', 'somecommand'],
+    ['--quiet', 'somecommand'],
 ])
 def test_dispatcher_generic_setup_quiet(options):
     """Generic parameter handling for silent log setup, directly of after the command."""
@@ -215,6 +219,24 @@ def test_dispatcher_generic_setup_quiet(options):
     logsetup.message_handler.mode = None
     dispatcher.run()
     assert logsetup.message_handler.mode == logsetup.message_handler.QUIET
+
+
+@pytest.mark.parametrize("options", [
+    ['--quiet', '--verbose'],
+    ['---v', '-q'],
+    # XXX Facundo 2020-08-25: we need to do this check when we escape out of argparsing parsing
+    # for global options and commands, as argparse doesn't support mutex options between parsers
+    # ['--verbose', 'somecommand', '--quiet'],
+    # ['-q', 'somecommand', '-v'],
+])
+def test_dispatcher_generic_setup_mutually_exclusive(options):
+    """Disallow mutually exclusive generic options."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    # test the system exit, which is done automatically by argparse
+    with pytest.raises(SystemExit) as cm:
+        Dispatcher(options, groups)
+    assert cm.value.code == 2
 
 
 def test_dispatcher_load_commands_ok():

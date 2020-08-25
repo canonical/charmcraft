@@ -116,9 +116,10 @@ class Dispatcher:
 
     def _handle_global_params(self):
         """Set up and process global parameters."""
-        if self.parsed_args.verbose:
+        args = self.parsed_args
+        if args.verbose_global or getattr(args, 'verbose_command', False):
             message_handler.set_mode(message_handler.VERBOSE)
-        elif self.parsed_args.quiet:
+        if args.quiet_global or getattr(args, 'quiet_command', False):
             message_handler.set_mode(message_handler.QUIET)
 
     def _load_commands(self, commands_groups):
@@ -133,14 +134,14 @@ class Dispatcher:
                 result[cmd_class.name] = cmd_class(cmd_group)
         return result
 
-    def _add_global_options(self, parser):
+    def _add_global_options(self, parser, context):
         """Add the global options to the received parser."""
         mutexg = parser.add_mutually_exclusive_group()
         mutexg.add_argument(
-            '-v', '--verbose', action='store_true',
+            '-v', '--verbose', action='store_true', dest='verbose_' + context,
             help="be more verbose and show debug information")
         mutexg.add_argument(
-            '-q', '--quiet', action='store_true',
+            '-q', '--quiet', action='store_true', dest='quiet_' + context,
             help="only show warnings and errors, not progress")
 
     def _build_argument_parser(self, commands_groups):
@@ -151,7 +152,7 @@ class Dispatcher:
             commands_groups=commands_groups)
 
         # basic general options
-        self._add_global_options(parser)
+        self._add_global_options(parser, 'global')
 
         subparsers = parser.add_subparsers(title=CustomArgumentParser.special_group)
         for group_name, _, cmd_classes in commands_groups:
@@ -163,7 +164,7 @@ class Dispatcher:
                     name, help=command.help_msg, description=command.overview,
                     formatter_class=argparse.RawDescriptionHelpFormatter)
                 subparser.set_defaults(_command=command)
-                self._add_global_options(subparser)
+                self._add_global_options(subparser, 'command')
                 command.fill_parser(subparser)
 
         return parser

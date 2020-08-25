@@ -226,6 +226,7 @@ def test_dispatcher_generic_setup_quiet(options):
     ['---v', '-q'],
     # XXX Facundo 2020-08-25: we need to do this check when we escape out of argparsing parsing
     # for global options and commands, as argparse doesn't support mutex options between parsers
+    # Related issue: https://github.com/canonical/charmcraft/issues/138
     # ['--verbose', 'somecommand', '--quiet'],
     # ['-q', 'somecommand', '-v'],
 ])

@@ -20,6 +20,7 @@ import logging
 import os
 import tempfile
 
+from charmcraft import __version__
 
 FORMATTER_SIMPLE = "%(message)s"
 FORMATTER_DETAILED = "%(asctime)s  %(name)-30s %(levelname)-8s %(message)s"
@@ -63,6 +64,8 @@ class _MessageHandler:
         level, format_string = self._modes[mode]
         self._stderr_handler.setFormatter(logging.Formatter(format_string))
         self._stderr_handler.setLevel(level)
+        if mode == self.VERBOSE:
+            _logger.debug("Starting charmcraft version %s", __version__)
 
     def _set_filehandler(self):
         """Set the file handler to log everything to the temp file."""
@@ -77,6 +80,7 @@ class _MessageHandler:
         self._file_logger = logging.getLogger('charmcraft.guard')
         self._file_logger.propagate = False
         self._file_logger.addHandler(file_handler)
+        self._file_logger.debug("Starting charmcraft version %s", __version__)
 
     def ended_ok(self):
         """Cleanup after successful execution."""

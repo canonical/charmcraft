@@ -21,7 +21,6 @@ import operator
 import os
 import sys
 
-from charmcraft import __version__
 from charmcraft.commands import version, build, store, init
 from charmcraft.cmdbase import CommandError
 from charmcraft.logsetup import message_handler
@@ -94,8 +93,6 @@ class Dispatcher:
     """
 
     def __init__(self, sysargs, commands_groups):
-        logger.debug("Starting charmcraft version %s", __version__)
-
         self.commands = self._load_commands(commands_groups)
         logger.debug("Commands loaded: %s", self.commands)
 

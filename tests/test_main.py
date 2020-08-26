@@ -356,7 +356,7 @@ def test_initmsg_default():
                 main(['charmcraft', 'somecommand'])
 
     # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once()
+    ended_ok_mock.assert_called_once_with()
     logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
     file_first_line = logged_to_file.split('\n')[0]
     logsetup.message_handler.ended_ok()
@@ -380,7 +380,7 @@ def test_initmsg_quiet():
                 main(['charmcraft', '--quiet', 'somecommand'])
 
     # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once()
+    ended_ok_mock.assert_called_once_with()
     logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
     file_first_line = logged_to_file.split('\n')[0]
     logsetup.message_handler.ended_ok()
@@ -404,7 +404,7 @@ def test_initmsg_verbose():
                 main(['charmcraft', '--verbose', 'somecommand'])
 
     # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once()
+    ended_ok_mock.assert_called_once_with()
     logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
     file_first_line = logged_to_file.split('\n')[0]
     logsetup.message_handler.ended_ok()
@@ -430,7 +430,7 @@ def test_initmsg_debug(monkeypatch):
                 main(['charmcraft', 'somecommand'])
 
     # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once()
+    ended_ok_mock.assert_called_once_with()
     logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
     file_first_line = logged_to_file.split('\n')[0]
     logsetup.message_handler.ended_ok()

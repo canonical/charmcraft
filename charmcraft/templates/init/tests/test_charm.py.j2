@@ -25,7 +25,7 @@ class TestCharm(unittest.TestCase):
         action_event = Mock(params={"fail": ""})
         harness.charm._on_fortune_action(action_event)
 
-        self.assertTrue(action_event.set_result.called)
+        self.assertTrue(action_event.set_results.called)
 
     def test_action_fail(self):
         harness = Harness({{ class_name }})

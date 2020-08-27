@@ -16,7 +16,7 @@
 
 import argparse
 import io
-import logging
+import pathlib
 import textwrap
 from unittest.mock import patch
 
@@ -278,14 +278,6 @@ def test_dispatcher_load_commands_repeated():
         Dispatcher([], groups)
 
 
-def test_dispatcher_log_startup(caplog):
-    """The version is logged in debug when started."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-    Dispatcher([], [])
-    expected = "Starting charmcraft version " + __version__
-    assert expected in [rec.message for rec in caplog.records]
-
-
 # --- Tests for the main entry point
 
 # In all the test methods below we patch Dispatcher.run so we don't really exercise any
@@ -349,3 +341,104 @@ def test_main_interrupted():
 
     assert retcode == 1
     assert mh_mock.ended_interrupt.called_once()
+
+
+# --- Tests for the bootstrap version message
+
+
+def test_initmsg_default():
+    """Without any option, the init msg only goes to disk."""
+    cmd = create_command('somecommand')
+    fake_stream = io.StringIO()
+    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
+        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
+            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
+                main(['charmcraft', 'somecommand'])
+
+    # get the logfile first line before removing it
+    ended_ok_mock.assert_called_once_with()
+    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
+    file_first_line = logged_to_file.split('\n')[0]
+    logsetup.message_handler.ended_ok()
+
+    # get the terminal first line
+    captured = fake_stream.getvalue()
+    terminal_first_line = captured.split('\n')[0]
+
+    expected = "Starting charmcraft version " + __version__
+    assert expected in file_first_line
+    assert expected not in terminal_first_line
+
+
+def test_initmsg_quiet():
+    """In quiet mode, the init msg only goes to disk."""
+    cmd = create_command('somecommand')
+    fake_stream = io.StringIO()
+    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
+        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
+            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
+                main(['charmcraft', '--quiet', 'somecommand'])
+
+    # get the logfile first line before removing it
+    ended_ok_mock.assert_called_once_with()
+    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
+    file_first_line = logged_to_file.split('\n')[0]
+    logsetup.message_handler.ended_ok()
+
+    # get the terminal first line
+    captured = fake_stream.getvalue()
+    terminal_first_line = captured.split('\n')[0]
+
+    expected = "Starting charmcraft version " + __version__
+    assert expected in file_first_line
+    assert expected not in terminal_first_line
+
+
+def test_initmsg_verbose():
+    """In verbose mode, the init msg goes both to disk and terminal."""
+    cmd = create_command('somecommand')
+    fake_stream = io.StringIO()
+    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
+        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
+            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
+                main(['charmcraft', '--verbose', 'somecommand'])
+
+    # get the logfile first line before removing it
+    ended_ok_mock.assert_called_once_with()
+    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
+    file_first_line = logged_to_file.split('\n')[0]
+    logsetup.message_handler.ended_ok()
+
+    # get the terminal first line
+    captured = fake_stream.getvalue()
+    terminal_first_line = captured.split('\n')[0]
+
+    expected = "Starting charmcraft version " + __version__
+    assert expected in file_first_line
+    assert expected in terminal_first_line
+
+
+def test_initmsg_debug(monkeypatch):
+    """When in DEBUG, the init msg goes both to disk and terminal."""
+    monkeypatch.setenv('DEBUG', '1')
+
+    cmd = create_command('somecommand')
+    fake_stream = io.StringIO()
+    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
+        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
+            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
+                main(['charmcraft', 'somecommand'])
+
+    # get the logfile first line before removing it
+    ended_ok_mock.assert_called_once_with()
+    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
+    file_first_line = logged_to_file.split('\n')[0]
+    logsetup.message_handler.ended_ok()
+
+    # get the terminal first line
+    captured = fake_stream.getvalue()
+    terminal_first_line = captured.split('\n')[0]
+
+    expected = "Starting charmcraft version " + __version__
+    assert expected in file_first_line
+    assert expected in terminal_first_line

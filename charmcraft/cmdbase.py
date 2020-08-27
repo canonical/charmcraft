@@ -48,11 +48,10 @@ class BaseCommand:
 
     name = None
     help_msg = None
+    overview = None
     common = False
 
     def __init__(self, group):
-        if self.name is None or self.help_msg is None:
-            raise RuntimeError("Command not properly created: {}".format(self.__class__.__name__))
         self.group = group
 
     def fill_parser(self, parser):

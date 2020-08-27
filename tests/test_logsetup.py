@@ -39,6 +39,9 @@ def create_message_handler(tmp_path):
         patchers.append(p)
 
         if modes is not None:
+            if 'verbose' not in modes:
+                # verbose should always be there, as it's used internally
+                modes['verbose'] = (10, "%(message)s")
             p = patch.object(_MessageHandler, '_modes', modes)
             p.start()
             patchers.append(p)
@@ -93,10 +96,11 @@ def test_logfile_all_stored(create_message_handler):
     with open(mh._log_filepath, 'rt') as fh:
         logcontent = fh.readlines()
 
-    assert 'test debug' in logcontent[0]
-    assert 'test info' in logcontent[1]
-    assert 'test warning' in logcontent[2]
-    assert 'test error' in logcontent[3]
+    # start checking from pos 1, as in 0 we always have the bootstrap message
+    assert 'test debug' in logcontent[1]
+    assert 'test info' in logcontent[2]
+    assert 'test warning' in logcontent[3]
+    assert 'test error' in logcontent[4]
 
 
 def test_ended_success(caplog, create_message_handler):
@@ -215,6 +219,6 @@ def test_ended_crash_while_verbose(caplog, create_message_handler):
     assert 'Traceback' in log_content
 
     # also it shown the error to the user AND also the traceback
-    (record,) = caplog.records
+    (_, record) = caplog.records
     assert record.message == expected_msg
     assert record.exc_info[0] == ValueError

@@ -20,7 +20,7 @@ import logging
 import os
 import sys
 
-from charmcraft import __version__, helptexts
+from charmcraft import helptexts
 from charmcraft.commands import version, build, store, init
 from charmcraft.cmdbase import CommandError
 from charmcraft.logsetup import message_handler
@@ -146,8 +146,6 @@ class Dispatcher:
     """
 
     def __init__(self, sysargs, commands_groups):
-        logger.debug("Starting charmcraft version %s", __version__)
-
         self.commands = self._load_commands(commands_groups)
         logger.debug("Commands loaded: %s", self.commands)
 
@@ -168,9 +166,10 @@ class Dispatcher:
 
     def _handle_global_params(self):
         """Set up and process global parameters."""
-        if self.parsed_args.verbose:
+        args = self.parsed_args
+        if args.verbose_global or getattr(args, 'verbose_command', False):
             message_handler.set_mode(message_handler.VERBOSE)
-        elif self.parsed_args.quiet:
+        if args.quiet_global or getattr(args, 'quiet_command', False):
             message_handler.set_mode(message_handler.QUIET)
 
     def _load_commands(self, commands_groups):
@@ -185,6 +184,20 @@ class Dispatcher:
                 result[cmd_class.name] = cmd_class(cmd_group)
         return result
 
+    def _add_global_options(self, parser, context):
+        """Add the global options to the received parser."""
+        # FIXME: make it context aware!!!
+        parser.add_argument(
+            '-h', '--help', action='store_true',
+            help="Show this help message and exit.")
+        mutexg = parser.add_mutually_exclusive_group()
+        mutexg.add_argument(
+            '-v', '--verbose', action='store_true', dest='verbose_' + context,
+            help="be more verbose and show debug information")
+        mutexg.add_argument(
+            '-q', '--quiet', action='store_true', dest='quiet_' + context,
+            help="only show warnings and errors, not progress")
+
     def _build_argument_parser(self, commands_groups):
         """Build the generic argument parser."""
         parser = CustomArgumentParser(
@@ -192,17 +205,7 @@ class Dispatcher:
             description="The main tool to build, upload and develop in general the Juju Charms.",
             add_help=False)
 
-        # basic general options
-        parser.add_argument(
-            '-h', '--help', action='store_true',
-            help="Show this help message and exit.")
-        mutexg = parser.add_mutually_exclusive_group()
-        mutexg.add_argument(
-            '-v', '--verbose', action='store_true',
-            help="Be more verbose and show debug information.")
-        mutexg.add_argument(
-            '-q', '--quiet', action='store_true',
-            help="Only show warnings and errors, not progress.")
+        self._add_global_options(parser, 'global')
 
         subparsers = parser.add_subparsers()
         for group_name, _, cmd_classes in commands_groups:
@@ -213,19 +216,7 @@ class Dispatcher:
                 subparser = subparsers.add_parser(
                     name, help=command.help_msg, command_parser=True, add_help=False)
                 subparser.set_defaults(_command=command)
-
-                # FIXME: this is a copy of above, let's not duplicate
-                subparser.add_argument(
-                    '-h', '--help', action='store_true',  # FIXME: this won't bypass mandatory args
-                    help="Show this help message and exit.")
-                mutexg = subparser.add_mutually_exclusive_group()
-                mutexg.add_argument(
-                    '-v', '--verbose', action='store_true',
-                    help="Be more verbose and show debug information.")
-                mutexg.add_argument(
-                    '-q', '--quiet', action='store_true',
-                    help="Only show warnings and errors, not progress.")
-
+                self._add_global_options(subparser, 'command')
                 command.fill_parser(subparser)
 
         return parser

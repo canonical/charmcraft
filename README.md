@@ -10,6 +10,16 @@ It is still in heavy, initial development and so a lot is still To Be
 Done. However it is already useful, and already simplifies the life of the
 charmer.
 
+## How do I install it?
+
+The easiest way to install `charmcraft` is by doing
+
+    sudo snap install --beta charmcraft
+
+(more options are available as per `snap info charmcraft`) but some
+people with more esoteric needs not covered by the snap might need to
+instead go via `pip3 install --user charmcraft`.
+
 ## What can it do for me today?
 
 It can build your charm! No need for git submodules nor pesky hook symlinks, you

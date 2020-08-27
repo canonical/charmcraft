@@ -120,6 +120,20 @@ class Builder:
                 ignore.extend_patterns(ignores)
         return ignore
 
+    def create_symlink(self, src_path, dest_path):
+        """Create a symlink in dest_path pointing relatively like src_path.
+
+        It also verifies that the linked dir or file is inside the project.
+        """
+        resolved_path = src_path.resolve()
+        if self.charmdir in resolved_path.parents:
+            relative_link = relativise(src_path, resolved_path)
+            dest_path.symlink_to(relative_link)
+        else:
+            rel_path = src_path.relative_to(self.charmdir)
+            logger.warning(
+                "Ignoring symlink because targets outside the project: '%s'", rel_path)
+
     def handle_generic_paths(self):
         """Handle all files and dirs except what's ignored and what will be handled later.
 
@@ -139,13 +153,17 @@ class Builder:
             ignored = []
             for pos, name in enumerate(dirnames):
                 rel_path = rel_basedir / name
+                abs_path = abs_basedir / name
+
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
                     logger.debug("Ignoring directory because of rules: '%s'", rel_path)
                     ignored.append(pos)
-                else:
-                    abs_path = abs_basedir / name
+                elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
-                    dest_path.mkdir()
+                    self.create_symlink(abs_path, dest_path)
+                else:
+                    dest_path = self.buildpath / rel_path
+                    dest_path.mkdir(mode=abs_path.stat().st_mode)
 
             # in the future don't go inside ignored directories
             for pos in reversed(ignored):
@@ -158,20 +176,12 @@ class Builder:
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
                     logger.debug("Ignoring file because of rules: '%s'", rel_path)
-
                 elif abs_path.is_symlink():
-                    if self.charmdir in abs_path.resolve().parents:
-                        dest_path = self.buildpath / rel_path
-                        relative_link = relativise(abs_path, abs_path.resolve())
-                        dest_path.symlink_to(relative_link)
-                    else:
-                        logger.warning(
-                            "Ignoring symlink because targets outside the project: '%s'", rel_path)
-
+                    dest_path = self.buildpath / rel_path
+                    self.create_symlink(abs_path, dest_path)
                 elif abs_path.is_file():
                     dest_path = self.buildpath / rel_path
                     os.link(str(abs_path), str(dest_path))
-
                 else:
                     logger.debug("Ignoring file because of type: '%s'", rel_path)
 
@@ -332,10 +342,19 @@ class Validator:
         return filepaths
 
 
+_overview = """
+Build the charm, leaving a .charm file as the result of the process.
+
+You can `juju deploy` directly from the resulting .charm file, or upload it to
+the store (see the "upload" command).
+"""
+
+
 class BuildCommand(BaseCommand):
     """Build the charm."""
     name = 'build'
     help_msg = "Build the charm."
+    overview = _overview
     common = True
 
     def fill_parser(self, parser):

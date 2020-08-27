@@ -16,7 +16,7 @@
 
 import argparse
 import io
-import logging
+import pathlib
 import textwrap
 from unittest.mock import patch
 
@@ -185,22 +185,59 @@ def test_dispatcher_command_execution_crash():
         dispatcher.run()
 
 
-@pytest.mark.parametrize("option", ['--verbose', '-v'])
-def test_dispatcher_generic_setup_verbose(option):
-    """Generic parameter handling for verbose log setup."""
-    dispatcher = Dispatcher([option], [])
+@pytest.mark.parametrize("options", [
+    ['--verbose'],
+    ['-v'],
+    ['somecommand', '--verbose'],
+    ['somecommand', '-v'],
+    ['-v', 'somecommand'],
+    ['--verbose', 'somecommand'],
+])
+def test_dispatcher_generic_setup_verbose(options):
+    """Generic parameter handling for verbose log setup, directly of after the command."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    dispatcher = Dispatcher(options, groups)
     logsetup.message_handler.mode = None
     dispatcher.run()
     assert logsetup.message_handler.mode == logsetup.message_handler.VERBOSE
 
 
-@pytest.mark.parametrize("option", ['--quiet', '-q'])
-def test_dispatcher_generic_setup_quiet(option):
-    """Generic parameter handling for silent log setup."""
-    dispatcher = Dispatcher([option], [])
+@pytest.mark.parametrize("options", [
+    ['--quiet'],
+    ['-q'],
+    ['somecommand', '--quiet'],
+    ['somecommand', '-q'],
+    ['-q', 'somecommand'],
+    ['--quiet', 'somecommand'],
+])
+def test_dispatcher_generic_setup_quiet(options):
+    """Generic parameter handling for silent log setup, directly of after the command."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    dispatcher = Dispatcher(options, groups)
     logsetup.message_handler.mode = None
     dispatcher.run()
     assert logsetup.message_handler.mode == logsetup.message_handler.QUIET
+
+
+@pytest.mark.parametrize("options", [
+    ['--quiet', '--verbose'],
+    ['---v', '-q'],
+    # XXX Facundo 2020-08-25: we need to do this check when we escape out of argparsing parsing
+    # for global options and commands, as argparse doesn't support mutex options between parsers
+    # Related issue: https://github.com/canonical/charmcraft/issues/138
+    # ['--verbose', 'somecommand', '--quiet'],
+    # ['-q', 'somecommand', '-v'],
+])
+def test_dispatcher_generic_setup_mutually_exclusive(options):
+    """Disallow mutually exclusive generic options."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    # test the system exit, which is done automatically by argparse
+    with pytest.raises(SystemExit) as cm:
+        Dispatcher(options, groups)
+    assert cm.value.code == 2
 
 
 def test_dispatcher_load_commands_ok():
@@ -239,14 +276,6 @@ def test_dispatcher_load_commands_repeated():
     expected_msg = "Multiple commands with same name: (Foo|Baz) and (Baz|Foo)"
     with pytest.raises(RuntimeError, match=expected_msg):
         Dispatcher([], groups)
-
-
-def test_dispatcher_log_startup(caplog):
-    """The version is logged in debug when started."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-    Dispatcher([], [])
-    expected = "Starting charmcraft version " + __version__
-    assert expected in [rec.message for rec in caplog.records]
 
 
 # --- Tests for the main entry point
@@ -312,3 +341,104 @@ def test_main_interrupted():
 
     assert retcode == 1
     assert mh_mock.ended_interrupt.called_once()
+
+
+# --- Tests for the bootstrap version message
+
+
+def test_initmsg_default():
+    """Without any option, the init msg only goes to disk."""
+    cmd = create_command('somecommand')
+    fake_stream = io.StringIO()
+    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
+        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
+            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
+                main(['charmcraft', 'somecommand'])
+
+    # get the logfile first line before removing it
+    ended_ok_mock.assert_called_once_with()
+    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
+    file_first_line = logged_to_file.split('\n')[0]
+    logsetup.message_handler.ended_ok()
+
+    # get the terminal first line
+    captured = fake_stream.getvalue()
+    terminal_first_line = captured.split('\n')[0]
+
+    expected = "Starting charmcraft version " + __version__
+    assert expected in file_first_line
+    assert expected not in terminal_first_line
+
+
+def test_initmsg_quiet():
+    """In quiet mode, the init msg only goes to disk."""
+    cmd = create_command('somecommand')
+    fake_stream = io.StringIO()
+    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
+        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
+            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
+                main(['charmcraft', '--quiet', 'somecommand'])
+
+    # get the logfile first line before removing it
+    ended_ok_mock.assert_called_once_with()
+    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
+    file_first_line = logged_to_file.split('\n')[0]
+    logsetup.message_handler.ended_ok()
+
+    # get the terminal first line
+    captured = fake_stream.getvalue()
+    terminal_first_line = captured.split('\n')[0]
+
+    expected = "Starting charmcraft version " + __version__
+    assert expected in file_first_line
+    assert expected not in terminal_first_line
+
+
+def test_initmsg_verbose():
+    """In verbose mode, the init msg goes both to disk and terminal."""
+    cmd = create_command('somecommand')
+    fake_stream = io.StringIO()
+    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
+        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
+            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
+                main(['charmcraft', '--verbose', 'somecommand'])
+
+    # get the logfile first line before removing it
+    ended_ok_mock.assert_called_once_with()
+    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
+    file_first_line = logged_to_file.split('\n')[0]
+    logsetup.message_handler.ended_ok()
+
+    # get the terminal first line
+    captured = fake_stream.getvalue()
+    terminal_first_line = captured.split('\n')[0]
+
+    expected = "Starting charmcraft version " + __version__
+    assert expected in file_first_line
+    assert expected in terminal_first_line
+
+
+def test_initmsg_debug(monkeypatch):
+    """When in DEBUG, the init msg goes both to disk and terminal."""
+    monkeypatch.setenv('DEBUG', '1')
+
+    cmd = create_command('somecommand')
+    fake_stream = io.StringIO()
+    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
+        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
+            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
+                main(['charmcraft', 'somecommand'])
+
+    # get the logfile first line before removing it
+    ended_ok_mock.assert_called_once_with()
+    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
+    file_first_line = logged_to_file.split('\n')[0]
+    logsetup.message_handler.ended_ok()
+
+    # get the terminal first line
+    captured = fake_stream.getvalue()
+    terminal_first_line = captured.split('\n')[0]
+
+    expected = "Starting charmcraft version " + __version__
+    assert expected in file_first_line
+    assert expected in terminal_first_line

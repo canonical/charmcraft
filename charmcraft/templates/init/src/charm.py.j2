@@ -31,9 +31,12 @@ class {{ class_name }}(CharmBase):
         if fail:
             event.fail(fail)
         else:
-            event.set_result(
-                "Probability is too important to be left to the experts."
-                " -- Richard Hamming")
+            event.set_results(
+                {
+                    "fortune": "Probability is too important to be left to the experts."
+                    " -- Richard Hamming"
+                }
+            )
 
 
 if __name__ == "__main__":

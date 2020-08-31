@@ -361,16 +361,16 @@ class BuildCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '-f', '--from', type=pathlib.Path,
-            help="the directory where the charm project is located, from where the build "
-                 "is done; defaults to '.'")
+            help="The directory where the charm project is located, from where the build "
+                 "is done; defaults to '.'.")
         parser.add_argument(
             '-e', '--entrypoint', type=pathlib.Path,
-            help="the executable script or program which is the entry point to all the "
-                 "charm code; defaults to 'src/charm.py'")
+            help="The executable script or program which is the entry point to all the "
+                 "charm code; defaults to 'src/charm.py'.")
         parser.add_argument(
             '-r', '--requirement', action='append', type=pathlib.Path,
-            help="the file(s) with the needed dependencies (this option can be used multiple "
-                  "times); defaults to 'requirements.txt'")
+            help="The file(s) with the needed dependencies (this option can be used multiple "
+                  "times); defaults to 'requirements.txt'.")
 
     def run(self, parsed_args):
         """Run the command."""

@@ -128,7 +128,7 @@ class RegisterNameCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="the name to register in the Store")
+        parser.add_argument('name', help="The name to register in the Store.")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -176,7 +176,7 @@ class ListNamesCommand(BaseCommand):
 class UploadCommand(BaseCommand):
     """Upload a charm file to the Store."""
     name = 'upload'
-    help_msg = "upload a charm file to the Store"
+    help_msg = "Upload a charm file to the Store."
     overview = textwrap.dedent("""
         Upload the charm file to the Store.
 
@@ -233,7 +233,7 @@ class UploadCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '--charm-file', type=pathlib.Path,
-            help="the path to the charm file to upload")
+            help="The path to the charm file to upload.")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -251,7 +251,7 @@ class UploadCommand(BaseCommand):
 class ListRevisionsCommand(BaseCommand):
     """List existing revisions for a charm."""
     name = 'revisions'
-    help_msg = "list existing revisions for a package in the Store"
+    help_msg = "List existing revisions for a package in the Store."
     overview = textwrap.dedent("""
         List existing revisions for a package in the Store, along with the version
         and status for each, and when they were created.
@@ -263,7 +263,7 @@ class ListRevisionsCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="the name of the charm")
+        parser.add_argument('--name', help="The name of the charm.")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -308,7 +308,7 @@ class ListRevisionsCommand(BaseCommand):
 class ReleaseCommand(BaseCommand):
     """Release a charm revision to specific channels."""
     name = 'release'
-    help_msg = "relase a charm revision to one or more channels"
+    help_msg = "Relase a charm revision to one or more channels."
     overview = textwrap.dedent("""
         Release a charm revision to the indicated channels (one or many).
 
@@ -332,11 +332,11 @@ class ReleaseCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             'channels', metavar='channel', nargs='+',
-            help="the channel(s) to release to")
-        parser.add_argument('--name', help="the name of the charm")
+            help="The channel(s) to release to.")
+        parser.add_argument('--name', help="The name of the charm.")
         parser.add_argument(
             '--revision', type=int,
-            help="the revision to release (defaults to latest)")
+            help="The revision to release (defaults to latest).")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -371,7 +371,7 @@ class ReleaseCommand(BaseCommand):
 class StatusCommand(BaseCommand):
     """List released revisions for a charm."""
     name = 'status'
-    help_msg = "list released revisions of a package"
+    help_msg = "List released revisions of a package."
     overview = textwrap.dedent("""
         List the released revisions for a package.
 
@@ -385,7 +385,7 @@ class StatusCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="the name of the charm")
+        parser.add_argument('--name', help="The name of the charm.")
 
     def run(self, parsed_args):
         """Run the command."""

@@ -56,24 +56,24 @@ default), including:
 class InitCommand(BaseCommand):
     """Initialize a directory to be a charm project."""
     name = "init"
-    help_msg = "initialize a directory to be a charm project"
+    help_msg = "Initialize a directory to be a charm project."
     overview = _overview
     common = True
 
     def fill_parser(self, parser):
         parser.add_argument(
             "--project-dir", type=Path, default=Path("."), metavar="DIR", dest="path",
-            help="the directory to initialize. Must be empty, or not exist; defaults to '.'")
+            help="The directory to initialize. Must be empty, or not exist; defaults to '.'.")
         parser.add_argument(
             "--name",
-            help="the name of the project; defaults to the directory name")
+            help="The name of the project; defaults to the directory name.")
         parser.add_argument(
             "--author",
-            help="the author of the project;"
+            help="The author of the project;"
             " defaults to the current user's name as present in the GECOS field.")
         parser.add_argument(
             "--series", default="kubernetes",
-            help="the comma-separated list of series this charm will support;"
+            help="The comma-separated list of series this charm will support;"
             " defaults to 'kubernetes'.")
 
     def run(self, args):

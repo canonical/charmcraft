@@ -107,8 +107,7 @@ class Store:
         """Return names registered by the authenticated user."""
         response = self._client.get('/v1/charm')
         result = []
-        # XXX Facundo 20200804: Remove this duality when Store consolidates the new name in prod
-        for item in response.get('results', response.get('charms')):
+        for item in response['results']:
             result.append(Charm(name=item['name'], private=item['private'], status=item['status']))
         return result
 
@@ -164,8 +163,6 @@ class Store:
             channel_map.append(
                 Release(revision=item['revision'], channel=item['channel'], expires_at=expires_at))
 
-        # XXX Facundo 20200804: Remove this duality when Store consolidates the new name in prod
-        package = response.get('package', response.get('charm'))
         channels = [
             Channel(
                 name=item['name'],
@@ -173,7 +170,7 @@ class Store:
                 track=item['track'],
                 risk=item['risk'],
                 branch=item['branch'],
-            ) for item in package['channels']]
+            ) for item in response['package']['channels']]
 
         revisions = [_build_revision(item) for item in response['revisions']]
 

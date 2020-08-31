@@ -60,9 +60,9 @@ which should be all you need to `juju deploy` the charm!
     virtualenv venv
     . venv/bin/activate
     pip install -r requirements.txt
-    PYTHONPATH=.:${PYTHONPATH} python charmcraft/main.py
+    python -m charmcraft
 
 If you would like to run the tests you can do so with
 
     pip install -r requirements-dev.txt
-    PYTHONPATH=.:${PYTHONPATH} ./run_tests
+    ./run_tests

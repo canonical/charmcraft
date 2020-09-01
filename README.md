@@ -57,6 +57,7 @@ which should be all you need to `juju deploy` the charm!
 ## How do I run it from source?
 
     git clone https://github.com/canonical/charmcraft.git
+    cd charmcraft
     virtualenv venv
     . venv/bin/activate
     pip install -r requirements.txt

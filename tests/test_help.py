@@ -21,8 +21,20 @@ import pytest
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.main import COMMAND_GROUPS, Dispatcher
-from charmcraft.helptexts import get_full_help
+from charmcraft.helptexts import get_full_help, get_error_message, get_command_help
 from tests.factory import create_command
+
+
+def test_get_error_message():
+    """Check the general "usage" text."""
+    text = get_error_message('charmcraft build', 'bad parameter for the build')
+    expected = textwrap.dedent("""\
+        Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
+        Try 'charmcraft build -h' for help.
+
+        Error: bad parameter for the build
+    """)
+    assert text == expected
 
 
 def test_default_help_text():
@@ -49,12 +61,9 @@ def test_default_help_text():
         ('-q, --quiet', 'Only show warnings and errors, not progress.'),
     ]
 
-    with patch('charmcraft.help.SUMMARY', fake_summary):
+    with patch('charmcraft.helptexts.SUMMARY', fake_summary):
         text = get_full_help(command_groups, global_options)
 
-    # XXX Facundo 2020-07-30: As we're losing the "regular summary"...
-    #     usage: charmcraft [-h] [-v | -q] {version,build,init,lo...
-    # ...we're not expressing that -v and -q are mutually exclusive.
     expected = textwrap.dedent("""\
         Usage:
             charmcraft [help] <command>
@@ -85,6 +94,133 @@ def test_default_help_text():
     """)
     assert text == expected
 
+
+def test_command_help_text_no_parameters():
+    """All different parts for a specific command help that doesn't have parameters."""
+    overview = textwrap.dedent("""
+        Quite some long text.
+
+        Multiline!
+    """)
+    cmd1 = create_command('somecommand', 'Command one line help.', overview_=overview)
+    cmd2 = create_command('other-cmd-2', 'Some help.')
+    cmd3 = create_command('other-cmd-3', 'Some help.')
+    cmd4 = create_command('other-cmd-4', 'Some help.')
+    command_groups = [
+        ('group1', 'help text for g1', [cmd1, cmd2, cmd4]),
+        ('group2', 'help text for g2', [cmd3]),
+    ]
+
+    options = [
+        ("-h, --help", "Show this help message and exit."),
+        ("-q, --quiet", "Only show warnings and errors, not progress."),
+        ("--name", "The name of the charm."),
+        ("--revision", "The revision to release (defaults to latest)."),
+    ]
+
+    text = get_command_help(command_groups, cmd1('group1'), options)
+
+    expected = textwrap.dedent("""\
+        Usage:
+            charmcraft somecommand [options]
+
+        Summary:
+            Quite some long text.
+
+            Multiline!
+
+        Options:
+            -h, --help:   Show this help message and exit.
+            -q, --quiet:  Only show warnings and errors, not progress.
+            --name:       The name of the charm.
+            --revision:   The revision to release (defaults to latest).
+
+        See also:
+            other-cmd-2
+            other-cmd-4
+
+        For a summary of all commands, run 'charmcraft help --all'.
+    """)
+    assert text == expected
+
+
+def test_command_help_text_with_parameters():
+    """All different parts for a specific command help that has parameters."""
+    overview = textwrap.dedent("""
+        Quite some long text.
+    """)
+    cmd1 = create_command('somecommand', 'Command one line help.', overview_=overview)
+    cmd2 = create_command('other-cmd-2', 'Some help.')
+    command_groups = [
+        ('group1', 'help text for g1', [cmd1, cmd2]),
+    ]
+
+    options = [
+        ("-h, --help", "Show this help message and exit."),
+        ("name", "The name of the charm."),
+        ("--revision", "The revision to release (defaults to latest)."),
+        ("extraparam", "Another parameter.."),
+        ("--other-option", "Other option."),
+    ]
+
+    text = get_command_help(command_groups, cmd1('group1'), options)
+
+    expected = textwrap.dedent("""\
+        Usage:
+            charmcraft somecommand [options] name extraparam
+
+        Summary:
+            Quite some long text.
+
+        Options:
+            -h, --help:      Show this help message and exit.
+            --revision:      The revision to release (defaults to latest).
+            --other-option:  Other option.
+
+        See also:
+            other-cmd-2
+
+        For a summary of all commands, run 'charmcraft help --all'.
+    """)
+    assert text == expected
+
+
+def test_command_help_text_loneranger():
+    """All different parts for a specific command that's the only one in its group."""
+    overview = textwrap.dedent("""
+        Quite some long text.
+    """)
+    cmd1 = create_command('somecommand', 'Command one line help.', overview_=overview)
+    cmd2 = create_command('other-cmd-2', 'Some help.')
+    command_groups = [
+        ('group1', 'help text for g1', [cmd1]),
+        ('group2', 'help text for g2', [cmd2]),
+    ]
+
+    options = [
+        ("-h, --help", "Show this help message and exit."),
+        ("-q, --quiet", "Only show warnings and errors, not progress."),
+    ]
+
+    text = get_command_help(command_groups, cmd1('group1'), options)
+
+    expected = textwrap.dedent("""\
+        Usage:
+            charmcraft somecommand [options]
+
+        Summary:
+            Quite some long text.
+
+        Options:
+            -h, --help:   Show this help message and exit.
+            -q, --quiet:  Only show warnings and errors, not progress.
+
+        For a summary of all commands, run 'charmcraft help --all'.
+    """)
+    assert text == expected
+
+
+# -- verifications on different help texts
 
 all_commands = list.__add__(*[commands for _, _, commands in COMMAND_GROUPS])
 
@@ -151,13 +287,13 @@ def test_tool_exec_command_incorrect():
     assert str(error) == expected
 
 
-@pytest.mark.parametrize('command_option', ['-h', '--help'])
-def test_tool_exec_command_dash_help_simple(command_option):
+@pytest.mark.parametrize('help_option', ['-h', '--help'])
+def test_tool_exec_command_dash_help_simple(help_option):
     """Execute a command (that needs no params) asking for help."""
-    cmd = create_command('somecommand', 'Help.')
+    cmd = create_command('somecommand', 'This command does that.')
     command_groups = [('group', 'help text', [cmd])]
 
-    dispatcher = Dispatcher(['somecommand', command_option], command_groups)
+    dispatcher = Dispatcher(['somecommand', help_option], command_groups)
 
     with patch('charmcraft.helptexts.get_command_help') as mock:
         mock.return_value = 'test help'
@@ -167,35 +303,62 @@ def test_tool_exec_command_dash_help_simple(command_option):
 
     # check the given information to the builder
     args = mock.call_args[0]
-    assert args[0].__class__ == cmd
-    assert {x[0] for x in args[1]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+    assert args[0] == COMMAND_GROUPS
+    assert args[1].__class__ == cmd
+    assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
     assert str(error) == "test help"
 
 
-@pytest.mark.parametrize('command_option', ['-h', '--help'])
-def test_tool_exec_command_dash_help_missing_params(command_option):
+@pytest.mark.parametrize('help_option', ['-h', '--help'])
+def test_tool_exec_command_dash_help_reverse(help_option):
+    """Execute a command (that needs no params) asking for help."""
+    cmd = create_command('somecommand', 'This command does that.')
+    command_groups = [('group', 'help text', [cmd])]
+
+    dispatcher = Dispatcher([help_option, 'somecommand'], command_groups)
+
+    with patch('charmcraft.helptexts.get_command_help') as mock:
+        mock.return_value = 'test help'
+        with pytest.raises(CommandError) as cm:
+            dispatcher.run()
+    error = cm.value
+
+    # check the given information to the builder
+    args = mock.call_args[0]
+    assert args[0] == COMMAND_GROUPS
+    assert args[1].__class__ == cmd
+    assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+
+    # check the result of the full help builder is what is shown
+    assert error.argsparsing
+    assert str(error) == "test help"
+
+
+@pytest.mark.parametrize('help_option', ['-h', '--help'])
+def test_tool_exec_command_dash_help_missing_params(help_option):
     """Execute a command (which needs params) asking for help."""
     def fill_parser(self, parser):
         parser.add_argument('mandatory')
 
-    cmd = create_command('somecommand', 'Help.')
+    cmd = create_command('somecommand', 'This command does that.')
     cmd.fill_parser = fill_parser
     command_groups = [('group', 'help text', [cmd])]
 
     with patch('charmcraft.helptexts.get_command_help') as mock:
         mock.return_value = 'test help'
         with pytest.raises(CommandError) as cm:
-            Dispatcher(['somecommand', command_option], command_groups)
+            Dispatcher(['somecommand', help_option], command_groups)
     error = cm.value
 
     # check the given information to the builder
     args = mock.call_args[0]
-    assert args[0].__class__ == cmd
-    print("=== args1", args)
-    assert {x[0] for x in args[1]} == {'-h, --help', '-v, --verbose', '-q, --quiet', 'mandatory'}
+    assert args[0] == COMMAND_GROUPS
+    assert args[1].__class__ == cmd
+    print("===== args1", args)
+    assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet', 'mandatory'}
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -204,7 +367,7 @@ def test_tool_exec_command_dash_help_missing_params(command_option):
 
 def test_tool_exec_command_wrong_option():
     """Execute a correct command but with a wrong option."""
-    cmd = create_command('somecommand', 'Help.')
+    cmd = create_command('somecommand', 'This command does that.')
     command_groups = [('group', 'help text', [cmd])]
     with pytest.raises(CommandError) as cm:
         Dispatcher(['somecommand', '--whatever'], command_groups)
@@ -226,7 +389,7 @@ def test_tool_exec_command_bad_option_type():
     def fill_parser(self, parser):
         parser.add_argument('--number', type=int)
 
-    cmd = create_command('somecommand', 'Help.')
+    cmd = create_command('somecommand', 'This command does that.')
     cmd.fill_parser = fill_parser
 
     command_groups = [('group', 'help text', [cmd])]

@@ -46,6 +46,15 @@ COMMAND_GROUPS = [
 ]
 
 
+def _get_option(args, name):
+    """Get a general option, merging with OR both global and command versions.
+
+    This is done manually because otherwise Argparse would overwrite the
+    command ont into thee global one.
+    """
+    return getattr(args, name + '_global', False) or getattr(args, name + '_command', False)
+
+
 class CustomArgumentParser(argparse.ArgumentParser):
     """ArgumentParser with grouped commands help."""
 
@@ -80,7 +89,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         """Show the usage, the error message, and no more."""
         print("========== ERROR!", repr(message), self._namespace)
         # if help was requested, no matter other errors (just provide help!)
-        if self._namespace.help:
+        if _get_option(self._namespace, 'help'):
             #FIXME refactor
             help_text = get_help(self, self._namespace)
             raise CommandError(help_text, argsparsing=True)
@@ -134,7 +143,7 @@ def get_help(parser, namespace):
     if command is None:
         help_text = helptexts.get_full_help(COMMAND_GROUPS, options)
     else:
-        help_text = helptexts.get_command_help(command, options)
+        help_text = helptexts.get_command_help(COMMAND_GROUPS, command, options)
 
     return help_text
 
@@ -155,9 +164,10 @@ class Dispatcher:
 
     def run(self):
         """Really run the command."""
+        print("======= parsed args", self.parsed_args)
         self._handle_global_params()
 
-        if not hasattr(self.parsed_args, '_command') or self.parsed_args.help:
+        if not hasattr(self.parsed_args, '_command') or _get_option(self.parsed_args, 'help'):
             help_text = get_help(self.main_parser, self.parsed_args)
             raise CommandError(help_text, argsparsing=True)
 
@@ -166,10 +176,9 @@ class Dispatcher:
 
     def _handle_global_params(self):
         """Set up and process global parameters."""
-        args = self.parsed_args
-        if args.verbose_global or getattr(args, 'verbose_command', False):
+        if _get_option(self.parsed_args, 'verbose'):
             message_handler.set_mode(message_handler.VERBOSE)
-        if args.quiet_global or getattr(args, 'quiet_command', False):
+        if _get_option(self.parsed_args, 'quiet'):
             message_handler.set_mode(message_handler.QUIET)
 
     def _load_commands(self, commands_groups):
@@ -186,9 +195,8 @@ class Dispatcher:
 
     def _add_global_options(self, parser, context):
         """Add the global options to the received parser."""
-        # FIXME: make it context aware!!!
         parser.add_argument(
-            '-h', '--help', action='store_true',
+            '-h', '--help', action='store_true', dest='help_' + context,
             help="Show this help message and exit.")
         mutexg = parser.add_mutually_exclusive_group()
         mutexg.add_argument(
@@ -201,9 +209,8 @@ class Dispatcher:
     def _build_argument_parser(self, commands_groups):
         """Build the generic argument parser."""
         parser = CustomArgumentParser(
-            prog='charmcraft',
             description="The main tool to build, upload and develop in general the Juju Charms.",
-            add_help=False)
+            prog='charmcraft', add_help=False)
 
         self._add_global_options(parser, 'global')
 

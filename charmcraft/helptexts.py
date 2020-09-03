@@ -51,7 +51,7 @@ Error: {error_message}
 """
 
 
-def get_error_message(fullcommand, error_message):  # FIXME: missing tests!!
+def get_error_message(fullcommand, error_message):
     """Build a usage and error message."""
     return USAGE.format(fullcommand=fullcommand, error_message=error_message)
 
@@ -136,97 +136,62 @@ def get_full_help(command_groups, global_options):
     return text
 
 
-def get_command_help(command, options):
+def get_command_help(command_groups, command, arguments):
     """Produce the text for each command's help.
 
     It has the following structure:
 
     - usage
-    - summary (link to docs)
-    - command options
-    - related commands
+    - summary
+    - options
+    - other related commands
     - footer
     """
-    # FIXME: implement!! the following is just a mockup, to prove we have all the info
-
     textblocks = []
 
-    textblocks.append("""
-    Usage:
-        charmcraft {} [options] ?????
-    """.format(command.name))
-    # FIXME: this structure is complicated! we could use parser.format_usage(), examples:
-    #   'usage: charmcraft register [-h] [-v | -q] name\n'
-    #   'usage: charmcraft build [-h] [-v | -q] [-f FROM] [-e ENTRYPOINT] [-r REQUIREMENT]\n'
+    # separaate all arguments into the parameters and optional ones, just checking
+    # if first char is a dash
+    parameters = []
+    options = []
+    for name, title in arguments:
+        if name[0] == '-':
+            options.append((name, title))
+        else:
+            parameters.append(name)
 
-    textblocks.append("""
-    Summary:
-        FIXME: we need a summary in each command!!!
-    """)  # FIXME
+    textblocks.append(textwrap.dedent("""\
+        Usage:
+            charmcraft {} [options] {}
+    """.format(command.name, " ".join(parameters))))
+
+    textblocks.append("Summary:{}".format(textwrap.indent(command.overview, '    ')))
 
     # column alignment is dictated by longest options title (plus ':' and two intercolumn spaces)
     max_title_len = max(len(title) for title, text in options) + 3
 
     # command options
-    option_lines = ["Command options:"]
+    option_lines = ["Options:"]
     for title, text in options:
         option_lines.extend(_build_item(title, text, max_title_len))
     textblocks.append("\n".join(option_lines))
 
-    # FIXME: "see also"!! (put commands of the same group?)
+    # recommend other commands of the same group
+    for group_name, _, command_classes in command_groups:
+        if group_name == command.group:
+            break
+    else:
+        raise RuntimeError("Internal inconsistency in commands groups")
+    other_command_names = [c.name for c in command_classes if not isinstance(command, c)]
+    if other_command_names:
+        see_also_block = ["See also:"]
+        see_also_block.extend(("    " + name) for name in sorted(other_command_names))
+        textblocks.append('\n'.join(see_also_block))
 
     # footer
     textblocks.append("""
-    For a summary of all commands, run 'charmcraft help --all'.
+        For a summary of all commands, run 'charmcraft help --all'.
     """)
 
     # join all stripped blocks, leaving ONE empty blank line between
     text = '\n\n'.join(block.strip() for block in textblocks) + '\n'
     return text
-
-# $juju help deploy
-#
-# Usage:
-#     juju deploy [options] <charm or bundle> [<application name>]
-#
-# Summary:
-#     Deploy a new application or bundle.
-#     <charm or bundle> can be a charm/bundle URL, or an unambiguously condensed
-#     form of it; assuming a current series of "trusty", the following forms will     be accepted:
-#
-#     link to docs!!
-#
-# Command options:
-#              --constraints=            Set application constraints
-#
-#              --dry-run=[false]        Just show what the bundle deploy would do
-#             --force=[false]            Allow a charm to be deployed to a machine
-#                                 running an unsupported series
-#              --increase-budget=[0…]     increase model budget allocation by this
-#                                 amount
-#          -m,     --model=                 Model to operate in. Accepts
-#                                 [<controller name>:]<model name>
-#              --map-machines=            Specify the existing machines to use for
-#                                 bundle deployments
-#          -n,     --num-units=[1…]        Number of application units to deploy for
-#                                 principal charms
-#              --overlay=                 Bundles to overlay on the primary bundle,
-#                                 applied in order
-#              --plan=                 Plan to deploy charm under
-#              --resource=                 Resource to be uploaded to the controller
-#              --series=                 The series on which to deploy
-#              --storage=                 Charm storage constraints
-#              --to=                The machine and/or container to deploy the
-#                                 unit in (bypasses constraints)
-#              --trust=[false]            Allows charm to run hooks that require
-#                                 access credentials
-#
-# See also:
-#      add-unit
-#      config
-#      set-constraints
-#      get-constraints
-#      spaces
-#
-#
-# For a summary of all commands, run 'juju help --all'.

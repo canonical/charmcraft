@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files.
 COMMAND_GROUPS = [
-    ('basic', "basics", [version.VersionCommand, build.BuildCommand, init.InitCommand]),
-    ('store', "interaction with the store", [
+    ('basic', "Basic commands", [version.VersionCommand, build.BuildCommand, init.InitCommand]),
+    ('store', "Interaction with the Store", [
         # auth
         store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
         # name handling

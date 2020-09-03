@@ -38,10 +38,6 @@ HEADER = """
 Usage:
     charmcraft [help] <command>
 """
-FOOTER = """
-For more information about a command, run 'charmcraft help <command>'.
-For a summary of all commands, run 'charmcraft help --all'.
-"""
 
 USAGE = """\
 Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
@@ -84,7 +80,7 @@ def get_full_help(command_groups, global_options):
     - usage
     - summary (link to docs)
     - common commands listed and described shortly
-    - all commands grouped and listed
+    - all commands grouped, just listed
     - more help
     """
     textblocks = []
@@ -129,7 +125,62 @@ def get_full_help(command_groups, global_options):
         grouped_lines.extend(_build_item(group, command_names, max_title_len))
     textblocks.append("\n".join(grouped_lines))
 
-    textblocks.append(FOOTER)
+    textblocks.append(textwrap.dedent("""
+        For more information about a command, run 'charmcraft help <command>'.
+        For a summary of all commands, run 'charmcraft help --all'.
+    """))
+
+    # join all stripped blocks, leaving ONE empty blank line between
+    text = '\n\n'.join(block.strip() for block in textblocks) + '\n'
+    return text
+
+
+def get_detailed_help(command_groups, global_options):
+    """Produce the text for the detailed help.
+
+    It has the following structure:
+
+    - usage
+    - summary (link to docs)
+    - global options
+    - all commands shown with description, grouped
+    - more help
+    """
+    textblocks = []
+
+    # title
+    textblocks.append(HEADER)
+
+    # summary
+    textblocks.append("Summary:" + SUMMARY)
+
+    # column alignment is dictated by longest common commands names and groups names
+    max_title_len = 0
+    for _, _, commands in command_groups:
+        for cmd in commands:
+            max_title_len = max(len(cmd.name), max_title_len)
+    for title, _ in global_options:
+        max_title_len = max(len(title), max_title_len)
+
+    # leave two spaces after longest title (also considering the ':')
+    max_title_len += 3
+
+    global_lines = ["Global options:"]
+    for title, text in global_options:
+        global_lines.extend(_build_item(title, text, max_title_len))
+    textblocks.append("\n".join(global_lines))
+
+    textblocks.append("Commands can be classified as follows:")
+
+    for _, group_description, commands in command_groups:
+        group_lines = ["{}:".format(group_description)]
+        for cmd in commands:
+            group_lines.extend(_build_item(cmd.name, cmd.help_msg, max_title_len))
+        textblocks.append("\n".join(group_lines))
+
+    textblocks.append(textwrap.dedent("""
+        For more information about a specific command, run 'charmcraft help <command>'.
+    """))
 
     # join all stripped blocks, leaving ONE empty blank line between
     text = '\n\n'.join(block.strip() for block in textblocks) + '\n'

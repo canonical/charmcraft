@@ -21,7 +21,12 @@ import pytest
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.main import COMMAND_GROUPS, Dispatcher
-from charmcraft.helptexts import get_full_help, get_error_message, get_command_help
+from charmcraft.helptexts import (
+    get_command_help,
+    get_detailed_help,
+    get_error_message,
+    get_full_help,
+)
 from tests.factory import create_command
 
 
@@ -91,6 +96,67 @@ def test_default_help_text():
 
         For more information about a command, run 'charmcraft help <command>'.
         For a summary of all commands, run 'charmcraft help --all'.
+    """)
+    assert text == expected
+
+
+def test_detailed_help_text():
+    """All different parts for the detailed help, showing all commands."""
+    cmd1 = create_command('cmd1', 'Cmd help which is very long but whatever.', common_=True)
+    cmd2 = create_command('command-2', 'Cmd help.', common_=True)
+    cmd3 = create_command('cmd3', 'Extremely ' + 'super crazy long ' * 5 + ' help.', common_=True)
+    cmd4 = create_command('cmd4', 'Some help.')
+    cmd5 = create_command('cmd5', 'More help.')
+    cmd6 = create_command('cmd6-really-long', 'More help.', common_=True)
+    cmd7 = create_command('cmd7', 'More help.')
+
+    command_groups = [
+        ('group1', 'Group 1 description', [cmd6, cmd2]),
+        ('group3', 'Group 3 help text', [cmd7]),
+        ('group2', 'Group 2 stuff', [cmd3, cmd4, cmd5, cmd1]),
+    ]
+    fake_summary = textwrap.indent(textwrap.dedent("""
+        This is the summary for
+        the whole program.
+    """), "    ")
+    global_options = [
+        ('-h, --help', 'Show this help message and exit.'),
+        ('-q, --quiet', 'Only show warnings and errors, not progress.'),
+    ]
+
+    with patch('charmcraft.helptexts.SUMMARY', fake_summary):
+        text = get_detailed_help(command_groups, global_options)
+
+    expected = textwrap.dedent("""\
+        Usage:
+            charmcraft [help] <command>
+
+        Summary:
+            This is the summary for
+            the whole program.
+
+        Global options:
+            -h, --help:        Show this help message and exit.
+            -q, --quiet:       Only show warnings and errors, not progress.
+
+        Commands can be classified as follows:
+
+        Group 1 description:
+            cmd6-really-long:  More help.
+            command-2:         Cmd help.
+
+        Group 3 help text:
+            cmd7:              More help.
+
+        Group 2 stuff:
+            cmd3:              Extremely super crazy long super crazy long super
+                               crazy long super crazy long super crazy long
+                               help.
+            cmd4:              Some help.
+            cmd5:              More help.
+            cmd1:              Cmd help which is very long but whatever.
+
+        For more information about a specific command, run 'charmcraft help <command>'.
     """)
     assert text == expected
 
@@ -248,7 +314,12 @@ def test_aesthetic_args_options_msg(command):
 
 # -- real execution outputs
 
-@pytest.mark.parametrize('sysargv', [[], ['-h'], ['--help']])
+@pytest.mark.parametrize('sysargv', [
+    [],
+    ['-h'],
+    ['--help'],
+    ['help'],
+])
 def test_tool_exec_full_help(sysargv):
     """Execute charmcraft without any option at all or explicitly asking for help."""
     dispatcher = Dispatcher(sysargv, COMMAND_GROUPS)
@@ -269,11 +340,19 @@ def test_tool_exec_full_help(sysargv):
     assert str(error) == "test help"
 
 
-def test_tool_exec_command_incorrect():
+@pytest.mark.parametrize('sysargv', [
+    ['wrongcommand'],
+    ['-h', 'wrongcommand'],
+    ['wrongcommand', '-h'],
+    ['--help', 'wrongcommand'],
+    ['wrongcommand', '--help'],
+    ['help', 'wrongcommand'],
+])
+def test_tool_exec_command_incorrect(sysargv):
     """Execute a command that doesn't exist."""
     command_groups = [('group', 'help text', [])]
     with pytest.raises(CommandError) as cm:
-        Dispatcher(['wrongcommand'], command_groups)
+        Dispatcher([], command_groups)
 
     expected = textwrap.dedent("""\
         Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
@@ -312,7 +391,7 @@ def test_tool_exec_command_dash_help_simple(help_option):
     assert str(error) == "test help"
 
 
-@pytest.mark.parametrize('help_option', ['-h', '--help'])
+@pytest.mark.parametrize('help_option', ['-h', '--help', 'help'])
 def test_tool_exec_command_dash_help_reverse(help_option):
     """Execute a command (that needs no params) asking for help."""
     cmd = create_command('somecommand', 'This command does that.')
@@ -357,7 +436,6 @@ def test_tool_exec_command_dash_help_missing_params(help_option):
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
-    print("===== args1", args)
     assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet', 'mandatory'}
 
     # check the result of the full help builder is what is shown
@@ -406,3 +484,27 @@ def test_tool_exec_command_bad_option_type():
     error = cm.value
     assert error.argsparsing
     assert str(error) == expected
+
+
+def test_tool_exec_help_all_command():
+    """Execute charmcraft asking for detailed help.
+
+    Note that all the other combinatios for the 'help' special commands are tested above,
+    with the -h/--help combinations.
+    """
+    dispatcher = Dispatcher(['help', '--all'], COMMAND_GROUPS)
+
+    with patch('charmcraft.helptexts.get_detailed_help') as mock:
+        mock.return_value = 'test help'
+        with pytest.raises(CommandError) as cm:
+            dispatcher.run()
+    error = cm.value
+
+    # check the given information to the builder
+    args = mock.call_args[0]
+    assert args[0] == COMMAND_GROUPS
+    assert {x[0] for x in args[1]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+
+    # check the result of the full help builder is what is shown
+    assert error.argsparsing
+    assert str(error) == "test help"

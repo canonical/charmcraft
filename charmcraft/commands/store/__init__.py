@@ -326,12 +326,11 @@ class ReleaseCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
+            'revision', type=int, help='the revision to release')
+        parser.add_argument(
             'channels', metavar='channel', nargs='+',
             help="the channel(s) to release to")
         parser.add_argument('--name', help="the name of the charm")
-        parser.add_argument(
-            '--revision', type=int,
-            help="the revision to release (defaults to latest)")
 
     def run(self, parsed_args):
         """Run the command."""

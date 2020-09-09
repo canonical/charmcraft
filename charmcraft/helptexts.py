@@ -47,7 +47,7 @@ Error: {error_message}
 """
 
 
-def get_error_message(fullcommand, error_message):
+def get_usage_message(fullcommand, error_message):
     """Build a usage and error message."""
     return USAGE.format(fullcommand=fullcommand, error_message=error_message)
 

@@ -21,18 +21,19 @@ import pytest
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.main import COMMAND_GROUPS, Dispatcher
+from charmcraft.commands.version import VersionCommand
 from charmcraft.helptexts import (
     get_command_help,
     get_detailed_help,
-    get_error_message,
+    get_usage_message,
     get_full_help,
 )
 from tests.factory import create_command
 
 
-def test_get_error_message():
+def test_get_usage_message():
     """Check the general "usage" text."""
-    text = get_error_message('charmcraft build', 'bad parameter for the build')
+    text = get_usage_message('charmcraft build', 'bad parameter for the build')
     expected = textwrap.dedent("""\
         Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
         Try 'charmcraft build -h' for help.
@@ -346,13 +347,12 @@ def test_tool_exec_full_help(sysargv):
     ['wrongcommand', '-h'],
     ['--help', 'wrongcommand'],
     ['wrongcommand', '--help'],
-    ['help', 'wrongcommand'],
 ])
 def test_tool_exec_command_incorrect(sysargv):
     """Execute a command that doesn't exist."""
     command_groups = [('group', 'help text', [])]
     with pytest.raises(CommandError) as cm:
-        Dispatcher([], command_groups)
+        Dispatcher(sysargv, command_groups)
 
     expected = textwrap.dedent("""\
         Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
@@ -391,7 +391,7 @@ def test_tool_exec_command_dash_help_simple(help_option):
     assert str(error) == "test help"
 
 
-@pytest.mark.parametrize('help_option', ['-h', '--help', 'help'])
+@pytest.mark.parametrize('help_option', ['-h', '--help'])
 def test_tool_exec_command_dash_help_reverse(help_option):
     """Execute a command (that needs no params) asking for help."""
     cmd = create_command('somecommand', 'This command does that.')
@@ -486,12 +486,47 @@ def test_tool_exec_command_bad_option_type():
     assert str(error) == expected
 
 
-def test_tool_exec_help_all_command():
-    """Execute charmcraft asking for detailed help.
+def test_tool_exec_help_command_on_command_ok():
+    """Execute charmcraft asking for help on a command ok."""
+    dispatcher = Dispatcher(['help', 'version'], COMMAND_GROUPS)
 
-    Note that all the other combinatios for the 'help' special commands are tested above,
-    with the -h/--help combinations.
-    """
+    with patch('charmcraft.helptexts.get_command_help') as mock:
+        mock.return_value = 'test help'
+        with pytest.raises(CommandError) as cm:
+            dispatcher.run()
+    error = cm.value
+
+    # check the given information to the builder
+    args = mock.call_args[0]
+    assert args[0] == COMMAND_GROUPS
+    assert args[1].__class__ == VersionCommand
+    assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+
+    # check the result of the full help builder is what is shown
+    assert error.argsparsing
+    assert str(error) == "test help"
+
+
+def test_tool_exec_help_command_on_command_wrong():
+    """Execute charmcraft asking for help on a command which does not exist."""
+    dispatcher = Dispatcher(['help', 'wrongcommand'], COMMAND_GROUPS)
+
+    with patch('charmcraft.helptexts.get_usage_message') as mock:
+        mock.return_value = 'test help'
+        with pytest.raises(CommandError) as cm:
+            dispatcher.run()
+    error = cm.value
+
+    # check the given information to the builder
+    assert mock.call_args[0] == ('charmcraft', "no such command 'wrongcommand'")
+
+    # check the result of the full help builder is what is shown
+    assert error.argsparsing
+    assert str(error) == "test help"
+
+
+def test_tool_exec_help_command_all():
+    """Execute charmcraft asking for detailed help."""
     dispatcher = Dispatcher(['help', '--all'], COMMAND_GROUPS)
 
     with patch('charmcraft.helptexts.get_detailed_help') as mock:

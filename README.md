@@ -53,3 +53,17 @@ will produce a charm that looks like
             └── ...
 
 which should be all you need to `juju deploy` the charm!
+
+## How do I run it from source?
+
+    git clone https://github.com/canonical/charmcraft.git
+    cd charmcraft
+    virtualenv venv
+    . venv/bin/activate
+    pip install -r requirements.txt
+    python -m charmcraft
+
+If you would like to run the tests you can do so with
+
+    pip install -r requirements-dev.txt
+    ./run_tests

@@ -61,7 +61,7 @@ class LoginCommand(BaseCommand):
         """Run the command."""
         store = Store()
         store.login()
-        logger.info("Login successful")
+        logger.info("Login successful.")
 
 
 class LogoutCommand(BaseCommand):
@@ -82,7 +82,7 @@ class LogoutCommand(BaseCommand):
         """Run the command."""
         store = Store()
         store.logout()
-        logger.info("Credentials cleared")
+        logger.info("Credentials cleared.")
 
 
 class WhoamiCommand(BaseCommand):
@@ -134,7 +134,7 @@ class RegisterNameCommand(BaseCommand):
         """Run the command."""
         store = Store()
         store.register_name(parsed_args.name)
-        logger.info("Congrats! You are now the publisher of %r", parsed_args.name)
+        logger.info("Congrats! You are now the publisher of %r.", parsed_args.name)
 
 
 class ListNamesCommand(BaseCommand):
@@ -155,7 +155,7 @@ class ListNamesCommand(BaseCommand):
         store = Store()
         result = store.list_registered_names()
         if not result:
-            logger.info("Nothing found")
+            logger.info("Nothing found.")
             return
 
         headers = ['Name', 'Visibility', 'Status']

@@ -299,10 +299,10 @@ class Validator:
             dirpath = dirpath.expanduser().absolute()
 
         if not dirpath.exists():
-            raise CommandError("the charm directory was not found: {!r}".format(str(dirpath)))
+            raise CommandError("Charm directory was not found: {!r}".format(str(dirpath)))
         if not dirpath.is_dir():
             raise CommandError(
-                "the charm directory is not really a directory: {!r}".format(str(dirpath)))
+                "Charm directory is not really a directory: {!r}".format(str(dirpath)))
 
         self.basedir = dirpath
         return dirpath
@@ -315,13 +315,13 @@ class Validator:
             filepath = filepath.expanduser().absolute()
 
         if not filepath.exists():
-            raise CommandError("the charm entry point was not found: {!r}".format(str(filepath)))
+            raise CommandError("Charm entry point was not found: {!r}".format(str(filepath)))
         if self.basedir not in filepath.parents:
             raise CommandError(
-                "the entry point must be inside the project: {!r}".format(str(filepath)))
+                "Charm entry point must be inside the project: {!r}".format(str(filepath)))
         if not os.access(str(filepath), os.X_OK):  # access does not support pathlib in 3.5
             raise CommandError(
-                "the charm entry point must be executable: {!r}".format(str(filepath)))
+                "Charm entry point must be executable: {!r}".format(str(filepath)))
         return filepath
 
     def validate_requirement(self, filepaths):

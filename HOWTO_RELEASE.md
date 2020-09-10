@@ -2,6 +2,10 @@
 
 Release early, release often. Don't be lazy.
 
+To use this doc: just replace X.Y.Z with the major.minor.patch version 
+of the release, and all commands and indications should be ready 
+to copy and paste,.
+
 
 ## Preparation
 
@@ -10,19 +14,20 @@ Release early, release often. Don't be lazy.
     git fetch upstream
     git merge upstream/master
     source venv/bin/activate
-    ./run_tests 
+    ./run_tests
+    deactivate
 
 - create a new release branch
 
-    git checkout -b release-0.3.0
+    git checkout -b release-X.Y.Z
 
 - create release notes after all main changes from last tag 
 
-    git log --first-parent master --decorate 
+    git log --first-parent master --decorate
 
 - tag the release (using those release notes)
 
-    git tag -s 0.3.0
+    git tag -s X.Y.Z
 
 
 ## Check all is ready
@@ -35,11 +40,11 @@ Release early, release often. Don't be lazy.
 - try the tarball
 
     mkdir /tmp/testrelease
-    cp dist/charmcraft-0.3.0.tar.gz /tmp/testrelease/
+    cp dist/charmcraft-X.Y.Z.tar.gz /tmp/testrelease/
     cd /tmp/testrelease/
-    tar -xf charmcraft-0.3.0.tar.gz
+    tar -xf charmcraft-X.Y.Z.tar.gz
     cd ~  # wherever out of the project, to avoid any potential "file mispicking"
-    fades -v -d file:///tmp/testrelease/charmcraft-0.3.0/ -x charmcraft version
+    fades -v -d file:///tmp/testrelease/charmcraft-X.Y.Z/ -x charmcraft version
 
 - back in the project, build all the snaps for different architectures
 
@@ -47,7 +52,7 @@ Release early, release often. Don't be lazy.
 
 - try the snap (for your arch)
 
-    sudo snap install --dangerous charmcraft_0.3.0_amd64.snap
+    sudo snap install --dangerous charmcraft_X.Y.Z_amd64.snap
     cd ~  # wherever out of the project, to avoid any potential "file mispicking"
     charmcraft version
 
@@ -73,9 +78,11 @@ Release early, release often. Don't be lazy.
 
 - release to Snap Store (for all the archs)
 
-    snapcraft upload charmcraft_0.3.0_amd64.snap --release=edge,beta
-    snapcraft upload charmcraft_0.3.0_s390x.snap --release=edge,beta
-    ...
+    snapcraft upload charmcraft_X.Y.Z_amd64.snap --release=edge,beta
+    snapcraft upload charmcraft_X.Y.Z_s390x.snap --release=edge,beta
+    snapcraft upload charmcraft_X.Y.Z_arm64.snap --release=edge,beta
+    snapcraft upload charmcraft_X.Y.Z_armhf.snap --release=edge,beta
+    snapcraft upload charmcraft_X.Y.Z_ppc64el.snap --release=edge,beta
 
 - verify all archs are consistent:
 

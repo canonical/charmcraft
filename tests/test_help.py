@@ -33,7 +33,7 @@ def test_aesthetic_help_msg(command):
 
 @pytest.mark.parametrize('command', all_commands)
 def test_aesthetic_args_options_msg(command):
-    """All the real commands args/options help messages start and end with a dot."""
+    """All the real commands args/options help messages start with uppercase and end with a dot."""
     class FakeParser:
         """A fake to get the arguments added."""
 

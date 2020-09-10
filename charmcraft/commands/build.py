@@ -299,10 +299,10 @@ class Validator:
             dirpath = dirpath.expanduser().absolute()
 
         if not dirpath.exists():
-            raise CommandError("the charm directory was not found: {!r}".format(str(dirpath)))
+            raise CommandError("Charm directory was not found: {!r}".format(str(dirpath)))
         if not dirpath.is_dir():
             raise CommandError(
-                "the charm directory is not really a directory: {!r}".format(str(dirpath)))
+                "Charm directory is not really a directory: {!r}".format(str(dirpath)))
 
         self.basedir = dirpath
         return dirpath
@@ -315,13 +315,13 @@ class Validator:
             filepath = filepath.expanduser().absolute()
 
         if not filepath.exists():
-            raise CommandError("the charm entry point was not found: {!r}".format(str(filepath)))
+            raise CommandError("Charm entry point was not found: {!r}".format(str(filepath)))
         if self.basedir not in filepath.parents:
             raise CommandError(
-                "the entry point must be inside the project: {!r}".format(str(filepath)))
+                "Charm entry point must be inside the project: {!r}".format(str(filepath)))
         if not os.access(str(filepath), os.X_OK):  # access does not support pathlib in 3.5
             raise CommandError(
-                "the charm entry point must be executable: {!r}".format(str(filepath)))
+                "Charm entry point must be executable: {!r}".format(str(filepath)))
         return filepath
 
     def validate_requirement(self, filepaths):
@@ -353,23 +353,23 @@ the store (see the "upload" command).
 class BuildCommand(BaseCommand):
     """Build the charm."""
     name = 'build'
-    help_msg = "build the charm"
+    help_msg = "Build the charm."
     overview = _overview
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '-f', '--from', type=pathlib.Path,
-            help="the directory where the charm project is located, from where the build "
-                 "is done; defaults to '.'")
+            help="The directory where the charm project is located, from where the build "
+                 "is done; defaults to '.'.")
         parser.add_argument(
             '-e', '--entrypoint', type=pathlib.Path,
-            help="the executable script or program which is the entry point to all the "
-                 "charm code; defaults to 'src/charm.py'")
+            help="The executable script or program which is the entry point to all the "
+                 "charm code; defaults to 'src/charm.py'.")
         parser.add_argument(
             '-r', '--requirement', action='append', type=pathlib.Path,
-            help="the file(s) with the needed dependencies (this option can be used multiple "
-                  "times); defaults to 'requirements.txt'")
+            help="The file(s) with the needed dependencies (this option can be used multiple "
+                  "times); defaults to 'requirements.txt'.")
 
     def run(self, parsed_args):
         """Run the command."""

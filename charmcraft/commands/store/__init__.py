@@ -88,7 +88,7 @@ class LogoutCommand(BaseCommand):
 class WhoamiCommand(BaseCommand):
     """Show login information."""
     name = 'whoami'
-    help_msg = "Returns your login information relevant to the Store."
+    help_msg = "Return your login information relevant to the Store."
     overview = textwrap.dedent("""
         Show login information for the current Store user.
 

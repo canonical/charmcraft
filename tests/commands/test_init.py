@@ -83,11 +83,10 @@ def test_tests(tmp_path):
     env = os.environ.copy()
     env_paths = [p for p in sys.path if 'env/lib/python' in p]
     if env_paths:
-        (env_path,) = env_paths
         if 'PYTHONPATH' in env:
-            env['PYTHONPATH'] += ':' + env_path
+            env['PYTHONPATH'] += ':' + ':'.join(env_paths)
         else:
-            env['PYTHONPATH'] = env_path
+            env['PYTHONPATH'] = ':'.join(env_paths)
 
     cmd = InitCommand('group')
     cmd.run(Namespace(path=tmp_path, name='my-charm', author="だれだれ", series='k8s'))

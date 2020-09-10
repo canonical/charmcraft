@@ -355,6 +355,7 @@ class BuildCommand(BaseCommand):
     name = 'build'
     help_msg = "Build the charm."
     overview = _overview
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

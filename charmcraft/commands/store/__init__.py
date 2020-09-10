@@ -124,6 +124,7 @@ class RegisterNameCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -147,6 +148,7 @@ class ListNamesCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def run(self, parsed_args):
         """Run the command."""
@@ -186,6 +188,7 @@ class UploadCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def _discover_charm(self, charm_filepath):
         """Discover the charm name and file path.
@@ -256,6 +259,7 @@ class ListRevisionsCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -322,6 +326,7 @@ class ReleaseCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -376,6 +381,7 @@ class StatusCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

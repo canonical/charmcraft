@@ -47,6 +47,7 @@ class VersionCommand(BaseCommand):
     name = 'version'
     help_msg = "Show the version."
     overview = _overview
+    common = True
 
     def run(self, parsed_args):
         """Run the command."""

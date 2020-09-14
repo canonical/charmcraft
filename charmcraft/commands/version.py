@@ -45,7 +45,7 @@ Example: 0.3.1+40.g883455b.dirty
 class VersionCommand(BaseCommand):
     """Show the charmcraft version."""
     name = 'version'
-    help_msg = "show the version"
+    help_msg = "Show the version."
     overview = _overview
 
     def run(self, parsed_args):

@@ -24,13 +24,13 @@ TERMINAL_WIDTH = 72
 
 # the summary of the whole program, already indented so it represents the real
 # "columns spread", for easier human editing.
-SUMMARY = """
+GENERAL_SUMMARY = """
     Charmcraft provides a streamlined, powerful, opinionated and
     flexible tool to develop, package and manage the lifecycle of
     Juju charm publication, focused particularly on charms written
     within the Operator Framework.
 """
-# XXX Facundo 2020-07-13: we should add an extra (separated) line to the summary with:
+# XXX Facundo 2020-09-10: we should add an extra (separated) line to the summary with:
 #   See <url> for additional documentation.
 
 # generic intro and outro texts
@@ -75,10 +75,10 @@ def _build_item(title, text, title_space):
 def get_full_help(command_groups, global_options):
     """Produce the text for the default help.
 
-    The default help has the following structure:
+    It has the following structure:
 
     - usage
-    - summary (link to docs)
+    - summary
     - common commands listed and described shortly
     - all commands grouped, just listed
     - more help
@@ -86,10 +86,13 @@ def get_full_help(command_groups, global_options):
     textblocks = []
 
     # title
-    textblocks.append(HEADER)
+    textblocks.append(textwrap.dedent("""
+        Usage:
+            charmcraft [help] <command>
+    """))
 
     # summary
-    textblocks.append("Summary:" + SUMMARY)
+    textblocks.append("Summary:" + GENERAL_SUMMARY)
 
     # column alignment is dictated by longest common commands names and groups names
     max_title_len = 0
@@ -152,7 +155,7 @@ def get_detailed_help(command_groups, global_options):
     textblocks.append(HEADER)
 
     # summary
-    textblocks.append("Summary:" + SUMMARY)
+    textblocks.append("Summary:" + GENERAL_SUMMARY)
 
     # column alignment is dictated by longest common commands names and groups names
     max_title_len = 0

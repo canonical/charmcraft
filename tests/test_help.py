@@ -31,6 +31,32 @@ from charmcraft.helptexts import (
 from tests.factory import create_command
 
 
+# -- verifications on different short help texts
+
+all_commands = list.__add__(*[commands for _, _, commands in COMMAND_GROUPS])
+
+
+@pytest.mark.parametrize('command', all_commands)
+def test_aesthetic_help_msg(command):
+    """All the real commands help msg start with uppercase and ends with a dot."""
+    msg = command.help_msg
+    assert msg[0].isupper() and msg[-1] == '.'
+
+
+@pytest.mark.parametrize('command', all_commands)
+def test_aesthetic_args_options_msg(command):
+    """All the real commands args/options help messages start with uppercase and end with a dot."""
+    class FakeParser:
+        """A fake to get the arguments added."""
+
+        def add_argument(self, *args, **kwargs):
+            help_msg = kwargs.get('help')
+            assert help_msg, "The help message must be present in each option"
+            assert help_msg[0].isupper() and help_msg[-1] == '.'
+
+    command('group').fill_parser(FakeParser())
+
+
 def test_get_usage_message():
     """Check the general "usage" text."""
     text = get_usage_message('charmcraft build', 'bad parameter for the build')
@@ -42,6 +68,8 @@ def test_get_usage_message():
     """)
     assert text == expected
 
+
+# -- bulding of the big help text outputs
 
 def test_default_help_text():
     """All different parts for the default help."""
@@ -67,7 +95,7 @@ def test_default_help_text():
         ('-q, --quiet', 'Only show warnings and errors, not progress.'),
     ]
 
-    with patch('charmcraft.helptexts.SUMMARY', fake_summary):
+    with patch('charmcraft.helptexts.GENERAL_SUMMARY', fake_summary):
         text = get_full_help(command_groups, global_options)
 
     expected = textwrap.dedent("""\
@@ -285,32 +313,6 @@ def test_command_help_text_loneranger():
         For a summary of all commands, run 'charmcraft help --all'.
     """)
     assert text == expected
-
-
-# -- verifications on different help texts
-
-all_commands = list.__add__(*[commands for _, _, commands in COMMAND_GROUPS])
-
-
-@pytest.mark.parametrize('command', all_commands)
-def test_aesthetic_help_msg(command):
-    """All the real commands help msg start with uppercase and ends with a dot."""
-    msg = command.help_msg
-    assert msg[0].isupper() and msg[-1] == '.'
-
-
-@pytest.mark.parametrize('command', all_commands)
-def test_aesthetic_args_options_msg(command):
-    """All the real commands args/options help messages start and end with a dot."""
-    class FakeParser:
-        """A fake to get the arguments added."""
-
-        def add_argument(self, *args, **kwargs):
-            help_msg = kwargs.get('help')
-            assert help_msg, "The help message must be present in each option"
-            assert help_msg[0].isupper() and help_msg[-1] == '.'
-
-    command('group').fill_parser(FakeParser())
 
 
 # -- real execution outputs

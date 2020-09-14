@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 
+import errno
 import logging
 import os
 import pathlib
@@ -185,6 +186,10 @@ class Builder:
                         os.link(str(abs_path), str(dest_path))
                     except PermissionError:
                         # when not allowed to create hard links
+                        shutil.copy2(str(abs_path), str(dest_path))
+                    except OSError as e:
+                        if e.errno != errno.EXDEV:
+                            raise
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
                     logger.debug("Ignoring file because of type: '%s'", rel_path)

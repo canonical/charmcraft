@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import filecmp
 import logging
 import pathlib
 import os
@@ -595,16 +596,23 @@ def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
     assert not (build_dir / 'dir2' / 'dir4').exists()
     assert (build_dir / 'dir2' / 'dir5').exists()
 
-    if expect_hardlinks:
-        # they're hard links
-        assert (build_dir / 'crazycharm.py').samefile(entrypoint)
-        assert (build_dir / 'file1.txt').samefile(file1)
-        assert (build_dir / 'dir2' / 'file2.txt').samefile(file2)
-    else:
-        # they're *not* hard links
-        assert not (build_dir / 'crazycharm.py').samefile(entrypoint)
-        assert not (build_dir / 'file1.txt').samefile(file1)
-        assert not (build_dir / 'dir2' / 'file2.txt').samefile(file2)
+    for (p1, p2) in [
+        (build_dir / 'crazycharm.py', entrypoint),
+        (build_dir / 'file1.txt', file1),
+        (build_dir / 'dir2' / 'file2.txt', file2),
+    ]:
+        if expect_hardlinks:
+            # they're hard links
+            assert p1.samefile(p2)
+        else:
+            # they're *not* hard links
+            assert not p1.samefile(p2)
+            # but they're essentially the same
+            assert filecmp.cmp(str(p1), str(p2), shallow=False)
+            assert p1.stat().st_mode == p2.stat().st_mode
+            assert p1.stat().st_size == p2.stat().st_size
+            assert p1.stat().st_atime == p2.stat().st_atime
+            assert p1.stat().st_mtime == p2.stat().st_mtime
 
 
 def test_build_generics_tree(tmp_path, caplog):

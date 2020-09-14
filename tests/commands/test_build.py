@@ -533,8 +533,7 @@ def test_build_generics_ignored_dir(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_generics_tree(tmp_path, caplog):
-    """Manages ok a deep tree, including internal ignores."""
+def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
     caplog.set_level(logging.DEBUG)
 
     build_dir = tmp_path / BUILD_DIRNAME
@@ -595,6 +594,29 @@ def test_build_generics_tree(tmp_path, caplog):
     assert not (build_dir / 'dir2' / 'file3.txt').exists()
     assert not (build_dir / 'dir2' / 'dir4').exists()
     assert (build_dir / 'dir2' / 'dir5').exists()
+
+    if expect_hardlinks:
+        # they're hard links
+        assert (build_dir / 'crazycharm.py').samefile(entrypoint)
+        assert (build_dir / 'file1.txt').samefile(file1)
+        assert (build_dir / 'dir2' / 'file2.txt').samefile(file2)
+    else:
+        # they're *not* hard links
+        assert not (build_dir / 'crazycharm.py').samefile(entrypoint)
+        assert not (build_dir / 'file1.txt').samefile(file1)
+        assert not (build_dir / 'dir2' / 'file2.txt').samefile(file2)
+
+
+def test_build_generics_tree(tmp_path, caplog):
+    """Manages ok a deep tree, including internal ignores."""
+    _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=True)
+
+
+def test_build_generics_tree_vagrant(tmp_path, caplog):
+    """Manages ok a deep tree, including internal ignores, when hardlinks aren't allowed."""
+    with patch('os.link') as mock_link:
+        mock_link.side_effect = PermissionError("No you don't.")
+        _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
 
 
 def test_build_generics_symlink_file(tmp_path):

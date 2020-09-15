@@ -12,6 +12,14 @@ python:
     - "3.7"
     - "3.8"
 
+addons:
+  apt:
+    packages:
+      - libffi-dev
+  homebrew:
+    packages:
+      - libffi
+
 matrix:
     include:
         - os: osx

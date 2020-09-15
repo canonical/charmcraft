@@ -14,6 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import errno
+import filecmp
 import logging
 import pathlib
 import os
@@ -533,8 +535,7 @@ def test_build_generics_ignored_dir(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_generics_tree(tmp_path, caplog):
-    """Manages ok a deep tree, including internal ignores."""
+def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
     caplog.set_level(logging.DEBUG)
 
     build_dir = tmp_path / BUILD_DIRNAME
@@ -595,6 +596,44 @@ def test_build_generics_tree(tmp_path, caplog):
     assert not (build_dir / 'dir2' / 'file3.txt').exists()
     assert not (build_dir / 'dir2' / 'dir4').exists()
     assert (build_dir / 'dir2' / 'dir5').exists()
+
+    for (p1, p2) in [
+        (build_dir / 'crazycharm.py', entrypoint),
+        (build_dir / 'file1.txt', file1),
+        (build_dir / 'dir2' / 'file2.txt', file2),
+    ]:
+        if expect_hardlinks:
+            # they're hard links
+            assert p1.samefile(p2)
+        else:
+            # they're *not* hard links
+            assert not p1.samefile(p2)
+            # but they're essentially the same
+            assert filecmp.cmp(str(p1), str(p2), shallow=False)
+            assert p1.stat().st_mode == p2.stat().st_mode
+            assert p1.stat().st_size == p2.stat().st_size
+            # checking st_atime seems to be a bit racy
+            # assert p1.stat().st_atime == p2.stat().st_atime
+            assert p1.stat().st_mtime == p2.stat().st_mtime
+
+
+def test_build_generics_tree(tmp_path, caplog):
+    """Manages ok a deep tree, including internal ignores."""
+    _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=True)
+
+
+def test_build_generics_tree_vagrant(tmp_path, caplog):
+    """Manages ok a deep tree, including internal ignores, when hardlinks aren't allowed."""
+    with patch('os.link') as mock_link:
+        mock_link.side_effect = PermissionError("No you don't.")
+        _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
+
+
+def test_build_generics_tree_xdev(tmp_path, caplog):
+    """Manages ok a deep tree, including internal ignores, when hardlinks can't be done."""
+    with patch('os.link') as mock_link:
+        mock_link.side_effect = OSError(errno.EXDEV, os.strerror(errno.EXDEV))
+        _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
 
 
 def test_build_generics_symlink_file(tmp_path):

@@ -346,20 +346,10 @@ class ReleaseCommand(BaseCommand):
                     "be executed in a valid project's directory, or indicate the charm name with "
                     "the --name option.")
 
-        if parsed_args.revision:
-            revision = parsed_args.revision
-        else:
-            # find out which is the latest revision for the charm
-            revisions = store.list_revisions(charm_name)
-            if not revisions:
-                raise CommandError(
-                    "The charm {!r} doesn't have any uploaded revisions.".format(charm_name))
-            revision = max(rev.revision for rev in revisions)
-
-        store.release(charm_name, revision, parsed_args.channels)
+        store.release(charm_name, parsed_args.revision, parsed_args.channels)
         logger.info(
             "Revision %d of charm %r released to %s",
-            revision, charm_name, ", ".join(parsed_args.channels))
+            parsed_args.revision, charm_name, ", ".join(parsed_args.channels))
 
 
 class StatusCommand(BaseCommand):

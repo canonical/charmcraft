@@ -194,7 +194,7 @@ def test_dispatcher_command_execution_crash():
     ['--verbose', 'somecommand'],
 ])
 def test_dispatcher_generic_setup_verbose(options):
-    """Generic parameter handling for verbose log setup, directly of after the command."""
+    """Generic parameter handling for verbose log setup, directly or after the command."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     dispatcher = Dispatcher(options, groups)
@@ -212,7 +212,7 @@ def test_dispatcher_generic_setup_verbose(options):
     ['--quiet', 'somecommand'],
 ])
 def test_dispatcher_generic_setup_quiet(options):
-    """Generic parameter handling for silent log setup, directly of after the command."""
+    """Generic parameter handling for quiet log setup, directly or after the command."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     dispatcher = Dispatcher(options, groups)

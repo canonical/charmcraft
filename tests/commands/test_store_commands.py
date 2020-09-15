@@ -123,7 +123,7 @@ def test_login(caplog, store_mock):
     assert store_mock.mock_calls == [
         call.login(),
     ]
-    assert ["Login successful"] == [rec.message for rec in caplog.records]
+    assert ["Login successful."] == [rec.message for rec in caplog.records]
 
 
 def test_logout(caplog, store_mock):
@@ -135,7 +135,7 @@ def test_logout(caplog, store_mock):
     assert store_mock.mock_calls == [
         call.logout(),
     ]
-    assert ["Credentials cleared"] == [rec.message for rec in caplog.records]
+    assert ["Credentials cleared."] == [rec.message for rec in caplog.records]
 
 
 def test_whoami(caplog, store_mock):
@@ -171,7 +171,7 @@ def test_register_name(caplog, store_mock):
     assert store_mock.mock_calls == [
         call.register_name('testname'),
     ]
-    expected = "Congrats! You are now the publisher of 'testname'"
+    expected = "Congrats! You are now the publisher of 'testname'."
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -187,7 +187,7 @@ def test_list_registered_empty(caplog, store_mock):
     assert store_mock.mock_calls == [
         call.list_registered_names(),
     ]
-    expected = "Nothing found"
+    expected = "Nothing found."
     assert [expected] == [rec.message for rec in caplog.records]
 
 

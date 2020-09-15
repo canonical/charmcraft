@@ -117,7 +117,7 @@ def test_validator_from_expanded():
 def test_validator_from_exist():
     """'from' param: checks that the directory exists."""
     validator = Validator()
-    expected_msg = "the charm directory was not found: '/not_really_there'"
+    expected_msg = "Charm directory was not found: '/not_really_there'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_from(pathlib.Path('/not_really_there'))
 
@@ -128,7 +128,7 @@ def test_validator_from_isdir(tmp_path):
     testfile.touch()
 
     validator = Validator()
-    expected_msg = "the charm directory is not really a directory: '{}'".format(testfile)
+    expected_msg = "Charm directory is not really a directory: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_from(testfile)
 
@@ -190,7 +190,7 @@ def test_validator_entrypoint_expanded(tmp_path):
 def test_validator_entrypoint_exist():
     """'entrypoint' param: checks that the file exists."""
     validator = Validator()
-    expected_msg = "the charm entry point was not found: '/not_really_there.py'"
+    expected_msg = "Charm entry point was not found: '/not_really_there.py'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_entrypoint(pathlib.Path('/not_really_there.py'))
 
@@ -204,7 +204,7 @@ def test_validator_entrypoint_inside_project(tmp_path):
     validator = Validator()
     validator.basedir = project_dir
 
-    expected_msg = "the entry point must be inside the project: '{}'".format(testfile)
+    expected_msg = "Charm entry point must be inside the project: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_entrypoint(testfile)
 
@@ -216,7 +216,7 @@ def test_validator_entrypoint_exec(tmp_path):
 
     validator = Validator()
     validator.basedir = tmp_path
-    expected_msg = "the charm entry point must be executable: '{}'".format(testfile)
+    expected_msg = "Charm entry point must be executable: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_entrypoint(testfile)
 

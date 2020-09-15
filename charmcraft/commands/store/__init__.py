@@ -46,7 +46,7 @@ def get_name_from_metadata():
 class LoginCommand(BaseCommand):
     """Log into the store."""
     name = 'login'
-    help_msg = "login to Ubuntu Single Sign On"
+    help_msg = "Login to Ubuntu Single Sign On."
     overview = textwrap.dedent("""
         Log in to the Store using Ubuntu Single Sign On.
 
@@ -61,13 +61,13 @@ class LoginCommand(BaseCommand):
         """Run the command."""
         store = Store()
         store.login()
-        logger.info("Login successful")
+        logger.info("Login successful.")
 
 
 class LogoutCommand(BaseCommand):
     """Clear store-related credentials."""
     name = 'logout'
-    help_msg = "clear session credentials"
+    help_msg = "Clear session credentials."
     overview = textwrap.dedent("""
         Clear the Store session credentials.
 
@@ -82,13 +82,13 @@ class LogoutCommand(BaseCommand):
         """Run the command."""
         store = Store()
         store.logout()
-        logger.info("Credentials cleared")
+        logger.info("Credentials cleared.")
 
 
 class WhoamiCommand(BaseCommand):
     """Show login information."""
     name = 'whoami'
-    help_msg = "returns your login information relevant to the Store"
+    help_msg = "Return your login information relevant to the Store."
     overview = textwrap.dedent("""
         Show login information for the current Store user.
 
@@ -114,7 +114,7 @@ class WhoamiCommand(BaseCommand):
 class RegisterNameCommand(BaseCommand):
     """Register a name in the Store."""
     name = 'register'
-    help_msg = "register a name in the Store"
+    help_msg = "Register a name in the Store."
     overview = textwrap.dedent("""
         Register a name in the Store.
 
@@ -124,22 +124,23 @@ class RegisterNameCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="the name to register in the Store")
+        parser.add_argument('name', help="The name to register in the Store.")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store()
         store.register_name(parsed_args.name)
-        logger.info("Congrats! You are now the publisher of %r", parsed_args.name)
+        logger.info("Congrats! You are now the publisher of %r.", parsed_args.name)
 
 
 class ListNamesCommand(BaseCommand):
     """List the charms registered in the Store."""
     name = 'names'
-    help_msg = "list the names registered in the Store"
+    help_msg = "List the charm names registered the Store."
     overview = textwrap.dedent("""
         List the names registered to the current Store user, together
         with each package's type, visibility and status.
@@ -147,13 +148,14 @@ class ListNamesCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store()
         result = store.list_registered_names()
         if not result:
-            logger.info("Nothing found")
+            logger.info("Nothing found.")
             return
 
         headers = ['Name', 'Visibility', 'Status']
@@ -174,7 +176,7 @@ class ListNamesCommand(BaseCommand):
 class UploadCommand(BaseCommand):
     """Upload a charm file to the Store."""
     name = 'upload'
-    help_msg = "upload a charm file to the Store"
+    help_msg = "Upload a charm file to the Store."
     overview = textwrap.dedent("""
         Upload the charm file to the Store.
 
@@ -186,6 +188,7 @@ class UploadCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def _discover_charm(self, charm_filepath):
         """Discover the charm name and file path.
@@ -230,7 +233,7 @@ class UploadCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '--charm-file', type=pathlib.Path,
-            help="the path to the charm file to upload")
+            help="The path to the charm file to upload.")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -248,7 +251,7 @@ class UploadCommand(BaseCommand):
 class ListRevisionsCommand(BaseCommand):
     """List existing revisions for a charm."""
     name = 'revisions'
-    help_msg = "list existing revisions for a package in the Store"
+    help_msg = "List existing revisions for a package in the Store."
     overview = textwrap.dedent("""
         List existing revisions for a package in the Store, along with the version
         and status for each, and when they were created.
@@ -256,10 +259,11 @@ class ListRevisionsCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="the name of the charm")
+        parser.add_argument('--name', help="The name of the charm.")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -304,7 +308,7 @@ class ListRevisionsCommand(BaseCommand):
 class ReleaseCommand(BaseCommand):
     """Release a charm revision to specific channels."""
     name = 'release'
-    help_msg = "relase a charm revision to one or more channels"
+    help_msg = "Relase a charm revision to one or more channels."
     overview = textwrap.dedent("""
         Release a charm revision to the indicated channels (one or many).
 
@@ -322,16 +326,17 @@ class ReleaseCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
             'channels', metavar='channel', nargs='+',
-            help="the channel(s) to release to")
-        parser.add_argument('--name', help="the name of the charm")
+            help="The channel(s) to release to.")
+        parser.add_argument('--name', help="The name of the charm.")
         parser.add_argument(
             '--revision', type=int,
-            help="the revision to release (defaults to latest)")
+            help="The revision to release (defaults to latest).")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -366,7 +371,7 @@ class ReleaseCommand(BaseCommand):
 class StatusCommand(BaseCommand):
     """List released revisions for a charm."""
     name = 'status'
-    help_msg = "list released revisions of a package"
+    help_msg = "List released revisions of a package."
     overview = textwrap.dedent("""
         List the released revisions for a package.
 
@@ -376,10 +381,11 @@ class StatusCommand(BaseCommand):
         It will automatically take you through the login process if
         your credentials are missing or too old.
     """)
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="the name of the charm")
+        parser.add_argument('--name', help="The name of the charm.")
 
     def run(self, parsed_args):
         """Run the command."""

@@ -47,10 +47,10 @@ COMMAND_GROUPS = [
 
 
 def _get_option(args, name):
-    """Get a general option, merging with OR both global and command versions.
+    """Get a general option, doing an OR operation between global and command versions.
 
     This is done manually because otherwise Argparse would overwrite the
-    command ont into thee global one.
+    command one into the global one.
     """
     return getattr(args, name + '_global', False) or getattr(args, name + '_command', False)
 

@@ -21,6 +21,9 @@ class CommandError(Exception):
     It optionally receives a `retcode` parameter that will be the returned code
     by the process on exit, and a `argsparsing` one to indicate that the problem
     is in the command line usage.
+
+    XXX Facundo 2020-09-21: This will be refactored soon in the branch where all
+    output messages are standarized.
     """
 
     def __init__(self, message, retcode=1, argsparsing=False):

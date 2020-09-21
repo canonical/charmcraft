@@ -334,7 +334,6 @@ class ReleaseCommand(BaseCommand):
             'revision', type=int, help='The revision to release.')
         parser.add_argument(
             'channels', metavar='channel', nargs='+',
-
             help="The channel(s) to release to.")
         parser.add_argument('--name', help="The name of the charm.")
 

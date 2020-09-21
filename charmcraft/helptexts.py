@@ -32,6 +32,7 @@ GENERAL_SUMMARY = """
 """
 # XXX Facundo 2020-09-10: we should add an extra (separated) line to the summary with:
 #   See <url> for additional documentation.
+# Related issue: https://github.com/canonical/charmcraft/issues/161
 
 # generic intro and outro texts
 HEADER = """
@@ -48,7 +49,11 @@ Error: {error_message}
 
 
 def get_usage_message(fullcommand, error_message):
-    """Build a usage and error message."""
+    """Build a usage and error message.
+
+    The fullcommand is the command used by the user (`charmcraft`, `charmcraft build`, etc),
+    and the error message is the specific problem in the given parameters.
+    """
     return USAGE.format(fullcommand=fullcommand, error_message=error_message)
 
 
@@ -75,7 +80,13 @@ def _build_item(title, text, title_space):
 def get_full_help(command_groups, global_options):
     """Produce the text for the default help.
 
-    It has the following structure:
+    - command_groups: list of grouped commands, as it's defined in the main
+      module
+
+    - global_options: options defined at charmcraft level (not in the commands),
+      with the (options, description) structure
+
+    The help text has the following structure:
 
     - usage
     - summary
@@ -86,10 +97,7 @@ def get_full_help(command_groups, global_options):
     textblocks = []
 
     # title
-    textblocks.append(textwrap.dedent("""
-        Usage:
-            charmcraft [help] <command>
-    """))
+    textblocks.append(HEADER)
 
     # summary
     textblocks.append("Summary:" + GENERAL_SUMMARY)
@@ -141,10 +149,16 @@ def get_full_help(command_groups, global_options):
 def get_detailed_help(command_groups, global_options):
     """Produce the text for the detailed help.
 
-    It has the following structure:
+    - command_groups: list of grouped commands, as it's defined in the main
+      module
+
+    - global_options: options defined at charmcraft level (not in the commands),
+      with the (options, description) structure
+
+    The help text has the following structure:
 
     - usage
-    - summary (link to docs)
+    - summary
     - global options
     - all commands shown with description, grouped
     - more help
@@ -193,7 +207,14 @@ def get_detailed_help(command_groups, global_options):
 def get_command_help(command_groups, command, arguments):
     """Produce the text for each command's help.
 
-    It has the following structure:
+    - command_groups: list of grouped commands, as it's defined in the main
+      module
+
+    - command: the instanciated command for which help is prepared
+
+    - arguments: all command options and parameters, with the (name, description) structure
+
+    The help text has the following structure:
 
     - usage
     - summary

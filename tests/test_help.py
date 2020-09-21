@@ -153,7 +153,7 @@ def test_detailed_help_text():
         ('-q, --quiet', 'Only show warnings and errors, not progress.'),
     ]
 
-    with patch('charmcraft.helptexts.SUMMARY', fake_summary):
+    with patch('charmcraft.helptexts.GENERAL_SUMMARY', fake_summary):
         text = get_detailed_help(command_groups, global_options)
 
     expected = textwrap.dedent("""\

@@ -1,6 +1,6 @@
 Steps:
 
-- First check that snapcraft is able build something:
+- First check that snapcraft can build something:
 
 ```
 snapcraft
@@ -18,13 +18,13 @@ sudo snap install --dangerous charmcraft_0.2.0+95.g6f8c4cc_amd64.snap
 
 ## How to add new Python dependencies
 
-If trying a new snap fails because import errors, you need to include new 
-dependencies. Easiest way to do this is to open the snap, manually copy the 
+If trying a new snap fails because of import errors, you need to include new 
+dependencies.The easiest way to do this is to open the snap, manually copy the 
 needed dependency, and try it: if it keeps failing, keep adding more dependencies, 
 else you're done and just update the `stage` section in `snapcraft.yaml` 
 with what you brought in.
 
-Let's go on that procedure. First open the just built snap:
+Let's go on that procedure. First, open the just built snap:
 
 ```
 unsquashfs charmcraft_0.2.0+95.g6f8c4cc_amd64.snap 

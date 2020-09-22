@@ -19,15 +19,18 @@
 from charmcraft.cmdbase import BaseCommand
 
 
-def create_command(name_, help_msg_=None, common_=False):
+def create_command(name_, help_msg_=None, common_=False, overview_=None):
     """Helper to create commands."""
     if help_msg_ is None:
         help_msg_ = "Automatic help generated in the factory for the tests."
+    if overview_ is None:
+        overview_ = "Automatic long description generated in the factory for the tests."
 
     class MyCommand(BaseCommand):
         name = name_
         help_msg = help_msg_
         common = common_
+        overview = overview_
 
         def run(self, parsed_args):
             pass

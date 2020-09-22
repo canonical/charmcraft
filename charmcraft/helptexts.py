@@ -32,6 +32,29 @@ GENERAL_SUMMARY = """
 """
 # XXX Facundo 2020-09-10: we should add an extra (separated) line to the summary with:
 #   See <url> for additional documentation.
+# Related issue: https://github.com/canonical/charmcraft/issues/161
+
+# generic intro and outro texts
+HEADER = """
+Usage:
+    charmcraft [help] <command>
+"""
+
+USAGE = """\
+Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
+Try '{fullcommand} -h' for help.
+
+Error: {error_message}
+"""
+
+
+def get_usage_message(fullcommand, error_message):
+    """Build a usage and error message.
+
+    The fullcommand is the command used by the user (`charmcraft`, `charmcraft build`, etc),
+    and the error message is the specific problem in the given parameters.
+    """
+    return USAGE.format(fullcommand=fullcommand, error_message=error_message)
 
 
 def _build_item(title, text, title_space):
@@ -57,7 +80,13 @@ def _build_item(title, text, title_space):
 def get_full_help(command_groups, global_options):
     """Produce the text for the default help.
 
-    It has the following structure:
+    - command_groups: list of grouped commands, as it's defined in the main
+      module
+
+    - global_options: options defined at charmcraft level (not in the commands),
+      with the (options, description) structure
+
+    The help text has the following structure:
 
     - usage
     - summary
@@ -68,10 +97,7 @@ def get_full_help(command_groups, global_options):
     textblocks = []
 
     # title
-    textblocks.append(textwrap.dedent("""
-        Usage:
-            charmcraft [help] <command>
-    """))
+    textblocks.append(HEADER)
 
     # summary
     textblocks.append("Summary:" + GENERAL_SUMMARY)
@@ -114,6 +140,132 @@ def get_full_help(command_groups, global_options):
         For more information about a command, run 'charmcraft help <command>'.
         For a summary of all commands, run 'charmcraft help --all'.
     """))
+
+    # join all stripped blocks, leaving ONE empty blank line between
+    text = '\n\n'.join(block.strip() for block in textblocks) + '\n'
+    return text
+
+
+def get_detailed_help(command_groups, global_options):
+    """Produce the text for the detailed help.
+
+    - command_groups: list of grouped commands, as it's defined in the main
+      module
+
+    - global_options: options defined at charmcraft level (not in the commands),
+      with the (options, description) structure
+
+    The help text has the following structure:
+
+    - usage
+    - summary
+    - global options
+    - all commands shown with description, grouped
+    - more help
+    """
+    textblocks = []
+
+    # title
+    textblocks.append(HEADER)
+
+    # summary
+    textblocks.append("Summary:" + GENERAL_SUMMARY)
+
+    # column alignment is dictated by longest common commands names and groups names
+    max_title_len = 0
+    for _, _, commands in command_groups:
+        for cmd in commands:
+            max_title_len = max(len(cmd.name), max_title_len)
+    for title, _ in global_options:
+        max_title_len = max(len(title), max_title_len)
+
+    # leave two spaces after longest title (also considering the ':')
+    max_title_len += 3
+
+    global_lines = ["Global options:"]
+    for title, text in global_options:
+        global_lines.extend(_build_item(title, text, max_title_len))
+    textblocks.append("\n".join(global_lines))
+
+    textblocks.append("Commands can be classified as follows:")
+
+    for _, group_description, commands in command_groups:
+        group_lines = ["{}:".format(group_description)]
+        for cmd in commands:
+            group_lines.extend(_build_item(cmd.name, cmd.help_msg, max_title_len))
+        textblocks.append("\n".join(group_lines))
+
+    textblocks.append(textwrap.dedent("""
+        For more information about a specific command, run 'charmcraft help <command>'.
+    """))
+
+    # join all stripped blocks, leaving ONE empty blank line between
+    text = '\n\n'.join(block.strip() for block in textblocks) + '\n'
+    return text
+
+
+def get_command_help(command_groups, command, arguments):
+    """Produce the text for each command's help.
+
+    - command_groups: list of grouped commands, as it's defined in the main
+      module
+
+    - command: the instanciated command for which help is prepared
+
+    - arguments: all command options and parameters, with the (name, description) structure
+
+    The help text has the following structure:
+
+    - usage
+    - summary
+    - options
+    - other related commands
+    - footer
+    """
+    textblocks = []
+
+    # separaate all arguments into the parameters and optional ones, just checking
+    # if first char is a dash
+    parameters = []
+    options = []
+    for name, title in arguments:
+        if name[0] == '-':
+            options.append((name, title))
+        else:
+            parameters.append(name)
+
+    textblocks.append(textwrap.dedent("""\
+        Usage:
+            charmcraft {} [options] {}
+    """.format(command.name, " ".join(parameters))))
+
+    textblocks.append("Summary:{}".format(textwrap.indent(command.overview, '    ')))
+
+    # column alignment is dictated by longest options title (plus ':' and two intercolumn spaces)
+    max_title_len = max(len(title) for title, text in options) + 3
+
+    # command options
+    option_lines = ["Options:"]
+    for title, text in options:
+        option_lines.extend(_build_item(title, text, max_title_len))
+    textblocks.append("\n".join(option_lines))
+
+    # recommend other commands of the same group
+    for group_name, _, command_classes in command_groups:
+        if group_name == command.group:
+            break
+    else:
+        raise RuntimeError("Internal inconsistency in commands groups")
+    other_command_names = [c.name for c in command_classes if not isinstance(command, c)]
+    if other_command_names:
+        see_also_block = ["See also:"]
+        see_also_block.extend(("    " + name) for name in sorted(other_command_names))
+        textblocks.append('\n'.join(see_also_block))
+
+    # footer
+    textblocks.append("""
+        For a summary of all commands, run 'charmcraft help --all'.
+    """)
 
     # join all stripped blocks, leaving ONE empty blank line between
     text = '\n\n'.join(block.strip() for block in textblocks) + '\n'

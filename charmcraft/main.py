@@ -46,6 +46,15 @@ COMMAND_GROUPS = [
 ]
 
 
+def _get_option(args, name):
+    """Get a general option, doing an OR operation between global and command versions.
+
+    This is done manually because otherwise Argparse would overwrite the
+    command one into the global one.
+    """
+    return getattr(args, name + '_global', False) or getattr(args, name + '_command', False)
+
+
 class CustomArgumentParser(argparse.ArgumentParser):
     """ArgumentParser with grouped commands help."""
 
@@ -113,10 +122,9 @@ class Dispatcher:
 
     def _handle_global_params(self):
         """Set up and process global parameters."""
-        args = self.parsed_args
-        if args.verbose_global or getattr(args, 'verbose_command', False):
+        if _get_option(self.parsed_args, 'verbose'):
             message_handler.set_mode(message_handler.VERBOSE)
-        if args.quiet_global or getattr(args, 'quiet_command', False):
+        if _get_option(self.parsed_args, 'quiet'):
             message_handler.set_mode(message_handler.QUIET)
 
     def _load_commands(self, commands_groups):

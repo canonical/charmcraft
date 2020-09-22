@@ -607,45 +607,6 @@ def test_release_name_guessing_bad():
             "the --name option.")
 
 
-def test_release_revision_guessing_ok(caplog, store_mock):
-    """Release after guessing the revision."""
-    caplog.set_level(logging.INFO, logger="charmcraft.commands")
-
-    # make the store to return some revisions badly ordered so we're sure we're getting the max
-    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
-    store_response = [
-        Revision(revision=1, version='v1', created_at=tstamp, status='accepted', errors=[]),
-        Revision(revision=3, version='v1', created_at=tstamp, status='accepted', errors=[]),
-        Revision(revision=2, version='v1', created_at=tstamp, status='accepted', errors=[]),
-    ]
-    store_mock.list_revisions.return_value = store_response
-
-    channels = ['somechannel']
-    args = Namespace(name='testcharm', revision=None, channels=channels)
-    ReleaseCommand('group').run(args)
-
-    assert store_mock.mock_calls == [
-        call.list_revisions('testcharm'),
-        call.release('testcharm', 3, channels),
-    ]
-
-    expected = "Revision 3 of charm 'testcharm' released to somechannel"
-    assert [expected] == [rec.message for rec in caplog.records]
-
-
-def test_release_revision_guessing_bad(store_mock):
-    """Can not release because the charm doesn't have revisions published."""
-    store_mock.list_revisions.return_value = []
-
-    channels = ['somechannel']
-    args = Namespace(name='testcharm', revision=None, channels=channels)
-
-    with pytest.raises(CommandError) as cm:
-        ReleaseCommand('group').run(args)
-
-    assert str(cm.value) == "The charm 'testcharm' doesn't have any uploaded revisions."
-
-
 # -- tests for the status command
 
 def _build_channels(track='latest'):

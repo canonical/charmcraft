@@ -55,7 +55,7 @@ _charmcraft()
             return
             ;;
         release)
-            COMPREPLY=( $(compgen -W "--help --name --revision" -- "$cur") )
+            COMPREPLY=( $(compgen -W "--help --name" -- "$cur") )
             return
             ;;
     esac

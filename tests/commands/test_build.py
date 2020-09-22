@@ -612,8 +612,8 @@ def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
             assert filecmp.cmp(str(p1), str(p2), shallow=False)
             assert p1.stat().st_mode == p2.stat().st_mode
             assert p1.stat().st_size == p2.stat().st_size
-            assert p2.stat().st_atime == pytest.approx(p1.stat().st_atime)
-            assert p2.stat().st_mtime == pytest.approx(p1.stat().st_mtime)
+            assert p1.stat().st_atime == pytest.approx(p2.stat().st_atime)
+            assert p1.stat().st_mtime == pytest.approx(p2.stat().st_mtime)
 
 
 def test_build_generics_tree(tmp_path, caplog):

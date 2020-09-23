@@ -23,6 +23,12 @@ import tempfile
 from charmcraft import jujuignore
 
 
+def test_default_important_files():
+    """Don't ignore important files by default."""
+    ignore = jujuignore.JujuIgnore(jujuignore.default_juju_ignore)
+    assert not ignore.match('version', is_dir=False)
+
+
 def test_jujuignore_only_dir():
     ignore = jujuignore.JujuIgnore(['target/'])
     assert ignore.match('target', is_dir=True)

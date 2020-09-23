@@ -220,7 +220,6 @@ default_juju_ignore = '''
 
 /build/
 /revision
-/version
 
 .jujuignore
 '''.split('\n')

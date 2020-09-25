@@ -129,6 +129,8 @@ def _get_subparser(parser, namespace):
             action for action in parser._actions
             if isinstance(action, argparse._SubParsersAction)]
         if subactions:
+            if len(subactions) > 1:
+                raise RuntimeError("Incorrect subactions extraction from Argparse")
             (subparseraction,) = subactions
             parser = subparseraction.choices[command.name]
             return parser

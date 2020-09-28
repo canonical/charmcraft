@@ -211,6 +211,8 @@ class JujuIgnore:
 
 # default_juju_ignore is the initial set of ignores.
 # juju itself always includes these before adding the contents of .jujuignore
+# NOTE that this diverges from Juju ignore list, which also ignores "version",
+# because we need the version file to populate the store
 default_juju_ignore = '''
 .git
 .svn

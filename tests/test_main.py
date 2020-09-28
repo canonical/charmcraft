@@ -17,7 +17,6 @@
 import argparse
 import io
 import pathlib
-import textwrap
 from unittest.mock import patch
 
 from charmcraft import __version__, logsetup
@@ -28,121 +27,7 @@ from tests.factory import create_command
 import pytest
 
 
-# --- Tests for the CustomArgumentParser
-
-
-def get_generated_help(groups):
-    """Helper to use the dispatcher to make the custom arg parser to generate special help."""
-    dispatcher = Dispatcher([], groups)
-    with patch.object(argparse.ArgumentParser, 'format_help', str):
-        generated_help = dispatcher.main_parser.format_help()
-    return generated_help
-
-
-def test_customhelp_simplest():
-    """Simplest situation: one command in (of course) one group."""
-    groups = [
-        ('test-group', "simple stuff (test)", [create_command('cmd-name', 'cmd help blah')]),
-    ]
-    generated_help = get_generated_help(groups)
-    expected_help = """
-        commands:
-
-            simple stuff (test):
-                cmd-name   cmd help blah
-    """
-    assert generated_help == textwrap.dedent(expected_help)
-
-
-def test_customhelp_onegroup_severalcommands():
-    """Multiple commands in the same group.
-
-    Note that commands are ordered.
-    """
-    groups = [
-        ('test-group', 'whatever title', [
-            create_command('name1', 'cmd help 1'),
-            create_command('zz-name2', 'cmd help 2'),
-            create_command('other-name', 'super long help'),
-        ]),
-    ]
-    generated_help = get_generated_help(groups)
-    expected_help = """
-        commands:
-
-            whatever title:
-                name1        cmd help 1
-                other-name   super long help
-                zz-name2     cmd help 2
-    """
-    assert generated_help == textwrap.dedent(expected_help)
-
-
-def test_customhelp_several_simple_groups():
-    """Multiple groups (each one simple).
-
-    Note that the groups order are respected.
-    """
-    groups = [
-        ('test-group-1', 'whatever title', [
-            create_command('cmd-name', 'cmd help 1'),
-        ]),
-        ('test-group-2', 'other title', [
-            create_command('cmd-longer-name', 'cmd help 2'),
-        ]),
-    ]
-    generated_help = get_generated_help(groups)
-    expected_help = """
-        commands:
-
-            whatever title:
-                cmd-name          cmd help 1
-
-            other title:
-                cmd-longer-name   cmd help 2
-    """
-    assert generated_help == textwrap.dedent(expected_help)
-
-
-def test_customhelp_combined():
-    """Several commands in several groups."""
-    groups = [
-        ('test-group-1', 'this is very long title but we do not prejudge much', [
-            create_command('1-name', 'cmd help 1'),
-        ]),
-        ('test-group-2', 'short', [
-            create_command('cmd-B1', 'cmd help which is very long but whatever'),
-            create_command('cmd-B2', 'cmd help'),
-            create_command('cmd-longer-name', 'cmd help'),
-        ]),
-    ]
-    generated_help = get_generated_help(groups)
-    expected_help = """
-        commands:
-
-            this is very long title but we do not prejudge much:
-                1-name            cmd help 1
-
-            short:
-                cmd-B1            cmd help which is very long but whatever
-                cmd-B2            cmd help
-                cmd-longer-name   cmd help
-    """
-    assert generated_help == textwrap.dedent(expected_help)
-
-
 # --- Tests for the Dispatcher
-
-
-def test_dispatcher_no_command():
-    """When no command is given we should get the "usage" help."""
-    groups = [('test-group', 'title', [create_command('cmd-name', 'cmd help')])]
-    dispatcher = Dispatcher([], groups)
-    fake_stdout = io.StringIO()
-    with patch('sys.stdout', fake_stdout):
-        retcode = dispatcher.run()
-    assert retcode == 1
-    assert "usage: charmcraft" in fake_stdout.getvalue()
 
 
 def test_dispatcher_command_execution_ok():
@@ -186,8 +71,6 @@ def test_dispatcher_command_execution_crash():
 
 
 @pytest.mark.parametrize("options", [
-    ['--verbose'],
-    ['-v'],
     ['somecommand', '--verbose'],
     ['somecommand', '-v'],
     ['-v', 'somecommand'],
@@ -204,8 +87,6 @@ def test_dispatcher_generic_setup_verbose(options):
 
 
 @pytest.mark.parametrize("options", [
-    ['--quiet'],
-    ['-q'],
     ['somecommand', '--quiet'],
     ['somecommand', '-q'],
     ['-q', 'somecommand'],
@@ -222,8 +103,10 @@ def test_dispatcher_generic_setup_quiet(options):
 
 
 @pytest.mark.parametrize("options", [
-    ['--quiet', '--verbose'],
-    ['---v', '-q'],
+    ['--quiet', '--verbose', 'somecommand'],
+    ['-v', '-q', 'somecommand'],
+    ['somecommand', '--quiet', '--verbose'],
+    ['somecommand', '-v', '-q'],
     # XXX Facundo 2020-08-25: we need to do this check when we escape out of argparsing parsing
     # for global options and commands, as argparse doesn't support mutex options between parsers
     # Related issue: https://github.com/canonical/charmcraft/issues/138
@@ -235,9 +118,8 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     # test the system exit, which is done automatically by argparse
-    with pytest.raises(SystemExit) as cm:
+    with pytest.raises(CommandError):
         Dispatcher(options, groups)
-    assert cm.value.code == 2
 
 
 def test_dispatcher_load_commands_ok():

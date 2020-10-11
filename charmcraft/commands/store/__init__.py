@@ -16,10 +16,13 @@
 
 """Commands related to the Store, a thin layer above real functionality."""
 
+import ast
+import hashlib
 import logging
 import os
 import pathlib
 import textwrap
+from collections import namedtuple
 from operator import attrgetter
 
 import yaml
@@ -30,6 +33,32 @@ from charmcraft.cmdbase import BaseCommand, CommandError
 from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
+
+LibData = namedtuple('LibData', 'lib_id api patch content content_hash full_name path name')
+
+LIBRARY_TEMPLATE = """
+\"""TEMPLATE FIXME: Add a proper docstring here.
+
+This is the main documentation of the library, will be exposed by Charmhub after
+the lib is published.
+
+Markdown is supported.
+\"""
+
+# Never change this field, it's the unique identifier to track the library in
+# all systems
+LIBID = "{lib_id}"
+
+# Update this API version when introducing backwards incompatible
+# changes in the library.
+LIBAPI = 0
+
+# Update this version for every change in the library before (re)publishing it
+# (except for the initial content).
+LIBPATCH = 1
+
+# TEMPLATE FIXME: add your code here! Happy coding!
+"""
 
 
 def get_name_from_metadata():
@@ -237,6 +266,7 @@ class UploadCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        # FIXME: check in this command if all "own libraries" are properly updated in the Store
         name, path = self._discover_charm(parsed_args.charm_file)
         store = Store()
         result = store.upload(name, path)
@@ -461,3 +491,344 @@ class StatusCommand(BaseCommand):
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():
             logger.info(line)
+
+
+def _convert_lib_to_path(full_name):
+    """Convert a lib name with dots to the full path, including Python file extension.
+
+    E.g.: charms.mycharm.v4.foo -> charms/mycharm/v4/foo.py
+    """
+    return pathlib.Path(full_name.replace('.', os.sep) + '.py')
+
+
+def _get_lib_info(full_name, libpath):
+    """Get the whole lib info from the path/file."""
+    # FIXME: this function probably shouldn't raise ValueError but something like CommandError
+    bad_structure_msg = (
+        "Library path {!r} must conform to the charms/<charm>/v<API>/<libname>.py "
+        "structure.".format(libpath))
+    try:
+        basedir, charm_name, v_api, libfile = libpath.parts
+    except ValueError:
+        raise ValueError(bad_structure_msg)
+
+    if basedir != 'charms':
+        raise ValueError(bad_structure_msg)
+
+    if v_api[0] != 'v' or not v_api[1:].isdigit():
+        raise ValueError("The API version in the library path must be 'vN' where N is an integer.")
+    api_from_path = int(v_api[1:])
+
+    metadata_fields = (b'LIBAPI', b'LIBPATCH', b'LIBID')
+    metadata = dict.fromkeys(metadata_fields)
+    hasher = hashlib.sha256()
+    with libpath.open('rb') as fh:
+        for line in fh:
+            print("========== Line", repr(line))
+            if line.startswith(metadata_fields):
+                try:
+                    field, value = [x.strip() for x in line.split(b'=')]
+                except ValueError:
+                    raise ValueError("Bad metadata line in {}: {!r}".format(libpath, line))
+                metadata[field] = value
+            else:
+                hasher.update(line)
+
+    print("====== metadata?", metadata)
+    missing = [k.decode('ascii') for k, v in metadata.items() if v is None]
+    if missing:
+        raise ValueError(
+            "Library {} is missing the mandatory metadata fields: {}"
+            .format(libpath, ', '.join(missing)))
+
+    def _get_positive_int(key):
+        """Convert the raw value for api/patch into a positive integer."""
+        value = metadata[key].decode('ascii')
+        value = int(value)
+        if value < 0:
+            raise ValueError('negative')
+        return value
+
+    bad_api_patch_msg = "Library {} metadata field {} is not zero or a positive integer."
+    try:
+        libapi = _get_positive_int(b'LIBAPI')
+    except Exception:
+        raise ValueError(bad_api_patch_msg.format(libpath, 'LIBAPI'))
+    try:
+        libpatch = _get_positive_int(b'LIBPATCH')
+    except Exception:
+        raise ValueError(bad_api_patch_msg.format(libpath, 'LIBPATCH'))
+
+    if libapi == 0 and libpatch == 0:
+        raise ValueError(
+            "Library {} metadata fields LIBAPI and LIBPATCH can not be both zero."
+            .format(libpath))
+
+    if libapi != api_from_path:
+        raise ValueError(
+            "Library {} metadata field LIBAPI is different than the version in the path."
+            .format(libpath))
+
+    try:
+        libid = ast.literal_eval(metadata[b'LIBID'])
+    except (ValueError, UnicodeDecodeError):
+        raise ValueError(
+            "Library {} metadata field LIBID must be a non-empty string.".format(libpath))
+
+    print("========== LIBs!", (libid, libapi, libpatch))
+    content_hash = hasher.hexdigest()
+    with libpath.open('rb') as fh:
+        content = fh.read()
+
+    lib_name = full_name.split('.')[-1]
+    return LibData(
+        lib_id=libid, api=libapi, patch=libpatch, content_hash=content_hash,
+        content=content, full_name=full_name, path=libpath, name=lib_name)
+
+
+class CreateLibCommand(BaseCommand):
+    """Create a charm library."""
+    name = 'create-lib'
+    help_msg = "Create a charm library."
+    overview = textwrap.dedent("""
+        Create a charm library.
+
+        It will request a unique ID from Charmhub and bootstrap a template file in the
+        proper local directory.
+
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
+    """)  # FIXME: improve help text
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('libname', help="The name of the library file (e.g. 'db').")
+        # FIXME: add --charm-name option and support below
+
+    def run(self, parsed_args):  # FIXME: test the whole function
+        """Run the command."""
+        lib_name = parsed_args.name
+        # FIXME: assert it's not a path with slashes or a full name with dots
+        # FIXME: assert that is all "valid chars"
+
+        charm_name = get_name_from_metadata()
+        if charm_name is None:
+            raise CommandError(
+                "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+                "be executed in a valid project's directory, or indicate the charm name with "
+                "the --name option.")
+
+        full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
+        lib_path = _convert_lib_to_path(full_name)
+        if lib_path.exists():
+            raise CommandError('The indicated library already exists on {}'.format(lib_path))
+
+        store = Store()
+        lib_id = store.create_library(charm_name, lib_name)
+        print("===== lib id", repr(lib_id))
+
+        lib_path.parent.mkdir(parents=True, exist_ok=True)
+        lib_path.write_text(LIBRARY_TEMPLATE.format(lib_id=lib_id))
+
+        logger.info("Library %s created with id %s.", full_name, lib_id)
+        logger.info("Make sure to add the library file to your project: %s", lib_path)
+
+
+class PublishLibsCommand(BaseCommand):
+    """Publish one or more charm libraries."""
+    name = 'publish-libs'
+    help_msg = "Publish one or more charm libraries."
+    overview = textwrap.dedent("""
+        Publish charm libraries.
+
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
+    """)  # FIXME: improve help text
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('library', help="Library to publish (e.g. charms.mycharm.v2.foo.")
+        parser.add_argument(
+            '--all', action='store_true',
+            help="To publish all the libraries for the charm.")
+        # FIXME: add --charm-name option and support below
+
+    def run(self, parsed_args):  # FIXME: test the whole function
+        """Run the command."""
+        if parsed_args.library and parsed_args.all:
+            raise CommandError("Specify --all without a specific library, to publish all of them.")
+        if parsed_args.library:
+            libpath = _convert_lib_to_path(parsed_args.library)
+            if not libpath.exists():
+                raise CommandError("The specified library not found at path {}".format(libpath))
+            libraries = [(parsed_args.library, libpath)]
+        elif parsed_args.all:
+            raise NotImplementedError  # FIXME: implement
+        else:
+            raise CommandError("Need to specify one library or use the --all option.")
+
+        charm_name = get_name_from_metadata()
+        if charm_name is None:
+            raise CommandError(
+                "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+                "be executed in a valid project's directory, or indicate the charm name with "
+                "the --name option.")
+
+        # get the libraries info
+        # FIXME: pass charm_name to _get_lib_info to only work on libs from current charm
+        local_libs_data = [_get_lib_info(name, path) for name, path in libraries]
+
+        # check if something needs to be done
+        store = Store()
+        to_query = [(lib.lib_id, lib.api) for lib in local_libs_data]
+        libs_tips = store.get_libraries_tips(to_query)
+        print("======= tips", libs_tips)
+        to_publish = []
+        for lib_data in local_libs_data:
+            logger.debug("Verifying local lib %s", lib_data)
+            tip = libs_tips.get((lib_data.lib_id, lib_data.api))
+            logger.debug("Store tip: %s", tip)
+            if tip is None:
+                # needs to first publish
+                to_publish.append(lib_data)
+                continue
+
+            if tip.patch > lib_data.patch:
+                # the store is more advanced than local
+                logger.info(
+                    "Library %s is out-of-date locally, Charmhub has version %d.%d, please "
+                    "fetch the updates before publish.", lib_data.full_name, tip.api, tip.patch)
+            elif tip.patch == lib_data.patch:
+                # the store has same version numbers than local
+                if tip.content_hash == lib_data.content_hash:
+                    logger.info("Library %s was already updated in Charmhub.")
+                else:
+                    # but shouldn't as hash is different!
+                    logger.info(
+                        "Library %s version %d.%d is the same than in Charmhub but content is "
+                        "different", lib_data.full_name, tip.api, tip.patch)
+            elif tip.patch + 1 == lib_data.patch:
+                # local is correctly incremented
+                if tip.content_hash == lib_data.content_hash:
+                    # but shouldn't as hash is the same!
+                    logger.info(
+                        "Library %s LIBPATCH number was incorrectly incremented, Charmhub has the"
+                        "same content in version %d.%d.", lib_data.full_name, tip.api, tip.patch)
+                else:
+                    to_publish.append(lib_data)
+            else:  # FIXME: elif tip.patch < lib_data.patch:
+                logger.info(
+                    "Library %s has a wrong LIBPATCH number, it's too high, Charmhub "
+                    "highest version is %d.%d.", lib_data.full_name, tip.api, tip.patch)
+
+        print("===== to publihs", to_publish)
+        for lib_data in to_publish:
+            store.create_library_revision(
+                lib_data.charm_name, lib_data.lib_id, lib_data.api, lib_data.patch,
+                lib_data.content, lib_data.content_hash)
+            logger.info(
+                "Library %s sent to the store with version %d.%d",
+                lib_data.full_name, tip.api, tip.patch)
+
+
+class FetchLibsCommand(BaseCommand):
+    """Fetch one or more charm libraries."""
+    name = 'fetch-libs'
+    help_msg = "Fetch one or more charm libraries."
+    overview = textwrap.dedent("""
+        Fetch charm libraries.
+
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
+    """)  # FIXME: improve help text
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('library', help="Library to fetch (e.g. charms.othercharm.v2.foo.")
+        parser.add_argument(
+            '--all', action='store_true',
+            help="To fetch all the libraries.")
+        # FIXME: add --charm-name option and support below
+
+    def run(self, parsed_args):  # FIXME: test the whole function
+        """Run the command."""
+        if parsed_args.library and parsed_args.all:
+            raise CommandError("Specify --all without a specific library, to fetch all of them.")
+        if parsed_args.library:
+            libpath = _convert_lib_to_path(parsed_args.library)
+            libraries = [(parsed_args.library, libpath)]
+        elif parsed_args.all:
+            raise NotImplementedError  # FIXME: implement
+        else:
+            raise CommandError("Need to specify one library or use the --all option.")
+
+        charm_name = get_name_from_metadata()
+        if charm_name is None:
+            raise CommandError(
+                "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+                "be executed in a valid project's directory, or indicate the charm name with "
+                "the --name option.")
+
+        # get the libraries info
+        local_libs_data = [_get_lib_info(name, path) for name, path in libraries]
+
+        # check if something needs to be done
+        store = Store()
+        to_query = [(lib.lib_id, lib.api) for lib in local_libs_data]
+        libs_tips = store.get_libraries_tips(to_query)
+        print("======= tips", libs_tips)
+        to_fetch = []
+        for lib_data in local_libs_data:
+            logger.debug("Verifying local lib %s", lib_data)
+            tip = libs_tips.get((lib_data.lib_id, lib_data.api))
+            logger.debug("Store tip: %s", tip)
+            if tip is None:
+                logger.info("Library %s not found in Charmhub", lib_data.full_name)
+                continue
+
+            if tip.patch > lib_data.patch:
+                # the store is more advanced than local
+                to_fetch.append(lib_data)
+            elif tip.patch < lib_data.patch:
+                # the store has smaller version numbers than local
+                if lib_data.charm_name == charm_name:
+                    logger.info(
+                        "Library %s is modified locally, remember to publish it.",
+                        lib_data.full_name)
+                else:
+                    logger.info(
+                        "Library %s has local changes, can not be updated.",
+                        lib_data.full_name)
+            else:
+                # same versions locally and in the store
+                if tip.content_hash == lib_data.content_hash:
+                    logger.info(
+                        "Library %s was already up to date in version %d.%d.",
+                        lib_data.full_name, tip.api, tip.patch)
+                else:
+                    if lib_data.charm_name == charm_name:
+                        logger.info(
+                            "Library %s is modified locally, remember to publish it.",
+                            lib_data.full_name)
+                    else:
+                        logger.info(
+                            "Library %s has local changes, can not be updated.",
+                            lib_data.full_name)
+
+        print("===== to fetch", to_fetch)
+        for lib_data in to_fetch:
+            if lib_data.lib_id is None:
+                # locally new
+                downloaded = store.get_library_by_name(lib_data.charm_name, lib_data.name)
+                lib_data.path.parent.mkdir(parents=True, exist_ok=True)
+                lib_data.path.write_text(downloaded.content)
+                logger.info(
+                    "Library %s version %d.%d downloaded",
+                    lib_data.full_name, downloaded.api, downloaded.patch)
+            else:
+                downloaded = store.get_library_by_id(lib_data.charm_name, lib_data.lib_id)
+                # FIXME: manage the case where the library was renamed
+                lib_data.path.write_text(downloaded.content)
+                logger.info(
+                    "Library %s updated to version %d.%d",
+                    lib_data.full_name, downloaded.api, downloaded.patch)

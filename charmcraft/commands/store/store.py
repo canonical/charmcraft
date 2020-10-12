@@ -37,7 +37,7 @@ Revision = namedtuple('Revision', 'revision version created_at status errors')
 Error = namedtuple('Error', 'message code')
 Release = namedtuple('Release', 'revision channel expires_at')
 Channel = namedtuple('Channel', 'name fallback track risk branch')
-Library = namedtuple('Library', 'api content content_hash lib_id lib_name package_id patch')
+Library = namedtuple('Library', 'api content content_hash lib_id lib_name charm_name patch')
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -68,7 +68,7 @@ def _build_library(resp):
         content_hash=resp['hash'],
         lib_id=resp['lib-id'],
         lib_name=resp['lib-name'],
-        package_id=resp['package-id'],
+        charm_name=resp['charm-name'],
         patch=resp['patch'],
     )
     return lib
@@ -196,7 +196,7 @@ class Store:
         """Create a new library id."""
         endpoint = '/v1/charm/{}/library/'.format(charm_name)
         response = self._client.post(endpoint, {'lib-name': lib_name})
-        lib_id = response['lib_id']
+        lib_id = response['lib-id']
         return lib_id
 
     # FIXME: test all this func
@@ -234,11 +234,19 @@ class Store:
     def get_libraries_tips(self, libraries):
         """Get the tip details for several libraries at once."""
         endpoint = '/v1/charm/library/bulk/'
-        payload = [
-            {
-                'lib-id': lib_id,
-                'api': api,
-            } for lib_id, api in libraries]
+        payload = []
+        for lib in libraries:
+            if 'lib_id' in lib:
+                d = {
+                    'lib-id': lib['lib_id'],
+                }
+            else:
+                d = {
+                    'charm-name': lib['charm_name'],
+                    'lib-name': lib['lib_name'],
+                }
+            d['api'] = lib['api']
+            payload.append(d)
         response = self._client.post(endpoint, payload)
         result = {(item['lib-id'], item['api']): _build_library(item) for item in response}
         return result

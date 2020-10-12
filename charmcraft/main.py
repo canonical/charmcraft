@@ -70,6 +70,8 @@ COMMAND_GROUPS = [
         store.UploadCommand, store.ListRevisionsCommand,
         # release process, and show status
         store.ReleaseCommand, store.StatusCommand,
+        # libraries support
+        store.CreateLibCommand, store.PublishLibsCommand, store.FetchLibsCommand,
     ]),
 ]
 

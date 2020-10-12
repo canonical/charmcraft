@@ -34,7 +34,8 @@ from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
-LibData = namedtuple('LibData', 'lib_id api patch content content_hash full_name path name')
+LibData = namedtuple(
+    'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
 
 LIBRARY_TEMPLATE = """
 \"""TEMPLATE FIXME: Add a proper docstring here.
@@ -519,12 +520,18 @@ def _get_lib_info(full_name, libpath):
         raise ValueError("The API version in the library path must be 'vN' where N is an integer.")
     api_from_path = int(v_api[1:])
 
+    lib_name = full_name.split('.')[-1]
+    if not libpath.exists():
+        return LibData(
+            lib_id=None, api=api_from_path, patch=-1, content_hash=None, content=None,
+            full_name=full_name, path=libpath, lib_name=lib_name, charm_name=charm_name)
+
+    # parse the file and extract metadata from it, while hashing
     metadata_fields = (b'LIBAPI', b'LIBPATCH', b'LIBID')
     metadata = dict.fromkeys(metadata_fields)
     hasher = hashlib.sha256()
     with libpath.open('rb') as fh:
         for line in fh:
-            print("========== Line", repr(line))
             if line.startswith(metadata_fields):
                 try:
                     field, value = [x.strip() for x in line.split(b'=')]
@@ -534,7 +541,6 @@ def _get_lib_info(full_name, libpath):
             else:
                 hasher.update(line)
 
-    print("====== metadata?", metadata)
     missing = [k.decode('ascii') for k, v in metadata.items() if v is None]
     if missing:
         raise ValueError(
@@ -570,20 +576,17 @@ def _get_lib_info(full_name, libpath):
             .format(libpath))
 
     try:
-        libid = ast.literal_eval(metadata[b'LIBID'])
+        libid = ast.literal_eval(metadata[b'LIBID'].decode('ascii'))
     except (ValueError, UnicodeDecodeError):
         raise ValueError(
             "Library {} metadata field LIBID must be a non-empty string.".format(libpath))
 
-    print("========== LIBs!", (libid, libapi, libpatch))
     content_hash = hasher.hexdigest()
-    with libpath.open('rb') as fh:
-        content = fh.read()
+    content = libpath.read_text()
 
-    lib_name = full_name.split('.')[-1]
     return LibData(
-        lib_id=libid, api=libapi, patch=libpatch, content_hash=content_hash,
-        content=content, full_name=full_name, path=libpath, name=lib_name)
+        lib_id=libid, api=libapi, patch=libpatch, content_hash=content_hash, content=content,
+        full_name=full_name, path=libpath, lib_name=lib_name, charm_name=charm_name)
 
 
 class CreateLibCommand(BaseCommand):
@@ -607,7 +610,7 @@ class CreateLibCommand(BaseCommand):
 
     def run(self, parsed_args):  # FIXME: test the whole function
         """Run the command."""
-        lib_name = parsed_args.name
+        lib_name = parsed_args.libname
         # FIXME: assert it's not a path with slashes or a full name with dots
         # FIXME: assert that is all "valid chars"
 
@@ -624,8 +627,7 @@ class CreateLibCommand(BaseCommand):
             raise CommandError('The indicated library already exists on {}'.format(lib_path))
 
         store = Store()
-        lib_id = store.create_library(charm_name, lib_name)
-        print("===== lib id", repr(lib_id))
+        lib_id = store.create_library_id(charm_name, lib_name)
 
         lib_path.parent.mkdir(parents=True, exist_ok=True)
         lib_path.write_text(LIBRARY_TEMPLATE.format(lib_id=lib_id))
@@ -680,9 +682,8 @@ class PublishLibsCommand(BaseCommand):
 
         # check if something needs to be done
         store = Store()
-        to_query = [(lib.lib_id, lib.api) for lib in local_libs_data]
+        to_query = [dict(lib_id=lib.lib_id, api=lib.api) for lib in local_libs_data]
         libs_tips = store.get_libraries_tips(to_query)
-        print("======= tips", libs_tips)
         to_publish = []
         for lib_data in local_libs_data:
             logger.debug("Verifying local lib %s", lib_data)
@@ -701,7 +702,7 @@ class PublishLibsCommand(BaseCommand):
             elif tip.patch == lib_data.patch:
                 # the store has same version numbers than local
                 if tip.content_hash == lib_data.content_hash:
-                    logger.info("Library %s was already updated in Charmhub.")
+                    logger.info("Library %s was already updated in Charmhub.", lib_data.full_name)
                 else:
                     # but shouldn't as hash is different!
                     logger.info(
@@ -721,14 +722,13 @@ class PublishLibsCommand(BaseCommand):
                     "Library %s has a wrong LIBPATCH number, it's too high, Charmhub "
                     "highest version is %d.%d.", lib_data.full_name, tip.api, tip.patch)
 
-        print("===== to publihs", to_publish)
         for lib_data in to_publish:
             store.create_library_revision(
                 lib_data.charm_name, lib_data.lib_id, lib_data.api, lib_data.patch,
                 lib_data.content, lib_data.content_hash)
             logger.info(
                 "Library %s sent to the store with version %d.%d",
-                lib_data.full_name, tip.api, tip.patch)
+                lib_data.full_name, lib_data.api, lib_data.patch)
 
 
 class FetchLibsCommand(BaseCommand):
@@ -772,15 +772,29 @@ class FetchLibsCommand(BaseCommand):
         # get the libraries info
         local_libs_data = [_get_lib_info(name, path) for name, path in libraries]
 
-        # check if something needs to be done
+        # get tips from the Store
         store = Store()
-        to_query = [(lib.lib_id, lib.api) for lib in local_libs_data]
+        to_query = []
+        for lib in local_libs_data:
+            if lib.lib_id is None:
+                to_query.append(
+                    dict(charm_name=lib.charm_name, lib_name=lib.lib_name, api=lib.api))
+            else:
+                to_query.append(dict(lib_id=lib.lib_id, api=lib.api))
         libs_tips = store.get_libraries_tips(to_query)
-        print("======= tips", libs_tips)
+
+        # check if something needs to be done
         to_fetch = []
         for lib_data in local_libs_data:
             logger.debug("Verifying local lib %s", lib_data)
-            tip = libs_tips.get((lib_data.lib_id, lib_data.api))
+            if lib_data.lib_id is None:
+                for tip in libs_tips.values():
+                    if lib_data.charm_name == tip.charm_name and lib_data.lib_name == tip.lib_name:
+                        break
+                else:
+                    tip = None
+            else:
+                tip = libs_tips.get((lib_data.lib_id, lib_data.api))
             logger.debug("Store tip: %s", tip)
             if tip is None:
                 logger.info("Library %s not found in Charmhub", lib_data.full_name)
@@ -815,18 +829,19 @@ class FetchLibsCommand(BaseCommand):
                             "Library %s has local changes, can not be updated.",
                             lib_data.full_name)
 
-        print("===== to fetch", to_fetch)
         for lib_data in to_fetch:
             if lib_data.lib_id is None:
                 # locally new
-                downloaded = store.get_library_by_name(lib_data.charm_name, lib_data.name)
+                downloaded = store.get_library_by_name(
+                    lib_data.charm_name, lib_data.lib_name, lib_data.api)
                 lib_data.path.parent.mkdir(parents=True, exist_ok=True)
                 lib_data.path.write_text(downloaded.content)
                 logger.info(
                     "Library %s version %d.%d downloaded",
                     lib_data.full_name, downloaded.api, downloaded.patch)
             else:
-                downloaded = store.get_library_by_id(lib_data.charm_name, lib_data.lib_id)
+                downloaded = store.get_library_by_id(
+                    lib_data.charm_name, lib_data.lib_id, lib_data.api)
                 # FIXME: manage the case where the library was renamed
                 lib_data.path.write_text(downloaded.content)
                 logger.info(

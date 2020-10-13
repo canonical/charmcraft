@@ -240,10 +240,10 @@ class Dispatcher:
         mutexg = parser.add_mutually_exclusive_group()
         mutexg.add_argument(
             '-v', '--verbose', action='store_true', dest='verbose_' + context,
-            help="be more verbose and show debug information")
+            help="More verbose and show debug information.")
         mutexg.add_argument(
             '-q', '--quiet', action='store_true', dest='quiet_' + context,
-            help="only show warnings and errors, not progress")
+            help="Only show warnings and errors, not progress.")
 
     def _build_argument_parser(self, commands_groups):
         """Build the generic argument parser."""

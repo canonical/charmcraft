@@ -27,8 +27,8 @@ TERMINAL_WIDTH = 72
 GENERAL_SUMMARY = """
     Charmcraft provides a streamlined, powerful, opinionated and
     flexible tool to develop, package and manage the lifecycle of
-    Juju charm publication, focused particularly on charms written
-    within the Operator Framework.
+    Juju charm publication, particularly charms written within
+    the Operator Framework.
 """
 # XXX Facundo 2020-09-10: we should add an extra (separated) line to the summary with:
 #   See <url> for additional documentation.
@@ -41,7 +41,7 @@ Usage:
 """
 
 USAGE = """\
-Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
+Usage: charmcraft [options] command [args]...
 Try '{fullcommand} -h' for help.
 
 Error: {error_message}

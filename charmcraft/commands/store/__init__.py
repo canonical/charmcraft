@@ -114,9 +114,9 @@ class WhoamiCommand(BaseCommand):
 class RegisterNameCommand(BaseCommand):
     """Register a name in the Store."""
     name = 'register'
-    help_msg = "Register a name in the Store."
+    help_msg = "Register a charm in the Store."
     overview = textwrap.dedent("""
-        Register a name in the Store.
+        Register a charm name in the Store.
 
         This is the first step when developing a charm, and needed only once
         for that charm.
@@ -140,7 +140,7 @@ class RegisterNameCommand(BaseCommand):
 class ListNamesCommand(BaseCommand):
     """List the charms registered in the Store."""
     name = 'names'
-    help_msg = "List the charm names registered the Store."
+    help_msg = "List the charm names registered in the Store."
     overview = textwrap.dedent("""
         List the names registered to the current Store user, together
         with each package's type, visibility and status.
@@ -251,9 +251,9 @@ class UploadCommand(BaseCommand):
 class ListRevisionsCommand(BaseCommand):
     """List existing revisions for a charm."""
     name = 'revisions'
-    help_msg = "List existing revisions for a package in the Store."
+    help_msg = "List existing revisions for a charm in the Store."
     overview = textwrap.dedent("""
-        List existing revisions for a package in the Store, along with the version
+        List existing revisions for a charm in the Store, along with the version
         and status for each, and when they were created.
 
         It will automatically take you through the login process if

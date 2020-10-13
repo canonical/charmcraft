@@ -61,7 +61,7 @@ def test_get_usage_message():
     """Check the general "usage" text."""
     text = get_usage_message('charmcraft build', 'bad parameter for the build')
     expected = textwrap.dedent("""\
-        Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
+        Usage: charmcraft [options] command [args]...
         Try 'charmcraft build -h' for help.
 
         Error: bad parameter for the build
@@ -107,21 +107,21 @@ def test_default_help_text():
             the whole program.
 
         Global options:
-            -h, --help:        Show this help message and exit.
-            -q, --quiet:       Only show warnings and errors, not progress.
+                  -h, --help:  Show this help message and exit.
+                 -q, --quiet:  Only show warnings and errors, not progress.
 
         Starter commands:
-            cmd1:              Cmd help which is very long but whatever.
-            cmd3:              Extremely super crazy long super crazy long super
+                        cmd1:  Cmd help which is very long but whatever.
+                        cmd3:  Extremely super crazy long super crazy long super
                                crazy long super crazy long super crazy long
                                help.
             cmd6-really-long:  More help.
-            command-2:         Cmd help.
+                   command-2:  Cmd help.
 
         Commands can be classified as follows:
-            group1:            cmd6-really-long, command-2
-            group2:            cmd1, cmd3, cmd4, cmd5
-            group3:            cmd7
+                      group1:  cmd6-really-long, command-2
+                      group2:  cmd1, cmd3, cmd4, cmd5
+                      group3:  cmd7
 
         For more information about a command, run 'charmcraft help <command>'.
         For a summary of all commands, run 'charmcraft help --all'.
@@ -165,25 +165,25 @@ def test_detailed_help_text():
             the whole program.
 
         Global options:
-            -h, --help:        Show this help message and exit.
-            -q, --quiet:       Only show warnings and errors, not progress.
+                  -h, --help:  Show this help message and exit.
+                 -q, --quiet:  Only show warnings and errors, not progress.
 
         Commands can be classified as follows:
 
         Group 1 description:
             cmd6-really-long:  More help.
-            command-2:         Cmd help.
+                   command-2:  Cmd help.
 
         Group 3 help text:
-            cmd7:              More help.
+                        cmd7:  More help.
 
         Group 2 stuff:
-            cmd3:              Extremely super crazy long super crazy long super
+                        cmd3:  Extremely super crazy long super crazy long super
                                crazy long super crazy long super crazy long
                                help.
-            cmd4:              Some help.
-            cmd5:              More help.
-            cmd1:              Cmd help which is very long but whatever.
+                        cmd4:  Some help.
+                        cmd5:  More help.
+                        cmd1:  Cmd help which is very long but whatever.
 
         For more information about a specific command, run 'charmcraft help <command>'.
     """)
@@ -225,10 +225,10 @@ def test_command_help_text_no_parameters():
             Multiline!
 
         Options:
-            -h, --help:   Show this help message and exit.
+             -h, --help:  Show this help message and exit.
             -q, --quiet:  Only show warnings and errors, not progress.
-            --name:       The name of the charm.
-            --revision:   The revision to release (defaults to latest).
+                 --name:  The name of the charm.
+             --revision:  The revision to release (defaults to latest).
 
         See also:
             other-cmd-2
@@ -268,8 +268,8 @@ def test_command_help_text_with_parameters():
             Quite some long text.
 
         Options:
-            -h, --help:      Show this help message and exit.
-            --revision:      The revision to release (defaults to latest).
+                -h, --help:  Show this help message and exit.
+                --revision:  The revision to release (defaults to latest).
             --other-option:  Other option.
 
         See also:
@@ -307,7 +307,7 @@ def test_command_help_text_loneranger():
             Quite some long text.
 
         Options:
-            -h, --help:   Show this help message and exit.
+             -h, --help:  Show this help message and exit.
             -q, --quiet:  Only show warnings and errors, not progress.
 
         For a summary of all commands, run 'charmcraft help --all'.
@@ -357,7 +357,7 @@ def test_tool_exec_command_incorrect(sysargv):
         Dispatcher(sysargv, command_groups)
 
     expected = textwrap.dedent("""\
-        Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
+        Usage: charmcraft [options] command [args]...
         Try 'charmcraft -h' for help.
 
         Error: no such command 'wrongcommand'
@@ -453,7 +453,7 @@ def test_tool_exec_command_wrong_option():
         Dispatcher(['somecommand', '--whatever'], command_groups)
 
     expected = textwrap.dedent("""\
-        Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
+        Usage: charmcraft [options] command [args]...
         Try 'charmcraft somecommand -h' for help.
 
         Error: unrecognized arguments: --whatever
@@ -477,7 +477,7 @@ def test_tool_exec_command_bad_option_type():
         Dispatcher(['somecommand', '--number=foo'], command_groups)
 
     expected = textwrap.dedent("""\
-        Usage: charmcraft [OPTIONS] COMMAND [ARGS]...
+        Usage: charmcraft [options] command [args]...
         Try 'charmcraft somecommand -h' for help.
 
         Error: argument --number: invalid int value: 'foo'

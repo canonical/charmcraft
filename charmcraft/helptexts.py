@@ -63,16 +63,18 @@ def _build_item(title, text, title_space):
     The title starts in column 4 with an extra ':'. The text starts in
     4 plus the title space; if too wide it's wrapped.
     """
-    text_space = TERMINAL_WIDTH - title_space - 4
+    # wrap the general text to the desired max width (discounting the space for the title,
+    # the first 4 spaces, the two spaces to separate title/text, and the ':'
+    text_space = TERMINAL_WIDTH - title_space - 7
     wrapped_lines = textwrap.wrap(text, text_space)
 
     # first line goes with the title at column 4
-    title += ':'
-    result = ["    {:<{title_space}s}{}".format(title, wrapped_lines[0], title_space=title_space)]
+    first = "    {:>{title_space}s}:  {}".format(title, wrapped_lines[0], title_space=title_space)
+    result = [first]
 
     # the rest (if any) still aligned but without title
     for line in wrapped_lines[1:]:
-        result.append(" " * (title_space + 4) + line)
+        result.append(" " * (title_space + 7) + line)
 
     return result
 
@@ -116,9 +118,6 @@ def get_full_help(command_groups, global_options):
 
     for title, _ in global_options:
         max_title_len = max(len(title), max_title_len)
-
-    # leave two spaces after longest title (also considering the ':')
-    max_title_len += 3
 
     global_lines = ["Global options:"]
     for title, text in global_options:
@@ -179,9 +178,6 @@ def get_detailed_help(command_groups, global_options):
     for title, _ in global_options:
         max_title_len = max(len(title), max_title_len)
 
-    # leave two spaces after longest title (also considering the ':')
-    max_title_len += 3
-
     global_lines = ["Global options:"]
     for title, text in global_options:
         global_lines.extend(_build_item(title, text, max_title_len))
@@ -241,8 +237,8 @@ def get_command_help(command_groups, command, arguments):
 
     textblocks.append("Summary:{}".format(textwrap.indent(command.overview, '    ')))
 
-    # column alignment is dictated by longest options title (plus ':' and two intercolumn spaces)
-    max_title_len = max(len(title) for title, text in options) + 3
+    # column alignment is dictated by longest options title
+    max_title_len = max(len(title) for title, text in options)
 
     # command options
     option_lines = ["Options:"]

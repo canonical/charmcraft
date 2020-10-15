@@ -173,7 +173,7 @@ def test_main_ok():
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 0
-    mh_mock.ended_ok.assert_called_once()
+    mh_mock.ended_ok.assert_called_once_with()
 
 
 def test_main_no_args():
@@ -183,7 +183,7 @@ def test_main_no_args():
             retcode = main()
 
     assert retcode == 1
-    mh_mock.ended_cmderror.assert_called_once()
+    assert mh_mock.ended_cmderror.call_count == 1
 
 
 def test_main_controlled_error():
@@ -218,7 +218,7 @@ def test_main_interrupted():
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 1
-    mh_mock.ended_interrupt.assert_called_once()
+    assert mh_mock.ended_interrupt.call_count == 1
 
 
 # --- Tests for the bootstrap version message

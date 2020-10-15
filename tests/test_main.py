@@ -35,24 +35,22 @@ def test_dispatcher_command_execution_ok():
     class MyCommandControl(BaseCommand):
         help_msg = "some help"
 
-        def __init__(self, group):
-            super().__init__(group)
-            self.executed = None
-
         def run(self, parsed_args):
-            self.executed = parsed_args
+            self._executed.append(parsed_args)
 
     class MyCommand1(MyCommandControl):
         name = 'name1'
+        _executed = []
 
     class MyCommand2(MyCommandControl):
         name = 'name2'
+        _executed = []
 
     groups = [('test-group', 'title', [MyCommand1, MyCommand2])]
     dispatcher = Dispatcher(['name2'], groups)
     dispatcher.run()
-    assert dispatcher.commands['name1'].executed is None
-    assert isinstance(dispatcher.commands['name2'].executed, argparse.Namespace)
+    assert MyCommand1._executed == []
+    assert isinstance(MyCommand2._executed[0], argparse.Namespace)
 
 
 def test_dispatcher_command_execution_crash():
@@ -169,60 +167,58 @@ def test_dispatcher_load_commands_repeated():
 
 def test_main_ok():
     """Work ended ok: message handler notified properly, return code in 0."""
-    with patch.object(logsetup, 'message_handler') as mh_mock:
+    with patch('charmcraft.main.message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.return_value = None
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 0
-    assert mh_mock.ended_ok.called_once()
+    mh_mock.ended_ok.assert_called_once()
 
 
 def test_main_no_args():
     """The setup.py entry_point function needs to work with no arguments."""
     with patch('sys.argv', ['charmcraft']):
-        with patch.object(logsetup, 'message_handler') as mh_mock:
-            with patch('charmcraft.main.Dispatcher.run') as d_mock:
-                d_mock.side_effect = CommandError('boom', retcode=42)
-                retcode = main()
+        with patch('charmcraft.main.message_handler') as mh_mock:
+            retcode = main()
 
-    assert retcode == 42
-    assert mh_mock.ended_ok.called_once()
+    assert retcode == 1
+    mh_mock.ended_cmderror.assert_called_once()
 
 
 def test_main_controlled_error():
     """Work raised CommandError: message handler notified properly, use indicated return code."""
     simulated_exception = CommandError('boom', retcode=33)
-    with patch.object(logsetup, 'message_handler') as mh_mock:
+    with patch('charmcraft.main.message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.side_effect = simulated_exception
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 33
-    assert mh_mock.ended_cmderror.called_once_with(simulated_exception)
+    mh_mock.ended_cmderror.assert_called_once_with(simulated_exception)
 
 
 def test_main_crash():
     """Work crashed: message handler notified properly, return code in 1."""
     simulated_exception = ValueError('boom')
-    with patch.object(logsetup, 'message_handler') as mh_mock:
+    with patch('charmcraft.main.message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.side_effect = simulated_exception
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 1
-    assert mh_mock.ended_crash.called_once_with(simulated_exception)
+    mh_mock.ended_crash.assert_called_once_with(simulated_exception)
 
 
 def test_main_interrupted():
     """Work interrupted: message handler notified properly, return code in 1."""
-    with patch.object(logsetup, 'message_handler') as mh_mock:
+    with patch('charmcraft.main.message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.side_effect = KeyboardInterrupt
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 1
-    assert mh_mock.ended_interrupt.called_once()
+    mh_mock.ended_interrupt.assert_called_once()
 
 
 # --- Tests for the bootstrap version message

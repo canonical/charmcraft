@@ -114,7 +114,7 @@ class WhoamiCommand(BaseCommand):
 class RegisterNameCommand(BaseCommand):
     """Register a name in the Store."""
     name = 'register'
-    help_msg = "Register a charm in the Store."
+    help_msg = "Register a charm name in the Store."
     overview = textwrap.dedent("""
         Register a charm name in the Store.
 
@@ -308,7 +308,7 @@ class ListRevisionsCommand(BaseCommand):
 class ReleaseCommand(BaseCommand):
     """Release a charm revision to specific channels."""
     name = 'release'
-    help_msg = "Relase a charm revision to one or more channels."
+    help_msg = "Release a charm revision to one or more channels."
     overview = textwrap.dedent("""
         Release a charm revision to the indicated channels (one or many).
 

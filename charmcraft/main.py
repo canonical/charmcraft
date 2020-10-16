@@ -240,7 +240,7 @@ class Dispatcher:
         mutexg = parser.add_mutually_exclusive_group()
         mutexg.add_argument(
             '-v', '--verbose', action='store_true', dest='verbose_' + context,
-            help="More verbose and show debug information.")
+            help="Show debug information and be more verbose.")
         mutexg.add_argument(
             '-q', '--quiet', action='store_true', dest='quiet_' + context,
             help="Only show warnings and errors, not progress.")

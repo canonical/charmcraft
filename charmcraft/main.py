@@ -53,7 +53,8 @@ class HelpCommand(BaseCommand):
 
 # Collect commands in different groups, for easier human consumption. Note that this is not
 # declared in each command because it's much easier to do this separation/grouping in one
-# central place and not distributed in several classes/files.
+# central place and not distributed in several classes/files. Also note that order here is
+# important when lisgint commands and showing help.
 COMMAND_GROUPS = [
     ('basic', "Basic commands", [
         HelpCommand,

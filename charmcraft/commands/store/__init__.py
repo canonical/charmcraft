@@ -21,6 +21,7 @@ import hashlib
 import logging
 import os
 import pathlib
+import string
 import textwrap
 from collections import namedtuple
 from operator import attrgetter
@@ -596,30 +597,36 @@ class CreateLibCommand(BaseCommand):
     overview = textwrap.dedent("""
         Create a charm library.
 
-        It will request a unique ID from Charmhub and bootstrap a template file in the
-        proper local directory.
+        It will request a unique ID from Charmhub and bootstrap a
+        template file in the proper local directory.
 
         It will automatically take you through the login process if
         your credentials are missing or too old.
-    """)  # FIXME: improve help text
+    """)
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('libname', help="The name of the library file (e.g. 'db').")
-        # FIXME: add --charm-name option and support below
+        parser.add_argument('lib-name', help="The name of the library file (e.g. 'db').")
+        parser.add_argument('--charm-name', help="The name of the charm.")
 
-    def run(self, parsed_args):  # FIXME: test the whole function
+    def run(self, parsed_args):
         """Run the command."""
-        lib_name = parsed_args.libname
-        # FIXME: assert it's not a path with slashes or a full name with dots
-        # FIXME: assert that is all "valid chars"
-
-        charm_name = get_name_from_metadata()
-        if charm_name is None:
+        lib_name = parsed_args.lib_name
+        valid_chars = set(string.ascii_lowercase + string.digits + '_')
+        if set(lib_name) - valid_chars or lib_name[0] not in string.ascii_lowercase:
             raise CommandError(
-                "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
-                "be executed in a valid project's directory, or indicate the charm name with "
-                "the --name option.")
+                "Invalid library name (can be only lowercase alphanumeric "
+                "characters and underscore, starting with alpha).")
+
+        if parsed_args.charm_name is None:
+            charm_name = get_name_from_metadata()
+            if charm_name is None:
+                raise CommandError(
+                    "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+                    "be executed in a valid project's directory, or indicate the charm name with "
+                    "the --charm-name option.")
+        else:
+            charm_name = parsed_args.charm_name
 
         full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
         lib_path = _convert_lib_to_path(full_name)

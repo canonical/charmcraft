@@ -29,6 +29,8 @@ from dateutil import parser
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
+    CreateLibCommand,
+    LIBRARY_TEMPLATE,
     ListNamesCommand,
     ListRevisionsCommand,
     LoginCommand,
@@ -939,3 +941,94 @@ def test_status_with_multiple_branches(caplog, store_mock):
         "         beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for create library command
+
+
+def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch):
+    """Happy path with result from the Store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    store_mock.create_library_id.return_value = lib_id
+
+    args = Namespace(charm_name='testcharm', lib_name='testlib')
+    CreateLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.create_library_id('testcharm', 'testlib'),
+    ]
+    expected = [
+        "Library charms.testcharm.v0.testlib created with id test-example-lib-id.",
+        "Make sure to add the library file to your project: charms/testcharm/v0/testlib.py",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+    created_lib_file = tmp_path / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
+    assert created_lib_file.read_text() == LIBRARY_TEMPLATE.format(lib_id=lib_id)
+
+
+def test_createlib_name_from_metadata_ok(store_mock, tmp_path, monkeypatch):
+    """The charm name is retrieved succesfully from the metadata."""
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    store_mock.create_library_id.return_value = lib_id
+
+    args = Namespace(charm_name=None, lib_name='testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'test-charm-name'
+        CreateLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.create_library_id('test-charm-name', 'testlib'),
+    ]
+    created_lib_file = tmp_path / 'charms' / 'test-charm-name' / 'v0' / 'testlib.py'
+    assert created_lib_file.exists()
+
+
+def test_createlib_name_from_metadata_problem(store_mock):
+    """The metadata wasn't there to get the name."""
+    args = Namespace(charm_name=None, lib_name='testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
+        with pytest.raises(CommandError) as cm:
+            CreateLibCommand('group').run(args)
+        assert str(cm.value) == (
+            "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+            "be executed in a valid project's directory, or indicate the charm name with "
+            "the --charm-name option.")
+
+
+@pytest.mark.parametrize('lib_name', [
+    'foo.bar',
+    'foo/bar',
+    'Foo',
+    '123foo',
+    '_foo',
+])
+def test_createlib_invalid_name(lib_name):
+    """Verify that it can not be used with an invalid name."""
+    args = Namespace(charm_name=None, lib_name=lib_name)
+    with pytest.raises(CommandError) as err:
+        CreateLibCommand('group').run(args)
+    assert str(err.value) == (
+        "Invalid library name (can be only lowercase alphanumeric "
+        "characters and underscore, starting with alpha).")
+
+
+def test_createlib_path_already_there(tmp_path, monkeypatch):
+    """The intended-to-be-created library is already there."""
+    monkeypatch.chdir(tmp_path)
+
+    lib_file = tmp_path / 'charms' / 'test-charm-name' / 'v0' / 'testlib.py'
+    lib_file.parent.mkdir(parents=True)
+    lib_file.touch()
+
+    args = Namespace(charm_name='test-charm-name', lib_name='testlib')
+    with pytest.raises(CommandError) as err:
+        CreateLibCommand('group').run(args)
+
+    assert str(err.value) == (
+        "The indicated library already exists on charms/test-charm-name/v0/testlib.py")

@@ -65,7 +65,8 @@ def _build_item(title, text, title_space):
     """
     # wrap the general text to the desired max width (discounting the space for the title,
     # the first 4 spaces, the two spaces to separate title/text, and the ':'
-    text_space = TERMINAL_WIDTH - title_space - 7
+    not_title_space = 7
+    text_space = TERMINAL_WIDTH - title_space - not_title_space
     wrapped_lines = textwrap.wrap(text, text_space)
 
     # first line goes with the title at column 4
@@ -74,7 +75,7 @@ def _build_item(title, text, title_space):
 
     # the rest (if any) still aligned but without title
     for line in wrapped_lines[1:]:
-        result.append(" " * (title_space + 7) + line)
+        result.append(" " * (title_space + not_title_space) + line)
 
     return result
 

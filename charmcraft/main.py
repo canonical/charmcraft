@@ -208,7 +208,6 @@ class Dispatcher:
 
         # control and use quiet/verbose options
         if flags['quiet'] and flags['verbose']:
-            print("Error, mutex!")
             raise CommandError("The 'verbose' and 'quiet' options are mutually exclusive.")
         if flags['quiet']:
             message_handler.set_mode(message_handler.QUIET)

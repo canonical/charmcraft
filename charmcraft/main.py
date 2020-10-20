@@ -31,10 +31,7 @@ logger = logging.getLogger(__name__)
 class HelpCommand(BaseCommand):
     """Special internal command to produce help and usage messages.
 
-    This command is not executed by calling it's "run" method, it's just handled by the
-    dispatcher.
-
-    It also bends the rules for parameters (we have an optional parameter without dashes), the
+    It bends the rules for parameters (we have an optional parameter without dashes), the
     idea is to lower the barrier as much as possible for the user getting help.
     """
     name = 'help'
@@ -49,6 +46,27 @@ class HelpCommand(BaseCommand):
         parser.add_argument(
             'command_to_help', nargs='?', metavar='command',
             help="Produce a detailed help of the specified command.")
+
+    def run(self, parsed_args, all_commands):
+        """Present different help messages to the user.
+
+        Unlike other commands, this one receives an extra parameter with all commands,
+        to validate if the help requested is on a valid one, or even parse its data.
+        """
+        if parsed_args.command_to_help is None or parsed_args.command_to_help == self.name:
+            # help on no command in particular, get general text
+            help_text = get_general_help(detailed=parsed_args.all)
+        elif parsed_args.command_to_help not in all_commands:
+            # asked help on a command that doesn't exist
+            msg = "no such command {!r}".format(parsed_args.command_to_help)
+            help_text = helptexts.get_usage_message('charmcraft', msg)
+        else:
+            cmd_class, group = all_commands[parsed_args.command_to_help]
+            cmd = cmd_class(group)
+            parser = CustomArgumentParser(prog=cmd.name)
+            cmd.fill_parser(parser)
+            help_text = get_command_help(parser, cmd)
+        raise CommandError(help_text, argsparsing=True)
 
 
 # Collect commands in different groups, for easier human consumption. Note that this is not
@@ -75,102 +93,54 @@ COMMAND_GROUPS = [
 ]
 
 
-def _get_option(args, name):
-    """Get a general option, doing an OR operation between global and command versions.
-
-    This is done manually because otherwise Argparse would overwrite the
-    command one into the global one.
-    """
-    return getattr(args, name + '_global', False) or getattr(args, name + '_command', False)
+# global options: the flag used internally, short and long parameters, and the help text
+GLOBAL_FLAGS = [
+    ('help', '-h', '--help', "Show this help message and exit."),
+    ('verbose', '-v', '--verbose', "More verbose and show debug information."),
+    ('quiet', '-q', '--quiet', "Only show warnings and errors, not progress."),
+]
 
 
 class CustomArgumentParser(argparse.ArgumentParser):
-    """ArgumentParser with grouped commands help."""
-
-    def parse_known_args(self, args, namespace):
-        """Hold the namespace to verify if help was requested."""
-        if namespace is None:
-            namespace = argparse.Namespace()
-        self._namespace = namespace
-        return super().parse_known_args(args, namespace)
-
-    def _check_value(self, action, value):
-        """Verify the command is a valid one.
-
-        This overwrites ArgumentParser one to change the error text.
-        """
-        if action.choices is not None and value not in action.choices:
-            self._namespace._missing_command = True
-            raise argparse.ArgumentError(action, "no such command {!r}".format(value))
+    """ArgumentParser with custom error manager.."""
 
     def error(self, message):
         """Show the usage, the error message, and no more."""
-        # if help was requested, no matter other errors (just provide help!)
-        _missing_command = getattr(self._namespace, '_missing_command', False)
-        if _get_option(self._namespace, 'help') and not _missing_command:
-            help_text = get_help(self, self._namespace)
-            raise CommandError(help_text, argsparsing=True)
-
-        # the text for the usage is just 'charmcraft', unless we have a subparser in plase, so
-        # a command was used, so it's 'charmcraft <somecommand>'
-        fullcommand = self.prog
-        subparser = _get_subparser(self, self._namespace)
-        if subparser is not None:
-            fullcommand = subparser.prog
-
+        fullcommand = "charmcraft " + self.prog
         full_msg = helptexts.get_usage_message(fullcommand, message)
         raise CommandError(full_msg, argsparsing=True)
 
 
-def _get_subparser(parser, namespace):
-    """Return a subparser for that command, if any."""
-    command = getattr(namespace, '_command', None)
-    if command is not None:
-        subactions = [
-            action for action in parser._actions
-            if isinstance(action, argparse._SubParsersAction)]
-        if subactions:
-            if len(subactions) > 1:
-                raise RuntimeError("Incorrect subactions extraction from Argparse")
-            (subparseraction,) = subactions
-            parser = subparseraction.choices[command.name]
-            return parser
-
-
-def get_help(parser, namespace, detailed=False):
-    """Produce the complete (but not extensive) help message."""
-    # we get here in three situations, for which we need different information
-    # - no command given: then 'command' is None, the received parser is just the global one
-    # - a command is given and asked for help: 'command' is the given command, we need to
-    #   get the subparser to present the help for the given command
-    # - a command is given but without a needed param: 'command' is the given command, and the
-    #   parser is already the one for the command (the "subparser")
-    subparser = _get_subparser(parser, namespace)
-    if subparser is not None:
-        parser = subparser
-
-    # get options from the global or command-specific parser
-    actions = [
-        action for action in parser._actions
-        if not isinstance(action, argparse._SubParsersAction)]
+def _get_global_options():
+    """Return the global flags ready to present as options in the help messages."""
     options = []
-    for action in actions:
+    for _, short_option, long_option, helpmsg in GLOBAL_FLAGS:
+        options.append(("{}, {}".format(short_option, long_option), helpmsg))
+    return options
+
+
+def get_command_help(parser, command):
+    """Produce the complete help message for a command."""
+    options = _get_global_options()
+
+    for action in parser._actions:
         # store the different options if present, otherwise it's just the dest
         if action.option_strings:
             options.append((', '.join(action.option_strings), action.help))
         else:
             options.append((action.dest, action.help))
 
-    # get general or specific help
-    command = getattr(namespace, '_command', None)
-    if command is None:
-        if detailed:
-            help_text = helptexts.get_detailed_help(COMMAND_GROUPS, options)
-        else:
-            help_text = helptexts.get_full_help(COMMAND_GROUPS, options)
-    else:
-        help_text = helptexts.get_command_help(COMMAND_GROUPS, command, options)
+    help_text = helptexts.get_command_help(COMMAND_GROUPS, command, options)
+    return help_text
 
+
+def get_general_help(detailed=False):
+    """Produce the "general charmcraft" help."""
+    options = _get_global_options()
+    if detailed:
+        help_text = helptexts.get_detailed_help(COMMAND_GROUPS, options)
+    else:
+        help_text = helptexts.get_full_help(COMMAND_GROUPS, options)
     return help_text
 
 
@@ -181,91 +151,95 @@ class Dispatcher:
     """
 
     def __init__(self, sysargs, commands_groups):
-        self.commands = self._load_commands(commands_groups)
-        logger.debug("Commands loaded: %s", self.commands)
+        self.commands = self._get_commands_info(commands_groups)
+        command_name, cmd_args = self._pre_parse_args(sysargs)
+        self.command, self.parsed_args = self._load_command(command_name, cmd_args)
 
-        self.main_parser = self._build_argument_parser(commands_groups)
-        self.parsed_args = self.main_parser.parse_args(sysargs)
-        logger.debug("Parsed arguments: %s", self.parsed_args)
+    def _get_commands_info(self, commands_groups):
+        """Process the commands groups structure for easier programmable access."""
+        commands = {}
+        for _cmd_group, _, _cmd_classes in commands_groups:
+            for _cmd_class in _cmd_classes:
+                if _cmd_class.name in commands:
+                    _stored_class, _ = commands[_cmd_class.name]
+                    raise RuntimeError(
+                        "Multiple commands with same name: {} and {}".format(
+                            _cmd_class.__name__, _stored_class.__name__))
+                commands[_cmd_class.name] = (_cmd_class, _cmd_group)
+        return commands
+
+    def _load_command(self, command_name, cmd_args):
+        """Load a command."""
+        cmd_class, group = self.commands[command_name]
+        cmd = cmd_class(group)
+
+        # load and parse the command specific options/params
+        parser = CustomArgumentParser(prog=cmd.name)
+        cmd.fill_parser(parser)
+        parsed_args = parser.parse_args(cmd_args)
+
+        return cmd, parsed_args
+
+    def _pre_parse_args(self, sysargs):
+        """Pre-parse sys args.
+
+        Several steps:
+
+        - extract the global options and detects the possible command and its args
+
+        - validate global options and apply them
+
+        - validate that command is correct (NOT loading and parsing its arguments)
+        """
+        # get all flags (default to False) and those per options, to filter sysargs
+        flags = {}
+        flag_per_option = {}
+        for flag, short_option, long_option, _ in GLOBAL_FLAGS:
+            flag_per_option[short_option] = flag
+            flag_per_option[long_option] = flag
+            flags[flag] = False
+
+        filtered_sysargs = []
+        for arg in sysargs:
+            if arg in flag_per_option:
+                flags[flag_per_option[arg]] = True
+            else:
+                filtered_sysargs.append(arg)
+
+        # control and use quiet/verbose options
+        if flags['quiet'] and flags['verbose']:
+            raise CommandError("The 'verbose' and 'quiet' options are mutually exclusive.")
+        if flags['quiet']:
+            message_handler.set_mode(message_handler.QUIET)
+        elif flags['verbose']:
+            message_handler.set_mode(message_handler.VERBOSE)
+        logger.debug("Raw pre-parsed sysargs: flags=%s filtered=%s", flags, filtered_sysargs)
+
+        # if help requested, transform the parameters to make that explicit
+        if flags['help']:
+            command = HelpCommand.name
+            cmd_args = filtered_sysargs
+        elif filtered_sysargs:
+            command = filtered_sysargs[0]
+            cmd_args = filtered_sysargs[1:]
+            if command not in self.commands:
+                msg = "no such command {!r}".format(command)
+                help_text = helptexts.get_usage_message('charmcraft', msg)
+                raise CommandError(help_text, argsparsing=True)
+        else:
+            # no command!
+            help_text = get_general_help()
+            raise CommandError(help_text, argsparsing=True)
+
+        logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
+        return command, cmd_args
 
     def run(self):
         """Really run the command."""
-        self._handle_global_params()
-
-        if not hasattr(self.parsed_args, '_command') or _get_option(self.parsed_args, 'help'):
-            help_text = get_help(self.main_parser, self.parsed_args)
-            raise CommandError(help_text, argsparsing=True)
-
-        command = self.parsed_args._command
-        if command.name == 'help':
-            if self.parsed_args.command_to_help is None:
-                self.parsed_args._command = None
-            else:
-                try:
-                    command_to_help = self.commands[self.parsed_args.command_to_help]
-                except KeyError:
-                    msg = "no such command {!r}".format(self.parsed_args.command_to_help)
-                    help_text = helptexts.get_usage_message('charmcraft', msg)
-                    raise CommandError(help_text, argsparsing=True)
-
-                self.parsed_args._command = command_to_help
-            help_text = get_help(self.main_parser, self.parsed_args, detailed=self.parsed_args.all)
-            raise CommandError(help_text, argsparsing=True)
+        if isinstance(self.command, HelpCommand):
+            self.command.run(self.parsed_args, self.commands)
         else:
-            command.run(self.parsed_args)
-
-    def _handle_global_params(self):
-        """Set up and process global parameters."""
-        if _get_option(self.parsed_args, 'verbose'):
-            message_handler.set_mode(message_handler.VERBOSE)
-        if _get_option(self.parsed_args, 'quiet'):
-            message_handler.set_mode(message_handler.QUIET)
-
-    def _load_commands(self, commands_groups):
-        """Init the commands and store them by name."""
-        result = {}
-        for cmd_group, _, cmd_classes in commands_groups:
-            for cmd_class in cmd_classes:
-                if cmd_class.name in result:
-                    raise RuntimeError(
-                        "Multiple commands with same name: {} and {}".format(
-                            cmd_class.__name__, result[cmd_class.name].__class__.__name__))
-                result[cmd_class.name] = cmd_class(cmd_group)
-        return result
-
-    def _add_global_options(self, parser, context):
-        """Add the global options to the received parser."""
-        parser.add_argument(
-            '-h', '--help', action='store_true', dest='help_' + context,
-            help="Show this help message and exit.")
-        mutexg = parser.add_mutually_exclusive_group()
-        mutexg.add_argument(
-            '-v', '--verbose', action='store_true', dest='verbose_' + context,
-            help="be more verbose and show debug information")
-        mutexg.add_argument(
-            '-q', '--quiet', action='store_true', dest='quiet_' + context,
-            help="only show warnings and errors, not progress")
-
-    def _build_argument_parser(self, commands_groups):
-        """Build the generic argument parser."""
-        parser = CustomArgumentParser(
-            description="The main tool to build, upload and develop in general the Juju Charms.",
-            prog='charmcraft', add_help=False)
-
-        self._add_global_options(parser, 'global')
-
-        subparsers = parser.add_subparsers()
-        for group_name, _, cmd_classes in commands_groups:
-            for cmd_class in cmd_classes:
-                name = cmd_class.name
-                command = self.commands[name]
-
-                subparser = subparsers.add_parser(name, help=command.help_msg, add_help=False)
-                subparser.set_defaults(_command=command)
-                self._add_global_options(subparser, 'command')
-                command.fill_parser(subparser)
-
-        return parser
+            self.command.run(self.parsed_args)
 
 
 def main(argv=None):

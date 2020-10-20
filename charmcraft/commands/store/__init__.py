@@ -726,7 +726,7 @@ class PublishLibCommand(BaseCommand):
                         "same content in version %d.%d.", lib_data.full_name, tip.api, tip.patch)
                 else:
                     to_publish.append(lib_data)
-            else:  # FIXME: elif tip.patch < lib_data.patch:
+            else:
                 logger.info(
                     "Library %s has a wrong LIBPATCH number, it's too high, Charmhub "
                     "highest version is %d.%d.", lib_data.full_name, tip.api, tip.patch)
@@ -747,9 +747,11 @@ class FetchLibCommand(BaseCommand):
     overview = textwrap.dedent("""
         Fetch charm libraries.
 
+        It will download the library the first time, and update it the next times.
+
         It will automatically take you through the login process if
         your credentials are missing or too old.
-    """)  # FIXME: improve help text
+    """)
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

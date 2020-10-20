@@ -35,6 +35,7 @@ from charmcraft.commands.store import (
     ListRevisionsCommand,
     LoginCommand,
     LogoutCommand,
+    PublishLibCommand,
     RegisterNameCommand,
     ReleaseCommand,
     StatusCommand,
@@ -46,11 +47,13 @@ from charmcraft.commands.store.store import (
     Channel,
     Charm,
     Error,
+    Library,
     Release,
     Revision,
     Uploaded,
     User,
 )
+from tests import factory
 
 # used a lot!
 noargs = Namespace()
@@ -954,51 +957,33 @@ def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch):
     lib_id = 'test-example-lib-id'
     store_mock.create_library_id.return_value = lib_id
 
-    args = Namespace(charm_name='testcharm', lib_name='testlib')
-    CreateLibCommand('group').run(args)
+    args = Namespace(lib_name='testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        CreateLibCommand('group').run(args)
 
     assert store_mock.mock_calls == [
         call.create_library_id('testcharm', 'testlib'),
     ]
     expected = [
         "Library charms.testcharm.v0.testlib created with id test-example-lib-id.",
-        "Make sure to add the library file to your project: charms/testcharm/v0/testlib.py",
+        "Make sure to add the library file to your project: lib/charms/testcharm/v0/testlib.py",
     ]
     assert expected == [rec.message for rec in caplog.records]
-    created_lib_file = tmp_path / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
+    created_lib_file = tmp_path / 'lib' / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
     assert created_lib_file.read_text() == LIBRARY_TEMPLATE.format(lib_id=lib_id)
-
-
-def test_createlib_name_from_metadata_ok(store_mock, tmp_path, monkeypatch):
-    """The charm name is retrieved succesfully from the metadata."""
-    monkeypatch.chdir(tmp_path)
-
-    lib_id = 'test-example-lib-id'
-    store_mock.create_library_id.return_value = lib_id
-
-    args = Namespace(charm_name=None, lib_name='testlib')
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = 'test-charm-name'
-        CreateLibCommand('group').run(args)
-
-    assert store_mock.mock_calls == [
-        call.create_library_id('test-charm-name', 'testlib'),
-    ]
-    created_lib_file = tmp_path / 'charms' / 'test-charm-name' / 'v0' / 'testlib.py'
-    assert created_lib_file.exists()
 
 
 def test_createlib_name_from_metadata_problem(store_mock):
     """The metadata wasn't there to get the name."""
-    args = Namespace(charm_name=None, lib_name='testlib')
+    args = Namespace(lib_name='testlib')
     with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
         mock.return_value = None
         with pytest.raises(CommandError) as cm:
             CreateLibCommand('group').run(args)
         assert str(cm.value) == (
             "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
-            "be executed in a valid project's directory, or indicate the charm name with "
-            "the --charm-name option.")
+            "be executed in a valid project's directory.")
 
 
 @pytest.mark.parametrize('lib_name', [
@@ -1010,7 +995,7 @@ def test_createlib_name_from_metadata_problem(store_mock):
 ])
 def test_createlib_invalid_name(lib_name):
     """Verify that it can not be used with an invalid name."""
-    args = Namespace(charm_name=None, lib_name=lib_name)
+    args = Namespace(lib_name=lib_name)
     with pytest.raises(CommandError) as err:
         CreateLibCommand('group').run(args)
     assert str(err.value) == (
@@ -1022,13 +1007,289 @@ def test_createlib_path_already_there(tmp_path, monkeypatch):
     """The intended-to-be-created library is already there."""
     monkeypatch.chdir(tmp_path)
 
-    lib_file = tmp_path / 'charms' / 'test-charm-name' / 'v0' / 'testlib.py'
-    lib_file.parent.mkdir(parents=True)
-    lib_file.touch()
-
-    args = Namespace(charm_name='test-charm-name', lib_name='testlib')
-    with pytest.raises(CommandError) as err:
-        CreateLibCommand('group').run(args)
+    factory.create_lib_filepath('test-charm-name', 'testlib', api=0)
+    args = Namespace(lib_name='testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'test-charm-name'
+        with pytest.raises(CommandError) as err:
+            CreateLibCommand('group').run(args)
 
     assert str(err.value) == (
-        "The indicated library already exists on charms/test-charm-name/v0/testlib.py")
+        "The indicated library already exists on lib/charms/test-charm-name/v0/testlib.py")
+
+
+# -- tests for publish libraries command
+
+
+def test_publishlib_simple(caplog, store_mock, tmp_path, monkeypatch):
+    """Happy path publishing because no revision at all in the Store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    content, content_hash = factory.create_lib_filepath(
+        'testcharm', 'testlib', api=0, patch=1, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {}
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        PublishLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+        call.create_library_revision('testcharm', lib_id, 0, 1, content, content_hash),
+    ]
+    expected = "Library charms.testcharm.v0.testlib sent to the store with version 0.1"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_publishlib_all(caplog, store_mock, tmp_path, monkeypatch):
+    """Publish all the libraries found in disk."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    c1, h1 = factory.create_lib_filepath(
+        'testcharm-1', 'testlib-a', api=0, patch=1, lib_id='lib_id_1')
+    c2, h2 = factory.create_lib_filepath(
+        'testcharm-1', 'testlib-b', api=0, patch=1, lib_id='lib_id_2')
+    c3, h3 = factory.create_lib_filepath(
+        'testcharm-1', 'testlib-b', api=1, patch=3, lib_id='lib_id_3')
+    factory.create_lib_filepath(
+        'testcharm-2', 'testlib', api=0, patch=1, lib_id='lib_id_4')
+
+    store_mock.get_libraries_tips.return_value = {}
+    args = Namespace(library=None)
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm-1'
+        PublishLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([
+            {'lib_id': 'lib_id_1', 'api': 0},
+            {'lib_id': 'lib_id_2', 'api': 0},
+            {'lib_id': 'lib_id_3', 'api': 1},
+        ]),
+        call.create_library_revision('testcharm-1', 'lib_id_1', 0, 1, c1, h1),
+        call.create_library_revision('testcharm-1', 'lib_id_2', 0, 1, c2, h2),
+        call.create_library_revision('testcharm-1', 'lib_id_3', 1, 3, c3, h3),
+    ]
+    names = [
+        'charms.testcharm-1.v0.testlib-a',
+        'charms.testcharm-1.v0.testlib-b',
+        'charms.testcharm-1.v1.testlib-b',
+    ]
+    expected = [
+        "Libraries found under lib/charms/testcharm-1: " + str(names),
+        "Library charms.testcharm-1.v0.testlib-a sent to the store with version 0.1",
+        "Library charms.testcharm-1.v0.testlib-b sent to the store with version 0.1",
+        "Library charms.testcharm-1.v1.testlib-b sent to the store with version 1.3",
+    ]
+    records = [rec.message for rec in caplog.records]
+    assert all(e in records for e in expected)
+
+
+def test_publishlib_not_found(caplog, store_mock, tmp_path, monkeypatch):
+    """The indicated library is not found."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        with pytest.raises(CommandError) as cm:
+            PublishLibCommand('group').run(args)
+
+        assert str(cm.value) == (
+            "The specified library was not found at path lib/charms/testcharm/v0/testlib.py.")
+
+
+def test_publishlib_not_from_current_charm(caplog, store_mock, tmp_path, monkeypatch):
+    """The indicated library to publish does not belong to this charm."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+    factory.create_lib_filepath('testcharm', 'testlib', api=0)
+
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'charm2'
+        with pytest.raises(CommandError) as cm:
+            PublishLibCommand('group').run(args)
+
+        assert str(cm.value) == (
+            "The library charms.testcharm.v0.testlib does not belong to this charm 'charm2'.")
+
+
+def test_publishlib_name_from_metadata_problem(store_mock):
+    """The metadata wasn't there to get the name."""
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
+        with pytest.raises(CommandError) as cm:
+            PublishLibCommand('group').run(args)
+
+        assert str(cm.value) == (
+            "Can't access name in 'metadata.yaml' file. The 'publish-lib' command needs to "
+            "be executed in a valid project's directory.")
+
+
+def test_publishlib_store_is_advanced(caplog, store_mock, tmp_path, monkeypatch):
+    """The store has a more advanced revision that we expect."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    factory.create_lib_filepath('testcharm', 'testlib', api=0, patch=1, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content='content', content_hash='abc', api=0, patch=2,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        PublishLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+    ]
+    expected = (
+        "Library charms.testcharm.v0.testlib is out-of-date locally, Charmhub has version 0.2, "
+        "please fetch the updates before publish.")
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_publishlib_store_is_exactly_behind_ok(caplog, store_mock, tmp_path, monkeypatch):
+    """The store is exactly one revision less than local lib, ok."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    content, content_hash = factory.create_lib_filepath(
+        'testcharm', 'testlib', api=0, patch=7, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content='content', content_hash='abc', api=0, patch=6,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        PublishLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+        call.create_library_revision('testcharm', lib_id, 0, 7, content, content_hash),
+    ]
+    expected = "Library charms.testcharm.v0.testlib sent to the store with version 0.7"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_publishlib_store_is_exactly_behind_same_hash(caplog, store_mock, tmp_path, monkeypatch):
+    """The store is exactly one revision less than local lib, same hash."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    content, content_hash = factory.create_lib_filepath(
+        'testcharm', 'testlib', api=0, patch=7, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=content, content_hash=content_hash, api=0, patch=6,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        PublishLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+    ]
+    expected = (
+        "Library charms.testcharm.v0.testlib LIBPATCH number was incorrectly incremented, "
+        "Charmhub has the same content in version 0.6.")
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_publishlib_store_is_too_behind(caplog, store_mock, tmp_path, monkeypatch):
+    """The store is way more behind than what we expected (local lib too high!)."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    factory.create_lib_filepath('testcharm', 'testlib', api=0, patch=5, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content='content', content_hash='abc', api=0, patch=2,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        PublishLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+    ]
+    expected = (
+        "Library charms.testcharm.v0.testlib has a wrong LIBPATCH number, it's too high, Charmhub "
+        "highest version is 0.2.")
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_publishlib_store_has_same_revision_same_hash(caplog, store_mock, tmp_path, monkeypatch):
+    """The store has the same revision we want to publish, with the same hash."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    content, content_hash = factory.create_lib_filepath(
+        'testcharm', 'testlib', api=0, patch=7, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=content, content_hash=content_hash, api=0, patch=7,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        PublishLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+    ]
+    expected = "Library charms.testcharm.v0.testlib is already updated in Charmhub."
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_publishlib_store_has_same_revision_other_hash(caplog, store_mock, tmp_path, monkeypatch):
+    """The store has the same revision we want to publish, but with a different hash."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    factory.create_lib_filepath('testcharm', 'testlib', api=0, patch=7, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content='content', content_hash='abc', api=0, patch=7,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    args = Namespace(library='charms.testcharm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        PublishLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+    ]
+    expected = (
+        "Library charms.testcharm.v0.testlib version 0.7 is the same than in Charmhub but "
+        "content is different")
+    assert [expected] == [rec.message for rec in caplog.records]

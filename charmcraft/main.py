@@ -95,7 +95,7 @@ COMMAND_GROUPS = [
 # global options: the flag used internally, short and long parameters, and the help text
 GLOBAL_FLAGS = [
     ('help', '-h', '--help', "Show this help message and exit."),
-    ('verbose', '-v', '--verbose', "More verbose and show debug information."),
+    ('verbose', '-v', '--verbose', "Show debug information and be more verbose."),
     ('quiet', '-q', '--quiet', "Only show warnings and errors, not progress."),
 ]
 

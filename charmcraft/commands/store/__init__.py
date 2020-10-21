@@ -654,7 +654,9 @@ class PublishLibCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--library', help="Library to publish (e.g. charms.mycharm.v2.foo.")
+        parser.add_argument(
+            'library', nargs='?',
+            help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all.")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -755,16 +757,13 @@ class FetchLibCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('library', help="Library to fetch (e.g. charms.othercharm.v2.foo.")
         parser.add_argument(
-            '--all', action='store_true',
-            help="To fetch all the libraries.")
-        # FIXME: add --charm-name option and support below
+            'library', nargs='?',
+            help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all.")
+        # FIXME: what if not in a charm dir? --dest-dir?
 
     def run(self, parsed_args):  # FIXME: test the whole function
         """Run the command."""
-        if parsed_args.library and parsed_args.all:
-            raise CommandError("Specify --all without a specific library, to fetch all of them.")
         if parsed_args.library:
             libpath = _convert_lib_to_path(parsed_args.library)
             libraries = [(parsed_args.library, libpath)]

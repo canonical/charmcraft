@@ -73,14 +73,14 @@ def test_dispatcher_command_execution_crash():
     ['somecommand', '-v'],
     ['-v', 'somecommand'],
     ['--verbose', 'somecommand'],
+    ['--verbose', 'somecommand', '-v'],
 ])
 def test_dispatcher_generic_setup_verbose(options):
     """Generic parameter handling for verbose log setup, directly or after the command."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
-    dispatcher = Dispatcher(options, groups)
     logsetup.message_handler.mode = None
-    dispatcher.run()
+    Dispatcher(options, groups)
     assert logsetup.message_handler.mode == logsetup.message_handler.VERBOSE
 
 
@@ -89,14 +89,14 @@ def test_dispatcher_generic_setup_verbose(options):
     ['somecommand', '-q'],
     ['-q', 'somecommand'],
     ['--quiet', 'somecommand'],
+    ['--quiet', 'somecommand', '-q'],
 ])
 def test_dispatcher_generic_setup_quiet(options):
     """Generic parameter handling for quiet log setup, directly or after the command."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
-    dispatcher = Dispatcher(options, groups)
     logsetup.message_handler.mode = None
-    dispatcher.run()
+    Dispatcher(options, groups)
     assert logsetup.message_handler.mode == logsetup.message_handler.QUIET
 
 
@@ -105,37 +105,35 @@ def test_dispatcher_generic_setup_quiet(options):
     ['-v', '-q', 'somecommand'],
     ['somecommand', '--quiet', '--verbose'],
     ['somecommand', '-v', '-q'],
-    # XXX Facundo 2020-08-25: we need to do this check when we escape out of argparsing parsing
-    # for global options and commands, as argparse doesn't support mutex options between parsers
-    # Related issue: https://github.com/canonical/charmcraft/issues/138
-    # ['--verbose', 'somecommand', '--quiet'],
-    # ['-q', 'somecommand', '-v'],
+    ['--verbose', 'somecommand', '--quiet'],
+    ['-q', 'somecommand', '-v'],
 ])
 def test_dispatcher_generic_setup_mutually_exclusive(options):
     """Disallow mutually exclusive generic options."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     # test the system exit, which is done automatically by argparse
-    with pytest.raises(CommandError):
+    with pytest.raises(CommandError) as err:
         Dispatcher(options, groups)
+    assert str(err.value) == "The 'verbose' and 'quiet' options are mutually exclusive."
 
 
-def test_dispatcher_load_commands_ok():
+def test_dispatcher_build_commands_ok():
     """Correct command loading."""
     cmd0, cmd1, cmd2 = [create_command('cmd-name-{}'.format(n), 'cmd help') for n in range(3)]
     groups = [
         ('test-group-A', 'whatever title', [cmd0]),
         ('test-group-B', 'other title', [cmd1, cmd2]),
     ]
-    dispatcher = Dispatcher([], groups)
+    dispatcher = Dispatcher([cmd0.name], groups)
     assert len(dispatcher.commands) == 3
     for cmd, group in [(cmd0, 'test-group-A'), (cmd1, 'test-group-B'), (cmd2, 'test-group-B')]:
-        expected_cmd = dispatcher.commands[cmd.name]
-        assert isinstance(expected_cmd, BaseCommand)
-        assert expected_cmd.group == group
+        expected_class, expected_group = dispatcher.commands[cmd.name]
+        assert expected_class == cmd
+        assert expected_group == group
 
 
-def test_dispatcher_load_commands_repeated():
+def test_dispatcher_build_commands_repeated():
     """Error while loading commands with repeated name."""
     class Foo(BaseCommand):
         help_msg = "some help"
@@ -156,6 +154,36 @@ def test_dispatcher_load_commands_repeated():
     expected_msg = "Multiple commands with same name: (Foo|Baz) and (Baz|Foo)"
     with pytest.raises(RuntimeError, match=expected_msg):
         Dispatcher([], groups)
+
+
+def test_dispatcher_commands_are_not_loaded_if_not_needed():
+    class MyCommand1(BaseCommand):
+        """Expected to be executed."""
+        name = 'command1'
+        help_msg = "some help"
+        _executed = []
+
+        def run(self, parsed_args):
+            self._executed.append(parsed_args)
+
+    class MyCommand2(BaseCommand):
+        """Expected to not be instantiated, or parse args, or run."""
+        name = 'command2'
+        help_msg = "some help"
+
+        def __init__(self, *args):
+            raise AssertionError
+
+        def fill_parser(self, parser):
+            raise AssertionError
+
+        def run(self, parsed_args):
+            raise AssertionError
+
+    groups = [('test-group', 'title', [MyCommand1, MyCommand2])]
+    dispatcher = Dispatcher(['command1'], groups)
+    dispatcher.run()
+    assert isinstance(MyCommand1._executed[0], argparse.Namespace)
 
 
 # --- Tests for the main entry point

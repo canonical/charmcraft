@@ -17,7 +17,6 @@
 
 import argparse
 import logging
-import os
 import sys
 
 from charmcraft import helptexts
@@ -244,10 +243,7 @@ class Dispatcher:
 
 def main(argv=None):
     """Main entry point."""
-    # Setup logging, using DEBUG envvar in case dev wants to show info before
-    # command parsing.
-    mode = message_handler.VERBOSE if 'DEBUG' in os.environ else message_handler.NORMAL
-    message_handler.init(mode)
+    message_handler.init(message_handler.NORMAL)
 
     if argv is None:
         argv = sys.argv

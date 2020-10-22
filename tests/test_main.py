@@ -322,29 +322,3 @@ def test_initmsg_verbose():
     expected = "Starting charmcraft version " + __version__
     assert expected in file_first_line
     assert expected in terminal_first_line
-
-
-def test_initmsg_debug(monkeypatch):
-    """When in DEBUG, the init msg goes both to disk and terminal."""
-    monkeypatch.setenv('DEBUG', '1')
-
-    cmd = create_command('somecommand')
-    fake_stream = io.StringIO()
-    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
-        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
-            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
-                main(['charmcraft', 'somecommand'])
-
-    # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once_with()
-    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
-    file_first_line = logged_to_file.split('\n')[0]
-    logsetup.message_handler.ended_ok()
-
-    # get the terminal first line
-    captured = fake_stream.getvalue()
-    terminal_first_line = captured.split('\n')[0]
-
-    expected = "Starting charmcraft version " + __version__
-    assert expected in file_first_line
-    assert expected in terminal_first_line

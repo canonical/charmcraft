@@ -370,8 +370,8 @@ class BuildCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '-f', '--from', type=pathlib.Path,
-            help="The directory where the charm project is located, from where the build "
-                 "is done; defaults to '.'.")
+            help="The directory where the charm project is located, where the build "
+                 "is done from; defaults to '.'.")
         parser.add_argument(
             '-e', '--entrypoint', type=pathlib.Path,
             help="The executable script or program which is the entry point to all the "

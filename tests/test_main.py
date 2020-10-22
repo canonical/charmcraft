@@ -35,24 +35,22 @@ def test_dispatcher_command_execution_ok():
     class MyCommandControl(BaseCommand):
         help_msg = "some help"
 
-        def __init__(self, group):
-            super().__init__(group)
-            self.executed = None
-
         def run(self, parsed_args):
-            self.executed = parsed_args
+            self._executed.append(parsed_args)
 
     class MyCommand1(MyCommandControl):
         name = 'name1'
+        _executed = []
 
     class MyCommand2(MyCommandControl):
         name = 'name2'
+        _executed = []
 
     groups = [('test-group', 'title', [MyCommand1, MyCommand2])]
     dispatcher = Dispatcher(['name2'], groups)
     dispatcher.run()
-    assert dispatcher.commands['name1'].executed is None
-    assert isinstance(dispatcher.commands['name2'].executed, argparse.Namespace)
+    assert MyCommand1._executed == []
+    assert isinstance(MyCommand2._executed[0], argparse.Namespace)
 
 
 def test_dispatcher_command_execution_crash():
@@ -75,14 +73,14 @@ def test_dispatcher_command_execution_crash():
     ['somecommand', '-v'],
     ['-v', 'somecommand'],
     ['--verbose', 'somecommand'],
+    ['--verbose', 'somecommand', '-v'],
 ])
 def test_dispatcher_generic_setup_verbose(options):
     """Generic parameter handling for verbose log setup, directly or after the command."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
-    dispatcher = Dispatcher(options, groups)
     logsetup.message_handler.mode = None
-    dispatcher.run()
+    Dispatcher(options, groups)
     assert logsetup.message_handler.mode == logsetup.message_handler.VERBOSE
 
 
@@ -91,14 +89,14 @@ def test_dispatcher_generic_setup_verbose(options):
     ['somecommand', '-q'],
     ['-q', 'somecommand'],
     ['--quiet', 'somecommand'],
+    ['--quiet', 'somecommand', '-q'],
 ])
 def test_dispatcher_generic_setup_quiet(options):
     """Generic parameter handling for quiet log setup, directly or after the command."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
-    dispatcher = Dispatcher(options, groups)
     logsetup.message_handler.mode = None
-    dispatcher.run()
+    Dispatcher(options, groups)
     assert logsetup.message_handler.mode == logsetup.message_handler.QUIET
 
 
@@ -107,37 +105,35 @@ def test_dispatcher_generic_setup_quiet(options):
     ['-v', '-q', 'somecommand'],
     ['somecommand', '--quiet', '--verbose'],
     ['somecommand', '-v', '-q'],
-    # XXX Facundo 2020-08-25: we need to do this check when we escape out of argparsing parsing
-    # for global options and commands, as argparse doesn't support mutex options between parsers
-    # Related issue: https://github.com/canonical/charmcraft/issues/138
-    # ['--verbose', 'somecommand', '--quiet'],
-    # ['-q', 'somecommand', '-v'],
+    ['--verbose', 'somecommand', '--quiet'],
+    ['-q', 'somecommand', '-v'],
 ])
 def test_dispatcher_generic_setup_mutually_exclusive(options):
     """Disallow mutually exclusive generic options."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     # test the system exit, which is done automatically by argparse
-    with pytest.raises(CommandError):
+    with pytest.raises(CommandError) as err:
         Dispatcher(options, groups)
+    assert str(err.value) == "The 'verbose' and 'quiet' options are mutually exclusive."
 
 
-def test_dispatcher_load_commands_ok():
+def test_dispatcher_build_commands_ok():
     """Correct command loading."""
     cmd0, cmd1, cmd2 = [create_command('cmd-name-{}'.format(n), 'cmd help') for n in range(3)]
     groups = [
         ('test-group-A', 'whatever title', [cmd0]),
         ('test-group-B', 'other title', [cmd1, cmd2]),
     ]
-    dispatcher = Dispatcher([], groups)
+    dispatcher = Dispatcher([cmd0.name], groups)
     assert len(dispatcher.commands) == 3
     for cmd, group in [(cmd0, 'test-group-A'), (cmd1, 'test-group-B'), (cmd2, 'test-group-B')]:
-        expected_cmd = dispatcher.commands[cmd.name]
-        assert isinstance(expected_cmd, BaseCommand)
-        assert expected_cmd.group == group
+        expected_class, expected_group = dispatcher.commands[cmd.name]
+        assert expected_class == cmd
+        assert expected_group == group
 
 
-def test_dispatcher_load_commands_repeated():
+def test_dispatcher_build_commands_repeated():
     """Error while loading commands with repeated name."""
     class Foo(BaseCommand):
         help_msg = "some help"
@@ -160,6 +156,36 @@ def test_dispatcher_load_commands_repeated():
         Dispatcher([], groups)
 
 
+def test_dispatcher_commands_are_not_loaded_if_not_needed():
+    class MyCommand1(BaseCommand):
+        """Expected to be executed."""
+        name = 'command1'
+        help_msg = "some help"
+        _executed = []
+
+        def run(self, parsed_args):
+            self._executed.append(parsed_args)
+
+    class MyCommand2(BaseCommand):
+        """Expected to not be instantiated, or parse args, or run."""
+        name = 'command2'
+        help_msg = "some help"
+
+        def __init__(self, *args):
+            raise AssertionError
+
+        def fill_parser(self, parser):
+            raise AssertionError
+
+        def run(self, parsed_args):
+            raise AssertionError
+
+    groups = [('test-group', 'title', [MyCommand1, MyCommand2])]
+    dispatcher = Dispatcher(['command1'], groups)
+    dispatcher.run()
+    assert isinstance(MyCommand1._executed[0], argparse.Namespace)
+
+
 # --- Tests for the main entry point
 
 # In all the test methods below we patch Dispatcher.run so we don't really exercise any
@@ -169,60 +195,58 @@ def test_dispatcher_load_commands_repeated():
 
 def test_main_ok():
     """Work ended ok: message handler notified properly, return code in 0."""
-    with patch.object(logsetup, 'message_handler') as mh_mock:
+    with patch('charmcraft.main.message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.return_value = None
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 0
-    assert mh_mock.ended_ok.called_once()
+    mh_mock.ended_ok.assert_called_once_with()
 
 
 def test_main_no_args():
     """The setup.py entry_point function needs to work with no arguments."""
     with patch('sys.argv', ['charmcraft']):
-        with patch.object(logsetup, 'message_handler') as mh_mock:
-            with patch('charmcraft.main.Dispatcher.run') as d_mock:
-                d_mock.side_effect = CommandError('boom', retcode=42)
-                retcode = main()
+        with patch('charmcraft.main.message_handler') as mh_mock:
+            retcode = main()
 
-    assert retcode == 42
-    assert mh_mock.ended_ok.called_once()
+    assert retcode == 1
+    assert mh_mock.ended_cmderror.call_count == 1
 
 
 def test_main_controlled_error():
     """Work raised CommandError: message handler notified properly, use indicated return code."""
     simulated_exception = CommandError('boom', retcode=33)
-    with patch.object(logsetup, 'message_handler') as mh_mock:
+    with patch('charmcraft.main.message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.side_effect = simulated_exception
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 33
-    assert mh_mock.ended_cmderror.called_once_with(simulated_exception)
+    mh_mock.ended_cmderror.assert_called_once_with(simulated_exception)
 
 
 def test_main_crash():
     """Work crashed: message handler notified properly, return code in 1."""
     simulated_exception = ValueError('boom')
-    with patch.object(logsetup, 'message_handler') as mh_mock:
+    with patch('charmcraft.main.message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.side_effect = simulated_exception
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 1
-    assert mh_mock.ended_crash.called_once_with(simulated_exception)
+    mh_mock.ended_crash.assert_called_once_with(simulated_exception)
 
 
 def test_main_interrupted():
     """Work interrupted: message handler notified properly, return code in 1."""
-    with patch.object(logsetup, 'message_handler') as mh_mock:
+    with patch('charmcraft.main.message_handler') as mh_mock:
         with patch('charmcraft.main.Dispatcher.run') as d_mock:
             d_mock.side_effect = KeyboardInterrupt
             retcode = main(['charmcraft', 'version'])
 
     assert retcode == 1
-    assert mh_mock.ended_interrupt.called_once()
+    assert mh_mock.ended_interrupt.call_count == 1
 
 
 # --- Tests for the bootstrap version message
@@ -284,32 +308,6 @@ def test_initmsg_verbose():
         with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
             with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
                 main(['charmcraft', '--verbose', 'somecommand'])
-
-    # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once_with()
-    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
-    file_first_line = logged_to_file.split('\n')[0]
-    logsetup.message_handler.ended_ok()
-
-    # get the terminal first line
-    captured = fake_stream.getvalue()
-    terminal_first_line = captured.split('\n')[0]
-
-    expected = "Starting charmcraft version " + __version__
-    assert expected in file_first_line
-    assert expected in terminal_first_line
-
-
-def test_initmsg_debug(monkeypatch):
-    """When in DEBUG, the init msg goes both to disk and terminal."""
-    monkeypatch.setenv('DEBUG', '1')
-
-    cmd = create_command('somecommand')
-    fake_stream = io.StringIO()
-    with patch('charmcraft.main.COMMAND_GROUPS', [('test-group', 'whatever title', [cmd])]):
-        with patch.object(logsetup.message_handler, 'ended_ok') as ended_ok_mock:
-            with patch.object(logsetup.message_handler._stderr_handler, 'stream', fake_stream):
-                main(['charmcraft', 'somecommand'])
 
     # get the logfile first line before removing it
     ended_ok_mock.assert_called_once_with()

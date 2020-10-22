@@ -243,9 +243,11 @@ class Store:
             else:
                 d = {
                     'charm-name': lib['charm_name'],
-                    'lib-name': lib['lib_name'],
                 }
-            d['api'] = lib['api']
+                if 'lib_name' in lib:
+                    d['lib-name'] = lib['lib_name']
+            if 'api' in lib:
+                d['api'] = lib['api']
             payload.append(d)
         response = self._client.post(endpoint, payload)
         result = {(item['lib-id'], item['api']): _build_library(item) for item in response}

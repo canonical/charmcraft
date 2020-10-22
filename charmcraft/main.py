@@ -90,6 +90,7 @@ COMMAND_GROUPS = [
         store.ReleaseCommand, store.StatusCommand,
         # libraries support
         store.CreateLibCommand, store.PublishLibCommand, store.FetchLibCommand,
+        store.ListLibCommand,
     ]),
 ]
 

@@ -214,6 +214,7 @@ class Store:
         return result
 
     # FIXME: test all this func
+    # FIXME: RENAM????
     def get_library_by_id(self, charm_name, lib_id, api):
         """Get the library tip by id for a given api version."""
         endpoint = '/v1/charm/{}/library/{}?api={}'.format(charm_name, lib_id, api)
@@ -222,6 +223,7 @@ class Store:
         return result
 
     # FIXME: test all this func
+    # FIXME: UNUSED???????????????????????
     def get_library_by_name(self, charm_name, lib_name, api):
         """Get the library tip by name for a given api version."""
         # XXX: decide if we need to quote the lib name here (acording to its name rules)

@@ -30,6 +30,7 @@ from dateutil import parser
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     CreateLibCommand,
+    FetchLibCommand,
     LIBRARY_TEMPLATE,
     ListNamesCommand,
     ListRevisionsCommand,
@@ -1143,7 +1144,7 @@ def test_publishlib_store_is_advanced(caplog, store_mock, tmp_path, monkeypatch)
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
-            lib_id=lib_id, content='content', content_hash='abc', api=0, patch=2,
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=2,
             lib_name='testlib', charm_name='testcharm'),
     }
     args = Namespace(library='charms.testcharm.v0.testlib')
@@ -1171,7 +1172,7 @@ def test_publishlib_store_is_exactly_behind_ok(caplog, store_mock, tmp_path, mon
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
-            lib_id=lib_id, content='content', content_hash='abc', api=0, patch=6,
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=6,
             lib_name='testlib', charm_name='testcharm'),
     }
     args = Namespace(library='charms.testcharm.v0.testlib')
@@ -1198,7 +1199,7 @@ def test_publishlib_store_is_exactly_behind_same_hash(caplog, store_mock, tmp_pa
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
-            lib_id=lib_id, content=content, content_hash=content_hash, api=0, patch=6,
+            lib_id=lib_id, content=None, content_hash=content_hash, api=0, patch=6,
             lib_name='testlib', charm_name='testcharm'),
     }
     args = Namespace(library='charms.testcharm.v0.testlib')
@@ -1225,7 +1226,7 @@ def test_publishlib_store_is_too_behind(caplog, store_mock, tmp_path, monkeypatc
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
-            lib_id=lib_id, content='content', content_hash='abc', api=0, patch=2,
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=2,
             lib_name='testlib', charm_name='testcharm'),
     }
     args = Namespace(library='charms.testcharm.v0.testlib')
@@ -1253,7 +1254,7 @@ def test_publishlib_store_has_same_revision_same_hash(caplog, store_mock, tmp_pa
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
-            lib_id=lib_id, content=content, content_hash=content_hash, api=0, patch=7,
+            lib_id=lib_id, content=None, content_hash=content_hash, api=0, patch=7,
             lib_name='testlib', charm_name='testcharm'),
     }
     args = Namespace(library='charms.testcharm.v0.testlib')
@@ -1278,7 +1279,7 @@ def test_publishlib_store_has_same_revision_other_hash(caplog, store_mock, tmp_p
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
-            lib_id=lib_id, content='content', content_hash='abc', api=0, patch=7,
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=7,
             lib_name='testlib', charm_name='testcharm'),
     }
     args = Namespace(library='charms.testcharm.v0.testlib')
@@ -1293,3 +1294,203 @@ def test_publishlib_store_has_same_revision_other_hash(caplog, store_mock, tmp_p
         "Library charms.testcharm.v0.testlib version 0.7 is the same than in Charmhub but "
         "content is different")
     assert [expected] == [rec.message for rec in caplog.records]
+
+
+# -- tests for fetch libraries command
+
+
+def test_fetchlib_simple_downloaded(caplog, store_mock, tmp_path, monkeypatch):
+    """Happy path fetching the lib for first time (downloading it)."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    lib_content = 'some test content with uñicode ;)'
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=7,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    store_mock.get_library.return_value = Library(
+        lib_id=lib_id, content=lib_content, content_hash='abc', api=0, patch=7,
+        lib_name='testlib', charm_name='testcharm')
+
+    FetchLibCommand('group').run(Namespace(library='charms.testcharm.v0.testlib'))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips(
+            [{'charm_name': 'testcharm', 'lib_name': 'testlib', 'api': 0}]),
+        call.get_library('testcharm', lib_id, 0),
+    ]
+    expected = "Library charms.testcharm.v0.testlib version 0.7 downloaded."
+    assert [expected] == [rec.message for rec in caplog.records]
+    saved_file = tmp_path / 'lib' / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
+    assert saved_file.read_text() == lib_content
+
+
+def test_fetchlib_simple_updated(caplog, store_mock, tmp_path, monkeypatch):
+    """Happy path fetching the lib for Nth time (updating it)."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    content, content_hash = factory.create_lib_filepath(
+        'testcharm', 'testlib', api=0, patch=1, lib_id=lib_id)
+
+    new_lib_content = 'some test content with uñicode ;)'
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=2,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    store_mock.get_library.return_value = Library(
+        lib_id=lib_id, content=new_lib_content, content_hash='abc', api=0, patch=2,
+        lib_name='testlib', charm_name='testcharm')
+
+    FetchLibCommand('group').run(Namespace(library='charms.testcharm.v0.testlib'))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+        call.get_library('testcharm', lib_id, 0),
+    ]
+    expected = "Library charms.testcharm.v0.testlib updated to version 0.2."
+    assert [expected] == [rec.message for rec in caplog.records]
+    saved_file = tmp_path / 'lib' / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
+    assert saved_file.read_text() == new_lib_content
+
+
+def test_fetchlib_all(caplog, store_mock, tmp_path, monkeypatch):
+    """Publish all the libraries found in disk."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    c1, h1 = factory.create_lib_filepath(
+        'testcharm1', 'testlib1', api=0, patch=1, lib_id='lib_id_1')
+    c2, h2 = factory.create_lib_filepath(
+        'testcharm2', 'testlib2', api=3, patch=5, lib_id='lib_id_2')
+
+    store_mock.get_libraries_tips.return_value = {
+        ('lib_id_1', 0): Library(
+            lib_id='lib_id_1', content=None, content_hash='abc', api=0, patch=2,
+            lib_name='testlib1', charm_name='testcharm1'),
+        ('lib_id_2', 3): Library(
+            lib_id='lib_id_2', content=None, content_hash='def', api=3, patch=14,
+            lib_name='testlib2', charm_name='testcharm2'),
+    }
+    _store_libs_info = [
+        Library(
+            lib_id='lib_id_1', content='new lib content 1', content_hash='xxx', api=0, patch=2,
+            lib_name='testlib1', charm_name='testcharm1'),
+        Library(
+            lib_id='lib_id_2', content='new lib content 2', content_hash='yyy', api=3, patch=14,
+            lib_name='testlib2', charm_name='testcharm2'),
+    ]
+    store_mock.get_library.side_effect = lambda *a: _store_libs_info.pop(0)
+
+    FetchLibCommand('group').run(Namespace(library=None))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([
+            {'lib_id': 'lib_id_1', 'api': 0},
+            {'lib_id': 'lib_id_2', 'api': 3},
+        ]),
+        call.get_library('testcharm1', 'lib_id_1', 0),
+        call.get_library('testcharm2', 'lib_id_2', 3),
+    ]
+    names = [
+        'charms.testcharm1.v0.testlib1',
+        'charms.testcharm2.v3.testlib2',
+    ]
+    expected = [
+        "Libraries found under lib/charms: " + str(names),
+        "Library charms.testcharm1.v0.testlib1 updated to version 0.2.",
+        "Library charms.testcharm2.v3.testlib2 updated to version 3.14.",
+    ]
+
+    records = [rec.message for rec in caplog.records]
+    assert all(e in records for e in expected)
+    saved_file = tmp_path / 'lib' / 'charms' / 'testcharm1' / 'v0' / 'testlib1.py'
+    assert saved_file.read_text() == 'new lib content 1'
+    saved_file = tmp_path / 'lib' / 'charms' / 'testcharm2' / 'v3' / 'testlib2.py'
+    assert saved_file.read_text() == 'new lib content 2'
+
+
+def test_fetchlib_store_not_found(caplog, store_mock):
+    """The indicated library is not found in the store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_mock.get_libraries_tips.return_value = {}
+    FetchLibCommand('group').run(Namespace(library='charms.testcharm.v0.testlib'))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips(
+            [{'charm_name': 'testcharm', 'lib_name': 'testlib', 'api': 0}]),
+    ]
+    expected = "Library charms.testcharm.v0.testlib not found in Charmhub."
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_fetchlib_store_is_old(caplog, store_mock, tmp_path, monkeypatch):
+    """The store has an older version that what is found locally."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    factory.create_lib_filepath('testcharm', 'testlib', api=0, patch=7, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=6,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    FetchLibCommand('group').run(Namespace(library='charms.testcharm.v0.testlib'))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+    ]
+    expected = "Library charms.testcharm.v0.testlib has local changes, can not be updated."
+    assert expected in [rec.message for rec in caplog.records]
+
+
+def test_fetchlib_store_same_versions_same_hash(caplog, store_mock, tmp_path, monkeypatch):
+    """The store situation is the same than locally."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    _, c_hash = factory.create_lib_filepath('testcharm', 'testlib', api=0, patch=7, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=None, content_hash=c_hash, api=0, patch=7,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    FetchLibCommand('group').run(Namespace(library='charms.testcharm.v0.testlib'))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+    ]
+    expected = "Library charms.testcharm.v0.testlib was already up to date in version 0.7."
+    assert expected in [rec.message for rec in caplog.records]
+
+
+def test_fetchlib_store_same_versions_differnt_hash(caplog, store_mock, tmp_path, monkeypatch):
+    """The store has the lib in the same version, but with different content."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    factory.create_lib_filepath('testcharm', 'testlib', api=0, patch=7, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=7,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    FetchLibCommand('group').run(Namespace(library='charms.testcharm.v0.testlib'))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+    ]
+    expected = "Library charms.testcharm.v0.testlib has local changes, can not be updated."
+    assert expected in [rec.message for rec in caplog.records]

@@ -757,24 +757,26 @@ class FetchLibCommand(BaseCommand):
         parser.add_argument(
             'library', nargs='?',
             help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all.")
-        # FIXME: what if not in a charm dir? --dest-dir?
 
-    def run(self, parsed_args):  # FIXME: test the whole function
+    def run(self, parsed_args):
         """Run the command."""
         if parsed_args.library:
             libpath = _convert_lib_to_path(parsed_args.library)
             libraries = [(parsed_args.library, libpath)]
-        elif parsed_args.all:
-            raise NotImplementedError  # FIXME: implement
         else:
-            raise CommandError("Need to specify one library or use the --all option.")
+            base_dir = pathlib.Path('lib') / 'charms'
+            libraries = []
+            if base_dir.exists():
+                for charm_dir in sorted(base_dir.iterdir()):
+                    for v_dir in sorted(charm_dir.iterdir()):
+                        if v_dir.is_dir() and v_dir.name[0] == 'v' and v_dir.name[1:].isdigit():
+                            for libfile in sorted(v_dir.glob('*.py')):
+                                full_name = '.'.join(
+                                    ('charms', charm_dir.stem, v_dir.stem, libfile.stem))
+                                libraries.append((full_name, libfile))
 
-        charm_name = get_name_from_metadata()
-        if charm_name is None:
-            raise CommandError(
-                "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
-                "be executed in a valid project's directory, or indicate the charm name with "
-                "the --name option.")
+            found_libs = [full_name for full_name, _ in libraries]
+            logger.debug("Libraries found under %s: %s", base_dir, found_libs)
 
         # get the libraries info
         local_libs_data = [_get_lib_info(name, path) for name, path in libraries]
@@ -784,27 +786,28 @@ class FetchLibCommand(BaseCommand):
         to_query = []
         for lib in local_libs_data:
             if lib.lib_id is None:
-                to_query.append(
-                    dict(charm_name=lib.charm_name, lib_name=lib.lib_name, api=lib.api))
+                d = dict(charm_name=lib.charm_name, lib_name=lib.lib_name)
             else:
-                to_query.append(dict(lib_id=lib.lib_id, api=lib.api))
+                d = dict(lib_id=lib.lib_id)
+            d['api'] = lib.api
+            to_query.append(d)
         libs_tips = store.get_libraries_tips(to_query)
 
         # check if something needs to be done
         to_fetch = []
         for lib_data in local_libs_data:
             logger.debug("Verifying local lib %s", lib_data)
+            # if locally we didn't have the lib id, let's fix it from the Store info
             if lib_data.lib_id is None:
                 for tip in libs_tips.values():
                     if lib_data.charm_name == tip.charm_name and lib_data.lib_name == tip.lib_name:
+                        lib_data = lib_data._replace(lib_id=tip.lib_id)
                         break
-                else:
-                    tip = None
-            else:
-                tip = libs_tips.get((lib_data.lib_id, lib_data.api))
+
+            tip = libs_tips.get((lib_data.lib_id, lib_data.api))
             logger.debug("Store tip: %s", tip)
             if tip is None:
-                logger.info("Library %s not found in Charmhub", lib_data.full_name)
+                logger.info("Library %s not found in Charmhub.", lib_data.full_name)
                 continue
 
             if tip.patch > lib_data.patch:
@@ -812,14 +815,8 @@ class FetchLibCommand(BaseCommand):
                 to_fetch.append(lib_data)
             elif tip.patch < lib_data.patch:
                 # the store has smaller version numbers than local
-                if lib_data.charm_name == charm_name:
-                    logger.info(
-                        "Library %s is modified locally, remember to publish it.",
-                        lib_data.full_name)
-                else:
-                    logger.info(
-                        "Library %s has local changes, can not be updated.",
-                        lib_data.full_name)
+                logger.info(
+                    "Library %s has local changes, can not be updated.", lib_data.full_name)
             else:
                 # same versions locally and in the store
                 if tip.content_hash == lib_data.content_hash:
@@ -827,32 +824,26 @@ class FetchLibCommand(BaseCommand):
                         "Library %s was already up to date in version %d.%d.",
                         lib_data.full_name, tip.api, tip.patch)
                 else:
-                    if lib_data.charm_name == charm_name:
-                        logger.info(
-                            "Library %s is modified locally, remember to publish it.",
-                            lib_data.full_name)
-                    else:
-                        logger.info(
-                            "Library %s has local changes, can not be updated.",
-                            lib_data.full_name)
+                    logger.info(
+                        "Library %s has local changes, can not be updated.", lib_data.full_name)
 
         for lib_data in to_fetch:
-            if lib_data.lib_id is None:
+            if lib_data.content is None:
                 # locally new
-                downloaded = store.get_library_by_name(
-                    lib_data.charm_name, lib_data.lib_name, lib_data.api)
+                downloaded = store.get_library(
+                    lib_data.charm_name, lib_data.lib_id, lib_data.api)
                 lib_data.path.parent.mkdir(parents=True, exist_ok=True)
                 lib_data.path.write_text(downloaded.content)
                 logger.info(
-                    "Library %s version %d.%d downloaded",
+                    "Library %s version %d.%d downloaded.",
                     lib_data.full_name, downloaded.api, downloaded.patch)
             else:
-                downloaded = store.get_library_by_id(
+                downloaded = store.get_library(
                     lib_data.charm_name, lib_data.lib_id, lib_data.api)
-                # FIXME: manage the case where the library was renamed
+                # XXX Facundo 2020-10-23: manage the case where the library was renamed
                 lib_data.path.write_text(downloaded.content)
                 logger.info(
-                    "Library %s updated to version %d.%d",
+                    "Library %s updated to version %d.%d.",
                     lib_data.full_name, downloaded.api, downloaded.patch)
 
 

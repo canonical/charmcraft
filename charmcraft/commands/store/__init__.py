@@ -503,7 +503,7 @@ def _convert_lib_to_path(full_name):
     return pathlib.Path('lib') / pathlib.Path(full_name.replace('.', os.sep) + '.py')
 
 
-def _get_lib_info(full_name, libpath):
+def _get_lib_info(full_name, libpath): #FIXME test all this function
     """Get the whole lib info from the path/file."""
     # FIXME: this function probably shouldn't raise ValueError but something like CommandError
     bad_structure_msg = (

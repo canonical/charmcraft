@@ -505,20 +505,19 @@ def _convert_lib_to_path(full_name):
 
 def _get_lib_info(full_name, libpath): #FIXME test all this function
     """Get the whole lib info from the path/file."""
-    # FIXME: this function probably shouldn't raise ValueError but something like CommandError
     bad_structure_msg = (
-        "Library path {!r} must conform to the lib/charms/<charm>/v<API>/<libname>.py "
-        "structure.".format(libpath))
+        "Library path {!r} must conform to the charms.<charm>.v<API>.<libname> structure."
+        .format(full_name))
     try:
         libsdir, charmsdir, charm_name, v_api, libfile = libpath.parts
     except ValueError:
-        raise ValueError(bad_structure_msg)
+        raise CommandError(bad_structure_msg)
 
     if libsdir != 'lib' or charmsdir != 'charms':
-        raise ValueError(bad_structure_msg)
+        raise CommandError(bad_structure_msg)
 
     if v_api[0] != 'v' or not v_api[1:].isdigit():
-        raise ValueError("The API version in the library path must be 'vN' where N is an integer.")
+        raise CommandError("The API version in the library path must be 'vN' where N is an integer.")
     api_from_path = int(v_api[1:])
 
     lib_name = full_name.split('.')[-1]
@@ -537,14 +536,14 @@ def _get_lib_info(full_name, libpath): #FIXME test all this function
                 try:
                     field, value = [x.strip() for x in line.split(b'=')]
                 except ValueError:
-                    raise ValueError("Bad metadata line in {}: {!r}".format(libpath, line))
+                    raise CommandError("Bad metadata line in {}: {!r}".format(libpath, line))
                 metadata[field] = value
             else:
                 hasher.update(line)
 
     missing = [k.decode('ascii') for k, v in metadata.items() if v is None]
     if missing:
-        raise ValueError(
+        raise CommandError(
             "Library {} is missing the mandatory metadata fields: {}"
             .format(libpath, ', '.join(missing)))
 
@@ -553,33 +552,33 @@ def _get_lib_info(full_name, libpath): #FIXME test all this function
         value = metadata[key].decode('ascii')
         value = int(value)
         if value < 0:
-            raise ValueError('negative')
+            raise CommandError('negative')
         return value
 
     bad_api_patch_msg = "Library {} metadata field {} is not zero or a positive integer."
     try:
         libapi = _get_positive_int(b'LIBAPI')
     except Exception:
-        raise ValueError(bad_api_patch_msg.format(libpath, 'LIBAPI'))
+        raise CommandError(bad_api_patch_msg.format(libpath, 'LIBAPI'))
     try:
         libpatch = _get_positive_int(b'LIBPATCH')
     except Exception:
-        raise ValueError(bad_api_patch_msg.format(libpath, 'LIBPATCH'))
+        raise CommandError(bad_api_patch_msg.format(libpath, 'LIBPATCH'))
 
     if libapi == 0 and libpatch == 0:
-        raise ValueError(
+        raise CommandError(
             "Library {} metadata fields LIBAPI and LIBPATCH can not be both zero."
             .format(libpath))
 
     if libapi != api_from_path:
-        raise ValueError(
+        raise CommandError(
             "Library {} metadata field LIBAPI is different than the version in the path."
             .format(libpath))
 
     try:
         libid = ast.literal_eval(metadata[b'LIBID'].decode('ascii'))
     except (ValueError, UnicodeDecodeError):
-        raise ValueError(
+        raise CommandError(
             "Library {} metadata field LIBID must be a non-empty string.".format(libpath))
 
     content_hash = hasher.hexdigest()
@@ -606,7 +605,9 @@ class CreateLibCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('lib-name', help="The name of the library file (e.g. 'db').")
+        parser.add_argument(
+            'lib_name', metavar='lib-name',
+            help="The name of the library file (e.g. 'db').")
 
     def run(self, parsed_args):
         """Run the command."""

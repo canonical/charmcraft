@@ -179,6 +179,7 @@ class Dispatcher:
         parser = CustomArgumentParser(prog=cmd.name)
         cmd.fill_parser(parser)
         parsed_args = parser.parse_args(cmd_args)
+        logger.debug("Command parsed sysargs: %s", parsed_args)
 
         return cmd, parsed_args
 

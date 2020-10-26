@@ -495,48 +495,58 @@ class StatusCommand(BaseCommand):
             logger.info(line)
 
 
-def _convert_lib_to_path(full_name):
-    """Convert a lib name with dots to the full path, including lib dir and Python extension.
-
-    E.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
-    """
-    return pathlib.Path('lib') / pathlib.Path(full_name.replace('.', os.sep) + '.py')
-
-
-def _get_lib_info(full_name, libpath): #FIXME test all this function
+def _get_lib_info(*, full_name=None, lib_path=None):
     """Get the whole lib info from the path/file."""
-    bad_structure_msg = (
-        "Library path {!r} must conform to the charms.<charm>.v<API>.<libname> structure."
-        .format(full_name))
-    try:
-        libsdir, charmsdir, charm_name, v_api, libfile = libpath.parts
-    except ValueError:
-        raise CommandError(bad_structure_msg)
+    if full_name is None:
+        # get it from the lib_path
+        bad_structure_msg = (
+            "Library path {!r} must conform to the lib/charms/<charm>/v<API>/<libname>.py "
+            "structure.".format(lib_path))
+        try:
+            libsdir, charmsdir, charm_name, v_api = lib_path.parts[:-1]
+        except ValueError:
+            raise CommandError(bad_structure_msg)
+        if libsdir != 'lib' or charmsdir != 'charms' or lib_path.suffix != '.py':
+            raise CommandError(bad_structure_msg)
+        full_name = '.'.join((charmsdir, charm_name, v_api, lib_path.stem))
 
-    if libsdir != 'lib' or charmsdir != 'charms':
-        raise CommandError(bad_structure_msg)
+    else:
+        # build the path! convert a lib name with dots to the full path, including lib
+        # dir and Python extension.
+        #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
+        bad_structure_msg = (
+            "Library full name {!r} must conform to the charms.<charm>.v<API>.<libname> structure."
+            .format(full_name))
+        try:
+            charmsdir, charm_name, v_api, libfile = full_name.split('.')
+        except ValueError:
+            raise CommandError(bad_structure_msg)
+        if charmsdir != 'charms':
+            raise CommandError(bad_structure_msg)
+        lib_path = pathlib.Path('lib') / charmsdir / charm_name / v_api / (libfile + '.py')
 
     if v_api[0] != 'v' or not v_api[1:].isdigit():
-        raise CommandError("The API version in the library path must be 'vN' where N is an integer.")
+        raise CommandError(
+            "The API version in the library path must be 'vN' where N is an integer.")
     api_from_path = int(v_api[1:])
 
     lib_name = full_name.split('.')[-1]
-    if not libpath.exists():
+    if not lib_path.exists():
         return LibData(
             lib_id=None, api=api_from_path, patch=-1, content_hash=None, content=None,
-            full_name=full_name, path=libpath, lib_name=lib_name, charm_name=charm_name)
+            full_name=full_name, path=lib_path, lib_name=lib_name, charm_name=charm_name)
 
     # parse the file and extract metadata from it, while hashing
     metadata_fields = (b'LIBAPI', b'LIBPATCH', b'LIBID')
     metadata = dict.fromkeys(metadata_fields)
     hasher = hashlib.sha256()
-    with libpath.open('rb') as fh:
+    with lib_path.open('rb') as fh:
         for line in fh:
             if line.startswith(metadata_fields):
                 try:
                     field, value = [x.strip() for x in line.split(b'=')]
                 except ValueError:
-                    raise CommandError("Bad metadata line in {}: {!r}".format(libpath, line))
+                    raise CommandError("Bad metadata line in {}: {!r}".format(lib_path, line))
                 metadata[field] = value
             else:
                 hasher.update(line)
@@ -545,7 +555,7 @@ def _get_lib_info(full_name, libpath): #FIXME test all this function
     if missing:
         raise CommandError(
             "Library {} is missing the mandatory metadata fields: {}"
-            .format(libpath, ', '.join(missing)))
+            .format(lib_path, ', '.join(missing)))
 
     def _get_positive_int(key):
         """Convert the raw value for api/patch into a positive integer."""
@@ -559,34 +569,59 @@ def _get_lib_info(full_name, libpath): #FIXME test all this function
     try:
         libapi = _get_positive_int(b'LIBAPI')
     except Exception:
-        raise CommandError(bad_api_patch_msg.format(libpath, 'LIBAPI'))
+        raise CommandError(bad_api_patch_msg.format(lib_path, 'LIBAPI'))
     try:
         libpatch = _get_positive_int(b'LIBPATCH')
     except Exception:
-        raise CommandError(bad_api_patch_msg.format(libpath, 'LIBPATCH'))
+        raise CommandError(bad_api_patch_msg.format(lib_path, 'LIBPATCH'))
 
     if libapi == 0 and libpatch == 0:
         raise CommandError(
             "Library {} metadata fields LIBAPI and LIBPATCH can not be both zero."
-            .format(libpath))
+            .format(lib_path))
 
     if libapi != api_from_path:
         raise CommandError(
             "Library {} metadata field LIBAPI is different than the version in the path."
-            .format(libpath))
+            .format(lib_path))
 
     try:
         libid = ast.literal_eval(metadata[b'LIBID'].decode('ascii'))
     except (ValueError, UnicodeDecodeError):
         raise CommandError(
-            "Library {} metadata field LIBID must be a non-empty string.".format(libpath))
+            "Library {} metadata field LIBID must be a non-empty string.".format(lib_path))
 
     content_hash = hasher.hexdigest()
-    content = libpath.read_text()
+    content = lib_path.read_text()
 
     return LibData(
         lib_id=libid, api=libapi, patch=libpatch, content_hash=content_hash, content=content,
-        full_name=full_name, path=libpath, lib_name=lib_name, charm_name=charm_name)
+        full_name=full_name, path=lib_path, lib_name=lib_name, charm_name=charm_name)
+
+
+def _get_libs_from_tree(charm_name=None):
+    """Get library info from the directories tree (for a specific charm if specified).
+
+    It only pays attention to the proper disk structures, if there.
+    """
+    local_libs_data = []
+
+    if charm_name is None:
+        base_dir = pathlib.Path('lib') / 'charms'
+        charm_dirs = sorted(base_dir.iterdir()) if base_dir.exists() else []
+    else:
+        base_dir = pathlib.Path('lib') / 'charms' / charm_name
+        charm_dirs = [base_dir] if base_dir.exists else []
+
+    for charm_dir in charm_dirs:
+        for v_dir in sorted(charm_dir.iterdir()):
+            if v_dir.is_dir() and v_dir.name[0] == 'v' and v_dir.name[1:].isdigit():
+                for libfile in sorted(v_dir.glob('*.py')):
+                    local_libs_data.append(_get_lib_info(lib_path=libfile))
+
+    found_libs = [lib_data.full_name for lib_data in local_libs_data]
+    logger.debug("Libraries found under %s: %s", base_dir, found_libs)
+    return local_libs_data
 
 
 class CreateLibCommand(BaseCommand):
@@ -625,7 +660,8 @@ class CreateLibCommand(BaseCommand):
                 "be executed in a valid project's directory.")
 
         full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
-        lib_path = _convert_lib_to_path(full_name)
+        lib_data = _get_lib_info(full_name=full_name)
+        lib_path = lib_data.path
         if lib_path.exists():
             raise CommandError('The indicated library already exists on {}'.format(lib_path))
 
@@ -668,29 +704,17 @@ class PublishLibCommand(BaseCommand):
                 "be executed in a valid project's directory.")
 
         if parsed_args.library:
-            libpath = _convert_lib_to_path(parsed_args.library)
-            if not libpath.exists():
+            lib_data = _get_lib_info(full_name=parsed_args.library)
+            if not lib_data.path.exists():
                 raise CommandError(
-                    "The specified library was not found at path {}.".format(libpath))
-            lib_data = _get_lib_info(parsed_args.library, libpath)
+                    "The specified library was not found at path {}.".format(lib_data.path))
             if lib_data.charm_name != charm_name:
                 raise CommandError(
                     "The library {} does not belong to this charm {!r}.".format(
                         lib_data.full_name, charm_name))
             local_libs_data = [lib_data]
         else:
-            base_dir = pathlib.Path('lib') / 'charms' / charm_name
-            local_libs_data = []
-            if base_dir.exists():
-                for v_dir in sorted(base_dir.iterdir()):
-                    if v_dir.is_dir() and v_dir.name[0] == 'v' and v_dir.name[1:].isdigit():
-                        for libfile in sorted(v_dir.glob('*.py')):
-                            full_name = '.'.join(('charms', charm_name, v_dir.stem, libfile.stem))
-                            lib_data = _get_lib_info(full_name, libfile)
-                            local_libs_data.append(lib_data)
-
-            found_libs = [lib_data.full_name for lib_data in local_libs_data]
-            logger.debug("Libraries found under %s: %s", base_dir, found_libs)
+            local_libs_data = _get_libs_from_tree(charm_name)
 
         # check if something needs to be done
         store = Store()
@@ -762,25 +786,9 @@ class FetchLibCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         if parsed_args.library:
-            libpath = _convert_lib_to_path(parsed_args.library)
-            libraries = [(parsed_args.library, libpath)]
+            local_libs_data = [_get_lib_info(full_name=parsed_args.library)]
         else:
-            base_dir = pathlib.Path('lib') / 'charms'
-            libraries = []
-            if base_dir.exists():
-                for charm_dir in sorted(base_dir.iterdir()):
-                    for v_dir in sorted(charm_dir.iterdir()):
-                        if v_dir.is_dir() and v_dir.name[0] == 'v' and v_dir.name[1:].isdigit():
-                            for libfile in sorted(v_dir.glob('*.py')):
-                                full_name = '.'.join(
-                                    ('charms', charm_dir.stem, v_dir.stem, libfile.stem))
-                                libraries.append((full_name, libfile))
-
-            found_libs = [full_name for full_name, _ in libraries]
-            logger.debug("Libraries found under %s: %s", base_dir, found_libs)
-
-        # get the libraries info
-        local_libs_data = [_get_lib_info(name, path) for name, path in libraries]
+            local_libs_data = _get_libs_from_tree()
 
         # get tips from the Store
         store = Store()

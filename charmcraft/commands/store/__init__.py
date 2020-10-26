@@ -862,7 +862,7 @@ class ListLibCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument('--charm-name', help="The name of the charm.")
 
-    def run(self, parsed_args):  # FIXME: test the whole function
+    def run(self, parsed_args):
         """Run the command."""
         if parsed_args.charm_name:
             charm_name = parsed_args.charm_name
@@ -880,7 +880,7 @@ class ListLibCommand(BaseCommand):
         libs_tips = store.get_libraries_tips(to_query)
 
         if not libs_tips:
-            logger.info("Nothing found")
+            logger.info("Nothing found.")
             return
 
         headers = ['Library name', 'API', 'Patch']

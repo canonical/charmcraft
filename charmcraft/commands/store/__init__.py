@@ -500,7 +500,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     if full_name is None:
         # get it from the lib_path
         bad_structure_msg = (
-            "Library path {!r} must conform to the lib/charms/<charm>/v<API>/<libname>.py "
+            "Library path {} must conform to the lib/charms/<charm>/v<API>/<libname>.py "
             "structure.".format(lib_path))
         try:
             libsdir, charmsdir, charm_name, v_api = lib_path.parts[:-1]
@@ -530,7 +530,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
             "The API version in the library path must be 'vN' where N is an integer.")
     api_from_path = int(v_api[1:])
 
-    lib_name = full_name.split('.')[-1]
+    lib_name = lib_path.stem
     if not lib_path.exists():
         return LibData(
             lib_id=None, api=api_from_path, patch=-1, content_hash=None, content=None,
@@ -554,7 +554,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     missing = [k.decode('ascii') for k, v in metadata.items() if v is None]
     if missing:
         raise CommandError(
-            "Library {} is missing the mandatory metadata fields: {}"
+            "Library {} is missing the mandatory metadata fields: {}."
             .format(lib_path, ', '.join(missing)))
 
     def _get_positive_int(key):
@@ -562,7 +562,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
         value = metadata[key].decode('ascii')
         value = int(value)
         if value < 0:
-            raise CommandError('negative')
+            raise ValueError('negative')
         return value
 
     bad_api_patch_msg = "Library {} metadata field {} is not zero or a positive integer."
@@ -585,11 +585,13 @@ def _get_lib_info(*, full_name=None, lib_path=None):
             "Library {} metadata field LIBAPI is different than the version in the path."
             .format(lib_path))
 
+    bad_libid_msg = "Library {} metadata field LIBID must be a non-empty ASCII string."
     try:
         libid = ast.literal_eval(metadata[b'LIBID'].decode('ascii'))
     except (ValueError, UnicodeDecodeError):
-        raise CommandError(
-            "Library {} metadata field LIBID must be a non-empty string.".format(lib_path))
+        raise CommandError(bad_libid_msg.format(lib_path))
+    if not libid or not isinstance(libid, str):
+        raise CommandError(bad_libid_msg.format(lib_path))
 
     content_hash = hasher.hexdigest()
     content = lib_path.read_text()

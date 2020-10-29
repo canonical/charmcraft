@@ -191,7 +191,6 @@ class Store:
 
         return channel_map, channels, revisions
 
-    # FIXME: test all this func
     def create_library_id(self, charm_name, lib_name):
         """Create a new library id."""
         endpoint = '/v1/charm/{}/library/'.format(charm_name)
@@ -199,7 +198,6 @@ class Store:
         lib_id = response['lib-id']
         return lib_id
 
-    # FIXME: test all this func
     def create_library_revision(self, charm_name, lib_id, api, patch, content, content_hash):
         """Create a new library revision."""
         endpoint = '/v1/charm/{}/library/{}'.format(charm_name, lib_id)
@@ -213,26 +211,13 @@ class Store:
         result = _build_library(response)
         return result
 
-    # FIXME: test all this func
-    # FIXME: RENAM????
-    def get_library_by_id(self, charm_name, lib_id, api):
+    def get_library(self, charm_name, lib_id, api):
         """Get the library tip by id for a given api version."""
         endpoint = '/v1/charm/{}/library/{}?api={}'.format(charm_name, lib_id, api)
         response = self._client.get(endpoint)
         result = _build_library(response)
         return result
 
-    # FIXME: test all this func
-    # FIXME: UNUSED???????????????????????
-    def get_library_by_name(self, charm_name, lib_name, api):
-        """Get the library tip by name for a given api version."""
-        # XXX: decide if we need to quote the lib name here (acording to its name rules)
-        endpoint = '/v1/charm/{}/library/?name={}&api={}'.format(charm_name, lib_name, api)
-        response = self._client.get(endpoint)
-        result = _build_library(response)
-        return result
-
-    # FIXME: test all this func
     def get_libraries_tips(self, libraries):
         """Get the tip details for several libraries at once."""
         endpoint = '/v1/charm/library/bulk/'

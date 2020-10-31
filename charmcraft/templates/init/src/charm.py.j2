@@ -21,7 +21,7 @@ class {{ class_name }}(CharmBase):
         self._stored.set_default(things=[])
 
     def _on_config_changed(self, _):
-        current = self.model.config["thing"]
+        current = self.config["thing"]
         if current not in self._stored.things:
             logger.debug("found a new thing: %r", current)
             self._stored.things.append(current)

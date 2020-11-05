@@ -66,8 +66,8 @@ def _build_library(resp):
         api=resp['api'],
         content=resp.get('content'),  # not always present
         content_hash=resp['hash'],
-        lib_id=resp['lib-id'],
-        lib_name=resp['lib-name'],
+        lib_id=resp['library-id'],
+        lib_name=resp['library-name'],
         charm_name=resp['charm-name'],
         patch=resp['patch'],
     )
@@ -193,14 +193,14 @@ class Store:
 
     def create_library_id(self, charm_name, lib_name):
         """Create a new library id."""
-        endpoint = '/v1/charm/{}/library/'.format(charm_name)
-        response = self._client.post(endpoint, {'lib-name': lib_name})
-        lib_id = response['lib-id']
+        endpoint = '/v1/charm/libraries/{}'.format(charm_name)
+        response = self._client.post(endpoint, {'library-name': lib_name})
+        lib_id = response['library-id']
         return lib_id
 
     def create_library_revision(self, charm_name, lib_id, api, patch, content, content_hash):
         """Create a new library revision."""
-        endpoint = '/v1/charm/{}/library/{}'.format(charm_name, lib_id)
+        endpoint = '/v1/charm/libraries/{}/{}'.format(charm_name, lib_id)
         payload = {
             'api': api,
             'patch': patch,
@@ -213,29 +213,29 @@ class Store:
 
     def get_library(self, charm_name, lib_id, api):
         """Get the library tip by id for a given api version."""
-        endpoint = '/v1/charm/{}/library/{}?api={}'.format(charm_name, lib_id, api)
+        endpoint = '/v1/charm/libraries/{}/{}?api={}'.format(charm_name, lib_id, api)
         response = self._client.get(endpoint)
         result = _build_library(response)
         return result
 
     def get_libraries_tips(self, libraries):
         """Get the tip details for several libraries at once."""
-        endpoint = '/v1/charm/library/bulk/'
+        endpoint = '/v1/charm/libraries/bulk'
         payload = []
         for lib in libraries:
             if 'lib_id' in lib:
                 d = {
-                    'lib-id': lib['lib_id'],
+                    'library-id': lib['lib_id'],
                 }
             else:
                 d = {
                     'charm-name': lib['charm_name'],
                 }
                 if 'lib_name' in lib:
-                    d['lib-name'] = lib['lib_name']
+                    d['library-name'] = lib['lib_name']
             if 'api' in lib:
                 d['api'] = lib['api']
             payload.append(d)
         response = self._client.post(endpoint, payload)
-        result = {(item['lib-id'], item['api']): _build_library(item) for item in response}
+        result = {(item['library-id'], item['api']): _build_library(item) for item in response}
         return result

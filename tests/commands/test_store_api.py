@@ -468,12 +468,12 @@ def test_status_ok(client_mock):
 def test_create_library_id(client_mock):
     """Create a new library in the store."""
     store = Store()
-    client_mock.post.return_value = {'lib-id': 'test-lib-id'}
+    client_mock.post.return_value = {'library-id': 'test-lib-id'}
 
     result = store.create_library_id('test-charm-name', 'test-lib-name')
 
     assert client_mock.mock_calls == [
-        call.post('/v1/charm/test-charm-name/library/', {'lib-name': 'test-lib-name'}),
+        call.post('/v1/charm/libraries/test-charm-name', {'library-name': 'test-lib-name'}),
     ]
     assert result == 'test-lib-id'
 
@@ -493,8 +493,8 @@ def test_create_library_revision(client_mock):
         'api': test_api,
         'content': test_content,
         'hash': test_hash,
-        'lib-id': test_lib_id,
-        'lib-name': test_lib_name,
+        'library-id': test_lib_id,
+        'library-name': test_lib_name,
         'charm-name': test_charm_name,
         'patch': test_patch,
     }
@@ -509,7 +509,7 @@ def test_create_library_revision(client_mock):
         'hash': test_hash,
     }
     assert client_mock.mock_calls == [
-        call.post('/v1/charm/test-charm-name/library/' + test_lib_id, payload),
+        call.post('/v1/charm/libraries/test-charm-name/' + test_lib_id, payload),
     ]
     assert result_lib.api == test_api
     assert result_lib.content == test_content
@@ -535,8 +535,8 @@ def test_get_library(client_mock):
         'api': test_api,
         'content': test_content,
         'hash': test_hash,
-        'lib-id': test_lib_id,
-        'lib-name': test_lib_name,
+        'library-id': test_lib_id,
+        'library-name': test_lib_name,
         'charm-name': test_charm_name,
         'patch': test_patch,
     }
@@ -544,7 +544,7 @@ def test_get_library(client_mock):
     result_lib = store.get_library(test_charm_name, test_lib_id, test_api)
 
     assert client_mock.mock_calls == [
-        call.get('/v1/charm/test-charm-name/library/{}?api={}'.format(test_lib_id, test_api)),
+        call.get('/v1/charm/libraries/test-charm-name/{}?api={}'.format(test_lib_id, test_api)),
     ]
     assert result_lib.api == test_api
     assert result_lib.content == test_content
@@ -570,8 +570,8 @@ def test_get_tips_simple(client_mock):
         'api': test_api,
         'content': test_content,
         'hash': test_hash,
-        'lib-id': test_lib_id,
-        'lib-name': test_lib_name,
+        'library-id': test_lib_id,
+        'library-name': test_lib_name,
         'charm-name': test_charm_name,
         'patch': test_patch,
     }]
@@ -582,10 +582,10 @@ def test_get_tips_simple(client_mock):
     result = store.get_libraries_tips(query_info)
 
     payload = [
-        {'lib-id': test_lib_id},
+        {'library-id': test_lib_id},
     ]
     assert client_mock.mock_calls == [
-        call.post('/v1/charm/library/bulk/', payload),
+        call.post('/v1/charm/libraries/bulk', payload),
     ]
     expected = {
         (test_lib_id, test_api): Library(
@@ -608,10 +608,10 @@ def test_get_tips_empty(client_mock):
     result = store.get_libraries_tips(query_info)
 
     payload = [
-        {'lib-id': test_lib_id},
+        {'library-id': test_lib_id},
     ]
     assert client_mock.mock_calls == [
-        call.post('/v1/charm/library/bulk/', payload),
+        call.post('/v1/charm/libraries/bulk', payload),
     ]
     assert result == {}
 
@@ -639,16 +639,16 @@ def test_get_tips_several(client_mock):
         'api': test_api_1,
         'content': test_content_1,
         'hash': test_hash_1,
-        'lib-id': test_lib_id_1,
-        'lib-name': test_lib_name_1,
+        'library-id': test_lib_id_1,
+        'library-name': test_lib_name_1,
         'charm-name': test_charm_name_1,
         'patch': test_patch_1,
     }, {
         'api': test_api_2,
         'content': test_content_2,
         'hash': test_hash_2,
-        'lib-id': test_lib_id_2,
-        'lib-name': test_lib_name_2,
+        'library-id': test_lib_id_2,
+        'library-name': test_lib_name_2,
         'charm-name': test_charm_name_2,
         'patch': test_patch_2,
     }]
@@ -660,11 +660,11 @@ def test_get_tips_several(client_mock):
     result = store.get_libraries_tips(query_info)
 
     payload = [
-        {'lib-id': test_lib_id_1},
-        {'lib-id': test_lib_id_2},
+        {'library-id': test_lib_id_1},
+        {'library-id': test_lib_id_2},
     ]
     assert client_mock.mock_calls == [
-        call.post('/v1/charm/library/bulk/', payload),
+        call.post('/v1/charm/libraries/bulk', payload),
     ]
     expected = {
         (test_lib_id_1, test_api_1): Library(
@@ -693,13 +693,13 @@ def test_get_tips_query_combinations(client_mock):
     store.get_libraries_tips(query_info)
 
     payload = [
-        {'lib-id': 'test-lib-id-1'},
-        {'lib-id': 'test-lib-id-2', 'api': 2},
+        {'library-id': 'test-lib-id-1'},
+        {'library-id': 'test-lib-id-2', 'api': 2},
         {'charm-name': 'test-charm-name-3'},
         {'charm-name': 'test-charm-name-4', 'api': 4},
-        {'charm-name': 'test-charm-name-5', 'lib-name': 'test-lib-name-5'},
-        {'charm-name': 'test-charm-name-6', 'lib-name': 'test-lib-name-6', 'api': 6},
+        {'charm-name': 'test-charm-name-5', 'library-name': 'test-lib-name-5'},
+        {'charm-name': 'test-charm-name-6', 'library-name': 'test-lib-name-6', 'api': 6},
     ]
     assert client_mock.mock_calls == [
-        call.post('/v1/charm/library/bulk/', payload),
+        call.post('/v1/charm/libraries/bulk', payload),
     ]

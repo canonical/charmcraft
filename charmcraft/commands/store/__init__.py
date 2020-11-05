@@ -555,7 +555,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     if missing:
         raise CommandError(
             "Library {} is missing the mandatory metadata fields: {}."
-            .format(lib_path, ', '.join(missing)))
+            .format(lib_path, ', '.join(sorted(missing))))
 
     def _get_positive_int(key):
         """Convert the raw value for api/patch into a positive integer."""

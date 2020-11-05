@@ -237,5 +237,6 @@ class Store:
                 d['api'] = lib['api']
             payload.append(d)
         response = self._client.post(endpoint, payload)
-        result = {(item['library-id'], item['api']): _build_library(item) for item in response}
+        libraries = response['libraries']
+        result = {(item['library-id'], item['api']): _build_library(item) for item in libraries}
         return result

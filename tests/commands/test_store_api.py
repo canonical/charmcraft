@@ -566,7 +566,7 @@ def test_get_tips_simple(client_mock):
     test_hash = '1234'
 
     store = Store()
-    client_mock.post.return_value = [{
+    client_mock.post.return_value = {'libraries': [{
         'api': test_api,
         'content': test_content,
         'hash': test_hash,
@@ -574,7 +574,7 @@ def test_get_tips_simple(client_mock):
         'library-name': test_lib_name,
         'charm-name': test_charm_name,
         'patch': test_patch,
-    }]
+    }]}
 
     query_info = [
         {'lib_id': test_lib_id},
@@ -600,7 +600,7 @@ def test_get_tips_empty(client_mock):
     test_lib_id = 'test-lib-id'
 
     store = Store()
-    client_mock.post.return_value = []
+    client_mock.post.return_value = {'libraries': []}
 
     query_info = [
         {'lib_id': test_lib_id},
@@ -635,7 +635,7 @@ def test_get_tips_several(client_mock):
     test_hash_2 = '5678'
 
     store = Store()
-    client_mock.post.return_value = [{
+    client_mock.post.return_value = {'libraries': [{
         'api': test_api_1,
         'content': test_content_1,
         'hash': test_hash_1,
@@ -651,7 +651,7 @@ def test_get_tips_several(client_mock):
         'library-name': test_lib_name_2,
         'charm-name': test_charm_name_2,
         'patch': test_patch_2,
-    }]
+    }]}
 
     query_info = [
         {'lib_id': test_lib_id_1},
@@ -680,7 +680,7 @@ def test_get_tips_several(client_mock):
 def test_get_tips_query_combinations(client_mock):
     """Use all the combinations to specify what's queried."""
     store = Store()
-    client_mock.post.return_value = []
+    client_mock.post.return_value = {'libraries': []}
 
     query_info = [
         {'lib_id': 'test-lib-id-1'},

@@ -1153,7 +1153,7 @@ def test_getlibinfo_api_patch_both_zero(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata fields LIBAPI and LIBPATCH can not be both zero.".format(test_path))
+        "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(test_path))
 
 
 def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
@@ -1163,7 +1163,7 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBAPI is different than the version in the path."
+        "Library {} metadata field LIBAPI is different from the version in the path."
         .format(test_path))
 
 

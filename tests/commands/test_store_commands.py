@@ -946,12 +946,12 @@ def test_status_with_multiple_branches(caplog, store_mock):
 # -- tests for _get_lib_info helper
 
 def _create_lib(extra_content=None, metadata_id=None, metadata_api=None, metadata_patch=None):
-    """Helper to create the structures in disk for a given lib.
+    """Helper to create the structures on disk for a given lib.
 
-    WARNING: this function has the capability of creating WRONG structures in disk.
+    WARNING: this function has the capability of creating INCORRECT structures on disk.
 
-    This is specific for the _get_lib_info tests below, other tests should use the safe
-    similar one from factory.
+    This is specific for the _get_lib_info tests below, other tests should use the
+    functionality provided by the factory.
     """
     base_dir = pathlib.Path('lib')
     lib_file = base_dir / 'charms' / 'testcharm' / 'v3' / 'testlib.py'

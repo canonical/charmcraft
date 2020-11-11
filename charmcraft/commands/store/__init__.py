@@ -21,6 +21,7 @@ import hashlib
 import logging
 import os
 import pathlib
+import string
 import textwrap
 from collections import namedtuple
 from operator import attrgetter
@@ -36,6 +37,30 @@ logger = logging.getLogger('charmcraft.commands.store')
 
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
+
+LIBRARY_TEMPLATE = """
+\"""TEMPLATE FIXME: Add a proper docstring here.
+
+This is the main documentation of the library, will be exposed by Charmhub after
+the lib is published.
+
+Markdown is supported.
+\"""
+
+# Never change this field, it's the unique identifier to track the library in
+# all systems
+LIBID = "{lib_id}"
+
+# Update this API version when introducing backwards incompatible
+# changes in the library.
+LIBAPI = 0
+
+# Update this version for every change in the library before (re)publishing it
+# (except for the initial content).
+LIBPATCH = 1
+
+# TEMPLATE FIXME: add your code here! Happy coding!
+"""
 
 
 def get_name_from_metadata():
@@ -583,3 +608,54 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     return LibData(
         lib_id=libid, api=libapi, patch=libpatch, content_hash=content_hash, content=content,
         full_name=full_name, path=lib_path, lib_name=lib_name, charm_name=charm_name)
+
+
+class CreateLibCommand(BaseCommand):
+    """Create a charm library."""
+    name = 'create-lib'
+    help_msg = "Create a charm library."
+    overview = textwrap.dedent("""
+        Create a charm library.
+
+        It will request a unique ID from Charmhub and bootstrap a
+        template file in the proper local directory.
+
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
+    """)
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            'lib_name', metavar='lib-name',
+            help="The name of the library file (e.g. 'db').")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        lib_name = parsed_args.lib_name
+        valid_chars = set(string.ascii_lowercase + string.digits + '_')
+        if set(lib_name) - valid_chars or lib_name[0] not in string.ascii_lowercase:
+            raise CommandError(
+                "Invalid library name (can be only lowercase alphanumeric "
+                "characters and underscore, starting with alpha).")
+
+        charm_name = get_name_from_metadata()
+        if charm_name is None:
+            raise CommandError(
+                "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+                "be executed in a valid project's directory.")
+
+        full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
+        lib_data = _get_lib_info(full_name=full_name)
+        lib_path = lib_data.path
+        if lib_path.exists():
+            raise CommandError('The indicated library already exists on {}'.format(lib_path))
+
+        store = Store()
+        lib_id = store.create_library_id(charm_name, lib_name)
+
+        lib_path.parent.mkdir(parents=True, exist_ok=True)
+        lib_path.write_text(LIBRARY_TEMPLATE.format(lib_id=lib_id))
+
+        logger.info("Library %s created with id %s.", full_name, lib_id)
+        logger.info("Make sure to add the library file to your project: %s", lib_path)

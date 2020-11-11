@@ -460,3 +460,19 @@ def test_status_ok(client_mock):
     assert rev2.created_at == parser.parse('2020-06-29T22:11:10')
     assert rev2.status == 'approved'
     assert rev2.errors == []
+
+
+# -- tests for library related functions
+
+
+def test_create_library_id(client_mock):
+    """Create a new library in the store."""
+    store = Store()
+    client_mock.post.return_value = {'library-id': 'test-lib-id'}
+
+    result = store.create_library_id('test-charm-name', 'test-lib-name')
+
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/libraries/test-charm-name', {'library-name': 'test-lib-name'}),
+    ]
+    assert result == 'test-lib-id'

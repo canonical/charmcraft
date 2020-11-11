@@ -495,34 +495,52 @@ class StatusCommand(BaseCommand):
             logger.info(line)
 
 
+class _BadLibraryPathError(CommandError):
+    """Subclass to provide a specific error for a bad library path."""
+    def __init__(self, path):
+        super().__init__(
+            "Library path {} must conform to the lib/charms/<charm>/v<API>/<libname>.py "
+            "structure.".format(path))
+
+
+class _BadLibraryNameError(CommandError):
+    """Subclass to provide a specific error for a bad library name."""
+    def __init__(self, name):
+        super().__init__(
+            "Library full name {!r} must conform to the charms.<charm>.v<API>.<libname> structure."
+            .format(name))
+
+
+def _get_positive_int(raw_value):
+    """Convert the raw value for api/patch into a positive integer."""
+    value = int(raw_value)
+    if value < 0:
+        raise ValueError('negative')
+    return value
+
+
 def _get_lib_info(*, full_name=None, lib_path=None):
     """Get the whole lib info from the path/file."""
     if full_name is None:
         # get it from the lib_path
-        bad_structure_msg = (
-            "Library path {} must conform to the lib/charms/<charm>/v<API>/<libname>.py "
-            "structure.".format(lib_path))
         try:
             libsdir, charmsdir, charm_name, v_api = lib_path.parts[:-1]
         except ValueError:
-            raise CommandError(bad_structure_msg)
+            raise _BadLibraryPathError(lib_path)
         if libsdir != 'lib' or charmsdir != 'charms' or lib_path.suffix != '.py':
-            raise CommandError(bad_structure_msg)
+            raise _BadLibraryPathError(lib_path)
         full_name = '.'.join((charmsdir, charm_name, v_api, lib_path.stem))
 
     else:
         # build the path! convert a lib name with dots to the full path, including lib
         # dir and Python extension.
         #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
-        bad_structure_msg = (
-            "Library full name {!r} must conform to the charms.<charm>.v<API>.<libname> structure."
-            .format(full_name))
         try:
             charmsdir, charm_name, v_api, libfile = full_name.split('.')
         except ValueError:
-            raise CommandError(bad_structure_msg)
+            raise _BadLibraryNameError(full_name)
         if charmsdir != 'charms':
-            raise CommandError(bad_structure_msg)
+            raise _BadLibraryNameError(full_name)
         lib_path = pathlib.Path('lib') / charmsdir / charm_name / v_api / (libfile + '.py')
 
     if v_api[0] != 'v' or not v_api[1:].isdigit():
@@ -557,32 +575,24 @@ def _get_lib_info(*, full_name=None, lib_path=None):
             "Library {} is missing the mandatory metadata fields: {}."
             .format(lib_path, ', '.join(sorted(missing))))
 
-    def _get_positive_int(key):
-        """Convert the raw value for api/patch into a positive integer."""
-        value = metadata[key].decode('ascii')
-        value = int(value)
-        if value < 0:
-            raise ValueError('negative')
-        return value
-
     bad_api_patch_msg = "Library {} metadata field {} is not zero or a positive integer."
     try:
-        libapi = _get_positive_int(b'LIBAPI')
-    except Exception:
+        libapi = _get_positive_int(metadata[b'LIBAPI'])
+    except ValueError:
         raise CommandError(bad_api_patch_msg.format(lib_path, 'LIBAPI'))
     try:
-        libpatch = _get_positive_int(b'LIBPATCH')
-    except Exception:
+        libpatch = _get_positive_int(metadata[b'LIBPATCH'])
+    except ValueError:
         raise CommandError(bad_api_patch_msg.format(lib_path, 'LIBPATCH'))
 
     if libapi == 0 and libpatch == 0:
         raise CommandError(
-            "Library {} metadata fields LIBAPI and LIBPATCH can not be both zero."
+            "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero."
             .format(lib_path))
 
     if libapi != api_from_path:
         raise CommandError(
-            "Library {} metadata field LIBAPI is different than the version in the path."
+            "Library {} metadata field LIBAPI is different from the version in the path."
             .format(lib_path))
 
     bad_libid_msg = "Library {} metadata field LIBID must be a non-empty ASCII string."

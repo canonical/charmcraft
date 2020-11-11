@@ -1598,12 +1598,12 @@ def test_listlib_properly_sorted(caplog, store_mock):
 # -- tests for _get_lib_info helper
 
 def _create_lib(extra_content=None, metadata_id=None, metadata_api=None, metadata_patch=None):
-    """Helper to create the structures in disk for a given lib.
+    """Helper to create the structures on disk for a given lib.
 
-    WARNING: this function has the capability of creating WRONG structures in disk.
+    WARNING: this function has the capability of creating INCORRECT structures on disk.
 
-    This is specific for the _get_lib_info tests below, other tests should use the safe
-    similar one from factory.
+    This is specific for the _get_lib_info tests below, other tests should use the
+    functionality provided by the factory.
     """
     base_dir = pathlib.Path('lib')
     lib_file = base_dir / 'charms' / 'testcharm' / 'v3' / 'testlib.py'
@@ -1805,7 +1805,7 @@ def test_getlibinfo_api_patch_both_zero(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata fields LIBAPI and LIBPATCH can not be both zero.".format(test_path))
+        "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(test_path))
 
 
 def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
@@ -1815,7 +1815,7 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBAPI is different than the version in the path."
+        "Library {} metadata field LIBAPI is different from the version in the path."
         .format(test_path))
 
 

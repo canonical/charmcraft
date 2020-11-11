@@ -16,10 +16,13 @@
 
 """Commands related to the Store, a thin layer above real functionality."""
 
+import ast
+import hashlib
 import logging
 import os
 import pathlib
 import textwrap
+from collections import namedtuple
 from operator import attrgetter
 
 import yaml
@@ -30,6 +33,9 @@ from charmcraft.cmdbase import BaseCommand, CommandError
 from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
+
+LibData = namedtuple(
+    'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
 
 
 def get_name_from_metadata():
@@ -461,3 +467,119 @@ class StatusCommand(BaseCommand):
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():
             logger.info(line)
+
+
+class _BadLibraryPathError(CommandError):
+    """Subclass to provide a specific error for a bad library path."""
+    def __init__(self, path):
+        super().__init__(
+            "Library path {} must conform to the lib/charms/<charm>/v<API>/<libname>.py "
+            "structure.".format(path))
+
+
+class _BadLibraryNameError(CommandError):
+    """Subclass to provide a specific error for a bad library name."""
+    def __init__(self, name):
+        super().__init__(
+            "Library full name {!r} must conform to the charms.<charm>.v<API>.<libname> structure."
+            .format(name))
+
+
+def _get_positive_int(raw_value):
+    """Convert the raw value for api/patch into a positive integer."""
+    value = int(raw_value)
+    if value < 0:
+        raise ValueError('negative')
+    return value
+
+
+def _get_lib_info(*, full_name=None, lib_path=None):
+    """Get the whole lib info from the path/file."""
+    if full_name is None:
+        # get it from the lib_path
+        try:
+            libsdir, charmsdir, charm_name, v_api = lib_path.parts[:-1]
+        except ValueError:
+            raise _BadLibraryPathError(lib_path)
+        if libsdir != 'lib' or charmsdir != 'charms' or lib_path.suffix != '.py':
+            raise _BadLibraryPathError(lib_path)
+        full_name = '.'.join((charmsdir, charm_name, v_api, lib_path.stem))
+
+    else:
+        # build the path! convert a lib name with dots to the full path, including lib
+        # dir and Python extension.
+        #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
+        try:
+            charmsdir, charm_name, v_api, libfile = full_name.split('.')
+        except ValueError:
+            raise _BadLibraryNameError(full_name)
+        if charmsdir != 'charms':
+            raise _BadLibraryNameError(full_name)
+        lib_path = pathlib.Path('lib') / charmsdir / charm_name / v_api / (libfile + '.py')
+
+    if v_api[0] != 'v' or not v_api[1:].isdigit():
+        raise CommandError(
+            "The API version in the library path must be 'vN' where N is an integer.")
+    api_from_path = int(v_api[1:])
+
+    lib_name = lib_path.stem
+    if not lib_path.exists():
+        return LibData(
+            lib_id=None, api=api_from_path, patch=-1, content_hash=None, content=None,
+            full_name=full_name, path=lib_path, lib_name=lib_name, charm_name=charm_name)
+
+    # parse the file and extract metadata from it, while hashing
+    metadata_fields = (b'LIBAPI', b'LIBPATCH', b'LIBID')
+    metadata = dict.fromkeys(metadata_fields)
+    hasher = hashlib.sha256()
+    with lib_path.open('rb') as fh:
+        for line in fh:
+            if line.startswith(metadata_fields):
+                try:
+                    field, value = [x.strip() for x in line.split(b'=')]
+                except ValueError:
+                    raise CommandError("Bad metadata line in {}: {!r}".format(lib_path, line))
+                metadata[field] = value
+            else:
+                hasher.update(line)
+
+    missing = [k.decode('ascii') for k, v in metadata.items() if v is None]
+    if missing:
+        raise CommandError(
+            "Library {} is missing the mandatory metadata fields: {}."
+            .format(lib_path, ', '.join(sorted(missing))))
+
+    bad_api_patch_msg = "Library {} metadata field {} is not zero or a positive integer."
+    try:
+        libapi = _get_positive_int(metadata[b'LIBAPI'])
+    except ValueError:
+        raise CommandError(bad_api_patch_msg.format(lib_path, 'LIBAPI'))
+    try:
+        libpatch = _get_positive_int(metadata[b'LIBPATCH'])
+    except ValueError:
+        raise CommandError(bad_api_patch_msg.format(lib_path, 'LIBPATCH'))
+
+    if libapi == 0 and libpatch == 0:
+        raise CommandError(
+            "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero."
+            .format(lib_path))
+
+    if libapi != api_from_path:
+        raise CommandError(
+            "Library {} metadata field LIBAPI is different from the version in the path."
+            .format(lib_path))
+
+    bad_libid_msg = "Library {} metadata field LIBID must be a non-empty ASCII string."
+    try:
+        libid = ast.literal_eval(metadata[b'LIBID'].decode('ascii'))
+    except (ValueError, UnicodeDecodeError):
+        raise CommandError(bad_libid_msg.format(lib_path))
+    if not libid or not isinstance(libid, str):
+        raise CommandError(bad_libid_msg.format(lib_path))
+
+    content_hash = hasher.hexdigest()
+    content = lib_path.read_text()
+
+    return LibData(
+        lib_id=libid, api=libapi, patch=libpatch, content_hash=content_hash, content=content,
+        full_name=full_name, path=lib_path, lib_name=lib_name, charm_name=charm_name)

@@ -31,6 +31,7 @@ from dateutil import parser
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     _get_lib_info,
+    CreateLibCommand,
     ListNamesCommand,
     ListRevisionsCommand,
     LoginCommand,
@@ -51,6 +52,8 @@ from charmcraft.commands.store.store import (
     Uploaded,
     User,
 )
+from charmcraft.commands.utils import get_templates_environment
+from tests import factory
 
 # used a lot!
 noargs = Namespace()
@@ -64,8 +67,22 @@ def store_mock():
         yield store_mock
 
 
-# -- tests for helpers
+@pytest.fixture
+def add_cleanup():
+    """Generic cleaning helper."""
+    to_cleanup = []
 
+    def f(func, *args, **kwargs):
+        """Store the cleaning actions for later."""
+        to_cleanup.append((func, args, kwargs))
+
+    yield f
+
+    for func, args, kwargs in to_cleanup:
+        func(*args, **kwargs)
+
+
+# -- tests for helpers
 
 def test_get_name_from_metadata_ok(tmp_path, monkeypatch):
     """The metadata file is valid yaml, but there is no name."""
@@ -941,6 +958,101 @@ def test_status_with_multiple_branches(caplog, store_mock):
         "         beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for create library command
+
+def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch):
+    """Happy path with result from the Store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    store_mock.create_library_id.return_value = lib_id
+
+    args = Namespace(name='testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        CreateLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.create_library_id('testcharm', 'testlib'),
+    ]
+    expected = [
+        "Library charms.testcharm.v0.testlib created with id test-example-lib-id.",
+        (
+            "Make sure to add the library file to your project; for example "
+            "'git add lib/charms/testcharm/v0/testlib.py'."
+        ),
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+    created_lib_file = tmp_path / 'lib' / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
+
+    env = get_templates_environment('charmlibs')
+    expected_newlib_content = env.get_template('new_library.py.j2').render(lib_id=lib_id)
+    assert created_lib_file.read_text() == expected_newlib_content
+
+
+def test_createlib_name_from_metadata_problem(store_mock):
+    """The metadata wasn't there to get the name."""
+    args = Namespace(name='testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
+        with pytest.raises(CommandError) as cm:
+            CreateLibCommand('group').run(args)
+        assert str(cm.value) == (
+            "Cannot access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+            "be executed in a valid project's directory.")
+
+
+@pytest.mark.parametrize('lib_name', [
+    'foo.bar',
+    'foo/bar',
+    'Foo',
+    '123foo',
+    '_foo',
+    '',
+])
+def test_createlib_invalid_name(lib_name):
+    """Verify that it can not be used with an invalid name."""
+    args = Namespace(name=lib_name)
+    with pytest.raises(CommandError) as err:
+        CreateLibCommand('group').run(args)
+    assert str(err.value) == (
+        "Invalid library name (can be only lowercase alphanumeric "
+        "characters and underscore, starting with alpha).")
+
+
+def test_createlib_path_already_there(tmp_path, monkeypatch):
+    """The intended-to-be-created library is already there."""
+    monkeypatch.chdir(tmp_path)
+
+    factory.create_lib_filepath('test-charm-name', 'testlib', api=0)
+    args = Namespace(name='testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'test-charm-name'
+        with pytest.raises(CommandError) as err:
+            CreateLibCommand('group').run(args)
+
+    assert str(err.value) == (
+        "This library already exists: lib/charms/test-charm-name/v0/testlib.py")
+
+
+def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cleanup):
+    """Disk error when trying to write the new lib (bad permissions, name too long, whatever)."""
+    lib_dir = tmp_path / 'lib' / 'charms' / 'test-charm-name' / 'v0'
+    lib_dir.mkdir(parents=True)
+    lib_dir.chmod(0o111)
+    add_cleanup(lib_dir.chmod, 0o777)
+    monkeypatch.chdir(tmp_path)
+
+    args = Namespace(name='testlib')
+    store_mock.create_library_id.return_value = 'lib_id'
+    expected_error = "Got an error when trying to write the library in .*: PermissionError.*"
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'test-charm-name'
+        with pytest.raises(CommandError, match=expected_error):
+            CreateLibCommand('group').run(args)
 
 
 # -- tests for _get_lib_info helper

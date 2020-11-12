@@ -17,6 +17,8 @@
 import os
 from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
 
+from jinja2 import Environment, PackageLoader, StrictUndefined
+
 S_IXALL = S_IXUSR | S_IXGRP | S_IXOTH
 S_IRALL = S_IRUSR | S_IRGRP | S_IROTH
 
@@ -29,3 +31,14 @@ def make_executable(fh):
     mode_x = mode_r >> 2
     mode = mode | mode_x
     os.fchmod(fileno, mode)
+
+
+def get_templates_environment(templates_dir):
+    """Create and return a Jinja environment to deal with the templates."""
+    env = Environment(
+        loader=PackageLoader('charmcraft', 'templates/{}'.format(templates_dir)),
+        autoescape=False,            # no need to escape things here :-)
+        keep_trailing_newline=True,  # they're not text files if they don't end in newline!
+        optimized=False,             # optimization doesn't make sense for one-offs
+        undefined=StrictUndefined)   # fail on undefined
+    return env

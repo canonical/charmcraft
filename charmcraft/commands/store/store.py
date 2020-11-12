@@ -175,3 +175,10 @@ class Store:
         revisions = [_build_revision(item) for item in response['revisions']]
 
         return channel_map, channels, revisions
+
+    def create_library_id(self, charm_name, lib_name):
+        """Create a new library id."""
+        endpoint = '/v1/charm/libraries/{}'.format(charm_name)
+        response = self._client.post(endpoint, {'library-name': lib_name})
+        lib_id = response['library-id']
+        return lib_id

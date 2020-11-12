@@ -32,7 +32,6 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     _get_lib_info,
     CreateLibCommand,
-    LIBRARY_TEMPLATE,
     ListNamesCommand,
     ListRevisionsCommand,
     LoginCommand,
@@ -53,6 +52,7 @@ from charmcraft.commands.store.store import (
     Uploaded,
     User,
 )
+from charmcraft.commands.utils import get_templates_environment
 from tests import factory
 
 # used a lot!
@@ -970,7 +970,10 @@ def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch):
     ]
     assert expected == [rec.message for rec in caplog.records]
     created_lib_file = tmp_path / 'lib' / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
-    assert created_lib_file.read_text() == LIBRARY_TEMPLATE.format(lib_id=lib_id)
+
+    env = get_templates_environment('charmlibs')
+    expected_newlib_content = env.get_template('new_library.py.j2').render(lib_id=lib_id)
+    assert created_lib_file.read_text() == expected_newlib_content
 
 
 def test_createlib_name_from_metadata_problem(store_mock):

@@ -30,6 +30,7 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.commands.utils import get_templates_environment
 
 from .store import Store
 
@@ -37,30 +38,6 @@ logger = logging.getLogger('charmcraft.commands.store')
 
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
-
-LIBRARY_TEMPLATE = """
-\"""TEMPLATE FIXME: Add a proper docstring here.
-
-This is the main documentation of the library, will be exposed by Charmhub after
-the lib is published.
-
-Markdown is supported.
-\"""
-
-# Never change this field, it's the unique identifier to track the library in
-# all systems
-LIBID = "{lib_id}"
-
-# Update this API version when introducing backwards incompatible
-# changes in the library.
-LIBAPI = 0
-
-# Update this version for every change in the library before (re)publishing it
-# (except for the initial content).
-LIBPATCH = 1
-
-# TEMPLATE FIXME: add your code here! Happy coding!
-"""
 
 
 def get_name_from_metadata():
@@ -654,8 +631,12 @@ class CreateLibCommand(BaseCommand):
         store = Store()
         lib_id = store.create_library_id(charm_name, lib_name)
 
+        # create the new library file from the template
+        env = get_templates_environment('charmlibs')
+        template = env.get_template('new_library.py.j2')
+        context = dict(lib_id=lib_id)
         lib_path.parent.mkdir(parents=True, exist_ok=True)
-        lib_path.write_text(LIBRARY_TEMPLATE.format(lib_id=lib_id))
+        lib_path.write_text(template.render(context))
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
         logger.info("Make sure to add the library file to your project: %s", lib_path)

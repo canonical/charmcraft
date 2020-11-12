@@ -1001,7 +1001,7 @@ def test_createlib_name_from_metadata_problem(store_mock):
         with pytest.raises(CommandError) as cm:
             CreateLibCommand('group').run(args)
         assert str(cm.value) == (
-            "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+            "Cannot access name in 'metadata.yaml' file. The 'create-lib' command needs to "
             "be executed in a valid project's directory.")
 
 
@@ -1035,7 +1035,7 @@ def test_createlib_path_already_there(tmp_path, monkeypatch):
             CreateLibCommand('group').run(args)
 
     assert str(err.value) == (
-        "The indicated library already exists on lib/charms/test-charm-name/v0/testlib.py")
+        "This library already exists: lib/charms/test-charm-name/v0/testlib.py")
 
 
 def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cleanup):

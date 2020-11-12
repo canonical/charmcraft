@@ -43,7 +43,7 @@ def create_command(name_, help_msg_=None, common_=False, overview_=None):
 
 
 def create_lib_filepath(charm_name, lib_name, api=0, patch=1, lib_id='test-lib-id'):
-    """Helper to create the structures in disk for a given lib."""
+    """Helper to create the structures on disk for a given lib."""
     base_dir = pathlib.Path('lib')
     lib_file = base_dir / 'charms' / charm_name / 'v{}'.format(api) / "{}.py".format(lib_name)
     lib_file.parent.mkdir(parents=True, exist_ok=True)

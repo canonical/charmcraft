@@ -620,14 +620,15 @@ class CreateLibCommand(BaseCommand):
         charm_name = get_name_from_metadata()
         if charm_name is None:
             raise CommandError(
-                "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+                "Cannot access name in 'metadata.yaml' file. The 'create-lib' command needs to "
                 "be executed in a valid project's directory.")
 
+        # all libraries born with API version in 0
         full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CommandError('The indicated library already exists on {}'.format(lib_path))
+            raise CommandError('This library already exists: {}'.format(lib_path))
 
         store = Store()
         lib_id = store.create_library_id(charm_name, lib_name)

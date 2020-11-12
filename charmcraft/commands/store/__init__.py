@@ -610,8 +610,9 @@ class CreateLibCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         lib_name = parsed_args.lib_name
-        valid_chars = set(string.ascii_lowercase + string.digits + '_')
-        if set(lib_name) - valid_chars or lib_name[0] not in string.ascii_lowercase:
+        valid_all_chars = set(string.ascii_lowercase + string.digits + '_')
+        valid_first_char = string.ascii_lowercase
+        if set(lib_name) - valid_all_chars or not lib_name or lib_name[0] not in valid_first_char:
             raise CommandError(
                 "Invalid library name (can be only lowercase alphanumeric "
                 "characters and underscore, starting with alpha).")
@@ -635,8 +636,14 @@ class CreateLibCommand(BaseCommand):
         env = get_templates_environment('charmlibs')
         template = env.get_template('new_library.py.j2')
         context = dict(lib_id=lib_id)
-        lib_path.parent.mkdir(parents=True, exist_ok=True)
-        lib_path.write_text(template.render(context))
+        try:
+            lib_path.parent.mkdir(parents=True, exist_ok=True)
+            lib_path.write_text(template.render(context))
+        except OSError as exc:
+            raise CommandError(
+                "Got an error when trying to write the library in {}: {!r}".format(lib_path, exc))
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
-        logger.info("Make sure to add the library file to your project: %s", lib_path)
+        logger.info(
+            "Make sure to add the library file to your project; for example 'git add %s'.",
+            lib_path)

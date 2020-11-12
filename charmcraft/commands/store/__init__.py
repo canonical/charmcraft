@@ -39,30 +39,6 @@ logger = logging.getLogger('charmcraft.commands.store')
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
 
-LIBRARY_TEMPLATE = """
-\"""TEMPLATE FIXME: Add a proper docstring here.
-
-This is the main documentation of the library, will be exposed by Charmhub after
-the lib is published.
-
-Markdown is supported.
-\"""
-
-# Never change this field, it's the unique identifier to track the library in
-# all systems
-LIBID = "{lib_id}"
-
-# Update this API version when introducing backwards incompatible
-# changes in the library.
-LIBAPI = 0
-
-# Update this version for every change in the library before (re)publishing it
-# (except for the initial content).
-LIBPATCH = 1
-
-# TEMPLATE FIXME: add your code here! Happy coding!
-"""
-
 
 def get_name_from_metadata():
     """Return the name (if present) from metadata file (if there and readable and sane)."""

@@ -1042,6 +1042,13 @@ def test_createlib_path_already_there(tmp_path, monkeypatch):
         "This library already exists: lib/charms/test-charm-name/v0/testlib.py")
 
 
+def test_createlib_library_template_is_python(caplog, store_mock, tmp_path, monkeypatch):
+    """Verify that the template used to create a library is valid Python code."""
+    env = get_templates_environment('charmlibs')
+    newlib_content = env.get_template('new_library.py.j2').render(lib_id='test-lib-id')
+    compile(newlib_content, 'test.py', 'exec')
+
+
 # -- tests for publish libraries command
 
 

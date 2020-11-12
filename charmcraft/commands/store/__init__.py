@@ -30,6 +30,7 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.commands.utils import get_templates_environment
 
 from .store import Store
 
@@ -653,14 +654,15 @@ class CreateLibCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'lib_name', metavar='lib-name',
+            'name', metavar='name',
             help="The name of the library file (e.g. 'db').")
 
     def run(self, parsed_args):
         """Run the command."""
-        lib_name = parsed_args.lib_name
-        valid_chars = set(string.ascii_lowercase + string.digits + '_')
-        if set(lib_name) - valid_chars or lib_name[0] not in string.ascii_lowercase:
+        lib_name = parsed_args.name
+        valid_all_chars = set(string.ascii_lowercase + string.digits + '_')
+        valid_first_char = string.ascii_lowercase
+        if set(lib_name) - valid_all_chars or not lib_name or lib_name[0] not in valid_first_char:
             raise CommandError(
                 "Invalid library name (can be only lowercase alphanumeric "
                 "characters and underscore, starting with alpha).")
@@ -668,23 +670,34 @@ class CreateLibCommand(BaseCommand):
         charm_name = get_name_from_metadata()
         if charm_name is None:
             raise CommandError(
-                "Can't access name in 'metadata.yaml' file. The 'create-lib' command needs to "
+                "Cannot access name in 'metadata.yaml' file. The 'create-lib' command needs to "
                 "be executed in a valid project's directory.")
 
+        # all libraries born with API version in 0
         full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CommandError('The indicated library already exists on {}'.format(lib_path))
+            raise CommandError('This library already exists: {}'.format(lib_path))
 
         store = Store()
         lib_id = store.create_library_id(charm_name, lib_name)
 
-        lib_path.parent.mkdir(parents=True, exist_ok=True)
-        lib_path.write_text(LIBRARY_TEMPLATE.format(lib_id=lib_id))
+        # create the new library file from the template
+        env = get_templates_environment('charmlibs')
+        template = env.get_template('new_library.py.j2')
+        context = dict(lib_id=lib_id)
+        try:
+            lib_path.parent.mkdir(parents=True, exist_ok=True)
+            lib_path.write_text(template.render(context))
+        except OSError as exc:
+            raise CommandError(
+                "Got an error when trying to write the library in {}: {!r}".format(lib_path, exc))
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
-        logger.info("Make sure to add the library file to your project: %s", lib_path)
+        logger.info(
+            "Make sure to add the library file to your project; for example 'git add %s'.",
+            lib_path)
 
 
 class PublishLibCommand(BaseCommand):

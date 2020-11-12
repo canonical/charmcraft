@@ -22,10 +22,9 @@ from datetime import date
 from pathlib import Path
 
 import yaml
-from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from .utils import make_executable
+from .utils import make_executable, get_templates_environment
 
 logger = logging.getLogger(__name__)
 
@@ -110,12 +109,7 @@ class InitCommand(BaseCommand):
             "series": yaml.dump(args.series.split(","), default_flow_style=True),
         }
 
-        env = Environment(
-            loader=PackageLoader('charmcraft', 'templates/init'),
-            autoescape=False,            # no need to escape things here :-)
-            keep_trailing_newline=True,  # they're not text files if they don't end in newline!
-            optimized=False,             # optimization doesn't make sense for one-offs
-            undefined=StrictUndefined)   # fail on undefined
+        env = get_templates_environment('init')
 
         _todo_rx = re.compile("TODO: (.*)")
         todos = []

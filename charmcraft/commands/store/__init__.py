@@ -604,12 +604,12 @@ class CreateLibCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'lib_name', metavar='lib-name',
+            'name', metavar='name',
             help="The name of the library file (e.g. 'db').")
 
     def run(self, parsed_args):
         """Run the command."""
-        lib_name = parsed_args.lib_name
+        lib_name = parsed_args.name
         valid_all_chars = set(string.ascii_lowercase + string.digits + '_')
         valid_first_char = string.ascii_lowercase
         if set(lib_name) - valid_all_chars or not lib_name or lib_name[0] not in valid_first_char:

@@ -970,7 +970,7 @@ def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch):
     lib_id = 'test-example-lib-id'
     store_mock.create_library_id.return_value = lib_id
 
-    args = Namespace(lib_name='testlib')
+    args = Namespace(name='testlib')
     with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
         mock.return_value = 'testcharm'
         CreateLibCommand('group').run(args)
@@ -995,7 +995,7 @@ def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch):
 
 def test_createlib_name_from_metadata_problem(store_mock):
     """The metadata wasn't there to get the name."""
-    args = Namespace(lib_name='testlib')
+    args = Namespace(name='testlib')
     with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
         mock.return_value = None
         with pytest.raises(CommandError) as cm:
@@ -1015,7 +1015,7 @@ def test_createlib_name_from_metadata_problem(store_mock):
 ])
 def test_createlib_invalid_name(lib_name):
     """Verify that it can not be used with an invalid name."""
-    args = Namespace(lib_name=lib_name)
+    args = Namespace(name=lib_name)
     with pytest.raises(CommandError) as err:
         CreateLibCommand('group').run(args)
     assert str(err.value) == (
@@ -1028,7 +1028,7 @@ def test_createlib_path_already_there(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     factory.create_lib_filepath('test-charm-name', 'testlib', api=0)
-    args = Namespace(lib_name='testlib')
+    args = Namespace(name='testlib')
     with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
         mock.return_value = 'test-charm-name'
         with pytest.raises(CommandError) as err:
@@ -1046,7 +1046,7 @@ def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cle
     add_cleanup(lib_dir.chmod, 0o777)
     monkeypatch.chdir(tmp_path)
 
-    args = Namespace(lib_name='testlib')
+    args = Namespace(name='testlib')
     store_mock.create_library_id.return_value = 'lib_id'
     expected_error = "Got an error when trying to write the library in .*: PermissionError.*"
     with patch('charmcraft.commands.store.get_name_from_metadata') as mock:

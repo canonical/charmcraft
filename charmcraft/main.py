@@ -20,7 +20,7 @@ import logging
 import sys
 
 from charmcraft import helptexts
-from charmcraft.commands import version, build, store, init
+from charmcraft.commands import version, build, store, init, pack
 from charmcraft.cmdbase import CommandError, BaseCommand
 from charmcraft.logsetup import message_handler
 
@@ -76,6 +76,7 @@ COMMAND_GROUPS = [
     ('basic', "Basic commands", [
         HelpCommand,
         build.BuildCommand,
+        pack.PackCommand,
         init.InitCommand,
         version.VersionCommand,
     ]),

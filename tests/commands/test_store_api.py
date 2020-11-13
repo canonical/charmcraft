@@ -22,7 +22,7 @@ from unittest.mock import patch, call, MagicMock
 import pytest
 from dateutil import parser
 
-from charmcraft.commands.store.store import Store, Library
+from charmcraft.commands.store.store import Store
 
 
 @pytest.fixture

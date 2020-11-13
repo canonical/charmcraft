@@ -32,38 +32,63 @@ from charmcraft.commands.pack import (
 )
 
 
-def create_bundle(basedir, *, name=None):
-    """Create a valid bundle yaml file in the indicated directory."""
-    bundle_path = basedir / 'bundle.yaml'
+@pytest.fixture
+def bundle_yaml(tmp_path):
+    """Create an empty bundle.yaml, with the option to set values to it."""
+    bundle_path = tmp_path / 'bundle.yaml'
+    bundle_path.write_text("{}")
     content = {}
-    if name is not None:
-        content['name'] = name
-    encoded = yaml.dump(content)
-    bundle_path.write_text(encoded)
-    return encoded
+
+    class _Setter:
+        """Simple interface to have a .set in the fixture."""
+
+        def set(self, *, name):
+            content['name'] = name
+            encoded = yaml.dump(content)
+            bundle_path.write_text(encoded)
+            return encoded
+
+    return _Setter()
 
 
-def create_charmcraft(basedir, prime):
-    """Create a simple charmcraft.yaml with some files to be included."""
-    charmcraft_path = basedir / 'charmcraft.yaml'
-    content = {
-        'parts': {
-            'bundle': {
-                'prime': prime,
-            }
-        }
-    }
-    charmcraft_path.write_text(yaml.dump(content))
+@pytest.fixture
+def charmcraft_yaml(tmp_path):
+    """Create an empty charmcraft.yaml, with the option to set values to it."""
+    charmcraft_path = tmp_path / 'charmcraft.yaml'
+    charmcraft_path.write_text("{}")
+    content = {}
+
+    class _Setter:
+        """Simple interface to have a .set in the fixture."""
+
+        def set(self, **kwargs):
+            # prime is special, so we don't need to write all this structure in all tests
+            prime = kwargs.pop('prime', None)
+            if prime is not None:
+                content['parts'] = {
+                    'bundle': {
+                        'prime': prime,
+                    }
+                }
+
+            # the rest is direct
+            content.update(kwargs)
+
+            encoded = yaml.dump(content)
+            charmcraft_path.write_text(encoded)
+            return encoded
+
+    return _Setter()
 
 
 # -- tests for main building process
 
-def test_simple_succesful_build(tmp_path, caplog):
+def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, charmcraft_yaml):
     """A simple happy story."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    content = create_bundle(tmp_path, name='testbundle')
-    create_charmcraft(tmp_path, [])
+    content = bundle_yaml.set(name='testbundle')
+    charmcraft_yaml.set(type='bundle')
 
     # build!
     args = Namespace(from_dir=tmp_path)
@@ -79,13 +104,15 @@ def test_simple_succesful_build(tmp_path, caplog):
     assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_simple_build_directory_default(tmp_path, caplog, monkeypatch):
+def test_simple_build_directory_default(
+        tmp_path, caplog, monkeypatch, bundle_yaml, charmcraft_yaml):
     """Building defaults to current directory."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
     # needed files
-    content = create_bundle(tmp_path, name='testbundle')
+    content = bundle_yaml.set(name='testbundle')
+    charmcraft_yaml.set(type='bundle')
 
     # build!
     args = Namespace(from_dir=None)
@@ -120,26 +147,52 @@ def test_specified_directory_not_a_directory(tmp_path):
         "Bundle project directory is not really a directory: '{}'.".format(somefile))
 
 
-def test_missing_mandatory_file(tmp_path):
+def test_missing_bundle_file(tmp_path, charmcraft_yaml):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
     args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
         PackCommand('group').run(args)
-    assert str(cm.value) == "Missing main bundle file: '{}'.".format(tmp_path / 'bundle.yaml')
+    assert str(cm.value) == (
+        "Missing or invalid main bundle file: '{}'.".format(tmp_path / 'bundle.yaml'))
 
 
-def test_missing_name_in_bundle(tmp_path):
+def test_missing_charmcraft_file(tmp_path, bundle_yaml):
+    """Can not build a bundle without charmcraft.yaml."""
+    bundle_yaml.set(name='testbundle')
+
+    # build without a charmcraft.yaml!
+    args = Namespace(from_dir=tmp_path)
+    with pytest.raises(CommandError) as cm:
+        PackCommand('group').run(args)
+    assert str(cm.value) == (
+        "Missing or invalid charmcraft file: '{}'.".format(tmp_path / 'charmcraft.yaml'))
+
+
+def test_missing_name_in_bundle(tmp_path, bundle_yaml, charmcraft_yaml):
     """Can not build a bundle without name."""
-    create_bundle(tmp_path)
+    charmcraft_yaml.set(type='bundle')
 
     # build!
     args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
         PackCommand('group').run(args)
     assert str(cm.value) == (
-        "Invalid config; the '{}' file must have a 'name' field indicating the bundle's name."
+        "Invalid bundle config; missing a 'name' field indicating the bundle's name in file '{}'."
         .format(tmp_path / 'bundle.yaml'))
+
+
+def test_missing_type_in_charmcraft(tmp_path, bundle_yaml, charmcraft_yaml):
+    """The charmcraft.yaml file must have a proper type field."""
+    bundle_yaml.set(name='testbundle')
+
+    # build!
+    args = Namespace(from_dir=tmp_path)
+    with pytest.raises(CommandError) as cm:
+        PackCommand('group').run(args)
+    assert str(cm.value) == (
+        "Invalid charmcraft config; 'type' must be 'bundle' in file '{}'."
+        .format(tmp_path / 'charmcraft.yaml'))
 
 
 # -- tests for get paths helper
@@ -158,11 +211,11 @@ def test_getpaths_mandatory_ok(tmp_path):
     assert result == [test_file2, test_file1]
 
 
-def test_getpaths_extra_ok(tmp_path, caplog):
+def test_getpaths_extra_ok(tmp_path, caplog, charmcraft_yaml):
     """Extra files were indicated ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    create_charmcraft(tmp_path, prime=['f2.txt', 'f1.txt'])
+    charmcraft_yaml.set(prime=['f2.txt', 'f1.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
     testfile2 = tmp_path / 'f2.txt'
@@ -179,11 +232,11 @@ def test_getpaths_extra_ok(tmp_path, caplog):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_missing(tmp_path, caplog):
+def test_getpaths_extra_missing(tmp_path, caplog, charmcraft_yaml):
     """Extra files were indicated but not found."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    create_charmcraft(tmp_path, prime=['f2.txt', 'f1.txt'])
+    charmcraft_yaml.set(prime=['f2.txt', 'f1.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
 
@@ -198,18 +251,18 @@ def test_getpaths_extra_missing(tmp_path, caplog):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_absolute(tmp_path):
+def test_getpaths_extra_absolute(tmp_path, charmcraft_yaml):
     """All extra files must be relative to the project."""
-    create_charmcraft(tmp_path, ['/tmp/foobar'])
+    charmcraft_yaml.set(prime=['/tmp/foobar'])
     with patch.object(pack, 'MANDATORY_FILES', []):
         with pytest.raises(CommandError) as cm:
             get_paths_to_include(tmp_path)
     assert str(cm.value) == "Extra files in prime config can not be absolute: '/tmp/foobar'"
 
 
-def test_getpaths_extra_long_path(tmp_path):
+def test_getpaths_extra_long_path(tmp_path, charmcraft_yaml):
     """An extra file can be deep in directories."""
-    create_charmcraft(tmp_path, ['foo/bar/baz/extra.txt'])
+    charmcraft_yaml.set(prime=['foo/bar/baz/extra.txt'])
     testfile = tmp_path / 'foo' / 'bar' / 'baz' / 'extra.txt'
     testfile.parent.mkdir(parents=True)
     testfile.touch()
@@ -219,11 +272,11 @@ def test_getpaths_extra_long_path(tmp_path):
     assert result == [testfile]
 
 
-def test_getpaths_extra_wildcards_ok(tmp_path, caplog):
+def test_getpaths_extra_wildcards_ok(tmp_path, caplog, charmcraft_yaml):
     """Use wildcards to specify several files ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    create_charmcraft(tmp_path, ['*.txt'])
+    charmcraft_yaml.set(prime=['*.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
     testfile2 = tmp_path / 'f2.bin'
@@ -241,11 +294,11 @@ def test_getpaths_extra_wildcards_ok(tmp_path, caplog):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_wildcards_not_found(tmp_path, caplog):
+def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, charmcraft_yaml):
     """Use wildcards to specify several files but nothing found."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    create_charmcraft(tmp_path, ['*.txt'])
+    charmcraft_yaml.set(prime=['*.txt'])
 
     with patch.object(pack, 'MANDATORY_FILES', []):
         result = get_paths_to_include(tmp_path)
@@ -257,9 +310,9 @@ def test_getpaths_extra_wildcards_not_found(tmp_path, caplog):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_globstar(tmp_path):
+def test_getpaths_extra_globstar(tmp_path, charmcraft_yaml):
     """Double star means whatever directories are in the path."""
-    create_charmcraft(tmp_path, ['lib/**/*'])
+    charmcraft_yaml.set(prime=['lib/**/*'])
     srcpaths = (
         ('lib/foo/f1.txt', True),
         ('lib/foo/deep/fx.txt', True),
@@ -281,9 +334,9 @@ def test_getpaths_extra_globstar(tmp_path):
     assert result == sorted(allexpected)
 
 
-def test_getpaths_extra_globstar_specific_files(tmp_path):
+def test_getpaths_extra_globstar_specific_files(tmp_path, charmcraft_yaml):
     """Combination of both mechanisms."""
-    create_charmcraft(tmp_path, ['lib/**/*.txt'])
+    charmcraft_yaml.set(prime=['lib/**/*.txt'])
     srcpaths = (
         ('lib/foo/f1.txt', True),
         ('lib/foo/f1.nop', False),

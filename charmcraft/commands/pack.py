@@ -95,23 +95,33 @@ class PackCommand(BaseCommand):
             dirpath = pathlib.Path.cwd()
         else:
             dirpath = parsed_args.from_dir.expanduser()
-            print("====== dP", dirpath)
             if not dirpath.exists():
                 raise CommandError("Bundle project directory was not found: '{}'.".format(dirpath))
             if not dirpath.is_dir():
                 raise CommandError(
                     "Bundle project directory is not really a directory: '{}'.".format(dirpath))
 
-        # get the bundle name
+        # get the config files
         bundle_filepath = dirpath / 'bundle.yaml'
-        config = load_yaml(bundle_filepath)
-        if config is None:
-            raise CommandError("Missing main bundle file: '{}'.".format(bundle_filepath))
-        bundle_name = config.get('name')
+        bundle_config = load_yaml(bundle_filepath)
+        if bundle_config is None:
+            raise CommandError(
+                "Missing or invalid main bundle file: '{}'.".format(bundle_filepath))
+        bundle_name = bundle_config.get('name')
         if not bundle_name:
             raise CommandError(
-                "Invalid config; the '{}' file must have a 'name' field indicating "
-                "the bundle's name.".format(bundle_filepath))
+                "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
+                "file '{}'.".format(bundle_filepath))
+
+        charmcraft_filepath = dirpath / 'charmcraft.yaml'
+        charmcraft_config = load_yaml(charmcraft_filepath)
+        if charmcraft_config is None:
+            raise CommandError(
+                "Missing or invalid charmcraft file: '{}'.".format(charmcraft_filepath))
+        if charmcraft_config.get('type') != 'bundle':
+            raise CommandError(
+                "Invalid charmcraft config; 'type' must be 'bundle' in file '{}'."
+                .format(charmcraft_filepath))
 
         # pack everything
         paths = get_paths_to_include(dirpath)

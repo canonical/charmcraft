@@ -1,11 +1,10 @@
 # Charmcraft is for Kubernetes operator developers
 
-Charmcraft supports development of Kubernetes operators, and also operators
-for Linux and Windows apps, for multi-cloud model-driven app management.
+Charmcraft supports Kubernetes operator development.
 
-Charmcraft enables collaboration between operator developers. It also
-handles publication on [Charmhub](https://charmhub.io/), home of the
-Open Operator Collection, the largest collection of operators.
+Charmcraft enables collaboration between operator developers, and
+publication on [Charmhub](https://charmhub.io/), home of the
+Open Operator Collection.
 
 Use `charmcraft` to:
 
@@ -20,6 +19,12 @@ recommend the [Python Operator Framework
 on Github](https://github.com/canonical/operator) which is also
 [on PyPI](https://pypi.org/project/ops/) for ease of development
 and collaboration.
+
+Charmcraft and the Python Operator Framework also extended the operator
+pattern beyond Kubernetes with
+[universal operators](https://juju.is/universdal-operators) for
+Linux and Windows apps. The universal operator pattern is very exciting
+for multi-cloud application management.
 
 ## Install
 

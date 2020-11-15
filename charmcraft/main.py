@@ -79,7 +79,7 @@ COMMAND_GROUPS = [
         init.InitCommand,
         version.VersionCommand,
     ]),
-    ('store', "Interaction with the Store", [
+    ('store', "Interaction with Charmhub", [
         # auth
         store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
         # name handling
@@ -96,9 +96,9 @@ COMMAND_GROUPS = [
 
 # global options: the flag used internally, short and long parameters, and the help text
 GLOBAL_FLAGS = [
-    ('help', '-h', '--help', "Show this help message and exit."),
-    ('verbose', '-v', '--verbose', "Show debug information and be more verbose."),
-    ('quiet', '-q', '--quiet', "Only show warnings and errors, not progress."),
+    ('help', '-h', '--help', "Show this help message and exit"),
+    ('verbose', '-v', '--verbose', "Show debug information and be more verbose"),
+    ('quiet', '-q', '--quiet', "Only show warnings and errors, not progress"),
 ]
 
 

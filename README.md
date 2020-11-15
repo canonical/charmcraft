@@ -3,8 +3,8 @@
 Charmcraft supports Kubernetes operator development.
 
 Charmcraft enables collaboration between operator developers, and
-publication on [Charmhub](https://charmhub.io/), home of the
-Open Operator Collection.
+publication on [Charmhub](https://charmhub.io/), home of the Open Operator
+Collection.
 
 Use `charmcraft` to:
 
@@ -15,16 +15,16 @@ Use `charmcraft` to:
  * Release your charms into channels
 
 You can use charmcraft with operators written in any language but we
-recommend the [Python Operator Framework
-on Github](https://github.com/canonical/operator) which is also
-[on PyPI](https://pypi.org/project/ops/) for ease of development
-and collaboration.
+recommend the [Python Operator Framework on
+Github](https://github.com/canonical/operator) which is also [on
+PyPI](https://pypi.org/project/ops/) for ease of development and
+collaboration.
 
 Charmcraft and the Python Operator Framework extend the operator pattern
-beyond Kubernetes with 
-[universal operators](https://juju.is/universdal-operators) that drive
-Linux and Windows apps. The universal operator pattern is very exciting
-for multi-cloud application management.
+beyond Kubernetes with [universal
+operators](https://juju.is/universdal-operators) that drive Linux and
+Windows apps. The universal operator pattern is very exciting for
+multi-cloud application management.
 
 ## Install
 
@@ -57,21 +57,22 @@ These are marked with ‘TODO:’, as is customary. Namely:
 
 You will now have all the essential files for a charmed operator, including
 the actual `src/charm.py` skeleton and various items of metadata. Charmcraft
-assumes you want to work in Python so it will add `requirements.txt` with the
-Python operator framework `ops`, and other conventional development support files.
+assumes you want to work in Python so it will add `requirements.txt` with
+the Python operator framework `ops`, and other conventional development
+support files.
 
 ## Build your charm
 
-With a correct `metadata.yaml` and with `ops` in `requirements.txt` you
-can build a charm with:
+With a correct `metadata.yaml` and with `ops` in `requirements.txt` you can
+build a charm with:
 
 ```text
 $ charmcraft build
 Done, charm left in 'test-charm.charm'
 ```
 
-`charmcraft build` will fetch additional files into the tree from PyPI
-based on `requirements.txt` and will compile modules using a virtualenv.
+`charmcraft build` will fetch additional files into the tree from PyPI based
+on `requirements.txt` and will compile modules using a virtualenv.
 
 The charm is just a zipfile with metadata and the operator code itself:
 
@@ -87,34 +88,34 @@ Archive:  test-charm.charm
    812617                     84 files
 ```
 
-Now, if you have a Kubernetes cluster with the Juju OLM accessible you
-can directly `juju deploy <test-charm.charm>` to the cluster. You do not
-need to publish your operator on Charmhub, you can pass the charm file
-around directly to users, or for CI/CD purposes.
+Now, if you have a Kubernetes cluster with the Juju OLM accessible you can
+directly `juju deploy <test-charm.charm>` to the cluster. You do not need to
+publish your operator on Charmhub, you can pass the charm file around
+directly to users, or for CI/CD purposes.
 
 ## Charmhub login and charm name reservations
 
-[Charmhub](https://charmhub.io/) is the world's largest repository of operators.
-It makes it easy to share and collaborate on operators. The community are
-interested in operators for a very wide range of purposes, including
-infrastructure-as-code and legacy application management, and of course
-Kubernetes operators.
+[Charmhub](https://charmhub.io/) is the world's largest repository of
+operators.  It makes it easy to share and collaborate on operators. The
+community are interested in operators for a very wide range of purposes,
+including infrastructure-as-code and legacy application management, and of
+course Kubernetes operators.
 
 Use `charmcraft login` and `charmcraft logout` to sign into Charmhub.
 
 ## Charmhub name registration
 
-You can register operator names in Charmhub with
-`charmcraft register <name>`. Many common names have been reserved, you
-are encouraged to discuss your interest in leading or collaborating on
-a charm in [Charmhub Discourse](https://discourse.charmhub.io/).
+You can register operator names in Charmhub with `charmcraft register
+<name>`. Many common names have been reserved, you are encouraged to discuss
+your interest in leading or collaborating on a charm in [Charmhub
+Discourse](https://discourse.charmhub.io/).
 
 Charmhub naming policy is the principle of least surprise - a well-known
-name should map to an operator that most people would expect to get for
-that name.
+name should map to an operator that most people would expect to get for that
+name.
 
-Operators in Charmhub can be renamed as needed, so feel free to register
-a temporary name, such as <username>-<charmname> as a placeholder.
+Operators in Charmhub can be renamed as needed, so feel free to register a
+temporary name, such as <username>-<charmname> as a placeholder.
 
 ## Operator upload and release
 

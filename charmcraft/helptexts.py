@@ -26,10 +26,10 @@ TERMINAL_WIDTH = 72
 # "columns spread", for easier human editing.
 GENERAL_SUMMARY = """
     Charmcraft helps build, package and publish operators on Charmhub.
-    
+
     Together with the Python Operator Framework, charmcraft simplifies
     operator development and collaboration.
-    
+
     See https://charmhub.io/publishing for more information.
 """
 # XXX Facundo 2020-09-10: we should add an extra (separated) line to the summary with:

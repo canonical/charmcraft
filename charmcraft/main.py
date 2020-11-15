@@ -73,13 +73,13 @@ class HelpCommand(BaseCommand):
 # central place and not distributed in several classes/files. Also note that order here is
 # important when lisgint commands and showing help.
 COMMAND_GROUPS = [
-    ('basic', "Basic commands", [
+    ('basic', "Basic", [
         HelpCommand,
         build.BuildCommand,
         init.InitCommand,
         version.VersionCommand,
     ]),
-    ('store', "Interaction with Charmhub", [
+    ('store', "Charmhub", [
         # auth
         store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
         # name handling

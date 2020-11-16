@@ -22,7 +22,7 @@ collaboration.
 
 Charmcraft and the Python Operator Framework extend the operator pattern
 beyond Kubernetes with [universal
-operators](https://juju.is/universdal-operators) that drive Linux and
+operators](https://juju.is/universal-operators) that drive Linux and
 Windows apps. The universal operator pattern is very exciting for
 multi-cloud application management.
 

@@ -38,11 +38,6 @@ logging.getLogger(requests.packages.urllib3.__package__).setLevel(logging.ERROR)
 
 logger = logging.getLogger('charmcraft.commands.store')
 
-# XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
-# functionality in Store's production (related: issue #51)
-API_BASE_URL = 'https://api.staging.charmhub.io'
-STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com'
-
 
 def build_user_agent():
     """Build the charmcraft's user agent."""
@@ -139,9 +134,9 @@ class _AuthHolder:
         return resp
 
 
-def _storage_push(monitor):
+def _storage_push(monitor, storage_base_url):
     """Push bytes to the storage."""
-    url = STORAGE_BASE_URL + '/unscanned-upload/'
+    url = storage_base_url + '/unscanned-upload/'
     headers = {
         'Content-Type': monitor.content_type,
         'Accept': 'application/json',
@@ -164,8 +159,18 @@ def _storage_push(monitor):
 class Client:
     """Lightweight layer above _AuthHolder to present a more network oriented interface."""
 
-    def __init__(self):
+    # default production URLs
+    api_base_url = 'https://api.charmhub.io'
+    storage_base_url = 'https://storage.snapcraftcontent.com'
+
+    def __init__(self, charmhub_config=None):
         self._auth_client = _AuthHolder()
+
+        if charmhub_config is not None:
+            if 'api' in charmhub_config:
+                self.api_base_url = charmhub_config['api'].rstrip('/')
+            if 'storage' in charmhub_config:
+                self.storage_base_url = charmhub_config['storage'].rstrip('/')
 
     def clear_credentials(self):
         """Clear stored credentials."""
@@ -197,7 +202,7 @@ class Client:
 
     def _hit(self, method, urlpath, body=None):
         """Generic hit to the Store."""
-        url = API_BASE_URL + urlpath
+        url = self.api_base_url + urlpath
         logger.debug("Hitting the store: %s %s %s", method, url, body)
         resp = self._auth_client.request(method, url, body)
         if not resp.ok:
@@ -234,7 +239,7 @@ class Client:
 
             # create a monitor (so that progress can be displayed) as call the real pusher
             monitor = MultipartEncoderMonitor(encoder, _progress)
-            response = _storage_push(monitor)
+            response = _storage_push(monitor, self.storage_base_url)
 
         if not response.ok:
             raise CommandError("Failure while pushing file: [{}] {!r}".format(

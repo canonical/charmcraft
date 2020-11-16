@@ -2,9 +2,9 @@
 
 Release early, release often. Don't be lazy.
 
-To use this doc: just replace X.Y.Z with the major.minor.patch version 
-of the release, and all commands and indications should be ready 
-to copy and paste,.
+To use this doc: just replace X.Y.Z with the major.minor.patch version of
+the release. The sequence of commands below should be good to copy and
+paste, but do please pay attention to details!
 
 
 ## Preparation
@@ -21,7 +21,7 @@ to copy and paste,.
 
     git checkout -b release-X.Y.Z
 
-- create release notes after all main changes from last tag 
+- create release notes after all main changes from last tag
 
     git log --first-parent master --decorate
 
@@ -66,10 +66,13 @@ to copy and paste,.
 - release in Github
 
     xdg-open https://github.com/canonical/charmcraft/tags
-    (you should see all project tags, the top one should be this release's one)
-    In the menu at right of the tag tag you just created, choose 'create release'
-    Copy the release notes into the release description
+
+    You should see all project tags, the top one should be this release.
+    In the menu at right of the tag tag you just created, choose 'create
+    release'. Copy the release notes into the release description.
+
     Attach the `dist/` files
+
     Click on "Publish release"
 
 - release to PyPI
@@ -86,16 +89,16 @@ to copy and paste,.
 
 - verify all archs are consistent:
 
-    snapcraft status charmcraft 
+    snapcraft status charmcraft
 
 
 ## Final details
 
 - update IRC channel topic
 
-- send a mail with "Release X.Y.Z" title and release notes in the body to 
+- send a mail with "Release X.Y.Z" title and release notes in the body to
 
-    charmcraft@lists.launchpad.net 
+    charmcraft@lists.launchpad.net
 
 - write a new post in Discourse about the release:
 

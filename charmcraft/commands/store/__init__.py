@@ -73,7 +73,7 @@ class LoginCommand(BaseCommand):
         """Run the command."""
         store = Store()
         store.login()
-        logger.info("Logged in as '%s'", store.whoami().username)
+        logger.info("Logged in as '%s'.", store.whoami().username)
 
 
 class LogoutCommand(BaseCommand):
@@ -153,7 +153,7 @@ class RegisterNameCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="The name to register in Charmhub.")
+        parser.add_argument('name', help="The name to register in Charmhub")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -206,7 +206,7 @@ class ListNamesCommand(BaseCommand):
 
 
 class UploadCommand(BaseCommand):
-    """Upload a charm to Charmhub"""
+    """Upload a charm to Charmhub."""
     name = 'upload'
     help_msg = "Upload a charm to Charmhub"
     overview = textwrap.dedent("""
@@ -239,13 +239,13 @@ class UploadCommand(BaseCommand):
             if charm_name is None:
                 raise CommandError(
                     "Cannot find a valid charm name in metadata.yaml to upload. Check you are in "
-                    "a charm directory with metadata.yaml, or use --charm-file=foo.charm")
+                    "a charm directory with metadata.yaml, or use --charm-file=foo.charm.")
 
             charm_filepath = pathlib.Path(charm_name + '.charm').absolute()
             if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
                 raise CommandError(
                     "Cannot access charm at {!r}. Try --charm-file=foo.charm"
-                    "".format(str(charm_filepath)))
+                    .format(str(charm_filepath)))
 
         else:
             # the path is given, asume the charm name is part of the file name
@@ -254,10 +254,10 @@ class UploadCommand(BaseCommand):
             charm_filepath = charm_filepath.expanduser()
             if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
                 raise CommandError(
-                    "Cannot access {!r}".format(str(charm_filepath)))
+                    "Cannot access {!r}.".format(str(charm_filepath)))
             if not charm_filepath.is_file():
                 raise CommandError(
-                    "{!r} is not a file".format(str(charm_filepath)))
+                    "{!r} is not a file.".format(str(charm_filepath)))
 
             charm_name = charm_filepath.stem
 
@@ -267,7 +267,7 @@ class UploadCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '--charm-file', type=pathlib.Path,
-            help="The charm to upload.")
+            help="The charm to upload")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -279,7 +279,7 @@ class UploadCommand(BaseCommand):
         else:
             # XXX Facundo 2020-06-30: at some point in the future the Store will give us also a
             # reason why it failed, to improve the message. Issue: #78.
-            logger.info("Upload failed with status %r", result.status)
+            logger.info("Upload failed with status %r.", result.status)
 
 
 class ListRevisionsCommand(BaseCommand):
@@ -302,7 +302,7 @@ class ListRevisionsCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="The name of the charm.")
+        parser.add_argument('--name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -313,12 +313,12 @@ class ListRevisionsCommand(BaseCommand):
             if charm_name is None:
                 raise CommandError(
                     "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo")
+                    "directory with metadata.yaml, or use --name=foo.")
 
         store = Store()
         result = store.list_revisions(charm_name)
         if not result:
-            logger.info("No revisions found")
+            logger.info("No revisions found.")
             return
 
         headers = ['Revision', 'Version', 'Created at', 'Status']
@@ -375,18 +375,17 @@ class ReleaseCommand(BaseCommand):
             1.3/beta/feature-foo
 
         Listing revisions will take you through login if needed.
-
     """)
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'revision', type=int, help='The revision to release.')
+            'revision', type=int, help='The revision to release')
         parser.add_argument(
             'channels', metavar='channel', nargs='+',
-            help="The channel(s) to release to.")
-        parser.add_argument('--name', help="The name of the charm.")
+            help="The channel(s) to release to")
+        parser.add_argument('--name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -399,7 +398,7 @@ class ReleaseCommand(BaseCommand):
             if charm_name is None:
                 raise CommandError(
                     "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo")
+                    "directory with metadata.yaml, or use --name=foo.")
 
         store.release(charm_name, parsed_args.revision, parsed_args.channels)
         logger.info(
@@ -428,13 +427,12 @@ class StatusCommand(BaseCommand):
                    edge       1          1
 
         Showing channels will take you through login if needed.
-
     """)
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="The name of the charm.")
+        parser.add_argument('--name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -445,7 +443,7 @@ class StatusCommand(BaseCommand):
             if charm_name is None:
                 raise CommandError(
                     "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo")
+                    "directory with metadata.yaml, or use --name=foo.")
 
         store = Store()
         channel_map, channels, revisions = store.list_releases(charm_name)
@@ -526,7 +524,7 @@ class _BadLibraryPathError(CommandError):
     """Subclass to provide a specific error for a bad library path."""
     def __init__(self, path):
         super().__init__(
-            "Charm library path {} must conform to lib/charms/<charm>/v<API>/<libname>.py"
+            "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
             "".format(path))
 
 
@@ -534,7 +532,7 @@ class _BadLibraryNameError(CommandError):
     """Subclass to provide a specific error for a bad library name."""
     def __init__(self, name):
         super().__init__(
-            "Charm library name {!r} must conform to charms.<charm>.vX.<libname>"
+            "Charm library name {!r} must conform to charms.<charm>.vN.<libname>"
             .format(name))
 
 
@@ -668,7 +666,7 @@ class CreateLibCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             'name', metavar='name',
-            help="The name of the library file (e.g. 'db').")
+            help="The name of the library file (e.g. 'db')")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -678,13 +676,13 @@ class CreateLibCommand(BaseCommand):
         if set(lib_name) - valid_all_chars or not lib_name or lib_name[0] not in valid_first_char:
             raise CommandError(
                 "Invalid library name. Must only use lowercase alphanumeric "
-                "characters and underscore, starting with alpha).")
+                "characters and underscore, starting with alpha.")
 
         charm_name = get_name_from_metadata()
         if charm_name is None:
             raise CommandError(
                 "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                "directory with metadata.yaml")
+                "directory with metadata.yaml.")
 
         # all libraries born with API version 0
         full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
@@ -705,7 +703,7 @@ class CreateLibCommand(BaseCommand):
             lib_path.write_text(template.render(context))
         except OSError as exc:
             raise CommandError(
-                "Error writing the library in {}: {!r}".format(lib_path, exc))
+                "Error writing the library in {}: {!r}.".format(lib_path, exc))
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
         logger.info("Consider 'git add %s'.", lib_path)

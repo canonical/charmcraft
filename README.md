@@ -68,7 +68,7 @@ build a charm with:
 
 ```text
 $ charmcraft build
-Done, charm left in 'test-charm.charm'
+Created 'test-charm.charm'.
 ```
 
 `charmcraft build` will fetch additional files into the tree from PyPI based

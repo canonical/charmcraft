@@ -107,4 +107,3 @@ paste, but do please pay attention to details!
 - finally change the version number in `charmcraft/version.py`
 
 - commit, push, create a PR for the branch
-

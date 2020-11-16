@@ -68,17 +68,17 @@ class InitCommand(BaseCommand):
     def fill_parser(self, parser):
         parser.add_argument(
             "--project-dir", type=Path, default=Path("."), metavar="DIR", dest="path",
-            help="The directory to initialize. Must be empty, or not exist; defaults to '.'.")
+            help="The directory to initialize. Must be empty, or not exist; defaults to '.'")
         parser.add_argument(
             "--name",
-            help="The name of the charm; defaults to the directory name.")
+            help="The name of the charm; defaults to the directory name")
         parser.add_argument(
             "--author",
-            help="The charm author; defaults to the current user name per GECOS.")
+            help="The charm author; defaults to the current user name per GECOS")
         parser.add_argument(
             "--series", default="kubernetes",
             help="A comma-separated list of supported platform series;"
-            " defaults to 'kubernetes'.")
+            " defaults to 'kubernetes'")
 
     def run(self, args):
         args.path = args.path.resolve()

@@ -34,17 +34,17 @@ class HelpCommand(BaseCommand):
     idea is to lower the barrier as much as possible for the user getting help.
     """
     name = 'help'
-    help_msg = "Provide help on charmcraft usage."
+    help_msg = "Provide help on charmcraft usage"
     overview = "Produce a general or a detailed charmcraft help, or a specific command one."
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            '--all', action='store_true', help="Produce an extensive help of all commands.")
+            '--all', action='store_true', help="Produce an extensive help of all commands")
         parser.add_argument(
             'command_to_help', nargs='?', metavar='command',
-            help="Produce a detailed help of the specified command.")
+            help="Produce a detailed help of the specified command")
 
     def run(self, parsed_args, all_commands):
         """Present different help messages to the user.

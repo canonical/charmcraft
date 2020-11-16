@@ -110,7 +110,7 @@ class Builder:
         self.handle_dependencies()
         zipname = self.handle_package()
 
-        logger.info("Created '%s'", zipname)
+        logger.info("Created '%s'.", zipname)
         return zipname
 
     def _load_juju_ignore(self):

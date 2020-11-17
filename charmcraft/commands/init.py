@@ -81,7 +81,7 @@ class InitCommand(BaseCommand):
             " defaults to 'kubernetes'")
         parser.add_argument(
             "-f", "--force", type="store_true",
-            help="Initialize even if the project dir is not empty. Will not overwrite files.")
+            help="Initialize even if the project dir is not empty. Will not overwrite files")
 
     def run(self, args):
         args.path = args.path.resolve()

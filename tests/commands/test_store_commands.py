@@ -136,13 +136,15 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 def test_login(caplog, store_mock):
     """Simple login case."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    store_mock.whoami.return_value = User(name='John Doe', username='jdoe', userid='-1')
 
     LoginCommand('group').run(noargs)
 
     assert store_mock.mock_calls == [
         call.login(),
+        call.whoami(),
     ]
-    assert ["Login successful."] == [rec.message for rec in caplog.records]
+    assert ["Logged in as 'jdoe'."] == [rec.message for rec in caplog.records]
 
 
 def test_logout(caplog, store_mock):
@@ -154,7 +156,7 @@ def test_logout(caplog, store_mock):
     assert store_mock.mock_calls == [
         call.logout(),
     ]
-    assert ["Credentials cleared."] == [rec.message for rec in caplog.records]
+    assert ["Charmhub token cleared."] == [rec.message for rec in caplog.records]
 
 
 def test_whoami(caplog, store_mock):
@@ -190,7 +192,7 @@ def test_register_name(caplog, store_mock):
     assert store_mock.mock_calls == [
         call.register_name('testname'),
     ]
-    expected = "Congrats! You are now the publisher of 'testname'."
+    expected = "You are now the publisher of 'testname' in Charmhub."
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -206,7 +208,7 @@ def test_list_registered_empty(caplog, store_mock):
     assert store_mock.mock_calls == [
         call.list_registered_names(),
     ]
-    expected = "Nothing found."
+    expected = "No charms registered."
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -314,7 +316,7 @@ def test_upload_call_error(caplog, store_mock):
         mock_discover.return_value = ('discovered-name', 'discovered-path')
         UploadCommand('group').run(args)
 
-    expected = "Upload failed: got status 400"
+    expected = "Upload failed with status 400."
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -345,14 +347,14 @@ def test_upload_discover_pathgiven_missing(tmp_path):
     """Discover charm name/path, the indicated path is not there."""
     with pytest.raises(CommandError) as cm:
         UploadCommand('group')._discover_charm(pathlib.Path('not_really_there.charm'))
-    assert str(cm.value) == "Can't access the indicated charm file: 'not_really_there.charm'"
+    assert str(cm.value) == "Cannot access 'not_really_there.charm'."
 
 
 def test_upload_discover_pathgiven_not_a_file(tmp_path):
     """Discover charm name/path, the indicated path is not a file."""
     with pytest.raises(CommandError) as cm:
         UploadCommand('group')._discover_charm(tmp_path)
-    assert str(cm.value) == "The indicated charm is not a file: {!r}".format(str(tmp_path))
+    assert str(cm.value) == "{!r} is not a file.".format(str(tmp_path))
 
 
 def test_upload_discover_default_ok(tmp_path, monkeypatch):
@@ -382,8 +384,8 @@ def test_upload_discover_default_no_metadata(tmp_path):
             UploadCommand('group')._discover_charm(None)
 
     assert str(cm.value) == (
-        "Can't access name in 'metadata.yaml' file. The 'upload' command needs to be executed in "
-        "a valid project's directory, or point to a charm file with the --charm-file option.")
+        "Cannot find a valid charm name in metadata.yaml to upload. Check you are in a "
+        "charm directory with metadata.yaml, or use --charm-file=foo.charm.")
 
 
 def test_upload_discover_default_no_charm_file(tmp_path, monkeypatch):
@@ -400,8 +402,8 @@ def test_upload_discover_default_no_charm_file(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as cm:
         UploadCommand('group')._discover_charm(None)
     assert str(cm.value) == (
-        "Can't access charm file {!r}. You can indicate a charm file with "
-        "the --charm-file option.".format(str(tmp_path / 'testcharm.charm')))
+        "Cannot access charm at {!r}. Try --charm-file=foo.charm"
+        .format(str(tmp_path / 'testcharm.charm')))
 
 
 # -- tests for list revisions command
@@ -452,9 +454,8 @@ def test_revisions_name_from_metadata_problem(store_mock):
         with pytest.raises(CommandError) as cm:
             ListRevisionsCommand('group').run(args)
         assert str(cm.value) == (
-            "Can't access name in 'metadata.yaml' file. The 'revisions' command needs to "
-            "be executed in a valid project's directory, or indicate the charm name with "
-            "the --name option.")
+            "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
+            "directory with metadata.yaml, or use --name=foo.")
 
 
 def test_revisions_empty(caplog, store_mock):
@@ -468,7 +469,7 @@ def test_revisions_empty(caplog, store_mock):
     ListRevisionsCommand('group').run(args)
 
     expected = [
-        "Nothing found",
+        "No revisions found.",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -621,9 +622,8 @@ def test_release_name_guessing_bad():
             ReleaseCommand('group').run(args)
 
         assert str(cm.value) == (
-            "Can't access name in 'metadata.yaml' file. The 'release' command needs to "
-            "be executed in a valid project's directory, or indicate the charm name with "
-            "the --name option.")
+            "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
+            "directory with metadata.yaml, or use --name=foo.")
 
 
 # -- tests for the status command
@@ -689,7 +689,7 @@ def test_status_empty(caplog, store_mock):
     args = Namespace(name='testcharm')
     StatusCommand('group').run(args)
 
-    expected = "Nothing found"
+    expected = "Nothing has been released yet."
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -718,9 +718,8 @@ def test_status_name_guessing_bad():
             StatusCommand('group').run(args)
 
         assert str(cm.value) == (
-            "Can't access name in 'metadata.yaml' file. The 'status' command needs to "
-            "be executed in a valid project's directory, or indicate the charm name with "
-            "the --name option.")
+            "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
+            "directory with metadata.yaml, or use --name=foo.")
 
 
 def test_status_channels_not_released_with_fallback(caplog, store_mock):
@@ -980,10 +979,7 @@ def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch):
     ]
     expected = [
         "Library charms.testcharm.v0.testlib created with id test-example-lib-id.",
-        (
-            "Make sure to add the library file to your project; for example "
-            "'git add lib/charms/testcharm/v0/testlib.py'."
-        ),
+        "Consider 'git add lib/charms/testcharm/v0/testlib.py'.",
     ]
     assert expected == [rec.message for rec in caplog.records]
     created_lib_file = tmp_path / 'lib' / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
@@ -1001,8 +997,8 @@ def test_createlib_name_from_metadata_problem(store_mock):
         with pytest.raises(CommandError) as cm:
             CreateLibCommand('group').run(args)
         assert str(cm.value) == (
-            "Cannot access name in 'metadata.yaml' file. The 'create-lib' command needs to "
-            "be executed in a valid project's directory.")
+            "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
+            "directory with metadata.yaml.")
 
 
 @pytest.mark.parametrize('lib_name', [
@@ -1019,8 +1015,8 @@ def test_createlib_invalid_name(lib_name):
     with pytest.raises(CommandError) as err:
         CreateLibCommand('group').run(args)
     assert str(err.value) == (
-        "Invalid library name (can be only lowercase alphanumeric "
-        "characters and underscore, starting with alpha).")
+        "Invalid library name. Must only use lowercase alphanumeric "
+        "characters and underscore, starting with alpha.")
 
 
 def test_createlib_path_already_there(tmp_path, monkeypatch):
@@ -1048,7 +1044,7 @@ def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cle
 
     args = Namespace(name='testlib')
     store_mock.create_library_id.return_value = 'lib_id'
-    expected_error = "Got an error when trying to write the library in .*: PermissionError.*"
+    expected_error = "Error writing the library in .*: PermissionError.*"
     with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
         mock.return_value = 'test-charm-name'
         with pytest.raises(CommandError, match=expected_error):
@@ -1132,8 +1128,7 @@ def test_getlibinfo_bad_name(name):
     with pytest.raises(CommandError) as err:
         _get_lib_info(full_name=name)
     assert str(err.value) == (
-        "Library full name {!r} must conform to the charms.<charm>.v<API>.<libname> structure."
-        .format(name))
+        "Charm library name {!r} must conform to charms.<charm>.vN.<libname>".format(name))
 
 
 @pytest.mark.parametrize('path', [
@@ -1149,7 +1144,7 @@ def test_getlibinfo_bad_path(path):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=pathlib.Path(path))
     assert str(err.value) == (
-        "Library path {} must conform to the lib/charms/<charm>/v<API>/<libname>.py structure."
+        "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
         .format(path))
 
 

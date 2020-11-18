@@ -79,7 +79,7 @@ class PackCommand(BaseCommand):
     on bundles.
     """
     name = 'pack'
-    help_msg = "Build the bundle."
+    help_msg = "Build the bundle"
     overview = _overview
 
     def fill_parser(self, parser):
@@ -87,7 +87,7 @@ class PackCommand(BaseCommand):
         parser.add_argument(
             '-f', '--from', type=pathlib.Path, dest='from_dir',
             help="The directory where the bundle project is located, where the build "
-                 "is done from; defaults to '.'.")
+                 "is done from; defaults to '.'")
 
     def run(self, parsed_args):
         """Run the command."""

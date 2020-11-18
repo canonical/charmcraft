@@ -22,6 +22,7 @@ from collections import namedtuple
 
 from dateutil import parser
 
+from charmcraft.config import config
 from charmcraft.commands.store.client import Client
 
 logger = logging.getLogger('charmcraft.commands.store')
@@ -63,7 +64,7 @@ class Store:
     """The main interface to the Store's API."""
 
     def __init__(self):
-        self._client = Client()
+        self._client = Client(config.get('charmhub'))  #FIXME test
 
     def login(self):
         """Login into the store.

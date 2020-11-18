@@ -21,6 +21,7 @@ import sys
 
 from charmcraft import helptexts
 from charmcraft.commands import version, build, store, init
+from charmcraft.config import config
 from charmcraft.cmdbase import CommandError, BaseCommand
 from charmcraft.logsetup import message_handler
 
@@ -94,11 +95,12 @@ COMMAND_GROUPS = [
 ]
 
 
-# global options: the flag used internally, short and long parameters, and the help text
+# global options: the flag used internally, short and long parameters, default value and help text
 GLOBAL_FLAGS = [
-    ('help', '-h', '--help', "Show this help message and exit"),
-    ('verbose', '-v', '--verbose', "Show debug information and be more verbose"),
-    ('quiet', '-q', '--quiet', "Only show warnings and errors, not progress"),
+    ('help', '-h', '--help', False, "Show this help message and exit"),
+    ('verbose', '-v', '--verbose', False, "Show debug information and be more verbose"),
+    ('quiet', '-q', '--quiet', False, "Only show warnings and errors, not progress"),
+    ('from', '-f', '--from', None, "Specify the project's directory (default to current one)"),
 ]
 
 
@@ -115,7 +117,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
 def _get_global_options():
     """Return the global flags ready to present as options in the help messages."""
     options = []
-    for _, short_option, long_option, helpmsg in GLOBAL_FLAGS:
+    for _, short_option, long_option, _, helpmsg in GLOBAL_FLAGS:
         options.append(("{}, {}".format(short_option, long_option), helpmsg))
     return options
 
@@ -192,13 +194,13 @@ class Dispatcher:
 
         - validate that command is correct (NOT loading and parsing its arguments)
         """
-        # get all flags (default to False) and those per options, to filter sysargs
+        # get all flags (default to what's specified) and those per options, to filter sysargs
         flags = {}
         flag_per_option = {}
-        for flag, short_option, long_option, _ in GLOBAL_FLAGS:
+        for flag, short_option, long_option, default, _ in GLOBAL_FLAGS:
             flag_per_option[short_option] = flag
             flag_per_option[long_option] = flag
-            flags[flag] = False
+            flags[flag] = default
 
         filtered_sysargs = []
         for arg in sysargs:
@@ -231,6 +233,9 @@ class Dispatcher:
             # no command!
             help_text = get_general_help()
             raise CommandError(help_text, argsparsing=True)
+
+        # init the system's config
+        config.init(flags['from'])
 
         logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
         return command, cmd_args

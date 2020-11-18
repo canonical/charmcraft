@@ -16,9 +16,26 @@
 
 """Central configuration management."""
 
-from charmcraft.commands import CommandError
+import pathlib
+
+from charmcraft.cmdbase import CommandError
 
 from collections import UserDict
+
+
+def load_yaml(fpath):  #FIXME: use the one from "utils"
+    """Return the content of a YAML file."""
+    import yaml
+    if not fpath.exists():
+        logger.debug("Couldn't find config file %s", fpath)
+        return
+    try:
+        with fpath.open('rb') as fh:
+            content = yaml.safe_load(fh)
+    except (yaml.error.YAMLError, OSError) as err:
+        logger.error("Failed to read/parse config file %s (got %r)", fpath, err)
+        return
+    return content
 
 
 class _Config(UserDict):
@@ -32,10 +49,17 @@ class _Config(UserDict):
         if not isinstance(raw_data, dict):
             raise CommandError("Invalid charmcraft.yaml structure: must be a dictionary.")
 
-    def init(self, raw_data):
-        """Init the config with the loaded charmcraft.yaml file content."""
-        self._validate(raw_data)
-        self.data = raw_data
+    def init(self, project_directory):
+        """Init the config with the loaded charmcraft.yaml from project's directory."""
+        if project_directory is None:
+            project_directory = pathlib.Path.cwd()
+        else:
+            project_directory = pathlib.Path(project_directory)
+            #FIXME: check if exists and it's a directory
+
+        content = load_yaml(project_directory / 'charmcraft.yaml')
+        self._validate(content)
+        self.data = content
 
 
 config = _Config()

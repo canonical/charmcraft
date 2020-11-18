@@ -737,7 +737,7 @@ class CreateLibCommand(BaseCommand):
 class PublishLibCommand(BaseCommand):
     """Publish one or more charm libraries."""
     name = 'publish-lib'
-    help_msg = "Publish one or more charm libraries."
+    help_msg = "Publish one or more charm libraries"
     overview = textwrap.dedent("""
         Publish charm libraries.
 
@@ -752,7 +752,7 @@ class PublishLibCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             'library', nargs='?',
-            help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all.")
+            help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all")
 
     def run(self, parsed_args):
         """Run the command."""

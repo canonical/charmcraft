@@ -34,17 +34,17 @@ class HelpCommand(BaseCommand):
     idea is to lower the barrier as much as possible for the user getting help.
     """
     name = 'help'
-    help_msg = "Provide help on charmcraft usage."
+    help_msg = "Provide help on charmcraft usage"
     overview = "Produce a general or a detailed charmcraft help, or a specific command one."
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            '--all', action='store_true', help="Produce an extensive help of all commands.")
+            '--all', action='store_true', help="Produce an extensive help of all commands")
         parser.add_argument(
             'command_to_help', nargs='?', metavar='command',
-            help="Produce a detailed help of the specified command.")
+            help="Produce a detailed help of the specified command")
 
     def run(self, parsed_args, all_commands):
         """Present different help messages to the user.
@@ -73,14 +73,14 @@ class HelpCommand(BaseCommand):
 # central place and not distributed in several classes/files. Also note that order here is
 # important when lisgint commands and showing help.
 COMMAND_GROUPS = [
-    ('basic', "Basic commands", [
+    ('basic', "Basic", [
         HelpCommand,
         build.BuildCommand,
         pack.PackCommand,
         init.InitCommand,
         version.VersionCommand,
     ]),
-    ('store', "Interaction with the Store", [
+    ('store', "Charmhub", [
         # auth
         store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
         # name handling
@@ -97,9 +97,9 @@ COMMAND_GROUPS = [
 
 # global options: the flag used internally, short and long parameters, and the help text
 GLOBAL_FLAGS = [
-    ('help', '-h', '--help', "Show this help message and exit."),
-    ('verbose', '-v', '--verbose', "Show debug information and be more verbose."),
-    ('quiet', '-q', '--quiet', "Only show warnings and errors, not progress."),
+    ('help', '-h', '--help', "Show this help message and exit"),
+    ('verbose', '-v', '--verbose', "Show debug information and be more verbose"),
+    ('quiet', '-q', '--quiet', "Only show warnings and errors, not progress"),
 ]
 
 

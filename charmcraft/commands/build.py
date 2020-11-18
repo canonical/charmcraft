@@ -110,7 +110,7 @@ class Builder:
         self.handle_dependencies()
         zipname = self.handle_package()
 
-        logger.info("Done, charm left in '%s'", zipname)
+        logger.info("Created '%s'.", zipname)
         return zipname
 
     def _load_juju_ignore(self):
@@ -352,17 +352,23 @@ class Validator:
 
 
 _overview = """
-Build the charm, leaving a .charm file as the result of the process.
+Build a charm operator package.
 
-You can `juju deploy` directly from the resulting .charm file, or upload it to
-the store (see the "upload" command).
+You can `juju deploy` the resulting `.charm` file directly, or upload it
+to Charmhub with `charmcraft upload`.
+
+You must be inside a charm directory with a valid `metadata.yaml`,
+`requirements.txt` including the `ops` package for the Python operator
+framework, and an operator entrypoint, usually `src/charm.py`.
+
+See `charmcraft init` to create a template charm directory structure.
 """
 
 
 class BuildCommand(BaseCommand):
     """Build the charm."""
     name = 'build'
-    help_msg = "Build the charm."
+    help_msg = "Build the charm"
     overview = _overview
     common = True
 
@@ -370,16 +376,16 @@ class BuildCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '-f', '--from', type=pathlib.Path,
-            help="The directory where the charm project is located, where the build "
-                 "is done from; defaults to '.'.")
+            help="Charm directory with metadata.yaml where the build "
+                 "takes place; defaults to '.'")
         parser.add_argument(
             '-e', '--entrypoint', type=pathlib.Path,
-            help="The executable script or program which is the entry point to all the "
-                 "charm code; defaults to 'src/charm.py'.")
+            help="The executable which is the operator entry point; "
+                 "defaults to 'src/charm.py'")
         parser.add_argument(
             '-r', '--requirement', action='append', type=pathlib.Path,
-            help="The file(s) with the needed dependencies (this option can be used multiple "
-                  "times); defaults to 'requirements.txt'.")
+            help="File(s) listing needed PyPI dependencies (can be used multiple "
+                  "times); defaults to 'requirements.txt'")
 
     def run(self, parsed_args):
         """Run the command."""

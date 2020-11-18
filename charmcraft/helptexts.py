@@ -25,10 +25,12 @@ TERMINAL_WIDTH = 72
 # the summary of the whole program, already indented so it represents the real
 # "columns spread", for easier human editing.
 GENERAL_SUMMARY = """
-    Charmcraft provides a streamlined, powerful, opinionated and
-    flexible tool to develop, package and manage the lifecycle of
-    Juju charm publication, particularly charms written with
-    the Operator Framework.
+    Charmcraft helps build, package and publish operators on Charmhub.
+
+    Together with the Python Operator Framework, charmcraft simplifies
+    operator development and collaboration.
+
+    See https://charmhub.io/publishing for more information.
 """
 # XXX Facundo 2020-09-10: we should add an extra (separated) line to the summary with:
 #   See <url> for additional documentation.
@@ -221,7 +223,7 @@ def get_command_help(command_groups, command, arguments):
     """
     textblocks = []
 
-    # separaate all arguments into the parameters and optional ones, just checking
+    # separate all arguments into the parameters and optional ones, just checking
     # if first char is a dash
     parameters = []
     options = []

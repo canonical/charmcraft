@@ -23,7 +23,7 @@ from charmcraft.cmdbase import BaseCommand
 logger = logging.getLogger(__name__)
 
 _overview = """
-Show the charmcraft version.
+Show charmcraft version.
 
 The output has the following format: X.Y.Z[+N.gHASH[.dirty]]
 
@@ -45,7 +45,7 @@ Example: 0.3.1+40.g883455b.dirty
 class VersionCommand(BaseCommand):
     """Show the charmcraft version."""
     name = 'version'
-    help_msg = "Show the version."
+    help_msg = "Show charmcraft version"
     overview = _overview
     common = True
 

@@ -30,7 +30,6 @@ from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.client import (
-    API_BASE_URL,
     Client,
     _AuthHolder,
     _storage_push,
@@ -309,7 +308,7 @@ def test_client_get():
         client = Client()
     client.get('/somepath')
 
-    mock_auth().request.assert_called_once_with('GET', API_BASE_URL + '/somepath', None)
+    mock_auth().request.assert_called_once_with('GET', Client.api_base_url + '/somepath', None)
 
 
 def test_client_post():
@@ -318,7 +317,8 @@ def test_client_post():
         client = Client()
     client.post('/somepath', 'somebody')
 
-    mock_auth().request.assert_called_once_with('POST', API_BASE_URL + '/somepath', 'somebody')
+    mock_auth().request.assert_called_once_with(
+        'POST', Client.api_base_url + '/somepath', 'somebody')
 
 
 def test_client_hit_success_simple(caplog):
@@ -332,13 +332,31 @@ def test_client_hit_success_simple(caplog):
         client = Client()
     result = client._hit('GET', '/somepath')
 
-    mock_auth().request.assert_called_once_with('GET', API_BASE_URL + '/somepath', None)
+    mock_auth().request.assert_called_once_with('GET', Client.api_base_url + '/somepath', None)
     assert result == response_value
     expected = [
-        "Hitting the store: GET {}/somepath None".format(API_BASE_URL),
+        "Hitting the store: GET {}/somepath None".format(Client.api_base_url),
         "Store ok: 200",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+def test_client_hit_configured_url_simple():
+    """Hits the server with a configured api url."""
+    test_config = {"api": "https://local.test:1234"}
+    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
+        client = Client(test_config)
+    client._hit('GET', '/somepath')
+    mock_auth().request.assert_called_once_with('GET', 'https://local.test:1234/somepath', None)
+
+
+def test_client_hit_configured_url_extra_slash():
+    """The configured api url is ok even with an extra slash."""
+    test_config = {"api": "https://local.test:1234/"}
+    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
+        client = Client(test_config)
+    client._hit('GET', '/somepath')
+    mock_auth().request.assert_called_once_with('GET', 'https://local.test:1234/somepath', None)
 
 
 def test_client_hit_success_withbody(caplog):
@@ -352,10 +370,11 @@ def test_client_hit_success_withbody(caplog):
         client = Client()
     result = client._hit('POST', '/somepath', 'somebody')
 
-    mock_auth().request.assert_called_once_with('POST', API_BASE_URL + '/somepath', 'somebody')
+    mock_auth().request.assert_called_once_with(
+        'POST', Client.api_base_url + '/somepath', 'somebody')
     assert result == response_value
     expected = [
-        "Hitting the store: POST {}/somepath somebody".format(API_BASE_URL),
+        "Hitting the store: POST {}/somepath somebody".format(Client.api_base_url),
         "Store ok: 200",
     ]
     assert expected == [rec.message for rec in caplog.records]
@@ -449,8 +468,10 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
     with test_filepath.open('wb') as fh:
         fh.write(b"abcdefgh")
 
-    def fake_pusher(monitor):
+    def fake_pusher(monitor, storage_base_url):
         """Push bytes in sequence, doing verifications in the middle."""
+        assert storage_base_url == Client.storage_base_url
+
         total_to_push = monitor.len  # not only the saved bytes, but also headers and stuff
 
         # one batch
@@ -482,6 +503,38 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
         "Uploading bytes ended, id test-upload-id",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+def test_client_push_configured_url_simple(tmp_path, capsys):
+    """The storage server can be configured."""
+    def fake_pusher(monitor, storage_base_url):
+        """Check the received URL."""
+        assert storage_base_url == "https://local.test:1234"
+
+        content = json.dumps(dict(successful=True, upload_id='test-upload-id'))
+        return FakeResponse(content=content, status_code=200)
+
+    test_config = {"storage": "https://local.test:1234"}
+    test_filepath = tmp_path / 'supercharm.bin'
+    test_filepath.write_text("abcdefgh")
+    with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
+        Client(test_config).push(test_filepath)
+
+
+def test_client_push_configured_url_extra_slash(caplog, tmp_path, capsys):
+    """The configured storage url is ok even with an extra slash."""
+    def fake_pusher(monitor, storage_base_url):
+        """Check the received URL."""
+        assert storage_base_url == "https://local.test:1234"
+
+        content = json.dumps(dict(successful=True, upload_id='test-upload-id'))
+        return FakeResponse(content=content, status_code=200)
+
+    test_config = {"storage": "https://local.test:1234/"}
+    test_filepath = tmp_path / 'supercharm.bin'
+    test_filepath.write_text("abcdefgh")
+    with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
+        Client(test_config).push(test_filepath)
 
 
 def test_client_push_response_not_ok(tmp_path):
@@ -523,11 +576,11 @@ def test_storage_push_succesful():
         fields={"binary": ("filename", 'somefile', "application/octet-stream")}))
 
     with patch('requests.Session') as mock:
-        _storage_push(test_monitor)
+        _storage_push(test_monitor, 'http://test.url:0000')
     cm_session_mock = mock().__enter__()
 
     # check request was properly called
-    url = 'https://storage.staging.snapcraftcontent.com/unscanned-upload/'
+    url = 'http://test.url:0000/unscanned-upload/'
     headers = {
         'Content-Type': test_monitor.content_type,
         'Accept': 'application/json',
@@ -552,6 +605,6 @@ def test_storage_push_network_error():
     with patch('requests.Session.post') as mock:
         mock.side_effect = RequestException("naughty error")
         with pytest.raises(CommandError) as cm:
-            _storage_push(test_monitor)
+            _storage_push(test_monitor, 'http://test.url:0000')
         expected = "Network error when pushing file: RequestException('naughty error')"
         assert str(cm.value) == expected

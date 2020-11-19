@@ -170,7 +170,7 @@ def test_dispatcher_generic_setup_from_without_param_confusing(options):
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     with pytest.raises(CommandError) as err:
-        with patch('charmcraft.config.config.init') as config_mock:
+        with patch('charmcraft.config.config.init'):
             Dispatcher(options, groups)
 
     # generic usage message because "no command" (as 'somecommand' was consumed by --from)

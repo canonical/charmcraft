@@ -64,7 +64,7 @@ class Store:
     """The main interface to the Store's API."""
 
     def __init__(self):
-        self._client = Client(config.get('charmhub'))  #FIXME test
+        self._client = Client(config.get('charmhub'))
 
     def login(self):
         """Login into the store.

@@ -23,13 +23,57 @@ import pytest
 from dateutil import parser
 
 from charmcraft.commands.store.store import Store
+from charmcraft.config import config
 
 
 @pytest.fixture
 def client_mock():
+    """Fixture to provide a mocked client."""
     client_mock = MagicMock()
-    with patch('charmcraft.commands.store.store.Client', lambda: client_mock):
+    with patch('charmcraft.commands.store.store.Client', lambda config: client_mock):
         yield client_mock
+
+
+@pytest.fixture
+def patch_config():
+    """Fixture to provide a simple way of patching the global config."""
+    old_config = config.copy()
+
+    def _patch(new_test_config=None, **kwargs):
+        """Patch the config.
+
+        First clear it, then update with new config if available, and then with kwargs.
+        """
+        config.clear()
+        if new_test_config:
+            config.update(new_test_config)
+        config.update(kwargs)
+
+    yield _patch
+    config.clear()
+    config.update(old_config)
+
+
+# -- tests for client usage
+
+def test_client_init_no_config(patch_config):
+    """Check that the client is initiated ok even without config."""
+    patch_config({})
+    with patch('charmcraft.commands.store.store.Client') as client_mock:
+        Store()
+    assert client_mock.mock_calls == [
+        call(None),
+    ]
+
+
+def test_client_init_with_config(patch_config):
+    """Check that the client is initiated with the proper config."""
+    patch_config(charmhub='test client config')
+    with patch('charmcraft.commands.store.store.Client') as client_mock:
+        Store()
+    assert client_mock.mock_calls == [
+        call('test client config'),
+    ]
 
 
 # -- tests for auth

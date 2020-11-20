@@ -39,16 +39,13 @@ def bundle_yaml(tmp_path):
     bundle_path.write_text("{}")
     content = {}
 
-    class _Setter:
-        """Simple interface to have a .set in the fixture."""
+    def func(*, name):
+        content['name'] = name
+        encoded = yaml.dump(content)
+        bundle_path.write_text(encoded)
+        return encoded
 
-        def set(self, *, name):
-            content['name'] = name
-            encoded = yaml.dump(content)
-            bundle_path.write_text(encoded)
-            return encoded
-
-    return _Setter()
+    return func
 
 
 @pytest.fixture
@@ -58,27 +55,24 @@ def charmcraft_yaml(tmp_path):
     charmcraft_path.write_text("{}")
     content = {}
 
-    class _Setter:
-        """Simple interface to have a .set in the fixture."""
-
-        def set(self, **kwargs):
-            # prime is special, so we don't need to write all this structure in all tests
-            prime = kwargs.pop('prime', None)
-            if prime is not None:
-                content['parts'] = {
-                    'bundle': {
-                        'prime': prime,
-                    }
+    def func(**kwargs):
+        # prime is special, so we don't need to write all this structure in all tests
+        prime = kwargs.pop('prime', None)
+        if prime is not None:
+            content['parts'] = {
+                'bundle': {
+                    'prime': prime,
                 }
+            }
 
-            # the rest is direct
-            content.update(kwargs)
+        # the rest is direct
+        content.update(kwargs)
 
-            encoded = yaml.dump(content)
-            charmcraft_path.write_text(encoded)
-            return encoded
+        encoded = yaml.dump(content)
+        charmcraft_path.write_text(encoded)
+        return encoded
 
-    return _Setter()
+    return func
 
 
 # -- tests for main building process
@@ -87,8 +81,8 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, charmcraft_yaml):
     """A simple happy story."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    content = bundle_yaml.set(name='testbundle')
-    charmcraft_yaml.set(type='bundle')
+    content = bundle_yaml(name='testbundle')
+    charmcraft_yaml(type='bundle')
 
     # build!
     args = Namespace(from_dir=tmp_path)
@@ -100,7 +94,7 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, charmcraft_yaml):
     assert 'charmcraft.yaml' not in [x.filename for x in zf.infolist()]
     assert zf.read('bundle.yaml') == content.encode('ascii')
 
-    expected = "Done, bundle left in '{}'.".format(zipname)
+    expected = "Created '{}'.".format(zipname)
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -111,8 +105,8 @@ def test_simple_build_directory_default(
     monkeypatch.chdir(tmp_path)
 
     # needed files
-    content = bundle_yaml.set(name='testbundle')
-    charmcraft_yaml.set(type='bundle')
+    content = bundle_yaml(name='testbundle')
+    charmcraft_yaml(type='bundle')
 
     # build!
     args = Namespace(from_dir=None)
@@ -123,7 +117,7 @@ def test_simple_build_directory_default(
     zf = zipfile.ZipFile(str(zipname))  # str() for Py3.5 support
     assert zf.read('bundle.yaml') == content.encode('ascii')
 
-    expected = "Done, bundle left in '{}'.".format(zipname)
+    expected = "Created '{}'.".format(zipname)
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -144,7 +138,7 @@ def test_specified_directory_not_a_directory(tmp_path):
     with pytest.raises(CommandError) as cm:
         PackCommand('group').run(args)
     assert str(cm.value) == (
-        "Bundle project directory is not really a directory: '{}'.".format(somefile))
+        "Bundle project directory is not a directory: '{}'.".format(somefile))
 
 
 def test_missing_bundle_file(tmp_path, charmcraft_yaml):
@@ -159,7 +153,7 @@ def test_missing_bundle_file(tmp_path, charmcraft_yaml):
 
 def test_missing_charmcraft_file(tmp_path, bundle_yaml):
     """Can not build a bundle without charmcraft.yaml."""
-    bundle_yaml.set(name='testbundle')
+    bundle_yaml(name='testbundle')
 
     # build without a charmcraft.yaml!
     args = Namespace(from_dir=tmp_path)
@@ -171,7 +165,7 @@ def test_missing_charmcraft_file(tmp_path, bundle_yaml):
 
 def test_missing_name_in_bundle(tmp_path, bundle_yaml, charmcraft_yaml):
     """Can not build a bundle without name."""
-    charmcraft_yaml.set(type='bundle')
+    charmcraft_yaml(type='bundle')
 
     # build!
     args = Namespace(from_dir=tmp_path)
@@ -184,7 +178,7 @@ def test_missing_name_in_bundle(tmp_path, bundle_yaml, charmcraft_yaml):
 
 def test_missing_type_in_charmcraft(tmp_path, bundle_yaml, charmcraft_yaml):
     """The charmcraft.yaml file must have a proper type field."""
-    bundle_yaml.set(name='testbundle')
+    bundle_yaml(name='testbundle')
 
     # build!
     args = Namespace(from_dir=tmp_path)
@@ -215,7 +209,7 @@ def test_getpaths_extra_ok(tmp_path, caplog, charmcraft_yaml):
     """Extra files were indicated ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    charmcraft_yaml.set(prime=['f2.txt', 'f1.txt'])
+    charmcraft_yaml(prime=['f2.txt', 'f1.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
     testfile2 = tmp_path / 'f2.txt'
@@ -236,7 +230,7 @@ def test_getpaths_extra_missing(tmp_path, caplog, charmcraft_yaml):
     """Extra files were indicated but not found."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    charmcraft_yaml.set(prime=['f2.txt', 'f1.txt'])
+    charmcraft_yaml(prime=['f2.txt', 'f1.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
 
@@ -253,7 +247,7 @@ def test_getpaths_extra_missing(tmp_path, caplog, charmcraft_yaml):
 
 def test_getpaths_extra_absolute(tmp_path, charmcraft_yaml):
     """All extra files must be relative to the project."""
-    charmcraft_yaml.set(prime=['/tmp/foobar'])
+    charmcraft_yaml(prime=['/tmp/foobar'])
     with patch.object(pack, 'MANDATORY_FILES', []):
         with pytest.raises(CommandError) as cm:
             get_paths_to_include(tmp_path)
@@ -262,7 +256,7 @@ def test_getpaths_extra_absolute(tmp_path, charmcraft_yaml):
 
 def test_getpaths_extra_long_path(tmp_path, charmcraft_yaml):
     """An extra file can be deep in directories."""
-    charmcraft_yaml.set(prime=['foo/bar/baz/extra.txt'])
+    charmcraft_yaml(prime=['foo/bar/baz/extra.txt'])
     testfile = tmp_path / 'foo' / 'bar' / 'baz' / 'extra.txt'
     testfile.parent.mkdir(parents=True)
     testfile.touch()
@@ -276,7 +270,7 @@ def test_getpaths_extra_wildcards_ok(tmp_path, caplog, charmcraft_yaml):
     """Use wildcards to specify several files ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    charmcraft_yaml.set(prime=['*.txt'])
+    charmcraft_yaml(prime=['*.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
     testfile2 = tmp_path / 'f2.bin'
@@ -298,7 +292,7 @@ def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, charmcraft_yaml):
     """Use wildcards to specify several files but nothing found."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    charmcraft_yaml.set(prime=['*.txt'])
+    charmcraft_yaml(prime=['*.txt'])
 
     with patch.object(pack, 'MANDATORY_FILES', []):
         result = get_paths_to_include(tmp_path)
@@ -312,7 +306,7 @@ def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, charmcraft_yaml):
 
 def test_getpaths_extra_globstar(tmp_path, charmcraft_yaml):
     """Double star means whatever directories are in the path."""
-    charmcraft_yaml.set(prime=['lib/**/*'])
+    charmcraft_yaml(prime=['lib/**/*'])
     srcpaths = (
         ('lib/foo/f1.txt', True),
         ('lib/foo/deep/fx.txt', True),
@@ -336,7 +330,7 @@ def test_getpaths_extra_globstar(tmp_path, charmcraft_yaml):
 
 def test_getpaths_extra_globstar_specific_files(tmp_path, charmcraft_yaml):
     """Combination of both mechanisms."""
-    charmcraft_yaml.set(prime=['lib/**/*.txt'])
+    charmcraft_yaml(prime=['lib/**/*.txt'])
     srcpaths = (
         ('lib/foo/f1.txt', True),
         ('lib/foo/f1.nop', False),

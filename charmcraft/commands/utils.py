@@ -41,7 +41,7 @@ def make_executable(fh):
 
 def load_yaml(fpath):
     """Return the content of a YAML file."""
-    if not fpath.exists():
+    if not fpath.is_file():
         logger.debug("Couldn't find config file %s", fpath)
         return
     try:

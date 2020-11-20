@@ -50,6 +50,18 @@ def test_load_yaml_no_file(tmp_path, caplog):
     assert [expected] == [rec.message for rec in caplog.records]
 
 
+def test_load_yaml_directory(tmp_path, caplog):
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    test_file = tmp_path / "testfile.yaml"
+    test_file.mkdir()
+    content = load_yaml(test_file)
+    assert content is None
+
+    expected = "Couldn't find config file {}".format(test_file)
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
 def test_load_yaml_corrupted_format(tmp_path, caplog):
     caplog.set_level(logging.ERROR, logger="charmcraft.commands")
 

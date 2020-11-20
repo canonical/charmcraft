@@ -65,9 +65,9 @@ def get_paths_to_include(dirpath):
 
 
 _overview = """
-Build the bundle, leaving a .zip file as the result of the process.
+Build the bundle and package it as a zip archive.
 
-You can `juju deploy` directly from the resulting .zip file, or upload it to
+You can `juju deploy` the bundle .zip file or upload it to
 the store (see the "upload" command).
 """
 
@@ -99,7 +99,7 @@ class PackCommand(BaseCommand):
                 raise CommandError("Bundle project directory was not found: '{}'.".format(dirpath))
             if not dirpath.is_dir():
                 raise CommandError(
-                    "Bundle project directory is not really a directory: '{}'.".format(dirpath))
+                    "Bundle project directory is not a directory: '{}'.".format(dirpath))
 
         # get the config files
         bundle_filepath = dirpath / 'bundle.yaml'
@@ -127,4 +127,4 @@ class PackCommand(BaseCommand):
         paths = get_paths_to_include(dirpath)
         zipname = dirpath / (bundle_name + '.zip')
         build_zip(zipname, dirpath, paths)
-        logger.info("Done, bundle left in '%s'.", zipname)
+        logger.info("Created '%s'.", zipname)

@@ -1176,7 +1176,7 @@ def test_publishlib_name_from_metadata_problem(store_mock):
 
 
 def test_publishlib_store_is_advanced(caplog, store_mock, tmp_path, monkeypatch):
-    """The store has a more advanced revision that we expect."""
+    """The store has a higher revision number than what we expect."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
@@ -1198,7 +1198,7 @@ def test_publishlib_store_is_advanced(caplog, store_mock, tmp_path, monkeypatch)
     ]
     expected = (
         "Library charms.testcharm.v0.testlib is out-of-date locally, Charmhub has version 0.2, "
-        "please fetch the updates before publish.")
+        "please fetch the updates before publishing.")
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -1263,7 +1263,7 @@ def test_publishlib_store_is_too_behind(caplog, store_mock, tmp_path, monkeypatc
     monkeypatch.chdir(tmp_path)
 
     lib_id = 'test-example-lib-id'
-    factory.create_lib_filepath('testcharm', 'testlib', api=0, patch=5, lib_id=lib_id)
+    factory.create_lib_filepath('testcharm', 'testlib', api=0, patch=4, lib_id=lib_id)
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(

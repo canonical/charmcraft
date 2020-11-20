@@ -639,16 +639,17 @@ def _get_lib_info(*, full_name=None, lib_path=None):
 def _get_libs_from_tree(charm_name=None):
     """Get library info from the directories tree (for a specific charm if specified).
 
-    It only pays attention to the proper disk structures, if there.
+    It only follows/uses the the directories/files for a correct charmlibs
+    disk structure.
     """
     local_libs_data = []
 
     if charm_name is None:
         base_dir = pathlib.Path('lib') / 'charms'
-        charm_dirs = sorted(base_dir.iterdir()) if base_dir.exists() else []
+        charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
     else:
         base_dir = pathlib.Path('lib') / 'charms' / charm_name
-        charm_dirs = [base_dir] if base_dir.exists else []
+        charm_dirs = [base_dir] if base_dir.is_dir() else []
 
     for charm_dir in charm_dirs:
         for v_dir in sorted(charm_dir.iterdir()):
@@ -793,7 +794,7 @@ class PublishLibCommand(BaseCommand):
                 # the store is more advanced than local
                 logger.info(
                     "Library %s is out-of-date locally, Charmhub has version %d.%d, please "
-                    "fetch the updates before publish.", lib_data.full_name, tip.api, tip.patch)
+                    "fetch the updates before publishing.", lib_data.full_name, tip.api, tip.patch)
             elif tip.patch == lib_data.patch:
                 # the store has same version numbers than local
                 if tip.content_hash == lib_data.content_hash:

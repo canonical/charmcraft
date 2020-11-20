@@ -19,23 +19,9 @@
 import pathlib
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.utils import load_yaml
 
 from collections import UserDict
-
-
-def load_yaml(fpath):  #FIXME: use the one from "utils"
-    """Return the content of a YAML file."""
-    import yaml
-    if not fpath.exists():
-        logger.debug("Couldn't find config file %s", fpath)
-        return
-    try:
-        with fpath.open('rb') as fh:
-            content = yaml.safe_load(fh)
-    except (yaml.error.YAMLError, OSError) as err:
-        logger.error("Failed to read/parse config file %s (got %r)", fpath, err)
-        return
-    return content
 
 
 class _Config(UserDict):
@@ -55,9 +41,12 @@ class _Config(UserDict):
             project_directory = pathlib.Path.cwd()
         else:
             project_directory = pathlib.Path(project_directory)
-            #FIXME: check if exists and it's a directory
 
         content = load_yaml(project_directory / 'charmcraft.yaml')
+        if content is None:
+            # so far charmcraft.yaml is optional
+            return
+
         self._validate(content)
         self.data = content
 

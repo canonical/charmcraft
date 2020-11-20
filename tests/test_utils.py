@@ -14,7 +14,9 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-from charmcraft.utils import make_executable
+import logging
+
+from charmcraft.utils import make_executable, load_yaml
 
 
 def test_make_executable_read_bits(tmp_path):
@@ -26,3 +28,66 @@ def test_make_executable_read_bits(tmp_path):
         make_executable(fd)
         # only read bits got made executable
         assert pth.stat().st_mode & 0o777 == 0o750
+
+
+def test_load_yaml_success(tmp_path):
+    test_file = tmp_path / "testfile.yaml"
+    test_file.write_text("""
+        foo: 33
+    """)
+    content = load_yaml(test_file)
+    assert content == {'foo': 33}
+
+
+def test_load_yaml_no_file(tmp_path, caplog):
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    test_file = tmp_path / "testfile.yaml"
+    content = load_yaml(test_file)
+    assert content is None
+
+    expected = "Couldn't find config file {}".format(test_file)
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_load_yaml_directory(tmp_path, caplog):
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    test_file = tmp_path / "testfile.yaml"
+    test_file.mkdir()
+    content = load_yaml(test_file)
+    assert content is None
+
+    expected = "Couldn't find config file {}".format(test_file)
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_load_yaml_corrupted_format(tmp_path, caplog):
+    caplog.set_level(logging.ERROR, logger="charmcraft.commands")
+
+    test_file = tmp_path / "testfile.yaml"
+    test_file.write_text("""
+        foo: [1, 2
+    """)
+    content = load_yaml(test_file)
+    assert content is None
+
+    (logged,) = [rec.message for rec in caplog.records]
+    assert "Failed to read/parse config file {}".format(test_file) in logged
+    assert "got ParserError" in logged
+
+
+def test_load_yaml_file_problem(tmp_path, caplog):
+    caplog.set_level(logging.ERROR, logger="charmcraft.commands")
+
+    test_file = tmp_path / "testfile.yaml"
+    test_file.write_text("""
+        foo: bar
+    """)
+    test_file.chmod(0o000)
+    content = load_yaml(test_file)
+    assert content is None
+
+    (logged,) = [rec.message for rec in caplog.records]
+    assert "Failed to read/parse config file {}".format(test_file) in logged
+    assert "got PermissionError" in logged

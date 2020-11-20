@@ -14,11 +14,17 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import logging
 import os
 from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
 
+import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
+logger = logging.getLogger('charmcraft.commands')
+
+
+# handy masks for execution and reading for everybody
 S_IXALL = S_IXUSR | S_IXGRP | S_IXOTH
 S_IRALL = S_IRUSR | S_IRGRP | S_IROTH
 
@@ -31,6 +37,20 @@ def make_executable(fh):
     mode_x = mode_r >> 2
     mode = mode | mode_x
     os.fchmod(fileno, mode)
+
+
+def load_yaml(fpath):
+    """Return the content of a YAML file."""
+    if not fpath.is_file():
+        logger.debug("Couldn't find config file %s", fpath)
+        return
+    try:
+        with fpath.open('rb') as fh:
+            content = yaml.safe_load(fh)
+    except (yaml.error.YAMLError, OSError) as err:
+        logger.error("Failed to read/parse config file %s (got %r)", fpath, err)
+        return
+    return content
 
 
 def get_templates_environment(templates_dir):

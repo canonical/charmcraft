@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-from charmcraft.commands.utils import make_executable
+from charmcraft.utils import make_executable
 
 
 def test_make_executable_read_bits(tmp_path):

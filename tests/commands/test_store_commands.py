@@ -52,7 +52,7 @@ from charmcraft.commands.store.store import (
     Uploaded,
     User,
 )
-from charmcraft.commands.utils import get_templates_environment
+from charmcraft.utils import get_templates_environment
 from tests import factory
 
 # used a lot!

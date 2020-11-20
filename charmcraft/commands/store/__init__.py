@@ -30,7 +30,7 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.commands.utils import get_templates_environment
+from charmcraft.utils import get_templates_environment
 
 from .store import Store
 

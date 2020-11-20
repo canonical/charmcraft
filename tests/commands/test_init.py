@@ -24,7 +24,7 @@ import yaml
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
-from charmcraft.commands.utils import S_IXALL
+from charmcraft.utils import S_IXALL
 from tests.test_infra import pep8_test, get_python_filepaths
 
 

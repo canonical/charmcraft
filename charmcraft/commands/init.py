@@ -24,7 +24,7 @@ from pathlib import Path
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from .utils import make_executable, get_templates_environment
+from charmcraft.utils import make_executable, get_templates_environment
 
 logger = logging.getLogger(__name__)
 

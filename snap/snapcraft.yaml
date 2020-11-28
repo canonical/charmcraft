@@ -15,11 +15,9 @@
 # For further info, check https://github.com/canonical/charmcraft
 name: charmcraft
 base: core20
-summary: The charming tool
+summary: Charmcraft supports Kubernetes operator development and collaboration
 license: Apache-2.0
 description: |
-  # Charmcraft supports Kubernetes operator development
-
   Charmcraft enables collaboration between operator developers, and
   publication on [Charmhub](https://charmhub.io/), home of the [Open
   Operator Collection](https://charmhub.io/manifesto).
@@ -27,10 +25,10 @@ description: |
   Use `charmcraft` to:
 
    * Init a new charm file structure
-   * Build your operator into a charm for distribution
+   * Build your [Kubernetes operator charm package](https://charmhub.io/about)
    * Register your charm name on Charmhub
-   * Upload your charms to Charmhub
-   * Release your charms into channels
+   * Upload your charm to Charmhub
+   * Release your charm into channels
 
   You can use charmcraft with operators written in any language but we
   recommend the [Python Operator Framework on

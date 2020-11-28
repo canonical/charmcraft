@@ -18,22 +18,31 @@ base: core20
 summary: The charming tool
 license: Apache-2.0
 description: |
-  Charmcraft provides a streamlined, powerful, opinionated, and
-  flexible tool to develop, package, and manage the lifecycle of Juju
-  charm publication, focused particularly on charms written within the
-  Operator Framework.
+  # Charmcraft supports Kubernetes operator development
 
-  It is still in heavy, initial development and so a lot is still To
-  Be Done. However it is already useful, and already simplifies the
-  life of the charmer.
+  Charmcraft enables collaboration between operator developers, and
+  publication on [Charmhub](https://charmhub.io/), home of the [Open
+  Operator Collection](https://charmhub.io/manifesto).
 
-  ---
+  Use `charmcraft` to:
 
-  This release ships with git to the point that you can have a
-  git+https line in your requirements.txt (tested against github and
-  launchpad, including some limited submodule support), but without
-  the work needed for it to access your home's git config. More work
-  is still needed on this front.
+   * Init a new charm file structure
+   * Build your operator into a charm for distribution
+   * Register your charm name on Charmhub
+   * Upload your charms to Charmhub
+   * Release your charms into channels
+
+  You can use charmcraft with operators written in any language but we
+  recommend the [Python Operator Framework on
+  Github](https://github.com/canonical/operator) which is also [on
+  PyPI](https://pypi.org/project/ops/) for ease of development and
+  collaboration.
+
+  Charmcraft and the Python Operator Framework extend the operator pattern
+  beyond Kubernetes with [universal
+  operators](https://juju.is/universal-operators) that drive Linux and
+  Windows apps. The universal operator pattern is very exciting for
+  multi-cloud application management.
 
 adopt-info: charmcraft  # look for 'snapcraftctl set-*' in the charmcraft part
 architectures:

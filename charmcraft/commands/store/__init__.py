@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Commands related to the Store, a thin layer above real functionality."""
+"""Commands related to Charmhub."""
 
 import ast
 import hashlib
@@ -41,7 +41,7 @@ LibData = namedtuple(
 
 
 def get_name_from_metadata():
-    """Return the name (if present) from metadata file (if there and readable and sane)."""
+    """Return the name if present and plausible in metadata.yaml."""
     try:
         with open('metadata.yaml', 'rb') as fh:
             metadata = yaml.safe_load(fh)
@@ -52,56 +52,61 @@ def get_name_from_metadata():
 
 
 class LoginCommand(BaseCommand):
-    """Log into the store."""
+    """Login to Charmhub."""
     name = 'login'
-    help_msg = "Login to Ubuntu Single Sign On."
+    help_msg = "Login to Charmhub"
     overview = textwrap.dedent("""
-        Log in to the Store using Ubuntu Single Sign On.
+        Login to Charmhub.
 
-        It will open a browser window where you will need to provide the
-        relevant credentials.
+        Charmcraft will provide a URL for the Charmhub login. When you have
+        successfully logged in, charmcraft will store a token for ongoing
+        access to Charmhub at the CLI.
 
-        See also the "whoami" command to verify you're properly logged in,
-        and the "logout" command to clear the session credentials.
+        Remember to `charmcraft logout` if you want to remove that token
+        from your local system, especially in a shared environment.
+
+        See also `charmcraft whoami` to verify that you are logged in.
+
     """)
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store()
         store.login()
-        logger.info("Login successful.")
+        logger.info("Logged in as '%s'.", store.whoami().username)
 
 
 class LogoutCommand(BaseCommand):
-    """Clear store-related credentials."""
+    """Clear Charmhub token."""
     name = 'logout'
-    help_msg = "Clear session credentials."
+    help_msg = "Logout from Charmhub and remove token"
     overview = textwrap.dedent("""
-        Clear the Store session credentials.
+        Clear the Charmhub token.
 
-        Because of the authentication mechanism used there is no Store-side state
-        to clear, so this operation does not contact the Store.
+        Charmcraft will remove the local token used for Charmhub access.
+        This is important on any shared system because the token allows
+        manipulation of your published charms.
 
-        See also the "whoami" command to verify you're properly logged in,
-        and the "login" command to log in to the Store.
+        See also `charmcraft whoami` to verify that you are logged in,
+        and `charmcraft login`.
+
     """)
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store()
         store.logout()
-        logger.info("Credentials cleared.")
+        logger.info("Charmhub token cleared.")
 
 
 class WhoamiCommand(BaseCommand):
     """Show login information."""
     name = 'whoami'
-    help_msg = "Return your login information relevant to the Store."
+    help_msg = "Show your Charmhub login status"
     overview = textwrap.dedent("""
-        Show login information for the current Store user.
+        Show your Charmhub login status.
 
-        See also the "login" and "logout" commands for more information about
-        the authentication cycle.
+        See also `charmcraft login` and `charmcraft logout`.
     """)
 
     def run(self, parsed_args):
@@ -120,41 +125,60 @@ class WhoamiCommand(BaseCommand):
 
 
 class RegisterNameCommand(BaseCommand):
-    """Register a name in the Store."""
+    """Register a name in Charmhub."""
     name = 'register'
-    help_msg = "Register a charm name in the Store."
+    help_msg = "Register a charm name in Charmhub"
     overview = textwrap.dedent("""
-        Register a charm name in the Store.
+        Register a charm name in Charmhub.
 
-        This is the first step when developing a charm, and needed only once
-        for that charm.
+        Claim a name for your operator in Charmhub. Once you have registered
+        a name, you can upload charm operator packages for that name and
+        release them for wider consumption.
 
-        It will automatically take you through the login process if
-        your credentials are missing or too old.
+        Charmhub operates on the 'principle of least surprise' with regard
+        to naming. A charm with a well-known name should provide the best
+        operator for the microservice most people associate with that name.
+        Charms can be renamed in the Charmhub, but we would nonetheless ask
+        you to use a qualified name, such as `yourname-charmname` if you are
+        in any doubt about your ability to meet that standard.
+
+        We discuss registrations in Charmhub Discourse:
+
+           https://discourse.charmhub.io/c/charm
+
+        Registration will take you through login if needed.
+
     """)
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="The name to register in the Store.")
+        parser.add_argument('name', help="The name to register in Charmhub")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store()
         store.register_name(parsed_args.name)
-        logger.info("Congrats! You are now the publisher of %r.", parsed_args.name)
+        logger.info("You are now the publisher of %r in Charmhub.", parsed_args.name)
 
 
 class ListNamesCommand(BaseCommand):
-    """List the charms registered in the Store."""
+    """List the charms registered in Charmhub"""
     name = 'names'
-    help_msg = "List the charm names registered in the Store."
+    help_msg = "List your registered charm names in Charmhub"
     overview = textwrap.dedent("""
-        List the names registered to the current Store user, together
-        with each package's type, visibility and status.
+        An overview of names you have registered to publish in Charmhub.
 
-        It will automatically take you through the login process if
-        your credentials are missing or too old.
+          $ charmcraft names
+          Name                Visibility    Status
+          sabdfl-hello-world  public        registered
+
+        Visibility and status are shown for each name. `public` items can be
+        seen by any user, while `private` items are only for you and the
+        other accounts with permission to collaborate on that specific name.
+
+        Listing names will take you through login if needed.
+
     """)
     common = True
 
@@ -163,7 +187,7 @@ class ListNamesCommand(BaseCommand):
         store = Store()
         result = store.list_registered_names()
         if not result:
-            logger.info("Nothing found.")
+            logger.info("No charms registered.")
             return
 
         headers = ['Name', 'Visibility', 'Status']
@@ -182,19 +206,22 @@ class ListNamesCommand(BaseCommand):
 
 
 class UploadCommand(BaseCommand):
-    """Upload a charm file to the Store."""
+    """Upload a charm to Charmhub."""
     name = 'upload'
-    help_msg = "Upload a charm file to the Store."
+    help_msg = "Upload a charm to Charmhub"
     overview = textwrap.dedent("""
-        Upload the charm file to the Store.
+        Upload a charm to Charmhub.
 
-        This command covers both pushing the charm itelf, as well as the
-        subsequent status verification actions, and will finish successfully once
-        the package is approved by the Store (otherwise it will report the
-        verification failure reasons).
+        Push a charm to Charmhub where it will be verified for conformance
+        to the packaging standard. This command will finish successfully
+        once the package is approved by Charmhub.
 
-        It will automatically take you through the login process if
-        your credentials are missing or too old.
+        In the event of a failure in the verification process, charmcraft
+        will report details of the failure, otherwise it will give you the
+        new charm revision.
+
+        Upload will take you through login if needed.
+
     """)
     common = True
 
@@ -211,15 +238,14 @@ class UploadCommand(BaseCommand):
             charm_name = get_name_from_metadata()
             if charm_name is None:
                 raise CommandError(
-                    "Can't access name in 'metadata.yaml' file. The 'upload' command needs to be "
-                    "executed in a valid project's directory, or point to a charm file with "
-                    "the --charm-file option.")
+                    "Cannot find a valid charm name in metadata.yaml to upload. Check you are in "
+                    "a charm directory with metadata.yaml, or use --charm-file=foo.charm.")
 
             charm_filepath = pathlib.Path(charm_name + '.charm').absolute()
             if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
                 raise CommandError(
-                    "Can't access charm file {!r}. You can indicate a charm file with "
-                    "the --charm-file option.".format(str(charm_filepath)))
+                    "Cannot access charm at {!r}. Try --charm-file=foo.charm"
+                    .format(str(charm_filepath)))
 
         else:
             # the path is given, asume the charm name is part of the file name
@@ -228,10 +254,10 @@ class UploadCommand(BaseCommand):
             charm_filepath = charm_filepath.expanduser()
             if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
                 raise CommandError(
-                    "Can't access the indicated charm file: {!r}".format(str(charm_filepath)))
+                    "Cannot access {!r}.".format(str(charm_filepath)))
             if not charm_filepath.is_file():
                 raise CommandError(
-                    "The indicated charm is not a file: {!r}".format(str(charm_filepath)))
+                    "{!r} is not a file.".format(str(charm_filepath)))
 
             charm_name = charm_filepath.stem
 
@@ -241,7 +267,7 @@ class UploadCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '--charm-file', type=pathlib.Path,
-            help="The path to the charm file to upload.")
+            help="The charm to upload")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -254,25 +280,30 @@ class UploadCommand(BaseCommand):
         else:
             # XXX Facundo 2020-06-30: at some point in the future the Store will give us also a
             # reason why it failed, to improve the message. Issue: #78.
-            logger.info("Upload failed: got status %r", result.status)
+            logger.info("Upload failed with status %r.", result.status)
 
 
 class ListRevisionsCommand(BaseCommand):
-    """List existing revisions for a charm."""
+    """List revisions for a charm."""
     name = 'revisions'
-    help_msg = "List existing revisions for a charm in the Store."
+    help_msg = "List revisions for a charm in Charmhub"
     overview = textwrap.dedent("""
-        List existing revisions for a charm in the Store, along with the version
-        and status for each, and when they were created.
+        Show version, date and status for each revision in Charmhub.
 
-        It will automatically take you through the login process if
-        your credentials are missing or too old.
+        For example:
+
+           $ charmcraft revisions
+           Revision    Version    Created at    Status
+           1           1          2020-11-15    released
+
+        Listing revisions will take you through login if needed.
+
     """)
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="The name of the charm.")
+        parser.add_argument('--name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -282,14 +313,13 @@ class ListRevisionsCommand(BaseCommand):
             charm_name = get_name_from_metadata()
             if charm_name is None:
                 raise CommandError(
-                    "Can't access name in 'metadata.yaml' file. The 'revisions' command needs to "
-                    "be executed in a valid project's directory, or indicate the charm name with "
-                    "the --name option.")
+                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
+                    "directory with metadata.yaml, or use --name=foo.")
 
         store = Store()
         result = store.list_revisions(charm_name)
         if not result:
-            logger.info("Nothing found")
+            logger.info("No revisions found.")
             return
 
         headers = ['Revision', 'Version', 'Created at', 'Status']
@@ -317,34 +347,46 @@ class ListRevisionsCommand(BaseCommand):
 class ReleaseCommand(BaseCommand):
     """Release a charm revision to specific channels."""
     name = 'release'
-    help_msg = "Release a charm revision to one or more channels."
+    help_msg = "Release a charm revision in one or more channels"
     overview = textwrap.dedent("""
-        Release a charm revision to the indicated channels (one or many).
+        Release a charm revision in the channel(s) provided.
 
-        Each channel has the [track/]risk[/branch] structure, where the risk
-        (stable, candidate, beta or edge) is mandatory, while track (default
-        to "latest") and branch are optional.
+        Charm revisions are not published for anybody else until you release
+        them in a channel. When you release a revision into a channel, users
+        who deploy the charm from that channel will get see the new revision
+        as a potential update.
+
+        A channel is made up of `track/risk/branch` with both the track and
+        the branch as optional items, so formally:
+
+          [track/]risk[/branch]
+
+        Channel risk must be one of stable, candidate, beta or edge. The
+        track defaults to `latest` and branch has no default.
+
+        It is enough just to provide a channel risk, like `stable` because
+        the track will be assumed to be `latest` and branch is not required.
 
         Some channel examples:
 
             stable
             edge
             2.0/candidate
-            beta/hotfix
+            beta/hotfix-23425
+            1.3/beta/feature-foo
 
-        It will automatically take you through the login process if
-        your credentials are missing or too old.
+        Listing revisions will take you through login if needed.
     """)
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'revision', type=int, help='The revision to release.')
+            'revision', type=int, help='The revision to release')
         parser.add_argument(
             'channels', metavar='channel', nargs='+',
-            help="The channel(s) to release to.")
-        parser.add_argument('--name', help="The name of the charm.")
+            help="The channel(s) to release to")
+        parser.add_argument('--name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -356,9 +398,8 @@ class ReleaseCommand(BaseCommand):
             charm_name = get_name_from_metadata()
             if charm_name is None:
                 raise CommandError(
-                    "Can't access name in 'metadata.yaml' file. The 'release' command needs to "
-                    "be executed in a valid project's directory, or indicate the charm name with "
-                    "the --name option.")
+                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
+                    "directory with metadata.yaml, or use --name=foo.")
 
         store.release(charm_name, parsed_args.revision, parsed_args.channels)
         logger.info(
@@ -367,23 +408,32 @@ class ReleaseCommand(BaseCommand):
 
 
 class StatusCommand(BaseCommand):
-    """List released revisions for a charm."""
-    name = 'status'
-    help_msg = "List released revisions of a package."
+    """Show channel status for a charm."""
+    name = 'channels'
+    help_msg = "Show channel and released revisions"
     overview = textwrap.dedent("""
-        List the released revisions for a package.
+        Show channels and released revisions in Charmhub
 
-        It will show each risk (with all its relevant information) for the
-        different tracks, series, etc.
+        Charm revisions are not available to users until they are released
+        into a channel. This command shows the various channels for a charm
+        and whether there is a charm released.
 
-        It will automatically take you through the login process if
-        your credentials are missing or too old.
+        For example:
+
+          $ charmcraft status
+          Track    Channel    Version    Revision
+          latest   stable     -          -
+                   candidate  -          -
+                   beta       -          -
+                   edge       1          1
+
+        Showing channels will take you through login if needed.
     """)
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="The name of the charm.")
+        parser.add_argument('--name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -393,14 +443,13 @@ class StatusCommand(BaseCommand):
             charm_name = get_name_from_metadata()
             if charm_name is None:
                 raise CommandError(
-                    "Can't access name in 'metadata.yaml' file. The 'status' command needs to "
-                    "be executed in a valid project's directory, or indicate the charm name with "
-                    "the --name option.")
+                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
+                    "directory with metadata.yaml, or use --name=foo.")
 
         store = Store()
         channel_map, channels, revisions = store.list_releases(charm_name)
         if not channel_map:
-            logger.info("Nothing found")
+            logger.info("Nothing has been released yet.")
             return
 
         # build easier to access structures
@@ -476,15 +525,15 @@ class _BadLibraryPathError(CommandError):
     """Subclass to provide a specific error for a bad library path."""
     def __init__(self, path):
         super().__init__(
-            "Library path {} must conform to the lib/charms/<charm>/v<API>/<libname>.py "
-            "structure.".format(path))
+            "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
+            "".format(path))
 
 
 class _BadLibraryNameError(CommandError):
     """Subclass to provide a specific error for a bad library name."""
     def __init__(self, name):
         super().__init__(
-            "Library full name {!r} must conform to the charms.<charm>.v<API>.<libname> structure."
+            "Charm library name {!r} must conform to charms.<charm>.vN.<libname>"
             .format(name))
 
 
@@ -591,16 +640,17 @@ def _get_lib_info(*, full_name=None, lib_path=None):
 def _get_libs_from_tree(charm_name=None):
     """Get library info from the directories tree (for a specific charm if specified).
 
-    It only pays attention to the proper disk structures, if there.
+    It only follows/uses the the directories/files for a correct charmlibs
+    disk structure.
     """
     local_libs_data = []
 
     if charm_name is None:
         base_dir = pathlib.Path('lib') / 'charms'
-        charm_dirs = sorted(base_dir.iterdir()) if base_dir.exists() else []
+        charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
     else:
         base_dir = pathlib.Path('lib') / 'charms' / charm_name
-        charm_dirs = [base_dir] if base_dir.exists else []
+        charm_dirs = [base_dir] if base_dir.is_dir() else []
 
     for charm_dir in charm_dirs:
         for v_dir in sorted(charm_dir.iterdir()):
@@ -616,22 +666,34 @@ def _get_libs_from_tree(charm_name=None):
 class CreateLibCommand(BaseCommand):
     """Create a charm library."""
     name = 'create-lib'
-    help_msg = "Create a charm library."
+    help_msg = "Create a charm library"
     overview = textwrap.dedent("""
         Create a charm library.
 
-        It will request a unique ID from Charmhub and bootstrap a
-        template file in the proper local directory.
+        Charmcraft manages charm libraries, which are published by charmers
+        to help other charmers integrate their charms. This command creates
+        a new library in your charm which you are publishing for others.
 
-        It will automatically take you through the login process if
-        your credentials are missing or too old.
+        This command MUST be run inside your charm directory with a valid
+        metadata.yaml. It will create the Python library with API version 0
+        initially:
+
+          lib/charms/<yourcharm>/v0/<name>.py
+
+        Each library has a unique identifier assigned by Charmhub that
+        supports accurate updates of libraries even if charms are renamed.
+        Charmcraft will request a unique ID from Charmhub and initialise a
+        template Python library.
+
+        Creating a charm library will take you through login if needed.
+
     """)
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
             'name', metavar='name',
-            help="The name of the library file (e.g. 'db').")
+            help="The name of the library file (e.g. 'db')")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -640,16 +702,16 @@ class CreateLibCommand(BaseCommand):
         valid_first_char = string.ascii_lowercase
         if set(lib_name) - valid_all_chars or not lib_name or lib_name[0] not in valid_first_char:
             raise CommandError(
-                "Invalid library name (can be only lowercase alphanumeric "
-                "characters and underscore, starting with alpha).")
+                "Invalid library name. Must only use lowercase alphanumeric "
+                "characters and underscore, starting with alpha.")
 
         charm_name = get_name_from_metadata()
         if charm_name is None:
             raise CommandError(
-                "Cannot access name in 'metadata.yaml' file. The 'create-lib' command needs to "
-                "be executed in a valid project's directory.")
+                "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
+                "directory with metadata.yaml.")
 
-        # all libraries born with API version in 0
+        # all libraries born with API version 0
         full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
@@ -668,18 +730,16 @@ class CreateLibCommand(BaseCommand):
             lib_path.write_text(template.render(context))
         except OSError as exc:
             raise CommandError(
-                "Got an error when trying to write the library in {}: {!r}".format(lib_path, exc))
+                "Error writing the library in {}: {!r}.".format(lib_path, exc))
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
-        logger.info(
-            "Make sure to add the library file to your project; for example 'git add %s'.",
-            lib_path)
+        logger.info("Consider 'git add %s'.", lib_path)
 
 
 class PublishLibCommand(BaseCommand):
     """Publish one or more charm libraries."""
     name = 'publish-lib'
-    help_msg = "Publish one or more charm libraries."
+    help_msg = "Publish one or more charm libraries"
     overview = textwrap.dedent("""
         Publish charm libraries.
 
@@ -694,7 +754,7 @@ class PublishLibCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             'library', nargs='?',
-            help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all.")
+            help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -735,7 +795,7 @@ class PublishLibCommand(BaseCommand):
                 # the store is more advanced than local
                 logger.info(
                     "Library %s is out-of-date locally, Charmhub has version %d.%d, please "
-                    "fetch the updates before publish.", lib_data.full_name, tip.api, tip.patch)
+                    "fetch the updates before publishing.", lib_data.full_name, tip.api, tip.patch)
             elif tip.patch == lib_data.patch:
                 # the store has same version numbers than local
                 if tip.content_hash == lib_data.content_hash:

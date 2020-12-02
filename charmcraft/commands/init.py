@@ -29,59 +29,68 @@ from .utils import make_executable, get_templates_environment
 logger = logging.getLogger(__name__)
 
 _overview = """
-Initialize a directory to be a charm project.
+Initialize a charm operator package tree and files.
 
-It will leave a basic structure in the specified directory (the current one by
-default), including:
+This command will modify the directory to create the necessary files for a
+charm operator package. By default it will work in the current directory.
+It will setup the following tree of files and directories:
 
-- a README.md as basic documentation for the project (with some TODOs for
-  you to complete),
+.
+├── metadata.yaml        - Charm operator package description
+├── README.md            - Frontpage for your charmhub.io/charm/
+├── actions.yaml         - Day-2 action declarations, e.g. backup, restore
+├── config.yaml          - Config schema for your operator
+├── LICENSE              - Your charm license, we recommend Apache 2
+├── requirements.txt     - PyPI dependencies for your charm, with `ops`
+├── requirements-dev.txt - PyPI for development tooling, notably flake8
+├── run_tests
+├── src
+│   └── charm.py         - Minimal operator using Python operator framework
+└── tests
+    ├── __init__.py
+    └── test_charm.py
 
-- a metadata.yaml for the basic Juju-related config (that you also need to
-  customize)
+You will need to edit at least metadata.yaml and README.md.
 
-- a src/charm.py with a basic structure for your charm
-
-- simple config.yaml and actions.yaml files, in case you need them in the charm
-
-- a requirement.txt and a requirement-dev.txt files that will hold the Python
-  dependencies (for production and development correspondingly), extend as you
-  need
-
-- some example tests in the corresponding directory, and a script to run them.
+Your minimal operator code is in src/charm.py which uses the Python operator
+framework from https://github.com/canonical/operator and there are some
+example tests with a harness to run them.
 """
 
 
 class InitCommand(BaseCommand):
     """Initialize a directory to be a charm project."""
     name = "init"
-    help_msg = "Initialize a directory to be a charm project."
+    help_msg = "Initialize a charm operator package tree and files"
     overview = _overview
     common = True
 
     def fill_parser(self, parser):
         parser.add_argument(
             "--project-dir", type=Path, default=Path("."), metavar="DIR", dest="path",
-            help="The directory to initialize. Must be empty, or not exist; defaults to '.'.")
+            help="The directory to initialize. Must be empty, or not exist; defaults to '.'")
         parser.add_argument(
             "--name",
-            help="The name of the project; defaults to the directory name.")
+            help="The name of the charm; defaults to the directory name")
         parser.add_argument(
             "--author",
-            help="The author of the project;"
-            " defaults to the current user's name as present in the GECOS field.")
+            help="The charm author; defaults to the current user name per GECOS")
         parser.add_argument(
             "--series", default="kubernetes",
-            help="The comma-separated list of series this charm will support;"
-            " defaults to 'kubernetes'.")
+            help="A comma-separated list of supported platform series;"
+            " defaults to 'kubernetes'")
+        parser.add_argument(
+            "-f", "--force", type="store_true",
+            help="Initialize even if the directory is not empty (will not overwrite files)")
 
     def run(self, args):
         args.path = args.path.resolve()
         if args.path.exists():
             if not args.path.is_dir():
                 raise CommandError("{} is not a directory".format(args.path))
-            if next(args.path.iterdir(), False):
-                raise CommandError("{} is not empty".format(args.path))
+            if any(args.path.iterdir()) and not args.force:
+                raise CommandError("{} is not empty (consider using --force "
+                                   "to work on nonempty directories)".format(args.path))
             logger.debug("Using existing project directory '%s'", args.path)
         else:
             logger.debug("Creating project directory '%s'", args.path)
@@ -121,6 +130,8 @@ class InitCommand(BaseCommand):
             template_name = template_name[:-3]
             logger.debug("Rendering %s", template_name)
             path = args.path / template_name
+            if path.exists():
+                continue
             path.parent.mkdir(parents=True, exist_ok=True)
             with path.open("wt", encoding="utf8") as fh:
                 out = template.render(context)
@@ -130,10 +141,10 @@ class InitCommand(BaseCommand):
                 if template_name in executables:
                     make_executable(fh)
                     logger.debug("  made executable")
-        logger.info("All done.")
+        logger.info("Charm operator package file and directory tree initialized.")
         if todos:
-            logger.info("There are some notes about things we think you should do.")
-            logger.info("These are marked with ‘TODO:’, as is customary. Namely:")
+            logger.info("TODO:")
+            logger.info("")
             w = max(len(i[0]) for i in todos)
             for fn, todo in todos:
                 logger.info("%*s: %s", w + 2, fn, todo)

@@ -1602,7 +1602,7 @@ def test_listlib_simple(caplog, store_mock):
             lib_id='some-lib-id', content=None, content_hash='abc', api=3, patch=7,
             lib_name='testlib', charm_name='testcharm'),
     }
-    args = Namespace(charm_name='testcharm')
+    args = Namespace(name='testcharm')
     ListLibCommand('group').run(args)
 
     assert store_mock.mock_calls == [
@@ -1620,7 +1620,7 @@ def test_listlib_charm_from_metadata(caplog, store_mock):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_mock.get_libraries_tips.return_value = {}
-    args = Namespace(charm_name=None)
+    args = Namespace(name=None)
     with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
         mock.return_value = 'testcharm'
         ListLibCommand('group').run(args)
@@ -1632,7 +1632,7 @@ def test_listlib_charm_from_metadata(caplog, store_mock):
 
 def test_listlib_name_from_metadata_problem(store_mock):
     """The metadata wasn't there to get the name."""
-    args = Namespace(charm_name=None)
+    args = Namespace(name=None)
     with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
         mock.return_value = None
         with pytest.raises(CommandError) as cm:
@@ -1649,10 +1649,10 @@ def test_listlib_empty(caplog, store_mock):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_mock.get_libraries_tips.return_value = {}
-    args = Namespace(charm_name='testcharm')
+    args = Namespace(name='testcharm')
     ListLibCommand('group').run(args)
 
-    expected = "Nothing found."
+    expected = "No libraries found for charm testcharm."
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -1671,7 +1671,7 @@ def test_listlib_properly_sorted(caplog, store_mock):
             lib_id='lib-id-1', content=None, content_hash='abc', api=5, patch=124,
             lib_name='testlib-1', charm_name='testcharm'),
     }
-    args = Namespace(charm_name='testcharm')
+    args = Namespace(name='testcharm')
     ListLibCommand('group').run(args)
 
     assert store_mock.mock_calls == [

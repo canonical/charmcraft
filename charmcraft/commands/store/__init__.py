@@ -840,12 +840,15 @@ class ListLibCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--charm-name', help="The name of the charm")
+        parser.add_argument(
+            'name', nargs='?', help=(
+                "The name of the charm (optional, will get the name from"
+                "metadata.yaml if not given)"))
 
     def run(self, parsed_args):
         """Run the command."""
-        if parsed_args.charm_name:
-            charm_name = parsed_args.charm_name
+        if parsed_args.name:
+            charm_name = parsed_args.name
         else:
             charm_name = get_name_from_metadata()
             if charm_name is None:
@@ -860,7 +863,7 @@ class ListLibCommand(BaseCommand):
         libs_tips = store.get_libraries_tips(to_query)
 
         if not libs_tips:
-            logger.info("Nothing found.")
+            logger.info("No libraries found for charm %s.", charm_name)
             return
 
         headers = ['Library name', 'API', 'Patch']

@@ -210,3 +210,26 @@ class Store:
         response = self._client.post(endpoint, payload)
         result = _build_library(response)
         return result
+
+    def get_libraries_tips(self, libraries):
+        """Get the tip details for several libraries at once."""
+        endpoint = '/v1/charm/libraries/bulk'
+        payload = []
+        for lib in libraries:
+            if 'lib_id' in lib:
+                d = {
+                    'library-id': lib['lib_id'],
+                }
+            else:
+                d = {
+                    'charm-name': lib['charm_name'],
+                }
+                if 'lib_name' in lib:
+                    d['library-name'] = lib['lib_name']
+            if 'api' in lib:
+                d['api'] = lib['api']
+            payload.append(d)
+        response = self._client.post(endpoint, payload)
+        libraries = response['libraries']
+        result = {(item['library-id'], item['api']): _build_library(item) for item in libraries}
+        return result

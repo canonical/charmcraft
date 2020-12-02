@@ -825,3 +825,47 @@ class PublishLibCommand(BaseCommand):
             logger.info(
                 "Library %s sent to the store with version %d.%d",
                 lib_data.full_name, lib_data.api, lib_data.patch)
+
+
+class ListLibCommand(BaseCommand):
+    """List all libraries belonging to a charm."""
+    name = 'list-lib'
+    help_msg = "List all libraries from a charm"
+    overview = textwrap.dedent("""
+        List all libraries from a charm.
+
+        For each library, it will show the name and the api and patch versions
+        for its tip.
+    """)
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('--charm-name', help="The name of the charm")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        if parsed_args.charm_name:
+            charm_name = parsed_args.charm_name
+        else:
+            charm_name = get_name_from_metadata()
+            if charm_name is None:
+                raise CommandError(
+                    "Can't access name in 'metadata.yaml' file. The 'list-lib' command needs to "
+                    "be executed in a valid project's directory, or indicate the charm name with "
+                    "the --charm-name option.")
+
+        # get tips from the Store
+        store = Store()
+        to_query = [{'charm_name': charm_name}]
+        libs_tips = store.get_libraries_tips(to_query)
+
+        if not libs_tips:
+            logger.info("Nothing found.")
+            return
+
+        headers = ['Library name', 'API', 'Patch']
+        data = sorted((item.lib_name, item.api, item.patch) for item in libs_tips.values())
+
+        table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
+        for line in table.splitlines():
+            logger.info(line)

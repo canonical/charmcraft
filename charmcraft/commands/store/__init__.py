@@ -831,7 +831,7 @@ class PublishLibCommand(BaseCommand):
 class FetchLibCommand(BaseCommand):
     """Fetch one or more charm libraries."""
     name = 'fetch-lib'
-    help_msg = "Fetch one or more charm libraries."
+    help_msg = "Fetch one or more charm libraries"
     overview = textwrap.dedent("""
         Fetch charm libraries.
 
@@ -842,7 +842,7 @@ class FetchLibCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument(
             'library', nargs='?',
-            help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all.")
+            help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -920,7 +920,7 @@ class FetchLibCommand(BaseCommand):
 class ListLibCommand(BaseCommand):
     """List all libraries belonging to a charm."""
     name = 'list-lib'
-    help_msg = "List all libraries from a charm."
+    help_msg = "List all libraries from a charm"
     overview = textwrap.dedent("""
         List all libraries from a charm.
 
@@ -930,7 +930,7 @@ class ListLibCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--charm-name', help="The name of the charm.")
+        parser.add_argument('--charm-name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""

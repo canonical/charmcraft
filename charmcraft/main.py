@@ -226,12 +226,12 @@ class Dispatcher:
                     try:
                         value = next(sysargs)
                     except StopIteration:
-                        raise CommandError("The 'from' option expected one argument.")
+                        raise CommandError("The 'from' option expects one argument.")
                 global_args[arg.name] = value
             elif sysarg.startswith(options_with_equal):
                 option, value = sysarg.split('=', 1)
                 if not value:
-                    raise CommandError("The 'from' option expected one argument.")
+                    raise CommandError("The 'from' option expects one argument.")
                 arg = arg_per_option[option]
                 global_args[arg.name] = value
             else:

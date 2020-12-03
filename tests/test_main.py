@@ -158,7 +158,7 @@ def test_dispatcher_generic_setup_from_without_param_simple(options):
     groups = [('test-group', 'title', [cmd])]
     with pytest.raises(CommandError) as err:
         Dispatcher(options, groups)
-    assert str(err.value) == "The 'from' option expected one argument."
+    assert str(err.value) == "The 'from' option expects one argument."
 
 
 @pytest.mark.parametrize("options", [

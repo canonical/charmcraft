@@ -48,7 +48,7 @@ def load_yaml(fpath):
         with fpath.open('rb') as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
-        logger.error("Failed to read/parse config file %s (got %r)", fpath, err)
+        logger.error("Failed to read/parse config file %s: %r", fpath, err)
         return
     return content
 

@@ -74,7 +74,7 @@ def test_load_yaml_corrupted_format(tmp_path, caplog):
 
     (logged,) = [rec.message for rec in caplog.records]
     assert "Failed to read/parse config file {}".format(test_file) in logged
-    assert "got ParserError" in logged
+    assert "ParserError" in logged
 
 
 def test_load_yaml_file_problem(tmp_path, caplog):
@@ -90,4 +90,4 @@ def test_load_yaml_file_problem(tmp_path, caplog):
 
     (logged,) = [rec.message for rec in caplog.records]
     assert "Failed to read/parse config file {}".format(test_file) in logged
-    assert "got PermissionError" in logged
+    assert "PermissionError" in logged

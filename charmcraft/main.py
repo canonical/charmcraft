@@ -91,7 +91,7 @@ COMMAND_GROUPS = [
         # release process, and show status
         store.ReleaseCommand, store.StatusCommand,
         # libraries support
-        store.CreateLibCommand,
+        store.CreateLibCommand, store.PublishLibCommand,
     ]),
 ]
 

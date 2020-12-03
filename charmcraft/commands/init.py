@@ -79,14 +79,18 @@ class InitCommand(BaseCommand):
             "--series", default="kubernetes",
             help="A comma-separated list of supported platform series;"
             " defaults to 'kubernetes'")
+        parser.add_argument(
+            "-f", "--force", type="store_true",
+            help="Initialize even if the directory is not empty (will not overwrite files)")
 
     def run(self, args):
         args.path = args.path.resolve()
         if args.path.exists():
             if not args.path.is_dir():
                 raise CommandError("{} is not a directory".format(args.path))
-            if next(args.path.iterdir(), False):
-                raise CommandError("{} is not empty".format(args.path))
+            if any(args.path.iterdir()) and not args.force:
+                raise CommandError("{} is not empty (consider using --force "
+                                   "to work on nonempty directories)".format(args.path))
             logger.debug("Using existing project directory '%s'", args.path)
         else:
             logger.debug("Creating project directory '%s'", args.path)
@@ -126,6 +130,8 @@ class InitCommand(BaseCommand):
             template_name = template_name[:-3]
             logger.debug("Rendering %s", template_name)
             path = args.path / template_name
+            if path.exists():
+                continue
             path.parent.mkdir(parents=True, exist_ok=True)
             with path.open("wt", encoding="utf8") as fh:
                 out = template.render(context)

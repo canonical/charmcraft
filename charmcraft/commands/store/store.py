@@ -38,6 +38,7 @@ Revision = namedtuple('Revision', 'revision version created_at status errors')
 Error = namedtuple('Error', 'message code')
 Release = namedtuple('Release', 'revision channel expires_at')
 Channel = namedtuple('Channel', 'name fallback track risk branch')
+Library = namedtuple('Library', 'api content content_hash lib_id lib_name charm_name patch')
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -58,6 +59,20 @@ def _build_revision(item):
         errors=errors,
     )
     return rev
+
+
+def _build_library(resp):
+    """Build a Library from a response."""
+    lib = Library(
+        api=resp['api'],
+        content=resp.get('content'),  # not always present
+        content_hash=resp['hash'],
+        lib_id=resp['library-id'],
+        lib_name=resp['library-name'],
+        charm_name=resp['charm-name'],
+        patch=resp['patch'],
+    )
+    return lib
 
 
 class Store:
@@ -183,3 +198,16 @@ class Store:
         response = self._client.post(endpoint, {'library-name': lib_name})
         lib_id = response['library-id']
         return lib_id
+
+    def create_library_revision(self, charm_name, lib_id, api, patch, content, content_hash):
+        """Create a new library revision."""
+        endpoint = '/v1/charm/libraries/{}/{}'.format(charm_name, lib_id)
+        payload = {
+            'api': api,
+            'patch': patch,
+            'content': content,
+            'hash': content_hash,
+        }
+        response = self._client.post(endpoint, payload)
+        result = _build_library(response)
+        return result

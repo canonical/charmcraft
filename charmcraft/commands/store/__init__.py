@@ -636,6 +636,32 @@ def _get_lib_info(*, full_name=None, lib_path=None):
         full_name=full_name, path=lib_path, lib_name=lib_name, charm_name=charm_name)
 
 
+def _get_libs_from_tree(charm_name=None):
+    """Get library info from the directories tree (for a specific charm if specified).
+
+    It only follows/uses the the directories/files for a correct charmlibs
+    disk structure.
+    """
+    local_libs_data = []
+
+    if charm_name is None:
+        base_dir = pathlib.Path('lib') / 'charms'
+        charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
+    else:
+        base_dir = pathlib.Path('lib') / 'charms' / charm_name
+        charm_dirs = [base_dir] if base_dir.is_dir() else []
+
+    for charm_dir in charm_dirs:
+        for v_dir in sorted(charm_dir.iterdir()):
+            if v_dir.is_dir() and v_dir.name[0] == 'v' and v_dir.name[1:].isdigit():
+                for libfile in sorted(v_dir.glob('*.py')):
+                    local_libs_data.append(_get_lib_info(lib_path=libfile))
+
+    found_libs = [lib_data.full_name for lib_data in local_libs_data]
+    logger.debug("Libraries found under %s: %s", base_dir, found_libs)
+    return local_libs_data
+
+
 class CreateLibCommand(BaseCommand):
     """Create a charm library."""
     name = 'create-lib'
@@ -707,3 +733,95 @@ class CreateLibCommand(BaseCommand):
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
         logger.info("Consider 'git add %s'.", lib_path)
+
+
+class PublishLibCommand(BaseCommand):
+    """Publish one or more charm libraries."""
+    name = 'publish-lib'
+    help_msg = "Publish one or more charm libraries"
+    overview = textwrap.dedent("""
+        Publish charm libraries.
+
+        Upload and release in Charmhub the new api/patch version of the
+        indicated library, or all the charm libraries if --all is used.
+
+        It will automatically take you through the login process if
+        your credentials are missing or too old.
+    """)
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            'library', nargs='?',
+            help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        charm_name = get_name_from_metadata()
+        if charm_name is None:
+            raise CommandError(
+                "Can't access name in 'metadata.yaml' file. The 'publish-lib' command needs to "
+                "be executed in a valid project's directory.")
+
+        if parsed_args.library:
+            lib_data = _get_lib_info(full_name=parsed_args.library)
+            if not lib_data.path.exists():
+                raise CommandError(
+                    "The specified library was not found at path {}.".format(lib_data.path))
+            if lib_data.charm_name != charm_name:
+                raise CommandError(
+                    "The library {} does not belong to this charm {!r}.".format(
+                        lib_data.full_name, charm_name))
+            local_libs_data = [lib_data]
+        else:
+            local_libs_data = _get_libs_from_tree(charm_name)
+
+        # check if something needs to be done
+        store = Store()
+        to_query = [dict(lib_id=lib.lib_id, api=lib.api) for lib in local_libs_data]
+        libs_tips = store.get_libraries_tips(to_query)
+        to_publish = []
+        for lib_data in local_libs_data:
+            logger.debug("Verifying local lib %s", lib_data)
+            tip = libs_tips.get((lib_data.lib_id, lib_data.api))
+            logger.debug("Store tip: %s", tip)
+            if tip is None:
+                # needs to first publish
+                to_publish.append(lib_data)
+                continue
+
+            if tip.patch > lib_data.patch:
+                # the store is more advanced than local
+                logger.info(
+                    "Library %s is out-of-date locally, Charmhub has version %d.%d, please "
+                    "fetch the updates before publishing.", lib_data.full_name, tip.api, tip.patch)
+            elif tip.patch == lib_data.patch:
+                # the store has same version numbers than local
+                if tip.content_hash == lib_data.content_hash:
+                    logger.info("Library %s is already updated in Charmhub.", lib_data.full_name)
+                else:
+                    # but shouldn't as hash is different!
+                    logger.info(
+                        "Library %s version %d.%d is the same than in Charmhub but content is "
+                        "different", lib_data.full_name, tip.api, tip.patch)
+            elif tip.patch + 1 == lib_data.patch:
+                # local is correctly incremented
+                if tip.content_hash == lib_data.content_hash:
+                    # but shouldn't as hash is the same!
+                    logger.info(
+                        "Library %s LIBPATCH number was incorrectly incremented, Charmhub has the "
+                        "same content in version %d.%d.", lib_data.full_name, tip.api, tip.patch)
+                else:
+                    to_publish.append(lib_data)
+            else:
+                logger.info(
+                    "Library %s has a wrong LIBPATCH number, it's too high, Charmhub "
+                    "highest version is %d.%d.", lib_data.full_name, tip.api, tip.patch)
+
+        for lib_data in to_publish:
+            store.create_library_revision(
+                lib_data.charm_name, lib_data.lib_id, lib_data.api, lib_data.patch,
+                lib_data.content, lib_data.content_hash)
+            logger.info(
+                "Library %s sent to the store with version %d.%d",
+                lib_data.full_name, lib_data.api, lib_data.patch)

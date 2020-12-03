@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import logging
-import os
 import pathlib
 import zipfile
 
@@ -53,7 +52,9 @@ def get_paths_to_include(dirpath):
     prime_specs = config.get('parts', {}).get('bundle', {}).get('prime', [])
 
     for spec in prime_specs:
-        if spec[0] == os.path.sep:
+        # check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
+        # config is independent of where charmcraft is running)
+        if spec[0] == '/':
             raise CommandError(
                 "Extra files in prime config can not be absolute: {!r}".format(spec))
 

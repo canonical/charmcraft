@@ -369,6 +369,7 @@ def test_tool_exec_command_incorrect(sysargv):
     error = cm.value
     assert error.argsparsing
     assert str(error) == expected
+    assert error.retcode == 1
 
 
 @pytest.mark.parametrize('help_option', ['-h', '--help'])
@@ -394,6 +395,7 @@ def test_tool_exec_command_dash_help_simple(help_option):
     # check the result of the full help builder is what is shown
     assert error.argsparsing
     assert str(error) == "test help"
+    assert error.retcode == 0
 
 
 @pytest.mark.parametrize('help_option', ['-h', '--help'])
@@ -419,6 +421,7 @@ def test_tool_exec_command_dash_help_reverse(help_option):
     # check the result of the full help builder is what is shown
     assert error.argsparsing
     assert str(error) == "test help"
+    assert error.retcode == 0
 
 
 @pytest.mark.parametrize('help_option', ['-h', '--help'])
@@ -448,6 +451,7 @@ def test_tool_exec_command_dash_help_missing_params(help_option):
     # check the result of the full help builder is what is shown
     assert error.argsparsing
     assert str(error) == "test help"
+    assert error.retcode == 0
 
 
 def test_tool_exec_command_wrong_option():
@@ -467,6 +471,7 @@ def test_tool_exec_command_wrong_option():
     error = cm.value
     assert error.argsparsing
     assert str(error) == expected
+    assert error.retcode == 1
 
 
 def test_tool_exec_command_bad_option_type():
@@ -491,6 +496,7 @@ def test_tool_exec_command_bad_option_type():
     error = cm.value
     assert error.argsparsing
     assert str(error) == expected
+    assert error.retcode == 1
 
 
 def test_tool_exec_help_command_on_command_ok():
@@ -512,6 +518,7 @@ def test_tool_exec_help_command_on_command_ok():
     # check the result of the full help builder is what is shown
     assert error.argsparsing
     assert str(error) == "test help"
+    assert error.retcode == 0
 
 
 def test_tool_exec_help_command_on_command_complex():
@@ -552,6 +559,7 @@ def test_tool_exec_help_command_on_command_complex():
     # check the result of the full help builder is what is shown
     assert error.argsparsing
     assert str(error) == "test help"
+    assert error.retcode == 0
 
 
 def test_tool_exec_help_command_on_command_wrong():
@@ -570,6 +578,7 @@ def test_tool_exec_help_command_on_command_wrong():
     # check the result of the full help builder is what is shown
     assert error.argsparsing
     assert str(error) == "test help"
+    assert error.retcode == 1
 
 
 def test_tool_exec_help_command_all():
@@ -590,3 +599,4 @@ def test_tool_exec_help_command_all():
     # check the result of the full help builder is what is shown
     assert error.argsparsing
     assert str(error) == "test help"
+    assert error.retcode == 0

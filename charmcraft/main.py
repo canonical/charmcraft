@@ -22,7 +22,7 @@ from collections import namedtuple
 
 from charmcraft import helptexts
 from charmcraft.commands import version, build, store, init
-from charmcraft.config import config
+from charmcraft.config import Config
 from charmcraft.cmdbase import CommandError, BaseCommand
 from charmcraft.logsetup import message_handler
 
@@ -63,7 +63,7 @@ class HelpCommand(BaseCommand):
             help_text = helptexts.get_usage_message('charmcraft', msg)
         else:
             cmd_class, group = all_commands[parsed_args.command_to_help]
-            cmd = cmd_class(group)
+            cmd = cmd_class(group, None)
             parser = CustomArgumentParser(prog=cmd.name)
             cmd.fill_parser(parser)
             help_text = get_command_help(parser, cmd)
@@ -103,8 +103,7 @@ GLOBAL_ARGS = [
     _Global('verbose', 'flag', '-v', '--verbose', "Show debug information and be more verbose"),
     _Global('quiet', 'flag', '-q', '--quiet', "Only show warnings and errors, not progress"),
     _Global(
-        'from', 'option', '-f', '--from',
-        "Specify the project's directory (default to current one)"),
+        'from', 'option', '-f', '--from', "Specify the project's directory (default to current)"),
 ]
 
 
@@ -159,8 +158,8 @@ class Dispatcher:
 
     def __init__(self, sysargs, commands_groups):
         self.commands = self._get_commands_info(commands_groups)
-        command_name, cmd_args = self._pre_parse_args(sysargs)
-        self.command, self.parsed_args = self._load_command(command_name, cmd_args)
+        command_name, cmd_args, config = self._pre_parse_args(sysargs)
+        self.command, self.parsed_args = self._load_command(command_name, cmd_args, config)
 
     def _get_commands_info(self, commands_groups):
         """Process the commands groups structure for easier programmable access."""
@@ -175,10 +174,10 @@ class Dispatcher:
                 commands[_cmd_class.name] = (_cmd_class, _cmd_group)
         return commands
 
-    def _load_command(self, command_name, cmd_args):
+    def _load_command(self, command_name, cmd_args, config):
         """Load a command."""
         cmd_class, group = self.commands[command_name]
-        cmd = cmd_class(group)
+        cmd = cmd_class(group, config)
 
         # load and parse the command specific options/params
         parser = CustomArgumentParser(prog=cmd.name)
@@ -262,11 +261,11 @@ class Dispatcher:
             help_text = get_general_help()
             raise CommandError(help_text, argsparsing=True)
 
-        # init the system's config
-        config.init(global_args['from'])
+        # load the system's config
+        config = Config.from_file(global_args['from'])
 
         logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
-        return command, cmd_args
+        return command, cmd_args, config
 
     def run(self):
         """Really run the command."""

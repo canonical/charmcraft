@@ -305,20 +305,19 @@ class FakeResponse:
 def test_client_get():
     """Passes the correct method."""
     with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client()
+        client = Client('http://api.test', 'http://storage.test')
     client.get('/somepath')
 
-    mock_auth().request.assert_called_once_with('GET', Client.api_base_url + '/somepath', None)
+    mock_auth().request.assert_called_once_with('GET', 'http://api.test/somepath', None)
 
 
 def test_client_post():
     """Passes the correct method."""
     with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client()
+        client = Client('http://api.test', 'http://storage.test')
     client.post('/somepath', 'somebody')
 
-    mock_auth().request.assert_called_once_with(
-        'POST', Client.api_base_url + '/somepath', 'somebody')
+    mock_auth().request.assert_called_once_with('POST', 'http://api.test/somepath', 'somebody')
 
 
 def test_client_hit_success_simple(caplog):
@@ -329,32 +328,22 @@ def test_client_hit_success_simple(caplog):
     fake_response = FakeResponse(content=json.dumps(response_value), status_code=200)
     with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
         mock_auth().request.return_value = fake_response
-        client = Client()
+        client = Client('http://api.test', 'http://storage.test')
     result = client._hit('GET', '/somepath')
 
-    mock_auth().request.assert_called_once_with('GET', Client.api_base_url + '/somepath', None)
+    mock_auth().request.assert_called_once_with('GET', 'http://api.test/somepath', None)
     assert result == response_value
     expected = [
-        "Hitting the store: GET {}/somepath None".format(Client.api_base_url),
+        "Hitting the store: GET http://api.test/somepath None",
         "Store ok: 200",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_client_hit_configured_url_simple():
-    """Hits the server with a configured api url."""
-    test_config = {"api": "https://local.test:1234"}
-    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client(test_config)
-    client._hit('GET', '/somepath')
-    mock_auth().request.assert_called_once_with('GET', 'https://local.test:1234/somepath', None)
-
-
-def test_client_hit_configured_url_extra_slash():
+def test_client_hit_url_extra_slash():
     """The configured api url is ok even with an extra slash."""
-    test_config = {"api": "https://local.test:1234/"}
     with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client(test_config)
+        client = Client("https://local.test:1234/", 'http://storage.test')
     client._hit('GET', '/somepath')
     mock_auth().request.assert_called_once_with('GET', 'https://local.test:1234/somepath', None)
 
@@ -367,14 +356,13 @@ def test_client_hit_success_withbody(caplog):
     fake_response = FakeResponse(content=json.dumps(response_value), status_code=200)
     with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
         mock_auth().request.return_value = fake_response
-        client = Client()
+        client = Client('http://api.test', 'http://storage.test')
     result = client._hit('POST', '/somepath', 'somebody')
 
-    mock_auth().request.assert_called_once_with(
-        'POST', Client.api_base_url + '/somepath', 'somebody')
+    mock_auth().request.assert_called_once_with('POST', 'http://api.test/somepath', 'somebody')
     assert result == response_value
     expected = [
-        "Hitting the store: POST {}/somepath somebody".format(Client.api_base_url),
+        "Hitting the store: POST http://api.test/somepath somebody",
         "Store ok: 200",
     ]
     assert expected == [rec.message for rec in caplog.records]
@@ -386,7 +374,7 @@ def test_client_hit_failure():
     fake_response = FakeResponse(content=response_value, status_code=404)
     with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
         mock_auth().request.return_value = fake_response
-        client = Client()
+        client = Client('http://api.test', 'http://storage.test')
 
     expected = r"Failure working with the Store: \[404\] 'raw data'"
     with pytest.raises(CommandError, match=expected):
@@ -395,7 +383,7 @@ def test_client_hit_failure():
 
 def test_client_clear_credentials():
     with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client()
+        client = Client('http://api.test', 'http://storage.test')
     client.clear_credentials()
 
     mock_auth().clear_credentials.assert_called_once_with()
@@ -405,7 +393,7 @@ def test_client_errorparsing_complete():
     """Build the error message using original message and code."""
     content = json.dumps({"error-list": [{'message': 'error message', 'code': 'test-error'}]})
     response = FakeResponse(content=content, status_code=404)
-    result = Client()._parse_store_error(response)
+    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
     assert result == "Store failure! error message [code: test-error]"
 
 
@@ -413,7 +401,7 @@ def test_client_errorparsing_no_code():
     """Build the error message using original message (even when code in None)."""
     content = json.dumps({"error-list": [{'message': 'error message', 'code': None}]})
     response = FakeResponse(content=content, status_code=404)
-    result = Client()._parse_store_error(response)
+    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
     assert result == "Store failure! error message"
 
 
@@ -424,14 +412,14 @@ def test_client_errorparsing_multiple():
         {'message': 'error 2', 'code': None},
     ]})
     response = FakeResponse(content=content, status_code=404)
-    result = Client()._parse_store_error(response)
+    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
     assert result == "Store failure! error 1 [code: test-error-1]; error 2"
 
 
 def test_client_errorparsing_nojson():
     """Produce a default message if response is not a json."""
     response = FakeResponse(content='this is not a json', status_code=404)
-    result = Client()._parse_store_error(response)
+    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
     assert result == "Failure working with the Store: [404] 'this is not a json'"
 
 
@@ -439,7 +427,7 @@ def test_client_errorparsing_no_errors_inside():
     """Produce a default message if response has no errors list."""
     content = json.dumps({"another-error-key": "stuff"})
     response = FakeResponse(content=content, status_code=404)
-    result = Client()._parse_store_error(response)
+    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
     assert result == "Failure working with the Store: [404] " + repr(content)
 
 
@@ -447,7 +435,7 @@ def test_client_errorparsing_empty_errors():
     """Produce a default message if error list is empty."""
     content = json.dumps({"error-list": []})
     response = FakeResponse(content=content, status_code=404)
-    result = Client()._parse_store_error(response)
+    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
     assert result == "Failure working with the Store: [404] " + repr(content)
 
 
@@ -455,7 +443,7 @@ def test_client_errorparsing_bad_structure():
     """Produce a default message if error list has a bad format."""
     content = json.dumps({"error-list": ['whatever']})
     response = FakeResponse(content=content, status_code=404)
-    result = Client()._parse_store_error(response)
+    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
     assert result == "Failure working with the Store: [404] " + repr(content)
 
 
@@ -470,7 +458,7 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
 
     def fake_pusher(monitor, storage_base_url):
         """Push bytes in sequence, doing verifications in the middle."""
-        assert storage_base_url == Client.storage_base_url
+        assert storage_base_url == 'http://storage.test'
 
         total_to_push = monitor.len  # not only the saved bytes, but also headers and stuff
 
@@ -495,7 +483,7 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
         return FakeResponse(content=content, status_code=200)
 
     with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
-        Client().push(test_filepath)
+        Client('http://api.test', 'http://storage.test').push(test_filepath)
 
     # check proper logs
     expected = [
@@ -514,11 +502,10 @@ def test_client_push_configured_url_simple(tmp_path, capsys):
         content = json.dumps(dict(successful=True, upload_id='test-upload-id'))
         return FakeResponse(content=content, status_code=200)
 
-    test_config = {"storage": "https://local.test:1234"}
     test_filepath = tmp_path / 'supercharm.bin'
     test_filepath.write_text("abcdefgh")
     with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
-        Client(test_config).push(test_filepath)
+        Client('http://api.test', 'https://local.test:1234/').push(test_filepath)
 
 
 def test_client_push_configured_url_extra_slash(caplog, tmp_path, capsys):
@@ -530,11 +517,10 @@ def test_client_push_configured_url_extra_slash(caplog, tmp_path, capsys):
         content = json.dumps(dict(successful=True, upload_id='test-upload-id'))
         return FakeResponse(content=content, status_code=200)
 
-    test_config = {"storage": "https://local.test:1234/"}
     test_filepath = tmp_path / 'supercharm.bin'
     test_filepath.write_text("abcdefgh")
     with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
-        Client(test_config).push(test_filepath)
+        Client('http://api.test', 'https://local.test:1234/').push(test_filepath)
 
 
 def test_client_push_response_not_ok(tmp_path):
@@ -547,7 +533,7 @@ def test_client_push_response_not_ok(tmp_path):
     with patch('charmcraft.commands.store.client._storage_push') as mock:
         mock.return_value = FakeResponse(content='had a problem', status_code=500)
         with pytest.raises(CommandError) as cm:
-            Client().push(test_filepath)
+            Client('http://api.test', 'http://storage.test').push(test_filepath)
         assert str(cm.value) == "Failure while pushing file: [500] 'had a problem'"
 
 
@@ -562,7 +548,7 @@ def test_client_push_response_unsuccessful(tmp_path):
         raw_content = dict(successful=False, upload_id=None)
         mock.return_value = FakeResponse(content=json.dumps(raw_content), status_code=200)
         with pytest.raises(CommandError) as cm:
-            Client().push(test_filepath)
+            Client('http://api.test', 'http://storage.test').push(test_filepath)
         # checking all this separatedly as in Py3.5 dicts order is not deterministic
         message = str(cm.value)
         assert "Server error while pushing file:" in message

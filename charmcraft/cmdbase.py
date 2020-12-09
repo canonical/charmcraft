@@ -54,8 +54,9 @@ class BaseCommand:
     overview = None
     common = False
 
-    def __init__(self, group):
+    def __init__(self, group, config):
         self.group = group
+        self.config = config
 
     def fill_parser(self, parser):
         """This is called to have the command to specify its specific parameters.

@@ -163,14 +163,10 @@ class Client:
     api_base_url = 'https://api.charmhub.io'
     storage_base_url = 'https://storage.snapcraftcontent.com'
 
-    def __init__(self, charmhub_config=None):
+    def __init__(self, api_base_url, storage_base_url):
         self._auth_client = _AuthHolder()
-
-        if charmhub_config is not None:
-            if 'api' in charmhub_config:
-                self.api_base_url = charmhub_config['api'].rstrip('/')
-            if 'storage' in charmhub_config:
-                self.storage_base_url = charmhub_config['storage'].rstrip('/')
+        self.api_base_url = api_base_url.rstrip('/')
+        self.storage_base_url = storage_base_url.rstrip('/')
 
     def clear_credentials(self):
         """Clear stored credentials."""

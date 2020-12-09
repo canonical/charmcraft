@@ -23,56 +23,26 @@ import pytest
 from dateutil import parser
 
 from charmcraft.commands.store.store import Store
-from charmcraft.config import config
+from charmcraft.config import _CharmhubConfig
 
 
 @pytest.fixture
 def client_mock():
     """Fixture to provide a mocked client."""
     client_mock = MagicMock()
-    with patch('charmcraft.commands.store.store.Client', lambda config: client_mock):
+    with patch('charmcraft.commands.store.store.Client', lambda api, storage: client_mock):
         yield client_mock
-
-
-@pytest.fixture
-def patch_config():
-    """Fixture to provide a simple way of patching the global config."""
-    old_config = config.copy()
-
-    def _patch(new_test_config=None, **kwargs):
-        """Patch the config.
-
-        First clear it, then update with new config if available, and then with kwargs.
-        """
-        config.clear()
-        if new_test_config:
-            config.update(new_test_config)
-        config.update(kwargs)
-
-    yield _patch
-    config.clear()
-    config.update(old_config)
 
 
 # -- tests for client usage
 
-def test_client_init_no_config(patch_config):
+def test_client_init():
     """Check that the client is initiated ok even without config."""
-    patch_config({})
+    config = _CharmhubConfig()
     with patch('charmcraft.commands.store.store.Client') as client_mock:
-        Store()
+        Store(config)
     assert client_mock.mock_calls == [
-        call(None),
-    ]
-
-
-def test_client_init_with_config(patch_config):
-    """Check that the client is initiated with the proper config."""
-    patch_config(charmhub='test client config')
-    with patch('charmcraft.commands.store.store.Client') as client_mock:
-        Store()
-    assert client_mock.mock_calls == [
-        call('test client config'),
+        call(config.api_url, config.storage_url),
     ]
 
 
@@ -81,7 +51,7 @@ def test_client_init_with_config(patch_config):
 
 def test_login(client_mock):
     """Simple login case."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     result = store.login()
     assert client_mock.mock_calls == [
         call.clear_credentials(),
@@ -92,7 +62,7 @@ def test_login(client_mock):
 
 def test_logout(client_mock):
     """Simple logout case."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     result = store.logout()
     assert client_mock.mock_calls == [
         call.clear_credentials(),
@@ -102,7 +72,7 @@ def test_logout(client_mock):
 
 def test_whoami(client_mock):
     """Simple whoami case."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     auth_response = {'display-name': 'John Doe', 'username': 'jdoe', 'id': '-1'}
     client_mock.get.return_value = auth_response
 
@@ -121,7 +91,7 @@ def test_whoami(client_mock):
 
 def test_register_name(client_mock):
     """Simple register case."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     result = store.register_name('testname')
 
     assert client_mock.mock_calls == [
@@ -132,7 +102,7 @@ def test_register_name(client_mock):
 
 def test_list_registered_names_empty(client_mock):
     """List registered names getting an empty response."""
-    store = Store()
+    store = Store(_CharmhubConfig())
 
     auth_response = {'results': []}
     client_mock.get.return_value = auth_response
@@ -147,7 +117,7 @@ def test_list_registered_names_empty(client_mock):
 
 def test_list_registered_names_multiple(client_mock):
     """List registered names getting a multiple response."""
-    store = Store()
+    store = Store(_CharmhubConfig())
 
     auth_response = {'results': [
         {'name': 'name1', 'private': False, 'status': 'status1'},
@@ -175,7 +145,7 @@ def test_list_registered_names_multiple(client_mock):
 def test_upload_straightforward(client_mock, caplog):
     """The full and successful upload case."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
-    store = Store()
+    store = Store(_CharmhubConfig())
 
     # the first response, for when pushing bytes
     test_upload_id = 'test-upload-id'
@@ -221,7 +191,7 @@ def test_upload_straightforward(client_mock, caplog):
 def test_upload_polls_status(client_mock, caplog):
     """Upload polls status url until the end is indicated."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
-    store = Store()
+    store = Store(_CharmhubConfig())
 
     # first and second response, for pushing bytes and let the store know about it
     test_upload_id = 'test-upload-id'
@@ -270,7 +240,7 @@ def test_upload_polls_status(client_mock, caplog):
 
 def test_list_revisions_ok(client_mock):
     """One revision ok."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     client_mock.get.return_value = {'revisions': [
         {
             'revision': 7,
@@ -297,7 +267,7 @@ def test_list_revisions_ok(client_mock):
 
 def test_list_revisions_empty(client_mock):
     """No revisions listed."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     client_mock.get.return_value = {'revisions': []}
 
     result = store.list_revisions('some-name')
@@ -310,7 +280,7 @@ def test_list_revisions_empty(client_mock):
 
 def test_list_revisions_errors(client_mock):
     """One revision with errors."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     client_mock.get.return_value = {'revisions': [
         {
             'revision': 7,
@@ -359,7 +329,7 @@ def test_list_revisions_several_mixed(client_mock):
         },
     ]}
 
-    store = Store()
+    store = Store(_CharmhubConfig())
     result = store.list_revisions('some-name')
 
     (item1, item2) = result
@@ -384,7 +354,7 @@ def test_list_revisions_several_mixed(client_mock):
 
 def test_release_simple(client_mock):
     """Releasing a revision into one channel."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     store.release('testname', 123, ['somechannel'])
 
     expected_body = [{'revision': 123, 'channel': 'somechannel'}]
@@ -395,7 +365,7 @@ def test_release_simple(client_mock):
 
 def test_release_multiple(client_mock):
     """Releasing a revision into multiple channels."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     store.release('testname', 123, ['channel1', 'channel2', 'channel3'])
 
     expected_body = [
@@ -466,7 +436,7 @@ def test_status_ok(client_mock):
         ],
     }
 
-    store = Store()
+    store = Store(_CharmhubConfig())
     channel_map, channels, revisions = store.list_releases('testname')
 
     # check how the client is used
@@ -511,7 +481,7 @@ def test_status_ok(client_mock):
 
 def test_create_library_id(client_mock):
     """Create a new library in the store."""
-    store = Store()
+    store = Store(_CharmhubConfig())
     client_mock.post.return_value = {'library-id': 'test-lib-id'}
 
     result = store.create_library_id('test-charm-name', 'test-lib-name')
@@ -532,7 +502,7 @@ def test_create_library_revision(client_mock):
     test_content = 'test content with quite a lot of funny Python code :p'
     test_hash = '1234'
 
-    store = Store()
+    store = Store(_CharmhubConfig())
     client_mock.post.return_value = {
         'api': test_api,
         'content': test_content,

@@ -20,6 +20,7 @@ from unittest.mock import patch
 import pytest
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.config import Config
 from charmcraft.main import COMMAND_GROUPS, Dispatcher
 from charmcraft.commands.version import VersionCommand
 from charmcraft.helptexts import (
@@ -54,7 +55,7 @@ def test_aesthetic_args_options_msg(command):
             assert help_msg, "The help message must be present in each option"
             assert help_msg[0].isupper() and help_msg[-1] != '.'
 
-    command('group').fill_parser(FakeParser())
+    command('group', Config()).fill_parser(FakeParser())
 
 
 def test_get_usage_message():
@@ -213,7 +214,7 @@ def test_command_help_text_no_parameters():
         ("--revision", "The revision to release (defaults to latest)."),
     ]
 
-    text = get_command_help(command_groups, cmd1('group1'), options)
+    text = get_command_help(command_groups, cmd1('group1', Config()), options)
 
     expected = textwrap.dedent("""\
         Usage:
@@ -258,7 +259,7 @@ def test_command_help_text_with_parameters():
         ("--other-option", "Other option."),
     ]
 
-    text = get_command_help(command_groups, cmd1('group1'), options)
+    text = get_command_help(command_groups, cmd1('group1', Config()), options)
 
     expected = textwrap.dedent("""\
         Usage:
@@ -297,7 +298,7 @@ def test_command_help_text_loneranger():
         ("-q, --quiet", "Only show warnings and errors, not progress."),
     ]
 
-    text = get_command_help(command_groups, cmd1('group1'), options)
+    text = get_command_help(command_groups, cmd1('group1', Config()), options)
 
     expected = textwrap.dedent("""\
         Usage:

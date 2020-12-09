@@ -62,7 +62,7 @@ class HelpCommand(BaseCommand):
         else:
             cmd_class, group = all_commands[parsed_args.command_to_help]
             cmd = cmd_class(group)
-            parser = CustomArgumentParser(prog=cmd.name)
+            parser = CustomArgumentParser(prog=cmd.name, add_help=False)
             cmd.fill_parser(parser)
             help_text = get_command_help(parser, cmd)
         raise CommandError(help_text, argsparsing=True)

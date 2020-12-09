@@ -21,7 +21,7 @@ import sys
 from collections import namedtuple
 
 from charmcraft import helptexts
-from charmcraft.commands import version, build, store, init
+from charmcraft.commands import version, build, store, init, pack
 from charmcraft.config import Config
 from charmcraft.cmdbase import CommandError, BaseCommand
 from charmcraft.logsetup import message_handler
@@ -64,7 +64,7 @@ class HelpCommand(BaseCommand):
         else:
             cmd_class, group = all_commands[parsed_args.command_to_help]
             cmd = cmd_class(group, None)
-            parser = CustomArgumentParser(prog=cmd.name)
+            parser = CustomArgumentParser(prog=cmd.name, add_help=False)
             cmd.fill_parser(parser)
             help_text = get_command_help(parser, cmd)
         raise CommandError(help_text, argsparsing=True)
@@ -78,6 +78,7 @@ COMMAND_GROUPS = [
     ('basic', "Basic", [
         HelpCommand,
         build.BuildCommand,
+        pack.PackCommand,
         init.InitCommand,
         version.VersionCommand,
     ]),

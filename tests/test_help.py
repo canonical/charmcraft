@@ -337,7 +337,7 @@ def test_tool_exec_full_help(sysargv):
     # check the given information to the builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
-    assert {x[0] for x in args[1]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+    assert sorted(x[0] for x in args[1]) == ['-h, --help', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -390,7 +390,7 @@ def test_tool_exec_command_dash_help_simple(help_option):
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
-    assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+    assert sorted(x[0] for x in args[2]) == ['-h, --help', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -416,7 +416,7 @@ def test_tool_exec_command_dash_help_reverse(help_option):
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
-    assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+    assert sorted(x[0] for x in args[2]) == ['-h, --help', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -446,7 +446,8 @@ def test_tool_exec_command_dash_help_missing_params(help_option):
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
-    assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet', 'mandatory'}
+    assert sorted(x[0] for x in args[2]) == [
+        '-h, --help', '-q, --quiet', '-v, --verbose', 'mandatory']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -513,7 +514,7 @@ def test_tool_exec_help_command_on_command_ok():
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == VersionCommand
-    assert {x[0] for x in args[2]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+    assert sorted(x[0] for x in args[2]) == ['-h, --help', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -545,16 +546,16 @@ def test_tool_exec_help_command_on_command_complex():
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
-    expected_options = {
+    expected_options = [
+        '--option1',
         '-h, --help',
-        '-v, --verbose',
+        '-o2, --option2',
         '-q, --quiet',
+        '-v, --verbose',
         'param1',
         'param2',
-        '--option1',
-        '-o2, --option2',
-    }
-    assert {x[0] for x in args[2]} == expected_options
+    ]
+    assert sorted(x[0] for x in args[2]) == expected_options
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -594,7 +595,7 @@ def test_tool_exec_help_command_all():
     # check the given information to the builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
-    assert {x[0] for x in args[1]} == {'-h, --help', '-v, --verbose', '-q, --quiet'}
+    assert sorted(x[0] for x in args[1]) == ['-h, --help', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing

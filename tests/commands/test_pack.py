@@ -24,6 +24,7 @@ import pytest
 import yaml
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.config import Config, _BasicPrime
 from charmcraft.commands import pack
 from charmcraft.commands.pack import (
     PackCommand,
@@ -49,44 +50,41 @@ def bundle_yaml(tmp_path):
 
 
 @pytest.fixture
-def charmcraft_yaml(tmp_path):
-    """Create an empty charmcraft.yaml, with the option to set values to it."""
-    charmcraft_path = tmp_path / 'charmcraft.yaml'
-    charmcraft_path.write_text("{}")
-    content = {}
+def config(tmp_path):
+    """Provide a config class with an extra set method for the test to change it."""
 
-    def func(**kwargs):
-        # prime is special, so we don't need to write all this structure in all tests
-        prime = kwargs.pop('prime', None)
-        if prime is not None:
-            content['parts'] = {
-                'bundle': {
-                    'prime': prime,
-                }
-            }
+    class TestConfig(Config):
+        """The Config, but with a method to set test values."""
 
-        # the rest is direct
-        content.update(kwargs)
+        def set(self, **kwargs):
+            # prime is special, so we don't need to write all this structure in all tests
+            prime = kwargs.pop('prime', None)
+            if prime is not None:
+                kwargs['parts'] = _BasicPrime.from_dict({
+                    'bundle': {
+                        'prime': prime,
+                    }
+                })
 
-        encoded = yaml.dump(content)
-        charmcraft_path.write_text(encoded)
-        return encoded
+            # the rest is direct
+            for k, v in kwargs.items():
+                object.__setattr__(self, k, v)
 
-    return func
+    return TestConfig.from_file(tmp_path)
 
 
 # -- tests for main building process
 
-def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, charmcraft_yaml):
+def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     """A simple happy story."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     content = bundle_yaml(name='testbundle')
-    charmcraft_yaml(type='bundle')
+    config.set(type='bundle')
 
     # build!
     args = Namespace(from_dir=tmp_path)
-    PackCommand('group').run(args)
+    PackCommand('group', config).run(args)
 
     # check
     zipname = tmp_path / 'testbundle.zip'
@@ -99,18 +97,18 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, charmcraft_yaml):
 
 
 def test_simple_build_directory_default(
-        tmp_path, caplog, monkeypatch, bundle_yaml, charmcraft_yaml):
+        tmp_path, caplog, monkeypatch, bundle_yaml, config):
     """Building defaults to current directory."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
     # needed files
     content = bundle_yaml(name='testbundle')
-    charmcraft_yaml(type='bundle')
+    config.set(type='bundle')
 
     # build!
     args = Namespace(from_dir=None)
-    PackCommand('group').run(args)
+    PackCommand('group', config).run(args)
 
     # check
     zipname = tmp_path / 'testbundle.zip'
@@ -121,77 +119,44 @@ def test_simple_build_directory_default(
     assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_specified_directory_not_found(tmp_path):
-    """The specified directory is not there."""
-    not_there = tmp_path / 'not there'
-    args = Namespace(from_dir=not_there)
-    with pytest.raises(CommandError) as cm:
-        PackCommand('group').run(args)
-    assert str(cm.value) == "Bundle project directory was not found: '{}'.".format(not_there)
-
-
-def test_specified_directory_not_a_directory(tmp_path):
-    """The specified directory is not really a directory."""
-    somefile = tmp_path / 'somefile'
-    somefile.touch()
-    args = Namespace(from_dir=somefile)
-    with pytest.raises(CommandError) as cm:
-        PackCommand('group').run(args)
-    assert str(cm.value) == (
-        "Bundle project directory is not a directory: '{}'.".format(somefile))
-
-
-def test_missing_bundle_file(tmp_path, charmcraft_yaml):
+def test_missing_bundle_file(tmp_path, config):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
     args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
-        PackCommand('group').run(args)
+        PackCommand('group', config).run(args)
     assert str(cm.value) == (
         "Missing or invalid main bundle file: '{}'.".format(tmp_path / 'bundle.yaml'))
 
 
-def test_missing_charmcraft_file(tmp_path, bundle_yaml):
-    """Can not build a bundle without charmcraft.yaml."""
-    bundle_yaml(name='testbundle')
-
-    # build without a charmcraft.yaml!
-    args = Namespace(from_dir=tmp_path)
-    with pytest.raises(CommandError) as cm:
-        PackCommand('group').run(args)
-    assert str(cm.value) == (
-        "Missing or invalid charmcraft file: '{}'.".format(tmp_path / 'charmcraft.yaml'))
-
-
-def test_missing_name_in_bundle(tmp_path, bundle_yaml, charmcraft_yaml):
+def test_missing_name_in_bundle(tmp_path, bundle_yaml, config):
     """Can not build a bundle without name."""
-    charmcraft_yaml(type='bundle')
+    config.set(type='bundle')
 
     # build!
     args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
-        PackCommand('group').run(args)
+        PackCommand('group', config).run(args)
     assert str(cm.value) == (
         "Invalid bundle config; missing a 'name' field indicating the bundle's name in file '{}'."
         .format(tmp_path / 'bundle.yaml'))
 
 
-def test_missing_type_in_charmcraft(tmp_path, bundle_yaml, charmcraft_yaml):
+def test_missing_type_in_charmcraft(tmp_path, bundle_yaml, config):
     """The charmcraft.yaml file must have a proper type field."""
     bundle_yaml(name='testbundle')
 
     # build!
     args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
-        PackCommand('group').run(args)
+        PackCommand('group', config).run(args)
     assert str(cm.value) == (
-        "Invalid charmcraft config; 'type' must be 'bundle' in file '{}'."
-        .format(tmp_path / 'charmcraft.yaml'))
+        "Bad config; charmcraft.yaml missing or with an invalid 'type' field: must be 'bundle'.")
 
 
 # -- tests for get paths helper
 
-def test_getpaths_mandatory_ok(tmp_path):
+def test_getpaths_mandatory_ok(tmp_path, config):
     """Simple succesful case getting all mandatory files."""
     test_mandatory = ['foo.txt', 'bar.bin']
     test_file1 = (tmp_path / 'foo.txt')
@@ -200,23 +165,23 @@ def test_getpaths_mandatory_ok(tmp_path):
     test_file2.touch()
 
     with patch.object(pack, 'MANDATORY_FILES', test_mandatory):
-        result = get_paths_to_include(tmp_path)
+        result = get_paths_to_include(config)
 
     assert result == [test_file2, test_file1]
 
 
-def test_getpaths_extra_ok(tmp_path, caplog, charmcraft_yaml):
+def test_getpaths_extra_ok(tmp_path, caplog, config):
     """Extra files were indicated ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    charmcraft_yaml(prime=['f2.txt', 'f1.txt'])
+    config.set(prime=['f2.txt', 'f1.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
     testfile2 = tmp_path / 'f2.txt'
     testfile2.touch()
 
     with patch.object(pack, 'MANDATORY_FILES', []):
-        result = get_paths_to_include(tmp_path)
+        result = get_paths_to_include(config)
     assert result == [testfile1, testfile2]
 
     expected = [
@@ -226,16 +191,16 @@ def test_getpaths_extra_ok(tmp_path, caplog, charmcraft_yaml):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_missing(tmp_path, caplog, charmcraft_yaml):
+def test_getpaths_extra_missing(tmp_path, caplog, config):
     """Extra files were indicated but not found."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    charmcraft_yaml(prime=['f2.txt', 'f1.txt'])
+    config.set(prime=['f2.txt', 'f1.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
 
     with patch.object(pack, 'MANDATORY_FILES', []):
-        result = get_paths_to_include(tmp_path)
+        result = get_paths_to_include(config)
     assert result == [testfile1]
 
     expected = [
@@ -245,32 +210,23 @@ def test_getpaths_extra_missing(tmp_path, caplog, charmcraft_yaml):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_absolute(tmp_path, charmcraft_yaml):
-    """All extra files must be relative to the project."""
-    charmcraft_yaml(prime=['/tmp/foobar'])
-    with patch.object(pack, 'MANDATORY_FILES', []):
-        with pytest.raises(CommandError) as cm:
-            get_paths_to_include(tmp_path)
-    assert str(cm.value) == "Extra files in prime config can not be absolute: '/tmp/foobar'"
-
-
-def test_getpaths_extra_long_path(tmp_path, charmcraft_yaml):
+def test_getpaths_extra_long_path(tmp_path, config):
     """An extra file can be deep in directories."""
-    charmcraft_yaml(prime=['foo/bar/baz/extra.txt'])
+    config.set(prime=['foo/bar/baz/extra.txt'])
     testfile = tmp_path / 'foo' / 'bar' / 'baz' / 'extra.txt'
     testfile.parent.mkdir(parents=True)
     testfile.touch()
 
     with patch.object(pack, 'MANDATORY_FILES', []):
-        result = get_paths_to_include(tmp_path)
+        result = get_paths_to_include(config)
     assert result == [testfile]
 
 
-def test_getpaths_extra_wildcards_ok(tmp_path, caplog, charmcraft_yaml):
+def test_getpaths_extra_wildcards_ok(tmp_path, caplog, config):
     """Use wildcards to specify several files ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    charmcraft_yaml(prime=['*.txt'])
+    config.set(prime=['*.txt'])
     testfile1 = tmp_path / 'f1.txt'
     testfile1.touch()
     testfile2 = tmp_path / 'f2.bin'
@@ -279,7 +235,7 @@ def test_getpaths_extra_wildcards_ok(tmp_path, caplog, charmcraft_yaml):
     testfile3.touch()
 
     with patch.object(pack, 'MANDATORY_FILES', []):
-        result = get_paths_to_include(tmp_path)
+        result = get_paths_to_include(config)
     assert result == [testfile1, testfile3]
 
     expected = [
@@ -288,14 +244,14 @@ def test_getpaths_extra_wildcards_ok(tmp_path, caplog, charmcraft_yaml):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, charmcraft_yaml):
+def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, config):
     """Use wildcards to specify several files but nothing found."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    charmcraft_yaml(prime=['*.txt'])
+    config.set(prime=['*.txt'])
 
     with patch.object(pack, 'MANDATORY_FILES', []):
-        result = get_paths_to_include(tmp_path)
+        result = get_paths_to_include(config)
     assert result == []
 
     expected = [
@@ -304,9 +260,9 @@ def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, charmcraft_yaml):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_globstar(tmp_path, charmcraft_yaml):
+def test_getpaths_extra_globstar(tmp_path, config):
     """Double star means whatever directories are in the path."""
-    charmcraft_yaml(prime=['lib/**/*'])
+    config.set(prime=['lib/**/*'])
     srcpaths = (
         ('lib/foo/f1.txt', True),
         ('lib/foo/deep/fx.txt', True),
@@ -324,13 +280,13 @@ def test_getpaths_extra_globstar(tmp_path, charmcraft_yaml):
             allexpected.append(testfile)
 
     with patch.object(pack, 'MANDATORY_FILES', []):
-        result = get_paths_to_include(tmp_path)
+        result = get_paths_to_include(config)
     assert result == sorted(allexpected)
 
 
-def test_getpaths_extra_globstar_specific_files(tmp_path, charmcraft_yaml):
+def test_getpaths_extra_globstar_specific_files(tmp_path, config):
     """Combination of both mechanisms."""
-    charmcraft_yaml(prime=['lib/**/*.txt'])
+    config.set(prime=['lib/**/*.txt'])
     srcpaths = (
         ('lib/foo/f1.txt', True),
         ('lib/foo/f1.nop', False),
@@ -352,7 +308,7 @@ def test_getpaths_extra_globstar_specific_files(tmp_path, charmcraft_yaml):
             allexpected.append(testfile)
 
     with patch.object(pack, 'MANDATORY_FILES', []):
-        result = get_paths_to_include(tmp_path)
+        result = get_paths_to_include(config)
     assert result == sorted(allexpected)
 
 

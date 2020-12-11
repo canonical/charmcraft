@@ -91,6 +91,8 @@ def add_cleanup():
         func(*args, **kwargs)
 
 
+# -- tests for helpers
+
 def test_get_name_from_metadata_ok(tmp_path, monkeypatch):
     """The metadata file is valid yaml, but there is no name."""
     monkeypatch.chdir(tmp_path)

@@ -149,6 +149,4 @@ class Config:
             raise CommandError("Invalid charmcraft.yaml structure: must be a dictionary.")
 
         content['project_dirpath'] = project_directory
-        xxx = cls(**content)
-        print("========== XXX", xxx)
-        return xxx
+        return cls(**content)

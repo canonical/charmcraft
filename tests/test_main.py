@@ -16,11 +16,14 @@
 
 import argparse
 import io
+import os
 import pathlib
+import subprocess
+import sys
 from unittest.mock import patch
 
 from charmcraft import __version__, logsetup
-from charmcraft.main import Dispatcher, main
+from charmcraft.main import Dispatcher, main, COMMAND_GROUPS
 from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
 
@@ -322,3 +325,19 @@ def test_initmsg_verbose():
     expected = "Starting charmcraft version " + __version__
     assert expected in file_first_line
     assert expected in terminal_first_line
+
+
+def test_commands():
+    cmds = [cmd.name for _, _, cmds in COMMAND_GROUPS for cmd in cmds]
+
+    env = os.environ.copy()
+    env_paths = [p for p in sys.path if 'env/lib/python' in p]
+    if env_paths:
+        if 'PYTHONPATH' in env:
+            env['PYTHONPATH'] += ':' + ':'.join(env_paths)
+        else:
+            env['PYTHONPATH'] = ':'.join(env_paths)
+
+    for cmd in cmds:
+        subprocess.run([sys.executable, '-m', 'charmcraft', cmd, '-h'],
+                       check=True, env=env, stdout=subprocess.DEVNULL)

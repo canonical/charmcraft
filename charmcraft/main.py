@@ -20,7 +20,7 @@ import logging
 import sys
 
 from charmcraft import helptexts
-from charmcraft.commands import version, build, store, init
+from charmcraft.commands import version, build, store, init, pack
 from charmcraft.cmdbase import CommandError, BaseCommand
 from charmcraft.logsetup import message_handler
 
@@ -52,6 +52,7 @@ class HelpCommand(BaseCommand):
         Unlike other commands, this one receives an extra parameter with all commands,
         to validate if the help requested is on a valid one, or even parse its data.
         """
+        retcode = 0
         if parsed_args.command_to_help is None or parsed_args.command_to_help == self.name:
             # help on no command in particular, get general text
             help_text = get_general_help(detailed=parsed_args.all)
@@ -59,13 +60,14 @@ class HelpCommand(BaseCommand):
             # asked help on a command that doesn't exist
             msg = "no such command {!r}".format(parsed_args.command_to_help)
             help_text = helptexts.get_usage_message('charmcraft', msg)
+            retcode = 1
         else:
             cmd_class, group = all_commands[parsed_args.command_to_help]
             cmd = cmd_class(group)
-            parser = CustomArgumentParser(prog=cmd.name)
+            parser = CustomArgumentParser(prog=cmd.name, add_help=False)
             cmd.fill_parser(parser)
             help_text = get_command_help(parser, cmd)
-        raise CommandError(help_text, argsparsing=True)
+        raise CommandError(help_text, argsparsing=True, retcode=retcode)
 
 
 # Collect commands in different groups, for easier human consumption. Note that this is not
@@ -76,6 +78,7 @@ COMMAND_GROUPS = [
     ('basic', "Basic", [
         HelpCommand,
         build.BuildCommand,
+        pack.PackCommand,
         init.InitCommand,
         version.VersionCommand,
     ]),

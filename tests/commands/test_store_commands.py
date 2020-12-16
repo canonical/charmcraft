@@ -1639,8 +1639,8 @@ def test_listlib_name_from_metadata_problem(store_mock):
             ListLibCommand('group').run(args)
 
         assert str(cm.value) == (
-            "Can't access name in 'metadata.yaml' file. The 'list-lib' command needs to "
-            "be executed in a valid project's directory, or indicate the charm name with "
+            "Can't access name in 'metadata.yaml' file. The 'list-lib' command must either be "
+            "executed from a valid project directory, or specify a charm name using "
             "the --charm-name option.")
 
 

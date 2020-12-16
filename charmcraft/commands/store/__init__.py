@@ -853,9 +853,9 @@ class ListLibCommand(BaseCommand):
             charm_name = get_name_from_metadata()
             if charm_name is None:
                 raise CommandError(
-                    "Can't access name in 'metadata.yaml' file. The 'list-lib' command needs to "
-                    "be executed in a valid project's directory, or indicate the charm name with "
-                    "the --charm-name option.")
+                    "Can't access name in 'metadata.yaml' file. The 'list-lib' command must "
+                    "either be executed from a valid project directory, or specify a charm "
+                    "name using the --charm-name option.")
 
         # get tips from the Store
         store = Store()

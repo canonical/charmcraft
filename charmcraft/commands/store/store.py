@@ -212,23 +212,29 @@ class Store:
         return result
 
     def get_libraries_tips(self, libraries):
-        """Get the tip details for several libraries at once."""
+        """Get the tip details for several libraries at once.
+
+        Each requested library can be specified in different ways: using the library id
+        or the charm and library names (both will pinpoint the library), but in the later
+        case the library name is optional (so all libraries for that charm will be
+        returned). Also, for all those cases, an API version can be specified.
+        """
         endpoint = '/v1/charm/libraries/bulk'
         payload = []
         for lib in libraries:
             if 'lib_id' in lib:
-                d = {
+                item = {
                     'library-id': lib['lib_id'],
                 }
             else:
-                d = {
+                item = {
                     'charm-name': lib['charm_name'],
                 }
                 if 'lib_name' in lib:
-                    d['library-name'] = lib['lib_name']
+                    item['library-name'] = lib['lib_name']
             if 'api' in lib:
-                d['api'] = lib['api']
-            payload.append(d)
+                item['api'] = lib['api']
+            payload.append(item)
         response = self._client.post(endpoint, payload)
         libraries = response['libraries']
         result = {(item['library-id'], item['api']): _build_library(item) for item in libraries}

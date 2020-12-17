@@ -389,7 +389,6 @@ class BuildCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        # FIXME: check in this command if all "used libraries from 3rd parties" are updated
         validator = Validator()
         args = validator.process(parsed_args)
         logger.debug("working arguments: %s", args)

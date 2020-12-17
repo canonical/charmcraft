@@ -855,11 +855,11 @@ class FetchLibCommand(BaseCommand):
         to_query = []
         for lib in local_libs_data:
             if lib.lib_id is None:
-                d = dict(charm_name=lib.charm_name, lib_name=lib.lib_name)
+                item = dict(charm_name=lib.charm_name, lib_name=lib.lib_name)
             else:
-                d = dict(lib_id=lib.lib_id)
-            d['api'] = lib.api
-            to_query.append(d)
+                item = dict(lib_id=lib.lib_id)
+            item['api'] = lib.api
+            to_query.append(item)
         libs_tips = store.get_libraries_tips(to_query)
 
         # check if something needs to be done
@@ -897,19 +897,17 @@ class FetchLibCommand(BaseCommand):
                         "Library %s has local changes, can not be updated.", lib_data.full_name)
 
         for lib_data in to_fetch:
+            downloaded = store.get_library(lib_data.charm_name, lib_data.lib_id, lib_data.api)
             if lib_data.content is None:
                 # locally new
-                downloaded = store.get_library(
-                    lib_data.charm_name, lib_data.lib_id, lib_data.api)
                 lib_data.path.parent.mkdir(parents=True, exist_ok=True)
                 lib_data.path.write_text(downloaded.content)
                 logger.info(
                     "Library %s version %d.%d downloaded.",
                     lib_data.full_name, downloaded.api, downloaded.patch)
             else:
-                downloaded = store.get_library(
-                    lib_data.charm_name, lib_data.lib_id, lib_data.api)
-                # XXX Facundo 2020-10-23: manage the case where the library was renamed
+                # XXX Facundo 2020-12-17: manage the case where the library was renamed
+                # (related GH issue: #214)
                 lib_data.path.write_text(downloaded.content)
                 logger.info(
                     "Library %s updated to version %d.%d.",

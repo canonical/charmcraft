@@ -271,7 +271,6 @@ class UploadCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        # FIXME: check in this command if all "own libraries" are properly updated in the Store
         name, path = self._discover_charm(parsed_args.charm_file)
         store = Store()
         result = store.upload(name, path)
@@ -930,19 +929,22 @@ class ListLibCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--charm-name', help="The name of the charm")
+        parser.add_argument(
+            'name', nargs='?', help=(
+                "The name of the charm (optional, will get the name from"
+                "metadata.yaml if not given)"))
 
     def run(self, parsed_args):
         """Run the command."""
-        if parsed_args.charm_name:
-            charm_name = parsed_args.charm_name
+        if parsed_args.name:
+            charm_name = parsed_args.name
         else:
             charm_name = get_name_from_metadata()
             if charm_name is None:
                 raise CommandError(
-                    "Can't access name in 'metadata.yaml' file. The 'list-lib' command needs to "
-                    "be executed in a valid project's directory, or indicate the charm name with "
-                    "the --charm-name option.")
+                    "Can't access name in 'metadata.yaml' file. The 'list-lib' command must "
+                    "either be executed from a valid project directory, or specify a charm "
+                    "name using the --charm-name option.")
 
         # get tips from the Store
         store = Store()
@@ -950,7 +952,7 @@ class ListLibCommand(BaseCommand):
         libs_tips = store.get_libraries_tips(to_query)
 
         if not libs_tips:
-            logger.info("Nothing found.")
+            logger.info("No libraries found for charm %s.", charm_name)
             return
 
         headers = ['Library name', 'API', 'Patch']

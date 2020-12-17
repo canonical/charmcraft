@@ -1,5 +1,6 @@
 -r requirements.txt
 
+coverage
 pytest == 5.4.1
 flake8 == 3.7.9
 ops >= 0.8.0

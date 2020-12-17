@@ -13,4 +13,5 @@ else
 fi
 
 flake8
-python3 -m unittest -v "$@"
+coverage run --source=src -m unittest -v "$@"
+coverage report -m

@@ -834,7 +834,8 @@ class FetchLibCommand(BaseCommand):
     overview = textwrap.dedent("""
         Fetch charm libraries.
 
-        It will download the library the first time, and update it the next times.
+        The first time a library is downloaded the command will create the needed
+        directories to place it, subsequent fetches will just update the local copy.
     """)
 
     def fill_parser(self, parser):
@@ -866,7 +867,7 @@ class FetchLibCommand(BaseCommand):
         to_fetch = []
         for lib_data in local_libs_data:
             logger.debug("Verifying local lib %s", lib_data)
-            # if locally we didn't have the lib id, let's fix it from the Store info
+            # fix any missing lib id using the Store info
             if lib_data.lib_id is None:
                 for tip in libs_tips.values():
                     if lib_data.charm_name == tip.charm_name and lib_data.lib_name == tip.lib_name:
@@ -880,10 +881,10 @@ class FetchLibCommand(BaseCommand):
                 continue
 
             if tip.patch > lib_data.patch:
-                # the store is more advanced than local
+                # the store has a higher version than local
                 to_fetch.append(lib_data)
             elif tip.patch < lib_data.patch:
-                # the store has smaller version numbers than local
+                # the store has a lower version numbers than local
                 logger.info(
                     "Library %s has local changes, can not be updated.", lib_data.full_name)
             else:

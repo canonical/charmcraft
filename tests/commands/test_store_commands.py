@@ -33,6 +33,7 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     _get_lib_info,
     CreateLibCommand,
+    ListLibCommand,
     ListNamesCommand,
     ListRevisionsCommand,
     LoginCommand,
@@ -1596,3 +1597,98 @@ def test_getlibinfo_libid_empty(tmp_path, monkeypatch):
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {} metadata field LIBID must be a non-empty ASCII string.".format(test_path))
+
+
+# -- tests for list libraries command
+
+def test_listlib_simple(caplog, store_mock):
+    """Happy path listing simple case."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_mock.get_libraries_tips.return_value = {
+        ('some-lib-id', 3): Library(
+            lib_id='some-lib-id', content=None, content_hash='abc', api=3, patch=7,
+            lib_name='testlib', charm_name='testcharm'),
+    }
+    args = Namespace(name='testcharm')
+    ListLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'charm_name': 'testcharm'}]),
+    ]
+    expected = [
+        "Library name    API    Patch",
+        "testlib         3      7",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_listlib_charm_from_metadata(caplog, store_mock):
+    """Happy path listing simple case."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_mock.get_libraries_tips.return_value = {}
+    args = Namespace(name=None)
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'testcharm'
+        ListLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'charm_name': 'testcharm'}]),
+    ]
+
+
+def test_listlib_name_from_metadata_problem(store_mock):
+    """The metadata wasn't there to get the name."""
+    args = Namespace(name=None)
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = None
+        with pytest.raises(CommandError) as cm:
+            ListLibCommand('group').run(args)
+
+        assert str(cm.value) == (
+            "Can't access name in 'metadata.yaml' file. The 'list-lib' command must either be "
+            "executed from a valid project directory, or specify a charm name using "
+            "the --charm-name option.")
+
+
+def test_listlib_empty(caplog, store_mock):
+    """Nothing found in the store for the specified charm."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_mock.get_libraries_tips.return_value = {}
+    args = Namespace(name='testcharm')
+    ListLibCommand('group').run(args)
+
+    expected = "No libraries found for charm testcharm."
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_listlib_properly_sorted(caplog, store_mock):
+    """Check the sorting of the list."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_mock.get_libraries_tips.return_value = {
+        ('lib-id-2', 3): Library(
+            lib_id='lib-id-1', content=None, content_hash='abc', api=3, patch=7,
+            lib_name='testlib-2', charm_name='testcharm'),
+        ('lib-id-2', 2): Library(
+            lib_id='lib-id-1', content=None, content_hash='abc', api=2, patch=8,
+            lib_name='testlib-2', charm_name='testcharm'),
+        ('lib-id-1', 5): Library(
+            lib_id='lib-id-1', content=None, content_hash='abc', api=5, patch=124,
+            lib_name='testlib-1', charm_name='testcharm'),
+    }
+    args = Namespace(name='testcharm')
+    ListLibCommand('group').run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'charm_name': 'testcharm'}]),
+    ]
+    expected = [
+        "Library name    API    Patch",
+        "testlib-1       5      124",
+        "testlib-2       2      8",
+        "testlib-2       3      7",
+    ]
+    assert expected == [rec.message for rec in caplog.records]

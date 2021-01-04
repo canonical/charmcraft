@@ -80,7 +80,7 @@ class InitCommand(BaseCommand):
             help="A comma-separated list of supported platform series;"
             " defaults to 'kubernetes'")
         parser.add_argument(
-            "-f", "--force", type="store_true",
+            "-f", "--force", action="store_true",
             help="Initialize even if the directory is not empty (will not overwrite files)")
 
     def run(self, args):

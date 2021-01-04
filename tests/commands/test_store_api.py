@@ -22,7 +22,7 @@ from unittest.mock import patch, call, MagicMock
 import pytest
 from dateutil import parser
 
-from charmcraft.commands.store.store import Store
+from charmcraft.commands.store.store import Store, Library
 from charmcraft.config import _CharmhubConfig
 
 
@@ -532,3 +532,153 @@ def test_create_library_revision(client_mock):
     assert result_lib.lib_name == test_lib_name
     assert result_lib.charm_name == test_charm_name
     assert result_lib.patch == test_patch
+
+
+def test_get_tips_simple(client_mock):
+    """Get info for a lib, simple case with successful result."""
+    test_charm_name = 'test-charm-name'
+    test_lib_name = 'test-lib-name'
+    test_lib_id = 'test-lib-id'
+    test_api = 'test-api-version'
+    test_patch = 'test-patch-version'
+    test_content = 'test content with quite a lot of funny Python code :p'
+    test_hash = '1234'
+
+    store = Store()
+    client_mock.post.return_value = {'libraries': [{
+        'api': test_api,
+        'content': test_content,
+        'hash': test_hash,
+        'library-id': test_lib_id,
+        'library-name': test_lib_name,
+        'charm-name': test_charm_name,
+        'patch': test_patch,
+    }]}
+
+    query_info = [
+        {'lib_id': test_lib_id},
+    ]
+    result = store.get_libraries_tips(query_info)
+
+    payload = [
+        {'library-id': test_lib_id},
+    ]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/libraries/bulk', payload),
+    ]
+    expected = {
+        (test_lib_id, test_api): Library(
+            api=test_api, content=test_content, content_hash=test_hash, lib_id=test_lib_id,
+            lib_name=test_lib_name, charm_name=test_charm_name, patch=test_patch),
+    }
+    assert result == expected
+
+
+def test_get_tips_empty(client_mock):
+    """Get info for a lib, with an empty response."""
+    test_lib_id = 'test-lib-id'
+
+    store = Store()
+    client_mock.post.return_value = {'libraries': []}
+
+    query_info = [
+        {'lib_id': test_lib_id},
+    ]
+    result = store.get_libraries_tips(query_info)
+
+    payload = [
+        {'library-id': test_lib_id},
+    ]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/libraries/bulk', payload),
+    ]
+    assert result == {}
+
+
+def test_get_tips_several(client_mock):
+    """Get info for multiple libs at once."""
+    test_charm_name_1 = 'test-charm-name-1'
+    test_lib_name_1 = 'test-lib-name-1'
+    test_lib_id_1 = 'test-lib-id-1'
+    test_api_1 = 'test-api-version-1'
+    test_patch_1 = 'test-patch-version-1'
+    test_content_1 = 'test content with quite a lot of funny Python code :p'
+    test_hash_1 = '1234'
+
+    test_charm_name_2 = 'test-charm-name-2'
+    test_lib_name_2 = 'test-lib-name-2'
+    test_lib_id_2 = 'test-lib-id-2'
+    test_api_2 = 'test-api-version-2'
+    test_patch_2 = 'test-patch-version-2'
+    test_content_2 = 'more awesome Python code :)'
+    test_hash_2 = '5678'
+
+    store = Store()
+    client_mock.post.return_value = {'libraries': [{
+        'api': test_api_1,
+        'content': test_content_1,
+        'hash': test_hash_1,
+        'library-id': test_lib_id_1,
+        'library-name': test_lib_name_1,
+        'charm-name': test_charm_name_1,
+        'patch': test_patch_1,
+    }, {
+        'api': test_api_2,
+        'content': test_content_2,
+        'hash': test_hash_2,
+        'library-id': test_lib_id_2,
+        'library-name': test_lib_name_2,
+        'charm-name': test_charm_name_2,
+        'patch': test_patch_2,
+    }]}
+
+    query_info = [
+        {'lib_id': test_lib_id_1},
+        {'lib_id': test_lib_id_2},
+    ]
+    result = store.get_libraries_tips(query_info)
+
+    payload = [
+        {'library-id': test_lib_id_1},
+        {'library-id': test_lib_id_2},
+    ]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/libraries/bulk', payload),
+    ]
+    expected = {
+        (test_lib_id_1, test_api_1): Library(
+            api=test_api_1, content=test_content_1, content_hash=test_hash_1, lib_id=test_lib_id_1,
+            lib_name=test_lib_name_1, charm_name=test_charm_name_1, patch=test_patch_1),
+        (test_lib_id_2, test_api_2): Library(
+            api=test_api_2, content=test_content_2, content_hash=test_hash_2, lib_id=test_lib_id_2,
+            lib_name=test_lib_name_2, charm_name=test_charm_name_2, patch=test_patch_2),
+    }
+    assert result == expected
+
+
+def test_get_tips_query_combinations(client_mock):
+    """Use all the combinations to specify what's queried."""
+    store = Store()
+    client_mock.post.return_value = {'libraries': []}
+
+    query_info = [
+        {'lib_id': 'test-lib-id-1'},
+        {'lib_id': 'test-lib-id-2', 'api': 2},
+        {'charm_name': 'test-charm-name-3'},
+        {'charm_name': 'test-charm-name-4', 'api': 4},
+        {'charm_name': 'test-charm-name-5', 'lib_name': 'test-lib-name-5'},
+        {'charm_name': 'test-charm-name-6', 'lib_name': 'test-lib-name-6', 'api': 6},
+    ]
+    store.get_libraries_tips(query_info)
+
+    payload = [
+        {'library-id': 'test-lib-id-1'},
+        {'library-id': 'test-lib-id-2', 'api': 2},
+        {'charm-name': 'test-charm-name-3'},
+        {'charm-name': 'test-charm-name-4', 'api': 4},
+        {'charm-name': 'test-charm-name-5', 'library-name': 'test-lib-name-5'},
+        {'charm-name': 'test-charm-name-6', 'library-name': 'test-lib-name-6', 'api': 6},
+    ]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/libraries/bulk', payload),
+    ]

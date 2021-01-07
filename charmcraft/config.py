@@ -20,71 +20,62 @@ import pathlib
 from urllib.parse import urlparse
 
 import attr
+import jsonschema
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.utils import load_yaml
 
+format_checker = jsonschema.FormatChecker()
 
-def _get_key(config, field):
-    """Get the complete path of the key in the config."""
-    section = getattr(config, 'section', None)
-    if section:
-        key = '{}.{}'.format(section, field.name)
+# translator between "json" and pythonic yaml names
+TYPE_TRANSLATOR = {
+    'object': 'dict',
+    'array': 'list',
+}
+
+
+def adapt_validation_error(error):
+    """Take a jsonschema.ValidationError and create a proper CommandError."""
+    field_path = '.'.join(error.absolute_path)
+    if error.validator == 'required':
+        msg = "Bad charmcraft.yaml content; missing fields: {}.".format(
+            ', '.join(error.validator_value))
+    elif error.validator == 'type':
+        expected_type = TYPE_TRANSLATOR.get(error.validator_value, error.validator_value)
+        msg = "Bad charmcraft.yaml content; the '{}' field must be a {}: got '{}'.".format(
+            field_path, expected_type, error.instance.__class__.__name__)
+    elif error.validator == 'enum':
+        msg = "Bad charmcraft.yaml content; the '{}' field must be one of: {}.".format(
+            field_path, ', '.join(map(repr, error.validator_value)))
+    elif error.validator == 'format':
+        msg = "Bad charmcraft.yaml content; the '{}' field {}: got {!r}.".format(
+            field_path, error.cause, error.instance)
     else:
-        key = field.name
-    return key
+        # safe fallback
+        msg = error.message
+
+    raise CommandError(msg)
 
 
-def _check_type(config, field, value):
-    """Check that the value is instance of the specified type."""
-    if not isinstance(value, field.type):
-        key = _get_key(config, field)
-        raise CommandError(
-            "Bad charmcraft.yaml content; field '{}' must be a {}: got {!r}."
-            .format(key, field.type.__name__, value))
-
-
-def _check_url(config, field, value):
+@format_checker.checks('url', raises=ValueError)
+def _check_url(value):
     """Check that the URL has at least scheme and net location."""
-    url = urlparse(value)
-    if not url.scheme or not url.netloc:
-        key = _get_key(config, field)
-        raise CommandError(
-            "Bad charmcraft.yaml content; field '{}' must be a full URL "
-            "(e.g. 'https://some.server.com'): got {!r}.".format(key, value))
-
-
-def _check_typefield(config, field, value):
-    """Check that the value of 'type' field is valid."""
-    # None is allowed until we make mandatory this configuration field
-    if value not in ('charm', 'bundle', None):
-        key = _get_key(config, field)
-        raise CommandError(
-            "Bad charmcraft.yaml content; field '{}' (if present) must value 'charm' or 'bundle': "
-            "got {!r}.".format(key, value))
+    if isinstance(value, str):
+        url = urlparse(value)
+        if url.scheme and url.netloc:
+            return True
+    raise ValueError("must be a full URL (e.g. 'https://some.server.com')")
 
 
 @attr.s(kw_only=True, frozen=True)
 class _CharmhubConfig:
-    section = 'charmhub'
-
-    api_url = attr.ib(
-        type=str, default='https://api.staging.charmhub.io',
-        validator=[_check_url, _check_type])
-    storage_url = attr.ib(
-        type=str, default='https://storage.staging.snapcraftcontent.com',
-        validator=[_check_url, _check_type])
+    """Configuration for all Charmhub related options."""
+    api_url = attr.ib(default='https://api.staging.charmhub.io')
+    storage_url = attr.ib(default='https://storage.staging.snapcraftcontent.com')
 
     @classmethod
-    def from_dict(cls, source=None):
+    def from_dict(cls, source):
         """Build from a raw dict."""
-        if source is None:
-            return cls()
-
-        if not isinstance(source, dict):
-            raise CommandError(
-                "Bad charmcraft.yaml content; the 'charmhub' field must be a dict: got {!r}."
-                .format(type(source).__name__))
         return cls(**source)
 
 
@@ -96,22 +87,7 @@ class _BasicPrime(tuple):
     @classmethod
     def from_dict(cls, parts):
         """Build from a dicts sequence."""
-        if not isinstance(parts, dict):
-            raise CommandError(
-                "Bad charmcraft.yaml content; the 'parts' field must be a dict: got {!r}."
-                .format(type(parts).__name__))
-
-        bundle = parts.get('bundle', {})
-        if not isinstance(bundle, dict):
-            raise CommandError(
-                "Bad charmcraft.yaml content; the 'parts.bundle' field must be a dict: got {!r}."
-                .format(type(bundle).__name__))
-
-        prime = bundle.get('prime', [])
-        if not isinstance(prime, list):
-            raise CommandError(
-                "Bad charmcraft.yaml content; the 'parts.bundle.prime' field must be a list: "
-                "got {!r}.".format(type(prime).__name__))
+        prime = parts.get('bundle', {}).get('prime', [])
 
         # validate that all are relative
         for spec in prime:
@@ -125,28 +101,70 @@ class _BasicPrime(tuple):
 
 
 @attr.s(kw_only=True, frozen=True)
-class Config:
+class _Project:
+    """Configuration for all project-related options, used internally."""
+    dirpath = attr.ib(default=None)
+
+
+@attr.s(kw_only=True, frozen=True)
+class _Config:
+    """Root of all the configuration."""
     charmhub = attr.ib(default={}, converter=_CharmhubConfig.from_dict)
     parts = attr.ib(default={}, converter=_BasicPrime.from_dict)
-    type = attr.ib(default=None, validator=[_check_typefield])
+    type = attr.ib()
 
-    # this value is provided by the code itself, not the user, as convenience for the
+    # this item is provided by the code itself, not the user, as convenience for the
     # rest of the code
-    project_dirpath = attr.ib(default=None)
+    project = attr.ib(default=None)
 
-    @classmethod
-    def from_file(cls, project_directory):
-        """Load the config from charmcraft.yaml in project's directory."""
-        if project_directory is None:
-            project_directory = pathlib.Path.cwd()
-        else:
-            project_directory = pathlib.Path(project_directory)
 
-        content = load_yaml(project_directory / 'charmcraft.yaml')
-        if content is None:
-            content = {}
-        elif not isinstance(content, dict):
-            raise CommandError("Invalid charmcraft.yaml structure: must be a dictionary.")
+CONFIG_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'type': {'type': 'string', 'enum': ['charm', 'bundle']},
+        'charmhub': {
+            'type': 'object',
+            'properties': {
+                'api_url': {'type': 'string', 'format': 'url'},
+                'storage_url': {'type': 'string', 'format': 'url'},
+            },
+        },
+        'parts': {
+            'type': 'object',
+            'properties': {
+                'bundle': {
+                    'type': 'object',
+                    'properties': {
+                        'prime': {'type': 'array'},
+                    },
+                },
+            },
+        },
+    },
+    'required': ['type'],
+}
 
-        content['project_dirpath'] = project_directory
-        return cls(**content)
+
+def load(dirpath):
+    """Load the config from charmcraft.yaml in the indicated directory."""
+    if dirpath is None:
+        dirpath = pathlib.Path.cwd()
+    else:
+        dirpath = pathlib.Path(dirpath)
+
+    content = load_yaml(dirpath / 'charmcraft.yaml')
+    # XXX Facundo 2021-01-04: we will make this configuration mandatory in the future, but
+    # so far is ok to not have it
+    if content is None:
+        return
+
+    # validate the loaded config is ok
+    try:
+        jsonschema.validate(instance=content, schema=CONFIG_SCHEMA, format_checker=format_checker)
+    except jsonschema.ValidationError as exc:
+        adapt_validation_error(exc)
+
+    # inject project's config
+    content['project'] = _Project(dirpath=dirpath)
+
+    return _Config(**content)

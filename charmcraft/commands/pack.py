@@ -39,7 +39,7 @@ def build_zip(zippath, basedir, fpaths):
 
 def get_paths_to_include(config):
     """Get all file/dir paths to include."""
-    dirpath = config.project_dirpath
+    dirpath = config.project.dirpath
     allpaths = set()
 
     # all mandatory files, which must exist (currently only bundles.yaml is mandatory, and
@@ -76,8 +76,12 @@ class PackCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        if self.config is None:
+            raise CommandError(
+                "Missing project configuration, please provide a valid charmcraft.yaml.")
+
         # get the config files
-        bundle_filepath = self.config.project_dirpath / 'bundle.yaml'
+        bundle_filepath = self.config.project.dirpath / 'bundle.yaml'
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
             raise CommandError(
@@ -91,11 +95,10 @@ class PackCommand(BaseCommand):
         # so far 'pack' works for bundles only (later this will operate also on charms)
         if self.config.type != 'bundle':
             raise CommandError(
-                "Bad config; charmcraft.yaml missing or with an invalid 'type' field: "
-                "must be 'bundle'.")
+                "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command.")
 
         # pack everything
         paths = get_paths_to_include(self.config)
-        zipname = self.config.project_dirpath / (bundle_name + '.zip')
-        build_zip(zipname, self.config.project_dirpath, paths)
+        zipname = self.config.project.dirpath / (bundle_name + '.zip')
+        build_zip(zipname, self.config.project.dirpath, paths)
         logger.info("Created '%s'.", zipname)

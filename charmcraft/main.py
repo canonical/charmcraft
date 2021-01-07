@@ -20,9 +20,8 @@ import logging
 import sys
 from collections import namedtuple
 
-from charmcraft import helptexts
+from charmcraft import helptexts, config
 from charmcraft.commands import version, build, store, init, pack
-from charmcraft.config import Config
 from charmcraft.cmdbase import CommandError, BaseCommand
 from charmcraft.logsetup import message_handler
 
@@ -161,8 +160,9 @@ class Dispatcher:
 
     def __init__(self, sysargs, commands_groups):
         self.commands = self._get_commands_info(commands_groups)
-        command_name, cmd_args, config = self._pre_parse_args(sysargs)
-        self.command, self.parsed_args = self._load_command(command_name, cmd_args, config)
+        command_name, cmd_args, charmcraft_config = self._pre_parse_args(sysargs)
+        self.command, self.parsed_args = self._load_command(
+            command_name, cmd_args, charmcraft_config)
 
     def _get_commands_info(self, commands_groups):
         """Process the commands groups structure for easier programmable access."""
@@ -177,10 +177,10 @@ class Dispatcher:
                 commands[_cmd_class.name] = (_cmd_class, _cmd_group)
         return commands
 
-    def _load_command(self, command_name, cmd_args, config):
+    def _load_command(self, command_name, cmd_args, charmcraft_config):
         """Load a command."""
         cmd_class, group = self.commands[command_name]
-        cmd = cmd_class(group, config)
+        cmd = cmd_class(group, charmcraft_config)
 
         # load and parse the command specific options/params
         parser = CustomArgumentParser(prog=cmd.name)
@@ -265,10 +265,10 @@ class Dispatcher:
             raise CommandError(help_text, argsparsing=True)
 
         # load the system's config
-        config = Config.from_file(global_args['from'])
+        charmcraft_config = config.load(global_args['from'])
 
         logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
-        return command, cmd_args, config
+        return command, cmd_args, charmcraft_config
 
     def run(self):
         """Really run the command."""

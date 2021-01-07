@@ -24,7 +24,6 @@ import pytest
 import yaml
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.config import Config, _BasicPrime
 from charmcraft.commands import pack
 from charmcraft.commands.pack import (
     PackCommand,
@@ -47,30 +46,6 @@ def bundle_yaml(tmp_path):
         return encoded
 
     return func
-
-
-@pytest.fixture
-def config(tmp_path):
-    """Provide a config class with an extra set method for the test to change it."""
-
-    class TestConfig(Config):
-        """The Config, but with a method to set test values."""
-
-        def set(self, **kwargs):
-            # prime is special, so we don't need to write all this structure in all tests
-            prime = kwargs.pop('prime', None)
-            if prime is not None:
-                kwargs['parts'] = _BasicPrime.from_dict({
-                    'bundle': {
-                        'prime': prime,
-                    }
-                })
-
-            # the rest is direct
-            for k, v in kwargs.items():
-                object.__setattr__(self, k, v)
-
-    return TestConfig.from_file(tmp_path)
 
 
 # -- tests for main building process
@@ -142,16 +117,27 @@ def test_missing_name_in_bundle(tmp_path, bundle_yaml, config):
         .format(tmp_path / 'bundle.yaml'))
 
 
-def test_missing_type_in_charmcraft(tmp_path, bundle_yaml, config):
+def test_bad_type_in_charmcraft(tmp_path, bundle_yaml, config):
     """The charmcraft.yaml file must have a proper type field."""
     bundle_yaml(name='testbundle')
+    config.set(type='charm')
 
     # build!
     args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
         PackCommand('group', config).run(args)
     assert str(cm.value) == (
-        "Bad config; charmcraft.yaml missing or with an invalid 'type' field: must be 'bundle'.")
+        "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command.")
+
+
+def test_missing_configuration(tmp_path):
+    """The charmcraft.yaml file must be in place for this command."""
+    config = None
+    args = Namespace(from_dir=tmp_path)
+    with pytest.raises(CommandError) as cm:
+        PackCommand('group', config).run(args)
+    assert str(cm.value) == (
+        "Missing project configuration, please provide a valid charmcraft.yaml.")
 
 
 # -- tests for get paths helper

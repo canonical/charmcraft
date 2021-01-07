@@ -858,7 +858,7 @@ class ListLibCommand(BaseCommand):
                     "name using the --charm-name option.")
 
         # get tips from the Store
-        store = Store()
+        store = Store(self.config.charmhub)
         to_query = [{'charm_name': charm_name}]
         libs_tips = store.get_libraries_tips(to_query)
 

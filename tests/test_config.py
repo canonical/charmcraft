@@ -19,143 +19,190 @@ import pytest
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
-    Config,
     _BasicPrime,
     _CharmhubConfig,
-    _check_type,
-    _check_typefield,
     _check_url,
+    load,
 )
 
 
-# -- tests for the config bootstrapping
+@pytest.fixture
+def create_config(tmp_path):
+    """Helper to create the config."""
+    def create_config(text):
+        test_file = tmp_path / "charmcraft.yaml"
+        test_file.write_text(text)
+        return tmp_path
+    return create_config
 
-def test_fromfile_current_directory(tmp_path, monkeypatch):
+
+# -- tests for the config loading
+
+def test_load_current_directory(create_config, monkeypatch):
     """Init the config using charmcraft.yaml in current directory."""
+    tmp_path = create_config("""
+        type: charm
+    """)
     monkeypatch.chdir(tmp_path)
-    test_file = tmp_path / "charmcraft.yaml"
-    test_file.write_text("""
-        charmhub:
-            api_url: http://foobar
-    """)
-    config = Config.from_file(None)
-    assert config.charmhub.api_url == 'http://foobar'
-    assert config.project_dirpath == tmp_path
+    config = load(None)
+    assert config.type == 'charm'
+    assert config.project.dirpath == tmp_path
 
 
-def test_fromfile_specific_directory_ok(tmp_path):
+def test_load_specific_directory_ok(create_config):
     """Init the config using charmcraft.yaml in a specific directory."""
-    test_file = tmp_path / "charmcraft.yaml"
-    test_file.write_text("""
-        charmhub:
-            api_url: http://foobar
+    tmp_path = create_config("""
+        type: charm
     """)
-    config = Config.from_file(tmp_path)
-    assert config.charmhub.api_url == 'http://foobar'
-    assert config.project_dirpath == tmp_path
+    config = load(tmp_path)
+    assert config.type == 'charm'
+    assert config.project.dirpath == tmp_path
 
 
-def test_fromfile_optional_charmcraft_missing(tmp_path):
+def test_load_optional_charmcraft_missing(tmp_path):
     """Specify a directory where the file is missing."""
-    config = Config.from_file(tmp_path)
-    default = _CharmhubConfig.__attrs_attrs__[0].default
-    assert config.charmhub.api_url == default
+    config = load(tmp_path)
+    assert config is None
 
 
-def test_fromfile_must_be_dict(tmp_path):
-    """The charmcraft.yaml content must be a dict."""
-    test_file = tmp_path / "charmcraft.yaml"
-    test_file.write_text("33")
-    with pytest.raises(CommandError) as cm:
-        Config.from_file(tmp_path)
-    assert str(cm.value) == "Invalid charmcraft.yaml structure: must be a dictionary."
+# -- tests for schema restrictions
+
+@pytest.fixture
+def check_schema_error(tmp_path):
+    """Helper to check the schema error."""
+    def check_schema_error(expected_msg):
+        with pytest.raises(CommandError) as cm:
+            load(tmp_path)
+        assert str(cm.value) == expected_msg
+    return check_schema_error
 
 
-def test_config_type_validation():
-    """The type of each value is verified."""
-    with pytest.raises(CommandError) as cm:
-        Config(charmhub='bad stuff')
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; the 'charmhub' field must be a dict: got 'str'.")
+def test_schema_type_mandatory(create_config, check_schema_error):
+    """Schema validation, type is mandatory."""
+    create_config("""
+        someconfig: None
+    """)
+    check_schema_error("Bad charmcraft.yaml content; missing fields: type.")
 
 
-def test_config_frozen():
-    """Cannot change values from the config."""
-    config = Config()
-    with pytest.raises(attr.exceptions.FrozenInstanceError):
-        config.charmhub = 'broken'
+def test_schema_type_bad_type(create_config, check_schema_error):
+    """Schema validation, type is a string."""
+    create_config("""
+        type: 33
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'type' field must be a string: got 'int'.")
+
+
+def test_schema_type_limited_values(create_config, check_schema_error):
+    """Schema validation, type must be a subset of values."""
+    create_config("""
+        type: whatever
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'type' field must be one of: 'charm', 'bundle'.")
+
+
+def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
+    """Schema validation, charmhub.api_url must be a string."""
+    create_config("""
+        type: charm  # mandatory
+        charmhub:
+            api_url: 33
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'charmhub.api_url' field must be a string: got 'int'.")
+
+
+def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
+    """Schema validation, charmhub.api_url must be a full URL."""
+    create_config("""
+        type: charm  # mandatory
+        charmhub:
+            api_url: stuff.com
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'charmhub.api_url' field must be a full URL (e.g. "
+        "'https://some.server.com'): got 'stuff.com'.")
+
+
+def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error):
+    """Schema validation, charmhub.storage_url must be a string."""
+    create_config("""
+        type: charm  # mandatory
+        charmhub:
+            storage_url: 33
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a string: "
+        "got 'int'.")
+
+
+def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_error):
+    """Schema validation, charmhub.storage_url must be a full URL."""
+    create_config("""
+        type: charm  # mandatory
+        charmhub:
+            storage_url: stuff.com
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a full URL (e.g. "
+        "'https://some.server.com'): got 'stuff.com'.")
+
+
+def test_schema_basicprime_bad_init_structure(create_config, check_schema_error):
+    """Schema validation, basic prime with bad parts."""
+    create_config("""
+        type: charm  # mandatory
+        parts: ['foo', 'bar']
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'parts' field must be a dict: got 'list'.")
+
+
+def test_schema_basicprime_bad_bundle_structure(create_config, check_schema_error):
+    """Instantiate charmhub using a bad structure."""
+    """Schema validation, basic prime with bad bundle."""
+    create_config("""
+        type: charm  # mandatory
+        parts:
+            bundle: ['foo', 'bar']
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'parts.bundle' field must be a dict: got 'list'.")
+
+
+def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error):
+    """Schema validation, basic prime with bad prime."""
+    create_config("""
+        type: charm  # mandatory
+        parts:
+            bundle:
+                prime: foo
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the 'parts.bundle.prime' field must be a list: got 'str'.")
 
 
 # -- tests for different validators
 
-
-@attr.s(kw_only=True)
-class FakeConfig:
-    """Helper with a simple field to be used to test validators."""
-    section = None
-    test_string = attr.ib(type=str, default='foo', validator=[_check_type])
-    test_url = attr.ib(type=str, default='http://localhost:0', validator=[_check_url])
-    test_typefield = attr.ib(default=None, validator=[_check_typefield])
-
-
-def test_type_ok():
-    """Type validation succeeds."""
-    FakeConfig(test_string='some ok string')
-
-
-def test_type_wrong_main_key():
-    """Type doesn't validate for a key in the main config."""
-    with pytest.raises(CommandError) as cm:
-        FakeConfig(test_string=33)
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; field 'test_string' must be a str: got 33.")
-
-
-def test_type_wrong_deep_key(monkeypatch):
-    """Type doesn't validate for a key under other section."""
-    monkeypatch.setattr(FakeConfig, 'section', 'testsection')
-    with pytest.raises(CommandError) as cm:
-        FakeConfig(test_string=33)
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; field 'testsection.test_string' must be a str: got 33.")
-
-
 def test_url_ok():
     """URL format is ok."""
-    FakeConfig(test_url='https://some.server.com')
+    assert _check_url('https://some.server.com')
 
 
 def test_url_no_scheme():
     """URL format is wrong, missing scheme."""
-    with pytest.raises(CommandError) as cm:
-        FakeConfig(test_url='some.server.com')
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; field 'test_url' must be a full URL (e.g. "
-        "'https://some.server.com'): got 'some.server.com'.")
+    with pytest.raises(ValueError) as cm:
+        _check_url('some.server.com')
+    assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
 
 
 def test_url_no_netloc():
     """URL format is wrong, missing network location."""
-    with pytest.raises(CommandError) as cm:
-        FakeConfig(test_url='https://')
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; field 'test_url' must be a full URL (e.g. "
-        "'https://some.server.com'): got 'https://'.")
-
-
-@pytest.mark.parametrize('field_value', ['charm', 'bundle', None])
-def test_typefield_ok(field_value):
-    """Type validation succeeds."""
-    FakeConfig(test_typefield=field_value)
-
-
-def test_typefield_badvalue():
-    """Wrong value."""
-    with pytest.raises(CommandError) as cm:
-        FakeConfig(test_typefield='whatever')
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; field 'test_typefield' (if present) must value "
-        "'charm' or 'bundle': got 'whatever'.")
+    with pytest.raises(ValueError) as cm:
+        _check_url('https://')
+    assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
 
 
 # -- tests for Charmhub config
@@ -167,48 +214,7 @@ def test_charmhub_frozen():
         config.api_url = 'broken'
 
 
-def test_charmhub_from_bad_structure():
-    """Instantiate charmhub using a bad structure."""
-    with pytest.raises(CommandError) as cm:
-        _CharmhubConfig.from_dict([1, 2])
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; the 'charmhub' field must be a dict: got 'list'.")
-
-
-def test_charmhub_from_dict_with_full_values():
-    """Instantiate charmhub config with all values from config."""
-    src = dict(api_url='http://api', storage_url='http://storage')
-    config = _CharmhubConfig.from_dict(src)
-    assert config.api_url == 'http://api'
-    assert config.storage_url == 'http://storage'
-
-
-def test_charmhub_from_dict_with_some_values():
-    """Instantiate charmhub config with some values from config."""
-    src = dict(api_url='http://api')
-    config = _CharmhubConfig.from_dict(src)
-    assert config.api_url == 'http://api'
-    assert config.storage_url == 'https://storage.staging.snapcraftcontent.com'
-
-
-def test_charmhub_from_dict_with_no_values():
-    """Instantiate charmhub config from empty config."""
-    config = _CharmhubConfig.from_dict({})
-    assert config.api_url == 'https://api.staging.charmhub.io'
-    assert config.storage_url == 'https://storage.staging.snapcraftcontent.com'
-
-
 # -- tests for BasicPrime config
-
-def test_basicprime_ok():
-    """A simple building ok."""
-    config = _BasicPrime.from_dict({
-        'bundle': {
-            'prime': ['foo', 'bar'],
-        }
-    })
-    assert config == ('foo', 'bar')
-
 
 def test_basicprime_frozen():
     """Cannot change values from the charmhub config."""
@@ -221,34 +227,14 @@ def test_basicprime_frozen():
         config[0] = 'broken'
 
 
-def test_basicprime_bad_init_structure():
-    """Instantiate charmhub using a bad structure."""
-    with pytest.raises(CommandError) as cm:
-        _BasicPrime.from_dict(['foo', 'bar'])
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; the 'parts' field must be a dict: got 'list'.")
-
-
-def test_basicprime_bad_bundle_structure():
-    """Instantiate charmhub using a bad structure."""
-    with pytest.raises(CommandError) as cm:
-        _BasicPrime.from_dict({
-            'bundle': ['foo', 'bar'],
-        })
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; the 'parts.bundle' field must be a dict: got 'list'.")
-
-
-def test_basicprime_bad_prime_structure():
-    """Instantiate charmhub using a bad structure."""
-    with pytest.raises(CommandError) as cm:
-        _BasicPrime.from_dict({
-            'bundle': {
-                'prime': 'foo',
-            }
-        })
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; the 'parts.bundle.prime' field must be a list: got 'str'.")
+def test_basicprime_ok():
+    """A simple building ok."""
+    config = _BasicPrime.from_dict({
+        'bundle': {
+            'prime': ['foo', 'bar'],
+        }
+    })
+    assert config == ('foo', 'bar')
 
 
 def test_basicprime_bad_paths():

@@ -76,7 +76,7 @@ def test_dispatcher_generic_setup_default():
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     logsetup.message_handler.mode = None
-    with patch('charmcraft.config.Config.from_file') as config_mock:
+    with patch('charmcraft.config.load') as config_mock:
         Dispatcher(['somecommand'], groups)
     assert logsetup.message_handler.mode is None
     config_mock.assert_called_once_with(None)
@@ -144,7 +144,7 @@ def test_dispatcher_generic_setup_from_with_param(options):
     """Generic parameter handling for 'from' with the param, directly or after the command."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
-    with patch('charmcraft.config.Config.from_file') as config_mock:
+    with patch('charmcraft.config.load') as config_mock:
         Dispatcher(options, groups)
     config_mock.assert_called_once_with('foobar')
 

@@ -1595,7 +1595,7 @@ def test_getlibinfo_libid_empty(tmp_path, monkeypatch):
 # -- tests for fetch libraries command
 
 def test_fetchlib_simple_downloaded(caplog, store_mock, tmp_path, monkeypatch):
-    """Happy path fetching the lib for first time (downloading it)."""
+    """Happy path fetching the lib for the first time (downloading it)."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
@@ -1655,7 +1655,7 @@ def test_fetchlib_simple_updated(caplog, store_mock, tmp_path, monkeypatch):
 
 
 def test_fetchlib_all(caplog, store_mock, tmp_path, monkeypatch):
-    """Publish all the libraries found in disk."""
+    """Update all the libraries found in disk."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 

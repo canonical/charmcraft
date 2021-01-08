@@ -211,6 +211,13 @@ class Store:
         result = _build_library(response)
         return result
 
+    def get_library(self, charm_name, lib_id, api):
+        """Get the library tip by id for a given api version."""
+        endpoint = '/v1/charm/libraries/{}/{}?api={}'.format(charm_name, lib_id, api)
+        response = self._client.get(endpoint)
+        result = _build_library(response)
+        return result
+
     def get_libraries_tips(self, libraries):
         """Get the tip details for several libraries at once.
 

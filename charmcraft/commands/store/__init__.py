@@ -827,6 +827,94 @@ class PublishLibCommand(BaseCommand):
                 lib_data.full_name, lib_data.api, lib_data.patch)
 
 
+class FetchLibCommand(BaseCommand):
+    """Fetch one or more charm libraries."""
+    name = 'fetch-lib'
+    help_msg = "Fetch one or more charm libraries"
+    overview = textwrap.dedent("""
+        Fetch charm libraries.
+
+        The first time a library is downloaded the command will create the needed
+        directories to place it, subsequent fetches will just update the local copy.
+    """)
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            'library', nargs='?',
+            help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        if parsed_args.library:
+            local_libs_data = [_get_lib_info(full_name=parsed_args.library)]
+        else:
+            local_libs_data = _get_libs_from_tree()
+
+        # get tips from the Store
+        store = Store()
+        to_query = []
+        for lib in local_libs_data:
+            if lib.lib_id is None:
+                item = dict(charm_name=lib.charm_name, lib_name=lib.lib_name)
+            else:
+                item = dict(lib_id=lib.lib_id)
+            item['api'] = lib.api
+            to_query.append(item)
+        libs_tips = store.get_libraries_tips(to_query)
+
+        # check if something needs to be done
+        to_fetch = []
+        for lib_data in local_libs_data:
+            logger.debug("Verifying local lib %s", lib_data)
+            # fix any missing lib id using the Store info
+            if lib_data.lib_id is None:
+                for tip in libs_tips.values():
+                    if lib_data.charm_name == tip.charm_name and lib_data.lib_name == tip.lib_name:
+                        lib_data = lib_data._replace(lib_id=tip.lib_id)
+                        break
+
+            tip = libs_tips.get((lib_data.lib_id, lib_data.api))
+            logger.debug("Store tip: %s", tip)
+            if tip is None:
+                logger.info("Library %s not found in Charmhub.", lib_data.full_name)
+                continue
+
+            if tip.patch > lib_data.patch:
+                # the store has a higher version than local
+                to_fetch.append(lib_data)
+            elif tip.patch < lib_data.patch:
+                # the store has a lower version numbers than local
+                logger.info(
+                    "Library %s has local changes, can not be updated.", lib_data.full_name)
+            else:
+                # same versions locally and in the store
+                if tip.content_hash == lib_data.content_hash:
+                    logger.info(
+                        "Library %s was already up to date in version %d.%d.",
+                        lib_data.full_name, tip.api, tip.patch)
+                else:
+                    logger.info(
+                        "Library %s has local changes, can not be updated.", lib_data.full_name)
+
+        for lib_data in to_fetch:
+            downloaded = store.get_library(lib_data.charm_name, lib_data.lib_id, lib_data.api)
+            if lib_data.content is None:
+                # locally new
+                lib_data.path.parent.mkdir(parents=True, exist_ok=True)
+                lib_data.path.write_text(downloaded.content)
+                logger.info(
+                    "Library %s version %d.%d downloaded.",
+                    lib_data.full_name, downloaded.api, downloaded.patch)
+            else:
+                # XXX Facundo 2020-12-17: manage the case where the library was renamed
+                # (related GH issue: #214)
+                lib_data.path.write_text(downloaded.content)
+                logger.info(
+                    "Library %s updated to version %d.%d.",
+                    lib_data.full_name, downloaded.api, downloaded.patch)
+
+
 class ListLibCommand(BaseCommand):
     """List all libraries belonging to a charm."""
     name = 'list-lib'

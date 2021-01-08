@@ -520,6 +520,41 @@ def test_create_library_revision(client_mock):
     assert result_lib.patch == test_patch
 
 
+def test_get_library(client_mock):
+    """Get all the information (including content) for a library revision."""
+    test_charm_name = 'test-charm-name'
+    test_lib_name = 'test-lib-name'
+    test_lib_id = 'test-lib-id'
+    test_api = 'test-api-version'
+    test_patch = 'test-patch-version'
+    test_content = 'test content with quite a lot of funny Python code :p'
+    test_hash = '1234'
+
+    store = Store()
+    client_mock.get.return_value = {
+        'api': test_api,
+        'content': test_content,
+        'hash': test_hash,
+        'library-id': test_lib_id,
+        'library-name': test_lib_name,
+        'charm-name': test_charm_name,
+        'patch': test_patch,
+    }
+
+    result_lib = store.get_library(test_charm_name, test_lib_id, test_api)
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/libraries/test-charm-name/{}?api={}'.format(test_lib_id, test_api)),
+    ]
+    assert result_lib.api == test_api
+    assert result_lib.content == test_content
+    assert result_lib.content_hash == test_hash
+    assert result_lib.lib_id == test_lib_id
+    assert result_lib.lib_name == test_lib_name
+    assert result_lib.charm_name == test_charm_name
+    assert result_lib.patch == test_patch
+
+
 def test_get_tips_simple(client_mock):
     """Get info for a lib, simple case with successful result."""
     test_charm_name = 'test-charm-name'

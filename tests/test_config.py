@@ -16,6 +16,7 @@
 
 import attr
 import pytest
+import sys
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
@@ -24,6 +25,10 @@ from charmcraft.config import (
     _check_url,
     load,
 )
+
+# Decide if we're using a Python 3.5 or older to support a jsonschema detail that uses
+# randomly ordered dictionaries
+is_py35 = (sys.version_info.major, sys.version_info.minor) < (3, 6)
 
 
 @pytest.fixture
@@ -70,10 +75,16 @@ def test_load_optional_charmcraft_missing(tmp_path):
 @pytest.fixture
 def check_schema_error(tmp_path):
     """Helper to check the schema error."""
-    def check_schema_error(expected_msg):
+    def check_schema_error(*expected_msgs):
+        """The real checker.
+
+        Note this compares for multiple messages, as for Python 3.5 we don't have control on
+        which of the verifications it will fail. After 3.5 is dropped this could be changed
+        to receive only one message and compare with equality below, not inclusion.
+        """
         with pytest.raises(CommandError) as cm:
             load(tmp_path)
-        assert str(cm.value) == expected_msg
+        assert str(cm.value) in expected_msgs
     return check_schema_error
 
 
@@ -82,7 +93,13 @@ def test_schema_type_mandatory(create_config, check_schema_error):
     create_config("""
         someconfig: None
     """)
-    check_schema_error("Bad charmcraft.yaml content; missing fields: type.")
+    if is_py35:
+        check_schema_error(
+            "Bad charmcraft.yaml content; missing fields: type.",
+            "Bad charmcraft.yaml content; the 'type' field must be one of: 'charm', 'bundle'.",
+        )
+    else:
+        check_schema_error("Bad charmcraft.yaml content; missing fields: type.")
 
 
 def test_schema_type_bad_type(create_config, check_schema_error):
@@ -90,8 +107,14 @@ def test_schema_type_bad_type(create_config, check_schema_error):
     create_config("""
         type: 33
     """)
-    check_schema_error(
-        "Bad charmcraft.yaml content; the 'type' field must be a string: got 'int'.")
+    if is_py35:
+        check_schema_error(
+            "Bad charmcraft.yaml content; the 'type' field must be a string: got 'int'.",
+            "Bad charmcraft.yaml content; the 'type' field must be one of: 'charm', 'bundle'.",
+        )
+    else:
+        check_schema_error(
+            "Bad charmcraft.yaml content; the 'type' field must be a string: got 'int'.")
 
 
 def test_schema_type_limited_values(create_config, check_schema_error):
@@ -110,8 +133,17 @@ def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
         charmhub:
             api_url: 33
     """)
-    check_schema_error(
-        "Bad charmcraft.yaml content; the 'charmhub.api_url' field must be a string: got 'int'.")
+    if is_py35:
+        check_schema_error(
+            ("Bad charmcraft.yaml content; the 'charmhub.api_url' field must be a string: "
+                "got 'int'."),
+            ("Bad charmcraft.yaml content; the 'charmhub.api_url' field must be a full "
+                "URL (e.g. 'https://some.server.com'): got 33."),
+        )
+    else:
+        check_schema_error(
+            "Bad charmcraft.yaml content; the 'charmhub.api_url' field must be a string: "
+            "got 'int'.")
 
 
 def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
@@ -133,9 +165,17 @@ def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error)
         charmhub:
             storage_url: 33
     """)
-    check_schema_error(
-        "Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a string: "
-        "got 'int'.")
+    if is_py35:
+        check_schema_error(
+            ("Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a string: "
+                "got 'int'."),
+            ("Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a full "
+                "URL (e.g. 'https://some.server.com'): got 33."),
+        )
+    else:
+        check_schema_error(
+            "Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a string: "
+            "got 'int'.")
 
 
 def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_error):

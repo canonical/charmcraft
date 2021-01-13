@@ -142,6 +142,7 @@ CONFIG_SCHEMA = {
         },
     },
     'required': ['type'],
+    'additionalProperties': False,
 }
 
 

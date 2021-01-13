@@ -88,6 +88,15 @@ def check_schema_error(tmp_path):
     return check_schema_error
 
 
+def test_schema_no_extra_properties(create_config, check_schema_error):
+    """Schema validation, can not add undefined properties."""
+    create_config("""
+        type: bundle
+        whatever: new-stuff
+    """)
+    check_schema_error("Additional properties are not allowed ('whatever' was unexpected)")
+
+
 def test_schema_type_mandatory(create_config, check_schema_error):
     """Schema validation, type is mandatory."""
     create_config("""

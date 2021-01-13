@@ -97,7 +97,7 @@ def test_executables(tmp_path):
 def test_tests(tmp_path):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
     # virtualenv libs and bins (if any), as they need them, but we're not creating a
-    # venv for the tests (note that for CI doesn't use a venv, so this is for local tests)
+    # venv for the local tests (note that for CI doesn't use a venv)
     env = os.environ.copy()
     env_paths = [p for p in sys.path if 'env/lib/python' in p]
     if env_paths:

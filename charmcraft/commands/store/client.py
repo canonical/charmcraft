@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -196,7 +196,7 @@ class Client:
         return "Store failure! " + "; ".join(messages)
 
     def _hit(self, method, urlpath, body=None):
-        """Generic hit to the Store."""
+        """Issue a request to the Store."""
         url = API_BASE_URL + urlpath
         logger.debug("Hitting the store: %s %s %s", method, url, body)
         resp = self._auth_client.request(method, url, body)

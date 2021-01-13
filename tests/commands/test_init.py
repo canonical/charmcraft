@@ -25,7 +25,14 @@ import yaml
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
 from charmcraft.utils import S_IXALL
-from tests.test_infra import pep8_test, get_python_filepaths
+from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
+
+
+def test_init_pep257(tmp_path):
+    cmd = InitCommand('group')
+    cmd.run(Namespace(path=tmp_path, name='my-charm', author='J Doe', series='k8s', force=False))
+    paths = get_python_filepaths(roots=[str(tmp_path / "src")], python_paths=[])
+    pep257_test(paths)
 
 
 def test_init_pep8(tmp_path, *, author="J Doe"):

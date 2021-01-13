@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Indicate which files are ignored by Juju."""
+
 import logging
 import re
 import typing
@@ -23,7 +25,6 @@ logger = logging.getLogger(__name__)
 KEEP = 'keep'
 SKIP = 'skip'
 FORCEKEEP = 'forcekeep'
-
 
 _unescapes = {
     r'\!': '!',
@@ -50,7 +51,7 @@ def _rstrip_unescaped(rule):
 
 
 def _unescape_rule(rule):
-    """Take out escape characters and trailing unescaped whitespace from the rule"""
+    """Take out escape characters and trailing unescaped whitespace from the rule."""
     rule = rule.lstrip()
     rule = _rstrip_unescaped(rule)
     for old, new in _unescapes.items():
@@ -130,7 +131,7 @@ class _Matcher:
         self.compiled = re.compile(regex, re.DOTALL)
 
     def match(self, path: str, is_dir: bool) -> str:
-        """Checks if a path matches.
+        """Check if a path matches.
 
         Returns:
             Can return one of KEEP, SKIP, FORCEKEEP

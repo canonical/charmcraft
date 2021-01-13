@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Main entry point module for all the tool functionality."""
 
 import argparse
 import logging
@@ -33,6 +34,7 @@ class HelpCommand(BaseCommand):
     It bends the rules for parameters (we have an optional parameter without dashes), the
     idea is to lower the barrier as much as possible for the user getting help.
     """
+
     name = 'help'
     help_msg = "Provide help on charmcraft usage"
     overview = "Produce a general or a detailed charmcraft help, or a specific command one."
@@ -249,7 +251,7 @@ class Dispatcher:
 
 
 def main(argv=None):
-    """Main entry point."""
+    """Provide the main entry point."""
     message_handler.init(message_handler.NORMAL)
 
     if argv is None:

@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Manage the charmcraft tool versioning."""
+
 import subprocess
 from pathlib import Path
 
@@ -21,6 +23,7 @@ _FALLBACK = '0.7.0'  # this gets bumped after release
 
 
 def _get_version():
+    """Build a version string from git cvs."""
     version = _FALLBACK + ".dev0+unknown"
 
     p = Path(__file__).parent

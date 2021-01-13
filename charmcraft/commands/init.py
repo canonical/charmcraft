@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ from pathlib import Path
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from .utils import make_executable, get_templates_environment
+from charmcraft.utils import make_executable, get_templates_environment
 
 logger = logging.getLogger(__name__)
 

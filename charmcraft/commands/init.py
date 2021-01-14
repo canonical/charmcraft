@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Infrastructure for the 'init' command."""
+
 import logging
 import os
 import pwd
@@ -24,7 +26,7 @@ from pathlib import Path
 import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from .utils import make_executable, get_templates_environment
+from charmcraft.utils import make_executable, get_templates_environment
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +62,14 @@ example tests with a harness to run them.
 
 class InitCommand(BaseCommand):
     """Initialize a directory to be a charm project."""
+
     name = "init"
     help_msg = "Initialize a charm operator package tree and files"
     overview = _overview
     common = True
 
     def fill_parser(self, parser):
+        """Specify command's specific parameters."""
         parser.add_argument(
             "--project-dir", type=Path, default=Path("."), metavar="DIR", dest="path",
             help="The directory to initialize. Must be empty, or not exist; defaults to '.'")
@@ -84,6 +88,7 @@ class InitCommand(BaseCommand):
             help="Initialize even if the directory is not empty (will not overwrite files)")
 
     def run(self, args):
+        """Execute command's actual functionality."""
         args.path = args.path.resolve()
         if args.path.exists():
             if not args.path.is_dir():

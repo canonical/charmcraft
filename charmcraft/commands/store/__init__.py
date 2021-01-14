@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.commands.utils import get_templates_environment
+from charmcraft.utils import get_templates_environment
 
 from .store import Store
 
@@ -53,6 +53,7 @@ def get_name_from_metadata():
 
 class LoginCommand(BaseCommand):
     """Login to Charmhub."""
+
     name = 'login'
     help_msg = "Login to Charmhub"
     overview = textwrap.dedent("""
@@ -78,6 +79,7 @@ class LoginCommand(BaseCommand):
 
 class LogoutCommand(BaseCommand):
     """Clear Charmhub token."""
+
     name = 'logout'
     help_msg = "Logout from Charmhub and remove token"
     overview = textwrap.dedent("""
@@ -101,6 +103,7 @@ class LogoutCommand(BaseCommand):
 
 class WhoamiCommand(BaseCommand):
     """Show login information."""
+
     name = 'whoami'
     help_msg = "Show your Charmhub login status"
     overview = textwrap.dedent("""
@@ -126,6 +129,7 @@ class WhoamiCommand(BaseCommand):
 
 class RegisterNameCommand(BaseCommand):
     """Register a name in Charmhub."""
+
     name = 'register'
     help_msg = "Register a charm name in Charmhub"
     overview = textwrap.dedent("""
@@ -163,7 +167,8 @@ class RegisterNameCommand(BaseCommand):
 
 
 class ListNamesCommand(BaseCommand):
-    """List the charms registered in Charmhub"""
+    """List the charms registered in Charmhub."""
+
     name = 'names'
     help_msg = "List your registered charm names in Charmhub"
     overview = textwrap.dedent("""
@@ -207,6 +212,7 @@ class ListNamesCommand(BaseCommand):
 
 class UploadCommand(BaseCommand):
     """Upload a charm to Charmhub."""
+
     name = 'upload'
     help_msg = "Upload a charm to Charmhub"
     overview = textwrap.dedent("""
@@ -284,6 +290,7 @@ class UploadCommand(BaseCommand):
 
 class ListRevisionsCommand(BaseCommand):
     """List revisions for a charm."""
+
     name = 'revisions'
     help_msg = "List revisions for a charm in Charmhub"
     overview = textwrap.dedent("""
@@ -345,6 +352,7 @@ class ListRevisionsCommand(BaseCommand):
 
 class ReleaseCommand(BaseCommand):
     """Release a charm revision to specific channels."""
+
     name = 'release'
     help_msg = "Release a charm revision in one or more channels"
     overview = textwrap.dedent("""
@@ -408,6 +416,7 @@ class ReleaseCommand(BaseCommand):
 
 class StatusCommand(BaseCommand):
     """Show channel status for a charm."""
+
     name = 'channels'
     help_msg = "Show channel and released revisions"
     overview = textwrap.dedent("""
@@ -522,6 +531,7 @@ class StatusCommand(BaseCommand):
 
 class _BadLibraryPathError(CommandError):
     """Subclass to provide a specific error for a bad library path."""
+
     def __init__(self, path):
         super().__init__(
             "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
@@ -530,6 +540,7 @@ class _BadLibraryPathError(CommandError):
 
 class _BadLibraryNameError(CommandError):
     """Subclass to provide a specific error for a bad library name."""
+
     def __init__(self, name):
         super().__init__(
             "Charm library name {!r} must conform to charms.<charm>.vN.<libname>"
@@ -664,6 +675,7 @@ def _get_libs_from_tree(charm_name=None):
 
 class CreateLibCommand(BaseCommand):
     """Create a charm library."""
+
     name = 'create-lib'
     help_msg = "Create a charm library"
     overview = textwrap.dedent("""
@@ -737,6 +749,7 @@ class CreateLibCommand(BaseCommand):
 
 class PublishLibCommand(BaseCommand):
     """Publish one or more charm libraries."""
+
     name = 'publish-lib'
     help_msg = "Publish one or more charm libraries"
     overview = textwrap.dedent("""
@@ -829,6 +842,7 @@ class PublishLibCommand(BaseCommand):
 
 class FetchLibCommand(BaseCommand):
     """Fetch one or more charm libraries."""
+
     name = 'fetch-lib'
     help_msg = "Fetch one or more charm libraries"
     overview = textwrap.dedent("""
@@ -917,6 +931,7 @@ class FetchLibCommand(BaseCommand):
 
 class ListLibCommand(BaseCommand):
     """List all libraries belonging to a charm."""
+
     name = 'list-lib'
     help_msg = "List all libraries from a charm"
     overview = textwrap.dedent("""

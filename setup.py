@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+
+"""Setup script for Charmcraft."""
 
 from pathlib import Path
 from textwrap import dedent

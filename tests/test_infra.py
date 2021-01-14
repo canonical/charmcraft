@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import re
 import subprocess
 from unittest.mock import patch
 
+import pydocstyle
 import pytest
 from flake8.api.legacy import get_style_guide
 
@@ -47,6 +48,7 @@ def test_pep8():
 
 
 def pep8_test(python_filepaths):
+    """Helper to check PEP8 (used from this module and from test_init.py to check templates)."""
     style_guide = get_style_guide()
     fake_stdout = io.StringIO()
     with patch('sys.stdout', fake_stdout):
@@ -61,6 +63,27 @@ def pep8_test(python_filepaths):
 
     if flake8_issues:
         msg = "Please fix the following flake8 issues!\n" + "\n".join(flake8_issues)
+        pytest.fail(msg, pytrace=False)
+
+
+def test_pep257():
+    """Verify all files have nice docstrings."""
+    pep257_test(get_python_filepaths(roots=['charmcraft']))
+
+
+def pep257_test(python_filepaths):
+    """Helper to check PEP257 (used from this module and from test_init.py to check templates)."""
+    to_ignore = {
+        'D105',  # Missing docstring in magic method
+        'D107',  # Missing docstring in __init__
+    }
+    to_include = pydocstyle.violations.conventions.pep257 - to_ignore
+    errors = list(pydocstyle.check(python_filepaths, select=to_include))
+
+    if errors:
+        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
+        report.extend(str(e) for e in errors)
+        msg = '\n'.join(report)
         pytest.fail(msg, pytrace=False)
 
 

@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+
+"""Infrastructure for common base commands functionality."""
 
 
 class CommandError(Exception):
@@ -58,7 +60,7 @@ class BaseCommand:
         self.group = group
 
     def fill_parser(self, parser):
-        """This is called to have the command to specify its specific parameters.
+        """Specify command's specific parameters.
 
         Each command parameters are independant of other commands, but note there are some
         global ones (see `main.Dispatcher._build_argument_parser`).
@@ -67,7 +69,7 @@ class BaseCommand:
         """
 
     def run(self, parsed_args):
-        """This is called for the command to actually execute.
+        """Execute command's actual functionality.
 
         It must be overridden by the command implementation.
 

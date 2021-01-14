@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Infrastructure for the 'build' command."""
 
 import errno
 import logging
@@ -27,7 +28,7 @@ import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
-from .utils import make_executable
+from charmcraft.utils import make_executable
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ HOOKS_DIR = 'hooks'
 
 
 def _pip_needs_system():
-    """Determines whether pip3 defaults to --user, needing --system to turn it off."""
+    """Determine whether pip3 defaults to --user, needing --system to turn it off."""
     try:
         from pip.commands.install import InstallCommand
         return InstallCommand().cmd_opts.get_option('--system') is not None
@@ -98,7 +99,7 @@ class Builder:
         self.ignore_rules = self._load_juju_ignore()
 
     def run(self):
-        """Main building process."""
+        """Build the charm."""
         logger.debug("Building charm in '%s'", self.buildpath)
 
         if self.buildpath.exists():
@@ -367,6 +368,7 @@ See `charmcraft init` to create a template charm directory structure.
 
 class BuildCommand(BaseCommand):
     """Build the charm."""
+
     name = 'build'
     help_msg = "Build the charm"
     overview = _overview

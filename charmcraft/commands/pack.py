@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,14 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Infrastructure for the 'pack' command."""
+
 import logging
 import pathlib
 import zipfile
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from .utils import load_yaml
+from charmcraft.utils import load_yaml
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +81,7 @@ class PackCommand(BaseCommand):
     Eventually this command will also support charms, but for now it will work only
     on bundles.
     """
+
     name = 'pack'
     help_msg = "Build the bundle"
     overview = _overview

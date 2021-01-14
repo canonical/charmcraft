@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 import logging
 import os
+import platform
 import webbrowser
 from http.cookiejar import MozillaCookieJar
 
@@ -46,9 +47,10 @@ STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com'
 
 def build_user_agent():
     """Build the charmcraft's user agent."""
-    # XXX Facundo 2020-06-29: we need to include here at least the platform, maybe
-    # architecture, etc. Related: issue #74.
-    return "charmcraft/{}".format(__version__)
+    return "charmcraft/{} ({}; {}) python/{}".format(__version__,
+                                                     platform.system(),
+                                                     platform.machine(),
+                                                     platform.python_version())
 
 
 def visit_page_with_browser(visit_url):

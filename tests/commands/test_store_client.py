@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,9 +42,13 @@ from charmcraft.commands.store.client import (
 # --- General tests
 
 def test_useragent():
-    with patch('charmcraft.commands.store.client.__version__', '1.2.3'):
+    """Construct a user-agent for requests."""
+    with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
+            patch('platform.system', return_value='Linux'), \
+            patch('platform.machine', return_value='x86_64'), \
+            patch('platform.python_version', return_value='3.9.1'):
         ua = build_user_agent()
-    assert ua == "charmcraft/1.2.3"
+    assert ua == "charmcraft/1.2.3 (Linux; x86_64) python/3.9.1"
 
 
 # --- AuthHolder tests

@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+
+"""Collection of utilities for charmcraft."""
 
 import logging
 import os
@@ -30,7 +32,7 @@ S_IRALL = S_IRUSR | S_IRGRP | S_IROTH
 
 
 def make_executable(fh):
-    """make open file fh executable"""
+    """Make open file fh executable."""
     fileno = fh.fileno()
     mode = os.fstat(fileno).st_mode
     mode_r = mode & S_IRALL

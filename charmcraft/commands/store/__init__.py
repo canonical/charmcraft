@@ -866,7 +866,7 @@ class FetchLibCommand(BaseCommand):
             local_libs_data = _get_libs_from_tree()
 
         # get tips from the Store
-        store = Store()
+        store = Store(self.config.charmhub)
         to_query = []
         for lib in local_libs_data:
             if lib.lib_id is None:

@@ -70,6 +70,7 @@ def _check_url(value):
 @attr.s(kw_only=True, frozen=True)
 class _CharmhubConfig:
     """Configuration for all Charmhub related options."""
+
     api_url = attr.ib(default='https://api.staging.charmhub.io')
     storage_url = attr.ib(default='https://storage.staging.snapcraftcontent.com')
 
@@ -84,6 +85,7 @@ class _BasicPrime(tuple):
 
     This is a intermediate structure until we have the full Lifecycle in place.
     """
+
     @classmethod
     def from_dict(cls, parts):
         """Build from a dicts sequence."""
@@ -103,12 +105,14 @@ class _BasicPrime(tuple):
 @attr.s(kw_only=True, frozen=True)
 class _Project:
     """Configuration for all project-related options, used internally."""
+
     dirpath = attr.ib(default=None)
 
 
 @attr.s(kw_only=True, frozen=True)
 class _Config:
     """Root of all the configuration."""
+
     charmhub = attr.ib(default={}, converter=_CharmhubConfig.from_dict)
     parts = attr.ib(default={}, converter=_BasicPrime.from_dict)
     type = attr.ib()

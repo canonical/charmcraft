@@ -197,7 +197,7 @@ class Client:
         return "Store failure! " + "; ".join(messages)
 
     def _hit(self, method, urlpath, body=None):
-        """Generic hit to the Store."""
+        """Issue a request to the Store."""
         url = self.api_base_url + urlpath
         logger.debug("Hitting the store: %s %s %s", method, url, body)
         resp = self._auth_client.request(method, url, body)

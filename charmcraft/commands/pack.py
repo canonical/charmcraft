@@ -14,6 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Infrastructure for the 'pack' command."""
+
 import logging
 import zipfile
 
@@ -70,6 +72,7 @@ class PackCommand(BaseCommand):
     Eventually this command will also support charms, but for now it will work only
     on bundles.
     """
+
     name = 'pack'
     help_msg = "Build the bundle"
     overview = _overview

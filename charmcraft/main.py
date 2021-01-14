@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Main entry point module for all the tool functionality."""
 
 import argparse
 import logging
@@ -34,6 +35,7 @@ class HelpCommand(BaseCommand):
     It bends the rules for parameters (we have an optional parameter without dashes), the
     idea is to lower the barrier as much as possible for the user getting help.
     """
+
     name = 'help'
     help_msg = "Provide help on charmcraft usage"
     overview = "Produce a general or a detailed charmcraft help, or a specific command one."
@@ -94,6 +96,7 @@ COMMAND_GROUPS = [
         store.ReleaseCommand, store.StatusCommand,
         # libraries support
         store.CreateLibCommand, store.PublishLibCommand, store.ListLibCommand,
+        store.FetchLibCommand,
     ]),
 ]
 
@@ -186,6 +189,7 @@ class Dispatcher:
         parser = CustomArgumentParser(prog=cmd.name)
         cmd.fill_parser(parser)
         parsed_args = parser.parse_args(cmd_args)
+        logger.debug("Command parsed sysargs: %s", parsed_args)
 
         return cmd, parsed_args
 
@@ -279,7 +283,7 @@ class Dispatcher:
 
 
 def main(argv=None):
-    """Main entry point."""
+    """Provide the main entry point."""
     message_handler.init(message_handler.NORMAL)
 
     if argv is None:

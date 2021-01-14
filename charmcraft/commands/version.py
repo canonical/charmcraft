@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+"""Infrastructure for the 'version' command."""
 
 import logging
 
@@ -44,6 +45,7 @@ Example: 0.3.1+40.g883455b.dirty
 
 class VersionCommand(BaseCommand):
     """Show the charmcraft version."""
+
     name = 'version'
     help_msg = "Show charmcraft version"
     overview = _overview

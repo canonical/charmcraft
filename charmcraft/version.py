@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Manage the charmcraft tool versioning."""
+
 import subprocess
 from pathlib import Path
 
 __all__ = ('version',)
 
-_FALLBACK = '0.6.1'  # this gets bumped after release
+_FALLBACK = '0.7.0'  # this gets bumped after release
 
 
 def _get_version():
+    """Build a version string from git cvs."""
     version = _FALLBACK + ".dev0+unknown"
 
     p = Path(__file__).parent

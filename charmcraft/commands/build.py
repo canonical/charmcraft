@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
-from .utils import make_executable
+from charmcraft.utils import make_executable
 
 logger = logging.getLogger(__name__)
 

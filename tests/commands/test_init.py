@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import yaml
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
-from charmcraft.commands.utils import S_IXALL
+from charmcraft.utils import S_IXALL
 from tests.test_infra import pep8_test, get_python_filepaths
 
 
@@ -95,9 +95,9 @@ def test_executables(tmp_path):
 
 
 def test_tests(tmp_path):
-    # fix the PYTHONPATH so the tests in the initted environment use our own
-    # virtualenv (if any), as they need one, but we're not creating one for them; note
-    # that for CI this normally doesn't run under a venv, so this may fix nothing
+    # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
+    # virtualenv libs and bins (if any), as they need them, but we're not creating a
+    # venv for the local tests (note that for CI doesn't use a venv)
     env = os.environ.copy()
     env_paths = [p for p in sys.path if 'env/lib/python' in p]
     if env_paths:
@@ -105,6 +105,9 @@ def test_tests(tmp_path):
             env['PYTHONPATH'] += ':' + ':'.join(env_paths)
         else:
             env['PYTHONPATH'] = ':'.join(env_paths)
+        for path in env_paths:
+            bin_path = path[:path.index('env/lib/python')] + 'env/bin'
+            env['PATH'] = bin_path + ':' + env['PATH']
 
     cmd = InitCommand('group')
     cmd.run(Namespace(path=tmp_path, name='my-charm', author="だれだれ", series='k8s',

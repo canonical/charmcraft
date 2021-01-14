@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.commands.utils import get_templates_environment
+from charmcraft.utils import get_templates_environment
 
 from .store import Store
 

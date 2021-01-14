@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 import logging
 
-from charmcraft.commands.utils import make_executable, load_yaml
+from charmcraft.utils import make_executable, load_yaml
 
 
 def test_make_executable_read_bits(tmp_path):

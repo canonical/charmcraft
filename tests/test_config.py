@@ -88,8 +88,8 @@ def check_schema_error(tmp_path):
     return check_schema_error
 
 
-def test_schema_no_extra_properties(create_config, check_schema_error):
-    """Schema validation, can not add undefined properties."""
+def test_schema_top_level_no_extra_properties(create_config, check_schema_error):
+    """Schema validation, can not add undefined properties at the top level."""
     create_config("""
         type: bundle
         whatever: new-stuff
@@ -100,7 +100,8 @@ def test_schema_no_extra_properties(create_config, check_schema_error):
 def test_schema_type_mandatory(create_config, check_schema_error):
     """Schema validation, type is mandatory."""
     create_config("""
-        someconfig: None
+        charmhub:
+            storage_url: https://some.server.com
     """)
     if is_py35:
         check_schema_error(
@@ -197,6 +198,17 @@ def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_erro
     check_schema_error(
         "Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a full URL (e.g. "
         "'https://some.server.com'): got 'stuff.com'.")
+
+
+def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
+    """Schema validation, can not add undefined properties in charmhub key."""
+    create_config("""
+        type: bundle
+        charmhub:
+            storage_url: https://some.server.com
+            crazy: false
+    """)
+    check_schema_error("Additional properties are not allowed ('crazy' was unexpected)")
 
 
 def test_schema_basicprime_bad_init_structure(create_config, check_schema_error):

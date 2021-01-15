@@ -132,6 +132,7 @@ CONFIG_SCHEMA = {
                 'api_url': {'type': 'string', 'format': 'url'},
                 'storage_url': {'type': 'string', 'format': 'url'},
             },
+            'additionalProperties': False,
         },
         'parts': {
             'type': 'object',

@@ -58,7 +58,7 @@ def adapt_validation_error(error):
 
 
 @format_checker.checks('url', raises=ValueError)
-def _check_url(value):
+def check_url(value):
     """Check that the URL has at least scheme and net location."""
     if isinstance(value, str):
         url = urlparse(value)
@@ -68,7 +68,7 @@ def _check_url(value):
 
 
 @attr.s(kw_only=True, frozen=True)
-class _CharmhubConfig:
+class CharmhubConfig:
     """Configuration for all Charmhub related options."""
 
     api_url = attr.ib(default='https://api.staging.charmhub.io')
@@ -80,7 +80,7 @@ class _CharmhubConfig:
         return cls(**source)
 
 
-class _BasicPrime(tuple):
+class BasicPrime(tuple):
     """Hold the list of files to include, specified under parts/bundle/prime configs.
 
     This is a intermediate structure until we have the full Lifecycle in place.
@@ -103,18 +103,18 @@ class _BasicPrime(tuple):
 
 
 @attr.s(kw_only=True, frozen=True)
-class _Project:
+class Project:
     """Configuration for all project-related options, used internally."""
 
     dirpath = attr.ib(default=None)
 
 
 @attr.s(kw_only=True, frozen=True)
-class _Config:
+class Config:
     """Root of all the configuration."""
 
-    charmhub = attr.ib(default={}, converter=_CharmhubConfig.from_dict)
-    parts = attr.ib(default={}, converter=_BasicPrime.from_dict)
+    charmhub = attr.ib(default={}, converter=CharmhubConfig.from_dict)
+    parts = attr.ib(default={}, converter=BasicPrime.from_dict)
     type = attr.ib()
 
     # this item is provided by the code itself, not the user, as convenience for the
@@ -170,6 +170,6 @@ def load(dirpath):
         adapt_validation_error(exc)
 
     # inject project's config
-    content['project'] = _Project(dirpath=dirpath)
+    content['project'] = Project(dirpath=dirpath)
 
-    return _Config(**content)
+    return Config(**content)

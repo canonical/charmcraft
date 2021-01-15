@@ -20,9 +20,9 @@ import sys
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
-    _BasicPrime,
-    _CharmhubConfig,
-    _check_url,
+    BasicPrime,
+    CharmhubConfig,
+    check_url,
     load,
 )
 
@@ -237,20 +237,20 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
 
 def test_url_ok():
     """URL format is ok."""
-    assert _check_url('https://some.server.com')
+    assert check_url('https://some.server.com')
 
 
 def test_url_no_scheme():
     """URL format is wrong, missing scheme."""
     with pytest.raises(ValueError) as cm:
-        _check_url('some.server.com')
+        check_url('some.server.com')
     assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
 
 
 def test_url_no_netloc():
     """URL format is wrong, missing network location."""
     with pytest.raises(ValueError) as cm:
-        _check_url('https://')
+        check_url('https://')
     assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
 
 
@@ -258,7 +258,7 @@ def test_url_no_netloc():
 
 def test_charmhub_frozen():
     """Cannot change values from the charmhub config."""
-    config = _CharmhubConfig()
+    config = CharmhubConfig()
     with pytest.raises(attr.exceptions.FrozenInstanceError):
         config.api_url = 'broken'
 
@@ -267,7 +267,7 @@ def test_charmhub_frozen():
 
 def test_basicprime_frozen():
     """Cannot change values from the charmhub config."""
-    config = _BasicPrime.from_dict({
+    config = BasicPrime.from_dict({
         'bundle': {
             'prime': ['foo', 'bar'],
         }
@@ -278,7 +278,7 @@ def test_basicprime_frozen():
 
 def test_basicprime_ok():
     """A simple building ok."""
-    config = _BasicPrime.from_dict({
+    config = BasicPrime.from_dict({
         'bundle': {
             'prime': ['foo', 'bar'],
         }
@@ -289,7 +289,7 @@ def test_basicprime_ok():
 def test_basicprime_bad_paths():
     """Indicated paths must be relative."""
     with pytest.raises(CommandError) as cm:
-        _BasicPrime.from_dict({
+        BasicPrime.from_dict({
             'bundle': {
                 'prime': ['foo', '/tmp/bar'],
             }

@@ -254,9 +254,16 @@ def test_schema_basicprime_bad_content_type(create_config, check_schema_error):
             bundle:
                 prime: [33, 'foo']
     """)
-    check_schema_error(
-        "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be a string: "
-        "got 'int'.")
+    if is_py35:
+        check_schema_error(
+            ("Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
+                "a string: got 'int'."),
+            ("Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
+                "a valid relative URL: got 33."))
+    else:
+        check_schema_error(
+            "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
+            "a string: got 'int'.")
 
 
 def test_schema_basicprime_bad_content_format(create_config, check_schema_error):
@@ -270,6 +277,7 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
     check_schema_error(
         "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
         "a valid relative URL: got '/bar/foo'.")
+
 
 # -- tests for different validators
 
@@ -358,29 +366,3 @@ def test_basicprime_empty():
         }
     })
     assert config == ()
-
-
-#def test_basicprime_bad_paths():
-#    """Indicated paths must be relative."""
-#    with pytest.raises(CommandError) as cm:
-#        BasicPrime.from_dict({
-#            'bundle': {
-#                'prime': ['foo', '/tmp/bar'],
-#            }
-#        })
-#    assert str(cm.value) == (
-#        "Bad charmcraft.yaml content; the paths specifications in 'parts.bundle.prime' "
-#        "must be relative: found '/tmp/bar'.")
-#
-#
-#def test_basicprime_with_empty_paths():
-#    """Indicated paths must be relative."""
-#    with pytest.raises(CommandError) as cm:
-#        BasicPrime.from_dict({
-#            'bundle': {
-#                'prime': ['', '/tmp/bar'],
-#            }
-#        })
-#    assert str(cm.value) == (
-#        "Bad charmcraft.yaml content; the paths specifications in 'parts.bundle.prime' "
-#        "must be relative: found ''.")

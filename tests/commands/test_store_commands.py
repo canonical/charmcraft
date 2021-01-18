@@ -28,7 +28,7 @@ import pytest
 import yaml
 from dateutil import parser
 
-from charmcraft.config import _CharmhubConfig
+from charmcraft.config import CharmhubConfig
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     _get_lib_info,
@@ -71,7 +71,7 @@ def store_mock():
 
     def validate_config(config):
         """Check that the store received the Charmhub configuration."""
-        assert config == _CharmhubConfig()
+        assert config == CharmhubConfig()
         return store_mock
 
     with patch('charmcraft.commands.store.Store', validate_config):

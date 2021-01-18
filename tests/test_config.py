@@ -20,9 +20,10 @@ import sys
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
-    _BasicPrime,
-    _CharmhubConfig,
-    _check_url,
+    BasicPrime,
+    CharmhubConfig,
+    check_relative_paths,
+    check_url,
     load,
 )
 
@@ -88,8 +89,8 @@ def check_schema_error(tmp_path):
     return check_schema_error
 
 
-def test_schema_no_extra_properties(create_config, check_schema_error):
-    """Schema validation, can not add undefined properties."""
+def test_schema_top_level_no_extra_properties(create_config, check_schema_error):
+    """Schema validation, can not add undefined properties at the top level."""
     create_config("""
         type: bundle
         whatever: new-stuff
@@ -100,7 +101,8 @@ def test_schema_no_extra_properties(create_config, check_schema_error):
 def test_schema_type_mandatory(create_config, check_schema_error):
     """Schema validation, type is mandatory."""
     create_config("""
-        someconfig: None
+        charmhub:
+            storage_url: https://some.server.com
     """)
     if is_py35:
         check_schema_error(
@@ -199,6 +201,17 @@ def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_erro
         "'https://some.server.com'): got 'stuff.com'.")
 
 
+def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
+    """Schema validation, can not add undefined properties in charmhub key."""
+    create_config("""
+        type: bundle
+        charmhub:
+            storage_url: https://some.server.com
+            crazy: false
+    """)
+    check_schema_error("Additional properties are not allowed ('crazy' was unexpected)")
+
+
 def test_schema_basicprime_bad_init_structure(create_config, check_schema_error):
     """Schema validation, basic prime with bad parts."""
     create_config("""
@@ -233,32 +246,91 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
         "Bad charmcraft.yaml content; the 'parts.bundle.prime' field must be a list: got 'str'.")
 
 
+def test_schema_basicprime_bad_content_type(create_config, check_schema_error):
+    """Schema validation, basic prime with a prime holding not strings."""
+    create_config("""
+        type: charm  # mandatory
+        parts:
+            bundle:
+                prime: [33, 'foo']
+    """)
+    if is_py35:
+        check_schema_error(
+            ("Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
+                "a string: got 'int'."),
+            ("Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
+                "a valid relative URL: got 33."))
+    else:
+        check_schema_error(
+            "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
+            "a string: got 'int'.")
+
+
+def test_schema_basicprime_bad_content_format(create_config, check_schema_error):
+    """Schema validation, basic prime with a prime holding not strings."""
+    create_config("""
+        type: charm  # mandatory
+        parts:
+            bundle:
+                prime: ['/bar/foo', 'foo']
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
+        "a valid relative URL: got '/bar/foo'.")
+
+
 # -- tests for different validators
 
 def test_url_ok():
     """URL format is ok."""
-    assert _check_url('https://some.server.com')
+    assert check_url('https://some.server.com')
 
 
 def test_url_no_scheme():
     """URL format is wrong, missing scheme."""
     with pytest.raises(ValueError) as cm:
-        _check_url('some.server.com')
+        check_url('some.server.com')
     assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
 
 
 def test_url_no_netloc():
     """URL format is wrong, missing network location."""
     with pytest.raises(ValueError) as cm:
-        _check_url('https://')
+        check_url('https://')
     assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
+
+
+def test_relativepaths_ok():
+    """Indicated paths must be relative."""
+    assert check_relative_paths('foo/bar')
+
+
+def test_relativepaths_absolute():
+    """Indicated paths must be relative."""
+    with pytest.raises(ValueError) as cm:
+        check_relative_paths('/foo/bar')
+    assert str(cm.value) == "must be a valid relative URL"
+
+
+def test_relativepaths_empty():
+    """Indicated paths must be relative."""
+    with pytest.raises(ValueError) as cm:
+        check_relative_paths('')
+    assert str(cm.value) == "must be a valid relative URL"
+
+
+def test_relativepaths_nonstring():
+    """Indicated paths must be relative."""
+    with pytest.raises(ValueError) as cm:
+        check_relative_paths(33)
+    assert str(cm.value) == "must be a valid relative URL"
 
 
 # -- tests for Charmhub config
 
 def test_charmhub_frozen():
     """Cannot change values from the charmhub config."""
-    config = _CharmhubConfig()
+    config = CharmhubConfig()
     with pytest.raises(attr.exceptions.FrozenInstanceError):
         config.api_url = 'broken'
 
@@ -267,7 +339,7 @@ def test_charmhub_frozen():
 
 def test_basicprime_frozen():
     """Cannot change values from the charmhub config."""
-    config = _BasicPrime.from_dict({
+    config = BasicPrime.from_dict({
         'bundle': {
             'prime': ['foo', 'bar'],
         }
@@ -278,7 +350,7 @@ def test_basicprime_frozen():
 
 def test_basicprime_ok():
     """A simple building ok."""
-    config = _BasicPrime.from_dict({
+    config = BasicPrime.from_dict({
         'bundle': {
             'prime': ['foo', 'bar'],
         }
@@ -286,14 +358,11 @@ def test_basicprime_ok():
     assert config == ('foo', 'bar')
 
 
-def test_basicprime_bad_paths():
-    """Indicated paths must be relative."""
-    with pytest.raises(CommandError) as cm:
-        _BasicPrime.from_dict({
-            'bundle': {
-                'prime': ['foo', '/tmp/bar'],
-            }
-        })
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; the paths specifications in 'parts.bundle.prime' "
-        "must be relative: found '/tmp/bar'.")
+def test_basicprime_empty():
+    """Building with an empty list."""
+    config = BasicPrime.from_dict({
+        'bundle': {
+            'prime': [],
+        }
+    })
+    assert config == ()

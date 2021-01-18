@@ -34,22 +34,35 @@ TYPE_TRANSLATOR = {
 }
 
 
+def get_field_reference(path):
+    """Get a field indicator from the received path."""
+    if isinstance(path[-1], int):
+        field = '.'.join(list(path)[:-1])
+        ref = "item {} in '{}' field".format(path[-1], field)
+    else:
+        field = '.'.join(path)
+        ref = "'{}' field".format(field)
+    return ref
+
+
 def adapt_validation_error(error):
     """Take a jsonschema.ValidationError and create a proper CommandError."""
-    field_path = '.'.join(error.absolute_path)
     if error.validator == 'required':
         msg = "Bad charmcraft.yaml content; missing fields: {}.".format(
             ', '.join(error.validator_value))
     elif error.validator == 'type':
         expected_type = TYPE_TRANSLATOR.get(error.validator_value, error.validator_value)
-        msg = "Bad charmcraft.yaml content; the '{}' field must be a {}: got '{}'.".format(
-            field_path, expected_type, error.instance.__class__.__name__)
+        field_ref = get_field_reference(error.absolute_path)
+        msg = "Bad charmcraft.yaml content; the {} must be a {}: got '{}'.".format(
+            field_ref, expected_type, error.instance.__class__.__name__)
     elif error.validator == 'enum':
-        msg = "Bad charmcraft.yaml content; the '{}' field must be one of: {}.".format(
-            field_path, ', '.join(map(repr, error.validator_value)))
+        field_ref = get_field_reference(error.absolute_path)
+        msg = "Bad charmcraft.yaml content; the {} must be one of: {}.".format(
+            field_ref, ', '.join(map(repr, error.validator_value)))
     elif error.validator == 'format':
-        msg = "Bad charmcraft.yaml content; the '{}' field {}: got {!r}.".format(
-            field_path, error.cause, error.instance)
+        field_ref = get_field_reference(error.absolute_path)
+        msg = "Bad charmcraft.yaml content; the {} {}: got {!r}.".format(
+            field_ref, error.cause, error.instance)
     else:
         # safe fallback
         msg = error.message
@@ -58,7 +71,7 @@ def adapt_validation_error(error):
 
 
 @format_checker.checks('url', raises=ValueError)
-def _check_url(value):
+def check_url(value):
     """Check that the URL has at least scheme and net location."""
     if isinstance(value, str):
         url = urlparse(value)
@@ -67,8 +80,19 @@ def _check_url(value):
     raise ValueError("must be a full URL (e.g. 'https://some.server.com')")
 
 
+@format_checker.checks('relative_path', raises=ValueError)
+def check_relative_paths(value):
+    """Check that the received paths are all valid relative ones."""
+    if isinstance(value, str):
+        # check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
+        # config is independent of the platform where charmcraft is running)
+        if value and value[0] != '/':
+            return True
+    raise ValueError("must be a valid relative URL")
+
+
 @attr.s(kw_only=True, frozen=True)
-class _CharmhubConfig:
+class CharmhubConfig:
     """Configuration for all Charmhub related options."""
 
     api_url = attr.ib(default='https://api.staging.charmhub.io')
@@ -80,7 +104,7 @@ class _CharmhubConfig:
         return cls(**source)
 
 
-class _BasicPrime(tuple):
+class BasicPrime(tuple):
     """Hold the list of files to include, specified under parts/bundle/prime configs.
 
     This is a intermediate structure until we have the full Lifecycle in place.
@@ -90,31 +114,22 @@ class _BasicPrime(tuple):
     def from_dict(cls, parts):
         """Build from a dicts sequence."""
         prime = parts.get('bundle', {}).get('prime', [])
-
-        # validate that all are relative
-        for spec in prime:
-            # check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
-            # config is independent of the platform where charmcraft is running)
-            if spec[0] == '/':
-                raise CommandError(
-                    "Bad charmcraft.yaml content; the paths specifications in "
-                    "'parts.bundle.prime' must be relative: found {!r}.".format(spec))
         return cls(prime)
 
 
 @attr.s(kw_only=True, frozen=True)
-class _Project:
+class Project:
     """Configuration for all project-related options, used internally."""
 
     dirpath = attr.ib(default=None)
 
 
 @attr.s(kw_only=True, frozen=True)
-class _Config:
+class Config:
     """Root of all the configuration."""
 
-    charmhub = attr.ib(default={}, converter=_CharmhubConfig.from_dict)
-    parts = attr.ib(default={}, converter=_BasicPrime.from_dict)
+    charmhub = attr.ib(default={}, converter=CharmhubConfig.from_dict)
+    parts = attr.ib(default={}, converter=BasicPrime.from_dict)
     type = attr.ib()
 
     # this item is provided by the code itself, not the user, as convenience for the
@@ -132,6 +147,7 @@ CONFIG_SCHEMA = {
                 'api_url': {'type': 'string', 'format': 'url'},
                 'storage_url': {'type': 'string', 'format': 'url'},
             },
+            'additionalProperties': False,
         },
         'parts': {
             'type': 'object',
@@ -139,7 +155,13 @@ CONFIG_SCHEMA = {
                 'bundle': {
                     'type': 'object',
                     'properties': {
-                        'prime': {'type': 'array'},
+                        'prime': {
+                            'type': 'array',
+                            'items': {
+                                'type': 'string',
+                                'format': 'relative_path',
+                            },
+                        },
                     },
                 },
             },
@@ -170,6 +192,6 @@ def load(dirpath):
         adapt_validation_error(exc)
 
     # inject project's config
-    content['project'] = _Project(dirpath=dirpath)
+    content['project'] = Project(dirpath=dirpath)
 
-    return _Config(**content)
+    return Config(**content)

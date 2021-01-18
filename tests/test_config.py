@@ -22,6 +22,7 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
     BasicPrime,
     CharmhubConfig,
+    check_relative_paths,
     check_url,
     load,
 )
@@ -245,6 +246,31 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
         "Bad charmcraft.yaml content; the 'parts.bundle.prime' field must be a list: got 'str'.")
 
 
+def test_schema_basicprime_bad_content_type(create_config, check_schema_error):
+    """Schema validation, basic prime with a prime holding not strings."""
+    create_config("""
+        type: charm  # mandatory
+        parts:
+            bundle:
+                prime: [33, 'foo']
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be a string: "
+        "got 'int'.")
+
+
+def test_schema_basicprime_bad_content_format(create_config, check_schema_error):
+    """Schema validation, basic prime with a prime holding not strings."""
+    create_config("""
+        type: charm  # mandatory
+        parts:
+            bundle:
+                prime: ['/bar/foo', 'foo']
+    """)
+    check_schema_error(
+        "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
+        "a valid relative URL: got '/bar/foo'.")
+
 # -- tests for different validators
 
 def test_url_ok():
@@ -264,6 +290,32 @@ def test_url_no_netloc():
     with pytest.raises(ValueError) as cm:
         check_url('https://')
     assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
+
+
+def test_relativepaths_ok():
+    """Indicated paths must be relative."""
+    assert check_relative_paths('foo/bar')
+
+
+def test_relativepaths_absolute():
+    """Indicated paths must be relative."""
+    with pytest.raises(ValueError) as cm:
+        check_relative_paths('/foo/bar')
+    assert str(cm.value) == "must be a valid relative URL"
+
+
+def test_relativepaths_empty():
+    """Indicated paths must be relative."""
+    with pytest.raises(ValueError) as cm:
+        check_relative_paths('')
+    assert str(cm.value) == "must be a valid relative URL"
+
+
+def test_relativepaths_nonstring():
+    """Indicated paths must be relative."""
+    with pytest.raises(ValueError) as cm:
+        check_relative_paths(33)
+    assert str(cm.value) == "must be a valid relative URL"
 
 
 # -- tests for Charmhub config
@@ -298,14 +350,37 @@ def test_basicprime_ok():
     assert config == ('foo', 'bar')
 
 
-def test_basicprime_bad_paths():
-    """Indicated paths must be relative."""
-    with pytest.raises(CommandError) as cm:
-        BasicPrime.from_dict({
-            'bundle': {
-                'prime': ['foo', '/tmp/bar'],
-            }
-        })
-    assert str(cm.value) == (
-        "Bad charmcraft.yaml content; the paths specifications in 'parts.bundle.prime' "
-        "must be relative: found '/tmp/bar'.")
+def test_basicprime_empty():
+    """Building with an empty list."""
+    config = BasicPrime.from_dict({
+        'bundle': {
+            'prime': [],
+        }
+    })
+    assert config == ()
+
+
+#def test_basicprime_bad_paths():
+#    """Indicated paths must be relative."""
+#    with pytest.raises(CommandError) as cm:
+#        BasicPrime.from_dict({
+#            'bundle': {
+#                'prime': ['foo', '/tmp/bar'],
+#            }
+#        })
+#    assert str(cm.value) == (
+#        "Bad charmcraft.yaml content; the paths specifications in 'parts.bundle.prime' "
+#        "must be relative: found '/tmp/bar'.")
+#
+#
+#def test_basicprime_with_empty_paths():
+#    """Indicated paths must be relative."""
+#    with pytest.raises(CommandError) as cm:
+#        BasicPrime.from_dict({
+#            'bundle': {
+#                'prime': ['', '/tmp/bar'],
+#            }
+#        })
+#    assert str(cm.value) == (
+#        "Bad charmcraft.yaml content; the paths specifications in 'parts.bundle.prime' "
+#        "must be relative: found ''.")

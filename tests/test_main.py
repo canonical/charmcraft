@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,6 +71,17 @@ def test_dispatcher_command_execution_crash():
         dispatcher.run()
 
 
+def test_dispatcher_generic_setup_default():
+    """Generic parameter handling for default values."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    logsetup.message_handler.mode = None
+    with patch('charmcraft.config.load') as config_mock:
+        Dispatcher(['somecommand'], groups)
+    assert logsetup.message_handler.mode is None
+    config_mock.assert_called_once_with(None)
+
+
 @pytest.mark.parametrize("options", [
     ['somecommand', '--verbose'],
     ['somecommand', '-v'],
@@ -119,6 +130,53 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
     with pytest.raises(CommandError) as err:
         Dispatcher(options, groups)
     assert str(err.value) == "The 'verbose' and 'quiet' options are mutually exclusive."
+
+
+@pytest.mark.parametrize("options", [
+    ['somecommand', '--from', 'foobar'],
+    ['somecommand', '--from=foobar'],
+    ['somecommand', '-f', 'foobar'],
+    ['-f', 'foobar', 'somecommand'],
+    ['--from', 'foobar', 'somecommand'],
+    ['--from=foobar', 'somecommand'],
+])
+def test_dispatcher_generic_setup_from_with_param(options):
+    """Generic parameter handling for 'from' with the param, directly or after the command."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    with patch('charmcraft.config.load') as config_mock:
+        Dispatcher(options, groups)
+    config_mock.assert_called_once_with('foobar')
+
+
+@pytest.mark.parametrize("options", [
+    ['somecommand', '--from'],
+    ['somecommand', '--from='],
+    ['somecommand', '-f'],
+    ['--from=', 'somecommand'],
+])
+def test_dispatcher_generic_setup_from_without_param_simple(options):
+    """Generic parameter handling for 'from' without the requested parameter."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    with pytest.raises(CommandError) as err:
+        Dispatcher(options, groups)
+    assert str(err.value) == "The 'from' option expects one argument."
+
+
+@pytest.mark.parametrize("options", [
+    ['-f', 'somecommand'],
+    ['--from', 'somecommand'],
+])
+def test_dispatcher_generic_setup_from_without_param_confusing(options):
+    """Generic parameter handling for 'from' taking confusingly the command as the argument."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    with pytest.raises(CommandError) as err:
+        Dispatcher(options, groups)
+
+    # generic usage message because "no command" (as 'somecommand' was consumed by --from)
+    assert "Usage" in str(err.value)
 
 
 def test_dispatcher_build_commands_ok():

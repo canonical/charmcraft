@@ -133,15 +133,15 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
 
 
 @pytest.mark.parametrize("options", [
-    ['somecommand', '--from', 'foobar'],
-    ['somecommand', '--from=foobar'],
-    ['somecommand', '-f', 'foobar'],
-    ['-f', 'foobar', 'somecommand'],
-    ['--from', 'foobar', 'somecommand'],
-    ['--from=foobar', 'somecommand'],
+    ['somecommand', '--project-dir', 'foobar'],
+    ['somecommand', '--project-dir=foobar'],
+    ['somecommand', '-p', 'foobar'],
+    ['-p', 'foobar', 'somecommand'],
+    ['--project-dir', 'foobar', 'somecommand'],
+    ['--project-dir=foobar', 'somecommand'],
 ])
-def test_dispatcher_generic_setup_from_with_param(options):
-    """Generic parameter handling for 'from' with the param, directly or after the command."""
+def test_dispatcher_generic_setup_projectdir_with_param(options):
+    """Generic parameter handling for 'project dir' with the param, directly or after the cmd."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     with patch('charmcraft.config.load') as config_mock:
@@ -150,32 +150,32 @@ def test_dispatcher_generic_setup_from_with_param(options):
 
 
 @pytest.mark.parametrize("options", [
-    ['somecommand', '--from'],
-    ['somecommand', '--from='],
-    ['somecommand', '-f'],
-    ['--from=', 'somecommand'],
+    ['somecommand', '--project-dir'],
+    ['somecommand', '--project-dir='],
+    ['somecommand', '-p'],
+    ['--project-dir=', 'somecommand'],
 ])
-def test_dispatcher_generic_setup_from_without_param_simple(options):
-    """Generic parameter handling for 'from' without the requested parameter."""
+def test_dispatcher_generic_setup_projectdir_without_param_simple(options):
+    """Generic parameter handling for 'project dir' without the requested parameter."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     with pytest.raises(CommandError) as err:
         Dispatcher(options, groups)
-    assert str(err.value) == "The 'from' option expects one argument."
+    assert str(err.value) == "The 'project-dir' option expects one argument."
 
 
 @pytest.mark.parametrize("options", [
-    ['-f', 'somecommand'],
-    ['--from', 'somecommand'],
+    ['-p', 'somecommand'],
+    ['--project-dir', 'somecommand'],
 ])
-def test_dispatcher_generic_setup_from_without_param_confusing(options):
-    """Generic parameter handling for 'from' taking confusingly the command as the argument."""
+def test_dispatcher_generic_setup_projectdir_without_param_confusing(options):
+    """Generic parameter handling for 'project dir' taking confusingly the command as the arg."""
     cmd = create_command('somecommand')
     groups = [('test-group', 'title', [cmd])]
     with pytest.raises(CommandError) as err:
         Dispatcher(options, groups)
 
-    # generic usage message because "no command" (as 'somecommand' was consumed by --from)
+    # generic usage message because "no command" (as 'somecommand' was consumed by --project-dir)
     assert "Usage" in str(err.value)
 
 

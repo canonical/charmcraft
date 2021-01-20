@@ -45,12 +45,42 @@ API_BASE_URL = 'https://api.staging.charmhub.io'
 STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com'
 
 
+def _is_ci_env() -> bool:
+    """Utilize standard env variables to determine if the environment is for testing."""
+    env_prefixes = ["TRAVIS", "AUTOPKGTEST_TMP"]
+    for prefix in env_prefixes:
+        for key in os.environ.keys():
+            if key.startswith(prefix):
+                return True
+    return False
+
+
+def _get_os_platform(filepath: str = "/etc/os-release") -> str:
+    """Determine a system/release combo for an OS using /etc/os-release if available."""
+    if platform.system() == "Linux":
+        os_release = dict()
+        try:
+            with open(filepath) as f:
+                for line in f:
+                    entry = line.rstrip().split("=")
+                    if len(entry) == 2:
+                        os_release[entry[0]] = entry[1].strip('"')
+        except FileNotFoundError:
+            logger.warning("Unable to locate 'os-release' file, using default values")
+        finally:
+            return "{}/{} ({})".format(os_release.get("NAME", "Unknown"),
+                                       os_release.get("VERSION_ID", "Unknown Version"),
+                                       platform.machine())
+
+    return "{}/{} ({})".format(platform.system(), platform.release(), platform.machine())
+
+
 def build_user_agent():
     """Build the charmcraft's user agent."""
-    return "charmcraft/{} ({}; {}) python/{}".format(__version__,
-                                                     platform.system(),
-                                                     platform.machine(),
-                                                     platform.python_version())
+    return "charmcraft/{} {} {} python/{}".format(__version__,
+                                                  "(testing)" if _is_ci_env() else "",
+                                                  _get_os_platform(),
+                                                  platform.python_version())
 
 
 def visit_page_with_browser(visit_url):

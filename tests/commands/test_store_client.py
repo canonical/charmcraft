@@ -21,6 +21,7 @@ import logging
 import os
 from http.cookiejar import MozillaCookieJar, Cookie
 from unittest.mock import patch
+from textwrap import dedent
 
 import pytest
 from macaroonbakery import httpbakery
@@ -36,19 +37,74 @@ from charmcraft.commands.store.client import (
     _storage_push,
     build_user_agent,
     visit_page_with_browser,
+    _is_ci_env,
+    _get_os_platform,
 )
 
 
 # --- General tests
 
-def test_useragent():
+def test_useragent_linux(monkeypatch):
     """Construct a user-agent for requests."""
+    monkeypatch.setenv("TRAVIS_TESTING", "1")
     with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
+            patch('charmcraft.commands.store.client._get_os_platform',
+                  return_value="Arch Linux/Unknown Version (x86_64)"), \
             patch('platform.system', return_value='Linux'), \
             patch('platform.machine', return_value='x86_64'), \
             patch('platform.python_version', return_value='3.9.1'):
         ua = build_user_agent()
-    assert ua == "charmcraft/1.2.3 (Linux; x86_64) python/3.9.1"
+    assert ua == "charmcraft/1.2.3 (testing) Arch Linux/Unknown Version (x86_64) python/3.9.1"
+
+
+def test_useragent_windows():
+    with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
+            patch('platform.system', return_value='Windows'), \
+            patch('platform.release', return_value='10'), \
+            patch('platform.machine', return_value='AMD64'), \
+            patch('platform.python_version', return_value='3.9.1'):
+        ua = build_user_agent()
+    assert ua == "charmcraft/1.2.3  Windows/10 (AMD64) python/3.9.1"
+
+
+def test_is_ci_env(monkeypatch):
+    env_vars = ["TRAVIS_TESTING", "AUTOPKGTEST_TMP"]
+    for var in env_vars:
+        monkeypatch.setenv(var, "1")
+        assert _is_ci_env()
+        monkeypatch.delenv(var)
+        assert not _is_ci_env()
+
+
+def test_get_os_platform_linux(tmp_path):
+    filepath = (tmp_path / "os-release")
+    with patch('platform.machine', return_value='x86_64'), open(filepath, "w") as release_file:
+        print(
+            dedent("""\
+            NAME="Ubuntu"
+            VERSION="20.04.1 LTS (Focal Fossa)"
+            ID=ubuntu
+            ID_LIKE=debian
+            PRETTY_NAME="Ubuntu 20.04.1 LTS"
+            VERSION_ID="20.04"
+            HOME_URL="https://www.ubuntu.com/"
+            SUPPORT_URL="https://help.ubuntu.com/"
+            BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+            PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+            VERSION_CODENAME=focal
+            UBUNTU_CODENAME=focal
+                """),
+            file=release_file,
+        )
+    assert _get_os_platform(filepath) == "Ubuntu/20.04 (x86_64)"
+
+
+def test_get_os_platform_windows():
+    with patch('platform.system', return_value='Windows'), \
+            patch('platform.release', return_value='10'), \
+            patch('platform.machine', return_value='AMD64'):
+        os_platform = _get_os_platform()
+    assert os_platform == "Windows/10 (AMD64)"
 
 
 # --- AuthHolder tests

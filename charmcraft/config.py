@@ -177,7 +177,7 @@ def load(dirpath):
     if dirpath is None:
         dirpath = pathlib.Path.cwd()
     else:
-        dirpath = pathlib.Path(dirpath)
+        dirpath = pathlib.Path(dirpath).expanduser().resolve()
 
     content = load_yaml(dirpath / 'charmcraft.yaml')
     # XXX Facundo 2021-01-04: we will make this configuration mandatory in the future, but

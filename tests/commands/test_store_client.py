@@ -78,7 +78,8 @@ def test_is_ci_env(monkeypatch):
 def test_get_os_platform_linux(tmp_path):
     filepath = (tmp_path / "os-release")
     # XXX: Delete the string conversion on the filepath when Python 3.5 support is dropped.
-    with patch('platform.machine', return_value='x86_64'):
+    with patch('platform.machine', return_value='x86_64'), \
+            patch('platform.system', return_value='Linux'):
         with open(str(filepath), "w") as release_file:
             print(
                 dedent("""\

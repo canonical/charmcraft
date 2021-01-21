@@ -17,7 +17,6 @@
 """Infrastructure for the 'pack' command."""
 
 import logging
-import pathlib
 import zipfile
 
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -40,8 +39,9 @@ def build_zip(zippath, basedir, fpaths):
     zipfh.close()
 
 
-def get_paths_to_include(dirpath):
+def get_paths_to_include(config):
     """Get all file/dir paths to include."""
+    dirpath = config.project.dirpath
     allpaths = set()
 
     # all mandatory files, which must exist (currently only bundles.yaml is mandatory, and
@@ -49,17 +49,8 @@ def get_paths_to_include(dirpath):
     for fname in MANDATORY_FILES:
         allpaths.add(dirpath / fname)
 
-    # the extra files, which must be relative
-    config = load_yaml(dirpath / 'charmcraft.yaml') or {}
-    prime_specs = config.get('parts', {}).get('bundle', {}).get('prime', [])
-
-    for spec in prime_specs:
-        # check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
-        # config is independent of where charmcraft is running)
-        if spec[0] == '/':
-            raise CommandError(
-                "Extra files in prime config can not be absolute: {!r}".format(spec))
-
+    # the extra files (relative paths)
+    for spec in config.parts:
         fpaths = sorted(fpath for fpath in dirpath.glob(spec) if fpath.is_file())
         logger.debug("Including per prime config %r: %s.", spec, fpaths)
         allpaths.update(fpaths)
@@ -86,27 +77,14 @@ class PackCommand(BaseCommand):
     help_msg = "Build the bundle"
     overview = _overview
 
-    def fill_parser(self, parser):
-        """Add own parameters to the general parser."""
-        parser.add_argument(
-            '-f', '--from', type=pathlib.Path, dest='from_dir',
-            help="The directory where the bundle project is located, where the build "
-                 "is done from; defaults to '.'")
-
     def run(self, parsed_args):
         """Run the command."""
-        if parsed_args.from_dir is None:
-            dirpath = pathlib.Path.cwd()
-        else:
-            dirpath = parsed_args.from_dir.expanduser()
-            if not dirpath.exists():
-                raise CommandError("Bundle project directory was not found: '{}'.".format(dirpath))
-            if not dirpath.is_dir():
-                raise CommandError(
-                    "Bundle project directory is not a directory: '{}'.".format(dirpath))
+        if self.config is None:
+            raise CommandError(
+                "Missing project configuration, please provide a valid charmcraft.yaml.")
 
         # get the config files
-        bundle_filepath = dirpath / 'bundle.yaml'
+        bundle_filepath = self.config.project.dirpath / 'bundle.yaml'
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
             raise CommandError(
@@ -117,18 +95,13 @@ class PackCommand(BaseCommand):
                 "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
                 "file '{}'.".format(bundle_filepath))
 
-        charmcraft_filepath = dirpath / 'charmcraft.yaml'
-        charmcraft_config = load_yaml(charmcraft_filepath)
-        if charmcraft_config is None:
+        # so far 'pack' works for bundles only (later this will operate also on charms)
+        if self.config.type != 'bundle':
             raise CommandError(
-                "Missing or invalid charmcraft file: '{}'.".format(charmcraft_filepath))
-        if charmcraft_config.get('type') != 'bundle':
-            raise CommandError(
-                "Invalid charmcraft config; 'type' must be 'bundle' in file '{}'."
-                .format(charmcraft_filepath))
+                "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command.")
 
         # pack everything
-        paths = get_paths_to_include(dirpath)
-        zipname = dirpath / (bundle_name + '.zip')
-        build_zip(zipname, dirpath, paths)
+        paths = get_paths_to_include(self.config)
+        zipname = self.config.project.dirpath / (bundle_name + '.zip')
+        build_zip(zipname, self.config.project.dirpath, paths)
         logger.info("Created '%s'.", zipname)

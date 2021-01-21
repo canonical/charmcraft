@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ import pathlib
 import tempfile
 
 import pytest
+
+from charmcraft import config as config_module
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -60,3 +62,27 @@ def monkeypatch(monkeypatch):
                 return getattr(monkeypatch, name)
 
     return Monkeypatcher()
+
+
+@pytest.fixture
+def config(tmp_path):
+    """Provide a config class with an extra set method for the test to change it."""
+
+    class TestConfig(config_module.Config):
+        """The Config, but with a method to set test values."""
+
+        def set(self, **kwargs):
+            # prime is special, so we don't need to write all this structure in all tests
+            prime = kwargs.pop('prime', None)
+            if prime is not None:
+                kwargs['parts'] = config_module.BasicPrime.from_dict({
+                    'bundle': {
+                        'prime': prime,
+                    }
+                })
+
+            # the rest is direct
+            for k, v in kwargs.items():
+                object.__setattr__(self, k, v)
+
+    return TestConfig(type='bundle', project=config_module.Project(dirpath=tmp_path))

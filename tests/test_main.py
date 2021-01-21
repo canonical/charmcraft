@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,6 +71,17 @@ def test_dispatcher_command_execution_crash():
         dispatcher.run()
 
 
+def test_dispatcher_generic_setup_default():
+    """Generic parameter handling for default values."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    logsetup.message_handler.mode = None
+    with patch('charmcraft.config.load') as config_mock:
+        Dispatcher(['somecommand'], groups)
+    assert logsetup.message_handler.mode is None
+    config_mock.assert_called_once_with(None)
+
+
 @pytest.mark.parametrize("options", [
     ['somecommand', '--verbose'],
     ['somecommand', '-v'],
@@ -119,6 +130,53 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
     with pytest.raises(CommandError) as err:
         Dispatcher(options, groups)
     assert str(err.value) == "The 'verbose' and 'quiet' options are mutually exclusive."
+
+
+@pytest.mark.parametrize("options", [
+    ['somecommand', '--project-dir', 'foobar'],
+    ['somecommand', '--project-dir=foobar'],
+    ['somecommand', '-p', 'foobar'],
+    ['-p', 'foobar', 'somecommand'],
+    ['--project-dir', 'foobar', 'somecommand'],
+    ['--project-dir=foobar', 'somecommand'],
+])
+def test_dispatcher_generic_setup_projectdir_with_param(options):
+    """Generic parameter handling for 'project dir' with the param, directly or after the cmd."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    with patch('charmcraft.config.load') as config_mock:
+        Dispatcher(options, groups)
+    config_mock.assert_called_once_with('foobar')
+
+
+@pytest.mark.parametrize("options", [
+    ['somecommand', '--project-dir'],
+    ['somecommand', '--project-dir='],
+    ['somecommand', '-p'],
+    ['--project-dir=', 'somecommand'],
+])
+def test_dispatcher_generic_setup_projectdir_without_param_simple(options):
+    """Generic parameter handling for 'project dir' without the requested parameter."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    with pytest.raises(CommandError) as err:
+        Dispatcher(options, groups)
+    assert str(err.value) == "The 'project-dir' option expects one argument."
+
+
+@pytest.mark.parametrize("options", [
+    ['-p', 'somecommand'],
+    ['--project-dir', 'somecommand'],
+])
+def test_dispatcher_generic_setup_projectdir_without_param_confusing(options):
+    """Generic parameter handling for 'project dir' taking confusingly the command as the arg."""
+    cmd = create_command('somecommand')
+    groups = [('test-group', 'title', [cmd])]
+    with pytest.raises(CommandError) as err:
+        Dispatcher(options, groups)
+
+    # generic usage message because "no command" (as 'somecommand' was consumed by --project-dir)
+    assert "Usage" in str(err.value)
 
 
 def test_dispatcher_build_commands_ok():

@@ -14,9 +14,11 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import os
+import sys
+
 import attr
 import pytest
-import sys
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
@@ -69,6 +71,34 @@ def test_load_optional_charmcraft_missing(tmp_path):
     """Specify a directory where the file is missing."""
     config = load(tmp_path)
     assert config is None
+
+
+def test_load_specific_directory_resolved(create_config, monkeypatch):
+    """Ensure that the given directory is resolved to always show the whole path."""
+    tmp_path = create_config("""
+        type: charm
+    """)
+    # change to some dir, and reference the config dir relatively
+    subdir = tmp_path / 'subdir'
+    subdir.mkdir()
+    monkeypatch.chdir(subdir)
+    config = load('../')
+
+    assert config.type == 'charm'
+    assert config.project.dirpath == tmp_path
+
+
+def test_load_specific_directory_expanded(create_config, monkeypatch):
+    """Ensure that the given directory is user-expanded."""
+    tmp_path = create_config("""
+        type: charm
+    """)
+    # fake HOME so the '~' indication is verified to work
+    monkeypatch.setitem(os.environ, 'HOME', str(tmp_path))
+    config = load('~')
+
+    assert config.type == 'charm'
+    assert config.project.dirpath == tmp_path
 
 
 # -- tests for schema restrictions

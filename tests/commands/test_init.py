@@ -30,14 +30,14 @@ from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
 
 def test_init_pep257(tmp_path, config):
     cmd = InitCommand('group', config)
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author='J Doe', series='k8s', force=False))
+    cmd.run(Namespace(name='my-charm', author='J Doe', series='k8s', force=False))
     paths = get_python_filepaths(roots=[str(tmp_path / "src")], python_paths=[])
     pep257_test(paths)
 
 
 def test_init_pep8(tmp_path, config, *, author="J Doe"):
     cmd = InitCommand('group', config)
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author=author, series='k8s', force=False))
+    cmd.run(Namespace(name='my-charm', author=author, series='k8s', force=False))
     paths = get_python_filepaths(
         roots=[str(tmp_path / "src"), str(tmp_path / "tests")],
         python_paths=[])
@@ -50,8 +50,7 @@ def test_init_non_ascii_author(tmp_path, config):
 
 def test_all_the_files(tmp_path, config):
     cmd = InitCommand('group', config)
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", series='k8s',
-                      force=False))
+    cmd.run(Namespace(name='my-charm', author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", series='k8s', force=False))
     assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
         ".flake8",
         ".jujuignore",
@@ -76,8 +75,7 @@ def test_force(tmp_path, config):
     tmp_file = tmp_path / 'README.md'
     with tmp_file.open('w') as f:
         f.write('This is a nonsense readme')
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", series='k8s',
-                      force=True))
+    cmd.run(Namespace(name='my-charm', author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", series='k8s', force=True))
 
     # Check that init ran
     assert (tmp_path / 'LICENSE').exists()
@@ -87,16 +85,15 @@ def test_force(tmp_path, config):
         assert f.read() == 'This is a nonsense readme'
 
 
-def test_bad_name(tmp_path, config):
+def test_bad_name(config):
     cmd = InitCommand('group', config)
     with pytest.raises(CommandError):
-        cmd.run(Namespace(path=tmp_path, name='1234', author="שראלה ישראל", series='k8s',
-                          force=False))
+        cmd.run(Namespace(name='1234', author="שראלה ישראל", series='k8s', force=False))
 
 
 def test_executables(tmp_path, config):
     cmd = InitCommand('group', config)
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="홍길동", series='k8s', force=False))
+    cmd.run(Namespace(name='my-charm', author="홍길동", series='k8s', force=False))
     assert (tmp_path / "run_tests").stat().st_mode & S_IXALL == S_IXALL
     assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
 
@@ -117,15 +114,14 @@ def test_tests(tmp_path, config):
             env['PATH'] = bin_path + ':' + env['PATH']
 
     cmd = InitCommand('group', config)
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="だれだれ", series='k8s',
-                      force=False))
+    cmd.run(Namespace(name='my-charm', author="だれだれ", series='k8s', force=False))
     subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)
 
 
 def test_series_defaults(tmp_path, config):
     cmd = InitCommand('group', config)
     # series default comes from the parsing itself
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="fred", series='k8s', force=False))
+    cmd.run(Namespace(name='my-charm', author="fred", series='k8s', force=False))
 
     with (tmp_path / "metadata.yaml").open("rt", encoding="utf8") as f:
         metadata = yaml.safe_load(f)
@@ -134,8 +130,7 @@ def test_series_defaults(tmp_path, config):
 
 def test_manual_overrides_defaults(tmp_path, config):
     cmd = InitCommand('group', config)
-    cmd.run(Namespace(path=tmp_path, name='my-charm', author="fred", series='xenial,precise',
-                      force=False))
+    cmd.run(Namespace(name='my-charm', author="fred", series='xenial,precise', force=False))
 
     with (tmp_path / "metadata.yaml").open("rt", encoding="utf8") as f:
         metadata = yaml.safe_load(f)

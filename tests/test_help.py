@@ -338,7 +338,7 @@ def test_tool_exec_full_help(sysargv):
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert sorted(x[0] for x in args[1]) == [
-        '-f, --from', '-h, --help', '-q, --quiet', '-v, --verbose']
+        '-h, --help', '-p, --project-dir', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -392,7 +392,7 @@ def test_tool_exec_command_dash_help_simple(help_option):
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
     assert sorted(x[0] for x in args[2]) == [
-        '-f, --from', '-h, --help', '-q, --quiet', '-v, --verbose']
+        '-h, --help', '-p, --project-dir', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -419,7 +419,7 @@ def test_tool_exec_command_dash_help_reverse(help_option):
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
     assert sorted(x[0] for x in args[2]) == [
-        '-f, --from', '-h, --help', '-q, --quiet', '-v, --verbose']
+        '-h, --help', '-p, --project-dir', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -450,7 +450,7 @@ def test_tool_exec_command_dash_help_missing_params(help_option):
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
     assert sorted(x[0] for x in args[2]) == [
-        '-f, --from', '-h, --help', '-q, --quiet', '-v, --verbose', 'mandatory']
+        '-h, --help', '-p, --project-dir', '-q, --quiet', '-v, --verbose', 'mandatory']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -518,7 +518,7 @@ def test_tool_exec_help_command_on_command_ok():
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == VersionCommand
     assert sorted(x[0] for x in args[2]) == [
-        '-f, --from', '-h, --help', '-q, --quiet', '-v, --verbose']
+        '-h, --help', '-p, --project-dir', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing
@@ -552,9 +552,9 @@ def test_tool_exec_help_command_on_command_complex():
     assert args[1].__class__ == cmd
     expected_options = [
         '--option1',
-        '-f, --from',
         '-h, --help',
         '-o2, --option2',
+        '-p, --project-dir',
         '-q, --quiet',
         '-v, --verbose',
         'param1',
@@ -601,7 +601,7 @@ def test_tool_exec_help_command_all():
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert sorted(x[0] for x in args[1]) == [
-        '-f, --from', '-h, --help', '-q, --quiet', '-v, --verbose']
+        '-h, --help', '-p, --project-dir', '-q, --quiet', '-v, --verbose']
 
     # check the result of the full help builder is what is shown
     assert error.argsparsing

@@ -31,6 +31,9 @@ from charmcraft.commands.pack import (
     get_paths_to_include,
 )
 
+# empty namespace
+noargs = Namespace()
+
 
 @pytest.fixture
 def bundle_yaml(tmp_path):
@@ -58,8 +61,7 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     config.set(type='bundle')
 
     # build!
-    args = Namespace(from_dir=tmp_path)
-    PackCommand('group', config).run(args)
+    PackCommand('group', config).run(noargs)
 
     # check
     zipname = tmp_path / 'testbundle.zip'
@@ -71,35 +73,11 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_simple_build_directory_default(
-        tmp_path, caplog, monkeypatch, bundle_yaml, config):
-    """Building defaults to current directory."""
-    caplog.set_level(logging.INFO, logger="charmcraft.commands")
-    monkeypatch.chdir(tmp_path)
-
-    # needed files
-    content = bundle_yaml(name='testbundle')
-    config.set(type='bundle')
-
-    # build!
-    args = Namespace(from_dir=None)
-    PackCommand('group', config).run(args)
-
-    # check
-    zipname = tmp_path / 'testbundle.zip'
-    zf = zipfile.ZipFile(str(zipname))  # str() for Py3.5 support
-    assert zf.read('bundle.yaml') == content.encode('ascii')
-
-    expected = "Created '{}'.".format(zipname)
-    assert [expected] == [rec.message for rec in caplog.records]
-
-
 def test_missing_bundle_file(tmp_path, config):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
-    args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
-        PackCommand('group', config).run(args)
+        PackCommand('group', config).run(noargs)
     assert str(cm.value) == (
         "Missing or invalid main bundle file: '{}'.".format(tmp_path / 'bundle.yaml'))
 
@@ -109,33 +87,30 @@ def test_missing_name_in_bundle(tmp_path, bundle_yaml, config):
     config.set(type='bundle')
 
     # build!
-    args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
-        PackCommand('group', config).run(args)
+        PackCommand('group', config).run(noargs)
     assert str(cm.value) == (
         "Invalid bundle config; missing a 'name' field indicating the bundle's name in file '{}'."
         .format(tmp_path / 'bundle.yaml'))
 
 
-def test_bad_type_in_charmcraft(tmp_path, bundle_yaml, config):
+def test_bad_type_in_charmcraft(bundle_yaml, config):
     """The charmcraft.yaml file must have a proper type field."""
     bundle_yaml(name='testbundle')
     config.set(type='charm')
 
     # build!
-    args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
-        PackCommand('group', config).run(args)
+        PackCommand('group', config).run(noargs)
     assert str(cm.value) == (
         "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command.")
 
 
-def test_missing_configuration(tmp_path):
+def test_missing_configuration():
     """The charmcraft.yaml file must be in place for this command."""
     config = None
-    args = Namespace(from_dir=tmp_path)
     with pytest.raises(CommandError) as cm:
-        PackCommand('group', config).run(args)
+        PackCommand('group', config).run(noargs)
     assert str(cm.value) == (
         "Missing project configuration, please provide a valid charmcraft.yaml.")
 

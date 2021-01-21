@@ -108,7 +108,8 @@ GLOBAL_ARGS = [
     _Global('verbose', 'flag', '-v', '--verbose', "Show debug information and be more verbose"),
     _Global('quiet', 'flag', '-q', '--quiet', "Only show warnings and errors, not progress"),
     _Global(
-        'from', 'option', '-f', '--from', "Specify the project's directory (default to current)"),
+        'project_dir', 'option', '-p', '--project-dir',
+        "Specify the project's directory (defaults to current)"),
 ]
 
 
@@ -232,12 +233,12 @@ class Dispatcher:
                     try:
                         value = next(sysargs)
                     except StopIteration:
-                        raise CommandError("The 'from' option expects one argument.")
+                        raise CommandError("The 'project-dir' option expects one argument.")
                 global_args[arg.name] = value
             elif sysarg.startswith(options_with_equal):
                 option, value = sysarg.split('=', 1)
                 if not value:
-                    raise CommandError("The 'from' option expects one argument.")
+                    raise CommandError("The 'project-dir' option expects one argument.")
                 arg = arg_per_option[option]
                 global_args[arg.name] = value
             else:
@@ -269,7 +270,7 @@ class Dispatcher:
             raise CommandError(help_text, argsparsing=True)
 
         # load the system's config
-        charmcraft_config = config.load(global_args['from'])
+        charmcraft_config = config.load(global_args['project_dir'])
 
         logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
         return command, cmd_args, charmcraft_config

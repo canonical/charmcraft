@@ -98,7 +98,7 @@ def test_get_os_platform_linux(tmp_path):
                     """),
                 file=release_file,
             )
-        os_platform = _get_os_platform(filepath)
+        os_platform = _get_os_platform(str(filepath))
     assert os_platform == "Ubuntu/20.04 (x86_64)"
 
 

@@ -78,25 +78,25 @@ def test_is_ci_env(monkeypatch):
 def test_get_os_platform_linux(tmp_path):
     filepath = (tmp_path / "os-release")
     # XXX: Delete the string conversion on the filepath when Python 3.5 support is dropped.
-    with patch('platform.machine', return_value='x86_64'), \
-            open(str(filepath), "w") as release_file:
-        print(
-            dedent("""\
-            NAME="Ubuntu"
-            VERSION="20.04.1 LTS (Focal Fossa)"
-            ID=ubuntu
-            ID_LIKE=debian
-            PRETTY_NAME="Ubuntu 20.04.1 LTS"
-            VERSION_ID="20.04"
-            HOME_URL="https://www.ubuntu.com/"
-            SUPPORT_URL="https://help.ubuntu.com/"
-            BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
-            PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
-            VERSION_CODENAME=focal
-            UBUNTU_CODENAME=focal
-                """),
-            file=release_file,
-        )
+    with patch('platform.machine', return_value='x86_64'):
+        with open(str(filepath), "w") as release_file:
+            print(
+                dedent("""\
+                NAME="Ubuntu"
+                VERSION="20.04.1 LTS (Focal Fossa)"
+                ID=ubuntu
+                ID_LIKE=debian
+                PRETTY_NAME="Ubuntu 20.04.1 LTS"
+                VERSION_ID="20.04"
+                HOME_URL="https://www.ubuntu.com/"
+                SUPPORT_URL="https://help.ubuntu.com/"
+                BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+                PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+                VERSION_CODENAME=focal
+                UBUNTU_CODENAME=focal
+                    """),
+                file=release_file,
+            )
         os_platform = _get_os_platform(filepath)
     assert os_platform == "Ubuntu/20.04 (x86_64)"
 

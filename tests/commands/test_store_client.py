@@ -59,6 +59,7 @@ def test_useragent_linux(monkeypatch):
 
 def test_useragent_windows():
     with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
+            patch('charmcraft.commands.store.client._is_ci_env', return_value=False), \
             patch('platform.system', return_value='Windows'), \
             patch('platform.release', return_value='10'), \
             patch('platform.machine', return_value='AMD64'), \
@@ -72,13 +73,13 @@ def test_is_ci_env(monkeypatch):
     for var in env_vars:
         monkeypatch.setenv(var, "1")
         assert _is_ci_env()
-        monkeypatch.delenv(var)
-        assert not _is_ci_env()
 
 
 def test_get_os_platform_linux(tmp_path):
     filepath = (tmp_path / "os-release")
-    with patch('platform.machine', return_value='x86_64'), open(filepath, "w") as release_file:
+    # XXX: Delete the string conversion on the filepath when Python 3.5 support is dropped.
+    with patch('platform.machine', return_value='x86_64'), \
+            open(str(filepath), "w") as release_file:
         print(
             dedent("""\
             NAME="Ubuntu"
@@ -96,7 +97,8 @@ def test_get_os_platform_linux(tmp_path):
                 """),
             file=release_file,
         )
-    assert _get_os_platform(filepath) == "Ubuntu/20.04 (x86_64)"
+        os_platform = _get_os_platform(filepath)
+    assert os_platform == "Ubuntu/20.04 (x86_64)"
 
 
 def test_get_os_platform_windows():

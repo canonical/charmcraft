@@ -18,6 +18,7 @@
 
 import logging
 import os
+import pathlib
 import platform
 import webbrowser
 from http.cookiejar import MozillaCookieJar
@@ -44,43 +45,42 @@ logger = logging.getLogger('charmcraft.commands.store')
 API_BASE_URL = 'https://api.staging.charmhub.io'
 STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com'
 
-
-def _is_ci_env() -> bool:
-    """Utilize standard env variables to determine if the environment is for testing."""
-    env_prefixes = ["TRAVIS", "AUTOPKGTEST_TMP"]
-    for prefix in env_prefixes:
-        for key in os.environ.keys():
-            if key.startswith(prefix):
-                return True
-    return False
+TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
 
-def _get_os_platform(filepath: str = "/etc/os-release") -> str:
+def _get_os_platform(filepath=pathlib.Path("/etc/os-release")):
     """Determine a system/release combo for an OS using /etc/os-release if available."""
-    if platform.system() == "Linux":
-        os_release = dict()
-        try:
-            with open(filepath) as f:
-                for line in f:
-                    entry = line.rstrip().split("=")
-                    if len(entry) == 2:
-                        os_release[entry[0]] = entry[1].strip('"')
-        except FileNotFoundError:
-            logger.warning("Unable to locate 'os-release' file, using default values")
-        finally:
-            return "{}/{} ({})".format(os_release.get("NAME", "Unknown"),
-                                       os_release.get("VERSION_ID", "Unknown Version"),
-                                       platform.machine())
+    system = platform.system()
+    release = platform.release()
+    machine = platform.machine()
 
-    return "{}/{} ({})".format(platform.system(), platform.release(), platform.machine())
+    if system == "Linux":
+        os_release = {}
+        try:
+            with filepath.open("r", encoding='utf-8') as f:
+                for line in f:
+                    if "=" in line:
+                        key, value = line.rstrip().split("=", 1)
+                        os_release[key] = value.strip('"')
+        except FileNotFoundError:
+            logger.debug("Unable to locate 'os-release' file, using default values")
+        finally:
+            system = os_release.get("NAME", "Unknown")
+            release = os_release.get("VERSION_ID", "Unknown Version")
+
+    return "{}/{} ({})".format(system, release, machine)
 
 
 def build_user_agent():
     """Build the charmcraft's user agent."""
-    return "charmcraft/{} {} {} python/{}".format(__version__,
-                                                  "(testing)" if _is_ci_env() else "",
-                                                  _get_os_platform(),
-                                                  platform.python_version())
+    if any(key.startswith(prefix) for prefix in TESTING_ENV_PREFIXES for key in os.environ.keys()):
+        testing = " (testing) "
+    else:
+        testing = " "
+    return "charmcraft/{}{}{} python/{}".format(__version__,
+                                                testing,
+                                                _get_os_platform(),
+                                                platform.python_version())
 
 
 def visit_page_with_browser(visit_url):

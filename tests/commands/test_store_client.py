@@ -37,7 +37,6 @@ from charmcraft.commands.store.client import (
     _storage_push,
     build_user_agent,
     visit_page_with_browser,
-    _is_ci_env,
     _get_os_platform,
 )
 
@@ -45,7 +44,7 @@ from charmcraft.commands.store.client import (
 # --- General tests
 
 def test_useragent_linux(monkeypatch):
-    """Construct a user-agent for requests."""
+    """Construct a user-agent as a patched Linux machine"""
     monkeypatch.setenv("TRAVIS_TESTING", "1")
     with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
             patch('charmcraft.commands.store.client._get_os_platform',
@@ -57,30 +56,24 @@ def test_useragent_linux(monkeypatch):
     assert ua == "charmcraft/1.2.3 (testing) Arch Linux/Unknown Version (x86_64) python/3.9.1"
 
 
-def test_useragent_windows():
+def test_useragent_windows(monkeypatch):
+    """Construct a user-agent as a patched Windows machine"""
+    monkeypatch.setenv("TRAVIS_TESTING", "1")
     with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
-            patch('charmcraft.commands.store.client._is_ci_env', return_value=False), \
             patch('platform.system', return_value='Windows'), \
             patch('platform.release', return_value='10'), \
             patch('platform.machine', return_value='AMD64'), \
             patch('platform.python_version', return_value='3.9.1'):
         ua = build_user_agent()
-    assert ua == "charmcraft/1.2.3  Windows/10 (AMD64) python/3.9.1"
-
-
-def test_is_ci_env(monkeypatch):
-    env_vars = ["TRAVIS_TESTING", "AUTOPKGTEST_TMP"]
-    for var in env_vars:
-        monkeypatch.setenv(var, "1")
-        assert _is_ci_env()
+    assert ua == "charmcraft/1.2.3 (testing) Windows/10 (AMD64) python/3.9.1"
 
 
 def test_get_os_platform_linux(tmp_path):
+    """Utilize an /etc/os-release file to determine platform"""
     filepath = (tmp_path / "os-release")
-    # XXX: Delete the string conversion on the filepath when Python 3.5 support is dropped.
     with patch('platform.machine', return_value='x86_64'), \
             patch('platform.system', return_value='Linux'):
-        with open(str(filepath), "w") as release_file:
+        with filepath.open("w", encoding="utf-8") as release_file:
             print(
                 dedent("""\
                 NAME="Ubuntu"
@@ -98,11 +91,12 @@ def test_get_os_platform_linux(tmp_path):
                     """),
                 file=release_file,
             )
-        os_platform = _get_os_platform(str(filepath))
+        os_platform = _get_os_platform(filepath)
     assert os_platform == "Ubuntu/20.04 (x86_64)"
 
 
 def test_get_os_platform_windows():
+    """Get platform from a patched Windows machine"""
     with patch('platform.system', return_value='Windows'), \
             patch('platform.release', return_value='10'), \
             patch('platform.machine', return_value='AMD64'):

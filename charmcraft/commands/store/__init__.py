@@ -36,6 +36,10 @@ from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
+# entity types
+CHARM = 'charm'
+BUNDLE = 'bundle'
+
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
 
@@ -128,7 +132,7 @@ class WhoamiCommand(BaseCommand):
 
 
 class RegisterNameCommand(BaseCommand):
-    """Register a name in Charmhub."""
+    """Register a charm name in Charmhub."""
 
     name = 'register'
     help_msg = "Register a charm name in Charmhub"
@@ -162,21 +166,21 @@ class RegisterNameCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store()
-        store.register_name(parsed_args.name)
-        logger.info("You are now the publisher of %r in Charmhub.", parsed_args.name)
+        store.register_name(parsed_args.name, CHARM)
+        logger.info("You are now the publisher of charm %r in Charmhub.", parsed_args.name)
 
 
 class ListNamesCommand(BaseCommand):
-    """List the charms registered in Charmhub."""
+    """List the entities registered in Charmhub."""
 
     name = 'names'
-    help_msg = "List your registered charm names in Charmhub"
+    help_msg = "List your registered charm and bundle names in Charmhub"
     overview = textwrap.dedent("""
         An overview of names you have registered to publish in Charmhub.
 
           $ charmcraft names
-          Name                Visibility    Status
-          sabdfl-hello-world  public        registered
+          Name                Type    Visibility    Status
+          sabdfl-hello-world  charm   public        registered
 
         Visibility and status are shown for each name. `public` items can be
         seen by any user, while `private` items are only for you and the
@@ -192,15 +196,16 @@ class ListNamesCommand(BaseCommand):
         store = Store()
         result = store.list_registered_names()
         if not result:
-            logger.info("No charms registered.")
+            logger.info("No charms or bundles registered.")
             return
 
-        headers = ['Name', 'Visibility', 'Status']
+        headers = ['Name', 'Type', 'Visibility', 'Status']
         data = []
         for item in result:
             visibility = 'private' if item.private else 'public'
             data.append([
                 item.name,
+                item.entity_type,
                 visibility,
                 item.status,
             ])
@@ -211,20 +216,20 @@ class ListNamesCommand(BaseCommand):
 
 
 class UploadCommand(BaseCommand):
-    """Upload a charm to Charmhub."""
+    """Upload a charm or bundle to Charmhub."""
 
     name = 'upload'
-    help_msg = "Upload a charm to Charmhub"
+    help_msg = "Upload a charm or bundle to Charmhub"
     overview = textwrap.dedent("""
-        Upload a charm to Charmhub.
+        Upload a charm or bundle to Charmhub.
 
-        Push a charm to Charmhub where it will be verified for conformance
-        to the packaging standard. This command will finish successfully
-        once the package is approved by Charmhub.
+        Push a charm or bundle to Charmhub where it will be verified for
+        conformance to the packaging standard. This command will finish
+        successfully once the package is approved by Charmhub.
 
         In the event of a failure in the verification process, charmcraft
         will report details of the failure, otherwise it will give you the
-        new charm revision.
+        new charm or bundle revision.
 
         Upload will take you through login if needed.
 

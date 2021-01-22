@@ -72,7 +72,7 @@ class LoginCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store()
+        store = Store(self.config.charmhub)
         store.login()
         logger.info("Logged in as '%s'.", store.whoami().username)
 
@@ -96,7 +96,7 @@ class LogoutCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store()
+        store = Store(self.config.charmhub)
         store.logout()
         logger.info("Charmhub token cleared.")
 
@@ -114,7 +114,7 @@ class WhoamiCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store()
+        store = Store(self.config.charmhub)
         result = store.whoami()
 
         data = [
@@ -161,7 +161,7 @@ class RegisterNameCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store()
+        store = Store(self.config.charmhub)
         store.register_name(parsed_args.name)
         logger.info("You are now the publisher of %r in Charmhub.", parsed_args.name)
 
@@ -189,7 +189,7 @@ class ListNamesCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store()
+        store = Store(self.config.charmhub)
         result = store.list_registered_names()
         if not result:
             logger.info("No charms registered.")
@@ -278,7 +278,7 @@ class UploadCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         name, path = self._discover_charm(parsed_args.charm_file)
-        store = Store()
+        store = Store(self.config.charmhub)
         result = store.upload(name, path)
         if result.ok:
             logger.info("Revision %s of %r created", result.revision, str(name))
@@ -322,7 +322,7 @@ class ListRevisionsCommand(BaseCommand):
                     "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
                     "directory with metadata.yaml, or use --name=foo.")
 
-        store = Store()
+        store = Store(self.config.charmhub)
         result = store.list_revisions(charm_name)
         if not result:
             logger.info("No revisions found.")
@@ -397,7 +397,7 @@ class ReleaseCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store()
+        store = Store(self.config.charmhub)
 
         if parsed_args.name:
             charm_name = parsed_args.name
@@ -454,7 +454,7 @@ class StatusCommand(BaseCommand):
                     "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
                     "directory with metadata.yaml, or use --name=foo.")
 
-        store = Store()
+        store = Store(self.config.charmhub)
         channel_map, channels, revisions = store.list_releases(charm_name)
         if not channel_map:
             logger.info("Nothing has been released yet.")
@@ -729,7 +729,7 @@ class CreateLibCommand(BaseCommand):
         if lib_path.exists():
             raise CommandError('This library already exists: {}'.format(lib_path))
 
-        store = Store()
+        store = Store(self.config.charmhub)
         lib_id = store.create_library_id(charm_name, lib_name)
 
         # create the new library file from the template
@@ -790,7 +790,7 @@ class PublishLibCommand(BaseCommand):
             local_libs_data = _get_libs_from_tree(charm_name)
 
         # check if something needs to be done
-        store = Store()
+        store = Store(self.config.charmhub)
         to_query = [dict(lib_id=lib.lib_id, api=lib.api) for lib in local_libs_data]
         libs_tips = store.get_libraries_tips(to_query)
         to_publish = []
@@ -866,7 +866,7 @@ class FetchLibCommand(BaseCommand):
             local_libs_data = _get_libs_from_tree()
 
         # get tips from the Store
-        store = Store()
+        store = Store(self.config.charmhub)
         to_query = []
         for lib in local_libs_data:
             if lib.lib_id is None:
@@ -961,7 +961,7 @@ class ListLibCommand(BaseCommand):
                     "name using the --charm-name option.")
 
         # get tips from the Store
-        store = Store()
+        store = Store(self.config.charmhub)
         to_query = [{'charm_name': charm_name}]
         libs_tips = store.get_libraries_tips(to_query)
 

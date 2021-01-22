@@ -28,6 +28,7 @@ import pytest
 import yaml
 from dateutil import parser
 
+from charmcraft.config import CharmhubConfig
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     _get_lib_info,
@@ -67,7 +68,13 @@ noargs = Namespace()
 def store_mock():
     """The fixture to fake the store layer in all the tests."""
     store_mock = MagicMock()
-    with patch('charmcraft.commands.store.Store', lambda: store_mock):
+
+    def validate_config(config):
+        """Check that the store received the Charmhub configuration."""
+        assert config == CharmhubConfig()
+        return store_mock
+
+    with patch('charmcraft.commands.store.Store', validate_config):
         yield store_mock
 
 

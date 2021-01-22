@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ def _build_library(resp):
 class Store:
     """The main interface to the Store's API."""
 
-    def __init__(self):
+    def __init__(self, charmhub_config):
         self._client = Client()
 
     def login(self):

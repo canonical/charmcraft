@@ -19,8 +19,9 @@
 import argparse
 import logging
 import sys
+from collections import namedtuple
 
-from charmcraft import helptexts
+from charmcraft import helptexts, config
 from charmcraft.commands import version, build, store, init, pack
 from charmcraft.cmdbase import CommandError, BaseCommand
 from charmcraft.logsetup import message_handler
@@ -65,7 +66,7 @@ class HelpCommand(BaseCommand):
             retcode = 1
         else:
             cmd_class, group = all_commands[parsed_args.command_to_help]
-            cmd = cmd_class(group)
+            cmd = cmd_class(group, None)
             parser = CustomArgumentParser(prog=cmd.name, add_help=False)
             cmd.fill_parser(parser)
             help_text = get_command_help(parser, cmd)
@@ -100,11 +101,15 @@ COMMAND_GROUPS = [
 ]
 
 
-# global options: the flag used internally, short and long parameters, and the help text
-GLOBAL_FLAGS = [
-    ('help', '-h', '--help', "Show this help message and exit"),
-    ('verbose', '-v', '--verbose', "Show debug information and be more verbose"),
-    ('quiet', '-q', '--quiet', "Only show warnings and errors, not progress"),
+# global options: the name used internally, its type, short and long parameters, and help text
+_Global = namedtuple('Global', 'name type short_option long_option help_message')
+GLOBAL_ARGS = [
+    _Global('help', 'flag', '-h', '--help', "Show this help message and exit"),
+    _Global('verbose', 'flag', '-v', '--verbose', "Show debug information and be more verbose"),
+    _Global('quiet', 'flag', '-q', '--quiet', "Only show warnings and errors, not progress"),
+    _Global(
+        'project_dir', 'option', '-p', '--project-dir',
+        "Specify the project's directory (defaults to current)"),
 ]
 
 
@@ -121,8 +126,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
 def _get_global_options():
     """Return the global flags ready to present as options in the help messages."""
     options = []
-    for _, short_option, long_option, helpmsg in GLOBAL_FLAGS:
-        options.append(("{}, {}".format(short_option, long_option), helpmsg))
+    for arg in GLOBAL_ARGS:
+        options.append(("{}, {}".format(arg.short_option, arg.long_option), arg.help_message))
     return options
 
 
@@ -159,8 +164,9 @@ class Dispatcher:
 
     def __init__(self, sysargs, commands_groups):
         self.commands = self._get_commands_info(commands_groups)
-        command_name, cmd_args = self._pre_parse_args(sysargs)
-        self.command, self.parsed_args = self._load_command(command_name, cmd_args)
+        command_name, cmd_args, charmcraft_config = self._pre_parse_args(sysargs)
+        self.command, self.parsed_args = self._load_command(
+            command_name, cmd_args, charmcraft_config)
 
     def _get_commands_info(self, commands_groups):
         """Process the commands groups structure for easier programmable access."""
@@ -175,10 +181,10 @@ class Dispatcher:
                 commands[_cmd_class.name] = (_cmd_class, _cmd_group)
         return commands
 
-    def _load_command(self, command_name, cmd_args):
+    def _load_command(self, command_name, cmd_args, charmcraft_config):
         """Load a command."""
         cmd_class, group = self.commands[command_name]
-        cmd = cmd_class(group)
+        cmd = cmd_class(group, charmcraft_config)
 
         # load and parse the command specific options/params
         parser = CustomArgumentParser(prog=cmd.name)
@@ -199,32 +205,56 @@ class Dispatcher:
 
         - validate that command is correct (NOT loading and parsing its arguments)
         """
-        # get all flags (default to False) and those per options, to filter sysargs
-        flags = {}
-        flag_per_option = {}
-        for flag, short_option, long_option, _ in GLOBAL_FLAGS:
-            flag_per_option[short_option] = flag
-            flag_per_option[long_option] = flag
-            flags[flag] = False
+        # get all arguments (default to what's specified) and those per options, to filter sysargs
+        global_args = {}
+        arg_per_option = {}
+        options_with_equal = []
+        for arg in GLOBAL_ARGS:
+            arg_per_option[arg.short_option] = arg
+            arg_per_option[arg.long_option] = arg
+            if arg.type == 'flag':
+                default = False
+            elif arg.type == 'option':
+                default = None
+                options_with_equal.append(arg.long_option + '=')
+            else:
+                raise ValueError("Bad GLOBAL_ARGS structure.")
+            global_args[arg.name] = default
 
         filtered_sysargs = []
-        for arg in sysargs:
-            if arg in flag_per_option:
-                flags[flag_per_option[arg]] = True
+        sysargs = iter(sysargs)
+        options_with_equal = tuple(options_with_equal)
+        for sysarg in sysargs:
+            if sysarg in arg_per_option:
+                arg = arg_per_option[sysarg]
+                if arg.type == 'flag':
+                    value = True
+                else:
+                    try:
+                        value = next(sysargs)
+                    except StopIteration:
+                        raise CommandError("The 'project-dir' option expects one argument.")
+                global_args[arg.name] = value
+            elif sysarg.startswith(options_with_equal):
+                option, value = sysarg.split('=', 1)
+                if not value:
+                    raise CommandError("The 'project-dir' option expects one argument.")
+                arg = arg_per_option[option]
+                global_args[arg.name] = value
             else:
-                filtered_sysargs.append(arg)
+                filtered_sysargs.append(sysarg)
 
         # control and use quiet/verbose options
-        if flags['quiet'] and flags['verbose']:
+        if global_args['quiet'] and global_args['verbose']:
             raise CommandError("The 'verbose' and 'quiet' options are mutually exclusive.")
-        if flags['quiet']:
+        if global_args['quiet']:
             message_handler.set_mode(message_handler.QUIET)
-        elif flags['verbose']:
+        elif global_args['verbose']:
             message_handler.set_mode(message_handler.VERBOSE)
-        logger.debug("Raw pre-parsed sysargs: flags=%s filtered=%s", flags, filtered_sysargs)
+        logger.debug("Raw pre-parsed sysargs: args=%s filtered=%s", global_args, filtered_sysargs)
 
         # if help requested, transform the parameters to make that explicit
-        if flags['help']:
+        if global_args['help']:
             command = HelpCommand.name
             cmd_args = filtered_sysargs
         elif filtered_sysargs:
@@ -239,8 +269,11 @@ class Dispatcher:
             help_text = get_general_help()
             raise CommandError(help_text, argsparsing=True)
 
+        # load the system's config
+        charmcraft_config = config.load(global_args['project_dir'])
+
         logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
-        return command, cmd_args
+        return command, cmd_args, charmcraft_config
 
     def run(self):
         """Really run the command."""

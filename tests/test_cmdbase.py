@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,15 +44,17 @@ def test_basecommand_mandatory_attributes(command, attrib):
     assert getattr(command, attrib) is not None
 
 
-def test_basecommand_holds_the_indicated_group():
+def test_basecommand_holds_the_indicated_info():
     """BaseCommand subclasses ."""
     class TestClass(BaseCommand):
         help_msg = 'help message'
         name = 'test'
 
     group = 'test group'
-    tc = TestClass(group)
+    config = 'test config'
+    tc = TestClass(group, config)
     assert tc.group == group
+    assert tc.config == config
 
 
 def test_basecommand_fill_parser_optional():
@@ -61,14 +63,14 @@ def test_basecommand_fill_parser_optional():
         help_msg = 'help message'
         name = 'test'
 
-        def __init__(self, group):
+        def __init__(self, group, config):
             self.done = False
-            super().__init__(group)
+            super().__init__(group, config)
 
         def run(self, parsed_args):
             self.done = True
 
-    tc = TestClass('group')
+    tc = TestClass('group', 'config')
     tc.run([])
     assert tc.done
 
@@ -79,6 +81,6 @@ def test_basecommand_run_mandatory():
         help_msg = 'help message'
         name = 'test'
 
-    tc = TestClass('group')
+    tc = TestClass('group', 'config')
     with pytest.raises(NotImplementedError):
         tc.run([])

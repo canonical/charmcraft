@@ -27,9 +27,21 @@ from charmcraft.commands.store.store import Store, Library
 
 @pytest.fixture
 def client_mock():
+    """Fixture to provide a mocked client."""
     client_mock = MagicMock()
-    with patch('charmcraft.commands.store.store.Client', lambda: client_mock):
+    with patch('charmcraft.commands.store.store.Client', lambda api, storage: client_mock):
         yield client_mock
+
+
+# -- tests for client usage
+
+def test_client_init(config):
+    """Check that the client is initiated ok even without config."""
+    with patch('charmcraft.commands.store.store.Client') as client_mock:
+        Store(config.charmhub)
+    assert client_mock.mock_calls == [
+        call(config.charmhub.api_url, config.charmhub.storage_url),
+    ]
 
 
 # -- tests for auth

@@ -236,7 +236,7 @@ def get_command_help(command_groups, command, arguments):
     textblocks.append(textwrap.dedent("""\
         Usage:
             charmcraft {} [options] {}
-    """.format(command.name, " ".join(parameters))))
+    """.format(command.name, " ".join("<{}>".format(parameter) for parameter in parameters))))
 
     textblocks.append("Summary:{}".format(textwrap.indent(command.overview, '    ')))
 

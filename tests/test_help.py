@@ -262,7 +262,7 @@ def test_command_help_text_with_parameters(config):
 
     expected = textwrap.dedent("""\
         Usage:
-            charmcraft somecommand [options] name extraparam
+            charmcraft somecommand [options] <name> <extraparam>
 
         Summary:
             Quite some long text.

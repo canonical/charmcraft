@@ -79,7 +79,7 @@ class PackCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        if self.config is None:
+        if self.config.type is None:
             raise CommandError(
                 "Missing project configuration, please provide a valid charmcraft.yaml.")
 

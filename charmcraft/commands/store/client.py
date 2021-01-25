@@ -18,6 +18,8 @@
 
 import logging
 import os
+import pathlib
+import platform
 import webbrowser
 from http.cookiejar import MozillaCookieJar
 
@@ -38,12 +40,47 @@ logging.getLogger(requests.packages.urllib3.__package__).setLevel(logging.ERROR)
 
 logger = logging.getLogger('charmcraft.commands.store')
 
+# XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
+# functionality in Store's production (related: issue #51)
+API_BASE_URL = 'https://api.staging.charmhub.io'
+STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com'
+
+TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
+
+
+def _get_os_platform(filepath=pathlib.Path("/etc/os-release")):
+    """Determine a system/release combo for an OS using /etc/os-release if available."""
+    system = platform.system()
+    release = platform.release()
+    machine = platform.machine()
+
+    if system == "Linux":
+        os_release = {}
+        try:
+            with filepath.open("r", encoding='utf-8') as f:
+                for line in f:
+                    if "=" in line:
+                        key, value = line.rstrip().split("=", 1)
+                        os_release[key] = value.strip('"')
+        except FileNotFoundError:
+            logger.debug("Unable to locate 'os-release' file, using default values")
+        finally:
+            system = os_release.get("NAME", system)
+            release = os_release.get("VERSION_ID", release)
+
+    return "{}/{} ({})".format(system, release, machine)
+
 
 def build_user_agent():
     """Build the charmcraft's user agent."""
-    # XXX Facundo 2020-06-29: we need to include here at least the platform, maybe
-    # architecture, etc. Related: issue #74.
-    return "charmcraft/{}".format(__version__)
+    if any(key.startswith(prefix) for prefix in TESTING_ENV_PREFIXES for key in os.environ.keys()):
+        testing = " (testing) "
+    else:
+        testing = " "
+    return "charmcraft/{}{}{} python/{}".format(__version__,
+                                                testing,
+                                                _get_os_platform(),
+                                                platform.python_version())
 
 
 def visit_page_with_browser(visit_url):

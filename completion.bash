@@ -38,7 +38,7 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${cmds[*]}" -- "$cur") )
             return
             ;;
-        login|logout|whoami|version|names)
+        login|logout|whoami|version|names|register|create-lib|publish-lib|fetch-lib|list-lib)
             COMPREPLY=( $(compgen -W "--help" -- "$cur") )
             return
             ;;
@@ -50,12 +50,16 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "--help --charm-file" -- "$cur") )
             return
             ;;
-        revisions|status)
+        revisions|status|release)
             COMPREPLY=( $(compgen -W "--help --name" -- "$cur") )
             return
             ;;
-        release)
-            COMPREPLY=( $(compgen -W "--help --name" -- "$cur") )
+        init)
+            COMPREPLY=( $(compgen -W "--help --project-dir --name --author --series --force" -- "$cur") )
+            return
+            ;;
+        pack)
+            COMPREPLY=( $(compgen -W "--help --from" -- "$cur") )
             return
             ;;
     esac
@@ -94,6 +98,20 @@ _charmcraft()
             case "$prev" in
                 --charm-file)
                     _filedir charm
+                    ;;
+            esac
+            ;;
+        "init")
+            case "$prev" in
+                --project-dir)
+                    _filedir -d
+                    ;;
+            esac
+            ;;
+        "pack")
+            case "$prev" in
+                -f|--from)
+                    _filedir -d
                     ;;
             esac
             ;;

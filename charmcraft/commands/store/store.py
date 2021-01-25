@@ -78,7 +78,7 @@ class Store:
     """The main interface to the Store's API."""
 
     def __init__(self, charmhub_config):
-        self._client = Client()
+        self._client = Client(charmhub_config.api_url, charmhub_config.storage_url)
 
     def login(self):
         """Login into the store.

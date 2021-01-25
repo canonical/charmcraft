@@ -171,9 +171,9 @@ class _AuthHolder:
         return resp
 
 
-def _storage_push(monitor):
+def _storage_push(monitor, storage_base_url):
     """Push bytes to the storage."""
-    url = STORAGE_BASE_URL + '/unscanned-upload/'
+    url = storage_base_url + '/unscanned-upload/'
     headers = {
         'Content-Type': monitor.content_type,
         'Accept': 'application/json',
@@ -196,8 +196,10 @@ def _storage_push(monitor):
 class Client:
     """Lightweight layer above _AuthHolder to present a more network oriented interface."""
 
-    def __init__(self):
+    def __init__(self, api_base_url, storage_base_url):
         self._auth_client = _AuthHolder()
+        self.api_base_url = api_base_url.rstrip('/')
+        self.storage_base_url = storage_base_url.rstrip('/')
 
     def clear_credentials(self):
         """Clear stored credentials."""
@@ -229,7 +231,7 @@ class Client:
 
     def _hit(self, method, urlpath, body=None):
         """Issue a request to the Store."""
-        url = API_BASE_URL + urlpath
+        url = self.api_base_url + urlpath
         logger.debug("Hitting the store: %s %s %s", method, url, body)
         resp = self._auth_client.request(method, url, body)
         if not resp.ok:
@@ -266,7 +268,7 @@ class Client:
 
             # create a monitor (so that progress can be displayed) as call the real pusher
             monitor = MultipartEncoderMonitor(encoder, _progress)
-            response = _storage_push(monitor)
+            response = _storage_push(monitor, self.storage_base_url)
 
         if not response.ok:
             raise CommandError("Failure while pushing file: [{}] {!r}".format(

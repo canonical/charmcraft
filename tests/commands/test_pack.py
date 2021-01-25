@@ -106,9 +106,9 @@ def test_bad_type_in_charmcraft(bundle_yaml, config):
         "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command.")
 
 
-def test_missing_configuration():
+def test_missing_configuration(config):
     """The charmcraft.yaml file must be in place for this command."""
-    config = None
+    config.set(type=None)
     with pytest.raises(CommandError) as cm:
         PackCommand('group', config).run(noargs)
     assert str(cm.value) == (

@@ -95,8 +95,8 @@ def check_relative_paths(value):
 class CharmhubConfig:
     """Configuration for all Charmhub related options."""
 
-    api_url = attr.ib(default='https://api.staging.charmhub.io')
-    storage_url = attr.ib(default='https://storage.staging.snapcraftcontent.com')
+    api_url = attr.ib(default='https://api.charmhub.io')
+    storage_url = attr.ib(default='https://storage.snapcraftcontent.com')
 
     @classmethod
     def from_dict(cls, source):
@@ -130,7 +130,7 @@ class Config:
 
     charmhub = attr.ib(default={}, converter=CharmhubConfig.from_dict)
     parts = attr.ib(default={}, converter=BasicPrime.from_dict)
-    type = attr.ib()
+    type = attr.ib(default=None)
 
     # this item is provided by the code itself, not the user, as convenience for the
     # rest of the code
@@ -167,7 +167,6 @@ CONFIG_SCHEMA = {
             },
         },
     },
-    'required': ['type'],
     'additionalProperties': False,
 }
 
@@ -183,7 +182,10 @@ def load(dirpath):
     # XXX Facundo 2021-01-04: we will make this configuration mandatory in the future, but
     # so far is ok to not have it
     if content is None:
-        return
+        # when the configuration becomes mandatory, we should enforce that 'type' is mandatory
+        # in the schema (so it always have it) and raise an exception here instead of having
+        # an empty config
+        content = {}
 
     # validate the loaded config is ok
     try:

@@ -65,8 +65,8 @@ def _get_os_platform(filepath=pathlib.Path("/etc/os-release")):
         except FileNotFoundError:
             logger.debug("Unable to locate 'os-release' file, using default values")
         finally:
-            system = os_release.get("NAME", "Unknown")
-            release = os_release.get("VERSION_ID", "Unknown Version")
+            system = os_release.get("NAME", system)
+            release = os_release.get("VERSION_ID", release)
 
     return "{}/{} ({})".format(system, release, machine)
 

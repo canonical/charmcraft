@@ -48,12 +48,12 @@ def test_useragent_linux(monkeypatch):
     monkeypatch.setenv("TRAVIS_TESTING", "1")
     with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
             patch('charmcraft.commands.store.client._get_os_platform',
-                  return_value="Arch Linux/Unknown Version (x86_64)"), \
+                  return_value="Arch Linux/5.10.10-arch1-1 (x86_64)"), \
             patch('platform.system', return_value='Linux'), \
             patch('platform.machine', return_value='x86_64'), \
             patch('platform.python_version', return_value='3.9.1'):
         ua = build_user_agent()
-    assert ua == "charmcraft/1.2.3 (testing) Arch Linux/Unknown Version (x86_64) python/3.9.1"
+    assert ua == "charmcraft/1.2.3 (testing) Arch Linux/5.10.10-arch1-1 (x86_64) python/3.9.1"
 
 
 def test_useragent_windows(monkeypatch):

@@ -119,6 +119,10 @@ parts:
       - lib/wheel-*.dist-info
       - lib/appdirs.py
       - lib/appdirs-*.dist-info
+      - lib/attr
+      - lib/attrs-*.dist-info
+      - lib/jsonschema
+      - lib/jsonschema-*.dist-info
       - lib/macaroonbakery
       - lib/macaroonbakery-*.dist-info
       - lib/pyrfc3339

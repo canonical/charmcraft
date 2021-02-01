@@ -44,7 +44,7 @@ def test_aesthetic_help_msg(command):
 
 
 @pytest.mark.parametrize('command', all_commands)
-def test_aesthetic_args_options_msg(command):
+def test_aesthetic_args_options_msg(command, config):
     """All the real commands args help messages start with uppercase and dont' end with a dot."""
     class FakeParser:
         """A fake to get the arguments added."""
@@ -54,7 +54,7 @@ def test_aesthetic_args_options_msg(command):
             assert help_msg, "The help message must be present in each option"
             assert help_msg[0].isupper() and help_msg[-1] != '.'
 
-    command('group').fill_parser(FakeParser())
+    command('group', config).fill_parser(FakeParser())
 
 
 def test_get_usage_message():
@@ -190,7 +190,7 @@ def test_detailed_help_text():
     assert text == expected
 
 
-def test_command_help_text_no_parameters():
+def test_command_help_text_no_parameters(config):
     """All different parts for a specific command help that doesn't have parameters."""
     overview = textwrap.dedent("""
         Quite some long text.
@@ -213,7 +213,7 @@ def test_command_help_text_no_parameters():
         ("--revision", "The revision to release (defaults to latest)."),
     ]
 
-    text = get_command_help(command_groups, cmd1('group1'), options)
+    text = get_command_help(command_groups, cmd1('group1', config), options)
 
     expected = textwrap.dedent("""\
         Usage:
@@ -239,7 +239,7 @@ def test_command_help_text_no_parameters():
     assert text == expected
 
 
-def test_command_help_text_with_parameters():
+def test_command_help_text_with_parameters(config):
     """All different parts for a specific command help that has parameters."""
     overview = textwrap.dedent("""
         Quite some long text.
@@ -258,11 +258,11 @@ def test_command_help_text_with_parameters():
         ("--other-option", "Other option."),
     ]
 
-    text = get_command_help(command_groups, cmd1('group1'), options)
+    text = get_command_help(command_groups, cmd1('group1', config), options)
 
     expected = textwrap.dedent("""\
         Usage:
-            charmcraft somecommand [options] name extraparam
+            charmcraft somecommand [options] <name> <extraparam>
 
         Summary:
             Quite some long text.
@@ -280,7 +280,7 @@ def test_command_help_text_with_parameters():
     assert text == expected
 
 
-def test_command_help_text_loneranger():
+def test_command_help_text_loneranger(config):
     """All different parts for a specific command that's the only one in its group."""
     overview = textwrap.dedent("""
         Quite some long text.
@@ -297,7 +297,7 @@ def test_command_help_text_loneranger():
         ("-q, --quiet", "Only show warnings and errors, not progress."),
     ]
 
-    text = get_command_help(command_groups, cmd1('group1'), options)
+    text = get_command_help(command_groups, cmd1('group1', config), options)
 
     expected = textwrap.dedent("""\
         Usage:

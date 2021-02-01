@@ -25,12 +25,16 @@ class {{ class_name }}(CharmBase):
         self._stored.set_default(things=[])
 
     def _on_config_changed(self, _):
+        # Note: you need to uncomment the example in the config.yaml file for this to work (ensure
+        # to not just leave the example, but adapt to your configuration needs)
         current = self.config["thing"]
         if current not in self._stored.things:
             logger.debug("found a new thing: %r", current)
             self._stored.things.append(current)
 
     def _on_fortune_action(self, event):
+        # Note: you need to uncomment the example in the actions.yaml file for this to work (ensure
+        # to not just leave the example, but adapt to your needs for actions commands)
         fail = event.params["fail"]
         if fail:
             event.fail(fail)

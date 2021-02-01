@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,17 +27,29 @@ from charmcraft.commands.store.store import Store, Library
 
 @pytest.fixture
 def client_mock():
+    """Fixture to provide a mocked client."""
     client_mock = MagicMock()
-    with patch('charmcraft.commands.store.store.Client', lambda: client_mock):
+    with patch('charmcraft.commands.store.store.Client', lambda api, storage: client_mock):
         yield client_mock
+
+
+# -- tests for client usage
+
+def test_client_init(config):
+    """Check that the client is initiated ok even without config."""
+    with patch('charmcraft.commands.store.store.Client') as client_mock:
+        Store(config.charmhub)
+    assert client_mock.mock_calls == [
+        call(config.charmhub.api_url, config.charmhub.storage_url),
+    ]
 
 
 # -- tests for auth
 
 
-def test_login(client_mock):
+def test_login(client_mock, config):
     """Simple login case."""
-    store = Store()
+    store = Store(config.charmhub)
     result = store.login()
     assert client_mock.mock_calls == [
         call.clear_credentials(),
@@ -46,9 +58,9 @@ def test_login(client_mock):
     assert result is None
 
 
-def test_logout(client_mock):
+def test_logout(client_mock, config):
     """Simple logout case."""
-    store = Store()
+    store = Store(config.charmhub)
     result = store.logout()
     assert client_mock.mock_calls == [
         call.clear_credentials(),
@@ -56,9 +68,9 @@ def test_logout(client_mock):
     assert result is None
 
 
-def test_whoami(client_mock):
+def test_whoami(client_mock, config):
     """Simple whoami case."""
-    store = Store()
+    store = Store(config.charmhub)
     auth_response = {'display-name': 'John Doe', 'username': 'jdoe', 'id': '-1'}
     client_mock.get.return_value = auth_response
 
@@ -75,9 +87,9 @@ def test_whoami(client_mock):
 # -- tests for register and list names
 
 
-def test_register_name(client_mock):
+def test_register_name(client_mock, config):
     """Simple register case."""
-    store = Store()
+    store = Store(config.charmhub)
     result = store.register_name('testname')
 
     assert client_mock.mock_calls == [
@@ -86,9 +98,9 @@ def test_register_name(client_mock):
     assert result is None
 
 
-def test_list_registered_names_empty(client_mock):
+def test_list_registered_names_empty(client_mock, config):
     """List registered names getting an empty response."""
-    store = Store()
+    store = Store(config.charmhub)
 
     auth_response = {'results': []}
     client_mock.get.return_value = auth_response
@@ -101,9 +113,9 @@ def test_list_registered_names_empty(client_mock):
     assert result == []
 
 
-def test_list_registered_names_multiple(client_mock):
+def test_list_registered_names_multiple(client_mock, config):
     """List registered names getting a multiple response."""
-    store = Store()
+    store = Store(config.charmhub)
 
     auth_response = {'results': [
         {'name': 'name1', 'private': False, 'status': 'status1'},
@@ -128,10 +140,10 @@ def test_list_registered_names_multiple(client_mock):
 # -- tests for upload
 
 
-def test_upload_straightforward(client_mock, caplog):
+def test_upload_straightforward(client_mock, caplog, config):
     """The full and successful upload case."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
-    store = Store()
+    store = Store(config.charmhub)
 
     # the first response, for when pushing bytes
     test_upload_id = 'test-upload-id'
@@ -174,10 +186,10 @@ def test_upload_straightforward(client_mock, caplog):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_upload_polls_status(client_mock, caplog):
+def test_upload_polls_status(client_mock, caplog, config):
     """Upload polls status url until the end is indicated."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
-    store = Store()
+    store = Store(config.charmhub)
 
     # first and second response, for pushing bytes and let the store know about it
     test_upload_id = 'test-upload-id'
@@ -224,9 +236,9 @@ def test_upload_polls_status(client_mock, caplog):
 # -- tests for list revisions
 
 
-def test_list_revisions_ok(client_mock):
+def test_list_revisions_ok(client_mock, config):
     """One revision ok."""
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.get.return_value = {'revisions': [
         {
             'revision': 7,
@@ -251,9 +263,9 @@ def test_list_revisions_ok(client_mock):
     assert item.errors == []
 
 
-def test_list_revisions_empty(client_mock):
+def test_list_revisions_empty(client_mock, config):
     """No revisions listed."""
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.get.return_value = {'revisions': []}
 
     result = store.list_revisions('some-name')
@@ -264,9 +276,9 @@ def test_list_revisions_empty(client_mock):
     assert result == []
 
 
-def test_list_revisions_errors(client_mock):
+def test_list_revisions_errors(client_mock, config):
     """One revision with errors."""
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.get.return_value = {'revisions': [
         {
             'revision': 7,
@@ -294,7 +306,7 @@ def test_list_revisions_errors(client_mock):
     assert error2.code == "error-code-2"
 
 
-def test_list_revisions_several_mixed(client_mock):
+def test_list_revisions_several_mixed(client_mock, config):
     """All cases mixed."""
     client_mock.get.return_value = {'revisions': [
         {
@@ -315,7 +327,7 @@ def test_list_revisions_several_mixed(client_mock):
         },
     ]}
 
-    store = Store()
+    store = Store(config.charmhub)
     result = store.list_revisions('some-name')
 
     (item1, item2) = result
@@ -338,9 +350,9 @@ def test_list_revisions_several_mixed(client_mock):
 # -- tests for release
 
 
-def test_release_simple(client_mock):
+def test_release_simple(client_mock, config):
     """Releasing a revision into one channel."""
-    store = Store()
+    store = Store(config.charmhub)
     store.release('testname', 123, ['somechannel'])
 
     expected_body = [{'revision': 123, 'channel': 'somechannel'}]
@@ -349,9 +361,9 @@ def test_release_simple(client_mock):
     ]
 
 
-def test_release_multiple(client_mock):
+def test_release_multiple(client_mock, config):
     """Releasing a revision into multiple channels."""
-    store = Store()
+    store = Store(config.charmhub)
     store.release('testname', 123, ['channel1', 'channel2', 'channel3'])
 
     expected_body = [
@@ -367,7 +379,7 @@ def test_release_multiple(client_mock):
 # -- tests for status
 
 
-def test_status_ok(client_mock):
+def test_status_ok(client_mock, config):
     """Get all the release information."""
     client_mock.get.return_value = {
         'channel-map': [
@@ -422,7 +434,7 @@ def test_status_ok(client_mock):
         ],
     }
 
-    store = Store()
+    store = Store(config.charmhub)
     channel_map, channels, revisions = store.list_releases('testname')
 
     # check how the client is used
@@ -465,9 +477,9 @@ def test_status_ok(client_mock):
 # -- tests for library related functions
 
 
-def test_create_library_id(client_mock):
+def test_create_library_id(client_mock, config):
     """Create a new library in the store."""
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.post.return_value = {'library-id': 'test-lib-id'}
 
     result = store.create_library_id('test-charm-name', 'test-lib-name')
@@ -478,7 +490,7 @@ def test_create_library_id(client_mock):
     assert result == 'test-lib-id'
 
 
-def test_create_library_revision(client_mock):
+def test_create_library_revision(client_mock, config):
     """Create a new library revision in the store."""
     test_charm_name = 'test-charm-name'
     test_lib_name = 'test-lib-name'
@@ -488,7 +500,7 @@ def test_create_library_revision(client_mock):
     test_content = 'test content with quite a lot of funny Python code :p'
     test_hash = '1234'
 
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.post.return_value = {
         'api': test_api,
         'content': test_content,
@@ -520,7 +532,7 @@ def test_create_library_revision(client_mock):
     assert result_lib.patch == test_patch
 
 
-def test_get_library(client_mock):
+def test_get_library(client_mock, config):
     """Get all the information (including content) for a library revision."""
     test_charm_name = 'test-charm-name'
     test_lib_name = 'test-lib-name'
@@ -530,7 +542,7 @@ def test_get_library(client_mock):
     test_content = 'test content with quite a lot of funny Python code :p'
     test_hash = '1234'
 
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.get.return_value = {
         'api': test_api,
         'content': test_content,
@@ -555,7 +567,7 @@ def test_get_library(client_mock):
     assert result_lib.patch == test_patch
 
 
-def test_get_tips_simple(client_mock):
+def test_get_tips_simple(client_mock, config):
     """Get info for a lib, simple case with successful result."""
     test_charm_name = 'test-charm-name'
     test_lib_name = 'test-lib-name'
@@ -565,7 +577,7 @@ def test_get_tips_simple(client_mock):
     test_content = 'test content with quite a lot of funny Python code :p'
     test_hash = '1234'
 
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.post.return_value = {'libraries': [{
         'api': test_api,
         'content': test_content,
@@ -595,11 +607,11 @@ def test_get_tips_simple(client_mock):
     assert result == expected
 
 
-def test_get_tips_empty(client_mock):
+def test_get_tips_empty(client_mock, config):
     """Get info for a lib, with an empty response."""
     test_lib_id = 'test-lib-id'
 
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.post.return_value = {'libraries': []}
 
     query_info = [
@@ -616,7 +628,7 @@ def test_get_tips_empty(client_mock):
     assert result == {}
 
 
-def test_get_tips_several(client_mock):
+def test_get_tips_several(client_mock, config):
     """Get info for multiple libs at once."""
     test_charm_name_1 = 'test-charm-name-1'
     test_lib_name_1 = 'test-lib-name-1'
@@ -634,7 +646,7 @@ def test_get_tips_several(client_mock):
     test_content_2 = 'more awesome Python code :)'
     test_hash_2 = '5678'
 
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.post.return_value = {'libraries': [{
         'api': test_api_1,
         'content': test_content_1,
@@ -677,9 +689,9 @@ def test_get_tips_several(client_mock):
     assert result == expected
 
 
-def test_get_tips_query_combinations(client_mock):
+def test_get_tips_query_combinations(client_mock, config):
     """Use all the combinations to specify what's queried."""
-    store = Store()
+    store = Store(config.charmhub)
     client_mock.post.return_value = {'libraries': []}
 
     query_info = [

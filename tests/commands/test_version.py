@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ from charmcraft.commands.version import VersionCommand
 def test_version_result(caplog):
     """Check it produces the right version."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands.version")
-    cmd = VersionCommand('group')
+    cmd = VersionCommand('group', 'config')
     cmd.run([])
     expected = __version__
     assert [expected] == [rec.message for rec in caplog.records]

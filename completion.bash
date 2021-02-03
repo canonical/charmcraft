@@ -38,7 +38,7 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${cmds[*]}" -- "$cur") )
             return
             ;;
-        login|logout|whoami|version|names|register|create-lib|publish-lib|fetch-lib|list-lib)
+        login|logout|whoami|version|names|register|create-lib|publish-lib|fetch-lib|list-lib|register-bundle)
             COMPREPLY=( $(compgen -W "--help" -- "$cur") )
             return
             ;;
@@ -46,12 +46,12 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "--help --from --entrypoint --requirement" -- "$cur") )
             return
             ;;
-        upload)
-            COMPREPLY=( $(compgen -W "--help --charm-file" -- "$cur") )
+        upload|revisions|status)
+            COMPREPLY=( $(compgen -W "--help" -- "$cur") )
             return
             ;;
-        revisions|status|release)
-            COMPREPLY=( $(compgen -W "--help --name" -- "$cur") )
+        release)
+            COMPREPLY=( $(compgen -W "--help" --revision --channel -- "$cur") )
             return
             ;;
         init)

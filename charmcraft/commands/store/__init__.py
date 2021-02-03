@@ -23,6 +23,7 @@ import os
 import pathlib
 import string
 import textwrap
+import zipfile
 from collections import namedtuple
 from operator import attrgetter
 
@@ -36,7 +37,7 @@ from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
-# entity types
+# entity types #FIXME: enum!
 CHARM = 'charm'
 BUNDLE = 'bundle'
 
@@ -131,7 +132,7 @@ class WhoamiCommand(BaseCommand):
             logger.info(line)
 
 
-class RegisterNameCommand(BaseCommand):
+class RegisterCharmNameCommand(BaseCommand):  #FIXME: probar IRL, fix tests
     """Register a charm name in Charmhub."""
 
     name = 'register'
@@ -170,7 +171,44 @@ class RegisterNameCommand(BaseCommand):
         logger.info("You are now the publisher of charm %r in Charmhub.", parsed_args.name)
 
 
-class ListNamesCommand(BaseCommand):
+class RegisterBundleCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+    """Register a bundle name in the Store."""
+    name = 'register-bundle'
+    help_msg = "Register a bundle name in the Store."
+    overview = textwrap.dedent("""
+        Register a bundle name in the Store.
+
+        Claim a name for your bundle in Charmhub. Once you have registered
+        a name, you can upload bundle packages for that name and
+        release them for wider consumption.
+
+        Charmhub operates on the 'principle of least surprise' with regard
+        to naming. A bundle with a well-known name should provide the best
+        system for the service most people associate with that name.  Bundles
+        can be renamed in the Charmhub, but we would nonetheless ask
+        you to use a qualified name, such as `yourname-bundlename` if you are
+        in any doubt about your ability to meet that standard.
+
+        We discuss registrations in Charmhub Discourse:
+
+           https://discourse.charmhub.io/c/charm
+
+        Registration will take you through login if needed.
+
+    """)
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('name', help="The name to register in Charmhub")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub)
+        store.register_name(parsed_args.name, BUNDLE)
+        logger.info("You are now the publisher of bundle %r in Charmhub.", parsed_args.name)
+
+
+class ListNamesCommand(BaseCommand):  #FIXME: probar IRL, fix tests
     """List the entities registered in Charmhub."""
 
     name = 'names'
@@ -205,7 +243,7 @@ class ListNamesCommand(BaseCommand):
             visibility = 'private' if item.private else 'public'
             data.append([
                 item.name,
-                item.entity_type,
+                item.entity_type,  #FIXME test
                 visibility,
                 item.status,
             ])
@@ -215,7 +253,7 @@ class ListNamesCommand(BaseCommand):
             logger.info(line)
 
 
-class UploadCommand(BaseCommand):
+class UploadCommand(BaseCommand):  #FIXME: probar IRL, fix tests
     """Upload a charm or bundle to Charmhub."""
 
     name = 'upload'
@@ -235,54 +273,86 @@ class UploadCommand(BaseCommand):
 
     """)
     common = True
+    needs_config = False #FIXME: montar toda esta infra
 
-    def _discover_charm(self, charm_filepath):
-        """Discover the charm name and file path.
+    def _discover_file(self, filepath):  #FIXME esta hay que testearla toda de cero, excepto lo de backarfs
+        """Discover the charm/bundle name and file path.
 
-        If received path is None, a metadata.yaml will be searched in the current directory. If
-        path is given the name is taken from the filename.
-
+        If received path is None, a metadata.yaml will be searched in the current directory (no
+        point in using --project-dir, as this is for backward compatibility, and in the next
+        versions the filepath will be mandatory).
         """
-        if charm_filepath is None:
+
+        if filepath is None:
             # discover the info using project's metadata, asume the file has the project's name
-            # with a .charm extension
+            # with a .charm extension.
+            # XXX Facundo 2020-02-01: This is left here for backwards compatibility, will be
+            # removed in next versions.
             charm_name = get_name_from_metadata()
             if charm_name is None:
                 raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml to upload. Check you are in "
-                    "a charm directory with metadata.yaml, or use --charm-file=foo.charm.")
+                    "Cannot find a valid charm name in metadata.yaml to upload. "
+                    "Pass the file to upload directly, e.g. charmcraft upload foo.charm.")
 
-            charm_filepath = pathlib.Path(charm_name + '.charm').absolute()
-            if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
+            filepath = pathlib.Path(charm_name + '.charm').absolute()
+            if not os.access(str(filepath), os.R_OK):  # access doesn't support pathlib in 3.5
                 raise CommandError(
-                    "Cannot access charm at {!r}. Try --charm-file=foo.charm"
-                    .format(str(charm_filepath)))
+                    "Cannot access charm at {!r}. Pass the file to upload directly, "
+                    "e.g. charmcraft upload foo.charm.".format(str(filepath)))
 
+        # expand and validate it's a file we can use
+        filepath = filepath.expanduser()
+        if not os.access(str(filepath), os.R_OK):  # access doesn't support pathlib in 3.5
+            raise CommandError("Cannot access {!r}.".format(str(filepath)))
+        if not filepath.is_file():
+            raise CommandError("{!r} is not a file.".format(str(filepath)))
+        try:
+            zf = zipfile.ZipFile(filepath)
+        except zipfile.BadZipFile:
+            raise CommandError("Can not open {!r} (bad zip file).".format(str(filepath)))
+
+        # get the name from the given file (trying first if it's a charm, otherwise a bundle,
+        # otherwise it's an error)
+        if 'metadata.yaml' in zf.namelist():
+            try:
+                name = yaml.safe_load(zf.read('metadata.yaml'))['name']
+            except Exception:
+                raise CommandError(
+                    "Bad 'metadata.yaml' file inside {!r}: must be a valid YAML with "
+                    "a 'name' key.".format(str(filepath)))
+        elif 'bundle.yaml' in zf.namelist():
+            try:
+                name = yaml.safe_load(zf.read('bundle.yaml'))['name']
+            except Exception:
+                raise CommandError(
+                    "Bad 'bundle.yaml' file inside {!r}: must be a valid YAML with "
+                    "a 'name' key.".format(str(filepath)))
         else:
-            # the path is given, asume the charm name is part of the file name
-            # XXX Facundo 2020-06-30: Actually, we need to open the ZIP file, extract the
-            # included metadata.yaml file, and read the name from there. Issue: #77.
-            charm_filepath = charm_filepath.expanduser()
-            if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
-                raise CommandError(
-                    "Cannot access {!r}.".format(str(charm_filepath)))
-            if not charm_filepath.is_file():
-                raise CommandError(
-                    "{!r} is not a file.".format(str(charm_filepath)))
+            raise CommandError(
+                "The indicated file {!r} is not a charm ('metadata.yaml' not found) "
+                "nor a bundle ('bundle.yaml' not found).".format(str(filepath)))
 
-            charm_name = charm_filepath.stem
-
-        return charm_name, charm_filepath
+        return name, filepath
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
             '--charm-file', type=pathlib.Path,
-            help="The charm to upload")
+            help="The charm to upload; this option is DEPRECATED, pass the filepath directly")
+        parser.add_argument(
+            'filepath', type=pathlib.Path, nargs='?',
+            help="The charm or bundle to upload")
 
     def run(self, parsed_args):
         """Run the command."""
-        name, path = self._discover_charm(parsed_args.charm_file)
+        if parsed_args.charm_file is not None:
+            logger.warning("The '--charm-file' option is DEPRECATED, pass the filepath directly.")
+            filepath = parsed_args.charm_file
+        if parsed_args.filepath is not None:
+            filepath = parsed_args.filepath
+        print("========== upload filepath", repr(filepath))
+        name, path = self._discover_file(filepath)
+        print("========== upload name path", repr(name), repr(path))
         store = Store(self.config.charmhub)
         result = store.upload(name, path)
         if result.ok:
@@ -293,11 +363,31 @@ class UploadCommand(BaseCommand):
             logger.info("Upload failed with status %r.", result.status)
 
 
-class ListRevisionsCommand(BaseCommand):
-    """List revisions for a charm."""
+def find_out_name(parsed_args, command_name):  #FIXME testear toda
+    """Get the name from multiple sources.
+
+    This will go away once 'name' is a mandatory parameter in commands.
+    """
+    # explicit by the user
+    if parsed_args.name:
+        return parsed_args.name
+
+    # not given! this is being deprecated, supported here for backwards compatibility: only in
+    # the case of a charm, and ignoring --project-dir
+    charm_name = get_name_from_metadata()
+    if charm_name is not None:
+        return charm_name
+
+    raise CommandError(
+        "Can't access name in 'metadata.yaml' file. "
+        "Pass the name directly, e.g. charmcraft {} foobar.".format(command_name))
+
+
+class ListRevisionsCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+    """List revisions for a charm or a bundle."""
 
     name = 'revisions'
-    help_msg = "List revisions for a charm in Charmhub"
+    help_msg = "List revisions for a charm or a bundle in Charmhub"
     overview = textwrap.dedent("""
         Show version, date and status for each revision in Charmhub.
 
@@ -314,21 +404,19 @@ class ListRevisionsCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="The name of the charm")
+        parser.add_argument(
+            '--name',
+            help="The name of the charm; this option is DEPRECATED, pass the name directly")
+        parser.add_argument(
+            'name', nargs='?',
+            help="The name of charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
-        if parsed_args.name:
-            charm_name = parsed_args.name
-        else:
-            charm_name = get_name_from_metadata()
-            if charm_name is None:
-                raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo.")
+        package_name = find_out_name(parsed_args, self.name) #FIXME: que la use
 
         store = Store(self.config.charmhub)
-        result = store.list_revisions(charm_name)
+        result = store.list_revisions(package_name)
         if not result:
             logger.info("No revisions found.")
             return
@@ -355,18 +443,18 @@ class ListRevisionsCommand(BaseCommand):
             logger.info(line)
 
 
-class ReleaseCommand(BaseCommand):
-    """Release a charm revision to specific channels."""
+class ReleaseCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+    """Release a charm or bundle revision to specific channels."""
 
     name = 'release'
-    help_msg = "Release a charm revision in one or more channels"
+    help_msg = "Release a charm or bundle revision in one or more channels"
     overview = textwrap.dedent("""
-        Release a charm revision in the channel(s) provided.
+        Release a charm or bundle revision in the channel(s) provided.
 
-        Charm revisions are not published for anybody else until you release
-        them in a channel. When you release a revision into a channel, users
-        who deploy the charm from that channel will get see the new revision
-        as a potential update.
+        Charm or bundle revisions are not published for anybody else until you
+        release them in a channel. When you release a revision into a channel,
+        users who deploy the charm or bundle from that channel will get see
+        the new revision as a potential update.
 
         A channel is made up of `track/risk/branch` with both the track and
         the branch as optional items, so formally:
@@ -399,33 +487,30 @@ class ReleaseCommand(BaseCommand):
             'channels', metavar='channel', nargs='+',
             help="The channel(s) to release to")
         parser.add_argument('--name', help="The name of the charm")
+        # FIXME FUCK!!!
+        #    help="The name of the charm; this option is DEPRECATED, pass the name directly")
+        #parser.add_argument(
+        #    'name', nargs='?',
+        #    help="The name of charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
+        package_name = find_out_name(parsed_args, self.name) #FIXME: que la use
+
         store = Store(self.config.charmhub)
-
-        if parsed_args.name:
-            charm_name = parsed_args.name
-        else:
-            charm_name = get_name_from_metadata()
-            if charm_name is None:
-                raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo.")
-
-        store.release(charm_name, parsed_args.revision, parsed_args.channels)
+        store.release(package_name, parsed_args.revision, parsed_args.channels)
         logger.info(
             "Revision %d of charm %r released to %s",
-            parsed_args.revision, charm_name, ", ".join(parsed_args.channels))
+            parsed_args.revision, package_name, ", ".join(parsed_args.channels))
 
 
-class StatusCommand(BaseCommand):
-    """Show channel status for a charm."""
+class StatusCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+    """Show channel status for a charm or bundle."""
 
     name = 'channels'
     help_msg = "Show channel and released revisions"
     overview = textwrap.dedent("""
-        Show channels and released revisions in Charmhub
+        Show channels and released revisions in Charmhub.
 
         Charm revisions are not available to users until they are released
         into a channel. This command shows the various channels for a charm
@@ -446,21 +531,19 @@ class StatusCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="The name of the charm")
+        parser.add_argument(
+            '--name',
+            help="The name of the charm; this option is DEPRECATED, pass the name directly")
+        parser.add_argument(
+            'name', nargs='?',
+            help="The name of charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
-        if parsed_args.name:
-            charm_name = parsed_args.name
-        else:
-            charm_name = get_name_from_metadata()
-            if charm_name is None:
-                raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo.")
+        package_name = find_out_name(parsed_args, self.name) #FIXME: que la use
 
         store = Store(self.config.charmhub)
-        channel_map, channels, revisions = store.list_releases(charm_name)
+        channel_map, channels, revisions = store.list_releases(package_name)
         if not channel_map:
             logger.info("Nothing has been released yet.")
             return

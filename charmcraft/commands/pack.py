@@ -76,6 +76,7 @@ class PackCommand(BaseCommand):
     name = 'pack'
     help_msg = "Build the bundle"
     overview = _overview
+    needs_config = True
 
     def run(self, parsed_args):
         """Run the command."""

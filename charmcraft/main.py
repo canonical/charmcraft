@@ -280,6 +280,11 @@ class Dispatcher:
         if isinstance(self.command, HelpCommand):
             self.command.run(self.parsed_args, self.commands)
         else:
+            if self.command.needs_config and not self.command.config.project.config_provided:  #FIXME test
+                raise CommandError(
+                    "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
+                    "the current directory or where specified with --project-dir option); see "
+                    "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138")
             self.command.run(self.parsed_args)
 
 

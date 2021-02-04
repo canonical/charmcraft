@@ -116,14 +116,14 @@ class Store:
 
     def register_name(self, name, entity_type):
         """Register the specified name for the authenticated user."""
-        self._client.post('/v1/charm', {'name': name, 'type': entity_type})  #FIXME test
+        self._client.post('/v1/charm', {'name': name, 'type': entity_type})
 
     def list_registered_names(self):
         """Return names registered by the authenticated user."""
         response = self._client.get('/v1/charm')
         result = []
         for item in response['results']:
-            result.append(Entity(  #FIXME: test
+            result.append(Entity(
                 name=item['name'], private=item['private'], status=item['status'],
                 entity_type=item['type']))
         return result

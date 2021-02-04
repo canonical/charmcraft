@@ -90,10 +90,10 @@ def test_whoami(client_mock, config):
 def test_register_name(client_mock, config):
     """Simple register case."""
     store = Store(config.charmhub)
-    result = store.register_name('testname')
+    result = store.register_name('testname', 'stuff')
 
     assert client_mock.mock_calls == [
-        call.post('/v1/charm', {'name': 'testname'}),
+        call.post('/v1/charm', {'name': 'testname', 'type': 'stuff'}),
     ]
     assert result is None
 
@@ -118,8 +118,8 @@ def test_list_registered_names_multiple(client_mock, config):
     store = Store(config.charmhub)
 
     auth_response = {'results': [
-        {'name': 'name1', 'private': False, 'status': 'status1'},
-        {'name': 'name2', 'private': True, 'status': 'status2'},
+        {'name': 'name1', 'type': 'charm', 'private': False, 'status': 'status1'},
+        {'name': 'name2', 'type': 'bundle', 'private': True, 'status': 'status2'},
     ]}
     client_mock.get.return_value = auth_response
 
@@ -130,9 +130,11 @@ def test_list_registered_names_multiple(client_mock, config):
     ]
     item1, item2 = result
     assert item1.name == 'name1'
+    assert item1.entity_type == 'charm'
     assert not item1.private
     assert item1.status == 'status1'
     assert item2.name == 'name2'
+    assert item2.entity_type == 'bundle'
     assert item2.private
     assert item2.status == 'status2'
 

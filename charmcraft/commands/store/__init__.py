@@ -37,7 +37,7 @@ from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
-# entity types #FIXME: enum!
+# entity types
 CHARM = 'charm'
 BUNDLE = 'bundle'
 
@@ -132,7 +132,7 @@ class WhoamiCommand(BaseCommand):
             logger.info(line)
 
 
-class RegisterCharmNameCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+class RegisterCharmNameCommand(BaseCommand):
     """Register a charm name in Charmhub."""
 
     name = 'register'
@@ -171,7 +171,7 @@ class RegisterCharmNameCommand(BaseCommand):  #FIXME: probar IRL, fix tests
         logger.info("You are now the publisher of charm %r in Charmhub.", parsed_args.name)
 
 
-class RegisterBundleCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+class RegisterBundleNameCommand(BaseCommand):
     """Register a bundle name in the Store."""
     name = 'register-bundle'
     help_msg = "Register a bundle name in the Store."
@@ -208,7 +208,7 @@ class RegisterBundleCommand(BaseCommand):  #FIXME: probar IRL, fix tests
         logger.info("You are now the publisher of bundle %r in Charmhub.", parsed_args.name)
 
 
-class ListNamesCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+class ListNamesCommand(BaseCommand):
     """List the entities registered in Charmhub."""
 
     name = 'names'
@@ -243,7 +243,7 @@ class ListNamesCommand(BaseCommand):  #FIXME: probar IRL, fix tests
             visibility = 'private' if item.private else 'public'
             data.append([
                 item.name,
-                item.entity_type,  #FIXME test
+                item.entity_type,
                 visibility,
                 item.status,
             ])
@@ -253,7 +253,38 @@ class ListNamesCommand(BaseCommand):  #FIXME: probar IRL, fix tests
             logger.info(line)
 
 
-class UploadCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+def get_name_from_zip(filepath):
+    """Get the charm/bundle name from a zip file."""
+    try:
+        zf = zipfile.ZipFile(filepath)
+    except zipfile.BadZipFile:
+        raise CommandError("Cannot open {!r} (bad zip file).".format(str(filepath)))
+
+    # get the name from the given file (trying first if it's a charm, then a bundle,
+    # otherwise it's an error)
+    if 'metadata.yaml' in zf.namelist():
+        try:
+            name = yaml.safe_load(zf.read('metadata.yaml'))['name']
+        except Exception:
+            raise CommandError(
+                "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
+                "a 'name' key.".format(str(filepath)))
+    elif 'bundle.yaml' in zf.namelist():
+        try:
+            name = yaml.safe_load(zf.read('bundle.yaml'))['name']
+        except Exception:
+            raise CommandError(
+                "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
+                "a 'name' key.".format(str(filepath)))
+    else:
+        raise CommandError(
+            "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
+            "nor a bundle ('bundle.yaml' not found).".format(str(filepath)))
+
+    return name
+
+
+class UploadCommand(BaseCommand):
     """Upload a charm or bundle to Charmhub."""
 
     name = 'upload'
@@ -273,88 +304,23 @@ class UploadCommand(BaseCommand):  #FIXME: probar IRL, fix tests
 
     """)
     common = True
-    needs_config = False #FIXME: montar toda esta infra
 
-    def _discover_file(self, filepath):  #FIXME esta hay que testearla toda de cero, excepto lo de backarfs
-        """Discover the charm/bundle name and file path.
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('filepath', type=pathlib.Path, help="The charm or bundle to upload")
 
-        If received path is None, a metadata.yaml will be searched in the current directory (no
-        point in using --project-dir, as this is for backward compatibility, and in the next
-        versions the filepath will be mandatory).
-        """
-
-        if filepath is None:
-            # discover the info using project's metadata, asume the file has the project's name
-            # with a .charm extension.
-            # XXX Facundo 2020-02-01: This is left here for backwards compatibility, will be
-            # removed in next versions.
-            charm_name = get_name_from_metadata()
-            if charm_name is None:
-                raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml to upload. "
-                    "Pass the file to upload directly, e.g. charmcraft upload foo.charm.")
-
-            filepath = pathlib.Path(charm_name + '.charm').absolute()
-            if not os.access(str(filepath), os.R_OK):  # access doesn't support pathlib in 3.5
-                raise CommandError(
-                    "Cannot access charm at {!r}. Pass the file to upload directly, "
-                    "e.g. charmcraft upload foo.charm.".format(str(filepath)))
-
+    def run(self, parsed_args):
+        """Run the command."""
         # expand and validate it's a file we can use
-        filepath = filepath.expanduser()
+        filepath = parsed_args.filepath.expanduser()
         if not os.access(str(filepath), os.R_OK):  # access doesn't support pathlib in 3.5
             raise CommandError("Cannot access {!r}.".format(str(filepath)))
         if not filepath.is_file():
             raise CommandError("{!r} is not a file.".format(str(filepath)))
-        try:
-            zf = zipfile.ZipFile(filepath)
-        except zipfile.BadZipFile:
-            raise CommandError("Can not open {!r} (bad zip file).".format(str(filepath)))
 
-        # get the name from the given file (trying first if it's a charm, otherwise a bundle,
-        # otherwise it's an error)
-        if 'metadata.yaml' in zf.namelist():
-            try:
-                name = yaml.safe_load(zf.read('metadata.yaml'))['name']
-            except Exception:
-                raise CommandError(
-                    "Bad 'metadata.yaml' file inside {!r}: must be a valid YAML with "
-                    "a 'name' key.".format(str(filepath)))
-        elif 'bundle.yaml' in zf.namelist():
-            try:
-                name = yaml.safe_load(zf.read('bundle.yaml'))['name']
-            except Exception:
-                raise CommandError(
-                    "Bad 'bundle.yaml' file inside {!r}: must be a valid YAML with "
-                    "a 'name' key.".format(str(filepath)))
-        else:
-            raise CommandError(
-                "The indicated file {!r} is not a charm ('metadata.yaml' not found) "
-                "nor a bundle ('bundle.yaml' not found).".format(str(filepath)))
-
-        return name, filepath
-
-    def fill_parser(self, parser):
-        """Add own parameters to the general parser."""
-        parser.add_argument(
-            '--charm-file', type=pathlib.Path,
-            help="The charm to upload; this option is DEPRECATED, pass the filepath directly")
-        parser.add_argument(
-            'filepath', type=pathlib.Path, nargs='?',
-            help="The charm or bundle to upload")
-
-    def run(self, parsed_args):
-        """Run the command."""
-        if parsed_args.charm_file is not None:
-            logger.warning("The '--charm-file' option is DEPRECATED, pass the filepath directly.")
-            filepath = parsed_args.charm_file
-        if parsed_args.filepath is not None:
-            filepath = parsed_args.filepath
-        print("========== upload filepath", repr(filepath))
-        name, path = self._discover_file(filepath)
-        print("========== upload name path", repr(name), repr(path))
+        name = get_name_from_zip(filepath)
         store = Store(self.config.charmhub)
-        result = store.upload(name, path)
+        result = store.upload(name, filepath)
         if result.ok:
             logger.info("Revision %s of %r created", result.revision, str(name))
         else:
@@ -363,27 +329,7 @@ class UploadCommand(BaseCommand):  #FIXME: probar IRL, fix tests
             logger.info("Upload failed with status %r.", result.status)
 
 
-def find_out_name(parsed_args, command_name):  #FIXME testear toda
-    """Get the name from multiple sources.
-
-    This will go away once 'name' is a mandatory parameter in commands.
-    """
-    # explicit by the user
-    if parsed_args.name:
-        return parsed_args.name
-
-    # not given! this is being deprecated, supported here for backwards compatibility: only in
-    # the case of a charm, and ignoring --project-dir
-    charm_name = get_name_from_metadata()
-    if charm_name is not None:
-        return charm_name
-
-    raise CommandError(
-        "Can't access name in 'metadata.yaml' file. "
-        "Pass the name directly, e.g. charmcraft {} foobar.".format(command_name))
-
-
-class ListRevisionsCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+class ListRevisionsCommand(BaseCommand):
     """List revisions for a charm or a bundle."""
 
     name = 'revisions'
@@ -404,19 +350,12 @@ class ListRevisionsCommand(BaseCommand):  #FIXME: probar IRL, fix tests
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument(
-            '--name',
-            help="The name of the charm; this option is DEPRECATED, pass the name directly")
-        parser.add_argument(
-            'name', nargs='?',
-            help="The name of charm or bundle")
+        parser.add_argument('name', help="The name of charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
-        package_name = find_out_name(parsed_args, self.name) #FIXME: que la use
-
         store = Store(self.config.charmhub)
-        result = store.list_revisions(package_name)
+        result = store.list_revisions(parsed_args.name)
         if not result:
             logger.info("No revisions found.")
             return
@@ -443,7 +382,24 @@ class ListRevisionsCommand(BaseCommand):  #FIXME: probar IRL, fix tests
             logger.info(line)
 
 
-class ReleaseCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+class SingleOptionEnsurer:
+    """Ensures that the option is specified only once, converting it properly.
+
+    No lower limit is checked, that is verified with required=True in the
+    argparse definition.
+    """
+    def __init__(self, converter):
+        self.converter = converter
+        self.count = 0
+
+    def __call__(self, value):
+        self.count += 1
+        if self.count > 1:
+            raise ValueError("the option can be specified only once")
+        return self.converter(value)
+
+
+class ReleaseCommand(BaseCommand):
     """Release a charm or bundle revision to specific channels."""
 
     name = 'release'
@@ -481,33 +437,27 @@ class ReleaseCommand(BaseCommand):  #FIXME: probar IRL, fix tests
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        parser.add_argument('name', help="The name of charm or bundle")
         parser.add_argument(
-            'revision', type=int, help='The revision to release')
+            '-r', '--revision', type=SingleOptionEnsurer(int), required=True,
+            help='The revision to release')
         parser.add_argument(
-            'channels', metavar='channel', nargs='+',
-            help="The channel(s) to release to")
-        parser.add_argument('--name', help="The name of the charm")
-        # FIXME FUCK!!!
-        #    help="The name of the charm; this option is DEPRECATED, pass the name directly")
-        #parser.add_argument(
-        #    'name', nargs='?',
-        #    help="The name of charm or bundle")
+            '-c', '--channel', action='append', required=True,
+            help="The channel(s) to release to (this option can be indicated multiple times)")
 
     def run(self, parsed_args):
         """Run the command."""
-        package_name = find_out_name(parsed_args, self.name) #FIXME: que la use
-
         store = Store(self.config.charmhub)
-        store.release(package_name, parsed_args.revision, parsed_args.channels)
+        store.release(parsed_args.name, parsed_args.revision, parsed_args.channel)
         logger.info(
             "Revision %d of charm %r released to %s",
-            parsed_args.revision, package_name, ", ".join(parsed_args.channels))
+            parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel))
 
 
-class StatusCommand(BaseCommand):  #FIXME: probar IRL, fix tests
+class StatusCommand(BaseCommand):
     """Show channel status for a charm or bundle."""
 
-    name = 'channels'
+    name = 'status'
     help_msg = "Show channel and released revisions"
     overview = textwrap.dedent("""
         Show channels and released revisions in Charmhub.
@@ -531,19 +481,12 @@ class StatusCommand(BaseCommand):  #FIXME: probar IRL, fix tests
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument(
-            '--name',
-            help="The name of the charm; this option is DEPRECATED, pass the name directly")
-        parser.add_argument(
-            'name', nargs='?',
-            help="The name of charm or bundle")
+        parser.add_argument('name', help="The name of charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
-        package_name = find_out_name(parsed_args, self.name) #FIXME: que la use
-
         store = Store(self.config.charmhub)
-        channel_map, channels, revisions = store.list_releases(package_name)
+        channel_map, channels, revisions = store.list_releases(parsed_args.name)
         if not channel_map:
             logger.info("Nothing has been released yet.")
             return
@@ -790,9 +733,7 @@ class CreateLibCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument(
-            'name', metavar='name',
-            help="The name of the library file (e.g. 'db')")
+        parser.add_argument('name', help="The name of the library file (e.g. 'db')")
 
     def run(self, parsed_args):
         """Run the command."""

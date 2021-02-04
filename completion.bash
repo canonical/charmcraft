@@ -26,7 +26,7 @@ _charmcraft()
     # it's not like it's more typing for the user)
 
     if [ "$cword" -eq 1 ]; then
-        COMPREPLY=( $(compgen -W "--help --verbose --quiet ${cmds[*]}" -- "$cur") )
+        COMPREPLY=( $(compgen -W "--help --verbose --quiet --project-dir ${cmds[*]}" -- "$cur") )
         return
     fi
 
@@ -38,28 +38,20 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${cmds[*]}" -- "$cur") )
             return
             ;;
-        login|logout|whoami|version|names|register|create-lib|publish-lib|fetch-lib|list-lib|register-bundle)
-            COMPREPLY=( $(compgen -W "--help" -- "$cur") )
+        login|logout|whoami|version|names|register|create-lib|publish-lib|fetch-lib|list-lib|register-bundle|upload|revisions|status|pack)
+            COMPREPLY=( $(compgen -W "--help --verbose --quiet --project-dir" -- "$cur") )
             return
             ;;
         build)
-            COMPREPLY=( $(compgen -W "--help --from --entrypoint --requirement" -- "$cur") )
-            return
-            ;;
-        upload|revisions|status)
-            COMPREPLY=( $(compgen -W "--help" -- "$cur") )
+            COMPREPLY=( $(compgen -W "--help --verbose --quiet --project-dir --from --entrypoint --requirement" -- "$cur") )
             return
             ;;
         release)
-            COMPREPLY=( $(compgen -W "--help" --revision --channel -- "$cur") )
+            COMPREPLY=( $(compgen -W "--help --verbose --quiet --project-dir --revision --channel" -- "$cur") )
             return
             ;;
         init)
-            COMPREPLY=( $(compgen -W "--help --project-dir --name --author --series --force" -- "$cur") )
-            return
-            ;;
-        pack)
-            COMPREPLY=( $(compgen -W "--help --from" -- "$cur") )
+            COMPREPLY=( $(compgen -W "--help --verbose --quiet --project-dir --name --author --series --force" -- "$cur") )
             return
             ;;
     esac
@@ -91,13 +83,6 @@ _charmcraft()
                     ;;
                 -f|--from)
                     _filedir -d
-                    ;;
-            esac
-            ;;
-        "upload")
-            case "$prev" in
-                --charm-file)
-                    _filedir charm
                     ;;
             esac
             ;;

@@ -40,11 +40,6 @@ logging.getLogger(requests.packages.urllib3.__package__).setLevel(logging.ERROR)
 
 logger = logging.getLogger('charmcraft.commands.store')
 
-# XXX Facundo 2020-06-19: only staging for now; will make it "multi-server" when we have proper
-# functionality in Store's production (related: issue #51)
-API_BASE_URL = 'https://api.staging.charmhub.io'
-STORAGE_BASE_URL = 'https://storage.staging.snapcraftcontent.com'
-
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
 

@@ -42,6 +42,7 @@ class BaseCommand:
     - name: the identifier in the command line
     - help_msg: a one line help for user documentation
     - common: if it's a common/starter command, which are prioritized in the help
+    - needs_config: will ensure a config is provided when executing the command
 
     It also must/can override some methods for the proper command behaviour (see each
     method's docstring).
@@ -55,6 +56,7 @@ class BaseCommand:
     help_msg = None
     overview = None
     common = False
+    needs_config = False
 
     def __init__(self, group, config):
         self.group = group

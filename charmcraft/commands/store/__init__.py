@@ -72,7 +72,6 @@ class LoginCommand(BaseCommand):
         from your local system, especially in a shared environment.
 
         See also `charmcraft whoami` to verify that you are logged in.
-
     """)
 
     def run(self, parsed_args):
@@ -96,7 +95,6 @@ class LogoutCommand(BaseCommand):
 
         See also `charmcraft whoami` to verify that you are logged in,
         and `charmcraft login`.
-
     """)
 
     def run(self, parsed_args):
@@ -156,7 +154,6 @@ class RegisterCharmNameCommand(BaseCommand):
            https://discourse.charmhub.io/c/charm
 
         Registration will take you through login if needed.
-
     """)
     common = True
 
@@ -173,8 +170,9 @@ class RegisterCharmNameCommand(BaseCommand):
 
 class RegisterBundleNameCommand(BaseCommand):
     """Register a bundle name in the Store."""
+
     name = 'register-bundle'
-    help_msg = "Register a bundle name in the Store."
+    help_msg = "Register a bundle name in the Store"
     overview = textwrap.dedent("""
         Register a bundle name in the Store.
 
@@ -194,7 +192,6 @@ class RegisterBundleNameCommand(BaseCommand):
            https://discourse.charmhub.io/c/charm
 
         Registration will take you through login if needed.
-
     """)
 
     def fill_parser(self, parser):
@@ -225,7 +222,6 @@ class ListNamesCommand(BaseCommand):
         other accounts with permission to collaborate on that specific name.
 
         Listing names will take you through login if needed.
-
     """)
     common = True
 
@@ -301,7 +297,6 @@ class UploadCommand(BaseCommand):
         new charm or bundle revision.
 
         Upload will take you through login if needed.
-
     """)
     common = True
 
@@ -344,7 +339,6 @@ class ListRevisionsCommand(BaseCommand):
            1           1          2020-11-15    released
 
         Listing revisions will take you through login if needed.
-
     """)
     common = True
 
@@ -388,11 +382,13 @@ class SingleOptionEnsurer:
     No lower limit is checked, that is verified with required=True in the
     argparse definition.
     """
+
     def __init__(self, converter):
         self.converter = converter
         self.count = 0
 
     def __call__(self, value):
+        """Run by argparse to validate and convert the given argument."""
         self.count += 1
         if self.count > 1:
             raise ValueError("the option can be specified only once")
@@ -728,7 +724,6 @@ class CreateLibCommand(BaseCommand):
         template Python library.
 
         Creating a charm library will take you through login if needed.
-
     """)
 
     def fill_parser(self, parser):

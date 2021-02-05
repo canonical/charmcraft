@@ -168,7 +168,7 @@ CONFIG_SCHEMA = {
             },
         },
     },
-    'required': ['type'],  #FIXME test
+    'required': ['type'],
     'additionalProperties': False,
 }
 
@@ -185,7 +185,7 @@ def load(dirpath):
         # configuration is mandatory only for some commands; when not provided, it will
         # be initialized all with defaults (but marked as not provided for later verification)
         content = {}
-        config_provided = False #FIXME test
+        config_provided = False
 
     else:
         # config provided! validate the loaded config is ok and mark as such
@@ -194,9 +194,9 @@ def load(dirpath):
                 instance=content, schema=CONFIG_SCHEMA, format_checker=format_checker)
         except jsonschema.ValidationError as exc:
             adapt_validation_error(exc)
-        config_provided = True #FIXME test
+        config_provided = True
 
     # inject project's config
-    content['project'] = Project(dirpath=dirpath, config_provided=config_provided) #FIXME test
+    content['project'] = Project(dirpath=dirpath, config_provided=config_provided)
 
     return Config(**content)

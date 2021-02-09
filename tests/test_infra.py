@@ -25,7 +25,7 @@ import pydocstyle
 import pytest
 from flake8.api.legacy import get_style_guide
 
-from charmcraft import __version__
+from charmcraft import __version__, main
 
 
 def get_python_filepaths(*, roots=None, python_paths=None):
@@ -112,3 +112,23 @@ def test_setup_version():
     proc = subprocess.run(cmd, stdout=subprocess.PIPE)
     output = proc.stdout.decode('utf8')
     assert output.strip() == __version__
+
+
+def test_bashcompletion_all_commands():
+    """Verify that all commands are represented in the bash completion file."""
+    # get the line where all commands are specified in the completion file; this is custom
+    # to our file, but simple and good enough
+    completed_commands = None
+    with open('completion.bash', 'rt', encoding='utf8') as fh:
+        completion_text = fh.read()
+    m = re.search(r"cmds=\((.*?)\)", completion_text, re.DOTALL)
+    if m:
+        completed_commands = set(m.groups()[0].split())
+    else:
+        pytest.fail("Failed to find commands in the bash completion file")
+
+    real_command_names = set()
+    for _, _, cmds in main.COMMAND_GROUPS:
+        real_command_names.update(cmd.name for cmd in cmds)
+
+    assert completed_commands == real_command_names

@@ -57,7 +57,7 @@ def test_dispatcher_command_execution_ok():
 
 
 def test_dispatcher_command_execution_crash():
-    """Command crashing doesn't pass through, we inform nicely"""
+    """Command crashing doesn't pass through, we inform nicely."""
     class MyCommand(BaseCommand):
         help_msg = "some help"
         name = 'cmdname'
@@ -69,6 +69,61 @@ def test_dispatcher_command_execution_crash():
     dispatcher = Dispatcher(['cmdname'], groups)
     with pytest.raises(ValueError):
         dispatcher.run()
+
+
+def test_dispatcher_config_needed_ok(tmp_path):
+    """Command needs a config, which is provided ok."""
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = 'cmdname'
+        needs_config = True
+
+        def run(self, parsed_args):
+            pass
+
+    # put the config in place
+    test_file = tmp_path / "charmcraft.yaml"
+    test_file.write_text("""
+        type: charm
+    """)
+
+    groups = [('test-group', 'title', [MyCommand])]
+    dispatcher = Dispatcher(['cmdname', '--project-dir', tmp_path], groups)
+    dispatcher.run()
+
+
+def test_dispatcher_config_needed_problem():
+    """Command needs a config, which is not there."""
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = 'cmdname'
+        needs_config = True
+
+        def run(self, parsed_args):
+            pass
+
+    groups = [('test-group', 'title', [MyCommand])]
+    dispatcher = Dispatcher(['cmdname'], groups)
+    with pytest.raises(CommandError) as err:
+        dispatcher.run()
+    assert str(err.value) == (
+        "The specified command needs a valid 'charmcraft.yaml' configuration file (in the "
+        "current directory or where specified with --project-dir option); see the reference: "
+        "https://discourse.charmhub.io/t/charmcraft-configuration/4138")
+
+
+def test_dispatcher_config_not_needed():
+    """Command does not needs a config."""
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = 'cmdname'
+
+        def run(self, parsed_args):
+            pass
+
+    groups = [('test-group', 'title', [MyCommand])]
+    dispatcher = Dispatcher(['cmdname'], groups)
+    dispatcher.run()
 
 
 def test_dispatcher_generic_setup_default():

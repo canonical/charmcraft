@@ -122,6 +122,7 @@ class Project:
     """Configuration for all project-related options, used internally."""
 
     dirpath = attr.ib(default=None)
+    config_provided = attr.ib(default=None)
 
 
 @attr.s(kw_only=True, frozen=True)
@@ -167,6 +168,7 @@ CONFIG_SCHEMA = {
             },
         },
     },
+    'required': ['type'],
     'additionalProperties': False,
 }
 
@@ -179,21 +181,22 @@ def load(dirpath):
         dirpath = pathlib.Path(dirpath).expanduser().resolve()
 
     content = load_yaml(dirpath / 'charmcraft.yaml')
-    # XXX Facundo 2021-01-04: we will make this configuration mandatory in the future, but
-    # so far is ok to not have it
     if content is None:
-        # when the configuration becomes mandatory, we should enforce that 'type' is mandatory
-        # in the schema (so it always have it) and raise an exception here instead of having
-        # an empty config
+        # configuration is mandatory only for some commands; when not provided, it will
+        # be initialized all with defaults (but marked as not provided for later verification)
         content = {}
+        config_provided = False
 
-    # validate the loaded config is ok
-    try:
-        jsonschema.validate(instance=content, schema=CONFIG_SCHEMA, format_checker=format_checker)
-    except jsonschema.ValidationError as exc:
-        adapt_validation_error(exc)
+    else:
+        # config provided! validate the loaded config is ok and mark as such
+        try:
+            jsonschema.validate(
+                instance=content, schema=CONFIG_SCHEMA, format_checker=format_checker)
+        except jsonschema.ValidationError as exc:
+            adapt_validation_error(exc)
+        config_provided = True
 
     # inject project's config
-    content['project'] = Project(dirpath=dirpath)
+    content['project'] = Project(dirpath=dirpath, config_provided=config_provided)
 
     return Config(**content)

@@ -32,6 +32,8 @@ from charmcraft.config import CharmhubConfig
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     _get_lib_info,
+    CHARM,
+    BUNDLE,
     CreateLibCommand,
     FetchLibCommand,
     ListLibCommand,
@@ -40,7 +42,8 @@ from charmcraft.commands.store import (
     LoginCommand,
     LogoutCommand,
     PublishLibCommand,
-    RegisterNameCommand,
+    RegisterCharmNameCommand,
+    RegisterBundleNameCommand,
     ReleaseCommand,
     StatusCommand,
     UploadCommand,
@@ -193,17 +196,31 @@ def test_whoami(caplog, store_mock, config):
 # -- tests for name-related commands
 
 
-def test_register_name(caplog, store_mock, config):
-    """Simple register_name case."""
+def test_register_charm_name(caplog, store_mock, config):
+    """Simple register_name case for a charm."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     args = Namespace(name='testname')
-    RegisterNameCommand('group', config).run(args)
+    RegisterCharmNameCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
-        call.register_name('testname'),
+        call.register_name('testname', CHARM),
     ]
-    expected = "You are now the publisher of 'testname' in Charmhub."
+    expected = "You are now the publisher of charm 'testname' in Charmhub."
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_register_bundle_name(caplog, store_mock, config):
+    """Simple register_name case for a bundl."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    args = Namespace(name='testname')
+    RegisterBundleNameCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.register_name('testname', BUNDLE),
+    ]
+    expected = "You are now the publisher of bundle 'testname' in Charmhub."
     assert [expected] == [rec.message for rec in caplog.records]
 
 

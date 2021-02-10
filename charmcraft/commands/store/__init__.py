@@ -36,6 +36,10 @@ from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
+# entity types
+CHARM = 'charm'
+BUNDLE = 'bundle'
+
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
 
@@ -67,7 +71,6 @@ class LoginCommand(BaseCommand):
         from your local system, especially in a shared environment.
 
         See also `charmcraft whoami` to verify that you are logged in.
-
     """)
 
     def run(self, parsed_args):
@@ -91,7 +94,6 @@ class LogoutCommand(BaseCommand):
 
         See also `charmcraft whoami` to verify that you are logged in,
         and `charmcraft login`.
-
     """)
 
     def run(self, parsed_args):
@@ -127,8 +129,8 @@ class WhoamiCommand(BaseCommand):
             logger.info(line)
 
 
-class RegisterNameCommand(BaseCommand):
-    """Register a name in Charmhub."""
+class RegisterCharmNameCommand(BaseCommand):
+    """Register a charm name in Charmhub."""
 
     name = 'register'
     help_msg = "Register a charm name in Charmhub"
@@ -151,7 +153,6 @@ class RegisterNameCommand(BaseCommand):
            https://discourse.charmhub.io/c/charm
 
         Registration will take you through login if needed.
-
     """)
     common = True
 
@@ -162,8 +163,45 @@ class RegisterNameCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        store.register_name(parsed_args.name)
-        logger.info("You are now the publisher of %r in Charmhub.", parsed_args.name)
+        store.register_name(parsed_args.name, CHARM)
+        logger.info("You are now the publisher of charm %r in Charmhub.", parsed_args.name)
+
+
+class RegisterBundleNameCommand(BaseCommand):
+    """Register a bundle name in the Store."""
+
+    name = 'register-bundle'
+    help_msg = "Register a bundle name in the Store"
+    overview = textwrap.dedent("""
+        Register a bundle name in the Store.
+
+        Claim a name for your bundle in Charmhub. Once you have registered
+        a name, you can upload bundle packages for that name and
+        release them for wider consumption.
+
+        Charmhub operates on the 'principle of least surprise' with regard
+        to naming. A bundle with a well-known name should provide the best
+        system for the service most people associate with that name.  Bundles
+        can be renamed in the Charmhub, but we would nonetheless ask
+        you to use a qualified name, such as `yourname-bundlename` if you are
+        in any doubt about your ability to meet that standard.
+
+        We discuss registrations in Charmhub Discourse:
+
+           https://discourse.charmhub.io/c/charm
+
+        Registration will take you through login if needed.
+    """)
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('name', help="The name to register in Charmhub")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub)
+        store.register_name(parsed_args.name, BUNDLE)
+        logger.info("You are now the publisher of bundle %r in Charmhub.", parsed_args.name)
 
 
 class ListNamesCommand(BaseCommand):
@@ -183,7 +221,6 @@ class ListNamesCommand(BaseCommand):
         other accounts with permission to collaborate on that specific name.
 
         Listing names will take you through login if needed.
-
     """)
     common = True
 
@@ -227,7 +264,6 @@ class UploadCommand(BaseCommand):
         new charm revision.
 
         Upload will take you through login if needed.
-
     """)
     common = True
 
@@ -303,7 +339,6 @@ class ListRevisionsCommand(BaseCommand):
            1           1          2020-11-15    released
 
         Listing revisions will take you through login if needed.
-
     """)
     common = True
 
@@ -697,14 +732,11 @@ class CreateLibCommand(BaseCommand):
         template Python library.
 
         Creating a charm library will take you through login if needed.
-
     """)
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument(
-            'name', metavar='name',
-            help="The name of the library file (e.g. 'db')")
+        parser.add_argument('name', help="The name of the library file (e.g. 'db')")
 
     def run(self, parsed_args):
         """Run the command."""

@@ -114,9 +114,9 @@ class Store:
         )
         return result
 
-    def register_name(self, name):
+    def register_name(self, name, entity_type):
         """Register the specified name for the authenticated user."""
-        self._client.post('/v1/charm', {'name': name})
+        self._client.post('/v1/charm', {'name': name, 'type': entity_type})
 
     def list_registered_names(self):
         """Return names registered by the authenticated user."""

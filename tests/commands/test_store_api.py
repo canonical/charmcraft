@@ -90,10 +90,10 @@ def test_whoami(client_mock, config):
 def test_register_name(client_mock, config):
     """Simple register case."""
     store = Store(config.charmhub)
-    result = store.register_name('testname')
+    result = store.register_name('testname', 'stuff')
 
     assert client_mock.mock_calls == [
-        call.post('/v1/charm', {'name': 'testname'}),
+        call.post('/v1/charm', {'name': 'testname', 'type': 'stuff'}),
     ]
     assert result is None
 

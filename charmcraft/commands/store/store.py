@@ -29,7 +29,7 @@ logger = logging.getLogger('charmcraft.commands.store')
 # helpers to build responses from this layer
 User = namedtuple('User', 'name username userid')
 Charm = namedtuple('Charm', 'name private status')
-Uploaded = namedtuple('Uploaded', 'ok status revision')
+Uploaded = namedtuple('Uploaded', 'ok status revision errors')
 # XXX Facundo 2020-07-23: Need to do a massive rename to call `revno` to the "revision as
 # the number" inside the "revision as the structure", this gets super confusing in the code with
 # time, and now it's the moment to do it (also in Release below!)
@@ -48,15 +48,19 @@ UPLOAD_ENDING_STATUSES = {
 POLL_DELAY = 1
 
 
+def _build_errors(item):
+    """Build a list of Errors from response item."""
+    return [Error(message=e['message'], code=e['code']) for e in (item['errors'] or [])]
+
+
 def _build_revision(item):
     """Build a Revision from a response item."""
-    errors = [Error(message=e['message'], code=e['code']) for e in (item['errors'] or [])]
     rev = Revision(
         revision=item['revision'],
         version=item['version'],
         created_at=parser.parse(item['created-at']),
         status=item['status'],
-        errors=errors,
+        errors=_build_errors(item),
     )
     return rev
 
@@ -157,7 +161,7 @@ class Store:
 
             if status in UPLOAD_ENDING_STATUSES:
                 return Uploaded(
-                    ok=UPLOAD_ENDING_STATUSES[status],
+                    ok=UPLOAD_ENDING_STATUSES[status], errors=_build_errors(revision),
                     status=status, revision=revision['revision'])
 
             # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after

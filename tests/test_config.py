@@ -55,6 +55,7 @@ def test_load_current_directory(create_config, monkeypatch):
     config = load(None)
     assert config.type == 'charm'
     assert config.project.dirpath == tmp_path
+    assert config.project.config_provided
 
 
 def test_load_specific_directory_ok(create_config):
@@ -72,6 +73,7 @@ def test_load_optional_charmcraft_missing(tmp_path):
     config = load(tmp_path)
     assert config.type is None
     assert config.project.dirpath == tmp_path
+    assert not config.project.config_provided
 
 
 def test_load_specific_directory_resolved(create_config, monkeypatch):
@@ -127,6 +129,15 @@ def test_schema_top_level_no_extra_properties(create_config, check_schema_error)
         whatever: new-stuff
     """)
     check_schema_error("Additional properties are not allowed ('whatever' was unexpected)")
+
+
+def test_schema_type_missing(create_config, check_schema_error):
+    """Schema validation, type is mandatory."""
+    create_config("""
+        charmhub:
+            api_url: 33
+    """)
+    check_schema_error("Bad charmcraft.yaml content; missing fields: type.")
 
 
 def test_schema_type_bad_type(create_config, check_schema_error):

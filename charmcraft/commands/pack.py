@@ -76,13 +76,10 @@ class PackCommand(BaseCommand):
     name = 'pack'
     help_msg = "Build the bundle"
     overview = _overview
+    needs_config = True
 
     def run(self, parsed_args):
         """Run the command."""
-        if self.config.type is None:
-            raise CommandError(
-                "Missing project configuration, please provide a valid charmcraft.yaml.")
-
         # get the config files
         bundle_filepath = self.config.project.dirpath / 'bundle.yaml'
         bundle_config = load_yaml(bundle_filepath)

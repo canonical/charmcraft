@@ -52,7 +52,7 @@ from charmcraft.commands.store import (
 )
 from charmcraft.commands.store.store import (
     Channel,
-    Charm,
+    Entity,
     Error,
     Library,
     Release,
@@ -236,7 +236,7 @@ def test_list_registered_empty(caplog, store_mock, config):
     assert store_mock.mock_calls == [
         call.list_registered_names(),
     ]
-    expected = "No charms registered."
+    expected = "No charms or bundles registered."
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -245,7 +245,7 @@ def test_list_registered_one_private(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = [
-        Charm(name='charm', private=True, status='status'),
+        Entity(entity_type='charm', name='charm', private=True, status='status'),
     ]
     store_mock.list_registered_names.return_value = store_response
 
@@ -255,8 +255,8 @@ def test_list_registered_one_private(caplog, store_mock, config):
         call.list_registered_names(),
     ]
     expected = [
-        "Name    Visibility    Status",
-        "charm   private       status",
+        "Name    Type    Visibility    Status",
+        "charm   charm   private       status",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -266,7 +266,7 @@ def test_list_registered_one_public(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = [
-        Charm(name='charm', private=False, status='status'),
+        Entity(entity_type='charm', name='charm', private=False, status='status'),
     ]
     store_mock.list_registered_names.return_value = store_response
 
@@ -276,8 +276,8 @@ def test_list_registered_one_public(caplog, store_mock, config):
         call.list_registered_names(),
     ]
     expected = [
-        "Name    Visibility    Status",
-        "charm   public        status",
+        "Name    Type    Visibility    Status",
+        "charm   charm   public        status",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -287,9 +287,10 @@ def test_list_registered_several(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = [
-        Charm(name='charm1', private=True, status='simple status'),
-        Charm(name='charm2-long-name', private=False, status='other'),
-        Charm(name='charm3', private=True, status='super long status'),
+        Entity(entity_type='charm', name='charm1', private=True, status='simple status'),
+        Entity(entity_type='charm', name='charm2-long-name', private=False, status='other'),
+        Entity(entity_type='charm', name='charm3', private=True, status='super long status'),
+        Entity(entity_type='bundle', name='somebundle', private=False, status='bundle status'),
     ]
     store_mock.list_registered_names.return_value = store_response
 
@@ -299,10 +300,11 @@ def test_list_registered_several(caplog, store_mock, config):
         call.list_registered_names(),
     ]
     expected = [
-        "Name              Visibility    Status",
-        "charm1            private       simple status",
-        "charm2-long-name  public        other",
-        "charm3            private       super long status",
+        "Name              Type    Visibility    Status",
+        "charm1            charm   private       simple status",
+        "charm2-long-name  charm   public        other",
+        "charm3            charm   private       super long status",
+        "somebundle        bundle  public        bundle status",
     ]
     assert expected == [rec.message for rec in caplog.records]
 

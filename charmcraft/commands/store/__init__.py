@@ -205,16 +205,16 @@ class RegisterBundleNameCommand(BaseCommand):
 
 
 class ListNamesCommand(BaseCommand):
-    """List the charms registered in Charmhub."""
+    """List the entities registered in Charmhub."""
 
     name = 'names'
-    help_msg = "List your registered charm names in Charmhub"
+    help_msg = "List your registered charm and bundle names in Charmhub"
     overview = textwrap.dedent("""
         An overview of names you have registered to publish in Charmhub.
 
           $ charmcraft names
-          Name                Visibility    Status
-          sabdfl-hello-world  public        registered
+          Name                Type    Visibility    Status
+          sabdfl-hello-world  charm   public        registered
 
         Visibility and status are shown for each name. `public` items can be
         seen by any user, while `private` items are only for you and the
@@ -229,15 +229,16 @@ class ListNamesCommand(BaseCommand):
         store = Store(self.config.charmhub)
         result = store.list_registered_names()
         if not result:
-            logger.info("No charms registered.")
+            logger.info("No charms or bundles registered.")
             return
 
-        headers = ['Name', 'Visibility', 'Status']
+        headers = ['Name', 'Type', 'Visibility', 'Status']
         data = []
         for item in result:
             visibility = 'private' if item.private else 'public'
             data.append([
                 item.name,
+                item.entity_type,
                 visibility,
                 item.status,
             ])

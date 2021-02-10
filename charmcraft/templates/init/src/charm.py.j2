@@ -2,7 +2,51 @@
 # Copyright {{ year }} {{ author }}
 # See LICENSE file for licensing details.
 
-"""Charm the service."""
+"""Charm the service.
+
+To gently guide you through the recommended way to write and deploy your new charm,
+here are some essential links and instructions to get you up-to-speed.
+
+To ease the development iterations on your computer we suggest you to setup a
+microk8s environment [1], in summary it will be:
+
+snap install juju --classic
+snap install microk8s --classic
+microk8s.enable dns storage
+juju bootstrap microk8s micro
+juju add-model my-charm-model
+
+At this point you have a controller named "micro" in the "microk8s" cloud. This
+cloud is actually your local machine, how neat! In Juju, you interact with the client
+(the juju command on your local machine). It connects to a controller. The controller
+is hosted on a cloud and controls models.
+
+This charm although simple is fully functional. You can build and deploy it on your
+microk8s cloud as following:
+
+charmcraft build
+juju deploy ./{{name}}-charm
+
+It may take a while to have the deployment finished, in the meantime you can check
+the status by:
+
+juju status
+
+From this point you are ready to start discovering how the Operation Framework
+works [2] and some more specifics about config, log, testing among other topics
+[3].
+
+If you are curious on how other existing operators are implemented refer to the
+MongoDB [4], Elasticsearch[5], or Redis[6] for inspiration on other topics such
+as relation management, replication and lifecycle management.
+
+[1] https://juju.is/docs/microk8s-cloud
+[2] https://discourse.charmhub.io/t/documentation-operator-framework/3394
+[3] https://discourse.charmhub.io/t/first-steps-with-the-operator-framework/3006
+[4] https://github.com/canonical/mongodb-operator
+[5] https://github.com/canonical/elasticsearch-operator
+[6] https://github.com/canonical/redis-operator
+"""
 
 import logging
 

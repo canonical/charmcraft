@@ -4,11 +4,9 @@
 
 """Charm the service.
 
-To gently guide you through the recommended way to write and deploy your new charm,
-here are some essential links and instructions to get you up-to-speed.
-
-To ease the development iterations on your computer we suggest you to setup a
-microk8s environment [1], in summary it will be:
+This is a quick-start guide to help you write and deploy a new k8s charm using the
+operator framework. To ease the development, we suggest you to setup a microk8s
+environment [1] by running:
 
 snap install juju --classic
 snap install microk8s --classic
@@ -28,24 +26,27 @@ charmcraft build
 juju deploy ./{{name}}-charm
 
 It may take a while to have the deployment finished, in the meantime you can check
-the status by:
+the status by running:
 
 juju status
 
-From this point you are ready to start discovering how the Operation Framework
-works [2] and some more specifics about config, log, testing among other topics
-[3].
+Now you are ready to start discovering how the operator framework works [2] and
+learn some more specifics about config, log, testing among other topics [3].
 
 If you are curious on how other existing operators are implemented refer to the
-MongoDB [4], Elasticsearch[5], or Redis[6] for inspiration on other topics such
-as relation management, replication and lifecycle management.
+MongoDB [4] and Elasticsearch[5] operators for inspiration on other topics such
+as relation, replication and lifecycle management.
+
+If still in doubt you can ask questions about the operator framework. There are
+multiple communication channels [6].
 
 [1] https://juju.is/docs/microk8s-cloud
 [2] https://discourse.charmhub.io/t/documentation-operator-framework/3394
 [3] https://discourse.charmhub.io/t/first-steps-with-the-operator-framework/3006
 [4] https://github.com/canonical/mongodb-operator
 [5] https://github.com/canonical/elasticsearch-operator
-[6] https://github.com/canonical/redis-operator
+[6] https://github.com/canonical/operator#talk-to-us
+
 """
 
 import logging

@@ -99,6 +99,7 @@ COMMAND_GROUPS = [
         store.FetchLibCommand,
         # resources support
         store.ListResourcesCommand, store.UploadResourceCommand,
+        store.ListResourceRevisionsCommand,
     ]),
 ]
 

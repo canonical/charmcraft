@@ -30,7 +30,7 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.utils import get_templates_environment
+from charmcraft.utils import get_templates_environment, SingleOptionEnsurer, useful_filepath
 
 from .store import Store
 
@@ -1009,3 +1009,48 @@ class ListResourcesCommand(BaseCommand):
         table = tabulate(data, headers=headers, tablefmt='plain')
         for line in table.splitlines():
             logger.info(line)
+
+
+class UploadResourceCommand(BaseCommand):
+    """Upload a resource to Charmhub."""
+
+    name = 'upload-resource'
+    help_msg = "Upload a resource to Charmhub"
+    overview = textwrap.dedent("""
+        Upload a resource to Charmhub.
+
+        Push a resource content to Charmhub, associating it to the
+        specified charm. This charm needs to have the resource declared
+        in its metadata (in a preoviously uploaded to Charmhub revision).
+
+        to the packaging standard. This command will finish successfully
+        once the package is approved by Charmhub.
+
+        Upload will take you through login if needed.
+    """)
+    common = True
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            'resource_name', metavar='resource-name',
+            help="The resource name")
+        parser.add_argument(
+            '--resource-file', type=SingleOptionEnsurer(useful_filepath), required=True,
+            help="The resource content to upload")
+        parser.add_argument(
+            '--charm-name', type=SingleOptionEnsurer(str), required=True,
+            help="The charm name to associate the resource")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub)
+        result = store.upload_resource(
+            parsed_args.charm_name, parsed_args.resource_name, parsed_args.resource_file)
+        if result.ok:
+            logger.info(
+                "Revision %s of %r created", result.revision, str(parsed_args.resource_name))
+        else:
+            logger.info("Upload failed with status %r:", result.status)
+            for error in result.errors:
+                logger.info("- %s: %s", error.code, error.message)

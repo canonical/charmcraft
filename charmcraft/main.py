@@ -98,10 +98,9 @@ COMMAND_GROUPS = [
         store.CreateLibCommand, store.PublishLibCommand, store.ListLibCommand,
         store.FetchLibCommand,
         # resources support
-        store.ListResourcesCommand,
+        store.ListResourcesCommand, store.UploadResourceCommand,
     ]),
 ]
-#FIXME: remember to improve autocompletion bash
 
 
 # global options: the name used internally, its type, short and long parameters, and help text

@@ -142,8 +142,33 @@ class Store:
             result.append(Charm(name=item['name'], private=item['private'], status=item['status']))
         return result
 
+    def _upload(self, endpoint, filepath):
+        """Generic upload for all charms, bundles, resources."""
+        upload_id = self._client.push(filepath)
+        response = self._client.post(endpoint, {'upload-id': upload_id})
+        status_url = response['status-url']
+        logger.debug("Upload %s started, got status url %s", upload_id, status_url)
+
+        while True:
+            response = self._client.get(status_url)
+            logger.debug("Status checked: %s", response)
+
+            # as we're asking for a single upload_id, the response will always have only one item
+            (revision,) = response['revisions']
+            status = revision['status']
+
+            if status in UPLOAD_ENDING_STATUSES:
+                return Uploaded(
+                    ok=UPLOAD_ENDING_STATUSES[status], errors=_build_errors(revision),
+                    status=status, revision=revision['revision'])
+
+            # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after
+            # N attempts (which should be big, as per snapcraft experience). Issue: #79.
+            time.sleep(POLL_DELAY)
+
     def upload(self, name, filepath):
         """Upload the content of filepath to the indicated charm."""
+        #FIXME: use the generalization above!
         upload_id = self._client.push(filepath)
 
         endpoint = '/v1/charm/{}/revisions'.format(name)
@@ -167,6 +192,11 @@ class Store:
             # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after
             # N attempts (which should be big, as per snapcraft experience). Issue: #79.
             time.sleep(POLL_DELAY)
+
+    def upload_resource(self, charm_name, resource_name, filepath):
+        """Upload the content of filepath to the indicated resource."""
+        endpoint = '/v1/charm/{}/resources/{}/revisions'.format(charm_name, resource_name)
+        return self._upload(endpoint, filepath)
 
     def list_revisions(self, name):
         """Return charm revisions for the indicated charm."""

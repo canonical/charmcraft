@@ -417,7 +417,7 @@ class ReleaseCommand(BaseCommand):
 class StatusCommand(BaseCommand):
     """Show channel status for a charm."""
 
-    name = 'channels'
+    name = 'status'
     help_msg = "Show channel and released revisions"
     overview = textwrap.dedent("""
         Show channels and released revisions in Charmhub

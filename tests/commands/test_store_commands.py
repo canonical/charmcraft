@@ -32,9 +32,8 @@ from charmcraft.config import CharmhubConfig
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     _get_lib_info,
-    CHARM,
-    BUNDLE,
     CreateLibCommand,
+    EntityType,
     FetchLibCommand,
     ListLibCommand,
     ListNamesCommand,
@@ -204,7 +203,7 @@ def test_register_charm_name(caplog, store_mock, config):
     RegisterCharmNameCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
-        call.register_name('testname', CHARM),
+        call.register_name('testname', EntityType.charm),
     ]
     expected = "You are now the publisher of charm 'testname' in Charmhub."
     assert [expected] == [rec.message for rec in caplog.records]
@@ -218,7 +217,7 @@ def test_register_bundle_name(caplog, store_mock, config):
     RegisterBundleNameCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
-        call.register_name('testname', BUNDLE),
+        call.register_name('testname', EntityType.bundle),
     ]
     expected = "You are now the publisher of bundle 'testname' in Charmhub."
     assert [expected] == [rec.message for rec in caplog.records]

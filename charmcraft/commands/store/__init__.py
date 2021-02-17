@@ -37,8 +37,7 @@ from .store import Store
 logger = logging.getLogger('charmcraft.commands.store')
 
 # entity types
-CHARM = 'charm'
-BUNDLE = 'bundle'
+EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
 
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
@@ -148,7 +147,7 @@ class RegisterCharmNameCommand(BaseCommand):
         you to use a qualified name, such as `yourname-charmname` if you are
         in any doubt about your ability to meet that standard.
 
-        We discuss registrations in Charmhub Discourse:
+        We discuss registrations on Charmhub's Discourse:
 
            https://discourse.charmhub.io/c/charm
 
@@ -163,7 +162,7 @@ class RegisterCharmNameCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        store.register_name(parsed_args.name, CHARM)
+        store.register_name(parsed_args.name, EntityType.charm)
         logger.info("You are now the publisher of charm %r in Charmhub.", parsed_args.name)
 
 
@@ -186,7 +185,7 @@ class RegisterBundleNameCommand(BaseCommand):
         you to use a qualified name, such as `yourname-bundlename` if you are
         in any doubt about your ability to meet that standard.
 
-        We discuss registrations in Charmhub Discourse:
+        We discuss registrations on Charmhub's Discourse:
 
            https://discourse.charmhub.io/c/charm
 
@@ -200,7 +199,7 @@ class RegisterBundleNameCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        store.register_name(parsed_args.name, BUNDLE)
+        store.register_name(parsed_args.name, EntityType.bundle)
         logger.info("You are now the publisher of bundle %r in Charmhub.", parsed_args.name)
 
 

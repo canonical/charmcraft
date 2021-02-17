@@ -179,30 +179,8 @@ class Store:
 
     def upload(self, name, filepath):
         """Upload the content of filepath to the indicated charm."""
-        #FIXME: use the generalization above!
-        upload_id = self._client.push(filepath)
-
         endpoint = '/v1/charm/{}/revisions'.format(name)
-        response = self._client.post(endpoint, {'upload-id': upload_id})
-        status_url = response['status-url']
-        logger.debug("Upload %s started, got status url %s", upload_id, status_url)
-
-        while True:
-            response = self._client.get(status_url)
-            logger.debug("Status checked: %s", response)
-
-            # as we're asking for a single upload_id, the response will always have only one item
-            (revision,) = response['revisions']
-            status = revision['status']
-
-            if status in UPLOAD_ENDING_STATUSES:
-                return Uploaded(
-                    ok=UPLOAD_ENDING_STATUSES[status], errors=_build_errors(revision),
-                    status=status, revision=revision['revision'])
-
-            # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after
-            # N attempts (which should be big, as per snapcraft experience). Issue: #79.
-            time.sleep(POLL_DELAY)
+        return self._upload(endpoint, filepath)
 
     def upload_resource(self, charm_name, resource_name, filepath):
         """Upload the content of filepath to the indicated resource."""

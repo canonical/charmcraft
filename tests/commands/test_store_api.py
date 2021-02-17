@@ -158,7 +158,8 @@ def test_upload_straightforward(client_mock, caplog, config):
     # the third response, status ok (note the patched UPLOAD_ENDING_STATUSES below)
     test_revision = 123
     test_status_ok = 'test-status'
-    status_response = {'revisions': [{'status': test_status_ok, 'revision': test_revision}]}
+    status_response = {
+        'revisions': [{'status': test_status_ok, 'revision': test_revision, 'errors': None}]}
     client_mock.get.return_value = status_response
 
     test_status_resolution = 'test-ok-or-not'
@@ -202,9 +203,12 @@ def test_upload_polls_status(client_mock, caplog, config):
     # the status checking response, will answer something not done yet twice, then ok
     test_revision = 123
     test_status_ok = 'test-status'
-    status_response_1 = {'revisions': [{'status': 'still-scanning', 'revision': None}]}
-    status_response_2 = {'revisions': [{'status': 'more-revisions', 'revision': None}]}
-    status_response_3 = {'revisions': [{'status': test_status_ok, 'revision': test_revision}]}
+    status_response_1 = {
+        'revisions': [{'status': 'still-scanning', 'revision': None, 'errors': None}]}
+    status_response_2 = {
+        'revisions': [{'status': 'more-revisions', 'revision': None, 'errors': None}]}
+    status_response_3 = {
+        'revisions': [{'status': test_status_ok, 'revision': test_revision, 'errors': None}]}
     client_mock.get.side_effect = [status_response_1, status_response_2, status_response_3]
 
     test_status_resolution = 'clean and crispy'
@@ -233,6 +237,49 @@ def test_upload_polls_status(client_mock, caplog, config):
         "Status checked: " + str(status_response_3),
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+def test_upload_error(client_mock, config):
+    """The upload ended in error."""
+    store = Store(config.charmhub)
+
+    # the first response, for when pushing bytes
+    test_upload_id = 'test-upload-id'
+    client_mock.push.return_value = test_upload_id
+
+    # the second response, for telling the store it was pushed
+    test_status_url = 'https://store.c.c/status'
+    client_mock.post.return_value = {'status-url': test_status_url}
+
+    # the third response, status in error (note the patched UPLOAD_ENDING_STATUSES below)
+    test_revision = 123
+    test_status_bad = 'test-status'
+    status_response = {'revisions': [{
+        'status': test_status_bad,
+        'revision': test_revision,
+        'errors': [
+            {'message': "error text 1", 'code': "error-code-1"},
+            {'message': "error text 2", 'code': "error-code-2"},
+        ],
+    }]}
+    client_mock.get.return_value = status_response
+
+    test_status_resolution = 'test-ok-or-not'
+    fake_statuses = {test_status_bad: test_status_resolution}
+    test_charm_name = 'test-name'
+    test_filepath = 'test-filepath'
+    with patch.dict('charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES', fake_statuses):
+        result = store.upload(test_charm_name, test_filepath)
+
+    # check result
+    assert result.ok == test_status_resolution
+    assert result.status == test_status_bad
+    assert result.revision == test_revision
+    error1, error2 = result.errors
+    assert error1.message == "error text 1"
+    assert error1.code == "error-code-1"
+    assert error2.message == "error text 2"
+    assert error2.code == "error-code-2"
 
 
 # -- tests for list revisions

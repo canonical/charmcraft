@@ -316,7 +316,7 @@ def test_upload_call_ok(caplog, store_mock, config):
     """Simple upload, success result."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    store_response = Uploaded(ok=True, status=200, revision=7)
+    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
 
     args = Namespace(charm_file='whatever-cmd-arg')
@@ -338,7 +338,11 @@ def test_upload_call_error(caplog, store_mock, config):
     """Simple upload but with a response indicating an error."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    store_response = Uploaded(ok=False, status=400, revision=None)
+    errors = [
+        Error(message="text 1", code='missing-stuff'),
+        Error(message="other long error text", code='broken'),
+    ]
+    store_response = Uploaded(ok=False, status=400, revision=None, errors=errors)
     store_mock.upload.return_value = store_response
 
     args = Namespace(charm_file='whatever-cmd-arg')
@@ -346,8 +350,12 @@ def test_upload_call_error(caplog, store_mock, config):
         mock_discover.return_value = ('discovered-name', 'discovered-path')
         UploadCommand('group', config).run(args)
 
-    expected = "Upload failed with status 400."
-    assert [expected] == [rec.message for rec in caplog.records]
+    expected = [
+        "Upload failed with status 400:",
+        "- missing-stuff: text 1",
+        "- broken: other long error text",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
 
 
 def test_upload_discover_pathgiven_ok(tmp_path, config):

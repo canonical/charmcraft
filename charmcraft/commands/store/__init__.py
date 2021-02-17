@@ -283,9 +283,9 @@ class UploadCommand(BaseCommand):
         if result.ok:
             logger.info("Revision %s of %r created", result.revision, str(name))
         else:
-            # XXX Facundo 2020-06-30: at some point in the future the Store will give us also a
-            # reason why it failed, to improve the message. Issue: #78.
-            logger.info("Upload failed with status %r.", result.status)
+            logger.info("Upload failed with status %r:", result.status)
+            for error in result.errors:
+                logger.info("- %s: %s", error.code, error.message)
 
 
 class ListRevisionsCommand(BaseCommand):

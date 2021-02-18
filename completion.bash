@@ -31,6 +31,7 @@ _charmcraft()
         pack 
         publish-lib 
         register 
+        register-bundle
         release 
         revisions 
         status 

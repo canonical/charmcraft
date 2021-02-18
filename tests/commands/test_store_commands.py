@@ -313,11 +313,10 @@ def test_list_registered_several(caplog, store_mock, config):
 
 def _build_zip_with_yaml(zippath, filename, *, content=None, raw_yaml=None):
     """Create a yaml named 'filename' with given content, inside a zip file in 'zippath'."""
-    zf = zipfile.ZipFile(zippath, 'w')
     if raw_yaml is None:
         raw_yaml = yaml.dump(content).encode('ascii')
-    with zf.open(filename, 'w') as fh:
-        fh.write(raw_yaml)
+    with zipfile.ZipFile(str(zippath), 'w') as zf:
+        zf.writestr(filename, raw_yaml)
 
 
 def test_get_name_bad_zip(tmp_path):

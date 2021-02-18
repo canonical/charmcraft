@@ -250,7 +250,7 @@ class ListNamesCommand(BaseCommand):
 def get_name_from_zip(filepath):
     """Get the charm/bundle name from a zip file."""
     try:
-        zf = zipfile.ZipFile(filepath)
+        zf = zipfile.ZipFile(str(filepath))
     except zipfile.BadZipFile:
         raise CommandError("Cannot open {!r} (bad zip file).".format(str(filepath)))
 

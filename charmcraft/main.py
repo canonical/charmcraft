@@ -89,7 +89,7 @@ COMMAND_GROUPS = [
         # auth
         store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
         # name handling
-        store.RegisterNameCommand, store.ListNamesCommand,
+        store.RegisterCharmNameCommand, store.RegisterBundleNameCommand, store.ListNamesCommand,
         # pushing files and checking revisions
         store.UploadCommand, store.ListRevisionsCommand,
         # release process, and show status

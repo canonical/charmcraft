@@ -18,10 +18,13 @@
 
 import logging
 import os
+import pathlib
 from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
 
 import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
+
+from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger('charmcraft.commands')
 
@@ -64,3 +67,17 @@ def get_templates_environment(templates_dir):
         optimized=False,             # optimization doesn't make sense for one-offs
         undefined=StrictUndefined)   # fail on undefined
     return env
+
+
+def useful_filepath(filepath):
+    """Convert the string to Path and verify that is a useful file path.
+
+    It checks that the file exists and it's readable, and that it's actually a
+    file. Also the `~` is expanded to the user's home.
+    """
+    filepath = pathlib.Path(filepath).expanduser()
+    if not os.access(str(filepath), os.R_OK):  # access doesn't support pathlib in 3.5
+        raise CommandError("Cannot access {!r}.".format(str(filepath)))
+    if not filepath.is_file():
+        raise CommandError("{!r} is not a file.".format(str(filepath)))
+    return filepath

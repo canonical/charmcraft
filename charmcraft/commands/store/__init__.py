@@ -19,7 +19,6 @@
 import ast
 import hashlib
 import logging
-import os
 import pathlib
 import string
 import textwrap
@@ -287,9 +286,9 @@ class UploadCommand(BaseCommand):
     overview = textwrap.dedent("""
         Upload a charm or bundle to Charmhub.
 
-        Push a charm or bundle to Charmhub where it will be verified for
-        conformance to the packaging standard. This command will finish
-        successfully once the package is approved by Charmhub.
+        Push a charm or bundle to Charmhub where it will be verified.
+        This command will finish successfully once the package is
+        approved by Charmhub.
 
         In the event of a failure in the verification process, charmcraft
         will report details of the failure, otherwise it will give you the

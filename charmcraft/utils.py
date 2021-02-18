@@ -70,10 +70,9 @@ def get_templates_environment(templates_dir):
 
 
 def useful_filepath(filepath):
-    """Convert the string to Path and verify that is a useful file path.
+    """Return a valid Path with user name expansion for filepath.
 
-    It checks that the file exists and it's readable, and that it's actually a
-    file. Also the `~` is expanded to the user's home.
+    CommandError is raised if filepath is not a valid file or is not readable.
     """
     filepath = pathlib.Path(filepath).expanduser()
     if not os.access(str(filepath), os.R_OK):  # access doesn't support pathlib in 3.5

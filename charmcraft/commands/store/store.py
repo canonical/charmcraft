@@ -28,7 +28,7 @@ logger = logging.getLogger('charmcraft.commands.store')
 
 # helpers to build responses from this layer
 User = namedtuple('User', 'name username userid')
-Charm = namedtuple('Charm', 'name private status')
+Entity = namedtuple('Charm', 'entity_type name private status')
 Uploaded = namedtuple('Uploaded', 'ok status revision errors')
 # XXX Facundo 2020-07-23: Need to do a massive rename to call `revno` to the "revision as
 # the number" inside the "revision as the structure", this gets super confusing in the code with
@@ -118,16 +118,18 @@ class Store:
         )
         return result
 
-    def register_name(self, name):
+    def register_name(self, name, entity_type):
         """Register the specified name for the authenticated user."""
-        self._client.post('/v1/charm', {'name': name})
+        self._client.post('/v1/charm', {'name': name, 'type': entity_type})
 
     def list_registered_names(self):
         """Return names registered by the authenticated user."""
         response = self._client.get('/v1/charm')
         result = []
         for item in response['results']:
-            result.append(Charm(name=item['name'], private=item['private'], status=item['status']))
+            result.append(Entity(
+                name=item['name'], private=item['private'], status=item['status'],
+                entity_type=item['type']))
         return result
 
     def upload(self, name, filepath):

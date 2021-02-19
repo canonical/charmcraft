@@ -19,14 +19,14 @@
 import datetime
 import hashlib
 import logging
-import os
 import pathlib
-from argparse import Namespace
+import zipfile
+from argparse import Namespace, ArgumentParser
 from unittest.mock import patch, call, MagicMock
 
+import dateutil.parser
 import pytest
 import yaml
-from dateutil import parser
 
 from charmcraft.config import CharmhubConfig
 from charmcraft.cmdbase import CommandError
@@ -48,6 +48,7 @@ from charmcraft.commands.store import (
     UploadCommand,
     WhoamiCommand,
     get_name_from_metadata,
+    get_name_from_zip,
 )
 from charmcraft.commands.store.store import (
     Channel,
@@ -59,7 +60,7 @@ from charmcraft.commands.store.store import (
     Uploaded,
     User,
 )
-from charmcraft.utils import get_templates_environment
+from charmcraft.utils import get_templates_environment, useful_filepath
 from tests import factory
 
 # used a lot!
@@ -310,30 +311,117 @@ def test_list_registered_several(caplog, store_mock, config):
 
 # -- tests for upload command
 
+def _build_zip_with_yaml(zippath, filename, *, content=None, raw_yaml=None):
+    """Create a yaml named 'filename' with given content, inside a zip file in 'zippath'."""
+    if raw_yaml is None:
+        raw_yaml = yaml.dump(content).encode('ascii')
+    with zipfile.ZipFile(str(zippath), 'w') as zf:
+        zf.writestr(filename, raw_yaml)
 
-def test_upload_call_ok(caplog, store_mock, config):
+
+def test_get_name_bad_zip(tmp_path):
+    """Get the name from a bad zip file."""
+    bad_zip = tmp_path / 'badstuff.zip'
+    bad_zip.write_text("I'm not really a zip file")
+
+    with pytest.raises(CommandError) as cm:
+        get_name_from_zip(bad_zip)
+    assert str(cm.value) == "Cannot open '{}' (bad zip file).".format(bad_zip)
+
+
+def test_get_name_charm_ok(tmp_path):
+    """Get the name from a charm file, all ok."""
+    test_zip = tmp_path / 'some.zip'
+    test_name = 'whatever'
+    _build_zip_with_yaml(test_zip, 'metadata.yaml', content={'name': test_name})
+
+    name = get_name_from_zip(test_zip)
+    assert name == test_name
+
+
+@pytest.mark.parametrize('yaml_content', [
+    b'=',  # invalid yaml
+    b'foo: bar',  # missing 'name'
+])
+def test_get_name_charm_bad_metadata(tmp_path, yaml_content):
+    """Get the name from a charm file, but with a wrong metadata.yaml."""
+    bad_zip = tmp_path / 'badstuff.zip'
+    _build_zip_with_yaml(bad_zip, 'metadata.yaml', raw_yaml=yaml_content)
+
+    with pytest.raises(CommandError) as cm:
+        get_name_from_zip(bad_zip)
+    assert str(cm.value) == (
+        "Bad 'metadata.yaml' file inside charm zip '{}': must be a valid YAML with a 'name' key."
+        .format(bad_zip))
+
+
+def test_get_name_bundle_ok(tmp_path):
+    """Get the name from a bundle file, all ok."""
+    test_zip = tmp_path / 'some.zip'
+    test_name = 'whatever'
+    _build_zip_with_yaml(test_zip, 'bundle.yaml', content={'name': test_name})
+
+    name = get_name_from_zip(test_zip)
+    assert name == test_name
+
+
+@pytest.mark.parametrize('yaml_content', [
+    b'=',  # invalid yaml
+    b'foo: bar',  # missing 'name'
+])
+def test_get_name_bundle_bad_data(tmp_path, yaml_content):
+    """Get the name from a bundle file, but with a bad bundle.yaml."""
+    bad_zip = tmp_path / 'badstuff.zip'
+    _build_zip_with_yaml(bad_zip, 'bundle.yaml', raw_yaml=yaml_content)
+
+    with pytest.raises(CommandError) as cm:
+        get_name_from_zip(bad_zip)
+    assert str(cm.value) == (
+        "Bad 'bundle.yaml' file inside bundle zip '{}': must be a valid YAML with a 'name' key."
+        .format(bad_zip))
+
+
+def test_get_name_nor_charm_nor_bundle(tmp_path):
+    """Get the name from a zip that has no metadata.yaml nor bundle.yaml."""
+    bad_zip = tmp_path / 'badstuff.zip'
+    _build_zip_with_yaml(bad_zip, 'whatever.yaml', content={})
+
+    with pytest.raises(CommandError) as cm:
+        get_name_from_zip(bad_zip)
+    assert str(cm.value) == (
+        "The indicated zip file '{}' is not a charm ('metadata.yaml' not found) nor a bundle "
+        "('bundle.yaml' not found).".format(bad_zip))
+
+
+def test_upload_parameters_filepath_type(config):
+    """The filepath parameter implies a set of validations."""
+    cmd = UploadCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == 'filepath']
+    assert action.type is useful_filepath
+
+
+def test_upload_call_ok(caplog, store_mock, config, tmp_path):
     """Simple upload, success result."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
 
-    args = Namespace(charm_file='whatever-cmd-arg')
-    with patch('charmcraft.commands.store.UploadCommand._discover_charm') as mock_discover:
-        mock_discover.return_value = ('discovered-name', 'discovered-path')
-        UploadCommand('group', config).run(args)
-
-    # check it called self discover helper with correct args
-    mock_discover.assert_called_once_with('whatever-cmd-arg')
+    test_charm = tmp_path / 'mystuff.charm'
+    _build_zip_with_yaml(test_charm, 'metadata.yaml', content={'name': 'mycharm'})
+    args = Namespace(filepath=test_charm)
+    UploadCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
-        call.upload('discovered-name', 'discovered-path')
+        call.upload('mycharm', test_charm)
     ]
-    expected = "Revision 7 of 'discovered-name' created"
+    expected = "Revision 7 of 'mycharm' created"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_upload_call_error(caplog, store_mock, config):
+def test_upload_call_error(caplog, store_mock, config, tmp_path):
     """Simple upload but with a response indicating an error."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
@@ -344,10 +432,10 @@ def test_upload_call_error(caplog, store_mock, config):
     store_response = Uploaded(ok=False, status=400, revision=None, errors=errors)
     store_mock.upload.return_value = store_response
 
-    args = Namespace(charm_file='whatever-cmd-arg')
-    with patch('charmcraft.commands.store.UploadCommand._discover_charm') as mock_discover:
-        mock_discover.return_value = ('discovered-name', 'discovered-path')
-        UploadCommand('group', config).run(args)
+    test_charm = tmp_path / 'mystuff.charm'
+    _build_zip_with_yaml(test_charm, 'metadata.yaml', content={'name': 'mycharm'})
+    args = Namespace(filepath=test_charm)
+    UploadCommand('group', config).run(args)
 
     expected = [
         "Upload failed with status 400:",
@@ -355,93 +443,6 @@ def test_upload_call_error(caplog, store_mock, config):
         "- broken: other long error text",
     ]
     assert expected == [rec.message for rec in caplog.records]
-
-
-def test_upload_discover_pathgiven_ok(tmp_path, config):
-    """Discover charm name/path, indicated path ok."""
-    charm_file = tmp_path / 'testfile.charm'
-    charm_file.touch()
-
-    name, path = UploadCommand('group', config)._discover_charm(charm_file)
-    assert name == 'testfile'
-    assert path == charm_file
-
-
-def test_upload_discover_pathgiven_home_expanded(tmp_path, config):
-    """Discover charm name/path, home-expand the indicated path."""
-    fake_home = tmp_path / 'homedir'
-    fake_home.mkdir()
-    charm_file = fake_home / 'testfile.charm'
-    charm_file.touch()
-
-    with patch.dict(os.environ, {'HOME': str(fake_home)}):
-        cmd = UploadCommand('group', config)
-        name, path = cmd._discover_charm(pathlib.Path('~/testfile.charm'))
-    assert name == 'testfile'
-    assert path == charm_file
-
-
-def test_upload_discover_pathgiven_missing(tmp_path, config):
-    """Discover charm name/path, the indicated path is not there."""
-    with pytest.raises(CommandError) as cm:
-        UploadCommand('group', config)._discover_charm(pathlib.Path('not_really_there.charm'))
-    assert str(cm.value) == "Cannot access 'not_really_there.charm'."
-
-
-def test_upload_discover_pathgiven_not_a_file(tmp_path, config):
-    """Discover charm name/path, the indicated path is not a file."""
-    with pytest.raises(CommandError) as cm:
-        UploadCommand('group', config)._discover_charm(tmp_path)
-    assert str(cm.value) == "{!r} is not a file.".format(str(tmp_path))
-
-
-def test_upload_discover_default_ok(tmp_path, monkeypatch, config):
-    """Discover charm name/path, default to get info from metadata, ok."""
-    monkeypatch.chdir(tmp_path)
-
-    # touch the charm file
-    charm_file = tmp_path / 'testcharm.charm'
-    charm_file.touch()
-
-    # fake the metadata to point to that file
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = 'testcharm'
-
-        name, path = UploadCommand('group', config)._discover_charm(None)
-
-    assert name == 'testcharm'
-    assert path == charm_file
-
-
-def test_upload_discover_default_no_metadata(tmp_path, config):
-    """Discover charm name/path, no metadata file to get info."""
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = None
-
-        with pytest.raises(CommandError) as cm:
-            UploadCommand('group', config)._discover_charm(None)
-
-    assert str(cm.value) == (
-        "Cannot find a valid charm name in metadata.yaml to upload. Check you are in a "
-        "charm directory with metadata.yaml, or use --charm-file=foo.charm.")
-
-
-def test_upload_discover_default_no_charm_file(tmp_path, monkeypatch, config):
-    """Discover charm name/path, the metadata indicates a not accesible."""
-    monkeypatch.chdir(tmp_path)
-
-    # fake the metadata to point to a missing file
-    metadata_data = {'name': 'testcharm'}
-    metadata_file = tmp_path / 'metadata.yaml'
-    metadata_raw = yaml.dump(metadata_data).encode('ascii')
-    with metadata_file.open('wb') as fh:
-        fh.write(metadata_raw)
-
-    with pytest.raises(CommandError) as cm:
-        UploadCommand('group', config)._discover_charm(None)
-    assert str(cm.value) == (
-        "Cannot access charm at {!r}. Try --charm-file=foo.charm"
-        .format(str(tmp_path / 'testcharm.charm')))
 
 
 # -- tests for list revisions command
@@ -918,7 +919,7 @@ def test_status_with_one_branch(caplog, store_mock, config):
     """Support having one branch."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    tstamp_with_timezone = parser.parse('2020-07-03T20:30:40Z')
+    tstamp_with_timezone = dateutil.parser.parse('2020-07-03T20:30:40Z')
     channel_map = [
         Release(revision=5, channel='latest/beta', expires_at=None),
         Release(revision=12, channel='latest/beta/mybranch', expires_at=tstamp_with_timezone),
@@ -956,7 +957,7 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
     """Support having multiple branches."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    tstamp_with_timezone = parser.parse('2020-07-03T20:30:40Z')
+    tstamp_with_timezone = dateutil.parser.parse('2020-07-03T20:30:40Z')
     channel_map = [
         Release(revision=5, channel='latest/beta', expires_at=None),
         Release(revision=12, channel='latest/beta/branch-1', expires_at=tstamp_with_timezone),

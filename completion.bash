@@ -19,57 +19,45 @@
 _charmcraft()
 {
     local cur prev words cword cmd cmds
-    cmds=(build version login logout whoami names upload revisions status release)
+    cmds=(
+        build 
+        create-lib 
+        fetch-lib 
+        help init 
+        list-lib 
+        login 
+        logout 
+        names 
+        pack 
+        publish-lib 
+        register 
+        register-bundle
+        release 
+        revisions 
+        status 
+        upload 
+        version 
+        whoami
+    )
     _init_completion || return
 
     # only offer long options, as they should be self-explanatory (and
     # it's not like it's more typing for the user)
+    globals=(--help --verbose --quiet --project-dir)
 
-    if [ "$cword" -eq 1 ]; then
-        COMPREPLY=( $(compgen -W "--help --verbose --quiet ${cmds[*]}" -- "$cur") )
+    # if user just wrote --project-dir, only offer directories
+    if [ "$prev" = "--project-dir" ] || [ "$prev" = "-p" ]; then
+        _filedir -d
         return
     fi
 
-    case "$prev" in
-        --help)
-            return
-            ;;
-        --verbose|--quiet)
-            COMPREPLY=( $(compgen -W "${cmds[*]}" -- "$cur") )
-            return
-            ;;
-        login|logout|whoami|version|names|register|create-lib|publish-lib|fetch-lib|list-lib)
-            COMPREPLY=( $(compgen -W "--help" -- "$cur") )
-            return
-            ;;
-        build)
-            COMPREPLY=( $(compgen -W "--help --from --entrypoint --requirement" -- "$cur") )
-            return
-            ;;
-        upload)
-            COMPREPLY=( $(compgen -W "--help --charm-file" -- "$cur") )
-            return
-            ;;
-        revisions|status|release)
-            COMPREPLY=( $(compgen -W "--help --name" -- "$cur") )
-            return
-            ;;
-        init)
-            COMPREPLY=( $(compgen -W "--help --project-dir --name --author --series --force" -- "$cur") )
-            return
-            ;;
-        pack)
-            COMPREPLY=( $(compgen -W "--help --from" -- "$cur") )
-            return
-            ;;
-    esac
-
-    # we're inside a command; which one?
-    local u w
+    # check if any of the words is a command: if yes, offer the options for that 
+    # command (and the global ones), else offer the commands and global options
+    local w c
     for w in "${words[@]}"; do
-        for u in "${cmds[@]}"; do
-            if [ "$u" = "$w" ]; then
-                cmd="$u"
+        for c in "${cmds[@]}"; do
+            if [ "$c" = "$w" ]; then
+                cmd="$c"
                 break
             fi
         done
@@ -78,10 +66,15 @@ _charmcraft()
         fi
     done
 
-    # NOTE cmd can be empty
+    if [ -z "$cmd" ]; then
+        # no command yet! show global options and the commands
+        COMPREPLY=( $(compgen -W  "${globals[*]} ${cmds[*]}" -- "$cur") )
+        return
+    fi
 
+    # offer the options for the given command (and global ones, always available)
     case "$cmd" in
-        "build")
+        build)
             case "$prev" in
                 -r|--requirement)
                     _filedir txt
@@ -92,28 +85,20 @@ _charmcraft()
                 -f|--from)
                     _filedir -d
                     ;;
-            esac
-            ;;
-        "upload")
-            case "$prev" in
-                --charm-file)
-                    _filedir charm
+                *)
+                    COMPREPLY=( $(compgen -W "${globals[*]} --from --entrypoint --requirement" -- "$cur") )
                     ;;
             esac
             ;;
-        "init")
-            case "$prev" in
-                --project-dir)
-                    _filedir -d
-                    ;;
-            esac
+        release)
+            COMPREPLY=( $(compgen -W "${globals[*]} --revision --channel" -- "$cur") )
             ;;
-        "pack")
-            case "$prev" in
-                -f|--from)
-                    _filedir -d
-                    ;;
-            esac
+        init)
+            COMPREPLY=( $(compgen -W "${globals[*]} --name --author --series --force" -- "$cur") )
+            ;;
+        *)
+            # by default just the global options
+            COMPREPLY=( $(compgen -W "${globals[*]}" -- "$cur") )
             ;;
     esac
 }

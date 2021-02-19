@@ -195,13 +195,6 @@ class Store:
         result = [_build_revision(item) for item in response['revisions']]
         return result
 
-    def list_resource_revisions(self, charm_name, resource_name):
-        """Return revisions for the indicated charm resource."""
-        endpoint = '/v1/charm/{}/resources/{}/revisions'.format(charm_name, resource_name)
-        response = self._client.get(endpoint)
-        result = [_build_resource_revision(item) for item in response['revisions']]
-        return result
-
     def release(self, name, revision, channels):
         """Release one or more revisions for a package."""
         endpoint = '/v1/charm/{}/releases'.format(name)
@@ -291,8 +284,15 @@ class Store:
         result = {(item['library-id'], item['api']): _build_library(item) for item in libraries}
         return result
 
-    def list_resources(self, charm):
+    def list_resources(self, charm):  #FIXME: test!!!!!!
         """Return resources associated to the indicated charm."""
         response = self._client.get('/v1/charm/{}/resources'.format(charm))
         result = [_build_resource(item) for item in response['resources']]
+        return result
+
+    def list_resource_revisions(self, charm_name, resource_name):  #FIXME: test!!!!!!
+        """Return revisions for the indicated charm resource."""
+        endpoint = '/v1/charm/{}/resources/{}/revisions'.format(charm_name, resource_name)
+        response = self._client.get(endpoint)
+        result = [_build_resource_revision(item) for item in response['revisions']]
         return result

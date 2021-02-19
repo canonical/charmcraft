@@ -385,7 +385,7 @@ class ListRevisionsCommand(BaseCommand):
             logger.info(line)
 
 
-class ReleaseCommand(BaseCommand):
+class ReleaseCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
     """Release a charm revision to specific channels."""
 
     name = 'release'
@@ -449,7 +449,7 @@ class ReleaseCommand(BaseCommand):
             parsed_args.revision, charm_name, ", ".join(parsed_args.channels))
 
 
-class StatusCommand(BaseCommand):
+class StatusCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
     """Show channel status for a charm."""
 
     name = 'status'
@@ -1009,7 +1009,7 @@ class ListLibCommand(BaseCommand):
             logger.info(line)
 
 
-class ListResourcesCommand(BaseCommand):
+class ListResourcesCommand(BaseCommand):  #FIXME: test!!!!!
     """List the resources associated with a given charm in Charmhub."""
 
     name = 'resources'
@@ -1043,7 +1043,7 @@ class ListResourcesCommand(BaseCommand):
             logger.info(line)
 
 
-class UploadResourceCommand(BaseCommand):
+class UploadResourceCommand(BaseCommand):  #FIXME: test!!!!!
     """Upload a resource to Charmhub."""
 
     name = 'upload-resource'
@@ -1064,6 +1064,7 @@ class UploadResourceCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        #FIXME: charm-name needs to be positional
         parser.add_argument(
             'resource_name', metavar='resource-name',
             help="The resource name")
@@ -1089,7 +1090,7 @@ class UploadResourceCommand(BaseCommand):
                 logger.info("- %s: %s", error.code, error.message)
 
 
-class ListResourceRevisionsCommand(BaseCommand):
+class ListResourceRevisionsCommand(BaseCommand):  #FIXME: test!!!!!
     """List revisions for a resource of a charm."""
 
     name = 'resource-revisions'
@@ -1108,6 +1109,7 @@ class ListResourceRevisionsCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        #FIXME: charm-name needs to be positional
         parser.add_argument(
             'resource_name', metavar='resource-name',
             help="The resource name")

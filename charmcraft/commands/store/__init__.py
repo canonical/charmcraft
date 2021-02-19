@@ -19,10 +19,10 @@
 import ast
 import hashlib
 import logging
-import os
 import pathlib
 import string
 import textwrap
+import zipfile
 from collections import namedtuple
 from operator import attrgetter
 
@@ -30,7 +30,7 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.utils import get_templates_environment
+from charmcraft.utils import get_templates_environment, useful_filepath
 
 from .store import Store
 
@@ -247,75 +247,66 @@ class ListNamesCommand(BaseCommand):
             logger.info(line)
 
 
+def get_name_from_zip(filepath):
+    """Get the charm/bundle name from a zip file."""
+    try:
+        zf = zipfile.ZipFile(str(filepath))
+    except zipfile.BadZipFile:
+        raise CommandError("Cannot open {!r} (bad zip file).".format(str(filepath)))
+
+    # get the name from the given file (trying first if it's a charm, then a bundle,
+    # otherwise it's an error)
+    if 'metadata.yaml' in zf.namelist():
+        try:
+            name = yaml.safe_load(zf.read('metadata.yaml'))['name']
+        except Exception:
+            raise CommandError(
+                "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
+                "a 'name' key.".format(str(filepath)))
+    elif 'bundle.yaml' in zf.namelist():
+        try:
+            name = yaml.safe_load(zf.read('bundle.yaml'))['name']
+        except Exception:
+            raise CommandError(
+                "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
+                "a 'name' key.".format(str(filepath)))
+    else:
+        raise CommandError(
+            "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
+            "nor a bundle ('bundle.yaml' not found).".format(str(filepath)))
+
+    return name
+
+
 class UploadCommand(BaseCommand):
-    """Upload a charm to Charmhub."""
+    """Upload a charm or bundle to Charmhub."""
 
     name = 'upload'
-    help_msg = "Upload a charm to Charmhub"
+    help_msg = "Upload a charm or bundle to Charmhub"
     overview = textwrap.dedent("""
-        Upload a charm to Charmhub.
+        Upload a charm or bundle to Charmhub.
 
-        Push a charm to Charmhub where it will be verified for conformance
-        to the packaging standard. This command will finish successfully
-        once the package is approved by Charmhub.
+        Push a charm or bundle to Charmhub where it will be verified.
+        This command will finish successfully once the package is
+        approved by Charmhub.
 
         In the event of a failure in the verification process, charmcraft
         will report details of the failure, otherwise it will give you the
-        new charm revision.
+        new charm or bundle revision.
 
         Upload will take you through login if needed.
     """)
     common = True
 
-    def _discover_charm(self, charm_filepath):
-        """Discover the charm name and file path.
-
-        If received path is None, a metadata.yaml will be searched in the current directory. If
-        path is given the name is taken from the filename.
-
-        """
-        if charm_filepath is None:
-            # discover the info using project's metadata, asume the file has the project's name
-            # with a .charm extension
-            charm_name = get_name_from_metadata()
-            if charm_name is None:
-                raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml to upload. Check you are in "
-                    "a charm directory with metadata.yaml, or use --charm-file=foo.charm.")
-
-            charm_filepath = pathlib.Path(charm_name + '.charm').absolute()
-            if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
-                raise CommandError(
-                    "Cannot access charm at {!r}. Try --charm-file=foo.charm"
-                    .format(str(charm_filepath)))
-
-        else:
-            # the path is given, asume the charm name is part of the file name
-            # XXX Facundo 2020-06-30: Actually, we need to open the ZIP file, extract the
-            # included metadata.yaml file, and read the name from there. Issue: #77.
-            charm_filepath = charm_filepath.expanduser()
-            if not os.access(str(charm_filepath), os.R_OK):  # access doesnt support pathlib in 3.5
-                raise CommandError(
-                    "Cannot access {!r}.".format(str(charm_filepath)))
-            if not charm_filepath.is_file():
-                raise CommandError(
-                    "{!r} is not a file.".format(str(charm_filepath)))
-
-            charm_name = charm_filepath.stem
-
-        return charm_name, charm_filepath
-
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument(
-            '--charm-file', type=pathlib.Path,
-            help="The charm to upload")
+        parser.add_argument('filepath', type=useful_filepath, help="The charm or bundle to upload")
 
     def run(self, parsed_args):
         """Run the command."""
-        name, path = self._discover_charm(parsed_args.charm_file)
+        name = get_name_from_zip(parsed_args.filepath)
         store = Store(self.config.charmhub)
-        result = store.upload(name, path)
+        result = store.upload(name, parsed_args.filepath)
         if result.ok:
             logger.info("Revision %s of %r created", result.revision, str(name))
         else:

@@ -4,49 +4,10 @@
 
 """Charm the service.
 
-This is a quick-start guide to help you write and deploy a new k8s charm using the
-operator framework. To ease the development, we suggest you to setup a microk8s
-environment [1] by running:
+Refer to [1] for a quick-start guide that will help you develop a new k8s charm
+using the operator framework.
 
-snap install juju --classic
-snap install microk8s --classic
-microk8s.enable dns storage
-juju bootstrap microk8s micro
-juju add-model my-charm-model
-
-At this point you have a controller named "micro" in the "microk8s" cloud. This
-cloud is actually your local machine, how neat! In Juju, you interact with the client
-(the juju command on your local machine). It connects to a controller. The controller
-is hosted on a cloud and controls models.
-
-This charm although simple is fully functional. You can build and deploy it on your
-microk8s cloud as following:
-
-charmcraft build
-juju deploy ./{{name}}-charm
-
-It may take a while to have the deployment finished, in the meantime you can check
-the status by running:
-
-juju status
-
-Now you are ready to start discovering how the operator framework works [2] and
-learn some more specifics about config, log, testing among other topics [3].
-
-If you are curious on how other existing operators are implemented refer to the
-MongoDB [4] and Elasticsearch[5] operators for inspiration on other topics such
-as relation, replication and lifecycle management.
-
-If still in doubt you can ask questions about the operator framework. There are
-multiple communication channels [6].
-
-[1] https://juju.is/docs/microk8s-cloud
-[2] https://discourse.charmhub.io/t/documentation-operator-framework/3394
-[3] https://discourse.charmhub.io/t/first-steps-with-the-operator-framework/3006
-[4] https://github.com/canonical/mongodb-operator
-[5] https://github.com/canonical/elasticsearch-operator
-[6] https://github.com/canonical/operator#talk-to-us
-
+[1] https://discourse.charmhub.io/t/quick-start-guide-to-help-you-write-a-k8s-charm-using-the-operator-framework/4208
 """
 
 import logging

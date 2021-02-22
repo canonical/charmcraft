@@ -21,7 +21,7 @@ import pathlib
 import pytest
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.utils import make_executable, load_yaml, useful_filepath
+from charmcraft.utils import make_executable, SingleOptionEnsurer, load_yaml, useful_filepath
 
 
 def test_make_executable_read_bits(tmp_path):
@@ -96,6 +96,23 @@ def test_load_yaml_file_problem(tmp_path, caplog):
     (logged,) = [rec.message for rec in caplog.records]
     assert "Failed to read/parse config file {}".format(test_file) in logged
     assert "PermissionError" in logged
+
+
+# -- tests for the SingleOptionEnsurer helper class
+
+def test_singleoptionensurer_convert_ok():
+    """Work fine with one call, convert as expected."""
+    soe = SingleOptionEnsurer(int)
+    assert soe('33') == 33
+
+
+def test_singleoptionensurer_too_many():
+    """Raise an error after one ok call."""
+    soe = SingleOptionEnsurer(int)
+    assert soe('33') == 33
+    with pytest.raises(ValueError) as cm:
+        soe('33')
+    assert str(cm.value) == "the option can be specified only once"
 
 
 # -- tests for the useful_filepath helper

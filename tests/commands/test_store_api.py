@@ -787,3 +787,156 @@ def test_get_tips_query_combinations(client_mock, config):
     assert client_mock.mock_calls == [
         call.post('/v1/charm/libraries/bulk', payload),
     ]
+
+
+# -- tests for list resources
+
+def test_list_resources_ok(client_mock, config):
+    """One resource ok."""
+    store = Store(config.charmhub)
+    client_mock.get.return_value = {'resources': [
+        {
+            'name': 'testresource',
+            'optional': True,
+            'revision': 9,
+            'type': 'file',
+        },
+    ]}
+
+    result = store.list_resources('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/resources')
+    ]
+
+    (item,) = result
+    assert item.name == 'testresource'
+    assert item.optional
+    assert item.revision == 9
+    assert item.resource_type == 'file'
+
+
+def test_list_resources_empty(client_mock, config):
+    """No resources listed."""
+    store = Store(config.charmhub)
+    client_mock.get.return_value = {'resources': []}
+
+    result = store.list_resources('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/resources')
+    ]
+    assert result == []
+
+
+def test_list_resources_several(client_mock, config):
+    """Several items returned."""
+    client_mock.get.return_value = {'resources': [
+        {
+            'name': 'testresource1',
+            'optional': True,
+            'revision': 123,
+            'type': 'file',
+        }, {
+            'name': 'testresource2',
+            'optional': False,
+            'revision': 678,
+            'type': 'file',
+        }
+    ]}
+
+    store = Store(config.charmhub)
+    result = store.list_resources('some-name')
+
+    (item1, item2) = result
+
+    assert item1.name == 'testresource1'
+    assert item1.optional
+    assert item1.revision == 123
+    assert item1.resource_type == 'file'
+
+    assert item2.name == 'testresource2'
+    assert not item2.optional
+    assert item2.revision == 678
+    assert item2.resource_type == 'file'
+
+
+# -- tests for list resource revisions
+
+def test_list_resource_revisions_ok(client_mock, config):
+    """One resource revision ok."""
+    store = Store(config.charmhub)
+    client_mock.get.return_value = {'revisions': [
+        {
+            'created-at': '2021-02-11T13:43:22.396606',
+            'name': 'otherstuff',
+            'revision': 1,
+            'sha256': '1bf0399c2de1240777ba73785f1ff1de5331f12853765a0',
+            'sha3-384': 'deb9369cb2b9e86ad44160e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89',
+            'sha384': 'eaaba6aa119da415e6ad778358a8530c47fefbe3ceced258e8c25530107dc7908e',
+            'sha512': 'b8cfe885d49285d8546885167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09d',
+            'size': 500
+        },
+    ]}
+
+    result = store.list_resource_revisions('charm-name', 'resource-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/charm-name/resources/resource-name/revisions')
+    ]
+
+    (item,) = result
+    assert item.revision == 1
+    assert item.created_at == parser.parse('2021-02-11T13:43:22.396606')
+    assert item.size == 500
+
+
+def test_list_resource_revisions_empty(client_mock, config):
+    """No resource revisions listed."""
+    store = Store(config.charmhub)
+    client_mock.get.return_value = {'revisions': []}
+
+    result = store.list_resource_revisions('charm-name', 'resource-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/charm-name/resources/resource-name/revisions')
+    ]
+    assert result == []
+
+
+def test_list_resource_revisions_several(client_mock, config):
+    """Several items returned."""
+    client_mock.get.return_value = {'revisions': [
+        {
+            'created-at': '2021-02-11T13:43:22.396606',
+            'name': 'otherstuff',
+            'revision': 1,
+            'sha256': '1bf0399c2de1240777ba73785f1ff1de5331f12853765a0',
+            'sha3-384': 'deb9369cb2b9e86ad44160e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89',
+            'sha384': 'eaaba6aa119da415e6ad778358a8530c47fefbe3ceced258e8c25530107dc7908e',
+            'sha512': 'b8cfe885d49285d8546885167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09d',
+            'size': 500
+        }, {
+            'created-at': '2021-02-11T14:23:55.659148',
+            'name': 'otherstuff',
+            'revision': 2,
+            'sha256': '73785f1ff1de5331f12853765a01bf0399c2de1240777ba',
+            'sha3-384': '60e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89deb9369cb2b5e86ad441',
+            'sha384': '778358a8530c47fefbe3ceced258e8c25530107dc7908eeaaba6aa119dad15e6ad',
+            'sha512': '05167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09db8cfe885d49285d8547c',
+            'size': 420,
+        },
+    ]}
+
+    store = Store(config.charmhub)
+    result = store.list_resource_revisions('charm-name', 'resource-name')
+
+    (item1, item2) = result
+
+    assert item1.revision == 1
+    assert item1.created_at == parser.parse('2021-02-11T13:43:22.396606')
+    assert item1.size == 500
+
+    assert item2.revision == 2
+    assert item2.created_at == parser.parse('2021-02-11T14:23:55.659148')
+    assert item2.size == 420

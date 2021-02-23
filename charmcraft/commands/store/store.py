@@ -284,13 +284,13 @@ class Store:
         result = {(item['library-id'], item['api']): _build_library(item) for item in libraries}
         return result
 
-    def list_resources(self, charm):  #FIXME: test!!!!!!
+    def list_resources(self, charm):
         """Return resources associated to the indicated charm."""
         response = self._client.get('/v1/charm/{}/resources'.format(charm))
         result = [_build_resource(item) for item in response['resources']]
         return result
 
-    def list_resource_revisions(self, charm_name, resource_name):  #FIXME: test!!!!!!
+    def list_resource_revisions(self, charm_name, resource_name):
         """Return revisions for the indicated charm resource."""
         endpoint = '/v1/charm/{}/resources/{}/revisions'.format(charm_name, resource_name)
         response = self._client.get(endpoint)

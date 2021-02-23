@@ -20,7 +20,8 @@ import pathlib
 
 import pytest
 
-from charmcraft.utils import make_executable, load_yaml, SingleOptionEnsurer, useful_filepath
+from charmcraft.cmdbase import CommandError
+from charmcraft.utils import make_executable, SingleOptionEnsurer, load_yaml, useful_filepath
 
 
 def test_make_executable_read_bits(tmp_path):
@@ -139,7 +140,7 @@ def test_usefulfilepath_home_expanded(tmp_path, monkeypatch):
 
 def test_usefulfilepath_missing():
     """The indicated path is not there."""
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(CommandError) as cm:
         useful_filepath('not_really_there.txt')
     assert str(cm.value) == "Cannot access 'not_really_there.txt'."
 
@@ -148,13 +149,13 @@ def test_usefulfilepath_inaccessible(tmp_path):
     """The indicated path is not readable."""
     test_file = tmp_path / 'testfile.bin'
     test_file.touch(mode=0o000)
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(CommandError) as cm:
         useful_filepath(str(test_file))
     assert str(cm.value) == "Cannot access {!r}.".format(str(test_file))
 
 
 def test_usefulfilepath_not_a_file(tmp_path):
     """The indicated path is not a file."""
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(CommandError) as cm:
         useful_filepath(str(tmp_path))
     assert str(cm.value) == "{!r} is not a file.".format(str(tmp_path))

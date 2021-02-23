@@ -472,31 +472,6 @@ def test_revisions_simple(caplog, store_mock, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_revisions_name_from_metadata_ok(store_mock, config):
-    """The charm name is retrieved succesfully from the metadata."""
-    store_mock.list_revisions.return_value = []
-    args = Namespace(name=None)
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = 'test-name'
-        ListRevisionsCommand('group', config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.list_revisions('test-name'),
-    ]
-
-
-def test_revisions_name_from_metadata_problem(store_mock, config):
-    """The metadata wasn't there to get the name."""
-    args = Namespace(name=None)
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = None
-        with pytest.raises(CommandError) as cm:
-            ListRevisionsCommand('group', config).run(args)
-        assert str(cm.value) == (
-            "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-            "directory with metadata.yaml, or use --name=foo.")
-
-
 def test_revisions_empty(caplog, store_mock, config):
     """No results from the store."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
@@ -613,7 +588,7 @@ def test_release_simple_ok(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channels = ['somechannel']
-    args = Namespace(name='testcharm', revision=7, channels=channels)
+    args = Namespace(name='testcharm', revision=7, channel=channels)
     ReleaseCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
@@ -628,41 +603,47 @@ def test_release_simple_multiple_channels(caplog, store_mock, config):
     """Releasing to multiple channels."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    args = Namespace(name='testcharm', revision=7, channels=['channel1', 'channel2', 'channel3'])
+    args = Namespace(name='testcharm', revision=7, channel=['channel1', 'channel2', 'channel3'])
     ReleaseCommand('group', config).run(args)
 
     expected = "Revision 7 of charm 'testcharm' released to channel1, channel2, channel3"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_release_name_guessing_ok(caplog, store_mock, config):
-    """Release after guessing the charm's name correctly."""
-    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+@pytest.mark.parametrize('args_validation', [
+    (['somename', '--channel=stable', '--revision=33'], ('somename', 33, ['stable'])),
+    (['somename', '--channel=stable', '-r', '33'], ('somename', 33, ['stable'])),
+    (['somename', '-c', 'stable', '--revision=33'], ('somename', 33, ['stable'])),
+    (['-c', 'stable', '--revision=33', 'somename'], ('somename', 33, ['stable'])),
+    (['-c', 'beta', '--revision=1', '--channel=edge', 'name'], ('name', 1, ['beta', 'edge'])),
+])
+def test_release_parameters_ok(config, args_validation):
+    """Control of different combination of sane parameters."""
+    sysargs, expected_parsed = args_validation
+    cmd = ReleaseCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    try:
+        args = parser.parse_args(sysargs)
+    except SystemExit:
+        pytest.fail("Parsing of {} was not ok.".format(sysargs))
+    assert args == Namespace(**dict(zip(['name', 'revision', 'channel'], expected_parsed)))
 
-    args = Namespace(name=None, revision=7, channels=['somechannel'])
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = 'guessed-name'
-        ReleaseCommand('group', config).run(args)
 
-    assert store_mock.mock_calls == [
-        call.release('guessed-name', 7, ['somechannel']),
-    ]
-    expected = "Revision 7 of charm 'guessed-name' released to somechannel"
-    assert [expected] == [rec.message for rec in caplog.records]
-
-
-def test_release_name_guessing_bad(config):
-    """The charm name couldn't be guessed."""
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = None
-
-        args = Namespace(name=None, revision=7, channels=['somechannel'])
-        with pytest.raises(CommandError) as cm:
-            ReleaseCommand('group', config).run(args)
-
-        assert str(cm.value) == (
-            "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-            "directory with metadata.yaml, or use --name=foo.")
+@pytest.mark.parametrize('sysargs', [
+    ['somename', '--channel=stable', '--revision=foo'],  # revision not an int
+    ['somename', '--channel=stable'],  # missing the revision
+    ['somename', '--revision=1'],  # missing a channel
+    ['somename', '--channel=stable', '--revision=1', '--revision=2'],  # too many revisions
+    ['--channel=stable', '--revision=1'],  # missing the name
+])
+def test_release_parameters_bad(config, sysargs):
+    """Control of different option/parameters combinations that are not valid."""
+    cmd = ReleaseCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    with pytest.raises(SystemExit):
+        parser.parse_args(sysargs)
 
 
 # -- tests for the status command
@@ -730,35 +711,6 @@ def test_status_empty(caplog, store_mock, config):
 
     expected = "Nothing has been released yet."
     assert [expected] == [rec.message for rec in caplog.records]
-
-
-def test_status_name_guessing_ok(caplog, store_mock, config):
-    """Get the status after guessing the charm's name correctly."""
-    caplog.set_level(logging.INFO, logger="charmcraft.commands")
-    store_mock.list_releases.return_value = [], [], []
-
-    args = Namespace(name=None)
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = 'guessed-name'
-        StatusCommand('group', config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.list_releases('guessed-name'),
-    ]
-
-
-def test_status_name_guessing_bad(config):
-    """The charm name couldn't be guessed."""
-    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
-        mock.return_value = None
-
-        args = Namespace(name=None)
-        with pytest.raises(CommandError) as cm:
-            StatusCommand('group', config).run(args)
-
-        assert str(cm.value) == (
-            "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-            "directory with metadata.yaml, or use --name=foo.")
 
 
 def test_status_channels_not_released_with_fallback(caplog, store_mock, config):

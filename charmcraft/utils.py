@@ -69,6 +69,30 @@ def get_templates_environment(templates_dir):
     return env
 
 
+class SingleOptionEnsurer:
+    """Argparse helper to ensure that the option is specified only once, converting it properly.
+
+    Receives a callable to convert the string from command line to the desired object.
+
+    Example of use:
+
+        parser.add_argument('-n', '--number',  type=SingleOptionEnsurer(int), required=True)
+
+    No lower limit is checked, that is verified with required=True in the argparse definition.
+    """
+
+    def __init__(self, converter):
+        self.converter = converter
+        self.count = 0
+
+    def __call__(self, value):
+        """Run by argparse to validate and convert the given argument."""
+        self.count += 1
+        if self.count > 1:
+            raise ValueError("the option can be specified only once")
+        return self.converter(value)
+
+
 def useful_filepath(filepath):
     """Return a valid Path with user name expansion for filepath.
 

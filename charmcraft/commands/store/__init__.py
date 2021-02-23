@@ -30,7 +30,7 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.utils import get_templates_environment, useful_filepath
+from charmcraft.utils import get_templates_environment, useful_filepath, SingleOptionEnsurer
 
 from .store import Store
 
@@ -316,16 +316,16 @@ class UploadCommand(BaseCommand):
 
 
 class ListRevisionsCommand(BaseCommand):
-    """List revisions for a charm."""
+    """List revisions for a charm or a bundle."""
 
     name = 'revisions'
-    help_msg = "List revisions for a charm in Charmhub"
+    help_msg = "List revisions for a charm or a bundle in Charmhub"
     overview = textwrap.dedent("""
         Show version, date and status for each revision in Charmhub.
 
         For example:
 
-           $ charmcraft revisions
+           $ charmcraft revisions mycharm
            Revision    Version    Created at    Status
            1           1          2020-11-15    released
 
@@ -335,21 +335,12 @@ class ListRevisionsCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="The name of the charm")
+        parser.add_argument('name', help="The name of the charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
-        if parsed_args.name:
-            charm_name = parsed_args.name
-        else:
-            charm_name = get_name_from_metadata()
-            if charm_name is None:
-                raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo.")
-
         store = Store(self.config.charmhub)
-        result = store.list_revisions(charm_name)
+        result = store.list_revisions(parsed_args.name)
         if not result:
             logger.info("No revisions found.")
             return
@@ -377,17 +368,17 @@ class ListRevisionsCommand(BaseCommand):
 
 
 class ReleaseCommand(BaseCommand):
-    """Release a charm revision to specific channels."""
+    """Release a charm or bundle revision to specific channels."""
 
     name = 'release'
-    help_msg = "Release a charm revision in one or more channels"
+    help_msg = "Release a charm or bundle revision in one or more channels"
     overview = textwrap.dedent("""
-        Release a charm revision in the channel(s) provided.
+        Release a charm or bundle revision in the channel(s) provided.
 
-        Charm revisions are not published for anybody else until you release
-        them in a channel. When you release a revision into a channel, users
-        who deploy the charm from that channel will get see the new revision
-        as a potential update.
+        Charm or bundle revisions are not published for anybody else until you
+        release them in a channel. When you release a revision into a channel,
+        users who deploy the charm or bundle from that channel will get see
+        the new revision as a potential update.
 
         A channel is made up of `track/risk/branch` with both the track and
         the branch as optional items, so formally:
@@ -414,39 +405,30 @@ class ReleaseCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        parser.add_argument('name', help="The name of charm or bundle")
         parser.add_argument(
-            'revision', type=int, help='The revision to release')
+            '-r', '--revision', type=SingleOptionEnsurer(int), required=True,
+            help='The revision to release')
         parser.add_argument(
-            'channels', metavar='channel', nargs='+',
-            help="The channel(s) to release to")
-        parser.add_argument('--name', help="The name of the charm")
+            '-c', '--channel', action='append', required=True,
+            help="The channel(s) to release to (this option can be indicated multiple times)")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-
-        if parsed_args.name:
-            charm_name = parsed_args.name
-        else:
-            charm_name = get_name_from_metadata()
-            if charm_name is None:
-                raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo.")
-
-        store.release(charm_name, parsed_args.revision, parsed_args.channels)
+        store.release(parsed_args.name, parsed_args.revision, parsed_args.channel)
         logger.info(
             "Revision %d of charm %r released to %s",
-            parsed_args.revision, charm_name, ", ".join(parsed_args.channels))
+            parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel))
 
 
 class StatusCommand(BaseCommand):
-    """Show channel status for a charm."""
+    """Show channel status for a charm or bundle."""
 
     name = 'status'
     help_msg = "Show channel and released revisions"
     overview = textwrap.dedent("""
-        Show channels and released revisions in Charmhub
+        Show channels and released revisions in Charmhub.
 
         Charm revisions are not available to users until they are released
         into a channel. This command shows the various channels for a charm
@@ -467,21 +449,12 @@ class StatusCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('--name', help="The name of the charm")
+        parser.add_argument('name', help="The name of the charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
-        if parsed_args.name:
-            charm_name = parsed_args.name
-        else:
-            charm_name = get_name_from_metadata()
-            if charm_name is None:
-                raise CommandError(
-                    "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                    "directory with metadata.yaml, or use --name=foo.")
-
         store = Store(self.config.charmhub)
-        channel_map, channels, revisions = store.list_releases(charm_name)
+        channel_map, channels, revisions = store.list_releases(parsed_args.name)
         if not channel_map:
             logger.info("Nothing has been released yet.")
             return

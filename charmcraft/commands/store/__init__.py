@@ -1007,7 +1007,7 @@ class ListResourcesCommand(BaseCommand):
             logger.info(line)
 
 
-class UploadResourceCommand(BaseCommand):  #FIXME: test!!!!!
+class UploadResourceCommand(BaseCommand):
     """Upload a resource to Charmhub."""
 
     name = 'upload-resource'
@@ -1045,7 +1045,7 @@ class UploadResourceCommand(BaseCommand):  #FIXME: test!!!!!
             parsed_args.charm_name, parsed_args.resource_name, parsed_args.resource_file)
         if result.ok:
             logger.info(
-                "Revision %s of resource %r for charm %r created",
+                "Revision %s created of resource %r for charm %r",
                 result.revision, parsed_args.resource_name, parsed_args.charm_name)
         else:
             logger.info("Upload failed with status %r:", result.status)

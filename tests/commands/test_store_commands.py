@@ -37,6 +37,8 @@ from charmcraft.commands.store import (
     FetchLibCommand,
     ListLibCommand,
     ListNamesCommand,
+    ListResourcesCommand,
+    ListResourceRevisionsCommand,
     ListRevisionsCommand,
     LoginCommand,
     LogoutCommand,
@@ -56,6 +58,8 @@ from charmcraft.commands.store.store import (
     Error,
     Library,
     Release,
+    Resource,
+    ResourceRevision,
     Revision,
     Uploaded,
     User,
@@ -1873,5 +1877,133 @@ def test_listlib_properly_sorted(caplog, store_mock, config):
         "testlib-1       5      124",
         "testlib-2       2      8",
         "testlib-2       3      7",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for list resources command
+
+def test_resources_simple(caplog, store_mock, config):
+    """Happy path of one result from the Store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Resource(name='testresource', optional=True, revision=1, resource_type='file'),
+    ]
+    store_mock.list_resources.return_value = store_response
+
+    args = Namespace(charm_name='testcharm')
+    ListResourcesCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_resources('testcharm'),
+    ]
+    expected = [
+        "Name          Type    Revision    Optional",
+        "testresource  file    1           True",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_resources_empty(caplog, store_mock, config):
+    """No results from the store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = []
+    store_mock.list_resources.return_value = store_response
+
+    args = Namespace(charm_name='testcharm')
+    ListResourcesCommand('group', config).run(args)
+
+    expected = [
+        "No resources associated to testcharm.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_resources_ordered_by_name(caplog, store_mock, config):
+    """Results are presented ordered by name in the table."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        Resource(name='bbb-resource', optional=True, revision=1, resource_type='file'),
+        Resource(name='aaa-resource', optional=True, revision=1, resource_type='file'),
+    ]
+    store_mock.list_resources.return_value = store_response
+
+    args = Namespace(charm_name='testcharm')
+    ListResourcesCommand('group', config).run(args)
+
+    expected = [
+        "Name          Type    Revision    Optional",
+        "aaa-resource  file    1           True",
+        "bbb-resource  file    1           True",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for list resource revisions command
+
+def test_resourcerevisions_simple(caplog, store_mock, config):
+    """Happy path of one result from the Store."""
+
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = [
+        ResourceRevision(revision=1, size=50, created_at=datetime.datetime(2020, 7, 3, 2, 30, 40)),
+    ]
+    store_mock.list_resource_revisions.return_value = store_response
+
+    args = Namespace(charm_name='testcharm', resource_name='testresource')
+    ListResourceRevisionsCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_resource_revisions('testcharm', 'testresource'),
+    ]
+    expected = [
+        "Revision    Created at    Size",
+        "1           2020-07-03      50",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_resourcerevisions_empty(caplog, store_mock, config):
+    """No results from the store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = []
+    store_mock.list_resource_revisions.return_value = store_response
+
+    args = Namespace(charm_name='testcharm', resource_name='testresource')
+    ListResourceRevisionsCommand('group', config).run(args)
+
+    expected = [
+        "No revisions found.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_resourcerevisions_ordered_by_revision(caplog, store_mock, config):
+    """Results are presented ordered by revision in the table."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    # three Revisions with all values weirdly similar, the only difference is revision, so
+    # we really assert later that it was used for ordering
+    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    store_response = [
+        ResourceRevision(revision=1, size=5000, created_at=tstamp),
+        ResourceRevision(revision=3, size=876543, created_at=tstamp),
+        ResourceRevision(revision=2, size=50, created_at=tstamp),
+    ]
+    store_mock.list_resource_revisions.return_value = store_response
+
+    args = Namespace(charm_name='testcharm', resource_name='testresource')
+    ListResourceRevisionsCommand('group', config).run(args)
+
+    expected = [
+        "Revision    Created at    Size",
+        "3           2020-07-03  876543",
+        "2           2020-07-03      50",
+        "1           2020-07-03    5000",
     ]
     assert expected == [rec.message for rec in caplog.records]

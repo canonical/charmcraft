@@ -973,7 +973,7 @@ class ListLibCommand(BaseCommand):
             logger.info(line)
 
 
-class ListResourcesCommand(BaseCommand):  #FIXME: test!!!!!
+class ListResourcesCommand(BaseCommand):
     """List the resources associated with a given charm in Charmhub."""
 
     name = 'resources'
@@ -987,14 +987,14 @@ class ListResourcesCommand(BaseCommand):  #FIXME: test!!!!!
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('charm', help="The name of the charm.")
+        parser.add_argument('charm_name', metavar='resource-name', help="The name of the charm.")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        result = store.list_resources(parsed_args.charm)
+        result = store.list_resources(parsed_args.charm_name)
         if not result:
-            logger.info("No resources associated to %s.", parsed_args.charm)
+            logger.info("No resources associated to %s.", parsed_args.charm_name)
             return
 
         headers = ['Name', 'Type', 'Revision', 'Optional']
@@ -1028,16 +1028,15 @@ class UploadResourceCommand(BaseCommand):  #FIXME: test!!!!!
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        #FIXME: charm-name needs to be positional
+        parser.add_argument(
+            'charm_name', metavar='charm-name',
+            help="The charm name to associate the resource")
         parser.add_argument(
             'resource_name', metavar='resource-name',
             help="The resource name")
         parser.add_argument(
             '--resource-file', type=SingleOptionEnsurer(useful_filepath), required=True,
             help="The resource content to upload")
-        parser.add_argument(
-            '--charm-name', type=SingleOptionEnsurer(str), required=True,
-            help="The charm name to associate the resource")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -1054,7 +1053,7 @@ class UploadResourceCommand(BaseCommand):  #FIXME: test!!!!!
                 logger.info("- %s: %s", error.code, error.message)
 
 
-class ListResourceRevisionsCommand(BaseCommand):  #FIXME: test!!!!!
+class ListResourceRevisionsCommand(BaseCommand):
     """List revisions for a resource of a charm."""
 
     name = 'resource-revisions'
@@ -1073,13 +1072,12 @@ class ListResourceRevisionsCommand(BaseCommand):  #FIXME: test!!!!!
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        #FIXME: charm-name needs to be positional
+        parser.add_argument(
+            'charm_name', metavar='charm-name',
+            help="The charm name to associate the resource")
         parser.add_argument(
             'resource_name', metavar='resource-name',
             help="The resource name")
-        parser.add_argument(
-            '--charm-name', type=SingleOptionEnsurer(str), required=True,
-            help="The charm name to associate the resource")
 
     def run(self, parsed_args):
         """Run the command."""

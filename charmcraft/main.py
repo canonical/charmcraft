@@ -140,7 +140,8 @@ def get_command_help(parser, command):
         if action.option_strings:
             options.append((', '.join(action.option_strings), action.help))
         else:
-            options.append((action.dest, action.help))
+            dest = action.dest if action.metavar is None else action.metavar
+            options.append((dest, action.help))
 
     help_text = helptexts.get_command_help(COMMAND_GROUPS, command, options)
     return help_text

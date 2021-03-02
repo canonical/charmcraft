@@ -531,6 +531,7 @@ def test_tool_exec_help_command_on_command_complex():
     def fill_parser(self, parser):
         parser.add_argument('param1', help="help on param1")
         parser.add_argument('param2', help="help on param2")
+        parser.add_argument('param3', metavar='transformed3', help="help on param2")
         parser.add_argument('--option1', help="help on option1")
         parser.add_argument('-o2', '--option2', help="help on option2")
 
@@ -559,6 +560,7 @@ def test_tool_exec_help_command_on_command_complex():
         '-v, --verbose',
         'param1',
         'param2',
+        'transformed3',
     ]
     assert sorted(x[0] for x in args[2]) == expected_options
 

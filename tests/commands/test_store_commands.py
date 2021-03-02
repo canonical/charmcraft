@@ -47,6 +47,7 @@ from charmcraft.commands.store import (
     ReleaseCommand,
     StatusCommand,
     UploadCommand,
+    UploadResourceCommand,
     WhoamiCommand,
     get_name_from_metadata,
     get_name_from_zip,
@@ -62,7 +63,7 @@ from charmcraft.commands.store.store import (
     Uploaded,
     User,
 )
-from charmcraft.utils import get_templates_environment, useful_filepath
+from charmcraft.utils import get_templates_environment, useful_filepath, SingleOptionEnsurer
 from tests import factory
 
 # used a lot!
@@ -1936,5 +1937,60 @@ def test_resources_ordered_by_name(caplog, store_mock, config):
         "Name          Type    Revision    Optional",
         "aaa-resource  file    1           True",
         "bbb-resource  file    1           True",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+# -- tests for upload resources command
+
+def test_uploadresource_options_resourcefile_type(config):
+    """The --resource-file option implies a set of validations."""
+    cmd = UploadResourceCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == 'filepath']
+    assert isinstance(action.type, SingleOptionEnsurer)
+    assert action.type.converter is useful_filepath
+
+
+def test_uploadresource_call_ok(caplog, store_mock, config, tmp_path):
+    """Simple upload, success result."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
+    store_mock.upload_resource.return_value = store_response
+
+    test_resource = tmp_path / 'mystuff.bin'
+    test_resource.write_text("sample stuff")
+    args = Namespace(charm_name='mycharm', resource_name='myresource', filepath=test_resource)
+    UploadResourceCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.upload_resource('mycharm', 'myresource', test_resource)
+    ]
+    expected = "Revision 7 created of resource 'myresource' for charm 'mycharm'"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_uploadresource_call_error(caplog, store_mock, config, tmp_path):
+    """Simple upload but with a response indicating an error."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    errors = [
+        Error(message="text 1", code='missing-stuff'),
+        Error(message="other long error text", code='broken'),
+    ]
+    store_response = Uploaded(ok=False, status=400, revision=None, errors=errors)
+    store_mock.upload_resource.return_value = store_response
+
+    test_resource = tmp_path / 'mystuff.bin'
+    test_resource.write_text("sample stuff")
+    args = Namespace(charm_name='mycharm', resource_name='myresource', filepath=test_resource)
+    UploadResourceCommand('group', config).run(args)
+
+    expected = [
+        "Upload failed with status 400:",
+        "- missing-stuff: text 1",
+        "- broken: other long error text",
     ]
     assert expected == [rec.message for rec in caplog.records]

@@ -144,11 +144,9 @@ class Store:
                 entity_type=item['type']))
         return result
 
-    def upload(self, name, filepath):
-        """Upload the content of filepath to the indicated charm."""
+    def _upload(self, endpoint, filepath):
+        """Uploadfor all charms, bundles, resources (generic process)."""
         upload_id = self._client.push(filepath)
-
-        endpoint = '/v1/charm/{}/revisions'.format(name)
         response = self._client.post(endpoint, {'upload-id': upload_id})
         status_url = response['status-url']
         logger.debug("Upload %s started, got status url %s", upload_id, status_url)
@@ -169,6 +167,16 @@ class Store:
             # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after
             # N attempts (which should be big, as per snapcraft experience). Issue: #79.
             time.sleep(POLL_DELAY)
+
+    def upload(self, name, filepath):
+        """Upload the content of filepath to the indicated charm."""
+        endpoint = '/v1/charm/{}/revisions'.format(name)
+        return self._upload(endpoint, filepath)
+
+    def upload_resource(self, charm_name, resource_name, filepath):
+        """Upload the content of filepath to the indicated resource."""
+        endpoint = '/v1/charm/{}/resources/{}/revisions'.format(charm_name, resource_name)
+        return self._upload(endpoint, filepath)
 
     def list_revisions(self, name):
         """Return charm revisions for the indicated charm."""

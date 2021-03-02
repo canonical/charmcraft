@@ -1938,4 +1938,3 @@ def test_resources_ordered_by_name(caplog, store_mock, config):
         "bbb-resource  file    1           True",
     ]
     assert expected == [rec.message for rec in caplog.records]
-

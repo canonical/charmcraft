@@ -1005,5 +1005,3 @@ class ListResourcesCommand(BaseCommand):
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():
             logger.info(line)
-
-

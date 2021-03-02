@@ -35,7 +35,7 @@ Uploaded = namedtuple('Uploaded', 'ok status revision errors')
 # time, and now it's the moment to do it (also in Release below!)
 Revision = namedtuple('Revision', 'revision version created_at status errors')
 Error = namedtuple('Error', 'message code')
-Release = namedtuple('Release', 'revision channel expires_at')
+Release = namedtuple('Release', 'revision channel expires_at resources')
 Channel = namedtuple('Channel', 'name fallback track risk branch')
 Library = namedtuple('Library', 'api content content_hash lib_id lib_name charm_name patch')
 Resource = namedtuple('Resource', 'name optional revision resource_type')
@@ -156,7 +156,7 @@ class Store:
         return result
 
     def _upload(self, endpoint, filepath):
-        """Generic upload for all charms, bundles, resources."""
+        """Uploadfor all charms, bundles, resources (generic process)."""
         upload_id = self._client.push(filepath)
         response = self._client.post(endpoint, {'upload-id': upload_id})
         status_url = response['status-url']
@@ -195,10 +195,13 @@ class Store:
         result = [_build_revision(item) for item in response['revisions']]
         return result
 
-    def release(self, name, revision, channels):
+    def release(self, name, revision, channels, resources):
         """Release one or more revisions for a package."""
         endpoint = '/v1/charm/{}/releases'.format(name)
-        items = [{'revision': revision, 'channel': channel} for channel in channels]
+        resources = [{'name': res.name, 'revision': res.revision} for res in resources]
+        items = [
+            {'revision': revision, 'channel': channel, 'resources': resources}
+            for channel in channels]
         self._client.post(endpoint, items)
 
     def list_releases(self, name):
@@ -212,8 +215,11 @@ class Store:
             if expires_at is not None:
                 # `datetime.datetime.fromisoformat` is available only since Py3.7
                 expires_at = parser.parse(expires_at)
+            resources = [_build_resource(r) for r in item['resources']]
             channel_map.append(
-                Release(revision=item['revision'], channel=item['channel'], expires_at=expires_at))
+                Release(
+                    revision=item['revision'], channel=item['channel'],
+                    expires_at=expires_at, resources=resources))
 
         channels = [
             Channel(

@@ -65,7 +65,12 @@ from charmcraft.commands.store.store import (
     Uploaded,
     User,
 )
-from charmcraft.utils import get_templates_environment, useful_filepath, SingleOptionEnsurer
+from charmcraft.utils import (
+    get_templates_environment,
+    useful_filepath,
+    SingleOptionEnsurer,
+    ResourceOption,
+)
 from tests import factory
 
 # used a lot!
@@ -593,11 +598,11 @@ def test_release_simple_ok(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channels = ['somechannel']
-    args = Namespace(name='testcharm', revision=7, channel=channels)
+    args = Namespace(name='testcharm', revision=7, channel=channels, resource=[])
     ReleaseCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
-        call.release('testcharm', 7, channels),
+        call.release('testcharm', 7, channels, []),
     ]
 
     expected = "Revision 7 of charm 'testcharm' released to somechannel"
@@ -608,19 +613,52 @@ def test_release_simple_multiple_channels(caplog, store_mock, config):
     """Releasing to multiple channels."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    args = Namespace(name='testcharm', revision=7, channel=['channel1', 'channel2', 'channel3'])
+    args = Namespace(
+        name='testcharm', revision=7, channel=['channel1', 'channel2', 'channel3'], resource=[])
     ReleaseCommand('group', config).run(args)
 
     expected = "Revision 7 of charm 'testcharm' released to channel1, channel2, channel3"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
+def test_release_including_resources(caplog, store_mock, config):
+    """Releasing with resources."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    r1 = ResourceOption(name='foo', revision=3)
+    r2 = ResourceOption(name='bar', revision=17)
+    args = Namespace(name='testcharm', revision=7, channel=['testchannel'], resource=[r1, r2])
+    ReleaseCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.release('testcharm', 7, ['testchannel'], [r1, r2]),
+    ]
+
+    expected = (
+        "Revision 7 of charm 'testcharm' released to testchannel "
+        "(attaching resources: 'foo' r3, 'bar' r17)")
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_release_options_resource(config):
+    """The --resource-file option implies a set of validations."""
+    cmd = ReleaseCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == 'resource']
+    assert isinstance(action.type, ResourceOption)
+
+
 @pytest.mark.parametrize('args_validation', [
-    (['somename', '--channel=stable', '--revision=33'], ('somename', 33, ['stable'])),
-    (['somename', '--channel=stable', '-r', '33'], ('somename', 33, ['stable'])),
-    (['somename', '-c', 'stable', '--revision=33'], ('somename', 33, ['stable'])),
-    (['-c', 'stable', '--revision=33', 'somename'], ('somename', 33, ['stable'])),
-    (['-c', 'beta', '--revision=1', '--channel=edge', 'name'], ('name', 1, ['beta', 'edge'])),
+    (['somename', '--channel=stable', '--revision=33'], ('somename', 33, ['stable'], [])),
+    (['somename', '--channel=stable', '-r', '33'], ('somename', 33, ['stable'], [])),
+    (['somename', '-c', 'stable', '--revision=33'], ('somename', 33, ['stable'], [])),
+    (['-c', 'stable', '--revision=33', 'somename'], ('somename', 33, ['stable'], [])),
+    (['-c', 'beta', '--revision=1', '--channel=edge', 'name'], ('name', 1, ['beta', 'edge'], [])),
+    (['somename', '-c=beta', '-r=3', '--resource=foo:15'],
+        ('somename', 3, ['beta'], [ResourceOption('foo', 15)])),
+    (['somename', '-c=beta', '-r=3', '--resource=foo:15', '--resource=bar:99'],
+        ('somename', 3, ['beta'], [ResourceOption('foo', 15), ResourceOption('bar', 99)])),
 ])
 def test_release_parameters_ok(config, args_validation):
     """Control of different combination of sane parameters."""
@@ -632,7 +670,9 @@ def test_release_parameters_ok(config, args_validation):
         args = parser.parse_args(sysargs)
     except SystemExit:
         pytest.fail("Parsing of {} was not ok.".format(sysargs))
-    assert args == Namespace(**dict(zip(['name', 'revision', 'channel'], expected_parsed)))
+    attribs = ['name', 'revision', 'channel', 'resource']
+    print("==== args", args)
+    assert args == Namespace(**dict(zip(attribs, expected_parsed)))
 
 
 @pytest.mark.parametrize('sysargs', [
@@ -641,6 +681,7 @@ def test_release_parameters_ok(config, args_validation):
     ['somename', '--revision=1'],  # missing a channel
     ['somename', '--channel=stable', '--revision=1', '--revision=2'],  # too many revisions
     ['--channel=stable', '--revision=1'],  # missing the name
+    ['somename', '-c=beta', '-r=3', '--resource=foo15'],  # bad resource format
 ])
 def test_release_parameters_bad(config, sysargs):
     """Control of different option/parameters combinations that are not valid."""
@@ -676,10 +717,10 @@ def test_status_simple_ok(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=7, channel='latest/stable', expires_at=None),
-        Release(revision=7, channel='latest/candidate', expires_at=None),
-        Release(revision=80, channel='latest/beta', expires_at=None),
-        Release(revision=156, channel='latest/edge', expires_at=None),
+        Release(revision=7, channel='latest/stable', expires_at=None, resources=[]),
+        Release(revision=7, channel='latest/candidate', expires_at=None, resources=[]),
+        Release(revision=80, channel='latest/beta', expires_at=None, resources=[]),
+        Release(revision=156, channel='latest/edge', expires_at=None, resources=[]),
     ]
     channels = _build_channels()
     revisions = [
@@ -723,8 +764,8 @@ def test_status_channels_not_released_with_fallback(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=7, channel='latest/stable', expires_at=None),
-        Release(revision=80, channel='latest/edge', expires_at=None),
+        Release(revision=7, channel='latest/stable', expires_at=None, resources=[]),
+        Release(revision=80, channel='latest/edge', expires_at=None, resources=[]),
     ]
     channels = _build_channels()
     revisions = [
@@ -755,8 +796,8 @@ def test_status_channels_not_released_without_fallback(caplog, store_mock, confi
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=5, channel='latest/beta', expires_at=None),
-        Release(revision=12, channel='latest/edge', expires_at=None),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[]),
+        Release(revision=12, channel='latest/edge', expires_at=None, resources=[]),
     ]
     channels = _build_channels()
     revisions = [
@@ -787,8 +828,8 @@ def test_status_multiple_tracks(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=503, channel='latest/stable', expires_at=None),
-        Release(revision=1, channel='2.0/edge', expires_at=None),
+        Release(revision=503, channel='latest/stable', expires_at=None, resources=[]),
+        Release(revision=1, channel='2.0/edge', expires_at=None, resources=[]),
     ]
     channels_latest = _build_channels()
     channels_track = _build_channels(track='2.0')
@@ -825,10 +866,10 @@ def test_status_tracks_order(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=1, channel='latest/edge', expires_at=None),
-        Release(revision=2, channel='aaa/edge', expires_at=None),
-        Release(revision=3, channel='2.0/edge', expires_at=None),
-        Release(revision=4, channel='zzz/edge', expires_at=None),
+        Release(revision=1, channel='latest/edge', expires_at=None, resources=[]),
+        Release(revision=2, channel='aaa/edge', expires_at=None, resources=[]),
+        Release(revision=3, channel='2.0/edge', expires_at=None, resources=[]),
+        Release(revision=4, channel='zzz/edge', expires_at=None, resources=[]),
     ]
     channels_latest = _build_channels()
     channels_track_1 = _build_channels(track='zzz')
@@ -878,8 +919,10 @@ def test_status_with_one_branch(caplog, store_mock, config):
 
     tstamp_with_timezone = dateutil.parser.parse('2020-07-03T20:30:40Z')
     channel_map = [
-        Release(revision=5, channel='latest/beta', expires_at=None),
-        Release(revision=12, channel='latest/beta/mybranch', expires_at=tstamp_with_timezone),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[]),
+        Release(
+            revision=12, channel='latest/beta/mybranch',
+            expires_at=tstamp_with_timezone, resources=[]),
     ]
     channels = _build_channels()
     channels.append(
@@ -914,11 +957,11 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
     """Support having multiple branches."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    tstamp_with_timezone = dateutil.parser.parse('2020-07-03T20:30:40Z')
+    tstamp = dateutil.parser.parse('2020-07-03T20:30:40Z')
     channel_map = [
-        Release(revision=5, channel='latest/beta', expires_at=None),
-        Release(revision=12, channel='latest/beta/branch-1', expires_at=tstamp_with_timezone),
-        Release(revision=15, channel='latest/beta/branch-2', expires_at=tstamp_with_timezone),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[]),
+        Release(revision=12, channel='latest/beta/branch-1', expires_at=tstamp, resources=[]),
+        Release(revision=15, channel='latest/beta/branch-2', expires_at=tstamp, resources=[]),
     ]
     channels = _build_channels()
     channels.extend([
@@ -951,6 +994,73 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
         "         edge           ↑          ↑",
         "         beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",
         "         beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_with_resources(caplog, store_mock, config):
+    """Support having multiple branches."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    res1 = Resource(name='resource1', optional=True, revision=1, resource_type='file')
+    res2 = Resource(name='resource2', optional=True, revision=54, resource_type='file')
+    channel_map = [
+        Release(revision=5, channel='latest/candidate', expires_at=None, resources=[res1, res2]),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[res1]),
+    ]
+    channels = _build_channels()
+    revisions = [
+        _build_revision(revno=5, version='5.1'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group', config).run(args)
+
+    expected = [
+        "Track    Channel    Version    Revision    Resources",
+        "latest   stable     -          -           -",
+        "         candidate  5.1        5           resource1 r1, resource2 r54",
+        "         beta       5.1        5           resource1 r1",
+        "         edge       ↑          ↑           ↑",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_with_resources_and_branches(caplog, store_mock, config):
+    """Support having multiple branches."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    tstamp = dateutil.parser.parse('2020-07-03T20:30:40Z')
+    res1 = Resource(name='testres', optional=True, revision=1, resource_type='file')
+    res2 = Resource(name='testres', optional=True, revision=14, resource_type='file')
+    channel_map = [
+        Release(
+            revision=23, channel='latest/beta', expires_at=None, resources=[res2]),
+        Release(
+            revision=5, channel='latest/edge/mybranch', expires_at=tstamp, resources=[res1]),
+    ]
+    channels = _build_channels()
+    channels.append(
+        Channel(
+            name='latest/edge/mybranch', fallback='latest/edge',
+            track='latest', risk='edge', branch='mybranch'))
+    revisions = [
+        _build_revision(revno=5, version='5.1'),
+        _build_revision(revno=23, version='7.0.0'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group', config).run(args)
+
+    expected = [
+        "Track    Channel        Version    Revision    Resources    Expires at",
+        "latest   stable         -          -           -",
+        "         candidate      -          -           -",
+        "         beta           7.0.0      23          testres r14",
+        "         edge           ↑          ↑           ↑",
+        "         edge/mybranch  5.1        5           testres r1   2020-07-03T20:30:40+00:00",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1950,7 +2060,7 @@ def test_uploadresource_options_resourcefile_type(config):
     cmd = UploadResourceCommand('group', config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == 'resource_file']
+    (action,) = [action for action in parser._actions if action.dest == 'filepath']
     assert isinstance(action.type, SingleOptionEnsurer)
     assert action.type.converter is useful_filepath
 
@@ -1964,7 +2074,7 @@ def test_uploadresource_call_ok(caplog, store_mock, config, tmp_path):
 
     test_resource = tmp_path / 'mystuff.bin'
     test_resource.write_text("sample stuff")
-    args = Namespace(charm_name='mycharm', resource_name='myresource', resource_file=test_resource)
+    args = Namespace(charm_name='mycharm', resource_name='myresource', filepath=test_resource)
     UploadResourceCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
@@ -1987,7 +2097,7 @@ def test_uploadresource_call_error(caplog, store_mock, config, tmp_path):
 
     test_resource = tmp_path / 'mystuff.bin'
     test_resource.write_text("sample stuff")
-    args = Namespace(charm_name='mycharm', resource_name='myresource', resource_file=test_resource)
+    args = Namespace(charm_name='mycharm', resource_name='myresource', filepath=test_resource)
     UploadResourceCommand('group', config).run(args)
 
     expected = [

@@ -30,7 +30,12 @@ import yaml
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.utils import get_templates_environment, useful_filepath, SingleOptionEnsurer
+from charmcraft.utils import (
+    ResourceOption,
+    SingleOptionEnsurer,
+    get_templates_environment,
+    useful_filepath,
+)
 
 from .store import Store
 
@@ -367,7 +372,7 @@ class ListRevisionsCommand(BaseCommand):
             logger.info(line)
 
 
-class ReleaseCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
+class ReleaseCommand(BaseCommand):
     """Release a charm or bundle revision to specific channels."""
 
     name = 'release'
@@ -399,6 +404,14 @@ class ReleaseCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
             beta/hotfix-23425
             1.3/beta/feature-foo
 
+        When releasing a charm, one or more resources can be attached to that
+        release, using the `--resource` option, indicating in each case the
+        resource name and specific revision. For example, to include the
+        resource `thedb` revision 4 in the charm release, do:
+
+            charmcraft release mycharm --revision=14 \
+                --channel=beta --resource=thedb:4
+
         Listing revisions will take you through login if needed.
     """)
     common = True
@@ -412,17 +425,28 @@ class ReleaseCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
         parser.add_argument(
             '-c', '--channel', action='append', required=True,
             help="The channel(s) to release to (this option can be indicated multiple times)")
+        parser.add_argument(
+            '--resource', action='append', type=ResourceOption(), default=[],
+            help=(
+                "The resource(s)s to attach to to the release, in the <name>:<revision> format "
+                "(this option can be indicated multiple times)"))
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        store.release(parsed_args.name, parsed_args.revision, parsed_args.channel)
-        logger.info(
-            "Revision %d of charm %r released to %s",
-            parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel))
+        store.release(
+            parsed_args.name, parsed_args.revision, parsed_args.channel, parsed_args.resource)
+
+        msg = "Revision %d of charm %r released to %s"
+        args = [parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel)]
+        if parsed_args.resource:
+            msg += " (attaching resources: %s)"
+            args.append(", ".join(
+                "{!r} r{}".format(r.name, r.revision) for r in parsed_args.resource))
+        logger.info(msg, *args)
 
 
-class StatusCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
+class StatusCommand(BaseCommand):
     """Show channel status for a charm or bundle."""
 
     name = 'status'
@@ -487,6 +511,9 @@ class StatusCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
                 branch_present = True
 
         headers = ['Track', 'Channel', 'Version', 'Revision']
+        resources_present = any(release.resources for release in channel_map)
+        if resources_present:
+            headers.append('Resources')
         if branch_present:
             headers.append('Expires at')
 
@@ -504,14 +531,19 @@ class StatusCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
                 # get the release of the channel, fallbacking accordingly
                 release = releases_by_channel.get(channel.name)
                 if release is None:
-                    version = revno = '↑' if release_shown_for_this_track else '-'
+                    version = revno = resources = '↑' if release_shown_for_this_track else '-'
                 else:
                     release_shown_for_this_track = True
                     revno = release.revision
                     revision = revisions_by_revno[revno]
                     version = revision.version
+                    resources = ', '.join(
+                        "{} r{}".format(r.name, r.revision) for r in release.resources)
 
-                data.append([shown_track, description, version, revno])
+                datum = [shown_track, description, version, revno]
+                if resources_present:
+                    datum.append(resources)
+                data.append(datum)
 
                 # stop showing the track name for the rest of the track
                 shown_track = ''
@@ -521,7 +553,12 @@ class StatusCommand(BaseCommand):  #FIXME: add resources support, and test!!!!!
                 release = releases_by_channel[branch.name]
                 expiration = release.expires_at.isoformat()
                 revision = revisions_by_revno[release.revision]
-                data.append(['', description, revision.version, release.revision, expiration])
+                datum = ['', description, revision.version, release.revision]
+                if resources_present:
+                    datum.append(', '.join(
+                        "{} r{}".format(r.name, r.revision) for r in release.resources))
+                datum.append(expiration)
+                data.append(datum)
 
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():
@@ -987,7 +1024,7 @@ class ListResourcesCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('charm_name', metavar='resource-name', help="The name of the charm.")
+        parser.add_argument('charm_name', metavar='resource-name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -1035,14 +1072,14 @@ class UploadResourceCommand(BaseCommand):
             'resource_name', metavar='resource-name',
             help="The resource name")
         parser.add_argument(
-            '--resource-file', type=SingleOptionEnsurer(useful_filepath), required=True,
-            help="The resource content to upload")
+            '--filepath', type=SingleOptionEnsurer(useful_filepath), required=True,
+            help="The file path of the resource content to upload")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         result = store.upload_resource(
-            parsed_args.charm_name, parsed_args.resource_name, parsed_args.resource_file)
+            parsed_args.charm_name, parsed_args.resource_name, parsed_args.filepath)
         if result.ok:
             logger.info(
                 "Revision %s created of resource %r for charm %r",

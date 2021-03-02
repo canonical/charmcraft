@@ -19,6 +19,7 @@
 import logging
 import os
 import pathlib
+from collections import namedtuple
 from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
 
 import yaml
@@ -91,6 +92,33 @@ class SingleOptionEnsurer:
         if self.count > 1:
             raise ValueError("the option can be specified only once")
         return self.converter(value)
+
+
+class ResourceOption(namedtuple('ResourceOption', "name revision", defaults=(None, None))):
+    """Argparse helper to validate and convert a 'resource' option.
+
+    Receives a callable to convert the string from command line to the desired object.
+
+    Example of use:
+
+        parser.add_argument('--resource',  type=ResourceOption())
+    """
+
+    def __call__(self, value):
+        """Run by argparse to validate and convert the given argument."""
+        parts = [x.strip() for x in value.split(':')]
+        parts = [p for p in parts if p]
+        if len(parts) == 2:
+            name, revision = parts
+            try:
+                revision = int(revision)
+            except ValueError:
+                pass
+            else:
+                if revision > 0:
+                    return ResourceOption(name, revision)
+        msg = "the resource format must be <name>:<revision> (revision being a positive integer)"
+        raise ValueError(msg)
 
 
 def useful_filepath(filepath):

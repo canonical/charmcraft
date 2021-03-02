@@ -21,7 +21,13 @@ import pathlib
 import pytest
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.utils import make_executable, SingleOptionEnsurer, load_yaml, useful_filepath
+from charmcraft.utils import (
+    ResourceOption,
+    SingleOptionEnsurer,
+    load_yaml,
+    make_executable,
+    useful_filepath,
+)
 
 
 def test_make_executable_read_bits(tmp_path):
@@ -113,6 +119,33 @@ def test_singleoptionensurer_too_many():
     with pytest.raises(ValueError) as cm:
         soe('33')
     assert str(cm.value) == "the option can be specified only once"
+
+
+# -- tests for the ResourceOption helper class
+
+def test_resourceoption_convert_ok():
+    """Convert as expected."""
+    r = ResourceOption()("foo:13")
+    assert r.name == 'foo'
+    assert r.revision == 13
+
+
+@pytest.mark.parametrize('value', [
+    'foo15',  # no separation
+    'foo:',  # no revision
+    'foo:x3',  # no int
+    'foo:0',  # revision 0 is not allowed
+    'foo:-1',  # negative revisions are not allowed
+    ':15',  # no name
+    '  :15',  # no name, really!
+    'foo:bar:15',  # invalid name, anyway
+])
+def test_resourceoption_convert_error(value):
+    """Error while converting."""
+    with pytest.raises(ValueError) as cm:
+        ResourceOption()(value)
+    assert str(cm.value) == (
+        "the resource format must be <name>:<revision> (revision being a positive integer)")
 
 
 # -- tests for the useful_filepath helper

@@ -33,9 +33,12 @@ _charmcraft()
         register 
         register-bundle
         release 
+        resource-revisions
+        resources
         revisions 
         status 
         upload 
+        upload-resource
         version 
         whoami
     )
@@ -95,6 +98,16 @@ _charmcraft()
             ;;
         init)
             COMPREPLY=( $(compgen -W "${globals[*]} --name --author --series --force" -- "$cur") )
+            ;;
+        upload-resource)
+            case "$prev" in
+                --filepath)
+                    _filedir
+                    ;;
+                *)
+                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath" -- "$cur") )
+                    ;;
+            esac
             ;;
         *)
             # by default just the global options

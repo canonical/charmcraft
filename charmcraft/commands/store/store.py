@@ -38,6 +38,7 @@ Error = namedtuple('Error', 'message code')
 Release = namedtuple('Release', 'revision channel expires_at')
 Channel = namedtuple('Channel', 'name fallback track risk branch')
 Library = namedtuple('Library', 'api content content_hash lib_id lib_name charm_name patch')
+Resource = namedtuple('Resource', 'name optional revision resource_type')
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -76,6 +77,17 @@ def _build_library(resp):
         patch=resp['patch'],
     )
     return lib
+
+
+def _build_resource(item):
+    """Build a Resource from a response item."""
+    resource = Resource(
+        name=item['name'],
+        optional=item.get('optional'),
+        revision=item.get('revision'),
+        resource_type=item['type'],
+    )
+    return resource
 
 
 class Store:
@@ -251,4 +263,10 @@ class Store:
         response = self._client.post(endpoint, payload)
         libraries = response['libraries']
         result = {(item['library-id'], item['api']): _build_library(item) for item in libraries}
+        return result
+
+    def list_resources(self, charm):
+        """Return resources associated to the indicated charm."""
+        response = self._client.get('/v1/charm/{}/resources'.format(charm))
+        result = [_build_resource(item) for item in response['resources']]
         return result

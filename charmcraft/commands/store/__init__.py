@@ -971,3 +971,39 @@ class ListLibCommand(BaseCommand):
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():
             logger.info(line)
+
+
+class ListResourcesCommand(BaseCommand):
+    """List the resources associated with a given charm in Charmhub."""
+
+    name = 'resources'
+    help_msg = "List the resources associated with a given charm in Charmhub"
+    overview = textwrap.dedent("""
+        An overview of the resources associated with a given charm in Charmhub.
+
+        Listing resources will take you through login if needed.
+
+    """)
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument('charm_name', metavar='resource-name', help="The name of the charm")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub)
+        result = store.list_resources(parsed_args.charm_name)
+        if not result:
+            logger.info("No resources associated to %s.", parsed_args.charm_name)
+            return
+
+        headers = ['Name', 'Type', 'Revision', 'Optional']
+        data = sorted(
+            (item.name, item.resource_type, item.revision, item.optional)
+            for item in result)
+
+        table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
+        for line in table.splitlines():
+            logger.info(line)
+
+

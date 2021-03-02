@@ -764,3 +764,75 @@ def test_get_tips_query_combinations(client_mock, config):
     assert client_mock.mock_calls == [
         call.post('/v1/charm/libraries/bulk', payload),
     ]
+
+
+# -- tests for list resources
+
+def test_list_resources_ok(client_mock, config):
+    """One resource ok."""
+    store = Store(config.charmhub)
+    client_mock.get.return_value = {'resources': [
+        {
+            'name': 'testresource',
+            'optional': True,
+            'revision': 9,
+            'type': 'file',
+        },
+    ]}
+
+    result = store.list_resources('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/resources')
+    ]
+
+    (item,) = result
+    assert item.name == 'testresource'
+    assert item.optional
+    assert item.revision == 9
+    assert item.resource_type == 'file'
+
+
+def test_list_resources_empty(client_mock, config):
+    """No resources listed."""
+    store = Store(config.charmhub)
+    client_mock.get.return_value = {'resources': []}
+
+    result = store.list_resources('some-name')
+
+    assert client_mock.mock_calls == [
+        call.get('/v1/charm/some-name/resources')
+    ]
+    assert result == []
+
+
+def test_list_resources_several(client_mock, config):
+    """Several items returned."""
+    client_mock.get.return_value = {'resources': [
+        {
+            'name': 'testresource1',
+            'optional': True,
+            'revision': 123,
+            'type': 'file',
+        }, {
+            'name': 'testresource2',
+            'optional': False,
+            'revision': 678,
+            'type': 'file',
+        }
+    ]}
+
+    store = Store(config.charmhub)
+    result = store.list_resources('some-name')
+
+    (item1, item2) = result
+
+    assert item1.name == 'testresource1'
+    assert item1.optional
+    assert item1.revision == 123
+    assert item1.resource_type == 'file'
+
+    assert item2.name == 'testresource2'
+    assert not item2.optional
+    assert item2.revision == 678
+    assert item2.resource_type == 'file'

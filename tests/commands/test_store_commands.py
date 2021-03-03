@@ -413,7 +413,7 @@ def test_upload_call_ok(caplog, store_mock, config, tmp_path):
 
     test_charm = tmp_path / 'mystuff.charm'
     _build_zip_with_yaml(test_charm, 'metadata.yaml', content={'name': 'mycharm'})
-    args = Namespace(filepath=test_charm)
+    args = Namespace(filepath=test_charm, release=[])
     UploadCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
@@ -436,15 +436,83 @@ def test_upload_call_error(caplog, store_mock, config, tmp_path):
 
     test_charm = tmp_path / 'mystuff.charm'
     _build_zip_with_yaml(test_charm, 'metadata.yaml', content={'name': 'mycharm'})
-    args = Namespace(filepath=test_charm)
+    args = Namespace(filepath=test_charm, release=[])
     UploadCommand('group', config).run(args)
 
+    assert store_mock.mock_calls == [
+        call.upload('mycharm', test_charm)
+    ]
     expected = [
         "Upload failed with status 400:",
         "- missing-stuff: text 1",
         "- broken: other long error text",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+def test_upload_call_ok_including_release(caplog, store_mock, config, tmp_path):
+    """Upload with a release included, success result."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
+    store_mock.upload.return_value = store_response
+
+    test_charm = tmp_path / 'mystuff.charm'
+    _build_zip_with_yaml(test_charm, 'metadata.yaml', content={'name': 'mycharm'})
+    args = Namespace(filepath=test_charm, release=['edge'])
+    UploadCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.upload('mycharm', test_charm),
+        call.release('mycharm', 7, ['edge']),
+    ]
+    expected = [
+        "Revision 7 of 'mycharm' created",
+        "And released it to edge",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_upload_call_ok_including_release_multiple(caplog, store_mock, config, tmp_path):
+    """Upload with release to two channels included, success result."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
+    store_mock.upload.return_value = store_response
+
+    test_charm = tmp_path / 'mystuff.charm'
+    _build_zip_with_yaml(test_charm, 'metadata.yaml', content={'name': 'mycharm'})
+    args = Namespace(filepath=test_charm, release=['edge', 'stable'])
+    UploadCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.upload('mycharm', test_charm),
+        call.release('mycharm', 7, ['edge', 'stable']),
+    ]
+    expected = [
+        "Revision 7 of 'mycharm' created",
+        "And released it to edge, stable",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_upload_call_error_including_release(caplog, store_mock, config, tmp_path):
+    """Upload with a realsea but the upload went wrong, so no release."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    errors = [Error(message="text", code='problem')]
+    store_response = Uploaded(ok=False, status=400, revision=None, errors=errors)
+    store_mock.upload.return_value = store_response
+
+    test_charm = tmp_path / 'mystuff.charm'
+    _build_zip_with_yaml(test_charm, 'metadata.yaml', content={'name': 'mycharm'})
+    args = Namespace(filepath=test_charm, release=['edge'])
+    UploadCommand('group', config).run(args)
+
+    # check the upload was attempted, but not the release!
+    assert store_mock.mock_calls == [
+        call.upload('mycharm', test_charm)
+    ]
 
 
 # -- tests for list revisions command

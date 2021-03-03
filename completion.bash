@@ -97,6 +97,9 @@ _charmcraft()
         init)
             COMPREPLY=( $(compgen -W "${globals[*]} --name --author --series --force" -- "$cur") )
             ;;
+        upload)
+            COMPREPLY=( $(compgen -W "${globals[*]} --release" -- "$cur") )
+            ;;
         *)
             # by default just the global options
             COMPREPLY=( $(compgen -W "${globals[*]}" -- "$cur") )

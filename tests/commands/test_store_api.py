@@ -139,8 +139,7 @@ def test_list_registered_names_multiple(client_mock, config):
     assert item2.status == 'status2'
 
 
-# -- tests for upload
-
+# -- tests for the upload functionality (both for charm/bundles and resources)
 
 def test_upload_straightforward(client_mock, caplog, config):
     """The full and successful upload case."""
@@ -164,15 +163,15 @@ def test_upload_straightforward(client_mock, caplog, config):
 
     test_status_resolution = 'test-ok-or-not'
     fake_statuses = {test_status_ok: test_status_resolution}
-    test_charm_name = 'test-name'
     test_filepath = 'test-filepath'
+    test_endpoint = '/v1/test/revisions/endpoint/'
     with patch.dict('charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES', fake_statuses):
-        result = store.upload(test_charm_name, test_filepath)
+        result = store._upload(test_endpoint, test_filepath)
 
     # check all client calls
     assert client_mock.mock_calls == [
         call.push(test_filepath),
-        call.post('/v1/charm/{}/revisions'.format(test_charm_name), {'upload-id': test_upload_id}),
+        call.post(test_endpoint, {'upload-id': test_upload_id}),
         call.get(test_status_url),
     ]
 
@@ -215,7 +214,7 @@ def test_upload_polls_status(client_mock, caplog, config):
     fake_statuses = {test_status_ok: test_status_resolution}
     with patch.dict('charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES', fake_statuses):
         with patch('charmcraft.commands.store.store.POLL_DELAY', 0.01):
-            result = store.upload('some-name', 'some-filepath')
+            result = store._upload('/test/endpoint/', 'some-filepath')
 
     # check the status-checking client calls (kept going until third one)
     assert client_mock.mock_calls[2:] == [
@@ -266,10 +265,9 @@ def test_upload_error(client_mock, config):
 
     test_status_resolution = 'test-ok-or-not'
     fake_statuses = {test_status_bad: test_status_resolution}
-    test_charm_name = 'test-name'
     test_filepath = 'test-filepath'
     with patch.dict('charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES', fake_statuses):
-        result = store.upload(test_charm_name, test_filepath)
+        result = store._upload('/test/endpoint/', test_filepath)
 
     # check result
     assert result.ok == test_status_resolution
@@ -280,6 +278,31 @@ def test_upload_error(client_mock, config):
     assert error1.code == "error-code-1"
     assert error2.message == "error text 2"
     assert error2.code == "error-code-2"
+
+
+def test_upload_charmbundles_endpoint(config):
+    """The bundle/charm upload prepares ok the endpoint and calls the generic _upload."""
+    store = Store(config.charmhub)
+    test_results = 'test-results'
+
+    with patch.object(store, '_upload') as mock:
+        mock.return_value = test_results
+        result = store.upload('test-charm', 'test-filepath')
+    mock.assert_called_once_with('/v1/charm/test-charm/revisions', 'test-filepath')
+    assert result == test_results
+
+
+def test_upload_resources_endpoint(config):
+    """The resource upload prepares ok the endpoint and calls the generic _upload."""
+    store = Store(config.charmhub)
+    test_results = 'test-results'
+
+    with patch.object(store, '_upload') as mock:
+        mock.return_value = test_results
+        result = store.upload_resource('test-charm', 'test-resource', 'test-filepath')
+    expected_endpoint = '/v1/charm/test-charm/resources/test-resource/revisions'
+    mock.assert_called_once_with(expected_endpoint, 'test-filepath')
+    assert result == test_results
 
 
 # -- tests for list revisions
@@ -828,11 +851,11 @@ def test_list_resources_several(client_mock, config):
     (item1, item2) = result
 
     assert item1.name == 'testresource1'
-    assert item1.optional
+    assert item1.optional is True
     assert item1.revision == 123
     assert item1.resource_type == 'file'
 
     assert item2.name == 'testresource2'
-    assert not item2.optional
+    assert item2.optional is False
     assert item2.revision == 678
     assert item2.resource_type == 'file'

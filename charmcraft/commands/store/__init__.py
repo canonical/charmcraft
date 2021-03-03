@@ -1005,3 +1005,49 @@ class ListResourcesCommand(BaseCommand):
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():
             logger.info(line)
+
+
+class UploadResourceCommand(BaseCommand):
+    """Upload a resource to Charmhub."""
+
+    name = 'upload-resource'
+    help_msg = "Upload a resource to Charmhub"
+    overview = textwrap.dedent("""
+        Upload a resource to Charmhub.
+
+        Push a resource content to Charmhub, associating it to the
+        specified charm. This charm needs to have the resource declared
+        in its metadata (in a preoviously uploaded to Charmhub revision).
+
+        to the packaging standard. This command will finish successfully
+        once the package is approved by Charmhub.
+
+        Upload will take you through login if needed.
+    """)
+    common = True
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            'charm_name', metavar='charm-name',
+            help="The charm name to associate the resource")
+        parser.add_argument(
+            'resource_name', metavar='resource-name',
+            help="The resource name")
+        parser.add_argument(
+            '--filepath', type=SingleOptionEnsurer(useful_filepath), required=True,
+            help="The file path of the resource content to upload")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub)
+        result = store.upload_resource(
+            parsed_args.charm_name, parsed_args.resource_name, parsed_args.filepath)
+        if result.ok:
+            logger.info(
+                "Revision %s created of resource %r for charm %r",
+                result.revision, parsed_args.resource_name, parsed_args.charm_name)
+        else:
+            logger.info("Upload failed with status %r:", result.status)
+            for error in result.errors:
+                logger.info("- %s: %s", error.code, error.message)

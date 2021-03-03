@@ -281,7 +281,7 @@ def test_upload_error(client_mock, config):
 
 
 def test_upload_charmbundles_endpoint(config):
-    """Upload for charm or bundles prepares ok the endpoint and call generic _upload."""
+    """The bundle/charm upload prepares ok the endpoint and calls the generic _upload."""
     store = Store(config.charmhub)
     test_results = 'test-results'
 
@@ -293,7 +293,7 @@ def test_upload_charmbundles_endpoint(config):
 
 
 def test_upload_resources_endpoint(config):
-    """Upload for resources prepares ok the endpoint and call generic _upload."""
+    """The resource upload prepares ok the endpoint and calls the generic _upload."""
     store = Store(config.charmhub)
     test_results = 'test-results'
 

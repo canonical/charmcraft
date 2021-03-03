@@ -33,6 +33,7 @@ _charmcraft()
         register 
         register-bundle
         release 
+        resource-revisions
         resources
         revisions 
         status 

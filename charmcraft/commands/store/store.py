@@ -39,6 +39,7 @@ Release = namedtuple('Release', 'revision channel expires_at')
 Channel = namedtuple('Channel', 'name fallback track risk branch')
 Library = namedtuple('Library', 'api content content_hash lib_id lib_name charm_name patch')
 Resource = namedtuple('Resource', 'name optional revision resource_type')
+ResourceRevision = namedtuple('ResourceRevision', 'revision created_at size')
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -61,6 +62,16 @@ def _build_revision(item):
         created_at=parser.parse(item['created-at']),
         status=item['status'],
         errors=_build_errors(item),
+    )
+    return rev
+
+
+def _build_resource_revision(item):
+    """Build a Revision from a response item."""
+    rev = ResourceRevision(
+        revision=item['revision'],
+        created_at=parser.parse(item['created-at']),
+        size=item['size'],
     )
     return rev
 
@@ -277,4 +288,11 @@ class Store:
         """Return resources associated to the indicated charm."""
         response = self._client.get('/v1/charm/{}/resources'.format(charm))
         result = [_build_resource(item) for item in response['resources']]
+        return result
+
+    def list_resource_revisions(self, charm_name, resource_name):
+        """Return revisions for the indicated charm resource."""
+        endpoint = '/v1/charm/{}/resources/{}/revisions'.format(charm_name, resource_name)
+        response = self._client.get(endpoint)
+        result = [_build_resource_revision(item) for item in response['revisions']]
         return result

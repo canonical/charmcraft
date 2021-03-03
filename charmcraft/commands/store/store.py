@@ -156,7 +156,7 @@ class Store:
         return result
 
     def _upload(self, endpoint, filepath):
-        """Uploadfor all charms, bundles, resources (generic process)."""
+        """Upload for all charms, bundles and resources (generic process)."""
         upload_id = self._client.push(filepath)
         response = self._client.post(endpoint, {'upload-id': upload_id})
         status_url = response['status-url']

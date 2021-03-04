@@ -27,6 +27,7 @@ from collections import namedtuple
 from operator import attrgetter
 
 import yaml
+from humanize import naturalsize
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -1093,7 +1094,7 @@ class ListResourceRevisionsCommand(BaseCommand):
         data = [(
             item.revision,
             item.created_at.strftime('%Y-%m-%d'),
-            item.size,
+            naturalsize(item.size, gnu=True),
         ) for item in result]
 
         table = tabulate(data, headers=headers, tablefmt='plain', colalign=custom_alignment)

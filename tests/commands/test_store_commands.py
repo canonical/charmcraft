@@ -2018,7 +2018,7 @@ def test_resourcerevisions_simple(caplog, store_mock, config):
     ]
     expected = [
         "Revision    Created at    Size",
-        "1           2020-07-03      50",
+        "1           2020-07-03     50B",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -2048,7 +2048,8 @@ def test_resourcerevisions_ordered_by_revision(caplog, store_mock, config):
     tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
     store_response = [
         ResourceRevision(revision=1, size=5000, created_at=tstamp),
-        ResourceRevision(revision=3, size=876543, created_at=tstamp),
+        ResourceRevision(revision=3, size=34450520, created_at=tstamp),
+        ResourceRevision(revision=4, size=876543, created_at=tstamp),
         ResourceRevision(revision=2, size=50, created_at=tstamp),
     ]
     store_mock.list_resource_revisions.return_value = store_response
@@ -2058,8 +2059,9 @@ def test_resourcerevisions_ordered_by_revision(caplog, store_mock, config):
 
     expected = [
         "Revision    Created at    Size",
-        "3           2020-07-03  876543",
-        "2           2020-07-03      50",
-        "1           2020-07-03    5000",
+        "4           2020-07-03  856.0K",
+        "3           2020-07-03   32.9M",
+        "2           2020-07-03     50B",
+        "1           2020-07-03    4.9K",
     ]
     assert expected == [rec.message for rec in caplog.records]

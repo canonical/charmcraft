@@ -98,6 +98,9 @@ _charmcraft()
         init)
             COMPREPLY=( $(compgen -W "${globals[*]} --name --author --series --force" -- "$cur") )
             ;;
+        upload)
+            COMPREPLY=( $(compgen -W "${globals[*]} --release" -- "$cur") )
+            ;;
         upload-resource)
             case "$prev" in
                 --filepath)

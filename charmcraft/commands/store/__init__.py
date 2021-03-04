@@ -315,7 +315,7 @@ class UploadCommand(BaseCommand):
             if parsed_args.release:
                 # also release!
                 store.release(name, result.revision, parsed_args.release)
-                logger.info("And released it to %s", ", ".join(parsed_args.release))
+                logger.info("Revision released to %s", ", ".join(parsed_args.release))
         else:
             logger.info("Upload failed with status %r:", result.status)
             for error in result.errors:

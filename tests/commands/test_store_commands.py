@@ -469,7 +469,7 @@ def test_upload_call_ok_including_release(caplog, store_mock, config, tmp_path):
     ]
     expected = [
         "Revision 7 of 'mycharm' created",
-        "And released it to edge",
+        "Revision released to edge",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -492,7 +492,7 @@ def test_upload_call_ok_including_release_multiple(caplog, store_mock, config, t
     ]
     expected = [
         "Revision 7 of 'mycharm' created",
-        "And released it to edge, stable",
+        "Revision released to edge, stable",
     ]
     assert expected == [rec.message for rec in caplog.records]
 

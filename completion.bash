@@ -37,6 +37,7 @@ _charmcraft()
         revisions 
         status 
         upload 
+        upload-resource
         version 
         whoami
     )
@@ -99,6 +100,16 @@ _charmcraft()
             ;;
         upload)
             COMPREPLY=( $(compgen -W "${globals[*]} --release" -- "$cur") )
+            ;;
+        upload-resource)
+            case "$prev" in
+                --filepath)
+                    _filedir
+                    ;;
+                *)
+                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath" -- "$cur") )
+                    ;;
+            esac
             ;;
         *)
             # by default just the global options

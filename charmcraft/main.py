@@ -98,7 +98,7 @@ COMMAND_GROUPS = [
         store.CreateLibCommand, store.PublishLibCommand, store.ListLibCommand,
         store.FetchLibCommand,
         # resources support
-        store.ListResourcesCommand,
+        store.ListResourcesCommand, store.UploadResourceCommand,
     ]),
 ]
 

@@ -27,6 +27,7 @@ from collections import namedtuple
 from operator import attrgetter
 
 import yaml
+from humanize import naturalsize
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -306,6 +307,9 @@ class UploadCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument('filepath', type=useful_filepath, help="The charm or bundle to upload")
+        parser.add_argument(
+            '--release', action='append',
+            help="The channel(s) to release to (this option can be indicated multiple times)")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -314,6 +318,10 @@ class UploadCommand(BaseCommand):
         result = store.upload(name, parsed_args.filepath)
         if result.ok:
             logger.info("Revision %s of %r created", result.revision, str(name))
+            if parsed_args.release:
+                # also release!
+                store.release(name, result.revision, parsed_args.release)
+                logger.info("Revision released to %s", ", ".join(parsed_args.release))
         else:
             logger.info("Upload failed with status %r:", result.status)
             for error in result.errors:
@@ -1130,7 +1138,7 @@ class ListResourceRevisionsCommand(BaseCommand):
         data = [(
             item.revision,
             item.created_at.strftime('%Y-%m-%d'),
-            item.size,
+            naturalsize(item.size, gnu=True),
         ) for item in result]
 
         table = tabulate(data, headers=headers, tablefmt='plain', colalign=custom_alignment)

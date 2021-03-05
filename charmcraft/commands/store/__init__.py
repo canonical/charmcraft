@@ -27,6 +27,7 @@ from collections import namedtuple
 from operator import attrgetter
 
 import yaml
+from humanize import naturalsize
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -1058,3 +1059,51 @@ class UploadResourceCommand(BaseCommand):
             logger.info("Upload failed with status %r:", result.status)
             for error in result.errors:
                 logger.info("- %s: %s", error.code, error.message)
+
+
+class ListResourceRevisionsCommand(BaseCommand):
+    """List revisions for a resource of a charm."""
+
+    name = 'resource-revisions'
+    help_msg = "List revisions for a resource associated to a charm in Charmhub"
+    overview = textwrap.dedent("""
+        Show size and date for each resource revision in Charmhub.
+
+        For example:
+
+           $ charmcraft resource-revisions
+           Revision    Created at     Size
+           1           2020-11-15   183151
+
+        Listing revisions will take you through login if needed.
+    """)
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            'charm_name', metavar='charm-name',
+            help="The charm name to associate the resource")
+        parser.add_argument(
+            'resource_name', metavar='resource-name',
+            help="The resource name")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub)
+        result = store.list_resource_revisions(parsed_args.charm_name, parsed_args.resource_name)
+        if not result:
+            logger.info("No revisions found.")
+            return
+
+        headers = ['Revision', 'Created at', 'Size']
+        custom_alignment = ['left', None, 'right']
+        result.sort(key=attrgetter('revision'), reverse=True)
+        data = [(
+            item.revision,
+            item.created_at.strftime('%Y-%m-%d'),
+            naturalsize(item.size, gnu=True),
+        ) for item in result]
+
+        table = tabulate(data, headers=headers, tablefmt='plain', colalign=custom_alignment)
+        for line in table.splitlines():
+            logger.info(line)

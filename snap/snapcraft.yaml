@@ -134,6 +134,8 @@ parts:
       - lib/pymacaroons
       - lib/pymacaroons-*.dist-info
       - lib/google
+      - lib/humanize
+      - lib/humanize-*.dist-info
       - lib/protobuf-*.pth
       - lib/protobuf-*.dist-info
       - lib/tabulate.py

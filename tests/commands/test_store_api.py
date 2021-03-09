@@ -492,6 +492,7 @@ def test_status_ok(client_mock, config):
                 'progressive': {'paused': None, 'percentage': None},
                 'revision': 5,
                 'when': '2020-07-16T18:45:24Z',
+                'resources': [],
             }, {
                 'channel': 'latest/edge/mybranch',
                 'expiration-date': '2020-08-16T18:46:02Z',
@@ -499,6 +500,7 @@ def test_status_ok(client_mock, config):
                 'progressive': {'paused': None, 'percentage': None},
                 'revision': 10,
                 'when': '2020-07-16T18:46:02Z',
+                'resources': [],
             }
         ],
         'package': {
@@ -549,9 +551,11 @@ def test_status_ok(client_mock, config):
     assert cmap1.revision == 5
     assert cmap1.channel == 'latest/beta'
     assert cmap1.expires_at is None
+    assert cmap1.resources == []
     assert cmap2.revision == 10
     assert cmap2.channel == 'latest/edge/mybranch'
     assert cmap2.expires_at == parser.parse('2020-08-16T18:46:02Z')
+    assert cmap2.resources == []
 
     channel1, channel2 = channels
     assert channel1.name == 'latest/stable'
@@ -574,6 +578,98 @@ def test_status_ok(client_mock, config):
     assert rev2.created_at == parser.parse('2020-06-29T22:11:10')
     assert rev2.status == 'approved'
     assert rev2.errors == []
+
+
+def test_status_with_resources(client_mock, config):
+    """Get all the release information."""
+    client_mock.get.return_value = {
+        'channel-map': [
+            {
+                'channel': 'latest/stable',
+                'expiration-date': None,
+                'platform': {'architecture': 'all', 'os': 'all', 'series': 'all'},
+                'progressive': {'paused': None, 'percentage': None},
+                'revision': 5,
+                'when': '2020-07-16T18:45:24Z',
+                'resources': [
+                    {
+                        'name': 'test-resource-1',
+                        'revision': 2,
+                        'type': 'file',
+                    },
+                ],
+            }, {
+                'channel': 'latest/edge',
+                'expiration-date': '2020-08-16T18:46:02Z',
+                'platform': {'architecture': 'all', 'os': 'all', 'series': 'all'},
+                'progressive': {'paused': None, 'percentage': None},
+                'revision': 5,
+                'when': '2020-07-16T18:46:02Z',
+                'resources': [
+                    {
+                        'name': 'test-resource-1',
+                        'revision': 2,
+                        'type': 'file',
+                    }, {
+                        'name': 'test-resource-2',
+                        'revision': 329,
+                        'type': 'file',
+                    },
+                ],
+            }
+        ],
+        'package': {
+            'channels': [
+                {
+                    'branch': None,
+                    'fallback': None,
+                    'name': 'latest/edge',
+                    'risk': 'edge',
+                    'track': 'latest',
+                }, {
+                    'branch': None,
+                    'fallback': None,
+                    'name': 'latest/stable',
+                    'risk': 'stable',
+                    'track': 'latest',
+                },
+            ]
+        },
+        'revisions': [
+            {
+                'revision': 5,
+                'version': '5',
+                'created-at': '2020-06-29T22:11:05',
+                'status': 'approved',
+                'errors': None,
+            },
+        ],
+    }
+
+    store = Store(config.charmhub)
+    channel_map, _, _ = store.list_releases('testname')
+
+    # check response
+    cmap1, cmap2 = channel_map
+
+    assert cmap1.revision == 5
+    assert cmap1.channel == 'latest/stable'
+    assert cmap1.expires_at is None
+    (res,) = cmap1.resources
+    assert res.name == 'test-resource-1'
+    assert res.revision == 2
+    assert res.resource_type == 'file'
+
+    assert cmap2.revision == 5
+    assert cmap2.channel == 'latest/edge'
+    assert cmap2.expires_at == parser.parse('2020-08-16T18:46:02Z')
+    (res1, res2) = cmap2.resources
+    assert res1.name == 'test-resource-1'
+    assert res1.revision == 2
+    assert res1.resource_type == 'file'
+    assert res2.name == 'test-resource-2'
+    assert res2.revision == 329
+    assert res2.resource_type == 'file'
 
 
 # -- tests for library related functions

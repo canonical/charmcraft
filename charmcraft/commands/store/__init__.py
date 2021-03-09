@@ -436,7 +436,7 @@ class ReleaseCommand(BaseCommand):
         parser.add_argument(
             '--resource', action='append', type=ResourceOption(), default=[],
             help=(
-                "The resource(s)s to attach to to the release, in the <name>:<revision> format "
+                "The resource(s) to attach to to the release, in the <name>:<revision> format "
                 "(this option can be indicated multiple times)"))
 
     def run(self, parsed_args):

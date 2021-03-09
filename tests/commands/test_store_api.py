@@ -22,6 +22,7 @@ from unittest.mock import patch, call, MagicMock
 import pytest
 from dateutil import parser
 
+from charmcraft.utils import ResourceOption
 from charmcraft.commands.store.store import Store, Library
 
 
@@ -425,23 +426,52 @@ def test_list_revisions_several_mixed(client_mock, config):
 def test_release_simple(client_mock, config):
     """Releasing a revision into one channel."""
     store = Store(config.charmhub)
-    store.release('testname', 123, ['somechannel'])
+    store.release('testname', 123, ['somechannel'], [])
 
-    expected_body = [{'revision': 123, 'channel': 'somechannel'}]
+    expected_body = [{'revision': 123, 'channel': 'somechannel', 'resources': []}]
     assert client_mock.mock_calls == [
         call.post('/v1/charm/testname/releases', expected_body),
     ]
 
 
-def test_release_multiple(client_mock, config):
+def test_release_multiple_channels(client_mock, config):
     """Releasing a revision into multiple channels."""
     store = Store(config.charmhub)
-    store.release('testname', 123, ['channel1', 'channel2', 'channel3'])
+    store.release('testname', 123, ['channel1', 'channel2', 'channel3'], [])
 
     expected_body = [
-        {'revision': 123, 'channel': 'channel1'},
-        {'revision': 123, 'channel': 'channel2'},
-        {'revision': 123, 'channel': 'channel3'},
+        {'revision': 123, 'channel': 'channel1', 'resources': []},
+        {'revision': 123, 'channel': 'channel2', 'resources': []},
+        {'revision': 123, 'channel': 'channel3', 'resources': []},
+    ]
+    assert client_mock.mock_calls == [
+        call.post('/v1/charm/testname/releases', expected_body),
+    ]
+
+
+def test_release_with_resources(client_mock, config):
+    """Releasing with resources attached."""
+    store = Store(config.charmhub)
+    r1 = ResourceOption(name='foo', revision=3)
+    r2 = ResourceOption(name='bar', revision=17)
+    store.release('testname', 123, ['channel1', 'channel2'], [r1, r2])
+
+    expected_body = [
+        {
+            'revision': 123,
+            'channel': 'channel1',
+            'resources': [
+                {'name': 'foo', 'revision': 3},
+                {'name': 'bar', 'revision': 17},
+            ]
+        }, {
+            'revision': 123,
+            'channel': 'channel2',
+            'resources': [
+                {'name': 'foo', 'revision': 3},
+                {'name': 'bar', 'revision': 17},
+            ]
+        }
     ]
     assert client_mock.mock_calls == [
         call.post('/v1/charm/testname/releases', expected_body),

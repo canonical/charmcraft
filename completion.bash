@@ -94,7 +94,7 @@ _charmcraft()
             esac
             ;;
         release)
-            COMPREPLY=( $(compgen -W "${globals[*]} --revision --channel" -- "$cur") )
+            COMPREPLY=( $(compgen -W "${globals[*]} --revision --channel --resource" -- "$cur") )
             ;;
         init)
             COMPREPLY=( $(compgen -W "${globals[*]} --name --author --series --force" -- "$cur") )

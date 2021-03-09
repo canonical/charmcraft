@@ -65,7 +65,12 @@ from charmcraft.commands.store.store import (
     Uploaded,
     User,
 )
-from charmcraft.utils import get_templates_environment, useful_filepath, SingleOptionEnsurer
+from charmcraft.utils import (
+    get_templates_environment,
+    useful_filepath,
+    SingleOptionEnsurer,
+    ResourceOption,
+)
 from tests import factory
 
 # used a lot!
@@ -661,11 +666,11 @@ def test_release_simple_ok(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channels = ['somechannel']
-    args = Namespace(name='testcharm', revision=7, channel=channels)
+    args = Namespace(name='testcharm', revision=7, channel=channels, resource=[])
     ReleaseCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
-        call.release('testcharm', 7, channels),
+        call.release('testcharm', 7, channels, []),
     ]
 
     expected = "Revision 7 of charm 'testcharm' released to somechannel"
@@ -676,19 +681,52 @@ def test_release_simple_multiple_channels(caplog, store_mock, config):
     """Releasing to multiple channels."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    args = Namespace(name='testcharm', revision=7, channel=['channel1', 'channel2', 'channel3'])
+    args = Namespace(
+        name='testcharm', revision=7, channel=['channel1', 'channel2', 'channel3'], resource=[])
     ReleaseCommand('group', config).run(args)
 
     expected = "Revision 7 of charm 'testcharm' released to channel1, channel2, channel3"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
+def test_release_including_resources(caplog, store_mock, config):
+    """Releasing with resources."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    r1 = ResourceOption(name='foo', revision=3)
+    r2 = ResourceOption(name='bar', revision=17)
+    args = Namespace(name='testcharm', revision=7, channel=['testchannel'], resource=[r1, r2])
+    ReleaseCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.release('testcharm', 7, ['testchannel'], [r1, r2]),
+    ]
+
+    expected = (
+        "Revision 7 of charm 'testcharm' released to testchannel "
+        "(attaching resources: 'foo' r3, 'bar' r17)")
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
+def test_release_options_resource(config):
+    """The --resource-file option implies a set of validations."""
+    cmd = ReleaseCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == 'resource']
+    assert isinstance(action.type, ResourceOption)
+
+
 @pytest.mark.parametrize('args_validation', [
-    (['somename', '--channel=stable', '--revision=33'], ('somename', 33, ['stable'])),
-    (['somename', '--channel=stable', '-r', '33'], ('somename', 33, ['stable'])),
-    (['somename', '-c', 'stable', '--revision=33'], ('somename', 33, ['stable'])),
-    (['-c', 'stable', '--revision=33', 'somename'], ('somename', 33, ['stable'])),
-    (['-c', 'beta', '--revision=1', '--channel=edge', 'name'], ('name', 1, ['beta', 'edge'])),
+    (['somename', '--channel=stable', '--revision=33'], ('somename', 33, ['stable'], [])),
+    (['somename', '--channel=stable', '-r', '33'], ('somename', 33, ['stable'], [])),
+    (['somename', '-c', 'stable', '--revision=33'], ('somename', 33, ['stable'], [])),
+    (['-c', 'stable', '--revision=33', 'somename'], ('somename', 33, ['stable'], [])),
+    (['-c', 'beta', '--revision=1', '--channel=edge', 'name'], ('name', 1, ['beta', 'edge'], [])),
+    (['somename', '-c=beta', '-r=3', '--resource=foo:15'],
+        ('somename', 3, ['beta'], [ResourceOption('foo', 15)])),
+    (['somename', '-c=beta', '-r=3', '--resource=foo:15', '--resource=bar:99'],
+        ('somename', 3, ['beta'], [ResourceOption('foo', 15), ResourceOption('bar', 99)])),
 ])
 def test_release_parameters_ok(config, args_validation):
     """Control of different combination of sane parameters."""
@@ -700,7 +738,8 @@ def test_release_parameters_ok(config, args_validation):
         args = parser.parse_args(sysargs)
     except SystemExit:
         pytest.fail("Parsing of {} was not ok.".format(sysargs))
-    assert args == Namespace(**dict(zip(['name', 'revision', 'channel'], expected_parsed)))
+    attribs = ['name', 'revision', 'channel', 'resource']
+    assert args == Namespace(**dict(zip(attribs, expected_parsed)))
 
 
 @pytest.mark.parametrize('sysargs', [
@@ -709,6 +748,7 @@ def test_release_parameters_ok(config, args_validation):
     ['somename', '--revision=1'],  # missing a channel
     ['somename', '--channel=stable', '--revision=1', '--revision=2'],  # too many revisions
     ['--channel=stable', '--revision=1'],  # missing the name
+    ['somename', '-c=beta', '-r=3', '--resource=foo15'],  # bad resource format
 ])
 def test_release_parameters_bad(config, sysargs):
     """Control of different option/parameters combinations that are not valid."""

@@ -195,10 +195,13 @@ class Store:
         result = [_build_revision(item) for item in response['revisions']]
         return result
 
-    def release(self, name, revision, channels):
+    def release(self, name, revision, channels, resources):
         """Release one or more revisions for a package."""
         endpoint = '/v1/charm/{}/releases'.format(name)
-        items = [{'revision': revision, 'channel': channel} for channel in channels]
+        resources = [{'name': res.name, 'revision': res.revision} for res in resources]
+        items = [
+            {'revision': revision, 'channel': channel, 'resources': resources}
+            for channel in channels]
         self._client.post(endpoint, items)
 
     def list_releases(self, name):

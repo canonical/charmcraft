@@ -31,7 +31,12 @@ from humanize import naturalsize
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.utils import get_templates_environment, useful_filepath, SingleOptionEnsurer
+from charmcraft.utils import (
+    ResourceOption,
+    SingleOptionEnsurer,
+    get_templates_environment,
+    useful_filepath,
+)
 
 from .store import Store
 
@@ -407,6 +412,14 @@ class ReleaseCommand(BaseCommand):
             beta/hotfix-23425
             1.3/beta/feature-foo
 
+        When releasing a charm, one or more resources can be attached to that
+        release, using the `--resource` option, indicating in each case the
+        resource name and specific revision. For example, to include the
+        resource `thedb` revision 4 in the charm release, do:
+
+            charmcraft release mycharm --revision=14 \
+                --channel=beta --resource=thedb:4
+
         Listing revisions will take you through login if needed.
     """)
     common = True
@@ -420,14 +433,25 @@ class ReleaseCommand(BaseCommand):
         parser.add_argument(
             '-c', '--channel', action='append', required=True,
             help="The channel(s) to release to (this option can be indicated multiple times)")
+        parser.add_argument(
+            '--resource', action='append', type=ResourceOption(), default=[],
+            help=(
+                "The resource(s) to attach to the release, in the <name>:<revision> format "
+                "(this option can be indicated multiple times)"))
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        store.release(parsed_args.name, parsed_args.revision, parsed_args.channel)
-        logger.info(
-            "Revision %d of charm %r released to %s",
-            parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel))
+        store.release(
+            parsed_args.name, parsed_args.revision, parsed_args.channel, parsed_args.resource)
+
+        msg = "Revision %d of charm %r released to %s"
+        args = [parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel)]
+        if parsed_args.resource:
+            msg += " (attaching resources: %s)"
+            args.append(", ".join(
+                "{!r} r{}".format(r.name, r.revision) for r in parsed_args.resource))
+        logger.info(msg, *args)
 
 
 class StatusCommand(BaseCommand):

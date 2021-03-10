@@ -60,6 +60,17 @@ def get_name_from_metadata():
     return charm_name
 
 
+def create_importable_name(charm_name):
+    """Convert a charm name to something that is importable in python."""
+    return charm_name.replace('-', '_')
+
+
+def create_charm_name_from_importable(charm_name):
+    """Convert a charm name from the importable form to the real form."""
+    # _ is invalid in charm names, so we know it's intended to be '-'
+    return charm_name.replace('_', '-')
+
+
 class LoginCommand(BaseCommand):
     """Login to Charmhub."""
 
@@ -610,6 +621,10 @@ def _get_lib_info(*, full_name=None, lib_path=None):
             raise _BadLibraryNameError(full_name)
         lib_path = pathlib.Path('lib') / charmsdir / charm_name / v_api / (libfile + '.py')
 
+    # charm names in the path can contain '_' to be importable
+    # these should be '-', so change them back
+    charm_name = create_charm_name_from_importable(charm_name)
+
     if v_api[0] != 'v' or not v_api[1:].isdigit():
         raise CommandError(
             "The API version in the library path must be 'vN' where N is an integer.")
@@ -690,6 +705,7 @@ def _get_libs_from_tree(charm_name=None):
         base_dir = pathlib.Path('lib') / 'charms'
         charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
     else:
+        charm_name = create_importable_name(charm_name)
         base_dir = pathlib.Path('lib') / 'charms' / charm_name
         charm_dirs = [base_dir] if base_dir.is_dir() else []
 
@@ -750,8 +766,12 @@ class CreateLibCommand(BaseCommand):
                 "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
                 "directory with metadata.yaml.")
 
+        # '-' is valid in charm names, but not in a python import
+        # mutate the name so the path is a valid import
+        importable_charm_name = create_importable_name(charm_name)
+
         # all libraries born with API version 0
-        full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
+        full_name = 'charms.{}.v0.{}'.format(importable_charm_name, lib_name)
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
@@ -861,7 +881,7 @@ class PublishLibCommand(BaseCommand):
 
         for lib_data in to_publish:
             store.create_library_revision(
-                lib_data.charm_name, lib_data.lib_id, lib_data.api, lib_data.patch,
+                charm_name, lib_data.lib_id, lib_data.api, lib_data.patch,
                 lib_data.content, lib_data.content_hash)
             logger.info(
                 "Library %s sent to the store with version %d.%d",

@@ -35,7 +35,7 @@ Uploaded = namedtuple('Uploaded', 'ok status revision errors')
 # time, and now it's the moment to do it (also in Release below!)
 Revision = namedtuple('Revision', 'revision version created_at status errors')
 Error = namedtuple('Error', 'message code')
-Release = namedtuple('Release', 'revision channel expires_at')
+Release = namedtuple('Release', 'revision channel expires_at resources')
 Channel = namedtuple('Channel', 'name fallback track risk branch')
 Library = namedtuple('Library', 'api content content_hash lib_id lib_name charm_name patch')
 Resource = namedtuple('Resource', 'name optional revision resource_type')
@@ -215,8 +215,11 @@ class Store:
             if expires_at is not None:
                 # `datetime.datetime.fromisoformat` is available only since Py3.7
                 expires_at = parser.parse(expires_at)
+            resources = [_build_resource(r) for r in item['resources']]
             channel_map.append(
-                Release(revision=item['revision'], channel=item['channel'], expires_at=expires_at))
+                Release(
+                    revision=item['revision'], channel=item['channel'],
+                    expires_at=expires_at, resources=resources))
 
         channels = [
             Channel(

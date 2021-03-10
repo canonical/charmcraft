@@ -1087,8 +1087,8 @@ def test_status_with_resources(caplog, store_mock, config):
     expected = [
         "Track    Channel    Version    Revision    Resources",
         "latest   stable     -          -           -",
-        "         candidate  5.1        5           resource1 r1, resource2 r54",
-        "         beta       5.1        5           resource1 r1",
+        "         candidate  5.1        5           resource1 (r1), resource2 (r54)",
+        "         beta       5.1        5           resource1 (r1)",
         "         edge       ↑          ↑           ↑",
     ]
     assert expected == [rec.message for rec in caplog.records]
@@ -1122,12 +1122,12 @@ def test_status_with_resources_and_branches(caplog, store_mock, config):
     StatusCommand('group', config).run(args)
 
     expected = [
-        "Track    Channel        Version    Revision    Resources    Expires at",
+        "Track    Channel        Version    Revision    Resources      Expires at",
         "latest   stable         -          -           -",
         "         candidate      -          -           -",
-        "         beta           7.0.0      23          testres r14",
+        "         beta           7.0.0      23          testres (r14)",
         "         edge           ↑          ↑           ↑",
-        "         edge/mybranch  5.1        5           testres r1   2020-07-03T20:30:40+00:00",
+        "         edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40+00:00",
     ]
     assert expected == [rec.message for rec in caplog.records]
 

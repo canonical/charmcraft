@@ -546,7 +546,7 @@ class StatusCommand(BaseCommand):
                     revision = revisions_by_revno[revno]
                     version = revision.version
                     resources = ', '.join(
-                        "{} r{}".format(r.name, r.revision) for r in release.resources)
+                        "{} (r{})".format(r.name, r.revision) for r in release.resources)
 
                 datum = [shown_track, description, version, revno]
                 if resources_present:
@@ -564,7 +564,7 @@ class StatusCommand(BaseCommand):
                 datum = ['', description, revision.version, release.revision]
                 if resources_present:
                     datum.append(', '.join(
-                        "{} r{}".format(r.name, r.revision) for r in release.resources))
+                        "{} (r{})".format(r.name, r.revision) for r in release.resources))
                 datum.append(expiration)
                 data.append(datum)
 

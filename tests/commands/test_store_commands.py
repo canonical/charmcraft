@@ -1806,6 +1806,35 @@ def test_fetchlib_simple_dash_in_name(caplog, store_mock, tmp_path, monkeypatch,
     assert saved_file.read_text() == lib_content
 
 
+def test_fetchlib_simple_dash_in_name_on_disk(caplog, store_mock, tmp_path, monkeypatch, config):
+    """Happy path fetching the lib for the first time (downloading it)."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    lib_content = "test-content"
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=7,
+            lib_name='testlib', charm_name='test-charm'),
+    }
+    store_mock.get_library.return_value = Library(
+        lib_id=lib_id, content=lib_content, content_hash='abc', api=0, patch=7,
+        lib_name='testlib', charm_name='test-charm')
+    factory.create_lib_filepath(
+        'test-charm', 'testlib', api=0, patch=1, lib_id=lib_id)
+
+    FetchLibCommand('group', config).run(Namespace(library=None))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips(
+            [{'lib_id': 'test-example-lib-id', 'api': 0}]),
+        call.get_library('test-charm', lib_id, 0),
+    ]
+    expected = "Library charms.test_charm.v0.testlib updated to version 0.7."
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
 def test_fetchlib_simple_updated(caplog, store_mock, tmp_path, monkeypatch, config):
     """Happy path fetching the lib for Nth time (updating it)."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")

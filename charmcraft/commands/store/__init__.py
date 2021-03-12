@@ -719,6 +719,8 @@ def _get_libs_from_tree(charm_name=None):
 
     It only follows/uses the the directories/files for a correct charmlibs
     disk structure.
+
+    This can take charm_name as both importable and normal form.
     """
     local_libs_data = []
 
@@ -726,8 +728,8 @@ def _get_libs_from_tree(charm_name=None):
         base_dir = pathlib.Path('lib') / 'charms'
         charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
     else:
-        charm_name = create_importable_name(charm_name)
-        base_dir = pathlib.Path('lib') / 'charms' / charm_name
+        importable_charm_name = create_importable_name(charm_name)
+        base_dir = pathlib.Path('lib') / 'charms' / importable_charm_name
         charm_dirs = [base_dir] if base_dir.is_dir() else []
 
     for charm_dir in charm_dirs:

@@ -881,7 +881,7 @@ class PublishLibCommand(BaseCommand):
 
         for lib_data in to_publish:
             store.create_library_revision(
-                charm_name, lib_data.lib_id, lib_data.api, lib_data.patch,
+                lib_data.charm_name, lib_data.lib_id, lib_data.api, lib_data.patch,
                 lib_data.content, lib_data.content_hash)
             logger.info(
                 "Library %s sent to the store with version %d.%d",

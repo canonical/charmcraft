@@ -598,32 +598,40 @@ def _get_positive_int(raw_value):
 
 
 def _get_lib_info(*, full_name=None, lib_path=None):
-    """Get the whole lib info from the path/file."""
+    """Get the whole lib info from the path/file.
+
+    This will perform mutation of the charm name to create importable paths.
+    * `charm_name` and `libdata.charm_name`: `foo-bar`
+    * `full_name` and `libdata.full_name`: `charms.foo_bar.v0.somelib`
+    * paths, including `libdata.path`: `lib/charms/foo_bar/v0/somelib`
+
+    """
     if full_name is None:
         # get it from the lib_path
         try:
-            libsdir, charmsdir, charm_name, v_api = lib_path.parts[:-1]
+            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
         except ValueError:
             raise _BadLibraryPathError(lib_path)
         if libsdir != 'lib' or charmsdir != 'charms' or lib_path.suffix != '.py':
             raise _BadLibraryPathError(lib_path)
-        full_name = '.'.join((charmsdir, charm_name, v_api, lib_path.stem))
+        full_name = '.'.join((charmsdir, importable_charm_name, v_api, lib_path.stem))
 
     else:
         # build the path! convert a lib name with dots to the full path, including lib
         # dir and Python extension.
         #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
         try:
-            charmsdir, charm_name, v_api, libfile = full_name.split('.')
+            charmsdir, importable_charm_name, v_api, libfile = full_name.split('.')
         except ValueError:
             raise _BadLibraryNameError(full_name)
         if charmsdir != 'charms':
             raise _BadLibraryNameError(full_name)
-        lib_path = pathlib.Path('lib') / charmsdir / charm_name / v_api / (libfile + '.py')
+        path = pathlib.Path('lib')
+        lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + '.py')
 
     # charm names in the path can contain '_' to be importable
     # these should be '-', so change them back
-    charm_name = create_charm_name_from_importable(charm_name)
+    charm_name = create_charm_name_from_importable(importable_charm_name)
 
     if v_api[0] != 'v' or not v_api[1:].isdigit():
         raise CommandError(

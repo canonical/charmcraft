@@ -784,10 +784,10 @@ def test_status_simple_ok(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=7, channel='latest/stable', expires_at=None),
-        Release(revision=7, channel='latest/candidate', expires_at=None),
-        Release(revision=80, channel='latest/beta', expires_at=None),
-        Release(revision=156, channel='latest/edge', expires_at=None),
+        Release(revision=7, channel='latest/stable', expires_at=None, resources=[]),
+        Release(revision=7, channel='latest/candidate', expires_at=None, resources=[]),
+        Release(revision=80, channel='latest/beta', expires_at=None, resources=[]),
+        Release(revision=156, channel='latest/edge', expires_at=None, resources=[]),
     ]
     channels = _build_channels()
     revisions = [
@@ -831,8 +831,8 @@ def test_status_channels_not_released_with_fallback(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=7, channel='latest/stable', expires_at=None),
-        Release(revision=80, channel='latest/edge', expires_at=None),
+        Release(revision=7, channel='latest/stable', expires_at=None, resources=[]),
+        Release(revision=80, channel='latest/edge', expires_at=None, resources=[]),
     ]
     channels = _build_channels()
     revisions = [
@@ -863,8 +863,8 @@ def test_status_channels_not_released_without_fallback(caplog, store_mock, confi
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=5, channel='latest/beta', expires_at=None),
-        Release(revision=12, channel='latest/edge', expires_at=None),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[]),
+        Release(revision=12, channel='latest/edge', expires_at=None, resources=[]),
     ]
     channels = _build_channels()
     revisions = [
@@ -895,8 +895,8 @@ def test_status_multiple_tracks(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=503, channel='latest/stable', expires_at=None),
-        Release(revision=1, channel='2.0/edge', expires_at=None),
+        Release(revision=503, channel='latest/stable', expires_at=None, resources=[]),
+        Release(revision=1, channel='2.0/edge', expires_at=None, resources=[]),
     ]
     channels_latest = _build_channels()
     channels_track = _build_channels(track='2.0')
@@ -933,10 +933,10 @@ def test_status_tracks_order(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=1, channel='latest/edge', expires_at=None),
-        Release(revision=2, channel='aaa/edge', expires_at=None),
-        Release(revision=3, channel='2.0/edge', expires_at=None),
-        Release(revision=4, channel='zzz/edge', expires_at=None),
+        Release(revision=1, channel='latest/edge', expires_at=None, resources=[]),
+        Release(revision=2, channel='aaa/edge', expires_at=None, resources=[]),
+        Release(revision=3, channel='2.0/edge', expires_at=None, resources=[]),
+        Release(revision=4, channel='zzz/edge', expires_at=None, resources=[]),
     ]
     channels_latest = _build_channels()
     channels_track_1 = _build_channels(track='zzz')
@@ -986,8 +986,10 @@ def test_status_with_one_branch(caplog, store_mock, config):
 
     tstamp_with_timezone = dateutil.parser.parse('2020-07-03T20:30:40Z')
     channel_map = [
-        Release(revision=5, channel='latest/beta', expires_at=None),
-        Release(revision=12, channel='latest/beta/mybranch', expires_at=tstamp_with_timezone),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[]),
+        Release(
+            revision=12, channel='latest/beta/mybranch',
+            expires_at=tstamp_with_timezone, resources=[]),
     ]
     channels = _build_channels()
     channels.append(
@@ -1022,11 +1024,11 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
     """Support having multiple branches."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    tstamp_with_timezone = dateutil.parser.parse('2020-07-03T20:30:40Z')
+    tstamp = dateutil.parser.parse('2020-07-03T20:30:40Z')
     channel_map = [
-        Release(revision=5, channel='latest/beta', expires_at=None),
-        Release(revision=12, channel='latest/beta/branch-1', expires_at=tstamp_with_timezone),
-        Release(revision=15, channel='latest/beta/branch-2', expires_at=tstamp_with_timezone),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[]),
+        Release(revision=12, channel='latest/beta/branch-1', expires_at=tstamp, resources=[]),
+        Release(revision=15, channel='latest/beta/branch-2', expires_at=tstamp, resources=[]),
     ]
     channels = _build_channels()
     channels.extend([
@@ -1059,6 +1061,73 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
         "         edge           ↑          ↑",
         "         beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",
         "         beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_with_resources(caplog, store_mock, config):
+    """Support having multiple branches."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    res1 = Resource(name='resource1', optional=True, revision=1, resource_type='file')
+    res2 = Resource(name='resource2', optional=True, revision=54, resource_type='file')
+    channel_map = [
+        Release(revision=5, channel='latest/candidate', expires_at=None, resources=[res1, res2]),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[res1]),
+    ]
+    channels = _build_channels()
+    revisions = [
+        _build_revision(revno=5, version='5.1'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group', config).run(args)
+
+    expected = [
+        "Track    Channel    Version    Revision    Resources",
+        "latest   stable     -          -           -",
+        "         candidate  5.1        5           resource1 (r1), resource2 (r54)",
+        "         beta       5.1        5           resource1 (r1)",
+        "         edge       ↑          ↑           ↑",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_with_resources_and_branches(caplog, store_mock, config):
+    """Support having multiple branches."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    tstamp = dateutil.parser.parse('2020-07-03T20:30:40Z')
+    res1 = Resource(name='testres', optional=True, revision=1, resource_type='file')
+    res2 = Resource(name='testres', optional=True, revision=14, resource_type='file')
+    channel_map = [
+        Release(
+            revision=23, channel='latest/beta', expires_at=None, resources=[res2]),
+        Release(
+            revision=5, channel='latest/edge/mybranch', expires_at=tstamp, resources=[res1]),
+    ]
+    channels = _build_channels()
+    channels.append(
+        Channel(
+            name='latest/edge/mybranch', fallback='latest/edge',
+            track='latest', risk='edge', branch='mybranch'))
+    revisions = [
+        _build_revision(revno=5, version='5.1'),
+        _build_revision(revno=23, version='7.0.0'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group', config).run(args)
+
+    expected = [
+        "Track    Channel        Version    Revision    Resources      Expires at",
+        "latest   stable         -          -           -",
+        "         candidate      -          -           -",
+        "         beta           7.0.0      23          testres (r14)",
+        "         edge           ↑          ↑           ↑",
+        "         edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40+00:00",
     ]
     assert expected == [rec.message for rec in caplog.records]
 

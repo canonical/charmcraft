@@ -428,7 +428,7 @@ class ReleaseCommand(BaseCommand):
         resource name and specific revision. For example, to include the
         resource `thedb` revision 4 in the charm release, do:
 
-            charmcraft release mycharm --revision=14 \
+            charmcraft release mycharm --revision=14 \\
                 --channel=beta --resource=thedb:4
 
         Listing revisions will take you through login if needed.
@@ -530,6 +530,9 @@ class StatusCommand(BaseCommand):
                 branch_present = True
 
         headers = ['Track', 'Channel', 'Version', 'Revision']
+        resources_present = any(release.resources for release in channel_map)
+        if resources_present:
+            headers.append('Resources')
         if branch_present:
             headers.append('Expires at')
 
@@ -547,14 +550,19 @@ class StatusCommand(BaseCommand):
                 # get the release of the channel, fallbacking accordingly
                 release = releases_by_channel.get(channel.name)
                 if release is None:
-                    version = revno = '↑' if release_shown_for_this_track else '-'
+                    version = revno = resources = '↑' if release_shown_for_this_track else '-'
                 else:
                     release_shown_for_this_track = True
                     revno = release.revision
                     revision = revisions_by_revno[revno]
                     version = revision.version
+                    resources = ', '.join(
+                        "{} (r{})".format(r.name, r.revision) for r in release.resources)
 
-                data.append([shown_track, description, version, revno])
+                datum = [shown_track, description, version, revno]
+                if resources_present:
+                    datum.append(resources)
+                data.append(datum)
 
                 # stop showing the track name for the rest of the track
                 shown_track = ''
@@ -564,7 +572,12 @@ class StatusCommand(BaseCommand):
                 release = releases_by_channel[branch.name]
                 expiration = release.expires_at.isoformat()
                 revision = revisions_by_revno[release.revision]
-                data.append(['', description, revision.version, release.revision, expiration])
+                datum = ['', description, revision.version, release.revision]
+                if resources_present:
+                    datum.append(', '.join(
+                        "{} (r{})".format(r.name, r.revision) for r in release.resources))
+                datum.append(expiration)
+                data.append(datum)
 
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():

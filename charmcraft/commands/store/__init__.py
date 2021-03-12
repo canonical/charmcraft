@@ -417,7 +417,7 @@ class ReleaseCommand(BaseCommand):
         resource name and specific revision. For example, to include the
         resource `thedb` revision 4 in the charm release, do:
 
-            charmcraft release mycharm --revision=14 \
+            charmcraft release mycharm --revision=14 \\
                 --channel=beta --resource=thedb:4
 
         Listing revisions will take you through login if needed.

@@ -1174,6 +1174,34 @@ def test_createlib_name_from_metadata_problem(store_mock, config):
             "directory with metadata.yaml.")
 
 
+def test_createlib_name_contains_dash(caplog, store_mock, tmp_path, monkeypatch, config):
+    """'-' is valid in charm names but can't be imported"""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    store_mock.create_library_id.return_value = lib_id
+
+    args = Namespace(name='testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'test-charm'
+        CreateLibCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.create_library_id('test-charm', 'testlib'),
+    ]
+    expected = [
+        "Library charms.test_charm.v0.testlib created with id test-example-lib-id.",
+        "Consider 'git add lib/charms/test_charm/v0/testlib.py'.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+    created_lib_file = tmp_path / 'lib' / 'charms' / 'test_charm' / 'v0' / 'testlib.py'
+
+    env = get_templates_environment('charmlibs')
+    expected_newlib_content = env.get_template('new_library.py.j2').render(lib_id=lib_id)
+    assert created_lib_file.read_text() == expected_newlib_content
+
+
 @pytest.mark.parametrize('lib_name', [
     'foo.bar',
     'foo/bar',
@@ -1204,12 +1232,12 @@ def test_createlib_path_already_there(tmp_path, monkeypatch, config):
             CreateLibCommand('group', config).run(args)
 
     assert str(err.value) == (
-        "This library already exists: lib/charms/test-charm-name/v0/testlib.py")
+        "This library already exists: lib/charms/test_charm_name/v0/testlib.py")
 
 
 def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cleanup, config):
     """Disk error when trying to write the new lib (bad permissions, name too long, whatever)."""
-    lib_dir = tmp_path / 'lib' / 'charms' / 'test-charm-name' / 'v0'
+    lib_dir = tmp_path / 'lib' / 'charms' / 'test_charm_name' / 'v0'
     lib_dir.mkdir(parents=True)
     lib_dir.chmod(0o111)
     add_cleanup(lib_dir.chmod, 0o777)
@@ -1257,6 +1285,29 @@ def test_publishlib_simple(caplog, store_mock, tmp_path, monkeypatch, config):
     assert [expected] == [rec.message for rec in caplog.records]
 
 
+def test_publishlib_contains_dash(caplog, store_mock, tmp_path, monkeypatch, config):
+    """Happy path publishing because no revision at all in the Store."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    content, content_hash = factory.create_lib_filepath(
+        'test-charm', 'testlib', api=0, patch=1, lib_id=lib_id)
+
+    store_mock.get_libraries_tips.return_value = {}
+    args = Namespace(library='charms.test_charm.v0.testlib')
+    with patch('charmcraft.commands.store.get_name_from_metadata') as mock:
+        mock.return_value = 'test-charm'
+        PublishLibCommand('group', config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips([{'lib_id': lib_id, 'api': 0}]),
+        call.create_library_revision('test-charm', lib_id, 0, 1, content, content_hash),
+    ]
+    expected = "Library charms.test_charm.v0.testlib sent to the store with version 0.1"
+    assert [expected] == [rec.message for rec in caplog.records]
+
+
 def test_publishlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
     """Publish all the libraries found in disk."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
@@ -1288,15 +1339,15 @@ def test_publishlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
         call.create_library_revision('testcharm-1', 'lib_id_3', 1, 3, c3, h3),
     ]
     names = [
-        'charms.testcharm-1.v0.testlib-a',
-        'charms.testcharm-1.v0.testlib-b',
-        'charms.testcharm-1.v1.testlib-b',
+        'charms.testcharm_1.v0.testlib-a',
+        'charms.testcharm_1.v0.testlib-b',
+        'charms.testcharm_1.v1.testlib-b',
     ]
     expected = [
-        "Libraries found under lib/charms/testcharm-1: " + str(names),
-        "Library charms.testcharm-1.v0.testlib-a sent to the store with version 0.1",
-        "Library charms.testcharm-1.v0.testlib-b sent to the store with version 0.1",
-        "Library charms.testcharm-1.v1.testlib-b sent to the store with version 1.3",
+        "Libraries found under lib/charms/testcharm_1: " + str(names),
+        "Library charms.testcharm_1.v0.testlib-a sent to the store with version 0.1",
+        "Library charms.testcharm_1.v0.testlib-b sent to the store with version 0.1",
+        "Library charms.testcharm_1.v1.testlib-b sent to the store with version 1.3",
     ]
     records = [rec.message for rec in caplog.records]
     assert all(e in records for e in expected)
@@ -1793,6 +1844,64 @@ def test_fetchlib_simple_downloaded(caplog, store_mock, tmp_path, monkeypatch, c
     assert [expected] == [rec.message for rec in caplog.records]
     saved_file = tmp_path / 'lib' / 'charms' / 'testcharm' / 'v0' / 'testlib.py'
     assert saved_file.read_text() == lib_content
+
+
+def test_fetchlib_simple_dash_in_name(caplog, store_mock, tmp_path, monkeypatch, config):
+    """Happy path fetching the lib for the first time (downloading it)."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    lib_content = 'some test content with uñicode ;)'
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=7,
+            lib_name='testlib', charm_name='test-charm'),
+    }
+    store_mock.get_library.return_value = Library(
+        lib_id=lib_id, content=lib_content, content_hash='abc', api=0, patch=7,
+        lib_name='testlib', charm_name='test-charm')
+
+    FetchLibCommand('group', config).run(Namespace(library='charms.test_charm.v0.testlib'))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips(
+            [{'charm_name': 'test-charm', 'lib_name': 'testlib', 'api': 0}]),
+        call.get_library('test-charm', lib_id, 0),
+    ]
+    expected = "Library charms.test_charm.v0.testlib version 0.7 downloaded."
+    assert [expected] == [rec.message for rec in caplog.records]
+    saved_file = tmp_path / 'lib' / 'charms' / 'test_charm' / 'v0' / 'testlib.py'
+    assert saved_file.read_text() == lib_content
+
+
+def test_fetchlib_simple_dash_in_name_on_disk(caplog, store_mock, tmp_path, monkeypatch, config):
+    """Happy path fetching the lib for the first time (downloading it)."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    monkeypatch.chdir(tmp_path)
+
+    lib_id = 'test-example-lib-id'
+    lib_content = "test-content"
+    store_mock.get_libraries_tips.return_value = {
+        (lib_id, 0): Library(
+            lib_id=lib_id, content=None, content_hash='abc', api=0, patch=7,
+            lib_name='testlib', charm_name='test-charm'),
+    }
+    store_mock.get_library.return_value = Library(
+        lib_id=lib_id, content=lib_content, content_hash='abc', api=0, patch=7,
+        lib_name='testlib', charm_name='test-charm')
+    factory.create_lib_filepath(
+        'test-charm', 'testlib', api=0, patch=1, lib_id=lib_id)
+
+    FetchLibCommand('group', config).run(Namespace(library=None))
+
+    assert store_mock.mock_calls == [
+        call.get_libraries_tips(
+            [{'lib_id': 'test-example-lib-id', 'api': 0}]),
+        call.get_library('test-charm', lib_id, 0),
+    ]
+    expected = "Library charms.test_charm.v0.testlib updated to version 0.7."
+    assert [expected] == [rec.message for rec in caplog.records]
 
 
 def test_fetchlib_simple_updated(caplog, store_mock, tmp_path, monkeypatch, config):

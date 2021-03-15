@@ -1094,6 +1094,35 @@ def test_status_with_resources(caplog, store_mock, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
+def test_status_with_resources_missing_after_closed_channel(caplog, store_mock, config):
+    """Specific glitch for a channel without resources after a closed one."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    resource = Resource(name='resource', optional=True, revision=1, resource_type='file')
+    channel_map = [
+        Release(revision=5, channel='latest/stable', expires_at=None, resources=[resource]),
+        Release(revision=5, channel='latest/beta', expires_at=None, resources=[]),
+        Release(revision=5, channel='latest/edge', expires_at=None, resources=[resource]),
+    ]
+    channels = _build_channels()
+    revisions = [
+        _build_revision(revno=5, version='5.1'),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name='testcharm')
+    StatusCommand('group', config).run(args)
+
+    expected = [
+        "Track    Channel    Version    Revision    Resources",
+        "latest   stable     5.1        5           resource (r1)",
+        "         candidate  ↑          ↑           ↑",
+        "         beta       5.1        5           -",
+        "         edge       5.1        5           resource (r1)",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
 def test_status_with_resources_and_branches(caplog, store_mock, config):
     """Support having multiple branches."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
@@ -2077,8 +2106,8 @@ def test_resources_simple(caplog, store_mock, config):
         call.list_resources('testcharm'),
     ]
     expected = [
-        "Name          Type    Revision    Optional",
-        "testresource  file    1           True",
+        "Charm Rev    Resource      Type    Optional",
+        "1            testresource  file    True",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -2099,13 +2128,16 @@ def test_resources_empty(caplog, store_mock, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_resources_ordered_by_name(caplog, store_mock, config):
+def test_resources_ordered_and_grouped(caplog, store_mock, config):
     """Results are presented ordered by name in the table."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_response = [
-        Resource(name='bbb-resource', optional=True, revision=1, resource_type='file'),
-        Resource(name='aaa-resource', optional=True, revision=1, resource_type='file'),
+        Resource(name='bbb-resource', optional=True, revision=2, resource_type='file'),
+        Resource(name='ccc-resource', optional=True, revision=1, resource_type='file'),
+        Resource(name='bbb-resource', optional=True, revision=3, resource_type='file'),
+        Resource(name='aaa-resource', optional=True, revision=2, resource_type='file'),
+        Resource(name='bbb-resource', optional=True, revision=5, resource_type='file'),
     ]
     store_mock.list_resources.return_value = store_response
 
@@ -2113,9 +2145,12 @@ def test_resources_ordered_by_name(caplog, store_mock, config):
     ListResourcesCommand('group', config).run(args)
 
     expected = [
-        "Name          Type    Revision    Optional",
-        "aaa-resource  file    1           True",
-        "bbb-resource  file    1           True",
+        "Charm Rev    Resource      Type    Optional",
+        "5            bbb-resource  file    True",
+        "3            bbb-resource  file    True",
+        "2            aaa-resource  file    True",
+        "             bbb-resource  file    True",
+        "1            ccc-resource  file    True",
     ]
     assert expected == [rec.message for rec in caplog.records]
 

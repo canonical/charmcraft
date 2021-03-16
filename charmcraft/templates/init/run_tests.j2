@@ -7,9 +7,9 @@ if [ -z "$VIRTUAL_ENV" -a -d venv/ ]; then
 fi
 
 if [ -z "$PYTHONPATH" ]; then
-    export PYTHONPATH=src
+    export PYTHONPATH="lib:src"
 else
-    export PYTHONPATH="src:$PYTHONPATH"
+    export PYTHONPATH="lib:src:$PYTHONPATH"
 fi
 
 flake8

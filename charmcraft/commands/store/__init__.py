@@ -494,6 +494,14 @@ class StatusCommand(BaseCommand):
         """Add own parameters to the general parser."""
         parser.add_argument('name', help="The name of the charm or bundle")
 
+    def _build_resources_repr(self, resources):
+        """Build a representation of a list of resources."""
+        if resources:
+            result = ', '.join("{} (r{})".format(r.name, r.revision) for r in resources)
+        else:
+            result = '-'
+        return result
+
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
@@ -556,8 +564,7 @@ class StatusCommand(BaseCommand):
                     revno = release.revision
                     revision = revisions_by_revno[revno]
                     version = revision.version
-                    resources = ', '.join(
-                        "{} (r{})".format(r.name, r.revision) for r in release.resources)
+                    resources = self._build_resources_repr(release.resources)
 
                 datum = [shown_track, description, version, revno]
                 if resources_present:
@@ -574,8 +581,7 @@ class StatusCommand(BaseCommand):
                 revision = revisions_by_revno[release.revision]
                 datum = ['', description, revision.version, release.revision]
                 if resources_present:
-                    datum.append(', '.join(
-                        "{} (r{})".format(r.name, r.revision) for r in release.resources))
+                    datum.append(self._build_resources_repr(release.resources))
                 datum.append(expiration)
                 data.append(datum)
 
@@ -1072,10 +1078,16 @@ class ListResourcesCommand(BaseCommand):
             logger.info("No resources associated to %s.", parsed_args.charm_name)
             return
 
-        headers = ['Name', 'Type', 'Revision', 'Optional']
-        data = sorted(
-            (item.name, item.resource_type, item.revision, item.optional)
-            for item in result)
+        headers = ['Charm Rev', 'Resource', 'Type', 'Optional']
+        by_revision = {}
+        for item in result:
+            by_revision.setdefault(item.revision, []).append(item)
+        data = []
+        for revision, items in sorted(by_revision.items(), reverse=True):
+            initial, *rest = sorted(items, key=attrgetter('name'))
+            data.append((revision, initial.name, initial.resource_type, initial.optional))
+            data.extend(
+                ("", item.name, item.resource_type, item.optional) for item in rest)
 
         table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
         for line in table.splitlines():

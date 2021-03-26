@@ -60,6 +60,17 @@ def get_name_from_metadata():
     return charm_name
 
 
+def create_importable_name(charm_name):
+    """Convert a charm name to something that is importable in python."""
+    return charm_name.replace('-', '_')
+
+
+def create_charm_name_from_importable(charm_name):
+    """Convert a charm name from the importable form to the real form."""
+    # _ is invalid in charm names, so we know it's intended to be '-'
+    return charm_name.replace('_', '-')
+
+
 class LoginCommand(BaseCommand):
     """Login to Charmhub."""
 
@@ -606,28 +617,40 @@ def _get_positive_int(raw_value):
 
 
 def _get_lib_info(*, full_name=None, lib_path=None):
-    """Get the whole lib info from the path/file."""
+    """Get the whole lib info from the path/file.
+
+    This will perform mutation of the charm name to create importable paths.
+    * `charm_name` and `libdata.charm_name`: `foo-bar`
+    * `full_name` and `libdata.full_name`: `charms.foo_bar.v0.somelib`
+    * paths, including `libdata.path`: `lib/charms/foo_bar/v0/somelib`
+
+    """
     if full_name is None:
         # get it from the lib_path
         try:
-            libsdir, charmsdir, charm_name, v_api = lib_path.parts[:-1]
+            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
         except ValueError:
             raise _BadLibraryPathError(lib_path)
         if libsdir != 'lib' or charmsdir != 'charms' or lib_path.suffix != '.py':
             raise _BadLibraryPathError(lib_path)
-        full_name = '.'.join((charmsdir, charm_name, v_api, lib_path.stem))
+        full_name = '.'.join((charmsdir, importable_charm_name, v_api, lib_path.stem))
 
     else:
         # build the path! convert a lib name with dots to the full path, including lib
         # dir and Python extension.
         #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
         try:
-            charmsdir, charm_name, v_api, libfile = full_name.split('.')
+            charmsdir, importable_charm_name, v_api, libfile = full_name.split('.')
         except ValueError:
             raise _BadLibraryNameError(full_name)
         if charmsdir != 'charms':
             raise _BadLibraryNameError(full_name)
-        lib_path = pathlib.Path('lib') / charmsdir / charm_name / v_api / (libfile + '.py')
+        path = pathlib.Path('lib')
+        lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + '.py')
+
+    # charm names in the path can contain '_' to be importable
+    # these should be '-', so change them back
+    charm_name = create_charm_name_from_importable(importable_charm_name)
 
     if v_api[0] != 'v' or not v_api[1:].isdigit():
         raise CommandError(
@@ -702,6 +725,8 @@ def _get_libs_from_tree(charm_name=None):
 
     It only follows/uses the the directories/files for a correct charmlibs
     disk structure.
+
+    This can take charm_name as both importable and normal form.
     """
     local_libs_data = []
 
@@ -709,7 +734,8 @@ def _get_libs_from_tree(charm_name=None):
         base_dir = pathlib.Path('lib') / 'charms'
         charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
     else:
-        base_dir = pathlib.Path('lib') / 'charms' / charm_name
+        importable_charm_name = create_importable_name(charm_name)
+        base_dir = pathlib.Path('lib') / 'charms' / importable_charm_name
         charm_dirs = [base_dir] if base_dir.is_dir() else []
 
     for charm_dir in charm_dirs:
@@ -769,8 +795,12 @@ class CreateLibCommand(BaseCommand):
                 "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
                 "directory with metadata.yaml.")
 
+        # '-' is valid in charm names, but not in a python import
+        # mutate the name so the path is a valid import
+        importable_charm_name = create_importable_name(charm_name)
+
         # all libraries born with API version 0
-        full_name = 'charms.{}.v0.{}'.format(charm_name, lib_name)
+        full_name = 'charms.{}.v0.{}'.format(importable_charm_name, lib_name)
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():

@@ -14,16 +14,24 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import datetime
 import logging
 import os
 import pathlib
+from textwrap import dedent
+from unittest.mock import patch
 
 import pytest
+import yaml
 
+from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
 from charmcraft.utils import (
     ResourceOption,
+    OSPlatform,
     SingleOptionEnsurer,
+    create_manifest,
+    get_os_platform,
     load_yaml,
     make_executable,
     useful_filepath,
@@ -192,3 +200,73 @@ def test_usefulfilepath_not_a_file(tmp_path):
     with pytest.raises(CommandError) as cm:
         useful_filepath(str(tmp_path))
     assert str(cm.value) == "{!r} is not a file.".format(str(tmp_path))
+
+
+# -- tests for the OS platform getter
+
+def test_get_os_platform_linux(tmp_path):
+    """Utilize an /etc/os-release file to determine platform"""
+    filepath = (tmp_path / "os-release")
+    filepath.write_text(dedent(
+        """
+        NAME="Ubuntu"
+        VERSION="20.04.1 LTS (Focal Fossa)"
+        ID=ubuntu
+        ID_LIKE=debian
+        PRETTY_NAME="Ubuntu 20.04.1 LTS"
+        VERSION_ID="20.04"
+        HOME_URL="https://www.ubuntu.com/"
+        SUPPORT_URL="https://help.ubuntu.com/"
+        BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+        PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+        VERSION_CODENAME=focal
+        UBUNTU_CODENAME=focal
+        """
+    ))
+    with patch('platform.machine', return_value='x86_64'):
+        with patch('platform.system', return_value='Linux'):
+            os_platform = get_os_platform(filepath)
+    assert os_platform.system == "Ubuntu"
+    assert os_platform.release == "20.04"
+    assert os_platform.machine == "x86_64"
+
+
+def test_get_os_platform_windows():
+    """Get platform from a patched Windows machine"""
+    with patch('platform.system', return_value='Windows'):
+        with patch('platform.release', return_value='10'):
+            with patch('platform.machine', return_value='AMD64'):
+                os_platform = get_os_platform()
+    assert os_platform.system == "Windows"
+    assert os_platform.release == "10"
+    assert os_platform.machine == "AMD64"
+
+
+# -- tests for the manifest creation
+
+def test_manifest_simple_ok(tmp_path):
+    """Simple construct."""
+    tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
+    os_platform = OSPlatform(system='SuperUbuntu', release='40.10', machine='SomeRISC')
+    with patch('charmcraft.utils.get_os_platform', return_value=os_platform):
+        result_filepath = create_manifest(tmp_path, tstamp)
+
+    assert result_filepath == tmp_path / 'manifest.yaml'
+    saved = yaml.safe_load(result_filepath.read_text())
+    expected = {
+        'architectures': ['SomeRISC'],
+        'charmcraft-os-release-name': 'SuperUbuntu',
+        'charmcraft-os-release-version-id': '40.10',
+        'charmcraft-started-at': '2020-02-01T15:40:33Z',
+        'charmcraft-version': __version__,
+    }
+    assert saved == expected
+
+
+def test_manifest_dont_overwrite(tmp_path):
+    """Don't overwrite the already-existing file."""
+    (tmp_path / 'manifest.yaml').touch()
+    with pytest.raises(CommandError) as cm:
+        create_manifest(tmp_path, datetime.datetime.now())
+    assert str(cm.value) == (
+        "Cannot write the manifest as there is already a 'manifest.yaml' in disk.")

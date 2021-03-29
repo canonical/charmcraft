@@ -28,7 +28,7 @@ import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
-from charmcraft.utils import make_executable
+from charmcraft.utils import make_executable, create_manifest
 
 logger = logging.getLogger(__name__)
 
@@ -90,13 +90,14 @@ def relativise(src, dst):
 class Builder:
     """The package builder."""
 
-    def __init__(self, args):
+    def __init__(self, args, config):
         self.charmdir = args['from']
         self.entrypoint = args['entrypoint']
         self.requirement_paths = args['requirement']
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.ignore_rules = self._load_juju_ignore()
+        self.config = config
 
     def run(self):
         """Build the charm."""
@@ -105,6 +106,8 @@ class Builder:
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
         self.buildpath.mkdir()
+
+        create_manifest(self.buildpath, self.config.project.started_at)
 
         linked_entrypoint = self.handle_generic_paths()
         self.handle_dispatcher(linked_entrypoint)
@@ -394,5 +397,5 @@ class BuildCommand(BaseCommand):
         validator = Validator()
         args = validator.process(parsed_args)
         logger.debug("working arguments: %s", args)
-        builder = Builder(args)
+        builder = Builder(args, self.config)
         builder.run()

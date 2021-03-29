@@ -18,7 +18,6 @@
 
 import logging
 import os
-import pathlib
 import platform
 import webbrowser
 from http.cookiejar import MozillaCookieJar
@@ -31,7 +30,7 @@ from requests.exceptions import RequestException
 from requests.packages.urllib3.util.retry import Retry
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
-from charmcraft import __version__
+from charmcraft import __version__, utils
 from charmcraft.cmdbase import CommandError
 
 # set urllib3's logger to only emit errors, not warnings. Otherwise even
@@ -43,39 +42,15 @@ logger = logging.getLogger('charmcraft.commands.store')
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
 
-def _get_os_platform(filepath=pathlib.Path("/etc/os-release")):
-    """Determine a system/release combo for an OS using /etc/os-release if available."""
-    system = platform.system()
-    release = platform.release()
-    machine = platform.machine()
-
-    if system == "Linux":
-        os_release = {}
-        try:
-            with filepath.open("r", encoding='utf-8') as f:
-                for line in f:
-                    if "=" in line:
-                        key, value = line.rstrip().split("=", 1)
-                        os_release[key] = value.strip('"')
-        except FileNotFoundError:
-            logger.debug("Unable to locate 'os-release' file, using default values")
-        finally:
-            system = os_release.get("NAME", system)
-            release = os_release.get("VERSION_ID", release)
-
-    return "{}/{} ({})".format(system, release, machine)
-
-
 def build_user_agent():
     """Build the charmcraft's user agent."""
     if any(key.startswith(prefix) for prefix in TESTING_ENV_PREFIXES for key in os.environ.keys()):
         testing = " (testing) "
     else:
         testing = " "
-    return "charmcraft/{}{}{} python/{}".format(__version__,
-                                                testing,
-                                                _get_os_platform(),
-                                                platform.python_version())
+    os_platform = "{0.system}/{0.release} ({0.machine})".format(utils.get_os_platform())
+    return "charmcraft/{}{}{} python/{}".format(
+        __version__, testing, os_platform, platform.python_version())
 
 
 def visit_page_with_browser(visit_url):

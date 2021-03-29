@@ -17,8 +17,9 @@
 import errno
 import filecmp
 import logging
-import pathlib
 import os
+import pathlib
+import platform
 import socket
 import sys
 import zipfile
@@ -372,7 +373,7 @@ def test_politeexec_crashed(caplog, tmp_path):
 # --- (real) build tests
 
 
-def test_build_basic_complete_structure(tmp_path, monkeypatch):
+def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
     """Integration test: a simple structure with custom lib and normal src dir."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -405,7 +406,7 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch):
         'from': tmp_path,
         'entrypoint': charm_script,
         'requirement': [],
-    })
+    }, config)
     zipname = builder.run()
 
     # check all is properly inside the zip
@@ -420,8 +421,13 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch):
     assert zf.read('hooks/upgrade-charm') == dispatch
     assert zf.read('lib/ops/stuff.txt') == b"ops stuff"
 
+    # check the created manifest for these particular values that depend on given info
+    manifest = yaml.safe_load(zf.read('manifest.yaml'))
+    assert manifest['architectures'] == [platform.machine()]
+    assert manifest['charmcraft-started-at'] == config.project.started_at.isoformat() + "Z"
 
-def test_build_generics_simple_files(tmp_path):
+
+def test_build_generics_simple_files(tmp_path, config):
     """Check transferred metadata and simple entrypoint, also return proper linked entrypoint."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -435,7 +441,7 @@ def test_build_generics_simple_files(tmp_path):
         'from': tmp_path,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
     linked_entrypoint = builder.handle_generic_paths()
 
     # check files are there, are files, and are really hard links (so no
@@ -451,7 +457,7 @@ def test_build_generics_simple_files(tmp_path):
     assert linked_entrypoint == built_entrypoint
 
 
-def test_build_generics_simple_dir(tmp_path):
+def test_build_generics_simple_dir(tmp_path, config):
     """Check transferred any directory, with proper permissions."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -465,7 +471,7 @@ def test_build_generics_simple_dir(tmp_path):
         'from': tmp_path,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
     builder.handle_generic_paths()
 
     built_dir = build_dir / 'somedir'
@@ -473,7 +479,7 @@ def test_build_generics_simple_dir(tmp_path):
     assert built_dir.stat().st_mode & 0xFFF == 0o700
 
 
-def test_build_generics_ignored_file(tmp_path, caplog):
+def test_build_generics_ignored_file(tmp_path, caplog, config):
     """Don't include ignored filed."""
     caplog.set_level(logging.DEBUG)
     build_dir = tmp_path / BUILD_DIRNAME
@@ -491,7 +497,7 @@ def test_build_generics_ignored_file(tmp_path, caplog):
         'from': tmp_path,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
 
     # set it up to ignore file 2 and make it work
     builder.ignore_rules.extend_patterns(['file2.*'])
@@ -504,7 +510,7 @@ def test_build_generics_ignored_file(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_generics_ignored_dir(tmp_path, caplog):
+def test_build_generics_ignored_dir(tmp_path, caplog, config):
     """Don't include ignored dir."""
     caplog.set_level(logging.DEBUG)
     build_dir = tmp_path / BUILD_DIRNAME
@@ -522,7 +528,7 @@ def test_build_generics_ignored_dir(tmp_path, caplog):
         'from': tmp_path,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
 
     # set it up to ignore dir 2 and make it work
     builder.ignore_rules.extend_patterns(['dir2'])
@@ -535,7 +541,7 @@ def test_build_generics_ignored_dir(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
+def _test_build_generics_tree(tmp_path, caplog, config, *, expect_hardlinks):
     caplog.set_level(logging.DEBUG)
 
     build_dir = tmp_path / BUILD_DIRNAME
@@ -577,7 +583,7 @@ def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
         'from': tmp_path,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
 
     # set it up to ignore some stuff and make it work
     builder.ignore_rules.extend_patterns([
@@ -616,26 +622,26 @@ def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
             assert p1.stat().st_mtime == pytest.approx(p2.stat().st_mtime)
 
 
-def test_build_generics_tree(tmp_path, caplog):
+def test_build_generics_tree(tmp_path, caplog, config):
     """Manages ok a deep tree, including internal ignores."""
-    _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=True)
+    _test_build_generics_tree(tmp_path, caplog, config, expect_hardlinks=True)
 
 
-def test_build_generics_tree_vagrant(tmp_path, caplog):
+def test_build_generics_tree_vagrant(tmp_path, caplog, config):
     """Manages ok a deep tree, including internal ignores, when hardlinks aren't allowed."""
     with patch('os.link') as mock_link:
         mock_link.side_effect = PermissionError("No you don't.")
-        _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
+        _test_build_generics_tree(tmp_path, caplog, config, expect_hardlinks=False)
 
 
-def test_build_generics_tree_xdev(tmp_path, caplog):
+def test_build_generics_tree_xdev(tmp_path, caplog, config):
     """Manages ok a deep tree, including internal ignores, when hardlinks can't be done."""
     with patch('os.link') as mock_link:
         mock_link.side_effect = OSError(errno.EXDEV, os.strerror(errno.EXDEV))
-        _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
+        _test_build_generics_tree(tmp_path, caplog, config, expect_hardlinks=False)
 
 
-def test_build_generics_symlink_file(tmp_path):
+def test_build_generics_symlink_file(tmp_path, config):
     """Respects a symlinked file."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -649,7 +655,7 @@ def test_build_generics_symlink_file(tmp_path):
         'from': tmp_path,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
     builder.handle_generic_paths()
 
     built_symlink = build_dir / 'somehook.py'
@@ -659,7 +665,7 @@ def test_build_generics_symlink_file(tmp_path):
     assert real_link == 'crazycharm.py'
 
 
-def test_build_generics_symlink_dir(tmp_path):
+def test_build_generics_symlink_dir(tmp_path, config):
     """Respects a symlinked dir."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -677,7 +683,7 @@ def test_build_generics_symlink_dir(tmp_path):
         'from': tmp_path,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
     builder.handle_generic_paths()
 
     built_symlink = build_dir / 'thelink'
@@ -690,7 +696,7 @@ def test_build_generics_symlink_dir(tmp_path):
     assert (build_dir / 'thelink' / 'sanity check').exists()
 
 
-def test_build_generics_symlink_deep(tmp_path):
+def test_build_generics_symlink_deep(tmp_path, config):
     """Correctly re-links a symlink across deep dirs."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -710,7 +716,7 @@ def test_build_generics_symlink_deep(tmp_path):
         'from': tmp_path,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
     builder.handle_generic_paths()
 
     built_symlink = build_dir / 'dir2' / 'file.link'
@@ -720,7 +726,7 @@ def test_build_generics_symlink_deep(tmp_path):
     assert real_link == '../dir1/file.real'
 
 
-def test_build_generics_symlink_file_outside(tmp_path, caplog):
+def test_build_generics_symlink_file_outside(tmp_path, caplog, config):
     """Ignores (with warning) a symlink pointing a file outside projects dir."""
     caplog.set_level(logging.WARNING)
 
@@ -741,7 +747,7 @@ def test_build_generics_symlink_file_outside(tmp_path, caplog):
         'from': project_dir,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
     builder.handle_generic_paths()
 
     assert not (build_dir / 'external-file').exists()
@@ -749,7 +755,7 @@ def test_build_generics_symlink_file_outside(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_generics_symlink_directory_outside(tmp_path, caplog):
+def test_build_generics_symlink_directory_outside(tmp_path, caplog, config):
     """Ignores (with warning) a symlink pointing a dir outside projects dir."""
     caplog.set_level(logging.WARNING)
 
@@ -770,7 +776,7 @@ def test_build_generics_symlink_directory_outside(tmp_path, caplog):
         'from': project_dir,
         'entrypoint': entrypoint,
         'requirement': [],
-    })
+    }, config)
     builder.handle_generic_paths()
 
     assert not (build_dir / 'external-dir').exists()
@@ -778,7 +784,7 @@ def test_build_generics_symlink_directory_outside(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
+def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch, config):
     """Ignores whatever is not a regular file, symlink or dir."""
     caplog.set_level(logging.DEBUG)
 
@@ -799,7 +805,7 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
         'from': tmp_path,
         'entrypoint': tmp_path / entrypoint,
         'requirement': [],
-    })
+    }, config)
     builder.handle_generic_paths()
 
     assert not (build_dir / 'test-socket').exists()
@@ -807,7 +813,7 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_dispatcher_modern_dispatch_created(tmp_path):
+def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
     """The dispatcher script is properly built."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -818,7 +824,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     builder.handle_dispatcher(linked_entrypoint)
 
     included_dispatcher = build_dir / DISPATCH_FILENAME
@@ -827,7 +833,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path='somestuff.py')
 
 
-def test_build_dispatcher_modern_dispatch_respected(tmp_path):
+def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
     """The already included dispatcher script is left untouched."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -840,14 +846,14 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     builder.handle_dispatcher('whatever')
 
     with already_present_dispatch.open('rb') as fh:
         assert fh.read() == b'abc'
 
 
-def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
+def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path, config):
     """The mandatory classic hooks are implemented ok if not present."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -859,7 +865,7 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     with patch('charmcraft.commands.build.MANDATORY_HOOK_NAMES', {'testhook'}):
         builder.handle_dispatcher(linked_entrypoint)
 
@@ -870,7 +876,7 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     assert real_link == os.path.join('..', DISPATCH_FILENAME)
 
 
-def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
+def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path, config):
     """The already included mandatory classic hooks are left untouched."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -887,7 +893,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     with patch('charmcraft.commands.build.MANDATORY_HOOK_NAMES', {'testhook'}):
         builder.handle_dispatcher(linked_entrypoint)
 
@@ -895,7 +901,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
         assert fh.read() == b'abc'
 
 
-def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog):
+def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog, config):
     """Hooks that are just a symlink to the entrypoint are replaced."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
@@ -921,7 +927,7 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog)
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     builder.handle_dispatcher(built_charm_script)
 
     # the test hook is still there and a symlink, but now pointing to the dispatcher
@@ -931,7 +937,7 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog)
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_dependencies_virtualenv_simple(tmp_path):
+def test_build_dependencies_virtualenv_simple(tmp_path, config):
     """A virtualenv is created with the specified requirements file."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -940,7 +946,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': ['reqs.txt'],
-    })
+    }, config)
 
     with patch('charmcraft.commands.build.polite_exec') as mock:
         mock.return_value = 0
@@ -953,7 +959,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     ]
 
 
-def test_build_dependencies_needs_system(tmp_path):
+def test_build_dependencies_needs_system(tmp_path, config):
     """pip3 is called with --system when pip3 needs it."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -962,7 +968,7 @@ def test_build_dependencies_needs_system(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': ['reqs'],
-    })
+    }, config)
 
     with patch('charmcraft.commands.build._pip_needs_system') as is_bionic:
         is_bionic.return_value = True
@@ -977,7 +983,7 @@ def test_build_dependencies_needs_system(tmp_path):
     ]
 
 
-def test_build_dependencies_virtualenv_multiple(tmp_path):
+def test_build_dependencies_virtualenv_multiple(tmp_path, config):
     """A virtualenv is created with multiple requirements files."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -986,7 +992,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': ['reqs1.txt', 'reqs2.txt'],
-    })
+    }, config)
 
     with patch('charmcraft.commands.build.polite_exec') as mock:
         mock.return_value = 0
@@ -1000,7 +1006,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
     ]
 
 
-def test_build_dependencies_virtualenv_none(tmp_path):
+def test_build_dependencies_virtualenv_none(tmp_path, config):
     """The virtualenv is NOT created if no needed."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1009,7 +1015,7 @@ def test_build_dependencies_virtualenv_none(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
 
     with patch('charmcraft.commands.build.polite_exec') as mock:
         builder.handle_dependencies()
@@ -1017,7 +1023,7 @@ def test_build_dependencies_virtualenv_none(tmp_path):
     mock.assert_not_called()
 
 
-def test_build_dependencies_virtualenv_error_basicpip(tmp_path):
+def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
     """Process is properly interrupted if using pip fails."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1026,7 +1032,7 @@ def test_build_dependencies_virtualenv_error_basicpip(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': ['something'],
-    })
+    }, config)
 
     with patch('charmcraft.commands.build.polite_exec') as mock:
         mock.return_value = -7
@@ -1034,7 +1040,7 @@ def test_build_dependencies_virtualenv_error_basicpip(tmp_path):
             builder.handle_dependencies()
 
 
-def test_build_dependencies_virtualenv_error_installing(tmp_path):
+def test_build_dependencies_virtualenv_error_installing(tmp_path, config):
     """Process is properly interrupted if virtualenv creation fails."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1043,7 +1049,7 @@ def test_build_dependencies_virtualenv_error_installing(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': ['something'],
-    })
+    }, config)
 
     with patch('charmcraft.commands.build.polite_exec') as mock:
         mock.side_effect = [0, -7]
@@ -1051,7 +1057,7 @@ def test_build_dependencies_virtualenv_error_installing(tmp_path):
             builder.handle_dependencies()
 
 
-def test_build_package_tree_structure(tmp_path, monkeypatch):
+def test_build_package_tree_structure(tmp_path, monkeypatch, config):
     """The zip file is properly built internally."""
     # the metadata
     metadata_data = {'name': 'name-from-metadata'}
@@ -1102,7 +1108,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     zipname = builder.handle_package()
 
     # check the stuff outside is not in the zip, the stuff inside is zipped (with
@@ -1117,7 +1123,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch):
     assert zf.read('linkeddir/file_ext') == b"external file"  # from file in the outside linked dir
 
 
-def test_build_package_name(tmp_path, monkeypatch):
+def test_build_package_name(tmp_path, monkeypatch, config):
     """The zip file name comes from the metadata."""
     to_be_zipped_dir = tmp_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
@@ -1134,13 +1140,13 @@ def test_build_package_name(tmp_path, monkeypatch):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     zipname = builder.handle_package()
 
     assert zipname == "name-from-metadata.charm"
 
 
-def test_builder_without_jujuignore(tmp_path):
+def test_builder_without_jujuignore(tmp_path, config):
     """Without a .jujuignore we still have a default set of ignores"""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1149,14 +1155,14 @@ def test_builder_without_jujuignore(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     ignore = builder._load_juju_ignore()
     assert ignore.match('/.git', is_dir=True)
     assert ignore.match('/build', is_dir=True)
     assert not ignore.match('myfile.py', is_dir=False)
 
 
-def test_builder_with_jujuignore(tmp_path):
+def test_builder_with_jujuignore(tmp_path, config):
     """With a .jujuignore we will include additional ignores."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1170,7 +1176,7 @@ def test_builder_with_jujuignore(tmp_path):
         'from': tmp_path,
         'entrypoint': 'whatever',
         'requirement': [],
-    })
+    }, config)
     ignore = builder._load_juju_ignore()
     assert ignore.match('/.git', is_dir=True)
     assert ignore.match('/build', is_dir=True)

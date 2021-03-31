@@ -248,7 +248,9 @@ def test_get_os_platform_alternative_formats(name, tmp_path):
         VERSION_ID="20.04"
         """.format(source)
     ))
-    os_platform = get_os_platform(filepath)
+    # need to patch this to "Linux" so actually uses /etc/os-release...
+    with patch('platform.system', return_value='Linux'):
+        os_platform = get_os_platform(filepath)
     assert os_platform.system == result
 
 

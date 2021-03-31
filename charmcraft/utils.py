@@ -19,16 +19,20 @@
 import logging
 import os
 import pathlib
+import platform
+from collections import namedtuple
 from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
 
 import attr
 import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
+from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger('charmcraft.commands')
 
+OSPlatform = namedtuple("OSPlatform", "system release machine")
 
 # handy masks for execution and reading for everybody
 S_IXALL = S_IXUSR | S_IXGRP | S_IXOTH
@@ -135,4 +139,55 @@ def useful_filepath(filepath):
         raise CommandError("Cannot access {!r}.".format(str(filepath)))
     if not filepath.is_file():
         raise CommandError("{!r} is not a file.".format(str(filepath)))
+    return filepath
+
+
+def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
+    """Determine a system/release combo for an OS using /etc/os-release if available."""
+    system = platform.system()
+    release = platform.release()
+    machine = platform.machine()
+
+    if system == "Linux":
+        os_release = {}
+        try:
+            with filepath.open("r", encoding='utf-8') as f:
+                for line in f:
+                    if "=" in line:
+                        key, value = line.rstrip().split("=", 1)
+                        if value[0] == value[-1] == '"':
+                            value = value[1:-1]
+                        os_release[key] = value
+        except FileNotFoundError:
+            logger.debug("Unable to locate 'os-release' file, using default values")
+        finally:
+            system = os_release.get("NAME", system)
+            release = os_release.get("VERSION_ID", release)
+
+    return OSPlatform(system=system, release=release, machine=machine)
+
+
+def create_manifest(basedir, started_at):
+    """Save context information for the charm execution.
+
+    Mostly to be used by builders.
+    """
+    os_platform = get_os_platform()
+
+    # XXX Facundo 2021-03-29: the architectures list will be provided by the caller when
+    # we integrate lifecycle lib in future branches
+    architectures = [os_platform.machine]
+
+    content = {
+        'charmcraft-version': __version__,
+        'charmcraft-started-at': started_at.isoformat() + "Z",
+        'charmcraft-os-release-name': os_platform.system,
+        'charmcraft-os-release-version-id': os_platform.release,
+        'architectures': architectures,
+    }
+    filepath = basedir / 'manifest.yaml'
+    if filepath.exists():
+        raise CommandError(
+            "Cannot write the manifest as there is already a 'manifest.yaml' in disk.")
+    filepath.write_text(yaml.dump(content))
     return filepath

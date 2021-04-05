@@ -155,7 +155,9 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
                 for line in f:
                     if "=" in line:
                         key, value = line.rstrip().split("=", 1)
-                        os_release[key] = value.strip('"')
+                        if value[0] == value[-1] == '"':
+                            value = value[1:-1]
+                        os_release[key] = value
         except FileNotFoundError:
             logger.debug("Unable to locate 'os-release' file, using default values")
         finally:

@@ -205,7 +205,7 @@ def test_usefulfilepath_not_a_file(tmp_path):
 # -- tests for the OS platform getter
 
 def test_get_os_platform_linux(tmp_path):
-    """Utilize an /etc/os-release file to determine platform"""
+    """Utilize an /etc/os-release file to determine platform."""
     filepath = (tmp_path / "os-release")
     filepath.write_text(dedent(
         """
@@ -231,8 +231,31 @@ def test_get_os_platform_linux(tmp_path):
     assert os_platform.machine == "x86_64"
 
 
+@pytest.mark.parametrize('name', [
+    ('"foo bar"', 'foo bar'),  # what's normally found
+    ('foo bar', 'foo bar'),  # no quotes
+    ('"foo " bar"', 'foo " bar'),  # quotes in the middle
+    ('foo bar"', 'foo bar"'),  # unbalanced quotes (no really enclosing)
+    ('"foo bar', '"foo bar'),  # unbalanced quotes (no really enclosing)
+])
+def test_get_os_platform_alternative_formats(name, tmp_path):
+    """Support different ways of building the string."""
+    source, result = name
+    filepath = (tmp_path / "os-release")
+    filepath.write_text(dedent(
+        """
+        NAME={}
+        VERSION_ID="20.04"
+        """.format(source)
+    ))
+    # need to patch this to "Linux" so actually uses /etc/os-release...
+    with patch('platform.system', return_value='Linux'):
+        os_platform = get_os_platform(filepath)
+    assert os_platform.system == result
+
+
 def test_get_os_platform_windows():
-    """Get platform from a patched Windows machine"""
+    """Get platform from a patched Windows machine."""
     with patch('platform.system', return_value='Windows'):
         with patch('platform.release', return_value='10'):
             with patch('platform.machine', return_value='AMD64'):

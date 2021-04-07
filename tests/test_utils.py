@@ -27,6 +27,7 @@ import yaml
 from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
 from charmcraft.utils import (
+    ARCH_TRANSLATIONS,
     ResourceOption,
     OSPlatform,
     SingleOptionEnsurer,
@@ -277,13 +278,28 @@ def test_manifest_simple_ok(tmp_path):
     assert result_filepath == tmp_path / 'manifest.yaml'
     saved = yaml.safe_load(result_filepath.read_text())
     expected = {
-        'architectures': ['SomeRISC'],
-        'charmcraft-os-release-name': 'SuperUbuntu',
-        'charmcraft-os-release-version-id': '40.10',
         'charmcraft-started-at': '2020-02-01T15:40:33Z',
         'charmcraft-version': __version__,
+        'bases': [
+            {
+                'name': 'SuperUbuntu',
+                'channel': '40.10',
+                'architectures': ['SomeRISC'],
+            }
+        ],
     }
     assert saved == expected
+
+
+def test_manifest_architecture_translated(tmp_path, monkeypatch):
+    """All known architectures must be translated."""
+    monkeypatch.setitem(ARCH_TRANSLATIONS, 'weird_arch', 'nice_arch')
+    os_platform = OSPlatform(system='Ubuntu', release='40.10', machine='weird_arch')
+    with patch('charmcraft.utils.get_os_platform', return_value=os_platform):
+        result_filepath = create_manifest(tmp_path, datetime.datetime.now())
+
+    saved = yaml.safe_load(result_filepath.read_text())
+    assert saved['bases'][0]['architectures'] == ['nice_arch']
 
 
 def test_manifest_dont_overwrite(tmp_path):

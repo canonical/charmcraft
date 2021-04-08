@@ -20,7 +20,6 @@ import logging
 import os
 import pathlib
 import platform
-from urllib.request import parse_keqv_list
 from collections import namedtuple
 from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
 
@@ -161,14 +160,21 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
     machine = platform.machine()
 
     if system == "Linux":
-        os_release = {}
         try:
             with filepath.open("rt", encoding='utf-8') as fh:
-                lines = [x.strip() for x in fh.readlines() if x.strip()]
+                lines = fh.readlines()
         except FileNotFoundError:
             logger.debug("Unable to locate 'os-release' file, using default values")
-        finally:
-            os_release = parse_keqv_list(lines)
+        else:
+            os_release = {}
+            for line in lines:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.rstrip().split("=", 1)
+                if value[0] == value[-1] == '"':
+                    value = value[1:-1]
+                os_release[key] = value
             system = os_release.get("NAME", system)
             release = os_release.get("VERSION_ID", release)
 

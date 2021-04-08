@@ -207,9 +207,12 @@ def test_usefulfilepath_not_a_file(tmp_path):
 
 def test_get_os_platform_linux(tmp_path):
     """Utilize an /etc/os-release file to determine platform."""
+    # explicitly add commented and empty lines, for parser robustness
     filepath = (tmp_path / "os-release")
     filepath.write_text(dedent(
         """
+        # the following is an empty line
+
         NAME="Ubuntu"
         VERSION="20.04.1 LTS (Focal Fossa)"
         ID=ubuntu
@@ -219,6 +222,11 @@ def test_get_os_platform_linux(tmp_path):
         HOME_URL="https://www.ubuntu.com/"
         SUPPORT_URL="https://help.ubuntu.com/"
         BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+
+        # more in the middle; the following even would be "out of standard", but
+        # we should not crash, just ignore it
+        SOMETHING-WEIRD
+
         PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
         VERSION_CODENAME=focal
         UBUNTU_CODENAME=focal

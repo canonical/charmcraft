@@ -52,6 +52,9 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
 HOOKS_DIR = 'hooks'
 
+# The token used in the 'init' command (as bytes)
+INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
+
 
 def _pip_needs_system():
     """Determine whether pip3 defaults to --user, needing --system to turn it off."""
@@ -85,6 +88,19 @@ def polite_exec(cmd):
 def relativise(src, dst):
     """Build a relative path from src to dst."""
     return pathlib.Path(os.path.relpath(str(dst), str(src.parent)))
+
+
+def validate_template_is_handled(filepath):
+    """Check that the file has not a mark of coming from the template and wasn't handled.
+
+    This is important to eliminate the risk of getting built charms that are just created
+    with the `init` commands and not paid attentiont.
+    """
+    if INIT_TEMPLATE_TOKEN in filepath.read_bytes():
+        token = INIT_TEMPLATE_TOKEN.decode('ascii')
+        raise CommandError(
+            "The file {} has a leftover {} token from when the project was created by the 'init' "
+            "command, please address it and build again.".format(filepath, token))
 
 
 class Builder:
@@ -182,6 +198,7 @@ class Builder:
                     dest_path = self.buildpath / rel_path
                     self.create_symlink(abs_path, dest_path)
                 elif abs_path.is_file():
+                    validate_template_is_handled(abs_path)
                     dest_path = self.buildpath / rel_path
                     try:
                         os.link(str(abs_path), str(dest_path))

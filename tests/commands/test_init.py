@@ -98,21 +98,6 @@ def test_executables(tmp_path, config):
     assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
 
 
-def uncomment(filepath, token):
-    """Uncomment a file after and including the line with the given token."""
-    new_content = []
-    with filepath.open('rt', encoding='utf8') as fh:
-        comment = None
-        for line in fh:
-            if token in line:
-                comment = line.index(token)
-            if comment is not None:
-                line = line[comment:]
-            new_content.append(line)
-    with filepath.open('wt', encoding='utf8') as fh:
-        fh.writelines(new_content)
-
-
 def test_tests(tmp_path, config):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
     # virtualenv libs and bins (if any), as they need them, but we're not creating a
@@ -131,23 +116,27 @@ def test_tests(tmp_path, config):
     cmd = InitCommand('group', config)
     cmd.run(Namespace(name='my-charm', author="だれだれ", series='k8s', force=False))
 
-    # uncomment the project YAMLs that we just created from the templates, so tests run ok
-    # (those files are commented out to avoid the developer pushing valid-but-fake config
-    # and actions files to the Store)
-    uncomment(tmp_path / 'actions.yaml', "fortune:")
-    uncomment(tmp_path / 'config.yaml', "options:")
-
     subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)
 
 
 def test_series_defaults(tmp_path, config):
+    """Check that series defaults to kubernetes including a TODO message."""
     cmd = InitCommand('group', config)
     # series default comes from the parsing itself
-    cmd.run(Namespace(name='my-charm', author="fred", series='k8s', force=False))
+    cmd.run(Namespace(name='my-charm', author="fred", series=None, force=False))
 
-    with (tmp_path / "metadata.yaml").open("rt", encoding="utf8") as f:
-        metadata = yaml.safe_load(f)
-    assert metadata.get("series") == ['k8s']
+    # verify the value is correct at a YAML level
+    metadata_filepath = tmp_path / "metadata.yaml"
+    metadata = yaml.safe_load(metadata_filepath.read_text())
+    assert metadata.get("series") == ['kubernetes']
+
+    # verify a TODO is added at a text level
+    for line in metadata_filepath.open('rt'):
+        if line.startswith('series'):
+            assert "# TEMPLATE-TODO" in line
+            break
+    else:
+        pytest.fail("ERROR, 'series' line not found")  # just in case
 
 
 def test_manual_overrides_defaults(tmp_path, config):

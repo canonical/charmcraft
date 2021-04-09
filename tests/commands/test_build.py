@@ -807,28 +807,6 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
     assert expected in [rec.message for rec in caplog.records]
 
 
-def test_build_generics_file_with_init_template_todo_token(tmp_path, caplog):
-    """Avoid building a charm that is not really ready."""
-    project_dir = tmp_path / 'test-project'
-    project_dir.mkdir()
-
-    build_dir = project_dir / BUILD_DIRNAME
-    build_dir.mkdir()
-    entrypoint = project_dir / 'crazycharm.py'
-    entrypoint.write_text("some stuff!  # TEMPLATE-TODO: need to fix to make all ready.")
-
-    builder = Builder({
-        'from': project_dir,
-        'entrypoint': entrypoint,
-        'requirement': [],
-    })
-    expected_msg = (
-        "The file .* has a leftover TEMPLATE-TODO token from when the project was created by "
-        "the 'init' command, please address it and build again.")
-    with pytest.raises(CommandError, match=expected_msg):
-        builder.handle_generic_paths()
-
-
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
     """The dispatcher script is properly built."""
     build_dir = tmp_path / BUILD_DIRNAME

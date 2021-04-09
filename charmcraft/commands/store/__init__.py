@@ -48,6 +48,9 @@ EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bun
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
 
+# The token used in the 'init' command (as bytes for easier comparison)
+INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
+
 
 def get_name_from_metadata():
     """Return the name if present and plausible in metadata.yaml."""
@@ -322,9 +325,31 @@ class UploadCommand(BaseCommand):
             '--release', action='append',
             help="The channel(s) to release to (this option can be indicated multiple times)")
 
+    def _validate_template_is_handled(self, filepath):
+        """Check that the zip has not any file with the mark coming from the 'init' templates.
+
+        This is important to avoid uploading low-quality charms that are just
+        bootstrapped and not paid enough attention.
+        """
+        # we're already sure we can open it ok
+        zf = zipfile.ZipFile(str(filepath))
+
+        tainted_filenames = []
+        for name in zf.namelist():
+            content = zf.read(name)
+            if INIT_TEMPLATE_TOKEN in content:
+                tainted_filenames.append(name)
+
+        if tainted_filenames:
+            raise CommandError(
+                "Cannot upload the charm as it include the following files with a leftover "
+                "TEMPLATE-TODO token from when the project was created using the 'init' "
+                "command: {}".format(", ".join(tainted_filenames)))
+
     def run(self, parsed_args):
         """Run the command."""
         name = get_name_from_zip(parsed_args.filepath)
+        self._validate_template_is_handled(parsed_args.filepath)
         store = Store(self.config.charmhub)
         result = store.upload(name, parsed_args.filepath)
         if result.ok:

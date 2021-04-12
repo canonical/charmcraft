@@ -27,6 +27,7 @@ import yaml
 from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
 from charmcraft.utils import (
+    ARCH_TRANSLATIONS,
     ResourceOption,
     OSPlatform,
     SingleOptionEnsurer,
@@ -206,9 +207,12 @@ def test_usefulfilepath_not_a_file(tmp_path):
 
 def test_get_os_platform_linux(tmp_path):
     """Utilize an /etc/os-release file to determine platform."""
+    # explicitly add commented and empty lines, for parser robustness
     filepath = (tmp_path / "os-release")
     filepath.write_text(dedent(
         """
+        # the following is an empty line
+
         NAME="Ubuntu"
         VERSION="20.04.1 LTS (Focal Fossa)"
         ID=ubuntu
@@ -218,6 +222,11 @@ def test_get_os_platform_linux(tmp_path):
         HOME_URL="https://www.ubuntu.com/"
         SUPPORT_URL="https://help.ubuntu.com/"
         BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+
+        # more in the middle; the following even would be "out of standard", but
+        # we should not crash, just ignore it
+        SOMETHING-WEIRD
+
         PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
         VERSION_CODENAME=focal
         UBUNTU_CODENAME=focal
@@ -237,6 +246,12 @@ def test_get_os_platform_linux(tmp_path):
     ('"foo " bar"', 'foo " bar'),  # quotes in the middle
     ('foo bar"', 'foo bar"'),  # unbalanced quotes (no really enclosing)
     ('"foo bar', '"foo bar'),  # unbalanced quotes (no really enclosing)
+    ("'foo bar'", 'foo bar'),  # enclosing with single quote
+    ("'foo ' bar'", "foo ' bar"),  # single quote in the middle
+    ("foo bar'", "foo bar'"),  # unbalanced single quotes (no really enclosing)
+    ("'foo bar", "'foo bar"),  # unbalanced single quotes (no really enclosing)
+    ("'foo bar\"", "'foo bar\""),  # unbalanced mixed quotes
+    ("\"foo bar'", "\"foo bar'"),  # unbalanced mixed quotes
 ])
 def test_get_os_platform_alternative_formats(name, tmp_path):
     """Support different ways of building the string."""
@@ -277,13 +292,28 @@ def test_manifest_simple_ok(tmp_path):
     assert result_filepath == tmp_path / 'manifest.yaml'
     saved = yaml.safe_load(result_filepath.read_text())
     expected = {
-        'architectures': ['SomeRISC'],
-        'charmcraft-os-release-name': 'SuperUbuntu',
-        'charmcraft-os-release-version-id': '40.10',
         'charmcraft-started-at': '2020-02-01T15:40:33Z',
         'charmcraft-version': __version__,
+        'bases': [
+            {
+                'name': 'SuperUbuntu',
+                'channel': '40.10',
+                'architectures': ['SomeRISC'],
+            }
+        ],
     }
     assert saved == expected
+
+
+def test_manifest_architecture_translated(tmp_path, monkeypatch):
+    """All known architectures must be translated."""
+    monkeypatch.setitem(ARCH_TRANSLATIONS, 'weird_arch', 'nice_arch')
+    os_platform = OSPlatform(system='Ubuntu', release='40.10', machine='weird_arch')
+    with patch('charmcraft.utils.get_os_platform', return_value=os_platform):
+        result_filepath = create_manifest(tmp_path, datetime.datetime.now())
+
+    saved = yaml.safe_load(result_filepath.read_text())
+    assert saved['bases'][0]['architectures'] == ['nice_arch']
 
 
 def test_manifest_dont_overwrite(tmp_path):

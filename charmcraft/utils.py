@@ -38,6 +38,17 @@ OSPlatform = namedtuple("OSPlatform", "system release machine")
 S_IXALL = S_IXUSR | S_IXGRP | S_IXOTH
 S_IRALL = S_IRUSR | S_IRGRP | S_IROTH
 
+# translations from what the platform module informs to the term deb and
+# snaps actually use
+ARCH_TRANSLATIONS = {
+    'aarch64': 'arm64',
+    'armv7l': 'armhf',
+    'i686': 'i386',
+    'ppc': 'powerpc',
+    'ppc64le': 'ppc64el',
+    'x86_64': 'amd64',
+}
+
 
 def make_executable(fh):
     """Make open file fh executable."""
@@ -149,18 +160,21 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
     machine = platform.machine()
 
     if system == "Linux":
-        os_release = {}
         try:
-            with filepath.open("r", encoding='utf-8') as f:
-                for line in f:
-                    if "=" in line:
-                        key, value = line.rstrip().split("=", 1)
-                        if value[0] == value[-1] == '"':
-                            value = value[1:-1]
-                        os_release[key] = value
+            with filepath.open("rt", encoding='utf-8') as fh:
+                lines = fh.readlines()
         except FileNotFoundError:
             logger.debug("Unable to locate 'os-release' file, using default values")
-        finally:
+        else:
+            os_release = {}
+            for line in lines:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.rstrip().split("=", 1)
+                if value[0] == value[-1] and value[0] in ('"', "'"):
+                    value = value[1:-1]
+                os_release[key] = value
             system = os_release.get("NAME", system)
             release = os_release.get("VERSION_ID", release)
 
@@ -176,14 +190,19 @@ def create_manifest(basedir, started_at):
 
     # XXX Facundo 2021-03-29: the architectures list will be provided by the caller when
     # we integrate lifecycle lib in future branches
-    architectures = [os_platform.machine]
+    architectures = [ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)]
 
     content = {
         'charmcraft-version': __version__,
         'charmcraft-started-at': started_at.isoformat() + "Z",
-        'charmcraft-os-release-name': os_platform.system,
-        'charmcraft-os-release-version-id': os_platform.release,
-        'architectures': architectures,
+        'bases': [
+            {
+                'name': os_platform.system,
+                'channel': os_platform.release,
+                'architectures': architectures,
+            }
+        ],
+
     }
     filepath = basedir / 'manifest.yaml'
     if filepath.exists():

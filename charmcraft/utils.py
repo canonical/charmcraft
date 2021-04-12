@@ -172,7 +172,7 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
                 if not line or line.startswith('#') or '=' not in line:
                     continue
                 key, value = line.rstrip().split("=", 1)
-                if value[0] == value[-1] == '"':
+                if value[0] == value[-1] and value[0] in ('"', "'"):
                     value = value[1:-1]
                 os_release[key] = value
             system = os_release.get("NAME", system)

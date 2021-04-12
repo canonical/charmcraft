@@ -246,6 +246,12 @@ def test_get_os_platform_linux(tmp_path):
     ('"foo " bar"', 'foo " bar'),  # quotes in the middle
     ('foo bar"', 'foo bar"'),  # unbalanced quotes (no really enclosing)
     ('"foo bar', '"foo bar'),  # unbalanced quotes (no really enclosing)
+    ("'foo bar'", 'foo bar'),  # enclosing with single quote
+    ("'foo ' bar'", "foo ' bar"),  # single quote in the middle
+    ("foo bar'", "foo bar'"),  # unbalanced single quotes (no really enclosing)
+    ("'foo bar", "'foo bar"),  # unbalanced single quotes (no really enclosing)
+    ("'foo bar\"", "'foo bar\""),  # unbalanced mixed quotes
+    ("\"foo bar'", "\"foo bar'"),  # unbalanced mixed quotes
 ])
 def test_get_os_platform_alternative_formats(name, tmp_path):
     """Support different ways of building the string."""

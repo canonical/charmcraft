@@ -326,10 +326,10 @@ class UploadCommand(BaseCommand):
             help="The channel(s) to release to (this option can be indicated multiple times)")
 
     def _validate_template_is_handled(self, filepath):
-        """Check that the zip has not any file with the mark coming from the 'init' templates.
+        """Verify the zip does not have any file with the 'init' template TODO marker.
 
         This is important to avoid uploading low-quality charms that are just
-        bootstrapped and not paid enough attention.
+        bootstrapped and not corrected.
         """
         # we're already sure we can open it ok
         zf = zipfile.ZipFile(str(filepath))

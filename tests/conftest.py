@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import datetime
 import pathlib
 import tempfile
 
@@ -85,4 +86,5 @@ def config(tmp_path):
             for k, v in kwargs.items():
                 object.__setattr__(self, k, v)
 
-    return TestConfig(type='bundle', project=config_module.Project(dirpath=tmp_path))
+    project = config_module.Project(dirpath=tmp_path, started_at=datetime.datetime.utcnow())
+    return TestConfig(type='bundle', project=project)

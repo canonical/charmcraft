@@ -20,12 +20,12 @@ import logging
 import zipfile
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.utils import load_yaml
+from charmcraft.utils import load_yaml, create_manifest
 
 logger = logging.getLogger(__name__)
 
 # the minimum set of files in a bundle
-MANDATORY_FILES = {'bundle.yaml'}
+MANDATORY_FILES = {'bundle.yaml', 'manifest.yaml'}
 
 
 def build_zip(zippath, basedir, fpaths):
@@ -98,7 +98,12 @@ class PackCommand(BaseCommand):
                 "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command.")
 
         # pack everything
-        paths = get_paths_to_include(self.config)
-        zipname = self.config.project.dirpath / (bundle_name + '.zip')
-        build_zip(zipname, self.config.project.dirpath, paths)
+        project = self.config.project
+        manifest_filepath = create_manifest(project.dirpath, project.started_at)
+        try:
+            paths = get_paths_to_include(self.config)
+            zipname = project.dirpath / (bundle_name + '.zip')
+            build_zip(zipname, project.dirpath, paths)
+        finally:
+            manifest_filepath.unlink()
         logger.info("Created '%s'.", zipname)

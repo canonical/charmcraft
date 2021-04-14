@@ -16,6 +16,7 @@
 
 import os
 import sys
+from unittest.mock import patch
 
 import attr
 import pytest
@@ -52,10 +53,13 @@ def test_load_current_directory(create_config, monkeypatch):
         type: charm
     """)
     monkeypatch.chdir(tmp_path)
-    config = load(None)
+    with patch('datetime.datetime') as mock:
+        mock.utcnow.return_value = 'test_timestamp'
+        config = load(None)
     assert config.type == 'charm'
     assert config.project.dirpath == tmp_path
     assert config.project.config_provided
+    assert config.project.started_at == 'test_timestamp'
 
 
 def test_load_specific_directory_ok(create_config):

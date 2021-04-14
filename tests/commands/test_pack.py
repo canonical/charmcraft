@@ -72,6 +72,13 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     expected = "Created '{}'.".format(zipname)
     assert [expected] == [rec.message for rec in caplog.records]
 
+    # check the manifest is present and with particular values that depend on given info
+    manifest = yaml.safe_load(zf.read('manifest.yaml'))
+    assert manifest['charmcraft-started-at'] == config.project.started_at.isoformat() + "Z"
+
+    # verify that the manifest was not leftover in user's project
+    assert not (tmp_path / 'manifest.yaml').exists()
+
 
 def test_missing_bundle_file(tmp_path, config):
     """Can not build a bundle without bundle.yaml."""

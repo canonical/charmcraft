@@ -16,6 +16,7 @@
 
 """Central configuration management."""
 
+import datetime
 import pathlib
 from urllib.parse import urlparse
 
@@ -123,6 +124,7 @@ class Project:
 
     dirpath = attr.ib(default=None)
     config_provided = attr.ib(default=None)
+    started_at = attr.ib(default=None)
 
 
 @attr.s(kw_only=True, frozen=True)
@@ -196,7 +198,10 @@ def load(dirpath):
             adapt_validation_error(exc)
         config_provided = True
 
+    # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
+    now = datetime.datetime.utcnow()
+
     # inject project's config
-    content['project'] = Project(dirpath=dirpath, config_provided=config_provided)
+    content['project'] = Project(dirpath=dirpath, config_provided=config_provided, started_at=now)
 
     return Config(**content)

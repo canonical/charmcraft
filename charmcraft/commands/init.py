@@ -107,7 +107,7 @@ class InitCommand(BaseCommand):
             raise CommandError("{} is not a valid charm name".format(args.name))
 
         if args.series is None:
-            series = "[kubernetes]  # TEMPLATE-TODO: fix to an Ubuntu series if not using k8s"
+            series = "[kubernetes]  # TEMPLATE-TODO: change to an Ubuntu series if not using k8s"
         else:
             series = yaml.dump(args.series.split(","), default_flow_style=True)
 

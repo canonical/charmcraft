@@ -2,17 +2,17 @@
 
 Charmcraft supports Kubernetes operator development.
 
-Charmcraft enables collaboration between operator developers, and
-publication on [Charmhub](https://charmhub.io/), home of the Open Operator
+Charmcraft enables collaboration between charmed operator developers, and
+publication on [Charmhub](https://charmhub.io/), home of the Charmed Operator
 Collection.
 
 Use `charmcraft` to:
 
- * Init a new charm file structure
- * Build your operator into a charm for distribution
- * Register your charm name on Charmhub
- * Upload your charms to Charmhub
- * Release your charms into channels
+ * Init a new charmed operator file structure
+ * Build your operator into a charmed operator for distribution
+ * Register your charmed operator name on Charmhub
+ * Upload your charmed operators to Charmhub
+ * Release your charmed operators into channels
 
 You can use charmcraft with operators written in any language but we
 recommend the [Python Operator Framework on
@@ -20,7 +20,7 @@ Github](https://github.com/canonical/operator) which is also [on
 PyPI](https://pypi.org/project/ops/) for ease of development and
 collaboration.
 
-Charmcraft and the Python Operator Framework extend the operator pattern
+Charmcraft and the Charmed Operator Framework extend the operator pattern
 beyond Kubernetes with [universal
 operators](https://juju.is/universal-operators) that drive Linux and
 Windows apps. The universal operator pattern is very exciting for
@@ -64,7 +64,7 @@ support files.
 ## Build your charm
 
 With a correct `metadata.yaml` and with `ops` in `requirements.txt` you can
-build a charm with:
+build a charmed operator with:
 
 ```text
 $ charmcraft build
@@ -74,7 +74,7 @@ Created 'test-charm.charm'.
 `charmcraft build` will fetch additional files into the tree from PyPI based
 on `requirements.txt` and will compile modules using a virtualenv.
 
-The charm is just a zipfile with metadata and the operator code itself:
+The charmed operator is just a zipfile with metadata and the operator code itself:
 
 ```text
 $ unzip -l test-charm.charm
@@ -90,7 +90,7 @@ Archive:  test-charm.charm
 
 Now, if you have a Kubernetes cluster with the Juju OLM accessible you can
 directly `juju deploy <test-charm.charm>` to the cluster. You do not need to
-publish your operator on Charmhub, you can pass the charm file around
+publish your operator on Charmhub, you can pass the charmed operator file around
 directly to users, or for CI/CD purposes.
 
 ## Charmhub login and charm name reservations
@@ -107,7 +107,7 @@ Use `charmcraft login` and `charmcraft logout` to sign into Charmhub.
 
 You can register operator names in Charmhub with `charmcraft register
 <name>`. Many common names have been reserved, you are encouraged to discuss
-your interest in leading or collaborating on a charm in [Charmhub
+your interest in leading or collaborating on a charmed operator in [Charmhub
 Discourse](https://discourse.charmhub.io/).
 
 Charmhub naming policy is the principle of least surprise - a well-known
@@ -134,7 +134,7 @@ latest/edge
 ```
 
 Use `charmcraft upload` to get a new revision number for your freshly built
-charm, and `charmcraft release` to release a revision into any particular
+charmed operator, and `charmcraft release` to release a revision into any particular
 channel for your users.
 
 # Charmcraft source

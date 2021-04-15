@@ -19,6 +19,7 @@ import pathlib
 import tempfile
 
 import pytest
+import responses as responses_module
 
 from charmcraft import config as config_module
 
@@ -88,3 +89,10 @@ def config(tmp_path):
 
     project = config_module.Project(dirpath=tmp_path, started_at=datetime.datetime.utcnow())
     return TestConfig(type='bundle', project=project)
+
+
+@pytest.fixture
+def responses():
+    """Simple helper to use responses module as a fixture, for easier integration in tests."""
+    with responses_module.RequestsMock() as rsps:
+        yield rsps

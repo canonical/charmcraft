@@ -523,6 +523,26 @@ def test_upload_call_error_including_release(caplog, store_mock, config, tmp_pat
     ]
 
 
+def test_upload_charm_with_init_template_todo_token(tmp_path, config):
+    """Avoid uploading a charm that is not really ready to be shown to the world."""
+    # create a charm zip file all valid but with files having the token from
+    # the templates used by 'init' command
+    test_charm = tmp_path / 'mystuff.charm'
+    with zipfile.ZipFile(str(test_charm), 'w') as zf:
+        zf.writestr('metadata.yaml', yaml.dump({'name': 'mycharm'}).encode('ascii'))
+        zf.writestr('somefile.cfg', b"# TEMPLATE-TODO: please take a look to this.")
+        zf.writestr('file_ok.cfg', b"This is fine :).")
+        zf.writestr('othertainted.txt', b"# TEMPLATE-TODO: need to fix.")
+
+    args = Namespace(filepath=test_charm, release=[])
+    expected_msg = (
+        "Cannot upload the charm as it include the following files with a leftover "
+        "TEMPLATE-TODO token from when the project was created using the 'init' "
+        "command: somefile.cfg, othertainted.txt")
+    with pytest.raises(CommandError, match=expected_msg):
+        UploadCommand('group', config).run(args)
+
+
 # -- tests for list revisions command
 
 

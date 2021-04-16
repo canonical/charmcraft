@@ -25,7 +25,12 @@ import pytest
 import requests
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.commands.store.registry import assert_response_ok, OCIRegistry
+from charmcraft.commands.store.registry import (
+    MANIFEST_LISTS,
+    MANIFEST_V2_MIMETYPE,
+    OCIRegistry,
+    assert_response_ok,
+)
 
 
 # -- tests for response verifications
@@ -260,3 +265,170 @@ def test_hit_extra_parameters(responses):
     response = ocireg._hit('PUT', 'https://fakereg.com/api/stuff', data=b'test-payload')
     assert response == responses.calls[0].response
     assert responses.calls[0].request.body == b'test-payload'
+
+
+# -- tests for other OCIRegistry helpers: full url and checkers if stuff uploaded
+
+def test_get_fully_qualified_url():
+    """Check that the url is built correctly."""
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    url = ocireg.get_fully_qualified_url('sha256:thehash')
+    assert url == "fakereg.com/test-orga/test-image@sha256:thehash"
+
+
+def test_is_manifest_uploaded():
+    """Check the simple call with correct path to the generic verifier."""
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    with patch.object(ocireg, '_is_item_already_uploaded') as mock_verifier:
+        mock_verifier.return_value = 'whatever'
+        result = ocireg.is_manifest_already_uploaded('test-reference')
+    assert result == 'whatever'
+    url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
+    mock_verifier.assert_called_with(url)
+
+
+def test_is_item_uploaded_simple_yes(responses):
+    """Simple case for the item already uploaded."""
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    url = 'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference'
+    responses.add(responses.HEAD, url)
+
+    # try it
+    result = ocireg._is_item_already_uploaded(url)
+    assert result is True
+
+
+def test_is_item_uploaded_simple_no(responses):
+    """Simple case for the item NOT already uploaded."""
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    url = 'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference'
+    responses.add(responses.HEAD, url, status=404)
+
+    # try it
+    result = ocireg._is_item_already_uploaded(url)
+    assert result is False
+
+
+@pytest.mark.parametrize('redir_status', [302, 307])
+def test_is_item_uploaded_redirect(responses, redir_status):
+    """The verification is redirected to somewhere else."""
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    url1 = 'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference'
+    url2 = 'http://fakereg.com/real-check/test-orga/test-image/stuff/some-reference'
+    responses.add(responses.HEAD, url1, status=redir_status, headers={'Location': url2})
+    responses.add(responses.HEAD, url2, status=200)
+
+    # try it
+    result = ocireg._is_item_already_uploaded(url1)
+    assert result is True
+
+
+def test_is_item_uploaded_strange_response(responses, caplog):
+    """Unexpected response."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    url = 'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference'
+    responses.add(responses.HEAD, url, status=400, headers={'foo': 'bar'})
+
+    # try it
+    result = ocireg._is_item_already_uploaded(url)
+    assert result is False
+    expected = (
+        "Bad response when checking for uploaded "
+        "'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference': 400 "
+        "(headers={'Content-Type': 'text/plain', 'foo': 'bar'})")
+    assert expected in [rec.message for rec in caplog.records]
+
+
+# -- tests for the OCIRegistry manifest download
+
+def test_get_manifest_simple_v2(responses, caplog):
+    """Straightforward download of a v2 manifest."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
+    response_headers = {'Docker-Content-Digest': 'test-digest'}
+    response_content = {"schemaVersion": 2, "foo": "bar", "unicodecontent": "moño"}
+    responses.add(responses.GET, url, status=200, headers=response_headers, json=response_content)
+
+    # try it
+    sublist, digest, raw_manifest = ocireg.get_manifest('test-reference')
+    assert sublist is None
+    assert digest == 'test-digest'
+    assert raw_manifest == responses.calls[0].response.text  # must be exactly the same
+
+    log_lines = [rec.message for rec in caplog.records]
+    assert "Getting manifests list for test-reference" in log_lines
+    assert "Got the manifest directly, schema 2" in log_lines
+
+    assert responses.calls[0].request.headers['Accept'] == MANIFEST_LISTS
+
+
+def test_get_manifest_v1_and_redownload(responses, caplog):
+    """Get a v2 manifest after initially getting a v1."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    # first response with v1 manifest
+    url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
+    response_headers = {'Docker-Content-Digest': 'test-digest'}
+    response_content = {"schemaVersion": 1}
+    responses.add(responses.GET, url, status=200, headers=response_headers, json=response_content)
+    # second response with v2 manifest, note the changed digest!
+    url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
+    response_headers = {'Docker-Content-Digest': 'test-digest-for-real'}
+    response_content = {"schemaVersion": 2}
+    responses.add(responses.GET, url, status=200, headers=response_headers, json=response_content)
+
+    # try it
+    sublist, digest, raw_manifest = ocireg.get_manifest('test-reference')
+    assert sublist is None
+    assert digest == 'test-digest-for-real'
+    assert raw_manifest == responses.calls[1].response.text  # the second one
+
+    log_lines = [rec.message for rec in caplog.records]
+    assert "Getting manifests list for test-reference" in log_lines
+    assert "Got the manifest directly, schema 1" in log_lines
+    assert "Got the v2 manifest ok" in log_lines
+
+    assert responses.calls[0].request.headers['Accept'] == MANIFEST_LISTS
+    assert responses.calls[1].request.headers['Accept'] == MANIFEST_V2_MIMETYPE
+
+
+def test_get_manifest_simple_multiple(responses):
+    """Straightforward download of a multiple manifest."""
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
+    response_headers = {'Docker-Content-Digest': 'test-digest'}
+    lot_of_manifests = [{'manifest1': 'stuff'}, {'manifest2': 'morestuff', 'foo': 'bar'}]
+    response_content = {'manifests': lot_of_manifests}
+    responses.add(responses.GET, url, status=200, headers=response_headers, json=response_content)
+
+    # try it
+    sublist, digest, raw_manifest = ocireg.get_manifest('test-reference')
+    assert sublist == lot_of_manifests
+    assert digest == 'test-digest'
+    assert raw_manifest == responses.calls[0].response.text  # exact
+
+
+def test_get_manifest_bad_v2(responses):
+    """Couldn't get a v2 manifest."""
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+
+    url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
+    response_headers = {'Docker-Content-Digest': 'test-digest'}
+    response_content = {"schemaVersion": 1}
+    responses.add(responses.GET, url, status=200, headers=response_headers, json=response_content)
+
+    # second response with a bad manifest
+    url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
+    response_headers = {'Docker-Content-Digest': 'test-digest-for-real'}
+    response_content = {"sadly broken": ":("}
+    responses.add(responses.GET, url, status=200, headers=response_headers, json=response_content)
+
+    # try it
+    with pytest.raises(CommandError) as cm:
+        ocireg.get_manifest('test-reference')
+    assert str(cm.value) == "Manifest v2 requested but got something else: {'sadly broken': ':('}"

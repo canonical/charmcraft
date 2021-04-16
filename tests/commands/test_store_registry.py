@@ -260,3 +260,77 @@ def test_hit_extra_parameters(responses):
     response = ocireg._hit('PUT', 'https://fakereg.com/api/stuff', data=b'test-payload')
     assert response == responses.calls[0].response
     assert responses.calls[0].request.body == b'test-payload'
+
+
+# -- tests for other OCIRegistry helpers: full url and checkers if stuff uploaded
+
+def test_get_fully_qualified_url():
+    """Check that the url is built correctly."""
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    url = ocireg.get_fully_qualified_url('sha256:thehash')
+    assert url == "fakereg.com/test-orga/test-image@sha256:thehash"
+
+
+def test_is_manifest_uploaded():
+    """Check the simple call with correct path to the generic verifier."""
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    with patch.object(ocireg, '_is_item_already_uploaded') as mock_verifier:
+        mock_verifier.return_value = 'whatever'
+        result = ocireg.is_manifest_already_uploaded('test-reference')
+    assert result == 'whatever'
+    url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
+    mock_verifier.assert_called_with(url)
+
+
+def test_is_item_uploaded_simple_yes(responses):
+    """Simple case for the item already uploaded."""
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    url = 'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference'
+    responses.add(responses.HEAD, url)
+
+    # try it
+    result = ocireg._is_item_already_uploaded(url)
+    assert result is True
+
+
+def test_is_item_uploaded_simple_no(responses):
+    """Simple case for the item NOT already uploaded."""
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    url = 'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference'
+    responses.add(responses.HEAD, url, status=404)
+
+    # try it
+    result = ocireg._is_item_already_uploaded(url)
+    assert result is False
+
+
+@pytest.mark.parametrize('redir_status', [302, 307])
+def test_is_item_uploaded_redirect(responses, redir_status):
+    """The verification is redirected to somewhere else."""
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    url1 = 'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference'
+    url2 = 'http://fakereg.com/real-check/test-orga/test-image/stuff/some-reference'
+    responses.add(responses.HEAD, url1, status=redir_status, headers={'Location': url2})
+    responses.add(responses.HEAD, url2, status=200)
+
+    # try it
+    result = ocireg._is_item_already_uploaded(url1)
+    assert result is True
+
+
+def test_is_item_uploaded_strange_response(responses, caplog):
+    """Unexpected response."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    url = 'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference'
+    responses.add(responses.HEAD, url, status=400, headers={'foo': 'bar'})
+
+    # try it
+    result = ocireg._is_item_already_uploaded(url)
+    assert result is False
+    expected = (
+        "Bad response when checking for uploaded "
+        "'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference': 400 "
+        "(headers={'Content-Type': 'text/plain', 'foo': 'bar'})")
+    assert expected in [rec.message for rec in caplog.records]

@@ -115,3 +115,38 @@ class OCIRegistry:
             response = requests.request(method, url, headers=headers, **kwargs)
 
         return response
+
+    def get_fully_qualified_url(self, digest):
+        """Return the fully qualified URL univocally specifying the element in the registry."""
+        return "{}/{}/{}@{}".format(self.server, self.orga, self.name, digest)
+
+    def _is_item_already_uploaded(self, url):
+        """Generic verification for uploaded items.
+
+        If the item is uploaded, return its digest (else None).
+        """
+        response = self._hit('HEAD', url)
+
+        if response.status_code == 200:
+            # item is there, done!
+            uploaded = True
+        elif response.status_code == 404:
+            # confirmed item is NOT there
+            uploaded = False
+        else:
+            # something else is going on, log what we have and return False so at least
+            # we can continue with the upload
+            logger.debug(
+                "Bad response when checking for uploaded %r: %r (headers=%s)",
+                url, response.status_code, response.headers)
+            uploaded = False
+        return uploaded
+
+    def is_manifest_already_uploaded(self, reference):
+        """Verify if the manifest is already uploaded, using a generic reference.
+
+        If yes, return its digest.
+        """
+        logger.debug("Checking if manifest is already uploaded")
+        url = self._get_url("manifests/{}".format(reference))
+        return self._is_item_already_uploaded(url)

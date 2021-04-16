@@ -26,6 +26,7 @@ import requests
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.registry import (
+    ImageHandler,
     MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
     OCIRegistry,
@@ -432,3 +433,44 @@ def test_get_manifest_bad_v2(responses):
     with pytest.raises(CommandError) as cm:
         ocireg.get_manifest('test-reference')
     assert str(cm.value) == "Manifest v2 requested but got something else: {'sadly broken': ':('}"
+
+
+# -- tests for the ImageHandler 'get_destination_url' functionality
+
+@pytest.fixture
+def mocked_imagehandler():
+    """Provide an ImageHandler with a mocked registry.
+
+    This is to isolate the use of the registry from the internal behaviour.
+    """
+    im = ImageHandler('test-orga', 'test-name')
+    with patch.object(im, 'dst_registry', autospec=True):
+        yield im
+
+
+def test_imagehandler_getdestinationurl_ok(mocked_imagehandler):
+    """Get the destination URL ok."""
+    dst_registry = mocked_imagehandler.dst_registry
+    dst_registry.is_manifest_already_uploaded.return_value = True
+
+    manifest_info = 'dontcare', 'test-digest', 'dontcare'  # (sublist, digest, raw_manifest)
+    dst_registry.get_manifest.return_value = manifest_info
+
+    dst_registry.get_fully_qualified_url.return_value = 'test-final-url'
+
+    # call and check final result
+    result = mocked_imagehandler.get_destination_url('test-reference')
+    assert result == 'test-final-url'
+
+    # check the registry was called properly
+    dst_registry.is_manifest_already_uploaded.assert_called_with('test-reference')
+    dst_registry.get_manifest.assert_called_with('test-reference')
+    dst_registry.get_fully_qualified_url.assert_called_with('test-digest')
+
+
+def test_imagehandler_getdestinationurl_missing(mocked_imagehandler):
+    """The indicated reference does not exist in the registry."""
+    mocked_imagehandler.dst_registry.is_manifest_already_uploaded.return_value = False
+    expected_error = "The 'test-reference' image does not exist in the destination registry"
+    with pytest.raises(CommandError, match=expected_error):
+        mocked_imagehandler.get_destination_url('test-reference')

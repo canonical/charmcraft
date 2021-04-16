@@ -181,3 +181,28 @@ class OCIRegistry:
             logger.debug("Got the v2 manifest ok")
             digest = response.headers['Docker-Content-Digest']
         return (None, digest, response.text)
+
+
+class PublicDockerhubRegistry(OCIRegistry):
+    """Hardcoded Dockerhub registry without special credentials."""
+
+    def __init__(self, organization, image_name):
+        super().__init__("registry.hub.docker.com", organization, image_name)
+
+
+class ImageHandler:
+    """Provide specific functionalities around images."""
+
+    def __init__(self, organization, image_name):
+        self.dst_registry = PublicDockerhubRegistry(organization, image_name)
+
+    def get_destination_url(self, reference):
+        """Get the fully qualified URL in the destination registry for a tag/digest reference."""
+        if not self.dst_registry.is_manifest_already_uploaded(reference):
+            raise CommandError(
+                "The {!r} image does not exist in the destination registry".format(reference))
+
+        # need to actually get the manifest, because this is what we'll end up getting the v2 one
+        _, digest, _ = self.dst_registry.get_manifest(reference)
+        final_fqu = self.dst_registry.get_fully_qualified_url(digest)
+        return final_fqu

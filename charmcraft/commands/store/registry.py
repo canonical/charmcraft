@@ -184,7 +184,7 @@ class OCIRegistry:
 
 
 class PublicDockerhubRegistry(OCIRegistry):
-    """Hardcoded Dockerhub registry without special credentials."""
+    """Dockerhub registry without special credentials."""
 
     def __init__(self, organization, image_name):
         super().__init__("registry.hub.docker.com", organization, image_name)

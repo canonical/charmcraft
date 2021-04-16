@@ -42,8 +42,9 @@ from .store import Store
 
 logger = logging.getLogger('charmcraft.commands.store')
 
-# entity types
+# some types
 EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
+ResourceType = namedtuple("ResourceType", "file oci_image")(file="file", oci_image="oci-image")
 
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
@@ -1093,7 +1094,7 @@ class ListResourcesCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('charm_name', metavar='resource-name', help="The name of the charm")
+        parser.add_argument('charm_name', metavar='charm-name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -1153,8 +1154,14 @@ class UploadResourceCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
+        resource_filepath = parsed_args.filepath
+        resource_type = ResourceType.file
+        logger.debug("Uploading resource directly from file %s", resource_filepath)
+
         result = store.upload_resource(
-            parsed_args.charm_name, parsed_args.resource_name, parsed_args.filepath)
+            parsed_args.charm_name, parsed_args.resource_name,
+            resource_type, resource_filepath)
+
         if result.ok:
             logger.info(
                 "Revision %s created of resource %r for charm %r",
@@ -1175,7 +1182,7 @@ class ListResourceRevisionsCommand(BaseCommand):
 
         For example:
 
-           $ charmcraft resource-revisions
+           $ charmcraft resource-revisions my-charm my-resource
            Revision    Created at     Size
            1           2020-11-15   183151
 

@@ -296,7 +296,7 @@ def test_manifest_simple_ok(tmp_path):
         'charmcraft-version': __version__,
         'bases': [
             {
-                'name': 'SuperUbuntu',
+                'name': 'superubuntu',
                 'channel': '40.10',
                 'architectures': ['SomeRISC'],
             }

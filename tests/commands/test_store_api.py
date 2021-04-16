@@ -300,10 +300,48 @@ def test_upload_resources_endpoint(config):
 
     with patch.object(store, '_upload') as mock:
         mock.return_value = test_results
-        result = store.upload_resource('test-charm', 'test-resource', 'test-filepath')
+        result = store.upload_resource(
+            'test-charm', 'test-resource', 'test-type', 'test-filepath')
     expected_endpoint = '/v1/charm/test-charm/resources/test-resource/revisions'
-    mock.assert_called_once_with(expected_endpoint, 'test-filepath')
+    mock.assert_called_once_with(
+        expected_endpoint, 'test-filepath', extra_fields={'type': 'test-type'})
     assert result == test_results
+
+
+def test_upload_including_extra_parameters(client_mock, caplog, config):
+    """Verify that the upload includes extra parameters if given."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    store = Store(config.charmhub)
+
+    # the first response, for when pushing bytes
+    test_upload_id = 'test-upload-id'
+    client_mock.push.return_value = test_upload_id
+
+    # the second response, for telling the store it was pushed
+    test_status_url = 'https://store.c.c/status'
+    client_mock.post.return_value = {'status-url': test_status_url}
+
+    # the third response, status ok (note the patched UPLOAD_ENDING_STATUSES below)
+    test_revision = 123
+    test_status_ok = 'test-status'
+    status_response = {
+        'revisions': [{'status': test_status_ok, 'revision': test_revision, 'errors': None}]}
+    client_mock.get.return_value = status_response
+
+    test_status_resolution = 'test-ok-or-not'
+    fake_statuses = {test_status_ok: test_status_resolution}
+    test_filepath = 'test-filepath'
+    test_endpoint = '/v1/test/revisions/endpoint/'
+    extra_fields = {'extra-key': '1', 'more': '2'}
+    with patch.dict('charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES', fake_statuses):
+        store._upload(test_endpoint, test_filepath, extra_fields=extra_fields)
+
+    # check all client calls
+    assert client_mock.mock_calls == [
+        call.push(test_filepath),
+        call.post(test_endpoint, {'upload-id': test_upload_id, 'extra-key': '1', 'more': '2'}),
+        call.get(test_status_url),
+    ]
 
 
 # -- tests for list revisions

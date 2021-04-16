@@ -109,11 +109,11 @@ def test_auth_simple(responses):
     """Simple authentication."""
     responses.add(
         responses.GET,
-        "http://auth.fakereg.com?service=test-service&scope=test-scope",
+        "https://auth.fakereg.com?service=test-service&scope=test-scope",
         json={'token': 'test-token'})
 
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
-    auth_info = dict(realm='http://auth.fakereg.com', service='test-service', scope='test-scope')
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    auth_info = dict(realm='https://auth.fakereg.com', service='test-service', scope='test-scope')
     token = ocireg._authenticate(auth_info)
     assert token == 'test-token'
     sent_auth_header = responses.calls[0].request.headers.get('Authorization')
@@ -126,12 +126,12 @@ def test_auth_with_credentials(caplog, responses):
 
     responses.add(
         responses.GET,
-        "http://auth.fakereg.com?service=test-service&scope=test-scope",
+        "https://auth.fakereg.com?service=test-service&scope=test-scope",
         json={'token': 'test-token'})
 
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
     ocireg.auth_encoded_credentials = "some encoded stuff"
-    auth_info = dict(realm='http://auth.fakereg.com', service='test-service', scope='test-scope')
+    auth_info = dict(realm='https://auth.fakereg.com', service='test-service', scope='test-scope')
     token = ocireg._authenticate(auth_info)
     assert token == 'test-token'
     sent_auth_header = responses.calls[0].request.headers.get('Authorization')
@@ -147,14 +147,14 @@ def test_hit_simple_initial_auth_ok(caplog, responses):
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
     # set the Registry with an initial token
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
     ocireg.auth_token = 'some auth token'
 
     # fake a 200 response
-    responses.add(responses.GET, 'http://fakereg.com/api/stuff')
+    responses.add(responses.GET, 'https://fakereg.com/api/stuff')
 
     # try it
-    response = ocireg._hit('GET', 'http://fakereg.com/api/stuff')
+    response = ocireg._hit('GET', 'https://fakereg.com/api/stuff')
     assert response == responses.calls[0].response
 
     # verify it authed ok
@@ -162,14 +162,14 @@ def test_hit_simple_initial_auth_ok(caplog, responses):
     assert sent_auth_header == "Bearer some auth token"
 
     # logged what it did
-    expected = "Hitting the registry: GET http://fakereg.com/api/stuff"
+    expected = "Hitting the registry: GET https://fakereg.com/api/stuff"
     assert [expected] == [rec.message for rec in caplog.records]
 
 
 def test_hit_simple_re_auth_ok(responses):
     """Simple GET but needing to re-authenticate."""
     # set the Registry
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
     ocireg.auth_token = 'some auth token'
 
     # need to set up two responses!
@@ -178,13 +178,13 @@ def test_hit_simple_re_auth_ok(responses):
     headers = {'Www-Authenticate': (
         'Bearer realm="https://auth.fakereg.com/token",'
         'service="fakereg.com",scope="repository:library/stuff:pull"')}
-    responses.add(responses.GET, 'http://fakereg.com/api/stuff', headers=headers, status=401)
-    responses.add(responses.GET, 'http://fakereg.com/api/stuff')
+    responses.add(responses.GET, 'https://fakereg.com/api/stuff', headers=headers, status=401)
+    responses.add(responses.GET, 'https://fakereg.com/api/stuff')
 
     # try it, isolating the re-authentication (tested separatedly above)
     with patch.object(ocireg, '_authenticate') as mock_auth:
         mock_auth.return_value = "new auth token"
-        response = ocireg._hit('GET', 'http://fakereg.com/api/stuff')
+        response = ocireg._hit('GET', 'https://fakereg.com/api/stuff')
     assert response == responses.calls[1].response
     mock_auth.assert_called_with({
         'realm': 'https://auth.fakereg.com/token',
@@ -202,45 +202,45 @@ def test_hit_simple_re_auth_ok(responses):
 
 def test_hit_simple_re_auth_problems(responses):
     """Bad response from the re-authentication process."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
 
     # set only one response, a 401 which is broken and all will end there
     headers = {'Www-Authenticate': 'broken header'}
-    responses.add(responses.GET, 'http://fakereg.com/api/stuff', headers=headers, status=401)
+    responses.add(responses.GET, 'https://fakereg.com/api/stuff', headers=headers, status=401)
 
     # try it, isolating the re-authentication (tested separatedly above)
     expected = (
         "Bad 401 response: Bearer not found; "
         "headers: {.*'Www-Authenticate': 'broken header'.*}")
     with pytest.raises(CommandError, match=expected):
-        ocireg._hit('GET', 'http://fakereg.com/api/stuff')
+        ocireg._hit('GET', 'https://fakereg.com/api/stuff')
 
 
 def test_hit_different_method(responses):
     """Simple request using something else than GET."""
     # set the Registry with an initial token
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
     ocireg.auth_token = 'some auth token'
 
     # fake a 200 response
-    responses.add(responses.POST, 'http://fakereg.com/api/stuff')
+    responses.add(responses.POST, 'https://fakereg.com/api/stuff')
 
     # try it
-    response = ocireg._hit('POST', 'http://fakereg.com/api/stuff')
+    response = ocireg._hit('POST', 'https://fakereg.com/api/stuff')
     assert response == responses.calls[0].response
 
 
 def test_hit_including_headers(responses):
     """A request including more headers."""
     # set the Registry with an initial token
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
     ocireg.auth_token = 'some auth token'
 
     # fake a 200 response
-    responses.add(responses.POST, 'http://fakereg.com/api/stuff')
+    responses.add(responses.POST, 'https://fakereg.com/api/stuff')
 
     # try it
-    response = ocireg._hit('POST', 'http://fakereg.com/api/stuff', headers={'FOO': 'bar'})
+    response = ocireg._hit('POST', 'https://fakereg.com/api/stuff', headers={'FOO': 'bar'})
     assert response == responses.calls[0].response
 
     # check that it sent the requested header AND the automatic auth one
@@ -251,12 +251,12 @@ def test_hit_including_headers(responses):
 
 def test_hit_extra_parameters(responses):
     """The request can include extra parameters."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
 
     # fake a 200 response
-    responses.add(responses.PUT, 'http://fakereg.com/api/stuff')
+    responses.add(responses.PUT, 'https://fakereg.com/api/stuff')
 
     # try it
-    response = ocireg._hit('PUT', 'http://fakereg.com/api/stuff', data=b'test-payload')
+    response = ocireg._hit('PUT', 'https://fakereg.com/api/stuff', data=b'test-payload')
     assert response == responses.calls[0].response
     assert responses.calls[0].request.body == b'test-payload'

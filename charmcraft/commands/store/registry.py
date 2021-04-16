@@ -150,3 +150,37 @@ class OCIRegistry:
         logger.debug("Checking if manifest is already uploaded")
         url = self._get_url("manifests/{}".format(reference))
         return self._is_item_already_uploaded(url)
+
+    def get_manifest(self, reference):
+        """Get the manifest for the indicated reference."""
+        url = self._get_url("manifests/{}".format(reference))
+        logger.debug("Getting manifests list for %s", reference)
+        headers = {
+            'Accept': MANIFEST_LISTS,
+        }
+        response = self._hit('GET', url, headers=headers)
+        result = assert_response_ok(response)
+        digest = response.headers['Docker-Content-Digest']
+
+        # the response can be the manifest itself or a list of manifests (only determined
+        # by the presence of the 'manifests' key
+        manifests = result.get('manifests')
+
+        if manifests is not None:
+            return (manifests, digest, response.text)
+
+        logger.debug("Got the manifest directly, schema %s", result['schemaVersion'])
+        if result['schemaVersion'] != 2:
+            # get the manifest in v2! cannot request it directly, as that will avoid us
+            # getting the manifests list when available
+            headers = {
+                'Accept': MANIFEST_V2_MIMETYPE,
+            }
+            response = self._hit('GET', url, headers=headers)
+            result = assert_response_ok(response)
+            if result.get('schemaVersion') != 2:
+                raise CommandError(
+                    "Manifest v2 requested but got something else: {}".format(result))
+            logger.debug("Got the v2 manifest ok")
+            digest = response.headers['Docker-Content-Digest']
+        return (None, digest, response.text)

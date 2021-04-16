@@ -2309,7 +2309,7 @@ def test_uploadresource_call_ok(caplog, store_mock, config, tmp_path):
     UploadResourceCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
-        call.upload_resource('mycharm', 'myresource', test_resource)
+        call.upload_resource('mycharm', 'myresource', 'file', test_resource)
     ]
     expected = "Revision 7 created of resource 'myresource' for charm 'mycharm'"
     assert [expected] == [rec.message for rec in caplog.records]

@@ -115,3 +115,69 @@ class OCIRegistry:
             response = requests.request(method, url, headers=headers, **kwargs)
 
         return response
+
+    def get_fully_qualified_url(self, digest):
+        """Return the fully qualified URL univocally specifying the element in the registry."""
+        return "{}/{}/{}@{}".format(self.server, self.orga, self.name, digest)
+
+    def _is_item_already_uploaded(self, url):
+        """Verify if a generic item is uploaded."""
+        response = self._hit('HEAD', url)
+
+        if response.status_code == 200:
+            # item is there, done!
+            uploaded = True
+        elif response.status_code == 404:
+            # confirmed item is NOT there
+            uploaded = False
+        else:
+            # something else is going on, log what we have and return False so at least
+            # we can continue with the upload
+            logger.debug(
+                "Bad response when checking for uploaded %r: %r (headers=%s)",
+                url, response.status_code, response.headers)
+            uploaded = False
+        return uploaded
+
+    def is_manifest_already_uploaded(self, reference):
+        """Verify if the manifest is already uploaded, using a generic reference.
+
+        If yes, return its digest.
+        """
+        logger.debug("Checking if manifest is already uploaded")
+        url = self._get_url("manifests/{}".format(reference))
+        return self._is_item_already_uploaded(url)
+
+    def get_manifest(self, reference):
+        """Get the manifest for the indicated reference."""
+        url = self._get_url("manifests/{}".format(reference))
+        logger.debug("Getting manifests list for %s", reference)
+        headers = {
+            'Accept': MANIFEST_LISTS,
+        }
+        response = self._hit('GET', url, headers=headers)
+        result = assert_response_ok(response)
+        digest = response.headers['Docker-Content-Digest']
+
+        # the response can be the manifest itself or a list of manifests (only determined
+        # by the presence of the 'manifests' key
+        manifests = result.get('manifests')
+
+        if manifests is not None:
+            return (manifests, digest, response.text)
+
+        logger.debug("Got the manifest directly, schema %s", result['schemaVersion'])
+        if result['schemaVersion'] != 2:
+            # get the manifest in v2! cannot request it directly, as that will avoid us
+            # getting the manifests list when available
+            headers = {
+                'Accept': MANIFEST_V2_MIMETYPE,
+            }
+            response = self._hit('GET', url, headers=headers)
+            result = assert_response_ok(response)
+            if result.get('schemaVersion') != 2:
+                raise CommandError(
+                    "Manifest v2 requested but got something else: {}".format(result))
+            logger.debug("Got the v2 manifest ok")
+            digest = response.headers['Docker-Content-Digest']
+        return (None, digest, response.text)

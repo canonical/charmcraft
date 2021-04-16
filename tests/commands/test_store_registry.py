@@ -432,10 +432,3 @@ def test_get_manifest_bad_v2(responses):
     with pytest.raises(CommandError) as cm:
         ocireg.get_manifest('test-reference')
     assert str(cm.value) == "Manifest v2 requested but got something else: {'sadly broken': ':('}"
-
-
-# -- tests for the ImageHandler 'get_destination_url' functionality
-
-def test_():
-    """."""
-    fixme

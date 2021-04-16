@@ -121,10 +121,7 @@ class OCIRegistry:
         return "{}/{}/{}@{}".format(self.server, self.orga, self.name, digest)
 
     def _is_item_already_uploaded(self, url):
-        """Generic verification for uploaded items.
-
-        If the item is uploaded, return its digest (else None).
-        """
+        """Verify if a generic item is uploaded."""
         response = self._hit('HEAD', url)
 
         if response.status_code == 200:

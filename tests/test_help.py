@@ -49,7 +49,12 @@ def test_aesthetic_args_options_msg(command, config):
     class FakeParser:
         """A fake to get the arguments added."""
 
+        def add_mutually_exclusive_group(self, *args, **kwargs):
+            """Return self, as it is used to add arguments too."""
+            return self
+
         def add_argument(self, *args, **kwargs):
+            """Verify that all commands have a correctly formatted help."""
             help_msg = kwargs.get('help')
             assert help_msg, "The help message must be present in each option"
             assert help_msg[0].isupper() and help_msg[-1] != '.'

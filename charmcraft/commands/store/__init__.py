@@ -1143,13 +1143,11 @@ def oci_image_spec(value):
         orga = 'library'
 
     # get the digest XOR tag
+    if '@' in value and ':' in value:
+        raise _BadOCIImageSpecError("Cannot specify both tag and digest")
     if '@' in value:
-        if ':' in value:
-            raise _BadOCIImageSpecError("Cannot specify both tag and digest")
         name, reference = value.split('@')
     elif ':' in value:
-        if '@' in value:
-            raise _BadOCIImageSpecError("Cannot specify both tag and digest")
         name, reference = value.split(':')
     else:
         name = value
@@ -1175,7 +1173,7 @@ class UploadResourceCommand(BaseCommand):
         The resource can be a file from your computer (use the '--filepath'
         option) or an OCI Image (use the '--image' option).
 
-        The OCI image description uses the [organization/]name[:reference]
+        The OCI image description uses the [organization/]name[:tag|@digest]
         form. The name is mandatory but organization and reference (a digest
         or a tag) are optional, defaulting to 'library' and 'latest'
         correspondingly.

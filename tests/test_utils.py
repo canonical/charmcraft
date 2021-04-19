@@ -235,7 +235,7 @@ def test_get_os_platform_linux(tmp_path):
     with patch('platform.machine', return_value='x86_64'):
         with patch('platform.system', return_value='Linux'):
             os_platform = get_os_platform(filepath)
-    assert os_platform.system == "Ubuntu"
+    assert os_platform.system == "ubuntu"
     assert os_platform.release == "20.04"
     assert os_platform.machine == "x86_64"
 
@@ -259,7 +259,7 @@ def test_get_os_platform_alternative_formats(name, tmp_path):
     filepath = (tmp_path / "os-release")
     filepath.write_text(dedent(
         """
-        NAME={}
+        ID={}
         VERSION_ID="20.04"
         """.format(source)
     ))
@@ -314,6 +314,18 @@ def test_manifest_architecture_translated(tmp_path, monkeypatch):
 
     saved = yaml.safe_load(result_filepath.read_text())
     assert saved['bases'][0]['architectures'] == ['nice_arch']
+
+
+def test_manifest_fields_from_strict_snap(tmp_path, monkeypatch):
+    """Fields found in a strict snap must be translated."""
+    os_platform = OSPlatform(system='Ubuntu Core', release='20', machine='amd64')
+    with patch('charmcraft.utils.get_os_platform', return_value=os_platform):
+        result_filepath = create_manifest(tmp_path, datetime.datetime.now())
+
+    saved = yaml.safe_load(result_filepath.read_text())
+    base = saved['bases'][0]
+    assert base['name'] == 'ubuntu'
+    assert base['channel'] == '20.04'
 
 
 def test_manifest_dont_overwrite(tmp_path):

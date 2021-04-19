@@ -175,7 +175,7 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
                 if value[0] == value[-1] and value[0] in ('"', "'"):
                     value = value[1:-1]
                 os_release[key] = value
-            system = os_release.get("NAME", system)
+            system = os_release.get("ID", system)
             release = os_release.get("VERSION_ID", release)
 
     return OSPlatform(system=system, release=release, machine=machine)
@@ -192,13 +192,21 @@ def create_manifest(basedir, started_at):
     # we integrate lifecycle lib in future branches
     architectures = [ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)]
 
+    # XXX Facundo 2021-04-19: these are temporary translations until charmcraft
+    # changes to be a "classic" snap
+    name_translation = {'ubuntu core': 'ubuntu'}
+    channel_translation = {'20': '20.04'}
+    name = os_platform.system.lower()
+    name = name_translation.get(name, name)
+    channel = channel_translation.get(os_platform.release, os_platform.release)
+
     content = {
         'charmcraft-version': __version__,
         'charmcraft-started-at': started_at.isoformat() + "Z",
         'bases': [
             {
-                'name': os_platform.system.lower(),
-                'channel': os_platform.release,
+                'name': name,
+                'channel': channel,
                 'architectures': architectures,
             }
         ],

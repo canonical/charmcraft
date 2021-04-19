@@ -92,6 +92,17 @@ def test_missing_bundle_file(tmp_path, config):
         "Missing or invalid main bundle file: '{}'.".format(tmp_path / 'bundle.yaml'))
 
 
+def test_missing_other_mandatory_file(tmp_path, config, bundle_yaml):
+    """Can not build a bundle without any of the mandatory files."""
+    bundle_yaml(name='testbundle')
+    config.set(type='bundle')
+
+    # build without a README!
+    with pytest.raises(CommandError) as cm:
+        PackCommand('group', config).run(noargs)
+    assert str(cm.value) == "Missing mandatory file: {}.".format(tmp_path / 'README.md')
+
+
 def test_missing_name_in_bundle(tmp_path, bundle_yaml, config):
     """Can not build a bundle without name."""
     config.set(type='bundle')

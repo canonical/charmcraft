@@ -194,7 +194,7 @@ def create_manifest(basedir, started_at):
 
     # XXX Facundo 2021-04-19: these are temporary translations until charmcraft
     # changes to be a "classic" snap
-    name_translation = {'ubuntu core': 'ubuntu'}
+    name_translation = {'ubuntu-core': 'ubuntu'}
     channel_translation = {'20': '20.04'}
     name = os_platform.system.lower()
     name = name_translation.get(name, name)

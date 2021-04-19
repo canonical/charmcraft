@@ -240,6 +240,29 @@ def test_get_os_platform_linux(tmp_path):
     assert os_platform.machine == "x86_64"
 
 
+def test_get_os_platform_strict_snaps(tmp_path):
+    """Utilize an /etc/os-release file to determine platform, core-20 values."""
+    # explicitly add commented and empty lines, for parser robustness
+    filepath = (tmp_path / "os-release")
+    filepath.write_text(dedent(
+        """
+        NAME="Ubuntu Core"
+        VERSION="20"
+        ID=ubuntu-core
+        PRETTY_NAME="Ubuntu Core 20"
+        VERSION_ID="20"
+        HOME_URL="https://snapcraft.io/"
+        BUG_REPORT_URL="https://bugs.launchpad.net/snappy/"
+        """
+    ))
+    with patch('platform.machine', return_value='x86_64'):
+        with patch('platform.system', return_value='Linux'):
+            os_platform = get_os_platform(filepath)
+    assert os_platform.system == "ubuntu-core"
+    assert os_platform.release == "20"
+    assert os_platform.machine == "x86_64"
+
+
 @pytest.mark.parametrize('name', [
     ('"foo bar"', 'foo bar'),  # what's normally found
     ('foo bar', 'foo bar'),  # no quotes
@@ -318,7 +341,7 @@ def test_manifest_architecture_translated(tmp_path, monkeypatch):
 
 def test_manifest_fields_from_strict_snap(tmp_path, monkeypatch):
     """Fields found in a strict snap must be translated."""
-    os_platform = OSPlatform(system='Ubuntu Core', release='20', machine='amd64')
+    os_platform = OSPlatform(system='ubuntu-core', release='20', machine='amd64')
     with patch('charmcraft.utils.get_os_platform', return_value=os_platform):
         result_filepath = create_manifest(tmp_path, datetime.datetime.now())
 

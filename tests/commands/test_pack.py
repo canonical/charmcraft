@@ -57,8 +57,10 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     """A simple happy story."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    # mandatory files (other thant the automatically provided manifest)
     content = bundle_yaml(name='testbundle')
     config.set(type='bundle')
+    (tmp_path / 'README.md').write_text("test readme")
 
     # build!
     PackCommand('group', config).run(noargs)
@@ -68,6 +70,7 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     zf = zipfile.ZipFile(str(zipname))  # str() for Py3.5 support
     assert 'charmcraft.yaml' not in [x.filename for x in zf.infolist()]
     assert zf.read('bundle.yaml') == content.encode('ascii')
+    assert zf.read('README.md') == b"test readme"
 
     expected = "Created '{}'.".format(zipname)
     assert [expected] == [rec.message for rec in caplog.records]

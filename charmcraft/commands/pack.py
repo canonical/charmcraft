@@ -25,7 +25,7 @@ from charmcraft.utils import load_yaml, create_manifest
 logger = logging.getLogger(__name__)
 
 # the minimum set of files in a bundle
-MANDATORY_FILES = {'bundle.yaml', 'manifest.yaml'}
+MANDATORY_FILES = {'bundle.yaml', 'manifest.yaml', 'README.md'}
 
 
 def build_zip(zippath, basedir, fpaths):

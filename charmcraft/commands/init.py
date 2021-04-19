@@ -22,7 +22,6 @@ import pwd
 import re
 from datetime import date
 
-import yaml
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import get_templates_environment, make_executable
 

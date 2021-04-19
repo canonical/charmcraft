@@ -71,6 +71,15 @@ def adapt_validation_error(error):
     raise CommandError(msg)
 
 
+@format_checker.checks('architecture', raises=ValueError)
+def check_architectures(value):
+    """Check the base architectures are valid charm-supported architectures."""
+    if isinstance(value, str):
+        if value in ["amd64", "arm64"]:
+            return True
+    raise ValueError("must be a valid architecture (e.g. amd64, arm64)")
+
+
 @format_checker.checks('url', raises=ValueError)
 def check_url(value):
     """Check that the URL has at least scheme and net location."""
@@ -105,6 +114,73 @@ class CharmhubConfig:
         return cls(**source)
 
 
+@attr.s(kw_only=True, frozen=True)
+class BaseConfig:
+    """Configuration for all Charmhub related options."""
+
+    name = attr.ib(validator=attr.validators.instance_of(str))
+    channel = attr.ib(validator=attr.validators.instance_of(str))
+    architectures = attr.ib(default=attr.Factory(list), validator=attr.validators.deep_iterable(
+        member_validator=attr.validators.instance_of(str),
+        iterable_validator=attr.validators.instance_of(list)))
+
+    @classmethod
+    def from_dict(cls, source):
+        """Build from a raw dict."""
+        # Ensure channel is treated as string if interpreted as number, e.g. 20.04.
+        channel = str(source.pop("channel"))
+
+        return cls(**source, channel=channel)
+
+
+@attr.s(kw_only=True, frozen=True)
+class BuildonRunonBaseConfig:
+    """Configuration for all Charmhub related options."""
+
+    build_on = attr.ib(default=attr.Factory(list))
+    run_on = attr.ib(default=attr.Factory(list))
+
+    @classmethod
+    def from_dict(cls, source):
+        """Build from a raw dict."""
+        build_on = list()
+        run_on = list()
+
+        if "build-on" in source or "run-on" in source:
+            # Long-form syntax for explicit build-on/run-on scenarios.
+            for build_base in source.get("build-on", list()):
+                build_on.append(BaseConfig.from_dict(build_base))
+
+            for run_base in source.get("run-on", list()):
+                run_on.append(BaseConfig.from_dict(run_base))
+        else:
+            # Short-form syntax which implies matching build-on/run-on.
+            short_form_base = BaseConfig.from_dict(source)
+            build_on.append(short_form_base)
+            run_on.append(short_form_base)
+
+        return cls(build_on=build_on, run_on=run_on)
+
+
+@attr.s(kw_only=True, frozen=True)
+class BasesConfig:
+    """Configures for bases and build-on/run-on pairs."""
+
+    buildon_runons = attr.ib(default=attr.Factory(list))
+
+    @classmethod
+    def unmarshal(cls, sources):
+        """Convert short-form / long-form bases into long form."""
+        if not isinstance(sources, list):
+            raise ValueError("bases must be a list")
+
+        buildon_runons = list()
+        for source in sources:
+            buildon_runons.append(BuildonRunonBaseConfig.from_dict(source))
+
+        return cls(buildon_runons=buildon_runons)
+
+
 class BasicPrime(tuple):
     """Hold the list of files to include, specified under parts/bundle/prime configs.
 
@@ -133,6 +209,7 @@ class Config:
 
     charmhub = attr.ib(default={}, converter=CharmhubConfig.from_dict)
     parts = attr.ib(default={}, converter=BasicPrime.from_dict)
+    bases = attr.ib(default=[], converter=BasesConfig.unmarshal)
     type = attr.ib(default=None)
 
     # this item is provided by the code itself, not the user, as convenience for the
@@ -142,6 +219,24 @@ class Config:
 
 CONFIG_SCHEMA = {
     'type': 'object',
+    'definitions': {
+        'base': {
+            'type': 'object',
+            'properties': {
+                'name': {'type': 'string'},
+                'channel': {"oneOf": [{'type': 'string'}, {'type': 'number'}]},
+                'architectures': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'string',
+                        'format': 'architecture'
+                    }
+                }
+            },
+            'additionalProperties': False,
+            'required': ['name', 'channel']
+        }
+    },
     'properties': {
         'type': {'type': 'string', 'enum': ['charm', 'bundle']},
         'charmhub': {
@@ -151,6 +246,38 @@ CONFIG_SCHEMA = {
                 'storage_url': {'type': 'string', 'format': 'url'},
             },
             'additionalProperties': False,
+        },
+        'bases': {
+            'type': 'array',
+            'items': {
+                "oneOf": [
+                    {
+                        '$ref': '#/definitions/base',
+                        'description': 'short form bases',
+                    },
+                    {
+                        'type': 'object',
+                        'description': 'long form bases',
+                        'properties': {
+                            'build-on': {
+                                'type': 'array',
+                                'items': {
+                                    '$ref': '#/definitions/base',
+
+                                }
+                            },
+                            'run-on': {
+                                'type': 'array',
+                                'items': {
+                                    '$ref': '#/definitions/base',
+
+                                }
+                            }
+                        },
+                        'additionalProperties': False
+                    }
+                ]
+            }
         },
         'parts': {
             'type': 'object',

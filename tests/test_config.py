@@ -23,7 +23,10 @@ import pytest
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
+    BaseConfig,
+    BasesConfig,
     BasicPrime,
+    BuildonRunonBaseConfig,
     CharmhubConfig,
     check_relative_paths,
     check_url,
@@ -397,3 +400,79 @@ def test_basicprime_empty():
         }
     })
     assert config == ()
+
+
+def test_optional_bases():
+    """Test optionally empty bases."""
+    config = BasesConfig.unmarshal([])
+    assert config == BasesConfig(buildon_runons=[])
+
+
+def test_short_form_bases():
+    """Test short-form base configurations."""
+    config = BasesConfig.unmarshal([{'name': 'test-base', 'channel': 'test-channel'}])
+
+    base = BaseConfig(name='test-base', channel='test-channel', architectures=[])
+
+    assert config == BasesConfig(buildon_runons=[
+        BuildonRunonBaseConfig(build_on=[base], run_on=[base])])
+
+
+def test_long_form_bases():
+    """Test long-form base configurations."""
+    build_on_base = {
+        'name': 'build-base', 'channel': 'build-channel', 'architectures': ['amd64']
+    }
+    run_on_base = {
+        'name': 'runtime-base', 'channel': 'runtime-channel', 'architectures': ['arm64']
+    }
+
+    config = BasesConfig.unmarshal(
+        [{'build-on': [build_on_base], 'run-on': [run_on_base]}]
+    )
+
+    assert config == BasesConfig(buildon_runons=[
+        BuildonRunonBaseConfig(
+            build_on=[
+                BaseConfig(name="build-base", channel="build-channel", architectures=["amd64"])
+            ],
+            run_on=[
+                BaseConfig(name="runtime-base", channel="runtime-channel", architectures=["arm64"])
+            ])])
+
+
+def test_mixed_form_bases():
+    """Test list of mixed short-form and long-form base configurations."""
+    build_on_base = {
+        'name': 'build-base', 'channel': 'build-channel', 'architectures': ['amd64']
+    }
+    run_on_base = {
+        'name': 'runtime-base', 'channel': 'runtime-channel', 'architectures': ['arm64']
+    }
+    short_base = {
+        'name': 'short-base', 'channel': 'short-channel', 'architectures': ['arm64']
+    }
+
+    config = BasesConfig.unmarshal(
+        [
+            {'build-on': [build_on_base], 'run-on': [run_on_base]},
+            short_base,
+        ]
+    )
+
+    assert config == BasesConfig(buildon_runons=[
+        BuildonRunonBaseConfig(
+            build_on=[
+                BaseConfig(name="build-base", channel="build-channel", architectures=["amd64"])
+            ],
+            run_on=[
+                BaseConfig(name="runtime-base", channel="runtime-channel", architectures=["arm64"])
+            ]),
+        BuildonRunonBaseConfig(
+            build_on=[
+                BaseConfig(name="short-base", channel="short-channel", architectures=["arm64"])
+            ],
+            run_on=[
+                BaseConfig(name="short-base", channel="short-channel", architectures=["arm64"])
+            ]),
+    ])

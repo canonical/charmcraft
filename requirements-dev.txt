@@ -5,3 +5,4 @@ flake8
 ops >= 0.8.0
 pydocstyle
 pytest
+responses

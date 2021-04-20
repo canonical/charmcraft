@@ -25,7 +25,7 @@ from charmcraft.utils import load_yaml, create_manifest
 logger = logging.getLogger(__name__)
 
 # the minimum set of files in a bundle
-MANDATORY_FILES = {'bundle.yaml', 'manifest.yaml'}
+MANDATORY_FILES = {'bundle.yaml', 'manifest.yaml', 'README.md'}
 
 
 def build_zip(zippath, basedir, fpaths):
@@ -44,10 +44,12 @@ def get_paths_to_include(config):
     dirpath = config.project.dirpath
     allpaths = set()
 
-    # all mandatory files, which must exist (currently only bundles.yaml is mandatory, and
-    # it's verified before)
+    # all mandatory files
     for fname in MANDATORY_FILES:
-        allpaths.add(dirpath / fname)
+        fpath = dirpath / fname
+        if not fpath.exists():
+            raise CommandError("Missing mandatory file: {}.".format(fpath))
+        allpaths.add(fpath)
 
     # the extra files (relative paths)
     for spec in config.parts:

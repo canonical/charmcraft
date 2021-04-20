@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # Copyright {{ year }} {{ author }}
 # See LICENSE file for licensing details.
+#
+# Learn more at: https://juju.is/docs/sdk
 
 """Charm the service.
 
@@ -33,20 +35,36 @@ class {{ class_name }}(CharmBase):
         self._stored.set_default(things=[])
 
     def _on_install(self, _):
-        # Perform any install steps and report status
-        self.unit.status = ActiveStatus("Active and running")
+        """Perform any install steps and report status."""
+        # Learn more about statuses in the SDK docs:
+        # https://juju.is/docs/sdk/constructs#heading--statuses
+        self.unit.status = ActiveStatus()
 
     def _on_config_changed(self, _):
-        # Note: you need to uncomment the example in the config.yaml file for this to work (ensure
-        # to not just leave the example, but adapt to your configuration needs)
+        """Just an example to show how to deal with changed configuration.
+
+        TEMPLATE-TODO: change this example to suit your needs.
+        If you don't need to handle config, you can remove this method,
+        the hook created in __init__.py for it, the corresponding test,
+        and the config.py file.
+
+        Learn more about config at https://juju.is/docs/sdk/config
+        """
         current = self.config["thing"]
         if current not in self._stored.things:
             logger.debug("found a new thing: %r", current)
             self._stored.things.append(current)
 
     def _on_fortune_action(self, event):
-        # Note: you need to uncomment the example in the actions.yaml file for this to work (ensure
-        # to not just leave the example, but adapt to your needs for actions commands)
+        """Just an example to show how to receive actions.
+
+        TEMPLATE-TODO: change this example to suit your needs.
+        If you don't need to handle actions, you can remove this method,
+        the hook created in __init__.py for it, the corresponding test,
+        and the actions.py file.
+
+        Learn more about actions at https://juju.is/docs/sdk/actions
+        """
         fail = event.params["fail"]
         if fail:
             event.fail(fail)

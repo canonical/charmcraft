@@ -18,9 +18,11 @@
 
 import ast
 import hashlib
+import json
 import logging
 import pathlib
 import string
+import tempfile
 import textwrap
 import zipfile
 from collections import namedtuple
@@ -39,14 +41,20 @@ from charmcraft.utils import (
 )
 
 from .store import Store
+from .registry import ImageHandler
 
 logger = logging.getLogger('charmcraft.commands.store')
 
-# entity types
+# some types
 EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
+ResourceType = namedtuple("ResourceType", "file oci_image")(file="file", oci_image="oci-image")
 
 LibData = namedtuple(
     'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
+OCIImageSpec = namedtuple('OCIImageSpec', 'organization name reference')
+
+# The token used in the 'init' command (as bytes for easier comparison)
+INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
 
 
 def get_name_from_metadata():
@@ -322,9 +330,31 @@ class UploadCommand(BaseCommand):
             '--release', action='append',
             help="The channel(s) to release to (this option can be indicated multiple times)")
 
+    def _validate_template_is_handled(self, filepath):
+        """Verify the zip does not have any file with the 'init' template TODO marker.
+
+        This is important to avoid uploading low-quality charms that are just
+        bootstrapped and not corrected.
+        """
+        # we're already sure we can open it ok
+        zf = zipfile.ZipFile(str(filepath))
+
+        tainted_filenames = []
+        for name in zf.namelist():
+            content = zf.read(name)
+            if INIT_TEMPLATE_TOKEN in content:
+                tainted_filenames.append(name)
+
+        if tainted_filenames:
+            raise CommandError(
+                "Cannot upload the charm as it include the following files with a leftover "
+                "TEMPLATE-TODO token from when the project was created using the 'init' "
+                "command: {}".format(", ".join(tainted_filenames)))
+
     def run(self, parsed_args):
         """Run the command."""
         name = get_name_from_zip(parsed_args.filepath)
+        self._validate_template_is_handled(parsed_args.filepath)
         store = Store(self.config.charmhub)
         result = store.upload(name, parsed_args.filepath)
         if result.ok:
@@ -1068,7 +1098,7 @@ class ListResourcesCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('charm_name', metavar='resource-name', help="The name of the charm")
+        parser.add_argument('charm_name', metavar='charm-name', help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -1094,6 +1124,40 @@ class ListResourcesCommand(BaseCommand):
             logger.info(line)
 
 
+class _BadOCIImageSpecError(CommandError):
+    """Subclass to provide a specific error for a bad OCI Image specification."""
+
+    def __init__(self, base_error):
+        super().__init__(base_error + " (the format is [organization/]name[:tag|@digest]).")
+
+
+def oci_image_spec(value):
+    """Build a full OCI image spec, using defaults for non specified parts."""
+    # separate the organization
+    if '/' in value:
+        if value.count('/') > 1:
+            raise _BadOCIImageSpecError(
+                "The registry server cannot be specified as part of the image")
+        orga, value = value.split('/')
+    else:
+        orga = 'library'
+
+    # get the digest XOR tag
+    if '@' in value and ':' in value:
+        raise _BadOCIImageSpecError("Cannot specify both tag and digest")
+    if '@' in value:
+        name, reference = value.split('@')
+    elif ':' in value:
+        name, reference = value.split(':')
+    else:
+        name = value
+        reference = 'latest'
+
+    if not name:
+        raise _BadOCIImageSpecError("The image name is mandatory")
+    return OCIImageSpec(organization=orga, name=name, reference=reference)
+
+
 class UploadResourceCommand(BaseCommand):
     """Upload a resource to Charmhub."""
 
@@ -1106,8 +1170,13 @@ class UploadResourceCommand(BaseCommand):
         specified charm. This charm needs to have the resource declared
         in its metadata (in a preoviously uploaded to Charmhub revision).
 
-        to the packaging standard. This command will finish successfully
-        once the package is approved by Charmhub.
+        The resource can be a file from your computer (use the '--filepath'
+        option) or an OCI Image (use the '--image' option).
+
+        The OCI image description uses the [organization/]name[:tag|@digest]
+        form. The name is mandatory but organization and reference (a digest
+        or a tag) are optional, defaulting to 'library' and 'latest'
+        correspondingly.
 
         Upload will take you through login if needed.
     """)
@@ -1121,15 +1190,47 @@ class UploadResourceCommand(BaseCommand):
         parser.add_argument(
             'resource_name', metavar='resource-name',
             help="The resource name")
-        parser.add_argument(
-            '--filepath', type=SingleOptionEnsurer(useful_filepath), required=True,
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument(
+            '--filepath', type=SingleOptionEnsurer(useful_filepath),
             help="The file path of the resource content to upload")
+        group.add_argument(
+            '--image', type=SingleOptionEnsurer(oci_image_spec),
+            help="The image specification with the [organization/]name[:tag|@digest] form")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
+
+        if parsed_args.filepath:
+            resource_filepath = parsed_args.filepath
+            resource_filepath_is_temp = False
+            resource_type = ResourceType.file
+            logger.debug("Uploading resource directly from file %s", resource_filepath)
+        elif parsed_args.image:
+            logger.debug("Uploading resource from image %s at Dockerhub", parsed_args.image)
+            ih = ImageHandler(parsed_args.image.organization, parsed_args.image.name)
+            final_resource_url = ih.get_destination_url(parsed_args.image.reference)
+            logger.debug("Resource URL: %s", final_resource_url)
+            resource_type = 'oci-image'
+
+            # create a JSON pointing to the unique image URL (to be uploaded to Charmhub)
+            resource_metadata = {
+                'ImageName': final_resource_url,
+            }
+            _, tname = tempfile.mkstemp(prefix='image-resource', suffix='.json')
+            resource_filepath = pathlib.Path(tname)
+            resource_filepath_is_temp = True
+            resource_filepath.write_text(json.dumps(resource_metadata))
+
         result = store.upload_resource(
-            parsed_args.charm_name, parsed_args.resource_name, parsed_args.filepath)
+            parsed_args.charm_name, parsed_args.resource_name,
+            resource_type, resource_filepath)
+
+        # clean the filepath if needed
+        if resource_filepath_is_temp:
+            resource_filepath.unlink()
+
         if result.ok:
             logger.info(
                 "Revision %s created of resource %r for charm %r",
@@ -1150,7 +1251,7 @@ class ListResourceRevisionsCommand(BaseCommand):
 
         For example:
 
-           $ charmcraft resource-revisions
+           $ charmcraft resource-revisions my-charm my-resource
            Revision    Created at     Size
            1           2020-11-15   183151
 

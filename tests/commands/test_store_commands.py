@@ -18,6 +18,7 @@
 
 import datetime
 import hashlib
+import json
 import logging
 import pathlib
 import zipfile
@@ -31,27 +32,29 @@ import yaml
 from charmcraft.config import CharmhubConfig
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
-    _get_lib_info,
     CreateLibCommand,
     EntityType,
     FetchLibCommand,
     ListLibCommand,
     ListNamesCommand,
-    ListResourcesCommand,
     ListResourceRevisionsCommand,
+    ListResourcesCommand,
     ListRevisionsCommand,
     LoginCommand,
     LogoutCommand,
+    OCIImageSpec,
     PublishLibCommand,
-    RegisterCharmNameCommand,
     RegisterBundleNameCommand,
+    RegisterCharmNameCommand,
     ReleaseCommand,
     StatusCommand,
     UploadCommand,
     UploadResourceCommand,
     WhoamiCommand,
+    _get_lib_info,
     get_name_from_metadata,
     get_name_from_zip,
+    oci_image_spec,
 )
 from charmcraft.commands.store.store import (
     Channel,
@@ -66,10 +69,10 @@ from charmcraft.commands.store.store import (
     User,
 )
 from charmcraft.utils import (
+    ResourceOption,
+    SingleOptionEnsurer,
     get_templates_environment,
     useful_filepath,
-    SingleOptionEnsurer,
-    ResourceOption,
 )
 from tests import factory
 
@@ -523,6 +526,26 @@ def test_upload_call_error_including_release(caplog, store_mock, config, tmp_pat
     ]
 
 
+def test_upload_charm_with_init_template_todo_token(tmp_path, config):
+    """Avoid uploading a charm that is not really ready to be shown to the world."""
+    # create a charm zip file all valid but with files having the token from
+    # the templates used by 'init' command
+    test_charm = tmp_path / 'mystuff.charm'
+    with zipfile.ZipFile(str(test_charm), 'w') as zf:
+        zf.writestr('metadata.yaml', yaml.dump({'name': 'mycharm'}).encode('ascii'))
+        zf.writestr('somefile.cfg', b"# TEMPLATE-TODO: please take a look to this.")
+        zf.writestr('file_ok.cfg', b"This is fine :).")
+        zf.writestr('othertainted.txt', b"# TEMPLATE-TODO: need to fix.")
+
+    args = Namespace(filepath=test_charm, release=[])
+    expected_msg = (
+        "Cannot upload the charm as it include the following files with a leftover "
+        "TEMPLATE-TODO token from when the project was created using the 'init' "
+        "command: somefile.cfg, othertainted.txt")
+    with pytest.raises(CommandError, match=expected_msg):
+        UploadCommand('group', config).run(args)
+
+
 # -- tests for list revisions command
 
 
@@ -717,7 +740,7 @@ def test_release_options_resource(config):
     assert isinstance(action.type, ResourceOption)
 
 
-@pytest.mark.parametrize('args_validation', [
+@pytest.mark.parametrize('sysargs,expected_parsed', [
     (['somename', '--channel=stable', '--revision=33'], ('somename', 33, ['stable'], [])),
     (['somename', '--channel=stable', '-r', '33'], ('somename', 33, ['stable'], [])),
     (['somename', '-c', 'stable', '--revision=33'], ('somename', 33, ['stable'], [])),
@@ -728,9 +751,8 @@ def test_release_options_resource(config):
     (['somename', '-c=beta', '-r=3', '--resource=foo:15', '--resource=bar:99'],
         ('somename', 3, ['beta'], [ResourceOption('foo', 15), ResourceOption('bar', 99)])),
 ])
-def test_release_parameters_ok(config, args_validation):
+def test_release_parameters_ok(config, sysargs, expected_parsed):
     """Control of different combination of sane parameters."""
-    sysargs, expected_parsed = args_validation
     cmd = ReleaseCommand('group', config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
@@ -2266,8 +2288,8 @@ def test_resources_ordered_and_grouped(caplog, store_mock, config):
 
 # -- tests for upload resources command
 
-def test_uploadresource_options_resourcefile_type(config):
-    """The --resource-file option implies a set of validations."""
+def test_uploadresource_options_filepath_type(config):
+    """The --filepath option implies a set of validations."""
     cmd = UploadResourceCommand('group', config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
@@ -2276,23 +2298,126 @@ def test_uploadresource_options_resourcefile_type(config):
     assert action.type.converter is useful_filepath
 
 
-def test_uploadresource_call_ok(caplog, store_mock, config, tmp_path):
+def test_uploadresource_options_image_type(config):
+    """The --image option implies a set of validations."""
+    cmd = UploadResourceCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == 'image']
+    assert isinstance(action.type, SingleOptionEnsurer)
+    assert action.type.converter is oci_image_spec
+
+
+@pytest.mark.parametrize("sysargs", [
+    ('c', 'r', '--filepath=fpath'),
+    ('c', 'r', '--image=x'),
+])
+def test_uploadresource_options_good_combinations(tmp_path, config, sysargs, monkeypatch):
+    """Check the specific rules for filepath and image/[registry] good combinations."""
+    # fake the file for filepath
+    (tmp_path / 'fpath').touch()
+    monkeypatch.chdir(tmp_path)
+
+    cmd = UploadResourceCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    try:
+        parser.parse_args(sysargs)
+    except SystemExit:
+        pytest.fail("Argument parsing expected to succeed but failed")
+
+
+@pytest.mark.parametrize("sysargs", [
+    ('c', 'r'),  # filepath XOR image needs to be specified
+    ('c', 'r', '--filepath=fpath', '--image=y'),  # can't specify both
+])
+def test_uploadresource_options_bad_combinations(config, sysargs, tmp_path, monkeypatch):
+    """Check the specific rules for filepath and image/[registry] bad combinations."""
+    # fake the file for filepath
+    (tmp_path / 'fpath').touch()
+    monkeypatch.chdir(tmp_path)
+
+    cmd = UploadResourceCommand('group', config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    with pytest.raises(SystemExit):
+        parsed_args = parser.parse_args(sysargs)
+        cmd.parsed_args_post_verification(parser, parsed_args)
+
+
+def test_uploadresource_filepath_call_ok(caplog, store_mock, config, tmp_path):
     """Simple upload, success result."""
-    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload_resource.return_value = store_response
 
     test_resource = tmp_path / 'mystuff.bin'
     test_resource.write_text("sample stuff")
-    args = Namespace(charm_name='mycharm', resource_name='myresource', filepath=test_resource)
+    args = Namespace(
+        charm_name='mycharm', resource_name='myresource', filepath=test_resource, image=None)
     UploadResourceCommand('group', config).run(args)
 
     assert store_mock.mock_calls == [
-        call.upload_resource('mycharm', 'myresource', test_resource)
+        call.upload_resource('mycharm', 'myresource', 'file', test_resource)
     ]
-    expected = "Revision 7 created of resource 'myresource' for charm 'mycharm'"
-    assert [expected] == [rec.message for rec in caplog.records]
+    expected = [
+        "Uploading resource directly from file {}".format(test_resource),
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+    assert test_resource.exists()  # provided by the user, don't touch it
+
+
+def test_uploadresource_image_call_ok(caplog, store_mock, config, tmp_path):
+    """Simple upload, success result."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    # hack into the store mock to save for later the uploaded resource bytes
+    uploaded_resource_content = None
+    uploaded_resource_filepath = None
+    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
+
+    def interceptor(charm_name, resource_name, resource_type, resource_filepath):
+        """Intercept the call to save real content (and validate params)."""
+        nonlocal uploaded_resource_content, uploaded_resource_filepath
+
+        uploaded_resource_filepath = resource_filepath
+        uploaded_resource_content = resource_filepath.read_text()
+
+        assert charm_name == 'mycharm'
+        assert resource_name == 'myresource'
+        assert resource_type == 'oci-image'
+        return store_response
+    store_mock.upload_resource.side_effect = interceptor
+
+    spec = OCIImageSpec('test-orga', 'test-image', 'test-tag')
+    args = Namespace(charm_name='mycharm', resource_name='myresource', filepath=None, image=spec)
+
+    with patch('charmcraft.commands.store.ImageHandler', autospec=True) as im_class_mock:
+        im_class_mock.return_value = im_mock = MagicMock()
+        im_mock.get_destination_url.return_value = 'test-final-url'
+        UploadResourceCommand('group', config).run(args)
+
+    # validate how ImageHandler was used
+    assert im_class_mock.mock_calls == [
+        call('test-orga', 'test-image'),
+        call().get_destination_url('test-tag'),
+    ]
+    assert im_mock.mock_calls == [
+        call.get_destination_url('test-tag')
+    ]
+
+    # check that the uploaded file is fine and that was cleaned
+    assert json.loads(uploaded_resource_content) == {"ImageName": "test-final-url"}
+    assert not uploaded_resource_filepath.exists()  # temporary! has to be cleaned
+
+    expected = [
+        "Uploading resource from image {} at Dockerhub".format(spec),
+        "Resource URL: test-final-url",
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
 
 
 def test_uploadresource_call_error(caplog, store_mock, config, tmp_path):
@@ -2317,6 +2442,37 @@ def test_uploadresource_call_error(caplog, store_mock, config, tmp_path):
         "- broken: other long error text",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+@pytest.mark.parametrize('source,expected', [
+    ('testname', OCIImageSpec('library', 'testname', 'latest')),
+    ('testorga/testname', OCIImageSpec('testorga', 'testname', 'latest')),
+    ('testname:sometag', OCIImageSpec('library', 'testname', 'sometag')),
+    ('testorga/testname:sometag', OCIImageSpec('testorga', 'testname', 'sometag')),
+    ('testname@somedigest', OCIImageSpec('library', 'testname', 'somedigest')),
+    ('testorga/testname@somedigest', OCIImageSpec('testorga', 'testname', 'somedigest')),
+])
+def test_uploadresource_ociimagespec_ok(source, expected):
+    """Check oci image spec format, different good combinations."""
+    result = oci_image_spec(source)
+    assert result == expected
+
+
+@pytest.mark.parametrize('source,partial_error_message', [
+    ('testname:tag@digest', "Cannot specify both tag and digest"),
+    ('testname@digest:tag', "Cannot specify both tag and digest"),
+    ('@digest:tag', "Cannot specify both tag and digest"),
+    ('', "The image name is mandatory"),
+    (':tag', "The image name is mandatory"),
+    ('server/testorga/name', "The registry server cannot be specified as part of the image"),
+])
+def test_uploadresource_ociimagespec_error(source, partial_error_message):
+    """Check oci image spec format, different bad combinations."""
+    error_message = partial_error_message + (
+        " (the format is [organization/]name[:tag|@digest]).")
+    with pytest.raises(CommandError) as cm:
+        oci_image_spec(source)
+    assert str(cm.value) == error_message
 
 
 # -- tests for list resource revisions command

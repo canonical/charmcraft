@@ -57,8 +57,10 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     """A simple happy story."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    # mandatory files (other thant the automatically provided manifest)
     content = bundle_yaml(name='testbundle')
     config.set(type='bundle')
+    (tmp_path / 'README.md').write_text("test readme")
 
     # build!
     PackCommand('group', config).run(noargs)
@@ -68,6 +70,7 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     zf = zipfile.ZipFile(str(zipname))  # str() for Py3.5 support
     assert 'charmcraft.yaml' not in [x.filename for x in zf.infolist()]
     assert zf.read('bundle.yaml') == content.encode('ascii')
+    assert zf.read('README.md') == b"test readme"
 
     expected = "Created '{}'.".format(zipname)
     assert [expected] == [rec.message for rec in caplog.records]
@@ -87,6 +90,17 @@ def test_missing_bundle_file(tmp_path, config):
         PackCommand('group', config).run(noargs)
     assert str(cm.value) == (
         "Missing or invalid main bundle file: '{}'.".format(tmp_path / 'bundle.yaml'))
+
+
+def test_missing_other_mandatory_file(tmp_path, config, bundle_yaml):
+    """Can not build a bundle without any of the mandatory files."""
+    bundle_yaml(name='testbundle')
+    config.set(type='bundle')
+
+    # build without a README!
+    with pytest.raises(CommandError) as cm:
+        PackCommand('group', config).run(noargs)
+    assert str(cm.value) == "Missing mandatory file: {}.".format(tmp_path / 'README.md')
 
 
 def test_missing_name_in_bundle(tmp_path, bundle_yaml, config):

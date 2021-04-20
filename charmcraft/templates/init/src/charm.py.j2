@@ -15,14 +15,14 @@ develop a new k8s charm using the Operator Framework:
 import logging
 
 from ops.charm import CharmBase
-from ops.main import main
 from ops.framework import StoredState
+from ops.main import main
 from ops.model import ActiveStatus
 
 logger = logging.getLogger(__name__)
 
 
-class {{ class_name }}(CharmBase):
+class {{class_name}}(CharmBase):
     """Charm the service."""
 
     _stored = StoredState()
@@ -39,8 +39,8 @@ class {{ class_name }}(CharmBase):
 
         TEMPLATE-TODO: change this example to suit your needs.
         You'll need to specify the right entrypoint and environment
-        configuration for your specific workload. Tip: you can see the 
-        standard entrypoint of an existing container using `docker-inspect`
+        configuration for your specific workload. Tip: you can see the
+        standard entrypoint of an existing container using docker inspect
 
         Learn more about Pebble layers at https://github.com/canonical/pebble
         """
@@ -56,9 +56,7 @@ class {{ class_name }}(CharmBase):
                     "summary": "httpbin",
                     "command": "gunicorn -b 0.0.0.0:80 httpbin:app -k gevent",
                     "startup": "enabled",
-                    "environment": {
-                        "thing": self.model.config["thing"]
-                    },
+                    "environment": {"thing": self.model.config["thing"]},
                 }
             },
         }
@@ -103,4 +101,4 @@ class {{ class_name }}(CharmBase):
 
 
 if __name__ == "__main__":
-    main({{ class_name }})
+    main({{class_name}})

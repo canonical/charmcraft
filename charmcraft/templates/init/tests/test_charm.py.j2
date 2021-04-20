@@ -37,34 +37,27 @@ class TestCharm(unittest.TestCase):
 
     def test_httpbin_pebble_ready(self):
         # Check the initial Pebble plan is empty
-        initial_plan = self.harness.get_container_pebble_plan('httpbin')
-        self.assertEqual(initial_plan.to_yaml(), '{}\n')
+        initial_plan = self.harness.get_container_pebble_plan("httpbin")
+        self.assertEqual(initial_plan.to_yaml(), "{}\n")
         # Expected plan after Pebble ready with default config
         expected_plan = {
-            "summary": "httpbin layer",
-            "description": "pebble config layer for httpbin",
             "services": {
                 "httpbin": {
                     "override": "replace",
                     "summary": "httpbin",
                     "command": "gunicorn -b 0.0.0.0:80 httpbin:app -k gevent",
                     "startup": "enabled",
-                    "environment": {
-                        "thing": "🎁"
-                    },
+                    "environment": {"thing": "🎁"},
                 }
             },
         }
-        # Get the container from model and create a Mock PebbleReadyEvent
-        pebble_ready_event = Mock(params={
-            "workload": self.harness.model.unit.get_container("httpbin")
-        })
-        self.harness.charm._on_httpbin_pebble_ready(pebble_ready_event)
-        # Check the PebbleReadyEvent handler adds the right layer
-        pebble_ready_event.workload.add_layer.assert_called_with(
-            "httpbin", expected_plan, combine=True
-        )
-        # Check that the handler starts the worklaod
-        pebble_ready_event.workload.autostart.assert_called_once()
+        # Get the httpbin container from the model that
+        container = self.harness.model.unit.get_container("httpbin")
+        # Emit the PebbleReadyEvent carrying the httpbin container
+        self.harness.charm.on.httpbin_pebble_ready.emit(container)
+        # Get the plan now we've run PebbleReady
+        updated_plan = self.harness.get_container_pebble_plan("httpbin").to_dict()
+        # Check we've got the plan we expected
+        self.assertEqual(expected_plan, updated_plan)
         # Ensure we set an ActiveStatus with no message
         self.assertEqual(self.harness.model.unit.status, ActiveStatus())

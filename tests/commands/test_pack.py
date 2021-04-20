@@ -67,7 +67,7 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
 
     # check
     zipname = tmp_path / 'testbundle.zip'
-    zf = zipfile.ZipFile(str(zipname))  # str() for Py3.5 support
+    zf = zipfile.ZipFile(zipname)
     assert 'charmcraft.yaml' not in [x.filename for x in zf.infolist()]
     assert zf.read('bundle.yaml') == content.encode('ascii')
     assert zf.read('README.md') == b"test readme"
@@ -299,7 +299,7 @@ def test_zipbuild_simple(tmp_path):
     zip_filepath = tmp_path / 'testresult.zip'
     build_zip(zip_filepath, tmp_path, [testfile1, testfile2])
 
-    zf = zipfile.ZipFile(str(zip_filepath))  # str() for Py3.5 support
+    zf = zipfile.ZipFile(zip_filepath)
     assert sorted(x.filename for x in zf.infolist()) == ['bar/baz.txt', 'foo.txt']
     assert zf.read('foo.txt') == b"123\x00456"
     assert zf.read('bar/baz.txt') == b"mo\xc3\xb1o"
@@ -315,7 +315,7 @@ def test_zipbuild_symlink_simple(tmp_path):
     zip_filepath = tmp_path / 'testresult.zip'
     build_zip(zip_filepath, tmp_path, [testfile1, testfile2])
 
-    zf = zipfile.ZipFile(str(zip_filepath))  # str() for Py3.5 support
+    zf = zipfile.ZipFile(zip_filepath)
     assert sorted(x.filename for x in zf.infolist()) == ['link.txt', 'real.txt']
     assert zf.read('real.txt') == b"123\x00456"
     assert zf.read('link.txt') == b"123\x00456"
@@ -336,6 +336,6 @@ def test_zipbuild_symlink_outside(tmp_path):
     zip_filepath = tmp_path / 'testresult.zip'
     build_zip(zip_filepath, build_dir, [testfile2])
 
-    zf = zipfile.ZipFile(str(zip_filepath))  # str() for Py3.5 support
+    zf = zipfile.ZipFile(zip_filepath)
     assert sorted(x.filename for x in zf.infolist()) == ['link.txt']
     assert zf.read('link.txt') == b"123\x00456"

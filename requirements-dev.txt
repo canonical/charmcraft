@@ -2,7 +2,8 @@
 
 coverage
 flake8
-ops >= 0.8.0
+# ops >= 0.8.0
+https://codeload.github.com/canonical/operator/zip/23a39afeb36820cf0326d7d66dca423a9c675cf5
 pydocstyle
 pytest
 responses

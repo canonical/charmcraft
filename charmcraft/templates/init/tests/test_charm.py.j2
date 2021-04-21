@@ -57,5 +57,8 @@ class TestCharm(unittest.TestCase):
         updated_plan = self.harness.get_container_pebble_plan("httpbin").to_dict()
         # Check we've got the plan we expected
         self.assertEqual(expected_plan, updated_plan)
+        # Check the service was started
+        service = self.harness.model.unit.get_container("httpbin").get_service("httpbin")
+        self.assertTrue(service.is_running())
         # Ensure we set an ActiveStatus with no message
         self.assertEqual(self.harness.model.unit.status, ActiveStatus())

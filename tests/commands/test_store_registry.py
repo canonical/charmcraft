@@ -414,8 +414,9 @@ def test_get_manifest_simple_multiple(responses):
     assert raw_manifest == responses.calls[0].response.text  # exact
 
 
-def test_get_manifest_bad_v2(responses):
+def test_get_manifest_bad_v2(responses, caplog):
     """Couldn't get a v2 manifest."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
     ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
 
     url = 'https://fakereg.com/v2/test-orga/test-image/manifests/test-reference'
@@ -432,7 +433,9 @@ def test_get_manifest_bad_v2(responses):
     # try it
     with pytest.raises(CommandError) as cm:
         ocireg.get_manifest('test-reference')
-    assert str(cm.value) == "Manifest v2 requested but got something else: {'sadly broken': ':('}"
+    assert str(cm.value) == "Manifest v2 not found for the indicated reference."
+    expected = "Got something else when asking for a v2 manifest: {'sadly broken': ':('}"
+    assert expected in [rec.message for rec in caplog.records]
 
 
 # -- tests for the ImageHandler 'get_destination_url' functionality

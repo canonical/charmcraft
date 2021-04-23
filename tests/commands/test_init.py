@@ -23,7 +23,7 @@ import pytest
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
 from charmcraft.utils import S_IXALL
-from tests.test_infra import get_python_filepaths, pep8_test, pep257_test
+from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
 
 
 def test_init_pep257(tmp_path, config):

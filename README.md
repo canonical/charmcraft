@@ -81,7 +81,8 @@ Created 'test-charm.charm'.
 `charmcraft build` will fetch additional files into the tree from PyPI based
 on `requirements.txt` and will compile modules using a virtualenv.
 
-The charmed operator is just a zipfile with metadata and the operator code itself:
+The charmed operator is just a zipfile with metadata and the operator code
+itself:
 
 ```text
 $ unzip -l test-charm.charm
@@ -96,7 +97,7 @@ Archive:  test-charm.charm
 ```
 
 Now, if you have a Kubernetes cluster with the Juju OLM accessible you can issue
-`juju deploy <test-charm.charm> --resource httpbin-image=kennethreitz/httpbin`.
+`juju deploy ./my-new-charm.charm --resource httpbin-image=kennethreitz/httpbin`.
 You do not need to publish your operator on Charmhub, you can pass the charmed
 operator file around directly to users, or for CI/CD purposes.
 
@@ -113,8 +114,9 @@ Use `charmcraft login` and `charmcraft logout` to sign into Charmhub.
 ## Charmhub name registration
 
 You can register operator names in Charmhub with `charmcraft register <name>`.
-Many common names have been reserved, you are encouraged to discuss your interest
-in leading or collaborating on a charmed operator in [Charmhub Discourse](https://discourse.charmhub.io/).
+Many common names have been reserved, you are encouraged to discuss your
+interest in leading or collaborating on a charmed operator in
+[Charmhub Discourse](https://discourse.charmhub.io/).
 
 Charmhub naming policy is the principle of least surprise - a well-known
 name should map to an operator that most people would expect to get for that
@@ -140,8 +142,8 @@ latest/edge
 ```
 
 Use `charmcraft upload` to get a new revision number for your freshly built
-charmed operator, and `charmcraft release` to release a revision into any particular
-channel for your users.
+charmed operator, and `charmcraft release` to release a revision into any
+particular channel for your users.
 
 # Charmcraft source
 

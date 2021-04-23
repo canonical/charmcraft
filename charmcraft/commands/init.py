@@ -74,11 +74,6 @@ class InitCommand(BaseCommand):
             "--author",
             help="The charm author; defaults to the current user name per GECOS")
         parser.add_argument(
-            "--series",
-            help=(
-                "A comma-separated list of supported platform series; "
-                "defaults to 'kubernetes' with a reminder to change it"))
-        parser.add_argument(
             "-f", "--force", action="store_true",
             help="Initialize even if the directory is not empty (will not overwrite files)")
 

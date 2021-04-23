@@ -23,7 +23,7 @@ import re
 from datetime import date
 
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.utils import get_templates_environment, make_executable
+from charmcraft.utils import make_executable, get_templates_environment
 
 logger = logging.getLogger(__name__)
 

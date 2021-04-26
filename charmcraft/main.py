@@ -18,6 +18,7 @@
 
 import argparse
 import logging
+import os
 import sys
 from collections import namedtuple
 
@@ -349,6 +350,10 @@ class Dispatcher:
 
 def main(argv=None):
     """Provide the main entry point."""
+    # Ensure PYTHONPATH doesn't leak to children processes if running as snap.
+    if "SNAP" in os.environ:
+        os.environ.pop("PYTHONPATH")
+
     message_handler.init(message_handler.NORMAL)
 
     if argv is None:

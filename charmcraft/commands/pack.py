@@ -29,13 +29,10 @@ MANDATORY_FILES = {'bundle.yaml', 'manifest.yaml', 'README.md'}
 
 
 def build_zip(zippath, basedir, fpaths):
-    """Build the final file.
-
-    Note we convert all paths to str to support Python 3.5.
-    """
-    zipfh = zipfile.ZipFile(str(zippath), 'w', zipfile.ZIP_DEFLATED)
+    """Build the final file."""
+    zipfh = zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED)
     for fpath in fpaths:
-        zipfh.write(str(fpath), str(fpath.relative_to(basedir)))
+        zipfh.write(fpath, fpath.relative_to(basedir))
     zipfh.close()
 
 

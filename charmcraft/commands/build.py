@@ -273,8 +273,7 @@ class Builder:
         logger.debug("Creating the package itself")
         zipname = metadata['name'] + '.charm'
         zipfh = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
-        buildpath_str = str(self.buildpath)  # os.walk does not support pathlib in 3.5
-        for dirpath, dirnames, filenames in os.walk(buildpath_str, followlinks=True):
+        for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
             dirpath = pathlib.Path(dirpath)
             for filename in filenames:
                 filepath = dirpath / filename
@@ -332,7 +331,7 @@ class Validator:
         if self.basedir not in filepath.parents:
             raise CommandError(
                 "Charm entry point must be inside the project: {!r}".format(str(filepath)))
-        if not os.access(str(filepath), os.X_OK):  # access does not support pathlib in 3.5
+        if not os.access(filepath, os.X_OK):
             raise CommandError(
                 "Charm entry point must be executable: {!r}".format(str(filepath)))
         return filepath
@@ -344,7 +343,7 @@ class Validator:
         """
         if filepaths is None:
             req = self.basedir / 'requirements.txt'
-            if req.exists() and os.access(str(req), os.R_OK):  # access doesn't support pathlib 3.5
+            if req.exists() and os.access(req, os.R_OK):
                 return [req]
             return []
 

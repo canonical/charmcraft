@@ -146,7 +146,7 @@ def useful_filepath(filepath):
     CommandError is raised if filepath is not a valid file or is not readable.
     """
     filepath = pathlib.Path(filepath).expanduser()
-    if not os.access(str(filepath), os.R_OK):  # access doesn't support pathlib in 3.5
+    if not os.access(filepath, os.R_OK):
         raise CommandError("Cannot access {!r}.".format(str(filepath)))
     if not filepath.is_file():
         raise CommandError("{!r} is not a file.".format(str(filepath)))

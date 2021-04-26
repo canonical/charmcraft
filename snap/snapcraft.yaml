@@ -52,11 +52,6 @@ apps:
   charmcraft:
     command: bin/python3 $SNAP/bin/charmcraft
     completer: completion.bash
-    plugs:
-      - home            # so it can acess files under the user's home
-      - removable-media # so it can access things in /media, etc. (manually connected)
-      - network         # so 'pip install' can download things
-      - desktop         # so the right default browser can be used
     environment:
       # help python pick up useful things from the base snap
       PYTHONPATH: /snap/core20/current/usr/lib/python3/dist-packages:$SNAP/lib
@@ -77,6 +72,8 @@ parts:
   # Classic core20 snaps require staged python.
   python3:
     plugin: nil
+    build-packages:
+      - python3-dev
     stage-packages:
       - libpython3-stdlib
       - libpython3.8-minimal
@@ -103,6 +100,9 @@ parts:
     # snapcraft uses venv, which doesn't pull in wheel (as opposed to virtualenv)
     # so then 'pip install PyYAML' gets cross.
     python-packages: [wheel]
+    build-environment:
+      - LDFLAGS: -L/usr/lib/python3.8
+      - CPPFLAGS: -I/usr/include/python3.8
     override-pull: |
       # do the usual pull stuff
       snapcraftctl pull

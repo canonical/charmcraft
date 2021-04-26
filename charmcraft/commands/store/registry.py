@@ -177,7 +177,7 @@ class OCIRegistry:
             result = assert_response_ok(response)
             if result.get('schemaVersion') != 2:
                 logger.debug("Got something else when asking for a v2 manifest: %s", result)
-                raise CommandError("Manifest v2 not found for the indicated reference.")
+                raise CommandError("Manifest v2 not found for {!r}.".format(reference))
             logger.debug("Got the v2 manifest ok")
             digest = response.headers['Docker-Content-Digest']
         return (None, digest, response.text)

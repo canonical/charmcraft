@@ -433,7 +433,7 @@ def test_get_manifest_bad_v2(responses, caplog):
     # try it
     with pytest.raises(CommandError) as cm:
         ocireg.get_manifest('test-reference')
-    assert str(cm.value) == "Manifest v2 not found for the indicated reference."
+    assert str(cm.value) == "Manifest v2 not found for 'test-reference'."
     expected = "Got something else when asking for a v2 manifest: {'sadly broken': ':('}"
     assert expected in [rec.message for rec in caplog.records]
 

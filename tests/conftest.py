@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
-import pathlib
 import tempfile
 
 import pytest
@@ -27,21 +26,6 @@ from charmcraft import config as config_module
 @pytest.fixture(autouse=True, scope="session")
 def tmpdir_under_tmpdir(tmpdir_factory):
     tempfile.tempdir = str(tmpdir_factory.getbasetemp())
-
-
-@pytest.fixture
-def tmp_path(tmp_path):
-    """Always present a pathlib's Path.
-
-    This is to avoid pytest using pythonlib2 in Python 3.5, which leads
-    to several slight differences in the tests.
-
-    This "middle layer fixture" has the same name of the pytest's fixture,
-    so when we drop Py 3.5 support we will be able to just remove this,
-    and all the tests automatically will use the standard one (no further
-    changes needed).
-    """
-    return pathlib.Path(str(tmp_path))
 
 
 @pytest.fixture

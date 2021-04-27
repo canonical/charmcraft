@@ -53,8 +53,6 @@ apps:
     command: bin/python3 $SNAP/bin/charmcraft
     completer: completion.bash
     environment:
-      # help python pick up useful things from the base snap
-      PYTHONPATH: /snap/core20/current/usr/lib/python3/dist-packages:$SNAP/lib
       # have the cache outside of the version dirs (avoids keeping N copies)
       XDG_CACHE_HOME: $SNAP_USER_COMMON/cache
       # same for config
@@ -72,6 +70,7 @@ parts:
   # Classic core20 snaps require staged python.
   python3:
     plugin: nil
+    source: snap-extras
     build-packages:
       - python3-dev
     stage-packages:
@@ -86,6 +85,9 @@ parts:
       - python3-setuptools
       - python3-venv
       - python3-wheel
+    override-build: |
+      snapcraftctl build
+      install -D -m 0755 sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
 
   charmcraft:
     after: [python3]

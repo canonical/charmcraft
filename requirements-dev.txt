@@ -2,7 +2,7 @@
 
 coverage
 flake8
-ops >= 0.8.0
+ops >= 1.2.0
 pydocstyle
 pytest
 responses

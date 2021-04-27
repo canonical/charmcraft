@@ -144,6 +144,14 @@ parts:
       - lib/appdirs-*.dist-info
       - lib/attr
       - lib/attrs-*.dist-info
+      - lib/certifi
+      - lib/certifi-*.dist-info
+      - lib/chardet
+      - lib/chardet-*.dist-info
+      - lib/_cffi_backend.*.so
+      - lib/cffi.libs
+      - lib/idna
+      - lib/idna-*.dist-info
       - lib/jsonschema
       - lib/jsonschema-*.dist-info
       - lib/macaroonbakery
@@ -161,14 +169,24 @@ parts:
       - lib/google
       - lib/humanize
       - lib/humanize-*.dist-info
+      - lib/jinja2
+      - lib/markupsafe
       - lib/protobuf-*.pth
       - lib/protobuf-*.dist-info
+      - lib/pyrsistent
+      - lib/pyrsistent-*.dist-info
+      - lib/requests
+      - lib/six.py
+      - lib/six-*.dist-info
       - lib/tabulate.py
       - lib/tabulate-*.dist-info
+      - lib/urllib3
+      - lib/urllib3-*.dist-info
       - lib/dateutil
       - lib/python_dateutil-*.dist-info
       - lib/requests_toolbelt
       - lib/requests_toolbelt-*.dist-info
+      - lib/yaml
       # this effectively means we're shipping pip and wheel twice (once above,
       # and once below), but untangling that is probably not worth it.
       - share/python-wheels

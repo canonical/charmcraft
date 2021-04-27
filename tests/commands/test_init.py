@@ -20,8 +20,6 @@ import sys
 from argparse import Namespace
 
 import pytest
-import yaml
-
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
 from charmcraft.utils import S_IXALL
@@ -53,6 +51,7 @@ def test_all_the_files(tmp_path, config):
     cmd.run(Namespace(name='my-charm', author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", series='k8s', force=False))
     assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
         ".flake8",
+        ".gitignore",
         ".jujuignore",
         "LICENSE",
         "README.md",
@@ -117,32 +116,3 @@ def test_tests(tmp_path, config):
     cmd.run(Namespace(name='my-charm', author="だれだれ", series='k8s', force=False))
 
     subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)
-
-
-def test_series_defaults(tmp_path, config):
-    """Check that series defaults to kubernetes including a TODO message."""
-    cmd = InitCommand('group', config)
-    # series default comes from the parsing itself
-    cmd.run(Namespace(name='my-charm', author="fred", series=None, force=False))
-
-    # verify the value is correct at a YAML level
-    metadata_filepath = tmp_path / "metadata.yaml"
-    metadata = yaml.safe_load(metadata_filepath.read_text())
-    assert metadata.get("series") == ['kubernetes']
-
-    # verify a TODO is added at a text level
-    for line in metadata_filepath.open('rt'):
-        if line.startswith('series'):
-            assert "# TEMPLATE-TODO" in line
-            break
-    else:
-        pytest.fail("ERROR, 'series' line not found")  # just in case
-
-
-def test_manual_overrides_defaults(tmp_path, config):
-    cmd = InitCommand('group', config)
-    cmd.run(Namespace(name='my-charm', author="fred", series='xenial,precise', force=False))
-
-    with (tmp_path / "metadata.yaml").open("rt", encoding="utf8") as f:
-        metadata = yaml.safe_load(f)
-    assert metadata.get("series") == ['xenial', 'precise']

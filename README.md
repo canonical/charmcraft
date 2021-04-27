@@ -8,11 +8,11 @@ Collection.
 
 Use `charmcraft` to:
 
- * Init a new charmed operator file structure
- * Build your operator into a charmed operator for distribution
- * Register your charmed operator name on Charmhub
- * Upload your charmed operators to Charmhub
- * Release your charmed operators into channels
+- Init a new charmed operator file structure
+- Build your operator into a charmed operator for distribution
+- Register your charmed operator name on Charmhub
+- Upload your charmed operators to Charmhub
+- Release your charmed operators into channels
 
 You can use charmcraft with operators written in any language but we
 recommend the [Python Operator Framework on
@@ -46,13 +46,20 @@ Use `charmcraft init` to create a new template charm operator file tree:
 ```bash
 $ mkdir my-new-charm; cd my-new-charm
 $ charmcraft init
-All done.
-There are some notes about things we think you should do.
-These are marked with ‘TODO:’, as is customary. Namely:
-      README.md: fill out the description
-      README.md: explain how to use the charm
+Charm operator package file and directory tree initialized.
+TODO:
+
+      README.md: Describe your charm in a few paragraphs of Markdown
+      README.md: Provide high-level usage, such as required config or relations
+   actions.yaml: change this example to suit your needs.
+    config.yaml: change this example to suit your needs.
   metadata.yaml: fill out the charm's description
   metadata.yaml: fill out the charm's summary
+  metadata.yaml: replace with containers for your workload (delete for non-k8s)
+  metadata.yaml: each container defined above must specify an oci-image resource
+   src/charm.py: change this example to suit your needs.
+   src/charm.py: change this example to suit your needs.
+   src/charm.py: change this example to suit your needs.
 ```
 
 You will now have all the essential files for a charmed operator, including
@@ -74,7 +81,8 @@ Created 'test-charm.charm'.
 `charmcraft build` will fetch additional files into the tree from PyPI based
 on `requirements.txt` and will compile modules using a virtualenv.
 
-The charmed operator is just a zipfile with metadata and the operator code itself:
+The charmed operator is just a zipfile with metadata and the operator code
+itself:
 
 ```text
 $ unzip -l test-charm.charm
@@ -88,15 +96,15 @@ Archive:  test-charm.charm
    812617                     84 files
 ```
 
-Now, if you have a Kubernetes cluster with the Juju OLM accessible you can
-directly `juju deploy <test-charm.charm>` to the cluster. You do not need to
-publish your operator on Charmhub, you can pass the charmed operator file around
-directly to users, or for CI/CD purposes.
+Now, if you have a Kubernetes cluster with the Juju OLM accessible you can issue
+`juju deploy ./my-new-charm.charm --resource httpbin-image=kennethreitz/httpbin`.
+You do not need to publish your operator on Charmhub, you can pass the charmed
+operator file around directly to users, or for CI/CD purposes.
 
 ## Charmhub login and charm name reservations
 
 [Charmhub](https://charmhub.io/) is the world's largest repository of
-operators.  It makes it easy to share and collaborate on operators. The
+operators. It makes it easy to share and collaborate on operators. The
 community are interested in operators for a very wide range of purposes,
 including infrastructure-as-code and legacy application management, and of
 course Kubernetes operators.
@@ -105,10 +113,10 @@ Use `charmcraft login` and `charmcraft logout` to sign into Charmhub.
 
 ## Charmhub name registration
 
-You can register operator names in Charmhub with `charmcraft register
-<name>`. Many common names have been reserved, you are encouraged to discuss
-your interest in leading or collaborating on a charmed operator in [Charmhub
-Discourse](https://discourse.charmhub.io/).
+You can register operator names in Charmhub with `charmcraft register <name>`.
+Many common names have been reserved, you are encouraged to discuss your
+interest in leading or collaborating on a charmed operator in
+[Charmhub Discourse](https://discourse.charmhub.io/).
 
 Charmhub naming policy is the principle of least surprise - a well-known
 name should map to an operator that most people would expect to get for that
@@ -134,8 +142,8 @@ latest/edge
 ```
 
 Use `charmcraft upload` to get a new revision number for your freshly built
-charmed operator, and `charmcraft release` to release a revision into any particular
-channel for your users.
+charmed operator, and `charmcraft release` to release a revision into any
+particular channel for your users.
 
 # Charmcraft source
 

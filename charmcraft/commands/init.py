@@ -22,8 +22,6 @@ import pwd
 import re
 from datetime import date
 
-import yaml
-
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import make_executable, get_templates_environment
 
@@ -76,11 +74,6 @@ class InitCommand(BaseCommand):
             "--author",
             help="The charm author; defaults to the current user name per GECOS")
         parser.add_argument(
-            "--series",
-            help=(
-                "A comma-separated list of supported platform series; "
-                "defaults to 'kubernetes' with a reminder to change it"))
-        parser.add_argument(
             "-f", "--force", action="store_true",
             help="Initialize even if the directory is not empty (will not overwrite files)")
 
@@ -106,17 +99,11 @@ class InitCommand(BaseCommand):
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
             raise CommandError("{} is not a valid charm name".format(args.name))
 
-        if args.series is None:
-            series = "[kubernetes]  # TEMPLATE-TODO: change to an Ubuntu series if not using k8s"
-        else:
-            series = yaml.dump(args.series.split(","), default_flow_style=True)
-
         context = {
             "name": args.name,
             "author": args.author,
             "year": date.today().year,
             "class_name": "".join(re.split(r"\W+", args.name.title())) + "Charm",
-            "series": series,
         }
 
         env = get_templates_environment('init')

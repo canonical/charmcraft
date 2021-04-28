@@ -197,3 +197,7 @@ parts:
       - "**/libssh.so.4.*"
       - "**/libwind.so.0"
       - "**/libwind.so.0.*"
+
+layout:
+  /usr/share/python-wheels:
+    bind: $SNAP/share/python-wheels

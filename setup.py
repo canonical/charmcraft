@@ -43,6 +43,7 @@ install_requires = [
 ]
 
 dev_requires = [
+    "black",
     "coverage",
     "flake8",
     "ops>=0.8.0",

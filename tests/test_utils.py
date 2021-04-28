@@ -52,11 +52,13 @@ def test_make_executable_read_bits(tmp_path):
 
 def test_load_yaml_success(tmp_path):
     test_file = tmp_path / "testfile.yaml"
-    test_file.write_text("""
+    test_file.write_text(
+        """
         foo: 33
-    """)
+    """
+    )
     content = load_yaml(test_file)
-    assert content == {'foo': 33}
+    assert content == {"foo": 33}
 
 
 def test_load_yaml_no_file(tmp_path, caplog):
@@ -86,9 +88,11 @@ def test_load_yaml_corrupted_format(tmp_path, caplog):
     caplog.set_level(logging.ERROR, logger="charmcraft.commands")
 
     test_file = tmp_path / "testfile.yaml"
-    test_file.write_text("""
+    test_file.write_text(
+        """
         foo: [1, 2
-    """)
+    """
+    )
     content = load_yaml(test_file)
     assert content is None
 
@@ -101,9 +105,11 @@ def test_load_yaml_file_problem(tmp_path, caplog):
     caplog.set_level(logging.ERROR, logger="charmcraft.commands")
 
     test_file = tmp_path / "testfile.yaml"
-    test_file.write_text("""
+    test_file.write_text(
+        """
         foo: bar
-    """)
+    """
+    )
     test_file.chmod(0o000)
     content = load_yaml(test_file)
     assert content is None
@@ -115,53 +121,60 @@ def test_load_yaml_file_problem(tmp_path, caplog):
 
 # -- tests for the SingleOptionEnsurer helper class
 
+
 def test_singleoptionensurer_convert_ok():
     """Work fine with one call, convert as expected."""
     soe = SingleOptionEnsurer(int)
-    assert soe('33') == 33
+    assert soe("33") == 33
 
 
 def test_singleoptionensurer_too_many():
     """Raise an error after one ok call."""
     soe = SingleOptionEnsurer(int)
-    assert soe('33') == 33
+    assert soe("33") == 33
     with pytest.raises(ValueError) as cm:
-        soe('33')
+        soe("33")
     assert str(cm.value) == "the option can be specified only once"
 
 
 # -- tests for the ResourceOption helper class
 
+
 def test_resourceoption_convert_ok():
     """Convert as expected."""
     r = ResourceOption()("foo:13")
-    assert r.name == 'foo'
+    assert r.name == "foo"
     assert r.revision == 13
 
 
-@pytest.mark.parametrize('value', [
-    'foo15',  # no separation
-    'foo:',  # no revision
-    'foo:x3',  # no int
-    'foo:0',  # revision 0 is not allowed
-    'foo:-1',  # negative revisions are not allowed
-    ':15',  # no name
-    '  :15',  # no name, really!
-    'foo:bar:15',  # invalid name, anyway
-])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "foo15",  # no separation
+        "foo:",  # no revision
+        "foo:x3",  # no int
+        "foo:0",  # revision 0 is not allowed
+        "foo:-1",  # negative revisions are not allowed
+        ":15",  # no name
+        "  :15",  # no name, really!
+        "foo:bar:15",  # invalid name, anyway
+    ],
+)
 def test_resourceoption_convert_error(value):
     """Error while converting."""
     with pytest.raises(ValueError) as cm:
         ResourceOption()(value)
     assert str(cm.value) == (
-        "the resource format must be <name>:<revision> (revision being a positive integer)")
+        "the resource format must be <name>:<revision> (revision being a positive integer)"
+    )
 
 
 # -- tests for the useful_filepath helper
 
+
 def test_usefulfilepath_pathlib(tmp_path):
     """Convert the string to Path."""
-    test_file = tmp_path / 'testfile.bin'
+    test_file = tmp_path / "testfile.bin"
     test_file.touch()
     path = useful_filepath(str(test_file))
     assert path == test_file
@@ -170,26 +183,26 @@ def test_usefulfilepath_pathlib(tmp_path):
 
 def test_usefulfilepath_home_expanded(tmp_path, monkeypatch):
     """Home-expand the indicated path."""
-    fake_home = tmp_path / 'homedir'
+    fake_home = tmp_path / "homedir"
     fake_home.mkdir()
-    test_file = fake_home / 'testfile.bin'
+    test_file = fake_home / "testfile.bin"
     test_file.touch()
 
-    monkeypatch.setitem(os.environ, 'HOME', str(fake_home))
-    path = useful_filepath('~/testfile.bin')
+    monkeypatch.setitem(os.environ, "HOME", str(fake_home))
+    path = useful_filepath("~/testfile.bin")
     assert path == test_file
 
 
 def test_usefulfilepath_missing():
     """The indicated path is not there."""
     with pytest.raises(CommandError) as cm:
-        useful_filepath('not_really_there.txt')
+        useful_filepath("not_really_there.txt")
     assert str(cm.value) == "Cannot access 'not_really_there.txt'."
 
 
 def test_usefulfilepath_inaccessible(tmp_path):
     """The indicated path is not readable."""
-    test_file = tmp_path / 'testfile.bin'
+    test_file = tmp_path / "testfile.bin"
     test_file.touch(mode=0o000)
     with pytest.raises(CommandError) as cm:
         useful_filepath(str(test_file))
@@ -205,12 +218,14 @@ def test_usefulfilepath_not_a_file(tmp_path):
 
 # -- tests for the OS platform getter
 
+
 def test_get_os_platform_linux(tmp_path):
     """Utilize an /etc/os-release file to determine platform."""
     # explicitly add commented and empty lines, for parser robustness
-    filepath = (tmp_path / "os-release")
-    filepath.write_text(dedent(
-        """
+    filepath = tmp_path / "os-release"
+    filepath.write_text(
+        dedent(
+            """
         # the following is an empty line
 
         NAME="Ubuntu"
@@ -231,9 +246,10 @@ def test_get_os_platform_linux(tmp_path):
         VERSION_CODENAME=focal
         UBUNTU_CODENAME=focal
         """
-    ))
-    with patch('platform.machine', return_value='x86_64'):
-        with patch('platform.system', return_value='Linux'):
+        )
+    )
+    with patch("platform.machine", return_value="x86_64"):
+        with patch("platform.system", return_value="Linux"):
             os_platform = get_os_platform(filepath)
     assert os_platform.system == "ubuntu"
     assert os_platform.release == "20.04"
@@ -243,9 +259,10 @@ def test_get_os_platform_linux(tmp_path):
 def test_get_os_platform_strict_snaps(tmp_path):
     """Utilize an /etc/os-release file to determine platform, core-20 values."""
     # explicitly add commented and empty lines, for parser robustness
-    filepath = (tmp_path / "os-release")
-    filepath.write_text(dedent(
-        """
+    filepath = tmp_path / "os-release"
+    filepath.write_text(
+        dedent(
+            """
         NAME="Ubuntu Core"
         VERSION="20"
         ID=ubuntu-core
@@ -254,49 +271,57 @@ def test_get_os_platform_strict_snaps(tmp_path):
         HOME_URL="https://snapcraft.io/"
         BUG_REPORT_URL="https://bugs.launchpad.net/snappy/"
         """
-    ))
-    with patch('platform.machine', return_value='x86_64'):
-        with patch('platform.system', return_value='Linux'):
+        )
+    )
+    with patch("platform.machine", return_value="x86_64"):
+        with patch("platform.system", return_value="Linux"):
             os_platform = get_os_platform(filepath)
     assert os_platform.system == "ubuntu-core"
     assert os_platform.release == "20"
     assert os_platform.machine == "x86_64"
 
 
-@pytest.mark.parametrize('name', [
-    ('"foo bar"', 'foo bar'),  # what's normally found
-    ('foo bar', 'foo bar'),  # no quotes
-    ('"foo " bar"', 'foo " bar'),  # quotes in the middle
-    ('foo bar"', 'foo bar"'),  # unbalanced quotes (no really enclosing)
-    ('"foo bar', '"foo bar'),  # unbalanced quotes (no really enclosing)
-    ("'foo bar'", 'foo bar'),  # enclosing with single quote
-    ("'foo ' bar'", "foo ' bar"),  # single quote in the middle
-    ("foo bar'", "foo bar'"),  # unbalanced single quotes (no really enclosing)
-    ("'foo bar", "'foo bar"),  # unbalanced single quotes (no really enclosing)
-    ("'foo bar\"", "'foo bar\""),  # unbalanced mixed quotes
-    ("\"foo bar'", "\"foo bar'"),  # unbalanced mixed quotes
-])
+@pytest.mark.parametrize(
+    "name",
+    [
+        ('"foo bar"', "foo bar"),  # what's normally found
+        ("foo bar", "foo bar"),  # no quotes
+        ('"foo " bar"', 'foo " bar'),  # quotes in the middle
+        ('foo bar"', 'foo bar"'),  # unbalanced quotes (no really enclosing)
+        ('"foo bar', '"foo bar'),  # unbalanced quotes (no really enclosing)
+        ("'foo bar'", "foo bar"),  # enclosing with single quote
+        ("'foo ' bar'", "foo ' bar"),  # single quote in the middle
+        ("foo bar'", "foo bar'"),  # unbalanced single quotes (no really enclosing)
+        ("'foo bar", "'foo bar"),  # unbalanced single quotes (no really enclosing)
+        ("'foo bar\"", "'foo bar\""),  # unbalanced mixed quotes
+        ("\"foo bar'", "\"foo bar'"),  # unbalanced mixed quotes
+    ],
+)
 def test_get_os_platform_alternative_formats(name, tmp_path):
     """Support different ways of building the string."""
     source, result = name
-    filepath = (tmp_path / "os-release")
-    filepath.write_text(dedent(
-        """
+    filepath = tmp_path / "os-release"
+    filepath.write_text(
+        dedent(
+            """
         ID={}
         VERSION_ID="20.04"
-        """.format(source)
-    ))
+        """.format(
+                source
+            )
+        )
+    )
     # need to patch this to "Linux" so actually uses /etc/os-release...
-    with patch('platform.system', return_value='Linux'):
+    with patch("platform.system", return_value="Linux"):
         os_platform = get_os_platform(filepath)
     assert os_platform.system == result
 
 
 def test_get_os_platform_windows():
     """Get platform from a patched Windows machine."""
-    with patch('platform.system', return_value='Windows'):
-        with patch('platform.release', return_value='10'):
-            with patch('platform.machine', return_value='AMD64'):
+    with patch("platform.system", return_value="Windows"):
+        with patch("platform.release", return_value="10"):
+            with patch("platform.machine", return_value="AMD64"):
                 os_platform = get_os_platform()
     assert os_platform.system == "Windows"
     assert os_platform.release == "10"
@@ -305,23 +330,24 @@ def test_get_os_platform_windows():
 
 # -- tests for the manifest creation
 
+
 def test_manifest_simple_ok(tmp_path):
     """Simple construct."""
     tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
-    os_platform = OSPlatform(system='SuperUbuntu', release='40.10', machine='SomeRISC')
-    with patch('charmcraft.utils.get_os_platform', return_value=os_platform):
+    os_platform = OSPlatform(system="SuperUbuntu", release="40.10", machine="SomeRISC")
+    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
         result_filepath = create_manifest(tmp_path, tstamp)
 
-    assert result_filepath == tmp_path / 'manifest.yaml'
+    assert result_filepath == tmp_path / "manifest.yaml"
     saved = yaml.safe_load(result_filepath.read_text())
     expected = {
-        'charmcraft-started-at': '2020-02-01T15:40:33Z',
-        'charmcraft-version': __version__,
-        'bases': [
+        "charmcraft-started-at": "2020-02-01T15:40:33Z",
+        "charmcraft-version": __version__,
+        "bases": [
             {
-                'name': 'superubuntu',
-                'channel': '40.10',
-                'architectures': ['SomeRISC'],
+                "name": "superubuntu",
+                "channel": "40.10",
+                "architectures": ["SomeRISC"],
             }
         ],
     }
@@ -330,31 +356,32 @@ def test_manifest_simple_ok(tmp_path):
 
 def test_manifest_architecture_translated(tmp_path, monkeypatch):
     """All known architectures must be translated."""
-    monkeypatch.setitem(ARCH_TRANSLATIONS, 'weird_arch', 'nice_arch')
-    os_platform = OSPlatform(system='Ubuntu', release='40.10', machine='weird_arch')
-    with patch('charmcraft.utils.get_os_platform', return_value=os_platform):
+    monkeypatch.setitem(ARCH_TRANSLATIONS, "weird_arch", "nice_arch")
+    os_platform = OSPlatform(system="Ubuntu", release="40.10", machine="weird_arch")
+    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
         result_filepath = create_manifest(tmp_path, datetime.datetime.now())
 
     saved = yaml.safe_load(result_filepath.read_text())
-    assert saved['bases'][0]['architectures'] == ['nice_arch']
+    assert saved["bases"][0]["architectures"] == ["nice_arch"]
 
 
 def test_manifest_fields_from_strict_snap(tmp_path, monkeypatch):
     """Fields found in a strict snap must be translated."""
-    os_platform = OSPlatform(system='ubuntu-core', release='20', machine='amd64')
-    with patch('charmcraft.utils.get_os_platform', return_value=os_platform):
+    os_platform = OSPlatform(system="ubuntu-core", release="20", machine="amd64")
+    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
         result_filepath = create_manifest(tmp_path, datetime.datetime.now())
 
     saved = yaml.safe_load(result_filepath.read_text())
-    base = saved['bases'][0]
-    assert base['name'] == 'ubuntu'
-    assert base['channel'] == '20.04'
+    base = saved["bases"][0]
+    assert base["name"] == "ubuntu"
+    assert base["channel"] == "20.04"
 
 
 def test_manifest_dont_overwrite(tmp_path):
     """Don't overwrite the already-existing file."""
-    (tmp_path / 'manifest.yaml').touch()
+    (tmp_path / "manifest.yaml").touch()
     with pytest.raises(CommandError) as cm:
         create_manifest(tmp_path, datetime.datetime.now())
     assert str(cm.value) == (
-        "Cannot write the manifest as there is already a 'manifest.yaml' in disk.")
+        "Cannot write the manifest as there is already a 'manifest.yaml' in disk."
+    )

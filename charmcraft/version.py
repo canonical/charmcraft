@@ -17,9 +17,9 @@
 import subprocess
 from pathlib import Path
 
-__all__ = ('version',)
+__all__ = ("version",)
 
-_FALLBACK = '0.10.0'  # this gets bumped after release
+_FALLBACK = "0.10.0"  # this gets bumped after release
 
 
 def _get_version():
@@ -27,24 +27,25 @@ def _get_version():
     version = _FALLBACK + ".dev0+unknown"
 
     p = Path(__file__).parent
-    if (p.parent / '.git').exists():
+    if (p.parent / ".git").exists():
         try:
             proc = subprocess.run(
-                ['git', 'describe', '--tags', '--dirty'],
+                ["git", "describe", "--tags", "--dirty"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
                 cwd=p,
-                check=True)
+                check=True,
+            )
         except Exception:
             pass
         else:
-            version = proc.stdout.strip().decode('utf8')
-            if '-' in version:
+            version = proc.stdout.strip().decode("utf8")
+            if "-" in version:
                 # version will look like <tag>-<#commits>-g<hex>[-dirty]
                 # in terms of PEP 440, the tag we'll make sure is a 'public version identifier';
                 # everything after the first - needs to be a 'local version'
-                public, local = version.split('-', 1)
-                version = public + '+' + local.replace('-', '.')
+                public, local = version.split("-", 1)
+                version = public + "+" + local.replace("-", ".")
                 # version now <tag>+<#commits>.g<hex>[.dirty]
                 # which is PEP440-compliant (as long as <tag> is :-)
     return version

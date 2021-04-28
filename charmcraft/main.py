@@ -36,18 +36,26 @@ class HelpCommand(BaseCommand):
     idea is to lower the barrier as much as possible for the user getting help.
     """
 
-    name = 'help'
+    name = "help"
     help_msg = "Provide help on charmcraft usage"
-    overview = "Produce a general or a detailed charmcraft help, or a specific command one."
+    overview = (
+        "Produce a general or a detailed charmcraft help, or a specific command one."
+    )
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            '--all', action='store_true', help="Produce an extensive help of all commands")
+            "--all",
+            action="store_true",
+            help="Produce an extensive help of all commands",
+        )
         parser.add_argument(
-            'command_to_help', nargs='?', metavar='command',
-            help="Produce a detailed help of the specified command")
+            "command_to_help",
+            nargs="?",
+            metavar="command",
+            help="Produce a detailed help of the specified command",
+        )
 
     def run(self, parsed_args, all_commands):
         """Present different help messages to the user.
@@ -56,13 +64,16 @@ class HelpCommand(BaseCommand):
         to validate if the help requested is on a valid one, or even parse its data.
         """
         retcode = 0
-        if parsed_args.command_to_help is None or parsed_args.command_to_help == self.name:
+        if (
+            parsed_args.command_to_help is None
+            or parsed_args.command_to_help == self.name
+        ):
             # help on no command in particular, get general text
             help_text = get_general_help(detailed=parsed_args.all)
         elif parsed_args.command_to_help not in all_commands:
             # asked help on a command that doesn't exist
             msg = "no such command {!r}".format(parsed_args.command_to_help)
-            help_text = helptexts.get_usage_message('charmcraft', msg)
+            help_text = helptexts.get_usage_message("charmcraft", msg)
             retcode = 1
         else:
             cmd_class, group = all_commands[parsed_args.command_to_help]
@@ -78,41 +89,70 @@ class HelpCommand(BaseCommand):
 # central place and not distributed in several classes/files. Also note that order here is
 # important when listing commands and showing help.
 COMMAND_GROUPS = [
-    ('basic', "Basic", [
-        HelpCommand,
-        build.BuildCommand,
-        pack.PackCommand,
-        init.InitCommand,
-        version.VersionCommand,
-    ]),
-    ('store', "Charmhub", [
-        # auth
-        store.LoginCommand, store.LogoutCommand, store.WhoamiCommand,
-        # name handling
-        store.RegisterCharmNameCommand, store.RegisterBundleNameCommand, store.ListNamesCommand,
-        # pushing files and checking revisions
-        store.UploadCommand, store.ListRevisionsCommand,
-        # release process, and show status
-        store.ReleaseCommand, store.StatusCommand,
-        # libraries support
-        store.CreateLibCommand, store.PublishLibCommand, store.ListLibCommand,
-        store.FetchLibCommand,
-        # resources support
-        store.ListResourcesCommand, store.UploadResourceCommand,
-        store.ListResourceRevisionsCommand,
-    ]),
+    (
+        "basic",
+        "Basic",
+        [
+            HelpCommand,
+            build.BuildCommand,
+            pack.PackCommand,
+            init.InitCommand,
+            version.VersionCommand,
+        ],
+    ),
+    (
+        "store",
+        "Charmhub",
+        [
+            # auth
+            store.LoginCommand,
+            store.LogoutCommand,
+            store.WhoamiCommand,
+            # name handling
+            store.RegisterCharmNameCommand,
+            store.RegisterBundleNameCommand,
+            store.ListNamesCommand,
+            # pushing files and checking revisions
+            store.UploadCommand,
+            store.ListRevisionsCommand,
+            # release process, and show status
+            store.ReleaseCommand,
+            store.StatusCommand,
+            # libraries support
+            store.CreateLibCommand,
+            store.PublishLibCommand,
+            store.ListLibCommand,
+            store.FetchLibCommand,
+            # resources support
+            store.ListResourcesCommand,
+            store.UploadResourceCommand,
+            store.ListResourceRevisionsCommand,
+        ],
+    ),
 ]
 
 
 # global options: the name used internally, its type, short and long parameters, and help text
-_Global = namedtuple('Global', 'name type short_option long_option help_message')
+_Global = namedtuple("Global", "name type short_option long_option help_message")
 GLOBAL_ARGS = [
-    _Global('help', 'flag', '-h', '--help', "Show this help message and exit"),
-    _Global('verbose', 'flag', '-v', '--verbose', "Show debug information and be more verbose"),
-    _Global('quiet', 'flag', '-q', '--quiet', "Only show warnings and errors, not progress"),
+    _Global("help", "flag", "-h", "--help", "Show this help message and exit"),
     _Global(
-        'project_dir', 'option', '-p', '--project-dir',
-        "Specify the project's directory (defaults to current)"),
+        "verbose",
+        "flag",
+        "-v",
+        "--verbose",
+        "Show debug information and be more verbose",
+    ),
+    _Global(
+        "quiet", "flag", "-q", "--quiet", "Only show warnings and errors, not progress"
+    ),
+    _Global(
+        "project_dir",
+        "option",
+        "-p",
+        "--project-dir",
+        "Specify the project's directory (defaults to current)",
+    ),
 ]
 
 
@@ -130,7 +170,9 @@ def _get_global_options():
     """Return the global flags ready to present as options in the help messages."""
     options = []
     for arg in GLOBAL_ARGS:
-        options.append(("{}, {}".format(arg.short_option, arg.long_option), arg.help_message))
+        options.append(
+            ("{}, {}".format(arg.short_option, arg.long_option), arg.help_message)
+        )
     return options
 
 
@@ -141,7 +183,7 @@ def get_command_help(parser, command):
     for action in parser._actions:
         # store the different options if present, otherwise it's just the dest
         if action.option_strings:
-            options.append((', '.join(action.option_strings), action.help))
+            options.append((", ".join(action.option_strings), action.help))
         else:
             dest = action.dest if action.metavar is None else action.metavar
             options.append((dest, action.help))
@@ -170,7 +212,8 @@ class Dispatcher:
         self.commands = self._get_commands_info(commands_groups)
         command_name, cmd_args, charmcraft_config = self._pre_parse_args(sysargs)
         self.command, self.parsed_args = self._load_command(
-            command_name, cmd_args, charmcraft_config)
+            command_name, cmd_args, charmcraft_config
+        )
 
     def _get_commands_info(self, commands_groups):
         """Process the commands groups structure for easier programmable access."""
@@ -181,7 +224,9 @@ class Dispatcher:
                     _stored_class, _ = commands[_cmd_class.name]
                     raise RuntimeError(
                         "Multiple commands with same name: {} and {}".format(
-                            _cmd_class.__name__, _stored_class.__name__))
+                            _cmd_class.__name__, _stored_class.__name__
+                        )
+                    )
                 commands[_cmd_class.name] = (_cmd_class, _cmd_group)
         return commands
 
@@ -216,11 +261,11 @@ class Dispatcher:
         for arg in GLOBAL_ARGS:
             arg_per_option[arg.short_option] = arg
             arg_per_option[arg.long_option] = arg
-            if arg.type == 'flag':
+            if arg.type == "flag":
                 default = False
-            elif arg.type == 'option':
+            elif arg.type == "option":
                 default = None
-                options_with_equal.append(arg.long_option + '=')
+                options_with_equal.append(arg.long_option + "=")
             else:
                 raise ValueError("Bad GLOBAL_ARGS structure.")
             global_args[arg.name] = default
@@ -231,16 +276,18 @@ class Dispatcher:
         for sysarg in sysargs:
             if sysarg in arg_per_option:
                 arg = arg_per_option[sysarg]
-                if arg.type == 'flag':
+                if arg.type == "flag":
                     value = True
                 else:
                     try:
                         value = next(sysargs)
                     except StopIteration:
-                        raise CommandError("The 'project-dir' option expects one argument.")
+                        raise CommandError(
+                            "The 'project-dir' option expects one argument."
+                        )
                 global_args[arg.name] = value
             elif sysarg.startswith(options_with_equal):
-                option, value = sysarg.split('=', 1)
+                option, value = sysarg.split("=", 1)
                 if not value:
                     raise CommandError("The 'project-dir' option expects one argument.")
                 arg = arg_per_option[option]
@@ -249,16 +296,20 @@ class Dispatcher:
                 filtered_sysargs.append(sysarg)
 
         # control and use quiet/verbose options
-        if global_args['quiet'] and global_args['verbose']:
-            raise CommandError("The 'verbose' and 'quiet' options are mutually exclusive.")
-        if global_args['quiet']:
+        if global_args["quiet"] and global_args["verbose"]:
+            raise CommandError(
+                "The 'verbose' and 'quiet' options are mutually exclusive."
+            )
+        if global_args["quiet"]:
             message_handler.set_mode(message_handler.QUIET)
-        elif global_args['verbose']:
+        elif global_args["verbose"]:
             message_handler.set_mode(message_handler.VERBOSE)
-        logger.debug("Raw pre-parsed sysargs: args=%s filtered=%s", global_args, filtered_sysargs)
+        logger.debug(
+            "Raw pre-parsed sysargs: args=%s filtered=%s", global_args, filtered_sysargs
+        )
 
         # if help requested, transform the parameters to make that explicit
-        if global_args['help']:
+        if global_args["help"]:
             command = HelpCommand.name
             cmd_args = filtered_sysargs
         elif filtered_sysargs:
@@ -266,7 +317,7 @@ class Dispatcher:
             cmd_args = filtered_sysargs[1:]
             if command not in self.commands:
                 msg = "no such command {!r}".format(command)
-                help_text = helptexts.get_usage_message('charmcraft', msg)
+                help_text = helptexts.get_usage_message("charmcraft", msg)
                 raise CommandError(help_text, argsparsing=True)
         else:
             # no command!
@@ -274,7 +325,7 @@ class Dispatcher:
             raise CommandError(help_text, argsparsing=True)
 
         # load the system's config
-        charmcraft_config = config.load(global_args['project_dir'])
+        charmcraft_config = config.load(global_args["project_dir"])
 
         logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
         return command, cmd_args, charmcraft_config
@@ -284,11 +335,15 @@ class Dispatcher:
         if isinstance(self.command, HelpCommand):
             self.command.run(self.parsed_args, self.commands)
         else:
-            if self.command.needs_config and not self.command.config.project.config_provided:
+            if (
+                self.command.needs_config
+                and not self.command.config.project.config_provided
+            ):
                 raise CommandError(
                     "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
                     "the current directory or where specified with --project-dir option); see "
-                    "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138")
+                    "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
+                )
             self.command.run(self.parsed_args)
 
 
@@ -319,5 +374,5 @@ def main(argv=None):
     return retcode
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv))

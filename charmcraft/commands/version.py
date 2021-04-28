@@ -46,7 +46,7 @@ Example: 0.3.1+40.g883455b.dirty
 class VersionCommand(BaseCommand):
     """Show the charmcraft version."""
 
-    name = 'version'
+    name = "version"
     help_msg = "Show charmcraft version"
     overview = _overview
     common = True

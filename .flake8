@@ -10,3 +10,8 @@ exclude:
     *.egg_info
     dist
     snap
+extend-ignore:
+    # E203 whitespace before ‘:’ (Not PEP8 compliant, Python Black)
+    E203
+    # W503 line break before binary operator (Not PEP8 compliant, Python Black)
+    W503

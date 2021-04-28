@@ -191,8 +191,9 @@ def test_ended_crash_while_normal(caplog, create_message_handler):
     except Exception as err:
         mh.ended_crash(err)  # needs to have an exception "active"
 
-    expected_msg = "charmcraft internal error! ValueError: crazy crash (full execution logs in {})".format(
-        mh._log_filepath
+    expected_msg = (
+        "charmcraft internal error! "
+        "ValueError: crazy crash (full execution logs in {})".format(mh._log_filepath)
     )
 
     # file is present, and it has the error and the traceback
@@ -219,8 +220,9 @@ def test_ended_crash_while_verbose(caplog, create_message_handler):
     except Exception as err:
         mh.ended_crash(err)  # needs to have an exception "active"
 
-    expected_msg = "charmcraft internal error! ValueError: crazy crash (full execution logs in {})".format(
-        mh._log_filepath
+    expected_msg = (
+        "charmcraft internal error! "
+        "ValueError: crazy crash (full execution logs in {})".format(mh._log_filepath)
     )
 
     # file is present, and it has the error and the traceback

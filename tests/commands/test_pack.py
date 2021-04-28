@@ -115,7 +115,8 @@ def test_missing_name_in_bundle(tmp_path, bundle_yaml, config):
     with pytest.raises(CommandError) as cm:
         PackCommand("group", config).run(noargs)
     assert str(cm.value) == (
-        "Invalid bundle config; missing a 'name' field indicating the bundle's name in file '{}'.".format(
+        "Invalid bundle config; "
+        "missing a 'name' field indicating the bundle's name in file '{}'.".format(
             tmp_path / "bundle.yaml"
         )
     )

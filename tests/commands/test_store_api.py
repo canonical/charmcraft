@@ -1119,7 +1119,9 @@ def test_list_resource_revisions_ok(client_mock, config):
                 "sha256": "1bf0399c2de1240777ba73785f1ff1de5331f12853765a0",
                 "sha3-384": "deb9369cb2b9e86ad44160e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89",
                 "sha384": "eaaba6aa119da415e6ad778358a8530c47fefbe3ceced258e8c25530107dc7908e",
-                "sha512": "b8cfe885d49285d8546885167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09d",
+                "sha512": (
+                    "b8cfe885d49285d8546885167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09d"
+                ),
                 "size": 500,
             },
         ]
@@ -1161,7 +1163,9 @@ def test_list_resource_revisions_several(client_mock, config):
                 "sha256": "1bf0399c2de1240777ba73785f1ff1de5331f12853765a0",
                 "sha3-384": "deb9369cb2b9e86ad44160e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89",
                 "sha384": "eaaba6aa119da415e6ad778358a8530c47fefbe3ceced258e8c25530107dc7908e",
-                "sha512": "b8cfe885d49285d8546885167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09d",
+                "sha512": (
+                    "b8cfe885d49285d8546885167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09d"
+                ),
                 "size": 500,
             },
             {
@@ -1171,7 +1175,9 @@ def test_list_resource_revisions_several(client_mock, config):
                 "sha256": "73785f1ff1de5331f12853765a01bf0399c2de1240777ba",
                 "sha3-384": "60e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89deb9369cb2b5e86ad441",
                 "sha384": "778358a8530c47fefbe3ceced258e8c25530107dc7908eeaaba6aa119dad15e6ad",
-                "sha512": "05167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09db8cfe885d49285d8547c",
+                "sha512": (
+                    "05167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09db8cfe885d49285d8547c"
+                ),
                 "size": 420,
             },
         ]

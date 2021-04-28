@@ -18,7 +18,6 @@
 
 import argparse
 import logging
-import os
 import sys
 from collections import namedtuple
 

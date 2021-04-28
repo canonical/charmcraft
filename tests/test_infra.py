@@ -21,6 +21,8 @@ import re
 import subprocess
 from unittest.mock import patch
 
+import black
+import click.testing
 import pydocstyle
 import pytest
 from flake8.api.legacy import get_style_guide
@@ -132,3 +134,14 @@ def test_bashcompletion_all_commands():
         real_command_names.update(cmd.name for cmd in cmds)
 
     assert completed_commands == real_command_names
+
+
+def test_black():
+    runner = click.testing.CliRunner()
+    result = runner.invoke(
+        black.main,
+        ["--check"] + get_python_filepaths(),
+    )
+
+    if result.exit_code != 0:
+        pytest.fail(f"Please reformat files with black.\n{result.output}")

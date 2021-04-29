@@ -70,7 +70,7 @@ jobs:
       - name: Install test dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip
+          sudo apt install -y python3-pip python3-setuptools
       - name: Run smoke tests
         run: |
           mkdir -p charm-smoke-test

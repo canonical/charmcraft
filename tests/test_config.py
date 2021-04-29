@@ -78,7 +78,7 @@ def test_load_specific_directory_ok(create_config):
 def test_load_optional_charmcraft_missing(tmp_path):
     """Specify a directory where the file is missing."""
     config = load(tmp_path)
-    assert config.type == "no-charmcraft-yaml"
+    assert config.type == "undefined"
     assert config.project.dirpath == tmp_path
     assert not config.project.config_provided
 

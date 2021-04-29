@@ -157,7 +157,7 @@ class Config(
     @pydantic.validator("type")
     def validate_charm_type(cls, charm_type):
         """Verify charm type is valid with exception when instantiated without YAML."""
-        if charm_type not in ["bundle", "charm", "no-charmcraft-yaml"]:
+        if charm_type not in ["bundle", "charm", "undefined"]:
             raise ValueError("must be either 'charm' or 'bundle'")
         return charm_type
 
@@ -200,7 +200,7 @@ def load(dirpath):
                 config_provided=False,
                 started_at=now,
             ),
-            type="no-charmcraft-yaml",
+            type="undefined",
         )
 
     else:

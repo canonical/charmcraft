@@ -75,6 +75,6 @@ jobs:
         run: |
           mkdir -p charm-smoke-test
           cd charm-smoke-test
-          charmcraft init --author testuser
-          charmcraft build
+          charmcraft -v init --author testuser
+          charmcraft -v build
           test -f *.charm

@@ -14,7 +14,103 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Central configuration management."""
+"""Central configuration management.
+
+Using pydantic's BaseModel, this module supports the translation of the
+charmcraft.yaml to a python object.
+
+An equivalent json schema is available for the configuration:
+>>> from charmcraft import config
+>>> print(config.Config.schema_json(indent=4))
+{
+    "title": "Config",
+    "description": "Definition of charmcraft.yaml configuration.",
+    "type": "object",
+    "properties": {
+        "type": {
+            "title": "Type",
+            "type": "string"
+        },
+        "charmhub": {
+            "title": "Charmhub",
+            "default": {
+                "api_url": "https://api.charmhub.io",
+                "storage_url": "https://storage.snapcraftcontent.com"
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CharmhubConfig"
+                }
+            ]
+        },
+        "parts": {
+            "title": "Parts",
+            "default": {},
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Parts"
+                }
+            ]
+        }
+    },
+    "required": [
+        "type"
+    ],
+    "additionalProperties": false,
+    "definitions": {
+        "CharmhubConfig": {
+            "title": "CharmhubConfig",
+            "description": "Definition of Charmhub endpoint configuration.",
+            "type": "object",
+            "properties": {
+                "api_url": {
+                    "title": "Api Url",
+                    "default": "https://api.charmhub.io",
+                    "minLength": 1,
+                    "maxLength": 2083,
+                    "format": "uri",
+                    "type": "string"
+                },
+                "storage_url": {
+                    "title": "Storage Url",
+                    "default": "https://storage.snapcraftcontent.com",
+                    "minLength": 1,
+                    "maxLength": 2083,
+                    "format": "uri",
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Part": {
+            "title": "Part",
+            "description": "Defintiion of part to build.",
+            "type": "object",
+            "properties": {
+                "prime": {
+                    "title": "Prime",
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "Parts": {
+            "title": "Parts",
+            "description": "Definition of parts to build.",
+            "default": {},
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/Part"
+            }
+        }
+    }
+}
+
+"""
 
 import datetime
 import pathlib
@@ -106,9 +202,7 @@ class Part(
         return check_relative_paths(prime)
 
 
-class Parts(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class Parts(pydantic.BaseModel, frozen=True, validate_all=True):
     """Definition of parts to build."""
 
     __root__: Dict[pydantic.StrictStr, Part] = {}
@@ -145,13 +239,16 @@ class Project(
 
 
 class Config(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+    pydantic.BaseModel,
+    extra=pydantic.Extra.forbid,
+    frozen=True,
+    validate_all=True,
 ):
-    """Definition for charmcraft.yaml configuration."""
+    """Definition of charmcraft.yaml configuration."""
 
     type: pydantic.StrictStr
     charmhub: CharmhubConfig = CharmhubConfig()
-    parts: Parts = Parts()
+    parts: Parts = Parts(__root__={})
     project: Project
 
     @pydantic.validator("type")
@@ -177,6 +274,20 @@ class Config(
             return cls.parse_obj({"project": project, **obj})
         except pydantic.error_wrappers.ValidationError as error:
             raise CommandError(format_pydantic_errors(error.errors()))
+
+    @classmethod
+    def schema(cls, **kwargs) -> Dict[str, Any]:
+        """Perform any schema fixups required to hide internal details."""
+        schema = super().schema(**kwargs)
+
+        # The internal __root__ detail is leaked, overwrite it.
+        schema["properties"]["parts"]["default"] = {}
+
+        # Project is an internal detail, purge references.
+        schema["definitions"].pop("Project", None)
+        schema["properties"].pop("project", None)
+        schema["required"].remove("project")
+        return schema
 
 
 def load(dirpath):

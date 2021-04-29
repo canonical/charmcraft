@@ -20,12 +20,14 @@ import errno
 import logging
 import os
 import pathlib
+import shlex
 import shutil
 import subprocess
 import zipfile
 
 import yaml
 
+from charmcraft import providers
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable, create_manifest
@@ -306,6 +308,9 @@ class Validator:
         "from",  # this needs to be processed first, as it's a base dir to find other files
         "entrypoint",
         "requirement",
+        'debug',
+        'destructive_mode',
+        'shell',
     ]
 
     def __init__(self):
@@ -318,6 +323,7 @@ class Validator:
             meth = getattr(self, "validate_" + opt)
             result[opt] = meth(getattr(parsed_args, opt, None))
         return result
+
 
     def validate_from(self, dirpath):
         """Validate that the charm dir is there and yes, a directory."""
@@ -380,7 +386,6 @@ class Validator:
                 )
         return filepaths
 
-
 _overview = """
 Build a charm operator package.
 
@@ -425,13 +430,68 @@ class BuildCommand(BaseCommand):
             action="append",
             type=pathlib.Path,
             help="File(s) listing needed PyPI dependencies (can be used multiple "
-            "times); defaults to 'requirements.txt'",
-        )
+                  "times); defaults to 'requirements.txt'")
+        parser.add_argument(
+            '--debug', action='store_true',
+            help="Launch debug shell on error.")
+        parser.add_argument(
+            '--destructive-mode', action='store_true',
+            help="Build on host rather than instantiating a build environment instance.")
+        parser.add_argument(
+            '--shell', action='store_true',
+            help="Launch debug shell instead of running build step.")
+
+        providers.fill_parser(parser)
 
     def run(self, parsed_args):
         """Run the command."""
         validator = Validator()
         args = validator.process(parsed_args)
+        providers.process_args(parsed_args, args)
         logger.debug("working arguments: %s", args)
-        builder = Builder(args, self.config)
-        builder.run()
+
+        # Force project directory in managed mode.
+        if os.getenv("CHARMCRAFT_BUILD_ENVIRONMENT") == "managed-host":
+            args["from"] = providers.CHARMCRAFT_PROJECT_PATH
+
+        # TODO check for bases
+        if args['destructive_mode']:
+            builder = Builder(args, self.config)
+            builder.run()
+        else:
+            self.run_in_provider_environment(args)
+
+    def run_in_provider_environment(self, args):
+        """Run build command in provided environment."""
+        logger.warning(self.config)
+        build_cmd = [
+            "build",
+            "--project-dir",
+            providers.CHARMCRAFT_PROJECT_PATH.as_posix()
+        ]
+
+        # Translate arguments to work in target environment.
+        # XXX: force these to be relative to project?
+        entrypoint = args.get("entrypoint")
+        if entrypoint:
+            build_cmd += [
+                "--entrypoint",
+                (providers.CHARMCRAFT_PROJECT_PATH / entrypoint.relative_to(args["from"])).as_posix()
+            ]
+
+        requirements = args.get("requirement")
+        for requirement in requirements:
+            build_cmd += [
+                "--requirement",
+                (providers.CHARMCRAFT_PROJECT_PATH / requirement.relative_to(args["from"])).as_posix()
+            ]
+
+
+        project_path = args["from"]
+        providers.execute_for_all_bases(
+            charmcraft_cmd=build_cmd,
+            project_name=args["from"].name,
+            project_path=args["from"],
+            debug=args["debug"],
+            shell=args["shell"]
+        )

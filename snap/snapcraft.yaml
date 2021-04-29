@@ -146,6 +146,8 @@ parts:
       - lib/jsonschema-*.dist-info
       - lib/macaroonbakery
       - lib/macaroonbakery-*.dist-info
+      - lib/pydantic
+      - lib/pydantic-*.dist-info
       - lib/pyrfc3339
       - lib/pyRFC3339-*.dist-info
       - lib/pytz

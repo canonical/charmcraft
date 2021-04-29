@@ -87,7 +87,7 @@ parts:
       - python3-wheel
     override-build: |
       snapcraftctl build
-      install -D -m 0755 sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
+      install -D -m 0755 $SNAPCRAFT_PROJECT_DIR/snap/local/sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
 
   charmcraft:
     after: [python3]

@@ -34,8 +34,7 @@ jobs:
         run: |
           pytest -ra tests
 
-  snap-integration-tests:
-    name: Test the snap
+  snap-build:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
@@ -50,9 +49,26 @@ jobs:
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
-      - name: Install snap and test dependencies
+
+  snap-tests:
+    needs: [snap-build]
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download snap artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: snap
+          path: snap-artifacts
+      - name: Install snap
         run: |
-          sudo snap install --classic --dangerous ${{ steps.snapcraft.outputs.snap }}
+          sudo snap install --classic --dangerous snap-artifacts/*.snap
+          rm -rf snap-artifacts
+      - name: Install test dependencies
+        run: |
           sudo apt update
           sudo apt install -y python3-pip
       - name: Run smoke tests

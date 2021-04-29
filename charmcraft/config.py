@@ -19,23 +19,11 @@
 import datetime
 import pathlib
 from typing import Any, Dict, List
-from urllib.parse import urlparse
 
 import pydantic
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.utils import load_yaml
-
-
-def check_url(value):
-    """Check that the URL has at least scheme and net location."""
-    if isinstance(value, str):
-        url = urlparse(value)
-        if url.scheme and url.netloc:
-            return value
-    raise ValueError(
-        "must be a fully qualified URL (such as 'https://some.server.com')"
-    )
 
 
 def check_relative_paths(value):
@@ -141,13 +129,8 @@ class CharmhubConfig(
 ):
     """Represents top-level charmhub object."""
 
-    api_url: pydantic.StrictStr = "https://api.charmhub.io"
-    storage_url: pydantic.StrictStr = "https://storage.snapcraftcontent.com"
-
-    @pydantic.validator("api_url", "storage_url")
-    def validate_urls(cls, url):
-        """Verify valid URLs are used for api and storage."""
-        return check_url(url)
+    api_url: pydantic.HttpUrl = "https://api.charmhub.io"
+    storage_url: pydantic.HttpUrl = "https://storage.snapcraftcontent.com"
 
 
 class Project(
@@ -159,13 +142,6 @@ class Project(
     content: Dict[str, Any] = {}
     config_provided: bool = False
     started_at: datetime.datetime
-
-    @pydantic.validator("dirpath")
-    def validate_path(cls, path):
-        """Verify valid URLs are used for api and storage."""
-        if not isinstance(path, pathlib.Path):
-            raise ValueError("invalid path")
-        return path
 
 
 class Config(

@@ -26,7 +26,6 @@ from charmcraft.config import (
     CharmhubConfig,
     Part,
     check_relative_paths,
-    check_url,
     load,
 )
 
@@ -221,7 +220,7 @@ def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
             """\
             Bad charmcraft.yaml content:
             - field: charmhub.api_url
-              reason: string type expected"""
+              reason: invalid or missing URL scheme"""
         )
     )
 
@@ -240,7 +239,7 @@ def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
             """\
             Bad charmcraft.yaml content:
             - field: charmhub.api_url
-              reason: must be a fully qualified URL (such as 'https://some.server.com')"""
+              reason: invalid or missing URL scheme"""
         )
     )
 
@@ -259,7 +258,7 @@ def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error)
             """\
             Bad charmcraft.yaml content:
             - field: charmhub.storage_url
-              reason: string type expected"""
+              reason: invalid or missing URL scheme"""
         )
     )
 
@@ -278,7 +277,7 @@ def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_erro
             """\
             Bad charmcraft.yaml content:
             - field: charmhub.storage_url
-              reason: must be a fully qualified URL (such as 'https://some.server.com')"""
+              reason: invalid or missing URL scheme"""
         )
     )
 
@@ -402,31 +401,6 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
 
 
 # -- tests for different validators
-
-
-def test_url_ok():
-    """URL format is ok."""
-    assert check_url("https://some.server.com")
-
-
-def test_url_no_scheme():
-    """URL format is wrong, missing scheme."""
-    with pytest.raises(ValueError) as cm:
-        check_url("some.server.com")
-    assert (
-        str(cm.value)
-        == "must be a fully qualified URL (such as 'https://some.server.com')"
-    )
-
-
-def test_url_no_netloc():
-    """URL format is wrong, missing network location."""
-    with pytest.raises(ValueError) as cm:
-        check_url("https://")
-    assert (
-        str(cm.value)
-        == "must be a fully qualified URL (such as 'https://some.server.com')"
-    )
 
 
 def test_relativepaths_ok():

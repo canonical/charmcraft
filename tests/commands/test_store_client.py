@@ -41,32 +41,43 @@ from charmcraft.utils import OSPlatform
 
 # --- General tests
 
+
 def test_useragent_linux(monkeypatch):
     """Construct a user-agent as a patched Linux machine"""
     monkeypatch.setenv("TRAVIS_TESTING", "1")
-    os_platform = OSPlatform(system="Arch Linux", release="5.10.10-arch1-1", machine="x86_64")
-    with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
-            patch('charmcraft.utils.get_os_platform', return_value=os_platform), \
-            patch('platform.system', return_value='Linux'), \
-            patch('platform.machine', return_value='x86_64'), \
-            patch('platform.python_version', return_value='3.9.1'):
+    os_platform = OSPlatform(
+        system="Arch Linux", release="5.10.10-arch1-1", machine="x86_64"
+    )
+    with patch("charmcraft.commands.store.client.__version__", "1.2.3"), patch(
+        "charmcraft.utils.get_os_platform", return_value=os_platform
+    ), patch("platform.system", return_value="Linux"), patch(
+        "platform.machine", return_value="x86_64"
+    ), patch(
+        "platform.python_version", return_value="3.9.1"
+    ):
         ua = build_user_agent()
-    assert ua == "charmcraft/1.2.3 (testing) Arch Linux/5.10.10-arch1-1 (x86_64) python/3.9.1"
+    assert (
+        ua
+        == "charmcraft/1.2.3 (testing) Arch Linux/5.10.10-arch1-1 (x86_64) python/3.9.1"
+    )
 
 
 def test_useragent_windows(monkeypatch):
     """Construct a user-agent as a patched Windows machine"""
     monkeypatch.setenv("TRAVIS_TESTING", "1")
-    with patch('charmcraft.commands.store.client.__version__', '1.2.3'), \
-            patch('platform.system', return_value='Windows'), \
-            patch('platform.release', return_value='10'), \
-            patch('platform.machine', return_value='AMD64'), \
-            patch('platform.python_version', return_value='3.9.1'):
+    with patch("charmcraft.commands.store.client.__version__", "1.2.3"), patch(
+        "platform.system", return_value="Windows"
+    ), patch("platform.release", return_value="10"), patch(
+        "platform.machine", return_value="AMD64"
+    ), patch(
+        "platform.python_version", return_value="3.9.1"
+    ):
         ua = build_user_agent()
     assert ua == "charmcraft/1.2.3 (testing) Windows/10 (AMD64) python/3.9.1"
 
 
 # --- AuthHolder tests
+
 
 @pytest.fixture
 def auth_holder(tmp_path):
@@ -80,42 +91,58 @@ def auth_holder(tmp_path):
     """
 
     ah = _AuthHolder()
-    ah._cookiejar_filepath = str(tmp_path / 'test.credentials')
+    ah._cookiejar_filepath = str(tmp_path / "test.credentials")
 
-    with patch('webbrowser.open'):
+    with patch("webbrowser.open"):
         yield ah
 
 
-def get_cookie(value='test'):
+def get_cookie(value="test"):
     """Helper to create a cookie, which is quite long."""
     return Cookie(
-        version=0, name='test-macaroon', value=value, port=None, port_specified=False,
-        domain='snapcraft.io', domain_specified=True, domain_initial_dot=False, path='/',
-        path_specified=True, secure=True, expires=2595425286, discard=False, comment=None,
-        comment_url=None, rest=None, rfc2109=False)
+        version=0,
+        name="test-macaroon",
+        value=value,
+        port=None,
+        port_specified=False,
+        domain="snapcraft.io",
+        domain_specified=True,
+        domain_initial_dot=False,
+        path="/",
+        path_specified=True,
+        secure=True,
+        expires=2595425286,
+        discard=False,
+        comment=None,
+        comment_url=None,
+        rest=None,
+        rfc2109=False,
+    )
 
 
 def test_authholder_cookiejar_filepath():
     """Builds the cookiejar filepath in user's config directory."""
-    with patch('appdirs.user_config_dir') as mock:
-        mock.return_value = 'testpath'
+    with patch("appdirs.user_config_dir") as mock:
+        mock.return_value = "testpath"
         ah = _AuthHolder()
 
-    assert ah._cookiejar_filepath == 'testpath'
-    mock.assert_called_once_with('charmcraft.credentials')
+    assert ah._cookiejar_filepath == "testpath"
+    mock.assert_called_once_with("charmcraft.credentials")
 
 
 def test_authholder_clear_credentials_ok(auth_holder, caplog):
     """Clear credentials removes the file."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    with open(auth_holder._cookiejar_filepath, 'wb') as fh:
-        fh.write(b'fake credentials')
+    with open(auth_holder._cookiejar_filepath, "wb") as fh:
+        fh.write(b"fake credentials")
 
     auth_holder.clear_credentials()
 
     assert not os.path.exists(auth_holder._cookiejar_filepath)
-    expected = "Credentials cleared: file {!r} removed".format(auth_holder._cookiejar_filepath)
+    expected = "Credentials cleared: file {!r} removed".format(
+        auth_holder._cookiejar_filepath
+    )
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -127,7 +154,8 @@ def test_authholder_clear_credentials_missing(auth_holder, caplog):
 
     assert not os.path.exists(auth_holder._cookiejar_filepath)
     expected = "Credentials file not found to be removed: {!r}".format(
-        auth_holder._cookiejar_filepath)
+        auth_holder._cookiejar_filepath
+    )
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -144,7 +172,9 @@ def test_authholder_credentials_load_file_present_ok(auth_holder):
     # check credentials
     loaded_cookies = list(auth_holder._cookiejar)
     assert len(loaded_cookies) == 1
-    assert loaded_cookies[0].value == fake_cookie.value  # compare the value as no __eq__ in Cookie
+    assert (
+        loaded_cookies[0].value == fake_cookie.value
+    )  # compare the value as no __eq__ in Cookie
     assert isinstance(auth_holder._cookiejar, MozillaCookieJar)
     assert auth_holder._old_cookies == list(auth_holder._cookiejar)
 
@@ -160,8 +190,8 @@ def test_authholder_credentials_load_file_present_problem(auth_holder, caplog):
     """Support the file to be corrupt (starts blank)."""
     caplog.set_level(logging.WARNING, logger="charmcraft.commands")
 
-    with open(auth_holder._cookiejar_filepath, 'wb') as fh:
-        fh.write(b'this surely is not a valid cookie format :p')
+    with open(auth_holder._cookiejar_filepath, "wb") as fh:
+        fh.write(b"this surely is not a valid cookie format :p")
 
     auth_holder._load_credentials()
 
@@ -175,7 +205,9 @@ def test_authholder_credentials_load_file_missing(auth_holder, caplog):
 
     auth_holder._load_credentials()
 
-    expected = "Credentials file not found: {!r}".format(auth_holder._cookiejar_filepath)
+    expected = "Credentials file not found: {!r}".format(
+        auth_holder._cookiejar_filepath
+    )
     assert [expected] == [rec.message for rec in caplog.records]
     assert auth_holder._old_cookies == []
 
@@ -190,7 +222,7 @@ def test_authholder_credentials_save_notreally(auth_holder):
 
     auth_holder._load_credentials()
 
-    with patch.object(auth_holder._cookiejar, 'save') as mock:
+    with patch.object(auth_holder._cookiejar, "save") as mock:
         auth_holder._save_credentials_if_changed()
     assert mock.call_count == 0
 
@@ -206,35 +238,35 @@ def test_authholder_credentials_save_reallysave(auth_holder):
     # make auth holder to have those credentials loaded, and also load them ourselves for
     # later comparison
     auth_holder._load_credentials()
-    with open(auth_holder._cookiejar_filepath, 'rb') as fh:
+    with open(auth_holder._cookiejar_filepath, "rb") as fh:
         prv_file_content = fh.read()
 
     # set a different credential in the auth_holder (mimickin that the user authenticated
     # while doing the request)
-    other_cookie = get_cookie(value='different')
+    other_cookie = get_cookie(value="different")
     auth_holder._cookiejar.set_cookie(other_cookie)
 
     # call the tested method and ensure that file changed!
     auth_holder._save_credentials_if_changed()
-    with open(auth_holder._cookiejar_filepath, 'rb') as fh:
+    with open(auth_holder._cookiejar_filepath, "rb") as fh:
         new_file_content = fh.read()
     assert new_file_content != prv_file_content
 
     # call the tested method again, to verify that it was calling save on the cookiejar (and
     # not that the file changed as other side effect)
-    with patch.object(auth_holder._cookiejar, 'save') as mock:
+    with patch.object(auth_holder._cookiejar, "save") as mock:
         auth_holder._save_credentials_if_changed()
     assert mock.call_count == 1
 
 
 def test_authholder_credentials_save_createsdir(auth_holder, tmp_path):
     """Save creates the directory if not there."""
-    weird_filepath = tmp_path / 'not_created_dir' / 'deep' / 'credentials'
+    weird_filepath = tmp_path / "not_created_dir" / "deep" / "credentials"
     auth_holder._cookiejar_filepath = str(weird_filepath)
     auth_holder._load_credentials()
 
     # set a cookie and ask for saving it
-    auth_holder._cookiejar.set_cookie(get_cookie(value='different'))
+    auth_holder._cookiejar.set_cookie(get_cookie(value="different"))
     auth_holder._save_credentials_if_changed()
 
     # file should be there, and have the right permissions
@@ -249,14 +281,14 @@ def test_authholder_request_simple(auth_holder):
     fake_cookiejar.set_cookie(get_cookie())
     fake_cookiejar.save()
 
-    other_cookie = get_cookie(value='different')
+    other_cookie = get_cookie(value="different")
 
     def fake_request(self, method, url, json, headers):
         # check it was properly called
-        assert method == 'testmethod'
-        assert url == 'testurl'
-        assert json == 'testbody'
-        assert headers == {'User-Agent': build_user_agent()}
+        assert method == "testmethod"
+        assert url == "testurl"
+        assert json == "testbody"
+        assert headers == {"User-Agent": build_user_agent()}
 
         # check credentials were loaded at this time
         assert auth_holder._cookiejar is not None
@@ -264,13 +296,13 @@ def test_authholder_request_simple(auth_holder):
         # modify the credentials, to simulate that a re-auth happened while the request
         auth_holder._cookiejar.set_cookie(other_cookie)
 
-        return 'raw request response'
+        return "raw request response"
 
-    with patch('macaroonbakery.httpbakery.Client.request', fake_request):
-        resp = auth_holder.request('testmethod', 'testurl', 'testbody')
+    with patch("macaroonbakery.httpbakery.Client.request", fake_request):
+        resp = auth_holder.request("testmethod", "testurl", "testbody")
 
     # verify response (the calling checks were done above in fake_request helper)
-    assert resp == 'raw request response'
+    assert resp == "raw request response"
 
     # check the credentials were saved (that were properly loaded was also check in above's helper)
     new_cookiejar = MozillaCookieJar(auth_holder._cookiejar_filepath)
@@ -289,8 +321,8 @@ def test_authholder_request_credentials_already_loaded(auth_holder):
     auth_holder._load_credentials()
     auth_holder._load_credentials = None
 
-    with patch('macaroonbakery.httpbakery.Client.request'):
-        auth_holder.request('testmethod', 'testurl', 'testbody')
+    with patch("macaroonbakery.httpbakery.Client.request"):
+        auth_holder.request("testmethod", "testurl", "testbody")
 
 
 def test_authholder_request_interaction_error(auth_holder):
@@ -300,14 +332,17 @@ def test_authholder_request_interaction_error(auth_holder):
     fake_cookiejar.set_cookie(get_cookie())
     fake_cookiejar.save()
 
-    with patch('macaroonbakery.httpbakery.Client.request') as mock:
-        mock.side_effect = httpbakery.InteractionError('bad auth!!')
-        expected = "Authentication failure: cannot start interactive session: bad auth!!"
+    with patch("macaroonbakery.httpbakery.Client.request") as mock:
+        mock.side_effect = httpbakery.InteractionError("bad auth!!")
+        expected = (
+            "Authentication failure: cannot start interactive session: bad auth!!"
+        )
         with pytest.raises(CommandError, match=expected):
-            auth_holder.request('testmethod', 'testurl', 'testbody')
+            auth_holder.request("testmethod", "testurl", "testbody")
 
 
 # --- Client tests
+
 
 class FakeResponse:
     def __init__(self, content, status_code):
@@ -324,20 +359,22 @@ class FakeResponse:
 
 def test_client_get():
     """Passes the correct method."""
-    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client('http://api.test', 'http://storage.test')
-    client.get('/somepath')
+    with patch("charmcraft.commands.store.client._AuthHolder") as mock_auth:
+        client = Client("http://api.test", "http://storage.test")
+    client.get("/somepath")
 
-    mock_auth().request.assert_called_once_with('GET', 'http://api.test/somepath', None)
+    mock_auth().request.assert_called_once_with("GET", "http://api.test/somepath", None)
 
 
 def test_client_post():
     """Passes the correct method."""
-    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client('http://api.test', 'http://storage.test')
-    client.post('/somepath', 'somebody')
+    with patch("charmcraft.commands.store.client._AuthHolder") as mock_auth:
+        client = Client("http://api.test", "http://storage.test")
+    client.post("/somepath", "somebody")
 
-    mock_auth().request.assert_called_once_with('POST', 'http://api.test/somepath', 'somebody')
+    mock_auth().request.assert_called_once_with(
+        "POST", "http://api.test/somepath", "somebody"
+    )
 
 
 def test_client_hit_success_simple(caplog):
@@ -346,12 +383,12 @@ def test_client_hit_success_simple(caplog):
 
     response_value = {"foo": "bar"}
     fake_response = FakeResponse(content=json.dumps(response_value), status_code=200)
-    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
+    with patch("charmcraft.commands.store.client._AuthHolder") as mock_auth:
         mock_auth().request.return_value = fake_response
-        client = Client('http://api.test', 'http://storage.test')
-    result = client._hit('GET', '/somepath')
+        client = Client("http://api.test", "http://storage.test")
+    result = client._hit("GET", "/somepath")
 
-    mock_auth().request.assert_called_once_with('GET', 'http://api.test/somepath', None)
+    mock_auth().request.assert_called_once_with("GET", "http://api.test/somepath", None)
     assert result == response_value
     expected = [
         "Hitting the store: GET http://api.test/somepath None",
@@ -362,10 +399,12 @@ def test_client_hit_success_simple(caplog):
 
 def test_client_hit_url_extra_slash():
     """The configured api url is ok even with an extra slash."""
-    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client("https://local.test:1234/", 'http://storage.test')
-    client._hit('GET', '/somepath')
-    mock_auth().request.assert_called_once_with('GET', 'https://local.test:1234/somepath', None)
+    with patch("charmcraft.commands.store.client._AuthHolder") as mock_auth:
+        client = Client("https://local.test:1234/", "http://storage.test")
+    client._hit("GET", "/somepath")
+    mock_auth().request.assert_called_once_with(
+        "GET", "https://local.test:1234/somepath", None
+    )
 
 
 def test_client_hit_success_withbody(caplog):
@@ -374,12 +413,14 @@ def test_client_hit_success_withbody(caplog):
 
     response_value = {"foo": "bar"}
     fake_response = FakeResponse(content=json.dumps(response_value), status_code=200)
-    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
+    with patch("charmcraft.commands.store.client._AuthHolder") as mock_auth:
         mock_auth().request.return_value = fake_response
-        client = Client('http://api.test', 'http://storage.test')
-    result = client._hit('POST', '/somepath', 'somebody')
+        client = Client("http://api.test", "http://storage.test")
+    result = client._hit("POST", "/somepath", "somebody")
 
-    mock_auth().request.assert_called_once_with('POST', 'http://api.test/somepath', 'somebody')
+    mock_auth().request.assert_called_once_with(
+        "POST", "http://api.test/somepath", "somebody"
+    )
     assert result == response_value
     expected = [
         "Hitting the store: POST http://api.test/somepath somebody",
@@ -392,18 +433,18 @@ def test_client_hit_failure():
     """Hits the server, got a failure."""
     response_value = "raw data"
     fake_response = FakeResponse(content=response_value, status_code=404)
-    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
+    with patch("charmcraft.commands.store.client._AuthHolder") as mock_auth:
         mock_auth().request.return_value = fake_response
-        client = Client('http://api.test', 'http://storage.test')
+        client = Client("http://api.test", "http://storage.test")
 
     expected = r"Failure working with the Store: \[404\] 'raw data'"
     with pytest.raises(CommandError, match=expected):
-        client._hit('GET', '/somepath')
+        client._hit("GET", "/somepath")
 
 
 def test_client_clear_credentials():
-    with patch('charmcraft.commands.store.client._AuthHolder') as mock_auth:
-        client = Client('http://api.test', 'http://storage.test')
+    with patch("charmcraft.commands.store.client._AuthHolder") as mock_auth:
+        client = Client("http://api.test", "http://storage.test")
     client.clear_credentials()
 
     mock_auth().clear_credentials.assert_called_once_with()
@@ -411,35 +452,49 @@ def test_client_clear_credentials():
 
 def test_client_errorparsing_complete():
     """Build the error message using original message and code."""
-    content = json.dumps({"error-list": [{'message': 'error message', 'code': 'test-error'}]})
+    content = json.dumps(
+        {"error-list": [{"message": "error message", "code": "test-error"}]}
+    )
     response = FakeResponse(content=content, status_code=404)
-    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
+    result = Client("http://api.test", "http://storage.test")._parse_store_error(
+        response
+    )
     assert result == "Store failure! error message [code: test-error]"
 
 
 def test_client_errorparsing_no_code():
     """Build the error message using original message (even when code in None)."""
-    content = json.dumps({"error-list": [{'message': 'error message', 'code': None}]})
+    content = json.dumps({"error-list": [{"message": "error message", "code": None}]})
     response = FakeResponse(content=content, status_code=404)
-    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
+    result = Client("http://api.test", "http://storage.test")._parse_store_error(
+        response
+    )
     assert result == "Store failure! error message"
 
 
 def test_client_errorparsing_multiple():
     """Build the error message coumpounding the different received ones."""
-    content = json.dumps({"error-list": [
-        {'message': 'error 1', 'code': 'test-error-1'},
-        {'message': 'error 2', 'code': None},
-    ]})
+    content = json.dumps(
+        {
+            "error-list": [
+                {"message": "error 1", "code": "test-error-1"},
+                {"message": "error 2", "code": None},
+            ]
+        }
+    )
     response = FakeResponse(content=content, status_code=404)
-    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
+    result = Client("http://api.test", "http://storage.test")._parse_store_error(
+        response
+    )
     assert result == "Store failure! error 1 [code: test-error-1]; error 2"
 
 
 def test_client_errorparsing_nojson():
     """Produce a default message if response is not a json."""
-    response = FakeResponse(content='this is not a json', status_code=404)
-    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
+    response = FakeResponse(content="this is not a json", status_code=404)
+    result = Client("http://api.test", "http://storage.test")._parse_store_error(
+        response
+    )
     assert result == "Failure working with the Store: [404] 'this is not a json'"
 
 
@@ -447,7 +502,9 @@ def test_client_errorparsing_no_errors_inside():
     """Produce a default message if response has no errors list."""
     content = json.dumps({"another-error-key": "stuff"})
     response = FakeResponse(content=content, status_code=404)
-    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
+    result = Client("http://api.test", "http://storage.test")._parse_store_error(
+        response
+    )
     assert result == "Failure working with the Store: [404] " + repr(content)
 
 
@@ -455,15 +512,19 @@ def test_client_errorparsing_empty_errors():
     """Produce a default message if error list is empty."""
     content = json.dumps({"error-list": []})
     response = FakeResponse(content=content, status_code=404)
-    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
+    result = Client("http://api.test", "http://storage.test")._parse_store_error(
+        response
+    )
     assert result == "Failure working with the Store: [404] " + repr(content)
 
 
 def test_client_errorparsing_bad_structure():
     """Produce a default message if error list has a bad format."""
-    content = json.dumps({"error-list": ['whatever']})
+    content = json.dumps({"error-list": ["whatever"]})
     response = FakeResponse(content=content, status_code=404)
-    result = Client('http://api.test', 'http://storage.test')._parse_store_error(response)
+    result = Client("http://api.test", "http://storage.test")._parse_store_error(
+        response
+    )
     assert result == "Failure working with the Store: [404] " + repr(content)
 
 
@@ -472,15 +533,17 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
     # fake some bytes to push
-    test_filepath = tmp_path / 'supercharm.bin'
-    with test_filepath.open('wb') as fh:
+    test_filepath = tmp_path / "supercharm.bin"
+    with test_filepath.open("wb") as fh:
         fh.write(b"abcdefgh")
 
     def fake_pusher(monitor, storage_base_url):
         """Push bytes in sequence, doing verifications in the middle."""
-        assert storage_base_url == 'http://storage.test'
+        assert storage_base_url == "http://storage.test"
 
-        total_to_push = monitor.len  # not only the saved bytes, but also headers and stuff
+        total_to_push = (
+            monitor.len
+        )  # not only the saved bytes, but also headers and stuff
 
         # one batch
         monitor.read(20)
@@ -494,16 +557,16 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
 
         # check monitor is properly built
         assert isinstance(monitor.encoder, MultipartEncoder)
-        filename, fh, ctype = monitor.encoder.fields['binary']
-        assert filename == 'supercharm.bin'
+        filename, fh, ctype = monitor.encoder.fields["binary"]
+        assert filename == "supercharm.bin"
         assert fh.name == str(test_filepath)
         assert ctype == "application/octet-stream"
 
-        content = json.dumps(dict(successful=True, upload_id='test-upload-id'))
+        content = json.dumps(dict(successful=True, upload_id="test-upload-id"))
         return FakeResponse(content=content, status_code=200)
 
-    with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
-        Client('http://api.test', 'http://storage.test').push(test_filepath)
+    with patch("charmcraft.commands.store.client._storage_push", fake_pusher):
+        Client("http://api.test", "http://storage.test").push(test_filepath)
 
     # check proper logs
     expected = [
@@ -515,85 +578,96 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
 
 def test_client_push_configured_url_simple(tmp_path, capsys):
     """The storage server can be configured."""
+
     def fake_pusher(monitor, storage_base_url):
         """Check the received URL."""
         assert storage_base_url == "https://local.test:1234"
 
-        content = json.dumps(dict(successful=True, upload_id='test-upload-id'))
+        content = json.dumps(dict(successful=True, upload_id="test-upload-id"))
         return FakeResponse(content=content, status_code=200)
 
-    test_filepath = tmp_path / 'supercharm.bin'
+    test_filepath = tmp_path / "supercharm.bin"
     test_filepath.write_text("abcdefgh")
-    with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
-        Client('http://api.test', 'https://local.test:1234/').push(test_filepath)
+    with patch("charmcraft.commands.store.client._storage_push", fake_pusher):
+        Client("http://api.test", "https://local.test:1234/").push(test_filepath)
 
 
 def test_client_push_configured_url_extra_slash(caplog, tmp_path, capsys):
     """The configured storage url is ok even with an extra slash."""
+
     def fake_pusher(monitor, storage_base_url):
         """Check the received URL."""
         assert storage_base_url == "https://local.test:1234"
 
-        content = json.dumps(dict(successful=True, upload_id='test-upload-id'))
+        content = json.dumps(dict(successful=True, upload_id="test-upload-id"))
         return FakeResponse(content=content, status_code=200)
 
-    test_filepath = tmp_path / 'supercharm.bin'
+    test_filepath = tmp_path / "supercharm.bin"
     test_filepath.write_text("abcdefgh")
-    with patch('charmcraft.commands.store.client._storage_push', fake_pusher):
-        Client('http://api.test', 'https://local.test:1234/').push(test_filepath)
+    with patch("charmcraft.commands.store.client._storage_push", fake_pusher):
+        Client("http://api.test", "https://local.test:1234/").push(test_filepath)
 
 
 def test_client_push_response_not_ok(tmp_path):
     """Didn't get a 200 from the Storage."""
     # fake some bytes to push
-    test_filepath = tmp_path / 'supercharm.bin'
-    with test_filepath.open('wb') as fh:
+    test_filepath = tmp_path / "supercharm.bin"
+    with test_filepath.open("wb") as fh:
         fh.write(b"abcdefgh")
 
-    with patch('charmcraft.commands.store.client._storage_push') as mock:
-        mock.return_value = FakeResponse(content='had a problem', status_code=500)
+    with patch("charmcraft.commands.store.client._storage_push") as mock:
+        mock.return_value = FakeResponse(content="had a problem", status_code=500)
         with pytest.raises(CommandError) as cm:
-            Client('http://api.test', 'http://storage.test').push(test_filepath)
+            Client("http://api.test", "http://storage.test").push(test_filepath)
         assert str(cm.value) == "Failure while pushing file: [500] 'had a problem'"
 
 
 def test_client_push_response_unsuccessful(tmp_path):
     """Didn't get a 200 from the Storage."""
     # fake some bytes to push
-    test_filepath = tmp_path / 'supercharm.bin'
-    with test_filepath.open('wb') as fh:
+    test_filepath = tmp_path / "supercharm.bin"
+    with test_filepath.open("wb") as fh:
         fh.write(b"abcdefgh")
 
-    with patch('charmcraft.commands.store.client._storage_push') as mock:
+    with patch("charmcraft.commands.store.client._storage_push") as mock:
         raw_content = dict(successful=False, upload_id=None)
-        mock.return_value = FakeResponse(content=json.dumps(raw_content), status_code=200)
+        mock.return_value = FakeResponse(
+            content=json.dumps(raw_content), status_code=200
+        )
         with pytest.raises(CommandError) as cm:
-            Client('http://api.test', 'http://storage.test').push(test_filepath)
-        expected = "Server error while pushing file: {'successful': False, 'upload_id': None}"
+            Client("http://api.test", "http://storage.test").push(test_filepath)
+        expected = (
+            "Server error while pushing file: {'successful': False, 'upload_id': None}"
+        )
         assert str(cm.value) == expected
 
 
 def test_storage_push_succesful():
     """Bytes are properly pushed to the Storage."""
-    test_monitor = MultipartEncoderMonitor(MultipartEncoder(
-        fields={"binary": ("filename", 'somefile', "application/octet-stream")}))
+    test_monitor = MultipartEncoderMonitor(
+        MultipartEncoder(
+            fields={"binary": ("filename", "somefile", "application/octet-stream")}
+        )
+    )
 
-    with patch('requests.Session') as mock:
-        _storage_push(test_monitor, 'http://test.url:0000')
+    with patch("requests.Session") as mock:
+        _storage_push(test_monitor, "http://test.url:0000")
     cm_session_mock = mock().__enter__()
 
     # check request was properly called
-    url = 'http://test.url:0000/unscanned-upload/'
+    url = "http://test.url:0000/unscanned-upload/"
     headers = {
-        'Content-Type': test_monitor.content_type,
-        'Accept': 'application/json',
-        'User-Agent': build_user_agent(),
+        "Content-Type": test_monitor.content_type,
+        "Accept": "application/json",
+        "User-Agent": build_user_agent(),
     }
-    cm_session_mock.post.assert_called_once_with(url, headers=headers, data=test_monitor)
+    cm_session_mock.post.assert_called_once_with(
+        url, headers=headers, data=test_monitor
+    )
 
     # check the retries were properly setup
     (protocol, adapter), _ = cm_session_mock.mount.call_args
-    assert protocol == 'https://'
+    assert protocol == "https://"
     assert isinstance(adapter, HTTPAdapter)
     assert adapter.max_retries.backoff_factor == 2
     assert adapter.max_retries.total == 5
@@ -602,12 +676,15 @@ def test_storage_push_succesful():
 
 def test_storage_push_network_error():
     """A generic network error happened."""
-    test_monitor = MultipartEncoderMonitor(MultipartEncoder(
-        fields={"binary": ("filename", 'somefile', "application/octet-stream")}))
+    test_monitor = MultipartEncoderMonitor(
+        MultipartEncoder(
+            fields={"binary": ("filename", "somefile", "application/octet-stream")}
+        )
+    )
 
-    with patch('requests.Session.post') as mock:
+    with patch("requests.Session.post") as mock:
         mock.side_effect = RequestException("naughty error")
         with pytest.raises(CommandError) as cm:
-            _storage_push(test_monitor, 'http://test.url:0000')
+            _storage_push(test_monitor, "http://test.url:0000")
         expected = "Network error when pushing file: RequestException('naughty error')"
         assert str(cm.value) == expected

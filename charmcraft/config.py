@@ -30,40 +30,46 @@ format_checker = jsonschema.FormatChecker()
 
 # translator between "json" and pythonic yaml names
 TYPE_TRANSLATOR = {
-    'object': 'dict',
-    'array': 'list',
+    "object": "dict",
+    "array": "list",
 }
 
 
 def get_field_reference(path):
     """Get a field indicator from the received path."""
     if isinstance(path[-1], int):
-        field = '.'.join(list(path)[:-1])
+        field = ".".join(list(path)[:-1])
         ref = "item {} in '{}' field".format(path[-1], field)
     else:
-        field = '.'.join(path)
+        field = ".".join(path)
         ref = "'{}' field".format(field)
     return ref
 
 
 def adapt_validation_error(error):
     """Take a jsonschema.ValidationError and create a proper CommandError."""
-    if error.validator == 'required':
+    if error.validator == "required":
         msg = "Bad charmcraft.yaml content; missing fields: {}.".format(
-            ', '.join(error.validator_value))
-    elif error.validator == 'type':
-        expected_type = TYPE_TRANSLATOR.get(error.validator_value, error.validator_value)
+            ", ".join(error.validator_value)
+        )
+    elif error.validator == "type":
+        expected_type = TYPE_TRANSLATOR.get(
+            error.validator_value, error.validator_value
+        )
         field_ref = get_field_reference(error.absolute_path)
         msg = "Bad charmcraft.yaml content; the {} must be a {}: got '{}'.".format(
-            field_ref, expected_type, error.instance.__class__.__name__)
-    elif error.validator == 'enum':
+            field_ref, expected_type, error.instance.__class__.__name__
+        )
+    elif error.validator == "enum":
         field_ref = get_field_reference(error.absolute_path)
         msg = "Bad charmcraft.yaml content; the {} must be one of: {}.".format(
-            field_ref, ', '.join(map(repr, error.validator_value)))
-    elif error.validator == 'format':
+            field_ref, ", ".join(map(repr, error.validator_value))
+        )
+    elif error.validator == "format":
         field_ref = get_field_reference(error.absolute_path)
         msg = "Bad charmcraft.yaml content; the {} {}: got {!r}.".format(
-            field_ref, error.cause, error.instance)
+            field_ref, error.cause, error.instance
+        )
     else:
         # safe fallback
         msg = error.message
@@ -71,7 +77,7 @@ def adapt_validation_error(error):
     raise CommandError(msg)
 
 
-@format_checker.checks('url', raises=ValueError)
+@format_checker.checks("url", raises=ValueError)
 def check_url(value):
     """Check that the URL has at least scheme and net location."""
     if isinstance(value, str):
@@ -81,13 +87,13 @@ def check_url(value):
     raise ValueError("must be a full URL (e.g. 'https://some.server.com')")
 
 
-@format_checker.checks('relative_path', raises=ValueError)
+@format_checker.checks("relative_path", raises=ValueError)
 def check_relative_paths(value):
     """Check that the received paths are all valid relative ones."""
     if isinstance(value, str):
         # check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
         # config is independent of the platform where charmcraft is running)
-        if value and value[0] != '/':
+        if value and value[0] != "/":
             return True
     raise ValueError("must be a valid relative URL")
 
@@ -96,8 +102,8 @@ def check_relative_paths(value):
 class CharmhubConfig:
     """Configuration for all Charmhub related options."""
 
-    api_url = attr.ib(default='https://api.charmhub.io')
-    storage_url = attr.ib(default='https://storage.snapcraftcontent.com')
+    api_url = attr.ib(default="https://api.charmhub.io")
+    storage_url = attr.ib(default="https://storage.snapcraftcontent.com")
 
     @classmethod
     def from_dict(cls, source):
@@ -114,7 +120,7 @@ class BasicPrime(tuple):
     @classmethod
     def from_dict(cls, parts):
         """Build from a dicts sequence."""
-        prime = parts.get('bundle', {}).get('prime', [])
+        prime = parts.get("bundle", {}).get("prime", [])
         return cls(prime)
 
 
@@ -141,28 +147,28 @@ class Config:
 
 
 CONFIG_SCHEMA = {
-    'type': 'object',
-    'properties': {
-        'type': {'type': 'string', 'enum': ['charm', 'bundle']},
-        'charmhub': {
-            'type': 'object',
-            'properties': {
-                'api_url': {'type': 'string', 'format': 'url'},
-                'storage_url': {'type': 'string', 'format': 'url'},
+    "type": "object",
+    "properties": {
+        "type": {"type": "string", "enum": ["charm", "bundle"]},
+        "charmhub": {
+            "type": "object",
+            "properties": {
+                "api_url": {"type": "string", "format": "url"},
+                "storage_url": {"type": "string", "format": "url"},
             },
-            'additionalProperties': False,
+            "additionalProperties": False,
         },
-        'parts': {
-            'type': 'object',
-            'properties': {
-                'bundle': {
-                    'type': 'object',
-                    'properties': {
-                        'prime': {
-                            'type': 'array',
-                            'items': {
-                                'type': 'string',
-                                'format': 'relative_path',
+        "parts": {
+            "type": "object",
+            "properties": {
+                "bundle": {
+                    "type": "object",
+                    "properties": {
+                        "prime": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "relative_path",
                             },
                         },
                     },
@@ -170,8 +176,8 @@ CONFIG_SCHEMA = {
             },
         },
     },
-    'required': ['type'],
-    'additionalProperties': False,
+    "required": ["type"],
+    "additionalProperties": False,
 }
 
 
@@ -182,7 +188,7 @@ def load(dirpath):
     else:
         dirpath = pathlib.Path(dirpath).expanduser().resolve()
 
-    content = load_yaml(dirpath / 'charmcraft.yaml')
+    content = load_yaml(dirpath / "charmcraft.yaml")
     if content is None:
         # configuration is mandatory only for some commands; when not provided, it will
         # be initialized all with defaults (but marked as not provided for later verification)
@@ -193,7 +199,8 @@ def load(dirpath):
         # config provided! validate the loaded config is ok and mark as such
         try:
             jsonschema.validate(
-                instance=content, schema=CONFIG_SCHEMA, format_checker=format_checker)
+                instance=content, schema=CONFIG_SCHEMA, format_checker=format_checker
+            )
         except jsonschema.ValidationError as exc:
             adapt_validation_error(exc)
         config_provided = True
@@ -202,6 +209,8 @@ def load(dirpath):
     now = datetime.datetime.utcnow()
 
     # inject project's config
-    content['project'] = Project(dirpath=dirpath, config_provided=config_provided, started_at=now)
+    content["project"] = Project(
+        dirpath=dirpath, config_provided=config_provided, started_at=now
+    )
 
     return Config(**content)

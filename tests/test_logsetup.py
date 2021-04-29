@@ -30,19 +30,19 @@ def create_message_handler(tmp_path):
 
     Always in a temp directory, maybe with patched modes.
     """
-    temp_log_file = tmp_path / 'test.log'
+    temp_log_file = tmp_path / "test.log"
     patchers = []
 
     def factory(modes=None):
-        p = patch('tempfile.mkstemp', lambda prefix: ('fd', str(temp_log_file)))
+        p = patch("tempfile.mkstemp", lambda prefix: ("fd", str(temp_log_file)))
         p.start()
         patchers.append(p)
 
         if modes is not None:
-            if 'verbose' not in modes:
+            if "verbose" not in modes:
                 # verbose should always be there, as it's used internally
-                modes['verbose'] = (10, "%(message)s")
-            p = patch.object(_MessageHandler, '_modes', modes)
+                modes["verbose"] = (10, "%(message)s")
+            p = patch.object(_MessageHandler, "_modes", modes)
             p.start()
             patchers.append(p)
 
@@ -57,11 +57,12 @@ def create_message_handler(tmp_path):
 
 # --- Tests for the MessageHandler
 
+
 def test_mode_setting_init(create_message_handler):
     """The internal mode is set on init and logger properly changed."""
     test_level = 123
     test_format = "test:: %(message)s"
-    mh = create_message_handler({'foo': (test_level, test_format)})
+    mh = create_message_handler({"foo": (test_level, test_format)})
     mh.init(mh.FOO)
 
     assert mh.mode == mh.FOO
@@ -73,7 +74,7 @@ def test_mode_setting_changed(create_message_handler):
     """The internal mode can be set later and logger properly changed."""
     test_level = 123
     test_format = "test:: %(message)s"
-    mh = create_message_handler({'foo': (0, ''), 'bar': (test_level, test_format)})
+    mh = create_message_handler({"foo": (0, ""), "bar": (test_level, test_format)})
     mh.init(mh.FOO)
     mh.set_mode(mh.BAR)
 
@@ -93,14 +94,14 @@ def test_logfile_all_stored(create_message_handler):
     logger.warning("test warning")
     logger.error("test error")
 
-    with open(mh._log_filepath, 'rt') as fh:
+    with open(mh._log_filepath, "rt") as fh:
         logcontent = fh.readlines()
 
     # start checking from pos 1, as in 0 we always have the bootstrap message
-    assert 'test debug' in logcontent[1]
-    assert 'test info' in logcontent[2]
-    assert 'test warning' in logcontent[3]
-    assert 'test error' in logcontent[4]
+    assert "test debug" in logcontent[1]
+    assert "test info" in logcontent[2]
+    assert "test warning" in logcontent[3]
+    assert "test error" in logcontent[4]
 
 
 def test_ended_success(caplog, create_message_handler):
@@ -156,12 +157,14 @@ def test_ended_commanderror_regular(caplog, create_message_handler):
     mh.init(mh.NORMAL)
     mh.ended_cmderror(CommandError("test controlled error"))
 
-    expected_msg = "test controlled error (full execution logs in {})".format(mh._log_filepath)
+    expected_msg = "test controlled error (full execution logs in {})".format(
+        mh._log_filepath
+    )
 
     # file is present, and it has the error
-    with open(mh._log_filepath, 'rt', encoding='ascii') as fh:
+    with open(mh._log_filepath, "rt", encoding="ascii") as fh:
         log_content = fh.read()
-    assert 'ERROR' in log_content
+    assert "ERROR" in log_content
     assert expected_msg in log_content
 
     # also it shown the error to the user
@@ -189,15 +192,16 @@ def test_ended_crash_while_normal(caplog, create_message_handler):
         mh.ended_crash(err)  # needs to have an exception "active"
 
     expected_msg = (
-        "charmcraft internal error! ValueError: crazy crash (full execution logs in {})".format(
-            mh._log_filepath))
+        "charmcraft internal error! "
+        "ValueError: crazy crash (full execution logs in {})".format(mh._log_filepath)
+    )
 
     # file is present, and it has the error and the traceback
-    with open(mh._log_filepath, 'rt', encoding='ascii') as fh:
+    with open(mh._log_filepath, "rt", encoding="ascii") as fh:
         log_content = fh.read()
-    assert 'ERROR' in log_content
+    assert "ERROR" in log_content
     assert expected_msg in log_content
-    assert 'Traceback' in log_content
+    assert "Traceback" in log_content
 
     # also it shown ONLY the error to the user
     (record,) = caplog.records
@@ -217,15 +221,16 @@ def test_ended_crash_while_verbose(caplog, create_message_handler):
         mh.ended_crash(err)  # needs to have an exception "active"
 
     expected_msg = (
-        "charmcraft internal error! ValueError: crazy crash (full execution logs in {})".format(
-            mh._log_filepath))
+        "charmcraft internal error! "
+        "ValueError: crazy crash (full execution logs in {})".format(mh._log_filepath)
+    )
 
     # file is present, and it has the error and the traceback
-    with open(mh._log_filepath, 'rt', encoding='ascii') as fh:
+    with open(mh._log_filepath, "rt", encoding="ascii") as fh:
         log_content = fh.read()
-    assert 'ERROR' in log_content
+    assert "ERROR" in log_content
     assert expected_msg in log_content
-    assert 'Traceback' in log_content
+    assert "Traceback" in log_content
 
     # also it shown the error to the user AND also the traceback
     (_, record) = caplog.records

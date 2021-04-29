@@ -22,15 +22,14 @@ import typing
 
 logger = logging.getLogger(__name__)
 
-KEEP = 'keep'
-SKIP = 'skip'
-FORCEKEEP = 'forcekeep'
+KEEP = "keep"
+SKIP = "skip"
+FORCEKEEP = "forcekeep"
 
 _unescapes = {
-    r'\!': '!',
-    r'\ ': ' ',
-    r'\#': '#',
-
+    r"\!": "!",
+    r"\ ": " ",
+    r"\#": "#",
 }
 
 
@@ -39,11 +38,11 @@ def _rstrip_unescaped(rule):
     i = len(rule) - 1
     last = len(rule)
     while i >= 0:
-        if rule[i] == '\n' or rule[i] == '\r':
+        if rule[i] == "\n" or rule[i] == "\r":
             last = i
-        elif rule[i] != ' ':
+        elif rule[i] != " ":
             break
-        elif i == 0 or rule[i - 1] != '\\':
+        elif i == 0 or rule[i - 1] != "\\":
             last = i
         i -= 1
     rule = rule[:last]
@@ -74,56 +73,62 @@ def _rule_to_regex(rule):
     # directories
 
     i, n = 0, len(rule)
-    res = ''
+    res = ""
     while i < n:
         c = rule[i]
         i += 1
-        if c == '*':
-            if i < n and rule[i] == '*':
+        if c == "*":
+            if i < n and rule[i] == "*":
                 i += 1
-                res += '.*'
+                res += ".*"
             else:
-                res += '[^/]*'
-        elif c == '?':
-            res += '[^/]'
-        elif c == '[':
+                res += "[^/]*"
+        elif c == "?":
+            res += "[^/]"
+        elif c == "[":
             j = i
-            if j < n and rule[j] == '!':
+            if j < n and rule[j] == "!":
                 j += 1
-            if j < n and rule[j] == ']':
+            if j < n and rule[j] == "]":
                 j += 1
-            while j < n and rule[j] != ']':
+            while j < n and rule[j] != "]":
                 j += 1
             if j >= n:
-                res += '\\['
+                res += "\\["
             else:
                 stuff = rule[i:j]
                 # Escape regex set operations (&~|).
-                stuff = re.sub(r'([&~|])', r'\\\1', stuff)
+                stuff = re.sub(r"([&~|])", r"\\\1", stuff)
                 i = j + 1
-                if stuff[0] == '!':
-                    stuff = '^' + stuff[1:]
-                elif stuff[0] in ('['):
-                    stuff = '\\' + stuff
-                res = '%s[%s]' % (res, stuff)
-        elif c == '/':
+                if stuff[0] == "!":
+                    stuff = "^" + stuff[1:]
+                elif stuff[0] in ("["):
+                    stuff = "\\" + stuff
+                res = "%s[%s]" % (res, stuff)
+        elif c == "/":
             # Special case of '/**/' which can match a single '/'
-            if i < n and rule[i] == '*' and rule[i - 1:i + 3] == '/**/':
+            if i < n and rule[i] == "*" and rule[i - 1 : i + 3] == "/**/":
                 i += 3
-                res = res + '.*/'
+                res = res + ".*/"
             else:
-                res = res + '/'
+                res = res + "/"
         else:
             res += re.escape(c)
-    res += r'\Z'
+    res += r"\Z"
     return res
 
 
 class _Matcher:
     """Couple a regex with other metadata for how we should match a given pattern."""
 
-    def __init__(self, line_num: int, orig_rule: str, invert: bool, only_dirs: bool,
-                 regex: typing.Pattern):
+    def __init__(
+        self,
+        line_num: int,
+        orig_rule: str,
+        invert: bool,
+        only_dirs: bool,
+        regex: typing.Pattern,
+    ):
         self.line_num = line_num
         self.orig_rule = orig_rule
         self.invert = invert
@@ -159,22 +164,22 @@ class JujuIgnore:
     def _compile_from(self, patterns: typing.Iterable[str]):
         for line_num, rule in enumerate(patterns, 1):
             orig_rule = rule
-            rule = rule.lstrip().rstrip('\r\n')
-            if not rule or rule.startswith('#'):
+            rule = rule.lstrip().rstrip("\r\n")
+            if not rule or rule.startswith("#"):
                 continue
             invert = False
-            if rule.startswith('!'):
+            if rule.startswith("!"):
                 invert = True
-                rule = rule.lstrip('!')
+                rule = rule.lstrip("!")
             rule = _unescape_rule(rule)
             only_dirs = False
-            if rule.endswith('/'):
+            if rule.endswith("/"):
                 only_dirs = True
-                rule = rule.rstrip('/')
-            if not rule.startswith('/'):
+                rule = rule.rstrip("/")
+            if not rule.startswith("/"):
                 # A rule that doesn't start with '/' means to match any
                 # subdirectory
-                rule = '**/' + rule
+                rule = "**/" + rule
             regex = _rule_to_regex(rule)
             m = _Matcher(
                 line_num=line_num,
@@ -184,7 +189,9 @@ class JujuIgnore:
                 regex=regex,
             )
             self._matchers.append(m)
-            logger.debug('Translated .jujuignore %d "%s" => "%s"', line_num, orig_rule, regex)
+            logger.debug(
+                'Translated .jujuignore %d "%s" => "%s"', line_num, orig_rule, regex
+            )
 
     def match(self, path: str, is_dir: bool) -> bool:
         """Check if the given path should be ignored.
@@ -197,8 +204,8 @@ class JujuIgnore:
             A boolean indicating whether the ignore rules matched the given path (thus the path
             should be ignored).
         """
-        if not path.startswith('/'):
-            path = '/' + path
+        if not path.startswith("/"):
+            path = "/" + path
         keep = True
         for matcher in self._matchers:
             matchRes = matcher.match(path, is_dir)
@@ -214,7 +221,7 @@ class JujuIgnore:
 # juju itself always includes these before adding the contents of .jujuignore
 # NOTE that this diverges from Juju ignore list, which also ignores "version",
 # because we need the version file to populate the store
-default_juju_ignore = '''
+default_juju_ignore = """
 .git
 .svn
 .hg
@@ -225,4 +232,6 @@ default_juju_ignore = '''
 /revision
 
 .jujuignore
-'''.split('\n')
+""".split(
+    "\n"
+)

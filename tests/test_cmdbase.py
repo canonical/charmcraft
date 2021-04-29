@@ -24,21 +24,21 @@ from charmcraft.main import COMMAND_GROUPS
 
 def test_commanderror_retcode_default():
     """The CommandError return code default."""
-    err = CommandError('problem')
+    err = CommandError("problem")
     assert err.retcode == 1
 
 
 def test_commanderror_retcode_given():
     """The CommandError holds the return code."""
-    err = CommandError('problem', retcode=4)
+    err = CommandError("problem", retcode=4)
     assert err.retcode == 4
 
 
 all_commands = list.__add__(*[commands for _, _, commands in COMMAND_GROUPS])
 
 
-@pytest.mark.parametrize('command', all_commands)
-@pytest.mark.parametrize('attrib', ['name', 'help_msg', 'overview'])
+@pytest.mark.parametrize("command", all_commands)
+@pytest.mark.parametrize("attrib", ["name", "help_msg", "overview"])
 def test_basecommand_mandatory_attributes(command, attrib):
     """All commands must provide the mandatory attributes."""
     assert getattr(command, attrib) is not None
@@ -46,12 +46,13 @@ def test_basecommand_mandatory_attributes(command, attrib):
 
 def test_basecommand_holds_the_indicated_info():
     """BaseCommand subclasses ."""
-    class TestClass(BaseCommand):
-        help_msg = 'help message'
-        name = 'test'
 
-    group = 'test group'
-    config = 'test config'
+    class TestClass(BaseCommand):
+        help_msg = "help message"
+        name = "test"
+
+    group = "test group"
+    config = "test config"
     tc = TestClass(group, config)
     assert tc.group == group
     assert tc.config == config
@@ -59,9 +60,10 @@ def test_basecommand_holds_the_indicated_info():
 
 def test_basecommand_fill_parser_optional():
     """BaseCommand subclasses are allowed to not override fill_parser."""
+
     class TestClass(BaseCommand):
-        help_msg = 'help message'
-        name = 'test'
+        help_msg = "help message"
+        name = "test"
 
         def __init__(self, group, config):
             self.done = False
@@ -70,17 +72,18 @@ def test_basecommand_fill_parser_optional():
         def run(self, parsed_args):
             self.done = True
 
-    tc = TestClass('group', 'config')
+    tc = TestClass("group", "config")
     tc.run([])
     assert tc.done
 
 
 def test_basecommand_run_mandatory():
     """BaseCommand subclasses must override run."""
-    class TestClass(BaseCommand):
-        help_msg = 'help message'
-        name = 'test'
 
-    tc = TestClass('group', 'config')
+    class TestClass(BaseCommand):
+        help_msg = "help message"
+        name = "test"
+
+    tc = TestClass("group", "config")
     with pytest.raises(NotImplementedError):
         tc.run([])

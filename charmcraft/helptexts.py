@@ -72,7 +72,9 @@ def _build_item(title, text, title_space):
     wrapped_lines = textwrap.wrap(text, text_space)
 
     # first line goes with the title at column 4
-    first = "    {:>{title_space}s}:  {}".format(title, wrapped_lines[0], title_space=title_space)
+    first = "    {:>{title_space}s}:  {}".format(
+        title, wrapped_lines[0], title_space=title_space
+    )
     result = [first]
 
     # the rest (if any) still aligned but without title
@@ -128,7 +130,7 @@ def get_full_help(command_groups, global_options):
     textblocks.append("\n".join(global_lines))
 
     common_lines = ["Starter commands:"]
-    for cmd in sorted(common_commands, key=attrgetter('name')):
+    for cmd in sorted(common_commands, key=attrgetter("name")):
         common_lines.extend(_build_item(cmd.name, cmd.help_msg, max_title_len))
     textblocks.append("\n".join(common_lines))
 
@@ -138,13 +140,17 @@ def get_full_help(command_groups, global_options):
         grouped_lines.extend(_build_item(group, command_names, max_title_len))
     textblocks.append("\n".join(grouped_lines))
 
-    textblocks.append(textwrap.dedent("""
+    textblocks.append(
+        textwrap.dedent(
+            """
         For more information about a command, run 'charmcraft help <command>'.
         For a summary of all commands, run 'charmcraft help --all'.
-    """))
+    """
+        )
+    )
 
     # join all stripped blocks, leaving ONE empty blank line between
-    text = '\n\n'.join(block.strip() for block in textblocks) + '\n'
+    text = "\n\n".join(block.strip() for block in textblocks) + "\n"
     return text
 
 
@@ -194,12 +200,16 @@ def get_detailed_help(command_groups, global_options):
             group_lines.extend(_build_item(cmd.name, cmd.help_msg, max_title_len))
         textblocks.append("\n".join(group_lines))
 
-    textblocks.append(textwrap.dedent("""
+    textblocks.append(
+        textwrap.dedent(
+            """
         For more information about a specific command, run 'charmcraft help <command>'.
-    """))
+    """
+        )
+    )
 
     # join all stripped blocks, leaving ONE empty blank line between
-    text = '\n\n'.join(block.strip() for block in textblocks) + '\n'
+    text = "\n\n".join(block.strip() for block in textblocks) + "\n"
     return text
 
 
@@ -228,17 +238,24 @@ def get_command_help(command_groups, command, arguments):
     parameters = []
     options = []
     for name, title in arguments:
-        if name[0] == '-':
+        if name[0] == "-":
             options.append((name, title))
         else:
             parameters.append(name)
 
-    textblocks.append(textwrap.dedent("""\
+    textblocks.append(
+        textwrap.dedent(
+            """\
         Usage:
             charmcraft {} [options] {}
-    """.format(command.name, " ".join("<{}>".format(parameter) for parameter in parameters))))
+    """.format(
+                command.name,
+                " ".join("<{}>".format(parameter) for parameter in parameters),
+            )
+        )
+    )
 
-    textblocks.append("Summary:{}".format(textwrap.indent(command.overview, '    ')))
+    textblocks.append("Summary:{}".format(textwrap.indent(command.overview, "    ")))
 
     # column alignment is dictated by longest options title
     max_title_len = max(len(title) for title, text in options)
@@ -255,17 +272,21 @@ def get_command_help(command_groups, command, arguments):
             break
     else:
         raise RuntimeError("Internal inconsistency in commands groups")
-    other_command_names = [c.name for c in command_classes if not isinstance(command, c)]
+    other_command_names = [
+        c.name for c in command_classes if not isinstance(command, c)
+    ]
     if other_command_names:
         see_also_block = ["See also:"]
         see_also_block.extend(("    " + name) for name in sorted(other_command_names))
-        textblocks.append('\n'.join(see_also_block))
+        textblocks.append("\n".join(see_also_block))
 
     # footer
-    textblocks.append("""
+    textblocks.append(
+        """
         For a summary of all commands, run 'charmcraft help --all'.
-    """)
+    """
+    )
 
     # join all stripped blocks, leaving ONE empty blank line between
-    text = '\n\n'.join(block.strip() for block in textblocks) + '\n'
+    text = "\n\n".join(block.strip() for block in textblocks) + "\n"
     return text

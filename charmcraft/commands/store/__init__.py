@@ -43,15 +43,19 @@ from charmcraft.utils import (
 from .store import Store
 from .registry import ImageHandler
 
-logger = logging.getLogger('charmcraft.commands.store')
+logger = logging.getLogger("charmcraft.commands.store")
 
 # some types
 EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
-ResourceType = namedtuple("ResourceType", "file oci_image")(file="file", oci_image="oci-image")
+ResourceType = namedtuple("ResourceType", "file oci_image")(
+    file="file", oci_image="oci-image"
+)
 
 LibData = namedtuple(
-    'LibData', 'lib_id api patch content content_hash full_name path lib_name charm_name')
-OCIImageSpec = namedtuple('OCIImageSpec', 'organization name reference')
+    "LibData",
+    "lib_id api patch content content_hash full_name path lib_name charm_name",
+)
+OCIImageSpec = namedtuple("OCIImageSpec", "organization name reference")
 
 # The token used in the 'init' command (as bytes for easier comparison)
 INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
@@ -60,9 +64,9 @@ INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
 def get_name_from_metadata():
     """Return the name if present and plausible in metadata.yaml."""
     try:
-        with open('metadata.yaml', 'rb') as fh:
+        with open("metadata.yaml", "rb") as fh:
             metadata = yaml.safe_load(fh)
-        charm_name = metadata['name']
+        charm_name = metadata["name"]
     except (yaml.error.YAMLError, OSError, KeyError):
         return
     return charm_name
@@ -70,21 +74,22 @@ def get_name_from_metadata():
 
 def create_importable_name(charm_name):
     """Convert a charm name to something that is importable in python."""
-    return charm_name.replace('-', '_')
+    return charm_name.replace("-", "_")
 
 
 def create_charm_name_from_importable(charm_name):
     """Convert a charm name from the importable form to the real form."""
     # _ is invalid in charm names, so we know it's intended to be '-'
-    return charm_name.replace('_', '-')
+    return charm_name.replace("_", "-")
 
 
 class LoginCommand(BaseCommand):
     """Login to Charmhub."""
 
-    name = 'login'
+    name = "login"
     help_msg = "Login to Charmhub"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Login to Charmhub.
 
         Charmcraft will provide a URL for the Charmhub login. When you have
@@ -95,7 +100,8 @@ class LoginCommand(BaseCommand):
         from your local system, especially in a shared environment.
 
         See also `charmcraft whoami` to verify that you are logged in.
-    """)
+    """
+    )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -107,9 +113,10 @@ class LoginCommand(BaseCommand):
 class LogoutCommand(BaseCommand):
     """Clear Charmhub token."""
 
-    name = 'logout'
+    name = "logout"
     help_msg = "Logout from Charmhub and remove token"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Clear the Charmhub token.
 
         Charmcraft will remove the local token used for Charmhub access.
@@ -118,7 +125,8 @@ class LogoutCommand(BaseCommand):
 
         See also `charmcraft whoami` to verify that you are logged in,
         and `charmcraft login`.
-    """)
+    """
+    )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -130,13 +138,15 @@ class LogoutCommand(BaseCommand):
 class WhoamiCommand(BaseCommand):
     """Show login information."""
 
-    name = 'whoami'
+    name = "whoami"
     help_msg = "Show your Charmhub login status"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Show your Charmhub login status.
 
         See also `charmcraft login` and `charmcraft logout`.
-    """)
+    """
+    )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -144,11 +154,11 @@ class WhoamiCommand(BaseCommand):
         result = store.whoami()
 
         data = [
-            ('name:', result.name),
-            ('username:', result.username),
-            ('id:', result.userid),
+            ("name:", result.name),
+            ("username:", result.username),
+            ("id:", result.userid),
         ]
-        table = tabulate(data, tablefmt='plain')
+        table = tabulate(data, tablefmt="plain")
         for line in table.splitlines():
             logger.info(line)
 
@@ -156,9 +166,10 @@ class WhoamiCommand(BaseCommand):
 class RegisterCharmNameCommand(BaseCommand):
     """Register a charm name in Charmhub."""
 
-    name = 'register'
+    name = "register"
     help_msg = "Register a charm name in Charmhub"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Register a charm name in Charmhub.
 
         Claim a name for your operator in Charmhub. Once you have registered
@@ -177,26 +188,30 @@ class RegisterCharmNameCommand(BaseCommand):
            https://discourse.charmhub.io/c/charm
 
         Registration will take you through login if needed.
-    """)
+    """
+    )
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="The name to register in Charmhub")
+        parser.add_argument("name", help="The name to register in Charmhub")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         store.register_name(parsed_args.name, EntityType.charm)
-        logger.info("You are now the publisher of charm %r in Charmhub.", parsed_args.name)
+        logger.info(
+            "You are now the publisher of charm %r in Charmhub.", parsed_args.name
+        )
 
 
 class RegisterBundleNameCommand(BaseCommand):
     """Register a bundle name in the Store."""
 
-    name = 'register-bundle'
+    name = "register-bundle"
     help_msg = "Register a bundle name in the Store"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Register a bundle name in the Store.
 
         Claim a name for your bundle in Charmhub. Once you have registered
@@ -215,25 +230,29 @@ class RegisterBundleNameCommand(BaseCommand):
            https://discourse.charmhub.io/c/charm
 
         Registration will take you through login if needed.
-    """)
+    """
+    )
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="The name to register in Charmhub")
+        parser.add_argument("name", help="The name to register in Charmhub")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         store.register_name(parsed_args.name, EntityType.bundle)
-        logger.info("You are now the publisher of bundle %r in Charmhub.", parsed_args.name)
+        logger.info(
+            "You are now the publisher of bundle %r in Charmhub.", parsed_args.name
+        )
 
 
 class ListNamesCommand(BaseCommand):
     """List the entities registered in Charmhub."""
 
-    name = 'names'
+    name = "names"
     help_msg = "List your registered charm and bundle names in Charmhub"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         An overview of names you have registered to publish in Charmhub.
 
           $ charmcraft names
@@ -245,7 +264,8 @@ class ListNamesCommand(BaseCommand):
         other accounts with permission to collaborate on that specific name.
 
         Listing names will take you through login if needed.
-    """)
+    """
+    )
     common = True
 
     def run(self, parsed_args):
@@ -256,18 +276,20 @@ class ListNamesCommand(BaseCommand):
             logger.info("No charms or bundles registered.")
             return
 
-        headers = ['Name', 'Type', 'Visibility', 'Status']
+        headers = ["Name", "Type", "Visibility", "Status"]
         data = []
         for item in result:
-            visibility = 'private' if item.private else 'public'
-            data.append([
-                item.name,
-                item.entity_type,
-                visibility,
-                item.status,
-            ])
+            visibility = "private" if item.private else "public"
+            data.append(
+                [
+                    item.name,
+                    item.entity_type,
+                    visibility,
+                    item.status,
+                ]
+            )
 
-        table = tabulate(data, headers=headers, tablefmt='plain')
+        table = tabulate(data, headers=headers, tablefmt="plain")
         for line in table.splitlines():
             logger.info(line)
 
@@ -281,24 +303,27 @@ def get_name_from_zip(filepath):
 
     # get the name from the given file (trying first if it's a charm, then a bundle,
     # otherwise it's an error)
-    if 'metadata.yaml' in zf.namelist():
+    if "metadata.yaml" in zf.namelist():
         try:
-            name = yaml.safe_load(zf.read('metadata.yaml'))['name']
+            name = yaml.safe_load(zf.read("metadata.yaml"))["name"]
         except Exception:
             raise CommandError(
                 "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
-                "a 'name' key.".format(str(filepath)))
-    elif 'bundle.yaml' in zf.namelist():
+                "a 'name' key.".format(str(filepath))
+            )
+    elif "bundle.yaml" in zf.namelist():
         try:
-            name = yaml.safe_load(zf.read('bundle.yaml'))['name']
+            name = yaml.safe_load(zf.read("bundle.yaml"))["name"]
         except Exception:
             raise CommandError(
                 "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
-                "a 'name' key.".format(str(filepath)))
+                "a 'name' key.".format(str(filepath))
+            )
     else:
         raise CommandError(
             "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
-            "nor a bundle ('bundle.yaml' not found).".format(str(filepath)))
+            "nor a bundle ('bundle.yaml' not found).".format(str(filepath))
+        )
 
     return name
 
@@ -306,9 +331,10 @@ def get_name_from_zip(filepath):
 class UploadCommand(BaseCommand):
     """Upload a charm or bundle to Charmhub."""
 
-    name = 'upload'
+    name = "upload"
     help_msg = "Upload a charm or bundle to Charmhub"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Upload a charm or bundle to Charmhub.
 
         Push a charm or bundle to Charmhub where it will be verified.
@@ -320,15 +346,20 @@ class UploadCommand(BaseCommand):
         new charm or bundle revision.
 
         Upload will take you through login if needed.
-    """)
+    """
+    )
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('filepath', type=useful_filepath, help="The charm or bundle to upload")
         parser.add_argument(
-            '--release', action='append',
-            help="The channel(s) to release to (this option can be indicated multiple times)")
+            "filepath", type=useful_filepath, help="The charm or bundle to upload"
+        )
+        parser.add_argument(
+            "--release",
+            action="append",
+            help="The channel(s) to release to (this option can be indicated multiple times)",
+        )
 
     def _validate_template_is_handled(self, filepath):
         """Verify the zip does not have any file with the 'init' template TODO marker.
@@ -349,7 +380,8 @@ class UploadCommand(BaseCommand):
             raise CommandError(
                 "Cannot upload the charm as it include the following files with a leftover "
                 "TEMPLATE-TODO token from when the project was created using the 'init' "
-                "command: {}".format(", ".join(tainted_filenames)))
+                "command: {}".format(", ".join(tainted_filenames))
+            )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -372,9 +404,10 @@ class UploadCommand(BaseCommand):
 class ListRevisionsCommand(BaseCommand):
     """List revisions for a charm or a bundle."""
 
-    name = 'revisions'
+    name = "revisions"
     help_msg = "List revisions for a charm or a bundle in Charmhub"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Show version, date and status for each revision in Charmhub.
 
         For example:
@@ -384,12 +417,13 @@ class ListRevisionsCommand(BaseCommand):
            1           1          2020-11-15    released
 
         Listing revisions will take you through login if needed.
-    """)
+    """
+    )
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="The name of the charm or bundle")
+        parser.add_argument("name", help="The name of the charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -399,24 +433,26 @@ class ListRevisionsCommand(BaseCommand):
             logger.info("No revisions found.")
             return
 
-        headers = ['Revision', 'Version', 'Created at', 'Status']
+        headers = ["Revision", "Version", "Created at", "Status"]
         data = []
-        for item in sorted(result, key=attrgetter('revision'), reverse=True):
+        for item in sorted(result, key=attrgetter("revision"), reverse=True):
             # use just the status or include error message/code in it (if exist)
             if item.errors:
                 errors = ("{0.message} [{0.code}]".format(e) for e in item.errors)
-                status = "{}: {}".format(item.status, '; '.join(errors))
+                status = "{}: {}".format(item.status, "; ".join(errors))
             else:
                 status = item.status
 
-            data.append([
-                item.revision,
-                item.version,
-                item.created_at.strftime('%Y-%m-%d'),
-                status,
-            ])
+            data.append(
+                [
+                    item.revision,
+                    item.version,
+                    item.created_at.strftime("%Y-%m-%d"),
+                    status,
+                ]
+            )
 
-        table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
+        table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
             logger.info(line)
 
@@ -424,9 +460,10 @@ class ListRevisionsCommand(BaseCommand):
 class ReleaseCommand(BaseCommand):
     """Release a charm or bundle revision to specific channels."""
 
-    name = 'release'
+    name = "release"
     help_msg = "Release a charm or bundle revision in one or more channels"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Release a charm or bundle revision in the channel(s) provided.
 
         Charm or bundle revisions are not published for anybody else until you
@@ -462,45 +499,67 @@ class ReleaseCommand(BaseCommand):
                 --channel=beta --resource=thedb:4
 
         Listing revisions will take you through login if needed.
-    """)
+    """
+    )
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="The name of charm or bundle")
+        parser.add_argument("name", help="The name of charm or bundle")
         parser.add_argument(
-            '-r', '--revision', type=SingleOptionEnsurer(int), required=True,
-            help='The revision to release')
+            "-r",
+            "--revision",
+            type=SingleOptionEnsurer(int),
+            required=True,
+            help="The revision to release",
+        )
         parser.add_argument(
-            '-c', '--channel', action='append', required=True,
-            help="The channel(s) to release to (this option can be indicated multiple times)")
+            "-c",
+            "--channel",
+            action="append",
+            required=True,
+            help="The channel(s) to release to (this option can be indicated multiple times)",
+        )
         parser.add_argument(
-            '--resource', action='append', type=ResourceOption(), default=[],
+            "--resource",
+            action="append",
+            type=ResourceOption(),
+            default=[],
             help=(
                 "The resource(s) to attach to the release, in the <name>:<revision> format "
-                "(this option can be indicated multiple times)"))
+                "(this option can be indicated multiple times)"
+            ),
+        )
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         store.release(
-            parsed_args.name, parsed_args.revision, parsed_args.channel, parsed_args.resource)
+            parsed_args.name,
+            parsed_args.revision,
+            parsed_args.channel,
+            parsed_args.resource,
+        )
 
         msg = "Revision %d of charm %r released to %s"
         args = [parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel)]
         if parsed_args.resource:
             msg += " (attaching resources: %s)"
-            args.append(", ".join(
-                "{!r} r{}".format(r.name, r.revision) for r in parsed_args.resource))
+            args.append(
+                ", ".join(
+                    "{!r} r{}".format(r.name, r.revision) for r in parsed_args.resource
+                )
+            )
         logger.info(msg, *args)
 
 
 class StatusCommand(BaseCommand):
     """Show channel status for a charm or bundle."""
 
-    name = 'status'
+    name = "status"
     help_msg = "Show channel and released revisions"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Show channels and released revisions in Charmhub.
 
         Charm revisions are not available to users until they are released
@@ -517,19 +576,20 @@ class StatusCommand(BaseCommand):
                    edge       1          1
 
         Showing channels will take you through login if needed.
-    """)
+    """
+    )
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="The name of the charm or bundle")
+        parser.add_argument("name", help="The name of the charm or bundle")
 
     def _build_resources_repr(self, resources):
         """Build a representation of a list of resources."""
         if resources:
-            result = ', '.join("{} (r{})".format(r.name, r.revision) for r in resources)
+            result = ", ".join("{} (r{})".format(r.name, r.revision) for r in resources)
         else:
-            result = '-'
+            result = "-"
         return result
 
     def run(self, parsed_args):
@@ -554,7 +614,9 @@ class StatusCommand(BaseCommand):
             if channel.track not in all_tracks:
                 all_tracks.append(channel.track)
 
-            nonbranches_list, branches_list = per_track.setdefault(channel.track, ([], []))
+            nonbranches_list, branches_list = per_track.setdefault(
+                channel.track, ([], [])
+            )
             if channel.branch is None:
                 # insert branch right after its fallback
                 for idx, stored in enumerate(nonbranches_list, 1):
@@ -567,12 +629,12 @@ class StatusCommand(BaseCommand):
                 branches_list.append(channel)
                 branch_present = True
 
-        headers = ['Track', 'Channel', 'Version', 'Revision']
+        headers = ["Track", "Channel", "Version", "Revision"]
         resources_present = any(release.resources for release in channel_map)
         if resources_present:
-            headers.append('Resources')
+            headers.append("Resources")
         if branch_present:
-            headers.append('Expires at')
+            headers.append("Expires at")
 
         # show everything, grouped by tracks, with regular channels at first and
         # branches (if any) after those
@@ -588,7 +650,9 @@ class StatusCommand(BaseCommand):
                 # get the release of the channel, fallbacking accordingly
                 release = releases_by_channel.get(channel.name)
                 if release is None:
-                    version = revno = resources = '↑' if release_shown_for_this_track else '-'
+                    version = revno = resources = (
+                        "↑" if release_shown_for_this_track else "-"
+                    )
                 else:
                     release_shown_for_this_track = True
                     revno = release.revision
@@ -602,20 +666,20 @@ class StatusCommand(BaseCommand):
                 data.append(datum)
 
                 # stop showing the track name for the rest of the track
-                shown_track = ''
+                shown_track = ""
 
             for branch in branches:
-                description = '/'.join((branch.risk, branch.branch))
+                description = "/".join((branch.risk, branch.branch))
                 release = releases_by_channel[branch.name]
                 expiration = release.expires_at.isoformat()
                 revision = revisions_by_revno[release.revision]
-                datum = ['', description, revision.version, release.revision]
+                datum = ["", description, revision.version, release.revision]
                 if resources_present:
                     datum.append(self._build_resources_repr(release.resources))
                 datum.append(expiration)
                 data.append(datum)
 
-        table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
+        table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
             logger.info(line)
 
@@ -626,7 +690,8 @@ class _BadLibraryPathError(CommandError):
     def __init__(self, path):
         super().__init__(
             "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
-            "".format(path))
+            "".format(path)
+        )
 
 
 class _BadLibraryNameError(CommandError):
@@ -634,15 +699,17 @@ class _BadLibraryNameError(CommandError):
 
     def __init__(self, name):
         super().__init__(
-            "Charm library name {!r} must conform to charms.<charm>.vN.<libname>"
-            .format(name))
+            "Charm library name {!r} must conform to charms.<charm>.vN.<libname>".format(
+                name
+            )
+        )
 
 
 def _get_positive_int(raw_value):
     """Convert the raw value for api/patch into a positive integer."""
     value = int(raw_value)
     if value < 0:
-        raise ValueError('negative')
+        raise ValueError("negative")
     return value
 
 
@@ -661,82 +728,101 @@ def _get_lib_info(*, full_name=None, lib_path=None):
             libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
         except ValueError:
             raise _BadLibraryPathError(lib_path)
-        if libsdir != 'lib' or charmsdir != 'charms' or lib_path.suffix != '.py':
+        if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":
             raise _BadLibraryPathError(lib_path)
-        full_name = '.'.join((charmsdir, importable_charm_name, v_api, lib_path.stem))
+        full_name = ".".join((charmsdir, importable_charm_name, v_api, lib_path.stem))
 
     else:
         # build the path! convert a lib name with dots to the full path, including lib
         # dir and Python extension.
         #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
         try:
-            charmsdir, importable_charm_name, v_api, libfile = full_name.split('.')
+            charmsdir, importable_charm_name, v_api, libfile = full_name.split(".")
         except ValueError:
             raise _BadLibraryNameError(full_name)
-        if charmsdir != 'charms':
+        if charmsdir != "charms":
             raise _BadLibraryNameError(full_name)
-        path = pathlib.Path('lib')
-        lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + '.py')
+        path = pathlib.Path("lib")
+        lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + ".py")
 
     # charm names in the path can contain '_' to be importable
     # these should be '-', so change them back
     charm_name = create_charm_name_from_importable(importable_charm_name)
 
-    if v_api[0] != 'v' or not v_api[1:].isdigit():
+    if v_api[0] != "v" or not v_api[1:].isdigit():
         raise CommandError(
-            "The API version in the library path must be 'vN' where N is an integer.")
+            "The API version in the library path must be 'vN' where N is an integer."
+        )
     api_from_path = int(v_api[1:])
 
     lib_name = lib_path.stem
     if not lib_path.exists():
         return LibData(
-            lib_id=None, api=api_from_path, patch=-1, content_hash=None, content=None,
-            full_name=full_name, path=lib_path, lib_name=lib_name, charm_name=charm_name)
+            lib_id=None,
+            api=api_from_path,
+            patch=-1,
+            content_hash=None,
+            content=None,
+            full_name=full_name,
+            path=lib_path,
+            lib_name=lib_name,
+            charm_name=charm_name,
+        )
 
     # parse the file and extract metadata from it, while hashing
-    metadata_fields = (b'LIBAPI', b'LIBPATCH', b'LIBID')
+    metadata_fields = (b"LIBAPI", b"LIBPATCH", b"LIBID")
     metadata = dict.fromkeys(metadata_fields)
     hasher = hashlib.sha256()
-    with lib_path.open('rb') as fh:
+    with lib_path.open("rb") as fh:
         for line in fh:
             if line.startswith(metadata_fields):
                 try:
-                    field, value = [x.strip() for x in line.split(b'=')]
+                    field, value = [x.strip() for x in line.split(b"=")]
                 except ValueError:
-                    raise CommandError("Bad metadata line in {}: {!r}".format(lib_path, line))
+                    raise CommandError(
+                        "Bad metadata line in {}: {!r}".format(lib_path, line)
+                    )
                 metadata[field] = value
             else:
                 hasher.update(line)
 
-    missing = [k.decode('ascii') for k, v in metadata.items() if v is None]
+    missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
     if missing:
         raise CommandError(
-            "Library {} is missing the mandatory metadata fields: {}."
-            .format(lib_path, ', '.join(sorted(missing))))
+            "Library {} is missing the mandatory metadata fields: {}.".format(
+                lib_path, ", ".join(sorted(missing))
+            )
+        )
 
-    bad_api_patch_msg = "Library {} metadata field {} is not zero or a positive integer."
+    bad_api_patch_msg = (
+        "Library {} metadata field {} is not zero or a positive integer."
+    )
     try:
-        libapi = _get_positive_int(metadata[b'LIBAPI'])
+        libapi = _get_positive_int(metadata[b"LIBAPI"])
     except ValueError:
-        raise CommandError(bad_api_patch_msg.format(lib_path, 'LIBAPI'))
+        raise CommandError(bad_api_patch_msg.format(lib_path, "LIBAPI"))
     try:
-        libpatch = _get_positive_int(metadata[b'LIBPATCH'])
+        libpatch = _get_positive_int(metadata[b"LIBPATCH"])
     except ValueError:
-        raise CommandError(bad_api_patch_msg.format(lib_path, 'LIBPATCH'))
+        raise CommandError(bad_api_patch_msg.format(lib_path, "LIBPATCH"))
 
     if libapi == 0 and libpatch == 0:
         raise CommandError(
-            "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero."
-            .format(lib_path))
+            "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
+                lib_path
+            )
+        )
 
     if libapi != api_from_path:
         raise CommandError(
-            "Library {} metadata field LIBAPI is different from the version in the path."
-            .format(lib_path))
+            "Library {} metadata field LIBAPI is different from the version in the path.".format(
+                lib_path
+            )
+        )
 
     bad_libid_msg = "Library {} metadata field LIBID must be a non-empty ASCII string."
     try:
-        libid = ast.literal_eval(metadata[b'LIBID'].decode('ascii'))
+        libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
     except (ValueError, UnicodeDecodeError):
         raise CommandError(bad_libid_msg.format(lib_path))
     if not libid or not isinstance(libid, str):
@@ -746,8 +832,16 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     content = lib_path.read_text()
 
     return LibData(
-        lib_id=libid, api=libapi, patch=libpatch, content_hash=content_hash, content=content,
-        full_name=full_name, path=lib_path, lib_name=lib_name, charm_name=charm_name)
+        lib_id=libid,
+        api=libapi,
+        patch=libpatch,
+        content_hash=content_hash,
+        content=content,
+        full_name=full_name,
+        path=lib_path,
+        lib_name=lib_name,
+        charm_name=charm_name,
+    )
 
 
 def _get_libs_from_tree(charm_name=None):
@@ -761,17 +855,17 @@ def _get_libs_from_tree(charm_name=None):
     local_libs_data = []
 
     if charm_name is None:
-        base_dir = pathlib.Path('lib') / 'charms'
+        base_dir = pathlib.Path("lib") / "charms"
         charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
     else:
         importable_charm_name = create_importable_name(charm_name)
-        base_dir = pathlib.Path('lib') / 'charms' / importable_charm_name
+        base_dir = pathlib.Path("lib") / "charms" / importable_charm_name
         charm_dirs = [base_dir] if base_dir.is_dir() else []
 
     for charm_dir in charm_dirs:
         for v_dir in sorted(charm_dir.iterdir()):
-            if v_dir.is_dir() and v_dir.name[0] == 'v' and v_dir.name[1:].isdigit():
-                for libfile in sorted(v_dir.glob('*.py')):
+            if v_dir.is_dir() and v_dir.name[0] == "v" and v_dir.name[1:].isdigit():
+                for libfile in sorted(v_dir.glob("*.py")):
                     local_libs_data.append(_get_lib_info(lib_path=libfile))
 
     found_libs = [lib_data.full_name for lib_data in local_libs_data]
@@ -782,9 +876,10 @@ def _get_libs_from_tree(charm_name=None):
 class CreateLibCommand(BaseCommand):
     """Create a charm library."""
 
-    name = 'create-lib'
+    name = "create-lib"
     help_msg = "Create a charm library"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Create a charm library.
 
         Charmcraft manages charm libraries, which are published by charmers
@@ -803,52 +898,60 @@ class CreateLibCommand(BaseCommand):
         template Python library.
 
         Creating a charm library will take you through login if needed.
-    """)
+    """
+    )
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('name', help="The name of the library file (e.g. 'db')")
+        parser.add_argument("name", help="The name of the library file (e.g. 'db')")
 
     def run(self, parsed_args):
         """Run the command."""
         lib_name = parsed_args.name
-        valid_all_chars = set(string.ascii_lowercase + string.digits + '_')
+        valid_all_chars = set(string.ascii_lowercase + string.digits + "_")
         valid_first_char = string.ascii_lowercase
-        if set(lib_name) - valid_all_chars or not lib_name or lib_name[0] not in valid_first_char:
+        if (
+            set(lib_name) - valid_all_chars
+            or not lib_name
+            or lib_name[0] not in valid_first_char
+        ):
             raise CommandError(
                 "Invalid library name. Must only use lowercase alphanumeric "
-                "characters and underscore, starting with alpha.")
+                "characters and underscore, starting with alpha."
+            )
 
         charm_name = get_name_from_metadata()
         if charm_name is None:
             raise CommandError(
                 "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                "directory with metadata.yaml.")
+                "directory with metadata.yaml."
+            )
 
         # '-' is valid in charm names, but not in a python import
         # mutate the name so the path is a valid import
         importable_charm_name = create_importable_name(charm_name)
 
         # all libraries born with API version 0
-        full_name = 'charms.{}.v0.{}'.format(importable_charm_name, lib_name)
+        full_name = "charms.{}.v0.{}".format(importable_charm_name, lib_name)
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CommandError('This library already exists: {}'.format(lib_path))
+            raise CommandError("This library already exists: {}".format(lib_path))
 
         store = Store(self.config.charmhub)
         lib_id = store.create_library_id(charm_name, lib_name)
 
         # create the new library file from the template
-        env = get_templates_environment('charmlibs')
-        template = env.get_template('new_library.py.j2')
+        env = get_templates_environment("charmlibs")
+        template = env.get_template("new_library.py.j2")
         context = dict(lib_id=lib_id)
         try:
             lib_path.parent.mkdir(parents=True, exist_ok=True)
             lib_path.write_text(template.render(context))
         except OSError as exc:
             raise CommandError(
-                "Error writing the library in {}: {!r}.".format(lib_path, exc))
+                "Error writing the library in {}: {!r}.".format(lib_path, exc)
+            )
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
         logger.info("Consider 'git add %s'.", lib_path)
@@ -857,9 +960,10 @@ class CreateLibCommand(BaseCommand):
 class PublishLibCommand(BaseCommand):
     """Publish one or more charm libraries."""
 
-    name = 'publish-lib'
+    name = "publish-lib"
     help_msg = "Publish one or more charm libraries"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Publish charm libraries.
 
         Upload and release in Charmhub the new api/patch version of the
@@ -867,13 +971,16 @@ class PublishLibCommand(BaseCommand):
 
         It will automatically take you through the login process if
         your credentials are missing or too old.
-    """)
+    """
+    )
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'library', nargs='?',
-            help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all")
+            "library",
+            nargs="?",
+            help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -881,17 +988,23 @@ class PublishLibCommand(BaseCommand):
         if charm_name is None:
             raise CommandError(
                 "Can't access name in 'metadata.yaml' file. The 'publish-lib' command needs to "
-                "be executed in a valid project's directory.")
+                "be executed in a valid project's directory."
+            )
 
         if parsed_args.library:
             lib_data = _get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
                 raise CommandError(
-                    "The specified library was not found at path {}.".format(lib_data.path))
+                    "The specified library was not found at path {}.".format(
+                        lib_data.path
+                    )
+                )
             if lib_data.charm_name != charm_name:
                 raise CommandError(
                     "The library {} does not belong to this charm {!r}.".format(
-                        lib_data.full_name, charm_name))
+                        lib_data.full_name, charm_name
+                    )
+                )
             local_libs_data = [lib_data]
         else:
             local_libs_data = _get_libs_from_tree(charm_name)
@@ -914,56 +1027,86 @@ class PublishLibCommand(BaseCommand):
                 # the store is more advanced than local
                 logger.info(
                     "Library %s is out-of-date locally, Charmhub has version %d.%d, please "
-                    "fetch the updates before publishing.", lib_data.full_name, tip.api, tip.patch)
+                    "fetch the updates before publishing.",
+                    lib_data.full_name,
+                    tip.api,
+                    tip.patch,
+                )
             elif tip.patch == lib_data.patch:
                 # the store has same version numbers than local
                 if tip.content_hash == lib_data.content_hash:
-                    logger.info("Library %s is already updated in Charmhub.", lib_data.full_name)
+                    logger.info(
+                        "Library %s is already updated in Charmhub.", lib_data.full_name
+                    )
                 else:
                     # but shouldn't as hash is different!
                     logger.info(
                         "Library %s version %d.%d is the same than in Charmhub but content is "
-                        "different", lib_data.full_name, tip.api, tip.patch)
+                        "different",
+                        lib_data.full_name,
+                        tip.api,
+                        tip.patch,
+                    )
             elif tip.patch + 1 == lib_data.patch:
                 # local is correctly incremented
                 if tip.content_hash == lib_data.content_hash:
                     # but shouldn't as hash is the same!
                     logger.info(
                         "Library %s LIBPATCH number was incorrectly incremented, Charmhub has the "
-                        "same content in version %d.%d.", lib_data.full_name, tip.api, tip.patch)
+                        "same content in version %d.%d.",
+                        lib_data.full_name,
+                        tip.api,
+                        tip.patch,
+                    )
                 else:
                     to_publish.append(lib_data)
             else:
                 logger.info(
                     "Library %s has a wrong LIBPATCH number, it's too high, Charmhub "
-                    "highest version is %d.%d.", lib_data.full_name, tip.api, tip.patch)
+                    "highest version is %d.%d.",
+                    lib_data.full_name,
+                    tip.api,
+                    tip.patch,
+                )
 
         for lib_data in to_publish:
             store.create_library_revision(
-                lib_data.charm_name, lib_data.lib_id, lib_data.api, lib_data.patch,
-                lib_data.content, lib_data.content_hash)
+                lib_data.charm_name,
+                lib_data.lib_id,
+                lib_data.api,
+                lib_data.patch,
+                lib_data.content,
+                lib_data.content_hash,
+            )
             logger.info(
                 "Library %s sent to the store with version %d.%d",
-                lib_data.full_name, lib_data.api, lib_data.patch)
+                lib_data.full_name,
+                lib_data.api,
+                lib_data.patch,
+            )
 
 
 class FetchLibCommand(BaseCommand):
     """Fetch one or more charm libraries."""
 
-    name = 'fetch-lib'
+    name = "fetch-lib"
     help_msg = "Fetch one or more charm libraries"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Fetch charm libraries.
 
         The first time a library is downloaded the command will create the needed
         directories to place it, subsequent fetches will just update the local copy.
-    """)
+    """
+    )
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'library', nargs='?',
-            help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all")
+            "library",
+            nargs="?",
+            help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -980,7 +1123,7 @@ class FetchLibCommand(BaseCommand):
                 item = dict(charm_name=lib.charm_name, lib_name=lib.lib_name)
             else:
                 item = dict(lib_id=lib.lib_id)
-            item['api'] = lib.api
+            item["api"] = lib.api
             to_query.append(item)
         libs_tips = store.get_libraries_tips(to_query)
 
@@ -991,7 +1134,10 @@ class FetchLibCommand(BaseCommand):
             # fix any missing lib id using the Store info
             if lib_data.lib_id is None:
                 for tip in libs_tips.values():
-                    if lib_data.charm_name == tip.charm_name and lib_data.lib_name == tip.lib_name:
+                    if (
+                        lib_data.charm_name == tip.charm_name
+                        and lib_data.lib_name == tip.lib_name
+                    ):
                         lib_data = lib_data._replace(lib_id=tip.lib_id)
                         break
 
@@ -1007,53 +1153,74 @@ class FetchLibCommand(BaseCommand):
             elif tip.patch < lib_data.patch:
                 # the store has a lower version numbers than local
                 logger.info(
-                    "Library %s has local changes, can not be updated.", lib_data.full_name)
+                    "Library %s has local changes, can not be updated.",
+                    lib_data.full_name,
+                )
             else:
                 # same versions locally and in the store
                 if tip.content_hash == lib_data.content_hash:
                     logger.info(
                         "Library %s was already up to date in version %d.%d.",
-                        lib_data.full_name, tip.api, tip.patch)
+                        lib_data.full_name,
+                        tip.api,
+                        tip.patch,
+                    )
                 else:
                     logger.info(
-                        "Library %s has local changes, can not be updated.", lib_data.full_name)
+                        "Library %s has local changes, can not be updated.",
+                        lib_data.full_name,
+                    )
 
         for lib_data in to_fetch:
-            downloaded = store.get_library(lib_data.charm_name, lib_data.lib_id, lib_data.api)
+            downloaded = store.get_library(
+                lib_data.charm_name, lib_data.lib_id, lib_data.api
+            )
             if lib_data.content is None:
                 # locally new
                 lib_data.path.parent.mkdir(parents=True, exist_ok=True)
                 lib_data.path.write_text(downloaded.content)
                 logger.info(
                     "Library %s version %d.%d downloaded.",
-                    lib_data.full_name, downloaded.api, downloaded.patch)
+                    lib_data.full_name,
+                    downloaded.api,
+                    downloaded.patch,
+                )
             else:
                 # XXX Facundo 2020-12-17: manage the case where the library was renamed
                 # (related GH issue: #214)
                 lib_data.path.write_text(downloaded.content)
                 logger.info(
                     "Library %s updated to version %d.%d.",
-                    lib_data.full_name, downloaded.api, downloaded.patch)
+                    lib_data.full_name,
+                    downloaded.api,
+                    downloaded.patch,
+                )
 
 
 class ListLibCommand(BaseCommand):
     """List all libraries belonging to a charm."""
 
-    name = 'list-lib'
+    name = "list-lib"
     help_msg = "List all libraries from a charm"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         List all libraries from a charm.
 
         For each library, it will show the name and the api and patch versions
         for its tip.
-    """)
+    """
+    )
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'name', nargs='?', help=(
+            "name",
+            nargs="?",
+            help=(
                 "The name of the charm (optional, will get the name from"
-                "metadata.yaml if not given)"))
+                "metadata.yaml if not given)"
+            ),
+        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -1065,21 +1232,24 @@ class ListLibCommand(BaseCommand):
                 raise CommandError(
                     "Can't access name in 'metadata.yaml' file. The 'list-lib' command must "
                     "either be executed from a valid project directory, or specify a charm "
-                    "name using the --charm-name option.")
+                    "name using the --charm-name option."
+                )
 
         # get tips from the Store
         store = Store(self.config.charmhub)
-        to_query = [{'charm_name': charm_name}]
+        to_query = [{"charm_name": charm_name}]
         libs_tips = store.get_libraries_tips(to_query)
 
         if not libs_tips:
             logger.info("No libraries found for charm %s.", charm_name)
             return
 
-        headers = ['Library name', 'API', 'Patch']
-        data = sorted((item.lib_name, item.api, item.patch) for item in libs_tips.values())
+        headers = ["Library name", "API", "Patch"]
+        data = sorted(
+            (item.lib_name, item.api, item.patch) for item in libs_tips.values()
+        )
 
-        table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
+        table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
             logger.info(line)
 
@@ -1087,18 +1257,22 @@ class ListLibCommand(BaseCommand):
 class ListResourcesCommand(BaseCommand):
     """List the resources associated with a given charm in Charmhub."""
 
-    name = 'resources'
+    name = "resources"
     help_msg = "List the resources associated with a given charm in Charmhub"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         An overview of the resources associated with a given charm in Charmhub.
 
         Listing resources will take you through login if needed.
 
-    """)
+    """
+    )
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument('charm_name', metavar='charm-name', help="The name of the charm")
+        parser.add_argument(
+            "charm_name", metavar="charm-name", help="The name of the charm"
+        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -1108,18 +1282,21 @@ class ListResourcesCommand(BaseCommand):
             logger.info("No resources associated to %s.", parsed_args.charm_name)
             return
 
-        headers = ['Charm Rev', 'Resource', 'Type', 'Optional']
+        headers = ["Charm Rev", "Resource", "Type", "Optional"]
         by_revision = {}
         for item in result:
             by_revision.setdefault(item.revision, []).append(item)
         data = []
         for revision, items in sorted(by_revision.items(), reverse=True):
-            initial, *rest = sorted(items, key=attrgetter('name'))
-            data.append((revision, initial.name, initial.resource_type, initial.optional))
+            initial, *rest = sorted(items, key=attrgetter("name"))
+            data.append(
+                (revision, initial.name, initial.resource_type, initial.optional)
+            )
             data.extend(
-                ("", item.name, item.resource_type, item.optional) for item in rest)
+                ("", item.name, item.resource_type, item.optional) for item in rest
+            )
 
-        table = tabulate(data, headers=headers, tablefmt='plain', numalign='left')
+        table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
             logger.info(line)
 
@@ -1128,30 +1305,33 @@ class _BadOCIImageSpecError(CommandError):
     """Subclass to provide a specific error for a bad OCI Image specification."""
 
     def __init__(self, base_error):
-        super().__init__(base_error + " (the format is [organization/]name[:tag|@digest]).")
+        super().__init__(
+            base_error + " (the format is [organization/]name[:tag|@digest])."
+        )
 
 
 def oci_image_spec(value):
     """Build a full OCI image spec, using defaults for non specified parts."""
     # separate the organization
-    if '/' in value:
-        if value.count('/') > 1:
+    if "/" in value:
+        if value.count("/") > 1:
             raise _BadOCIImageSpecError(
-                "The registry server cannot be specified as part of the image")
-        orga, value = value.split('/')
+                "The registry server cannot be specified as part of the image"
+            )
+        orga, value = value.split("/")
     else:
-        orga = 'library'
+        orga = "library"
 
     # get the digest XOR tag
-    if '@' in value and ':' in value:
+    if "@" in value and ":" in value:
         raise _BadOCIImageSpecError("Cannot specify both tag and digest")
-    if '@' in value:
-        name, reference = value.split('@')
-    elif ':' in value:
-        name, reference = value.split(':')
+    if "@" in value:
+        name, reference = value.split("@")
+    elif ":" in value:
+        name, reference = value.split(":")
     else:
         name = value
-        reference = 'latest'
+        reference = "latest"
 
     if not name:
         raise _BadOCIImageSpecError("The image name is mandatory")
@@ -1161,9 +1341,10 @@ def oci_image_spec(value):
 class UploadResourceCommand(BaseCommand):
     """Upload a resource to Charmhub."""
 
-    name = 'upload-resource'
+    name = "upload-resource"
     help_msg = "Upload a resource to Charmhub"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Upload a resource to Charmhub.
 
         Push a resource content to Charmhub, associating it to the
@@ -1179,24 +1360,31 @@ class UploadResourceCommand(BaseCommand):
         correspondingly.
 
         Upload will take you through login if needed.
-    """)
+    """
+    )
     common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'charm_name', metavar='charm-name',
-            help="The charm name to associate the resource")
+            "charm_name",
+            metavar="charm-name",
+            help="The charm name to associate the resource",
+        )
         parser.add_argument(
-            'resource_name', metavar='resource-name',
-            help="The resource name")
+            "resource_name", metavar="resource-name", help="The resource name"
+        )
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument(
-            '--filepath', type=SingleOptionEnsurer(useful_filepath),
-            help="The file path of the resource content to upload")
+            "--filepath",
+            type=SingleOptionEnsurer(useful_filepath),
+            help="The file path of the resource content to upload",
+        )
         group.add_argument(
-            '--image', type=SingleOptionEnsurer(oci_image_spec),
-            help="The image specification with the [organization/]name[:tag|@digest] form")
+            "--image",
+            type=SingleOptionEnsurer(oci_image_spec),
+            help="The image specification with the [organization/]name[:tag|@digest] form",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -1208,24 +1396,29 @@ class UploadResourceCommand(BaseCommand):
             resource_type = ResourceType.file
             logger.debug("Uploading resource directly from file %s", resource_filepath)
         elif parsed_args.image:
-            logger.debug("Uploading resource from image %s at Dockerhub", parsed_args.image)
+            logger.debug(
+                "Uploading resource from image %s at Dockerhub", parsed_args.image
+            )
             ih = ImageHandler(parsed_args.image.organization, parsed_args.image.name)
             final_resource_url = ih.get_destination_url(parsed_args.image.reference)
             logger.debug("Resource URL: %s", final_resource_url)
-            resource_type = 'oci-image'
+            resource_type = "oci-image"
 
             # create a JSON pointing to the unique image URL (to be uploaded to Charmhub)
             resource_metadata = {
-                'ImageName': final_resource_url,
+                "ImageName": final_resource_url,
             }
-            _, tname = tempfile.mkstemp(prefix='image-resource', suffix='.json')
+            _, tname = tempfile.mkstemp(prefix="image-resource", suffix=".json")
             resource_filepath = pathlib.Path(tname)
             resource_filepath_is_temp = True
             resource_filepath.write_text(json.dumps(resource_metadata))
 
         result = store.upload_resource(
-            parsed_args.charm_name, parsed_args.resource_name,
-            resource_type, resource_filepath)
+            parsed_args.charm_name,
+            parsed_args.resource_name,
+            resource_type,
+            resource_filepath,
+        )
 
         # clean the filepath if needed
         if resource_filepath_is_temp:
@@ -1234,7 +1427,10 @@ class UploadResourceCommand(BaseCommand):
         if result.ok:
             logger.info(
                 "Revision %s created of resource %r for charm %r",
-                result.revision, parsed_args.resource_name, parsed_args.charm_name)
+                result.revision,
+                parsed_args.resource_name,
+                parsed_args.charm_name,
+            )
         else:
             logger.info("Upload failed with status %r:", result.status)
             for error in result.errors:
@@ -1244,9 +1440,10 @@ class UploadResourceCommand(BaseCommand):
 class ListResourceRevisionsCommand(BaseCommand):
     """List revisions for a resource of a charm."""
 
-    name = 'resource-revisions'
+    name = "resource-revisions"
     help_msg = "List revisions for a resource associated to a charm in Charmhub"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Show size and date for each resource revision in Charmhub.
 
         For example:
@@ -1256,34 +1453,44 @@ class ListResourceRevisionsCommand(BaseCommand):
            1           2020-11-15   183151
 
         Listing revisions will take you through login if needed.
-    """)
+    """
+    )
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            'charm_name', metavar='charm-name',
-            help="The charm name to associate the resource")
+            "charm_name",
+            metavar="charm-name",
+            help="The charm name to associate the resource",
+        )
         parser.add_argument(
-            'resource_name', metavar='resource-name',
-            help="The resource name")
+            "resource_name", metavar="resource-name", help="The resource name"
+        )
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        result = store.list_resource_revisions(parsed_args.charm_name, parsed_args.resource_name)
+        result = store.list_resource_revisions(
+            parsed_args.charm_name, parsed_args.resource_name
+        )
         if not result:
             logger.info("No revisions found.")
             return
 
-        headers = ['Revision', 'Created at', 'Size']
-        custom_alignment = ['left', None, 'right']
-        result.sort(key=attrgetter('revision'), reverse=True)
-        data = [(
-            item.revision,
-            item.created_at.strftime('%Y-%m-%d'),
-            naturalsize(item.size, gnu=True),
-        ) for item in result]
+        headers = ["Revision", "Created at", "Size"]
+        custom_alignment = ["left", None, "right"]
+        result.sort(key=attrgetter("revision"), reverse=True)
+        data = [
+            (
+                item.revision,
+                item.created_at.strftime("%Y-%m-%d"),
+                naturalsize(item.size, gnu=True),
+            )
+            for item in result
+        ]
 
-        table = tabulate(data, headers=headers, tablefmt='plain', colalign=custom_alignment)
+        table = tabulate(
+            data, headers=headers, tablefmt="plain", colalign=custom_alignment
+        )
         for line in table.splitlines():
             logger.info(line)

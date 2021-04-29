@@ -25,7 +25,7 @@ from setuptools import setup
 import charmcraft
 
 
-with open("README.md", "rt", encoding='utf8') as fh:
+with open("README.md", "rt", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [
@@ -43,6 +43,7 @@ install_requires = [
 ]
 
 dev_requires = [
+    "black",
     "coverage",
     "flake8",
     "ops>=0.8.0",
@@ -60,11 +61,15 @@ version_backup = Path("charmcraft/version.py~")
 version_path.rename(version_backup)
 try:
     with version_path.open("wt", encoding="utf8") as fh:
-        fh.write(dedent('''
+        fh.write(
+            dedent(
+                """
             # this is a generated file
 
             version = {!r}
-            ''').format(charmcraft.__version__))
+            """
+            ).format(charmcraft.__version__)
+        )
 
     setup(
         name="charmcraft",
@@ -76,7 +81,7 @@ try:
         long_description_content_type="text/markdown",
         url="https://github.com/canonical/charmcraft",
         license="Apache-2.0",
-        packages=['charmcraft', 'charmcraft.commands', 'charmcraft.commands.store'],
+        packages=["charmcraft", "charmcraft.commands", "charmcraft.commands.store"],
         classifiers=[
             "Environment :: Console",
             "License :: OSI Approved :: Apache Software License",
@@ -84,9 +89,9 @@ try:
             "Programming Language :: Python :: 3",
         ],
         entry_points={
-            'console_scripts': ["charmcraft = charmcraft.main:main"],
+            "console_scripts": ["charmcraft = charmcraft.main:main"],
         },
-        python_requires='>=3',
+        python_requires=">=3",
         install_requires=install_requires,
         extras_require=extras_require,
         include_package_data=True,  # so we get templates in the wheel

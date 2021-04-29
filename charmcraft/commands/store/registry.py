@@ -26,12 +26,12 @@ from charmcraft.cmdbase import CommandError
 logger = logging.getLogger(__name__)
 
 # some mimetypes
-MANIFEST_LISTS = 'application/vnd.docker.distribution.manifest.list.v2+json'
-MANIFEST_V2_MIMETYPE = 'application/vnd.docker.distribution.manifest.v2+json'
-LAYER_MIMETYPE = 'application/vnd.docker.image.rootfs.diff.tar.gzip'
+MANIFEST_LISTS = "application/vnd.docker.distribution.manifest.list.v2+json"
+MANIFEST_V2_MIMETYPE = "application/vnd.docker.distribution.manifest.v2+json"
+LAYER_MIMETYPE = "application/vnd.docker.image.rootfs.diff.tar.gzip"
 JSON_RELATED_MIMETYPES = {
-    'application/json',
-    'application/vnd.docker.distribution.manifest.v1+prettyjws',  # signed manifest
+    "application/json",
+    "application/vnd.docker.distribution.manifest.v1+prettyjws",  # signed manifest
     MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
 }
@@ -40,20 +40,24 @@ JSON_RELATED_MIMETYPES = {
 def assert_response_ok(response, expected_status=200):
     """Assert the response is ok."""
     if response.status_code != expected_status:
-        if response.headers.get('Content-Type') in JSON_RELATED_MIMETYPES:
-            errors = response.json().get('errors')
+        if response.headers.get("Content-Type") in JSON_RELATED_MIMETYPES:
+            errors = response.json().get("errors")
         else:
             errors = None
         raise CommandError(
             "Wrong status code from server (expected={}, got={}) errors={} headers={}".format(
-                expected_status, response.status_code, errors, response.headers))
+                expected_status, response.status_code, errors, response.headers
+            )
+        )
 
-    if response.headers.get('Content-Type') not in JSON_RELATED_MIMETYPES:
+    if response.headers.get("Content-Type") not in JSON_RELATED_MIMETYPES:
         return
 
     result = response.json()
-    if 'errors' in result:
-        raise CommandError("Response with errors from server: {}".format(result['errors']))
+    if "errors" in result:
+        raise CommandError(
+            "Response with errors from server: {}".format(result["errors"])
+        )
     return result
 
 
@@ -72,23 +76,25 @@ class OCIRegistry:
         """Get the auth token."""
         headers = {}
         if self.auth_encoded_credentials is not None:
-            headers['Authorization'] = 'Basic {}'.format(self.auth_encoded_credentials)
+            headers["Authorization"] = "Basic {}".format(self.auth_encoded_credentials)
 
         logger.debug("Authenticating! %s", auth_info)
         url = "{realm}?service={service}&scope={scope}".format_map(auth_info)
         response = requests.get(url, headers=headers)
 
         result = assert_response_ok(response)
-        auth_token = result['token']
+        auth_token = result["token"]
         return auth_token
 
     def _get_url(self, subpath):
         """Build the URL completing the subpath."""
-        return "https://{}/v2/{}/{}/{}".format(self.server, self.orga, self.name, subpath)
+        return "https://{}/v2/{}/{}/{}".format(
+            self.server, self.orga, self.name, subpath
+        )
 
     def _get_auth_info(self, response):
         """Parse a 401 response and get the needed auth parameters."""
-        www_auth = response.headers['Www-Authenticate']
+        www_auth = response.headers["Www-Authenticate"]
         if not www_auth.startswith("Bearer "):
             raise ValueError("Bearer not found")
         info = parse_keqv_list(parse_http_list(www_auth[7:]))
@@ -99,7 +105,7 @@ class OCIRegistry:
         if headers is None:
             headers = {}
         if self.auth_token is not None:
-            headers['Authorization'] = 'Bearer {}'.format(self.auth_token)
+            headers["Authorization"] = "Bearer {}".format(self.auth_token)
 
         logger.debug("Hitting the registry: %s %s", method, url)
         response = requests.request(method, url, headers=headers, **kwargs)
@@ -109,9 +115,10 @@ class OCIRegistry:
                 auth_info = self._get_auth_info(response)
             except (ValueError, KeyError) as exc:
                 raise CommandError(
-                    "Bad 401 response: {}; headers: {!r}".format(exc, response.headers))
+                    "Bad 401 response: {}; headers: {!r}".format(exc, response.headers)
+                )
             self.auth_token = self._authenticate(auth_info)
-            headers['Authorization'] = 'Bearer {}'.format(self.auth_token)
+            headers["Authorization"] = "Bearer {}".format(self.auth_token)
             response = requests.request(method, url, headers=headers, **kwargs)
 
         return response
@@ -122,7 +129,7 @@ class OCIRegistry:
 
     def _is_item_already_uploaded(self, url):
         """Verify if a generic item is uploaded."""
-        response = self._hit('HEAD', url)
+        response = self._hit("HEAD", url)
 
         if response.status_code == 200:
             # item is there, done!
@@ -135,7 +142,10 @@ class OCIRegistry:
             # we can continue with the upload
             logger.debug(
                 "Bad response when checking for uploaded %r: %r (headers=%s)",
-                url, response.status_code, response.headers)
+                url,
+                response.status_code,
+                response.headers,
+            )
             uploaded = False
         return uploaded
 
@@ -153,33 +163,35 @@ class OCIRegistry:
         url = self._get_url("manifests/{}".format(reference))
         logger.debug("Getting manifests list for %s", reference)
         headers = {
-            'Accept': MANIFEST_LISTS,
+            "Accept": MANIFEST_LISTS,
         }
-        response = self._hit('GET', url, headers=headers)
+        response = self._hit("GET", url, headers=headers)
         result = assert_response_ok(response)
-        digest = response.headers['Docker-Content-Digest']
+        digest = response.headers["Docker-Content-Digest"]
 
         # the response can be the manifest itself or a list of manifests (only determined
         # by the presence of the 'manifests' key
-        manifests = result.get('manifests')
+        manifests = result.get("manifests")
 
         if manifests is not None:
             return (manifests, digest, response.text)
 
-        logger.debug("Got the manifest directly, schema %s", result['schemaVersion'])
-        if result['schemaVersion'] != 2:
+        logger.debug("Got the manifest directly, schema %s", result["schemaVersion"])
+        if result["schemaVersion"] != 2:
             # get the manifest in v2! cannot request it directly, as that will avoid us
             # getting the manifests list when available
             headers = {
-                'Accept': MANIFEST_V2_MIMETYPE,
+                "Accept": MANIFEST_V2_MIMETYPE,
             }
-            response = self._hit('GET', url, headers=headers)
+            response = self._hit("GET", url, headers=headers)
             result = assert_response_ok(response)
-            if result.get('schemaVersion') != 2:
-                logger.debug("Got something else when asking for a v2 manifest: %s", result)
+            if result.get("schemaVersion") != 2:
+                logger.debug(
+                    "Got something else when asking for a v2 manifest: %s", result
+                )
                 raise CommandError("Manifest v2 not found for {!r}.".format(reference))
             logger.debug("Got the v2 manifest ok")
-            digest = response.headers['Docker-Content-Digest']
+            digest = response.headers["Docker-Content-Digest"]
         return (None, digest, response.text)
 
 
@@ -200,7 +212,10 @@ class ImageHandler:
         """Get the fully qualified URL in the destination registry for a tag/digest reference."""
         if not self.dst_registry.is_manifest_already_uploaded(reference):
             raise CommandError(
-                "The {!r} image does not exist in the destination registry".format(reference))
+                "The {!r} image does not exist in the destination registry".format(
+                    reference
+                )
+            )
 
         # need to actually get the manifest, because this is what we'll end up getting the v2 one
         _, digest, _ = self.dst_registry.get_manifest(reference)

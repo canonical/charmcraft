@@ -25,7 +25,7 @@ from charmcraft import __version__
 FORMATTER_SIMPLE = "%(message)s"
 FORMATTER_DETAILED = "%(asctime)s  %(name)-30s %(levelname)-8s %(message)s"
 
-_logger = logging.getLogger('charmcraft')
+_logger = logging.getLogger("charmcraft")
 _logger.setLevel(logging.DEBUG)
 
 
@@ -40,9 +40,9 @@ class _MessageHandler:
     """
 
     _modes = {
-        'quiet': (logging.WARNING, FORMATTER_SIMPLE),
-        'normal': (logging.INFO, FORMATTER_SIMPLE),
-        'verbose': (logging.DEBUG, FORMATTER_DETAILED),
+        "quiet": (logging.WARNING, FORMATTER_SIMPLE),
+        "normal": (logging.INFO, FORMATTER_SIMPLE),
+        "verbose": (logging.DEBUG, FORMATTER_DETAILED),
     }
 
     def __init__(self):
@@ -69,7 +69,7 @@ class _MessageHandler:
 
     def _set_filehandler(self):
         """Set the file handler to log everything to the temp file."""
-        _, self._log_filepath = tempfile.mkstemp(prefix='charmcraft-log-')
+        _, self._log_filepath = tempfile.mkstemp(prefix="charmcraft-log-")
 
         file_handler = logging.FileHandler(self._log_filepath)
         file_handler.setFormatter(logging.Formatter(FORMATTER_DETAILED))
@@ -77,7 +77,7 @@ class _MessageHandler:
         _logger.addHandler(file_handler)
 
         # a logger for only the file
-        self._file_logger = logging.getLogger('charmcraft.guard')
+        self._file_logger = logging.getLogger("charmcraft.guard")
         self._file_logger.propagate = False
         self._file_logger.addHandler(file_handler)
         self._file_logger.debug("Starting charmcraft version %s", __version__)
@@ -108,14 +108,15 @@ class _MessageHandler:
         Show just the error to the user, but send the whole traceback to the log file.
         """
         msg = "charmcraft internal error! {}: {} (full execution logs in {})".format(
-            err.__class__.__name__, err, self._log_filepath)
+            err.__class__.__name__, err, self._log_filepath
+        )
         if self.mode == self.VERBOSE:
             # both to screen and file!
             _logger.exception(msg)
         else:
             # the error to screen and file, plus the traceback to the file
             _logger.error(msg)
-            self._file_logger.exception('')
+            self._file_logger.exception("")
 
 
 message_handler = _MessageHandler()

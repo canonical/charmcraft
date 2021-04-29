@@ -84,7 +84,7 @@ An equivalent json schema is available for the configuration:
         },
         "Part": {
             "title": "Part",
-            "description": "Defintiion of part to build.",
+            "description": "Definition of part to build.",
             "type": "object",
             "properties": {
                 "prime": {
@@ -192,7 +192,7 @@ def format_pydantic_errors(errors):
 class Part(
     pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
 ):
-    """Defintiion of part to build."""
+    """Definition of part to build."""
 
     prime: List[pydantic.StrictStr] = []
 

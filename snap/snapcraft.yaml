@@ -70,7 +70,6 @@ parts:
   # Classic core20 snaps require staged python.
   python3:
     plugin: nil
-    source: snap-extras
     build-packages:
       - python3-dev
     stage-packages:

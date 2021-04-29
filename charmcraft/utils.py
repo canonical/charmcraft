@@ -30,7 +30,7 @@ from jinja2 import Environment, PackageLoader, StrictUndefined
 from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
 
-logger = logging.getLogger('charmcraft.commands')
+logger = logging.getLogger("charmcraft.commands")
 
 OSPlatform = namedtuple("OSPlatform", "system release machine")
 
@@ -41,12 +41,12 @@ S_IRALL = S_IRUSR | S_IRGRP | S_IROTH
 # translations from what the platform module informs to the term deb and
 # snaps actually use
 ARCH_TRANSLATIONS = {
-    'aarch64': 'arm64',
-    'armv7l': 'armhf',
-    'i686': 'i386',
-    'ppc': 'powerpc',
-    'ppc64le': 'ppc64el',
-    'x86_64': 'amd64',
+    "aarch64": "arm64",
+    "armv7l": "armhf",
+    "i686": "i386",
+    "ppc": "powerpc",
+    "ppc64le": "ppc64el",
+    "x86_64": "amd64",
 }
 
 
@@ -66,7 +66,7 @@ def load_yaml(fpath):
         logger.debug("Couldn't find config file %s", fpath)
         return
     try:
-        with fpath.open('rb') as fh:
+        with fpath.open("rb") as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
         logger.error("Failed to read/parse config file %s: %r", fpath, err)
@@ -77,11 +77,12 @@ def load_yaml(fpath):
 def get_templates_environment(templates_dir):
     """Create and return a Jinja environment to deal with the templates."""
     env = Environment(
-        loader=PackageLoader('charmcraft', 'templates/{}'.format(templates_dir)),
-        autoescape=False,            # no need to escape things here :-)
+        loader=PackageLoader("charmcraft", "templates/{}".format(templates_dir)),
+        autoescape=False,  # no need to escape things here :-)
         keep_trailing_newline=True,  # they're not text files if they don't end in newline!
-        optimized=False,             # optimization doesn't make sense for one-offs
-        undefined=StrictUndefined)   # fail on undefined
+        optimized=False,  # optimization doesn't make sense for one-offs
+        undefined=StrictUndefined,
+    )  # fail on undefined
     return env
 
 
@@ -125,7 +126,7 @@ class ResourceOption:
 
     def __call__(self, value):
         """Run by argparse to validate and convert the given argument."""
-        parts = [x.strip() for x in value.split(':')]
+        parts = [x.strip() for x in value.split(":")]
         parts = [p for p in parts if p]
         if len(parts) == 2:
             name, revision = parts
@@ -161,7 +162,7 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
 
     if system == "Linux":
         try:
-            with filepath.open("rt", encoding='utf-8') as fh:
+            with filepath.open("rt", encoding="utf-8") as fh:
                 lines = fh.readlines()
         except FileNotFoundError:
             logger.debug("Unable to locate 'os-release' file, using default values")
@@ -169,7 +170,7 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
             os_release = {}
             for line in lines:
                 line = line.strip()
-                if not line or line.startswith('#') or '=' not in line:
+                if not line or line.startswith("#") or "=" not in line:
                     continue
                 key, value = line.rstrip().split("=", 1)
                 if value[0] == value[-1] and value[0] in ('"', "'"):
@@ -194,27 +195,27 @@ def create_manifest(basedir, started_at):
 
     # XXX Facundo 2021-04-19: these are temporary translations until charmcraft
     # changes to be a "classic" snap
-    name_translation = {'ubuntu-core': 'ubuntu'}
-    channel_translation = {'20': '20.04'}
+    name_translation = {"ubuntu-core": "ubuntu"}
+    channel_translation = {"20": "20.04"}
     name = os_platform.system.lower()
     name = name_translation.get(name, name)
     channel = channel_translation.get(os_platform.release, os_platform.release)
 
     content = {
-        'charmcraft-version': __version__,
-        'charmcraft-started-at': started_at.isoformat() + "Z",
-        'bases': [
+        "charmcraft-version": __version__,
+        "charmcraft-started-at": started_at.isoformat() + "Z",
+        "bases": [
             {
-                'name': name,
-                'channel': channel,
-                'architectures': architectures,
+                "name": name,
+                "channel": channel,
+                "architectures": architectures,
             }
         ],
-
     }
-    filepath = basedir / 'manifest.yaml'
+    filepath = basedir / "manifest.yaml"
     if filepath.exists():
         raise CommandError(
-            "Cannot write the manifest as there is already a 'manifest.yaml' in disk.")
+            "Cannot write the manifest as there is already a 'manifest.yaml' in disk."
+        )
     filepath.write_text(yaml.dump(content))
     return filepath

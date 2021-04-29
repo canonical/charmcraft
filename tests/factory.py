@@ -42,22 +42,26 @@ def create_command(name_, help_msg_=None, common_=False, overview_=None):
     return MyCommand
 
 
-def create_lib_filepath(charm_name, lib_name, api=0, patch=1, lib_id='test-lib-id'):
+def create_lib_filepath(charm_name, lib_name, api=0, patch=1, lib_id="test-lib-id"):
     """Helper to create the structures on disk for a given lib."""
     charm_name = create_importable_name(charm_name)
-    base_dir = pathlib.Path('lib')
-    lib_file = base_dir / 'charms' / charm_name / 'v{}'.format(api) / "{}.py".format(lib_name)
+    base_dir = pathlib.Path("lib")
+    lib_file = (
+        base_dir / "charms" / charm_name / "v{}".format(api) / "{}.py".format(lib_name)
+    )
     lib_file.parent.mkdir(parents=True, exist_ok=True)
 
     # save the content to that specific file under custom structure
-    template = textwrap.dedent("""
+    template = textwrap.dedent(
+        """
         # test content for a library
         LIBID = "{lib_id}"
         LIBAPI = {api}
         LIBPATCH = {patch}
 
         # more text and python code...
-    """)
+    """
+    )
     content = template.format(lib_id=lib_id, api=api, patch=patch)
     lib_file.write_text(content)
 

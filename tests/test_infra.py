@@ -21,6 +21,8 @@ import re
 import subprocess
 from unittest.mock import patch
 
+import black
+import click.testing
 import pydocstyle
 import pytest
 from flake8.api.legacy import get_style_guide
@@ -31,9 +33,9 @@ from charmcraft import __version__, main
 def get_python_filepaths(*, roots=None, python_paths=None):
     """Helper to retrieve paths of Python files."""
     if python_paths is None:
-        python_paths = ['setup.py']
+        python_paths = ["setup.py"]
     if roots is None:
-        roots = ['charmcraft', 'tests']
+        roots = ["charmcraft", "tests"]
     for root in roots:
         for dirpath, dirnames, filenames in os.walk(root):
             for filename in filenames:
@@ -51,7 +53,7 @@ def pep8_test(python_filepaths):
     """Helper to check PEP8 (used from this module and from test_init.py to check templates)."""
     style_guide = get_style_guide()
     fake_stdout = io.StringIO()
-    with patch('sys.stdout', fake_stdout):
+    with patch("sys.stdout", fake_stdout):
         report = style_guide.check_files(python_filepaths)
 
     # if flake8 didnt' report anything, we're done
@@ -59,7 +61,7 @@ def pep8_test(python_filepaths):
         return
 
     # grab on which files we have issues
-    flake8_issues = fake_stdout.getvalue().split('\n')
+    flake8_issues = fake_stdout.getvalue().split("\n")
 
     if flake8_issues:
         msg = "Please fix the following flake8 issues!\n" + "\n".join(flake8_issues)
@@ -68,22 +70,26 @@ def pep8_test(python_filepaths):
 
 def test_pep257():
     """Verify all files have nice docstrings."""
-    pep257_test(get_python_filepaths(roots=['charmcraft']))
+    pep257_test(get_python_filepaths(roots=["charmcraft"]))
 
 
 def pep257_test(python_filepaths):
     """Helper to check PEP257 (used from this module and from test_init.py to check templates)."""
     to_ignore = {
-        'D105',  # Missing docstring in magic method
-        'D107',  # Missing docstring in __init__
+        "D105",  # Missing docstring in magic method
+        "D107",  # Missing docstring in __init__
     }
     to_include = pydocstyle.violations.conventions.pep257 - to_ignore
     errors = list(pydocstyle.check(python_filepaths, select=to_include))
 
     if errors:
-        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
+        report = [
+            "Please fix files as suggested by pydocstyle ({:d} issues):".format(
+                len(errors)
+            )
+        ]
         report.extend(str(e) for e in errors)
-        msg = '\n'.join(report)
+        msg = "\n".join(report)
         pytest.fail(msg, pytrace=False)
 
 
@@ -102,15 +108,17 @@ def test_ensure_copyright():
             else:
                 issues.append(filepath)
     if issues:
-        msg = "Please add copyright headers to the following files:\n" + "\n".join(issues)
+        msg = "Please add copyright headers to the following files:\n" + "\n".join(
+            issues
+        )
         pytest.fail(msg, pytrace=False)
 
 
 def test_setup_version():
     """Verify that setup.py is picking up the version correctly."""
-    cmd = [os.path.abspath('setup.py'), '--version']
+    cmd = [os.path.abspath("setup.py"), "--version"]
     proc = subprocess.run(cmd, stdout=subprocess.PIPE)
-    output = proc.stdout.decode('utf8')
+    output = proc.stdout.decode("utf8")
     assert output.strip() == __version__
 
 
@@ -119,7 +127,7 @@ def test_bashcompletion_all_commands():
     # get the line where all commands are specified in the completion file; this is custom
     # to our file, but simple and good enough
     completed_commands = None
-    with open('completion.bash', 'rt', encoding='utf8') as fh:
+    with open("completion.bash", "rt", encoding="utf8") as fh:
         completion_text = fh.read()
     m = re.search(r"cmds=\((.*?)\)", completion_text, re.DOTALL)
     if m:
@@ -132,3 +140,14 @@ def test_bashcompletion_all_commands():
         real_command_names.update(cmd.name for cmd in cmds)
 
     assert completed_commands == real_command_names
+
+
+def test_black():
+    runner = click.testing.CliRunner()
+    result = runner.invoke(
+        black.main,
+        ["--check"] + get_python_filepaths(),
+    )
+
+    if result.exit_code != 0:
+        pytest.fail(f"Please reformat files with black.\n{result.output}")

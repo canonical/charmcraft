@@ -37,27 +37,34 @@ from charmcraft.cmdbase import CommandError
 # retries are printed, and they're nasty.
 logging.getLogger(requests.packages.urllib3.__package__).setLevel(logging.ERROR)
 
-logger = logging.getLogger('charmcraft.commands.store')
+logger = logging.getLogger("charmcraft.commands.store")
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
 
 def build_user_agent():
     """Build the charmcraft's user agent."""
-    if any(key.startswith(prefix) for prefix in TESTING_ENV_PREFIXES for key in os.environ.keys()):
+    if any(
+        key.startswith(prefix)
+        for prefix in TESTING_ENV_PREFIXES
+        for key in os.environ.keys()
+    ):
         testing = " (testing) "
     else:
         testing = " "
     os_platform = "{0.system}/{0.release} ({0.machine})".format(utils.get_os_platform())
     return "charmcraft/{}{}{} python/{}".format(
-        __version__, testing, os_platform, platform.python_version())
+        __version__, testing, os_platform, platform.python_version()
+    )
 
 
 def visit_page_with_browser(visit_url):
     """Open a browser so the user can validate its identity."""
     logger.warning(
         "Opening an authorization web page in your browser; if it does not open, "
-        "please open this URL: %s", visit_url)
+        "please open this URL: %s",
+        visit_url,
+    )
     webbrowser.open(visit_url, new=1)
 
 
@@ -76,7 +83,7 @@ class _AuthHolder:
     """
 
     def __init__(self):
-        self._cookiejar_filepath = appdirs.user_config_dir('charmcraft.credentials')
+        self._cookiejar_filepath = appdirs.user_config_dir("charmcraft.credentials")
         self._cookiejar = None
         self._client = None
 
@@ -84,10 +91,14 @@ class _AuthHolder:
         """Clear stored credentials."""
         if os.path.exists(self._cookiejar_filepath):
             os.unlink(self._cookiejar_filepath)
-            logger.debug("Credentials cleared: file '%s' removed", self._cookiejar_filepath)
+            logger.debug(
+                "Credentials cleared: file '%s' removed", self._cookiejar_filepath
+            )
         else:
             logger.debug(
-                "Credentials file not found to be removed: '%s'", self._cookiejar_filepath)
+                "Credentials file not found to be removed: '%s'",
+                self._cookiejar_filepath,
+            )
 
     def _save_credentials_if_changed(self):
         """Save credentials if changed."""
@@ -96,7 +107,9 @@ class _AuthHolder:
             dirpath = os.path.dirname(self._cookiejar_filepath)
             os.makedirs(dirpath, exist_ok=True)
 
-            fd = os.open(self._cookiejar_filepath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            fd = os.open(
+                self._cookiejar_filepath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
+            )
             os.fchmod(fd, 0o600)
             self._cookiejar.save(fd)
 
@@ -104,10 +117,14 @@ class _AuthHolder:
         """Load credentials and set up internal auth request objects."""
         wbi = httpbakery.WebBrowserInteractor(open=visit_page_with_browser)
         self._cookiejar = MozillaCookieJar(self._cookiejar_filepath)
-        self._client = httpbakery.Client(cookies=self._cookiejar, interaction_methods=[wbi])
+        self._client = httpbakery.Client(
+            cookies=self._cookiejar, interaction_methods=[wbi]
+        )
 
         if os.path.exists(self._cookiejar_filepath):
-            logger.debug("Loading credentials from file: '%s'", self._cookiejar_filepath)
+            logger.debug(
+                "Loading credentials from file: '%s'", self._cookiejar_filepath
+            )
             try:
                 self._cookiejar.load()
             except Exception as err:
@@ -143,11 +160,11 @@ class _AuthHolder:
 
 def _storage_push(monitor, storage_base_url):
     """Push bytes to the storage."""
-    url = storage_base_url + '/unscanned-upload/'
+    url = storage_base_url + "/unscanned-upload/"
     headers = {
-        'Content-Type': monitor.content_type,
-        'Accept': 'application/json',
-        'User-Agent': build_user_agent(),
+        "Content-Type": monitor.content_type,
+        "Accept": "application/json",
+        "User-Agent": build_user_agent(),
     }
     retries = Retry(total=5, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
 
@@ -157,8 +174,11 @@ def _storage_push(monitor, storage_base_url):
         try:
             response = session.post(url, headers=headers, data=monitor)
         except RequestException as err:
-            raise CommandError("Network error when pushing file: {}({!r})".format(
-                err.__class__.__name__, str(err)))
+            raise CommandError(
+                "Network error when pushing file: {}({!r})".format(
+                    err.__class__.__name__, str(err)
+                )
+            )
 
     return response
 
@@ -168,8 +188,8 @@ class Client:
 
     def __init__(self, api_base_url, storage_base_url):
         self._auth_client = _AuthHolder()
-        self.api_base_url = api_base_url.rstrip('/')
-        self.storage_base_url = storage_base_url.rstrip('/')
+        self.api_base_url = api_base_url.rstrip("/")
+        self.storage_base_url = storage_base_url.rstrip("/")
 
     def clear_credentials(self):
         """Clear stored credentials."""
@@ -178,14 +198,17 @@ class Client:
     def _parse_store_error(self, response):
         """Get the proper error from the Store response."""
         default_msg = "Failure working with the Store: [{}] {!r}".format(
-            response.status_code, response.content)
+            response.status_code, response.content
+        )
         try:
             error_data = response.json()
         except ValueError:
             return default_msg
 
         try:
-            error_info = [(error['message'], error['code']) for error in error_data['error-list']]
+            error_info = [
+                (error["message"], error["code"]) for error in error_data["error-list"]
+            ]
         except (KeyError, TypeError):
             return default_msg
 
@@ -216,11 +239,11 @@ class Client:
 
     def get(self, urlpath):
         """GET something from the Store."""
-        return self._hit('GET', urlpath)
+        return self._hit("GET", urlpath)
 
     def post(self, urlpath, body):
         """POST a body (json-encoded) to the Store."""
-        return self._hit('POST', urlpath, body)
+        return self._hit("POST", urlpath, body)
 
     def push(self, filepath):
         """Push the bytes from filepath to the Storage."""
@@ -230,24 +253,28 @@ class Client:
             # XXX Facundo 2020-07-01: use a real progress bar
             if monitor.bytes_read <= monitor.len:
                 progress = 100 * monitor.bytes_read / monitor.len
-                print("Uploading... {:.2f}%\r".format(progress), end='', flush=True)
+                print("Uploading... {:.2f}%\r".format(progress), end="", flush=True)
 
-        with filepath.open('rb') as fh:
+        with filepath.open("rb") as fh:
             encoder = MultipartEncoder(
-                fields={"binary": (filepath.name, fh, "application/octet-stream")})
+                fields={"binary": (filepath.name, fh, "application/octet-stream")}
+            )
 
             # create a monitor (so that progress can be displayed) as call the real pusher
             monitor = MultipartEncoderMonitor(encoder, _progress)
             response = _storage_push(monitor, self.storage_base_url)
 
         if not response.ok:
-            raise CommandError("Failure while pushing file: [{}] {!r}".format(
-                response.status_code, response.content))
+            raise CommandError(
+                "Failure while pushing file: [{}] {!r}".format(
+                    response.status_code, response.content
+                )
+            )
 
         result = response.json()
-        if not result['successful']:
+        if not result["successful"]:
             raise CommandError("Server error while pushing file: {}".format(result))
 
-        upload_id = result['upload_id']
+        upload_id = result["upload_id"]
         logger.debug("Uploading bytes ended, id %s", upload_id)
         return upload_id

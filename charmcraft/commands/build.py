@@ -33,12 +33,12 @@ from charmcraft.utils import make_executable, create_manifest
 logger = logging.getLogger(__name__)
 
 # Some constants that are used through the code.
-CHARM_METADATA = 'metadata.yaml'
-BUILD_DIRNAME = 'build'
-VENV_DIRNAME = 'venv'
+CHARM_METADATA = "metadata.yaml"
+BUILD_DIRNAME = "build"
+VENV_DIRNAME = "venv"
 
 # The file name and template for the dispatch script
-DISPATCH_FILENAME = 'dispatch'
+DISPATCH_FILENAME = "dispatch"
 # If Juju doesn't support the dispatch mechanism, it will execute the
 # hook, and we'd need sys.argv[0] to be the name of the hook but it's
 # geting lost by calling this dispatch, so we fake JUJU_DISPATCH_PATH
@@ -49,15 +49,16 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 """
 
 # The minimum set of hooks to be provided for compatibility with old Juju
-MANDATORY_HOOK_NAMES = {'install', 'start', 'upgrade-charm'}
-HOOKS_DIR = 'hooks'
+MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
+HOOKS_DIR = "hooks"
 
 
 def _pip_needs_system():
     """Determine whether pip3 defaults to --user, needing --system to turn it off."""
     try:
         from pip.commands.install import InstallCommand
-        return InstallCommand().cmd_opts.get_option('--system') is not None
+
+        return InstallCommand().cmd_opts.get_option("--system") is not None
     except (ImportError, AttributeError, TypeError):
         # probably not the bionic pip version then
         return False
@@ -68,7 +69,11 @@ def polite_exec(cmd):
     logger.debug("Running external command %s", cmd)
     try:
         proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+        )
     except Exception as err:
         logger.error("Executing %s crashed with %r", cmd, err)
         return 1
@@ -91,9 +96,9 @@ class Builder:
     """The package builder."""
 
     def __init__(self, args, config):
-        self.charmdir = args['from']
-        self.entrypoint = args['entrypoint']
-        self.requirement_paths = args['requirement']
+        self.charmdir = args["from"]
+        self.entrypoint = args["entrypoint"]
+        self.requirement_paths = args["requirement"]
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.ignore_rules = self._load_juju_ignore()
@@ -119,9 +124,9 @@ class Builder:
 
     def _load_juju_ignore(self):
         ignore = JujuIgnore(default_juju_ignore)
-        path = self.charmdir / '.jujuignore'
+        path = self.charmdir / ".jujuignore"
         if path.exists():
-            with path.open('r', encoding='utf-8') as ignores:
+            with path.open("r", encoding="utf-8") as ignores:
                 ignore.extend_patterns(ignores)
         return ignore
 
@@ -137,7 +142,8 @@ class Builder:
         else:
             rel_path = src_path.relative_to(self.charmdir)
             logger.warning(
-                "Ignoring symlink because targets outside the project: '%s'", rel_path)
+                "Ignoring symlink because targets outside the project: '%s'", rel_path
+            )
 
     def handle_generic_paths(self):
         """Handle all files and dirs except what's ignored and what will be handled later.
@@ -150,7 +156,9 @@ class Builder:
         """
         logger.debug("Linking in generic paths")
 
-        for basedir, dirnames, filenames in os.walk(str(self.charmdir), followlinks=False):
+        for basedir, dirnames, filenames in os.walk(
+            str(self.charmdir), followlinks=False
+        ):
             abs_basedir = pathlib.Path(basedir)
             rel_basedir = abs_basedir.relative_to(self.charmdir)
 
@@ -209,7 +217,8 @@ class Builder:
         if not dispatch_path.exists():
             logger.debug("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
-                entrypoint_relative_path=linked_entrypoint.relative_to(self.buildpath))
+                entrypoint_relative_path=linked_entrypoint.relative_to(self.buildpath)
+            )
             with dispatch_path.open("wt", encoding="utf8") as fh:
                 fh.write(dispatch_content)
                 make_executable(fh)
@@ -229,7 +238,9 @@ class Builder:
                 current_hooks_to_replace.append(node)
                 node.unlink()
                 logger.debug(
-                    "Replacing existing hook %r as it's a symlink to the entrypoint", node.name)
+                    "Replacing existing hook %r as it's a symlink to the entrypoint",
+                    node.name,
+                )
 
         # include the mandatory ones and those we need to replace
         hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
@@ -246,20 +257,25 @@ class Builder:
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
-            retcode = polite_exec(['pip3', 'list'])
+            retcode = polite_exec(["pip3", "list"])
             if retcode:
                 raise CommandError("problems using pip")
 
             venvpath = self.buildpath / VENV_DIRNAME
             cmd = [
-                'pip3', 'install',  # base command
-                '--target={}'.format(venvpath),  # put all the resulting files in that specific dir
+                "pip3",
+                "install",  # base command
+                "--target={}".format(
+                    venvpath
+                ),  # put all the resulting files in that specific dir
             ]
             if _pip_needs_system():
                 logger.debug("adding --system to work around pip3 defaulting to --user")
                 cmd.append("--system")
             for reqspath in self.requirement_paths:
-                cmd.append('--requirement={}'.format(reqspath))  # the dependencies file(s)
+                cmd.append(
+                    "--requirement={}".format(reqspath)
+                )  # the dependencies file(s)
             retcode = polite_exec(cmd)
             if retcode:
                 raise CommandError("problems installing dependencies")
@@ -267,12 +283,12 @@ class Builder:
     def handle_package(self):
         """Handle the final package creation."""
         logger.debug("Parsing the project's metadata")
-        with (self.charmdir / CHARM_METADATA).open('rt', encoding='utf8') as fh:
+        with (self.charmdir / CHARM_METADATA).open("rt", encoding="utf8") as fh:
             metadata = yaml.safe_load(fh)
 
         logger.debug("Creating the package itself")
-        zipname = metadata['name'] + '.charm'
-        zipfh = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
+        zipname = metadata["name"] + ".charm"
+        zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
             dirpath = pathlib.Path(dirpath)
             for filename in filenames:
@@ -287,9 +303,9 @@ class Validator:
     """A validator of all received options."""
 
     _options = [
-        'from',  # this needs to be processed first, as it's a base dir to find other files
-        'entrypoint',
-        'requirement',
+        "from",  # this needs to be processed first, as it's a base dir to find other files
+        "entrypoint",
+        "requirement",
     ]
 
     def __init__(self):
@@ -299,7 +315,7 @@ class Validator:
         """Process the received options."""
         result = {}
         for opt in self._options:
-            meth = getattr(self, 'validate_' + opt)
+            meth = getattr(self, "validate_" + opt)
             result[opt] = meth(getattr(parsed_args, opt, None))
         return result
 
@@ -311,10 +327,13 @@ class Validator:
             dirpath = dirpath.expanduser().absolute()
 
         if not dirpath.exists():
-            raise CommandError("Charm directory was not found: {!r}".format(str(dirpath)))
+            raise CommandError(
+                "Charm directory was not found: {!r}".format(str(dirpath))
+            )
         if not dirpath.is_dir():
             raise CommandError(
-                "Charm directory is not really a directory: {!r}".format(str(dirpath)))
+                "Charm directory is not really a directory: {!r}".format(str(dirpath))
+            )
 
         self.basedir = dirpath
         return dirpath
@@ -322,18 +341,24 @@ class Validator:
     def validate_entrypoint(self, filepath):
         """Validate that the entrypoint exists and is executable."""
         if filepath is None:
-            filepath = self.basedir / 'src' / 'charm.py'
+            filepath = self.basedir / "src" / "charm.py"
         else:
             filepath = filepath.expanduser().absolute()
 
         if not filepath.exists():
-            raise CommandError("Charm entry point was not found: {!r}".format(str(filepath)))
+            raise CommandError(
+                "Charm entry point was not found: {!r}".format(str(filepath))
+            )
         if self.basedir not in filepath.parents:
             raise CommandError(
-                "Charm entry point must be inside the project: {!r}".format(str(filepath)))
+                "Charm entry point must be inside the project: {!r}".format(
+                    str(filepath)
+                )
+            )
         if not os.access(filepath, os.X_OK):
             raise CommandError(
-                "Charm entry point must be executable: {!r}".format(str(filepath)))
+                "Charm entry point must be executable: {!r}".format(str(filepath))
+            )
         return filepath
 
     def validate_requirement(self, filepaths):
@@ -342,7 +367,7 @@ class Validator:
         If not specified, default to requirements.txt if there.
         """
         if filepaths is None:
-            req = self.basedir / 'requirements.txt'
+            req = self.basedir / "requirements.txt"
             if req.exists() and os.access(req, os.R_OK):
                 return [req]
             return []
@@ -350,7 +375,9 @@ class Validator:
         filepaths = [x.expanduser().absolute() for x in filepaths]
         for fpath in filepaths:
             if not fpath.exists():
-                raise CommandError("the requirements file was not found: {!r}".format(str(fpath)))
+                raise CommandError(
+                    "the requirements file was not found: {!r}".format(str(fpath))
+                )
         return filepaths
 
 
@@ -371,7 +398,7 @@ See `charmcraft init` to create a template charm directory structure.
 class BuildCommand(BaseCommand):
     """Build the charm."""
 
-    name = 'build'
+    name = "build"
     help_msg = "Build the charm"
     overview = _overview
     common = True
@@ -379,17 +406,27 @@ class BuildCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            '-f', '--from', type=pathlib.Path,
+            "-f",
+            "--from",
+            type=pathlib.Path,
             help="Charm directory with metadata.yaml where the build "
-                 "takes place; defaults to '.'")
+            "takes place; defaults to '.'",
+        )
         parser.add_argument(
-            '-e', '--entrypoint', type=pathlib.Path,
+            "-e",
+            "--entrypoint",
+            type=pathlib.Path,
             help="The executable which is the operator entry point; "
-                 "defaults to 'src/charm.py'")
+            "defaults to 'src/charm.py'",
+        )
         parser.add_argument(
-            '-r', '--requirement', action='append', type=pathlib.Path,
+            "-r",
+            "--requirement",
+            action="append",
+            type=pathlib.Path,
             help="File(s) listing needed PyPI dependencies (can be used multiple "
-                  "times); defaults to 'requirements.txt'")
+            "times); defaults to 'requirements.txt'",
+        )
 
     def run(self, parsed_args):
         """Run the command."""

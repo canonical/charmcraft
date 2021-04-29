@@ -25,12 +25,12 @@ from charmcraft.utils import load_yaml, create_manifest
 logger = logging.getLogger(__name__)
 
 # the minimum set of files in a bundle
-MANDATORY_FILES = {'bundle.yaml', 'manifest.yaml', 'README.md'}
+MANDATORY_FILES = {"bundle.yaml", "manifest.yaml", "README.md"}
 
 
 def build_zip(zippath, basedir, fpaths):
     """Build the final file."""
-    zipfh = zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED)
+    zipfh = zipfile.ZipFile(zippath, "w", zipfile.ZIP_DEFLATED)
     for fpath in fpaths:
         zipfh.write(fpath, fpath.relative_to(basedir))
     zipfh.close()
@@ -72,7 +72,7 @@ class PackCommand(BaseCommand):
     on bundles.
     """
 
-    name = 'pack'
+    name = "pack"
     help_msg = "Build the bundle"
     overview = _overview
     needs_config = True
@@ -80,28 +80,31 @@ class PackCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         # get the config files
-        bundle_filepath = self.config.project.dirpath / 'bundle.yaml'
+        bundle_filepath = self.config.project.dirpath / "bundle.yaml"
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
             raise CommandError(
-                "Missing or invalid main bundle file: '{}'.".format(bundle_filepath))
-        bundle_name = bundle_config.get('name')
+                "Missing or invalid main bundle file: '{}'.".format(bundle_filepath)
+            )
+        bundle_name = bundle_config.get("name")
         if not bundle_name:
             raise CommandError(
                 "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
-                "file '{}'.".format(bundle_filepath))
+                "file '{}'.".format(bundle_filepath)
+            )
 
         # so far 'pack' works for bundles only (later this will operate also on charms)
-        if self.config.type != 'bundle':
+        if self.config.type != "bundle":
             raise CommandError(
-                "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command.")
+                "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command."
+            )
 
         # pack everything
         project = self.config.project
         manifest_filepath = create_manifest(project.dirpath, project.started_at)
         try:
             paths = get_paths_to_include(self.config)
-            zipname = project.dirpath / (bundle_name + '.zip')
+            zipname = project.dirpath / (bundle_name + ".zip")
             build_zip(zipname, project.dirpath, paths)
         finally:
             manifest_filepath.unlink()

@@ -34,6 +34,7 @@ def monkeypatch(monkeypatch):
 
     class Monkeypatcher:
         """Middle man for chdir."""
+
         def _chdir(self, value):
             """Change dir, but converting to str first.
 
@@ -42,8 +43,8 @@ def monkeypatch(monkeypatch):
             return monkeypatch.chdir(str(value))
 
         def __getattribute__(self, name):
-            if name == 'chdir':
-                return object.__getattribute__(self, '_chdir')
+            if name == "chdir":
+                return object.__getattribute__(self, "_chdir")
             else:
                 return getattr(monkeypatch, name)
 
@@ -59,20 +60,24 @@ def config(tmp_path):
 
         def set(self, **kwargs):
             # prime is special, so we don't need to write all this structure in all tests
-            prime = kwargs.pop('prime', None)
+            prime = kwargs.pop("prime", None)
             if prime is not None:
-                kwargs['parts'] = config_module.BasicPrime.from_dict({
-                    'bundle': {
-                        'prime': prime,
+                kwargs["parts"] = config_module.BasicPrime.from_dict(
+                    {
+                        "bundle": {
+                            "prime": prime,
+                        }
                     }
-                })
+                )
 
             # the rest is direct
             for k, v in kwargs.items():
                 object.__setattr__(self, k, v)
 
-    project = config_module.Project(dirpath=tmp_path, started_at=datetime.datetime.utcnow())
-    return TestConfig(type='bundle', project=project)
+    project = config_module.Project(
+        dirpath=tmp_path, started_at=datetime.datetime.utcnow()
+    )
+    return TestConfig(type="bundle", project=project)
 
 
 @pytest.fixture

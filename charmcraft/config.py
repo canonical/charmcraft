@@ -96,7 +96,7 @@ def format_pydantic_errors(errors):
 class Part(
     pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
 ):
-    """Placeholder representation for part.  To be replaced by craft-parts."""
+    """Defintiion of part to build."""
 
     prime: List[pydantic.StrictStr] = []
 
@@ -109,7 +109,7 @@ class Part(
 class Parts(
     pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
 ):
-    """Represents parts: top-level key.  To be replaced by craft-parts."""
+    """Definition of parts to build."""
 
     __root__: Dict[pydantic.StrictStr, Part] = {}
 
@@ -127,7 +127,7 @@ class Parts(
 class CharmhubConfig(
     pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
 ):
-    """Represents top-level charmhub object."""
+    """Definition of Charmhub endpoint configuration."""
 
     api_url: pydantic.HttpUrl = "https://api.charmhub.io"
     storage_url: pydantic.HttpUrl = "https://storage.snapcraftcontent.com"
@@ -136,7 +136,7 @@ class CharmhubConfig(
 class Project(
     pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
 ):
-    """Configuration for all project-related options, used internally."""
+    """Internal-only project configuration."""
 
     dirpath: pydantic.DirectoryPath
     content: Dict[str, Any] = {}
@@ -147,13 +147,7 @@ class Project(
 class Config(
     pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
 ):
-    """Charmcraft config.
-
-    :ivar type: If none, no charmcraft.yaml is present.
-    :ivar charmhub: Charmhub configuration.
-    :ivar parts: Build parts.
-    :ivar project: Project details.
-    """
+    """Definition for charmcraft.yaml configuration."""
 
     type: pydantic.StrictStr
     charmhub: CharmhubConfig = CharmhubConfig()
@@ -168,7 +162,7 @@ class Config(
         return charm_type
 
     @classmethod
-    def unmarshal(cls, obj: Dict[str, Any]):
+    def unmarshal(cls, obj: Dict[str, Any], project: Project):
         """Unmarshal object with necessary translations and error handling.
 
         (1) Perform any necessary translations.
@@ -180,7 +174,7 @@ class Config(
         :raises CommandError: On failure to unmarshal object.
         """
         try:
-            return cls.parse_obj(obj)
+            return cls.parse_obj({"project": project, **obj})
         except pydantic.error_wrappers.ValidationError as error:
             raise CommandError(format_pydantic_errors(error.errors()))
 
@@ -210,14 +204,12 @@ def load(dirpath):
         )
 
     else:
-        config_provided = True
-
-        # inject project's config
-        content["project"] = {
-            "dirpath": str(dirpath),
-            "content": content,
-            "config_provided": config_provided,
-            "started_at": str(now),
-        }
-
-        return Config.unmarshal(content)
+        return Config.unmarshal(
+            content,
+            project=Project(
+                dirpath=dirpath,
+                content=content.copy(),
+                config_provided=True,
+                started_at=now,
+            ),
+        )

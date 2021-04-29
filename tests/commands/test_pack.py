@@ -17,22 +17,24 @@
 import logging
 import pathlib
 import zipfile
-from argparse import Namespace
-from unittest.mock import patch
+from argparse import Namespace, ArgumentParser
+from unittest.mock import patch, MagicMock
 
 import pytest
 import yaml
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.config import Project
 from charmcraft.commands import pack
 from charmcraft.commands.pack import (
     PackCommand,
     build_zip,
     get_paths_to_include,
 )
+from charmcraft.utils import useful_filepath, SingleOptionEnsurer
 
 # empty namespace
-noargs = Namespace()
+noargs = Namespace(entrypoint=None, requirement=None)
 
 
 @pytest.fixture
@@ -51,10 +53,66 @@ def bundle_yaml(tmp_path):
     return func
 
 
-# -- tests for main building process
+# -- tests for the project type decissor
 
 
-def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
+def test_decissor_charm_type(config):
+    """The config indicates the project is a charm."""
+    config.set(type="charm")
+    cmd = PackCommand("group", config)
+
+    with patch.object(cmd, "_pack_charm") as mock:
+        cmd.run(noargs)
+    mock.assert_called_with(noargs)
+
+
+def test_decissor_bundle_type(config):
+    """The config indicates the project is a bundle."""
+    config.set(type="bundle")
+    cmd = PackCommand("group", config)
+
+    with patch.object(cmd, "_pack_bundle") as mock:
+        cmd.run(noargs)
+    mock.assert_called_with()
+
+
+def test_decissor_no_given_config(config):
+    """There is no config."""
+    config.set(project=Project(config_provided=False))
+    cmd = PackCommand("group", config)
+
+    with patch.object(cmd, "_pack_charm") as mock:
+        cmd.run(noargs)
+    mock.assert_called_with(noargs)
+
+
+def test_decissor_bundle_with_requirement(config):
+    """The requirement option is not valid when packing a bundle."""
+    config.set(type="bundle")
+    args = Namespace(requirement="reqs.txt", entrypoint=None)
+
+    with pytest.raises(CommandError) as cm:
+        PackCommand("group", config).run(args)
+    assert (
+        str(cm.value)
+        == "The -r/--requirement option is valid only when packing a charm"
+    )
+
+
+def test_decissor_bundle_with_entrypoint(config):
+    """The entrypoint option is not valid when packing a bundle."""
+    config.set(type="bundle")
+    args = Namespace(requirement=None, entrypoint="mycharm.py")
+
+    with pytest.raises(CommandError) as cm:
+        PackCommand("group", config).run(args)
+    assert str(cm.value) == "The -e/--entry option is valid only when packing a charm"
+
+
+# -- tests for main bundle building process
+
+
+def test_bundle_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     """A simple happy story."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
@@ -86,7 +144,7 @@ def test_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     assert not (tmp_path / "manifest.yaml").exists()
 
 
-def test_missing_bundle_file(tmp_path, config):
+def test_bundle_missing_bundle_file(tmp_path, config):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
     with pytest.raises(CommandError) as cm:
@@ -96,7 +154,7 @@ def test_missing_bundle_file(tmp_path, config):
     )
 
 
-def test_missing_other_mandatory_file(tmp_path, config, bundle_yaml):
+def test_bundle_missing_other_mandatory_file(tmp_path, config, bundle_yaml):
     """Can not build a bundle without any of the mandatory files."""
     bundle_yaml(name="testbundle")
     config.set(type="bundle")
@@ -107,7 +165,7 @@ def test_missing_other_mandatory_file(tmp_path, config, bundle_yaml):
     assert str(cm.value) == "Missing mandatory file: {}.".format(tmp_path / "README.md")
 
 
-def test_missing_name_in_bundle(tmp_path, bundle_yaml, config):
+def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, config):
     """Can not build a bundle without name."""
     config.set(type="bundle")
 
@@ -119,19 +177,6 @@ def test_missing_name_in_bundle(tmp_path, bundle_yaml, config):
         "missing a 'name' field indicating the bundle's name in file '{}'.".format(
             tmp_path / "bundle.yaml"
         )
-    )
-
-
-def test_bad_type_in_charmcraft(bundle_yaml, config):
-    """The charmcraft.yaml file must have a proper type field."""
-    bundle_yaml(name="testbundle")
-    config.set(type="charm")
-
-    # build!
-    with pytest.raises(CommandError) as cm:
-        PackCommand("group", config).run(noargs)
-    assert str(cm.value) == (
-        "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command."
     )
 
 
@@ -349,3 +394,59 @@ def test_zipbuild_symlink_outside(tmp_path):
     zf = zipfile.ZipFile(zip_filepath)
     assert sorted(x.filename for x in zf.infolist()) == ["link.txt"]
     assert zf.read("link.txt") == b"123\x00456"
+
+
+# tests for the main charm building process -- so far this is only using the "build" command
+# infrastructure, until we migrate the (adapted) behaviour to this command
+
+
+def test_charm_parameters_requirement(config):
+    """The --requirement option implies a set of validations."""
+    cmd = PackCommand("group", config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == "requirement"]
+    assert action.type is useful_filepath
+
+
+def test_charm_parameters_entrypoint(config):
+    """The --entrypoint option implies a set of validations."""
+    cmd = PackCommand("group", config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == "entrypoint"]
+    assert isinstance(action.type, SingleOptionEnsurer)
+    assert action.type.converter is useful_filepath
+
+
+def test_charm_parameters_validator(config):
+    """Check that build.Builder is properly called."""
+    args = Namespace(requirement="test-reqs", entrypoint="test-epoint")
+    config.set(type="charm", project=Project(dirpath="test-pdir"))
+    with patch(
+        "charmcraft.commands.build.Validator", autospec=True
+    ) as validator_class_mock:
+        validator_class_mock.return_value = validator_instance_mock = MagicMock()
+        with patch("charmcraft.commands.build.Builder"):
+            PackCommand("group", config).run(args)
+    validator_instance_mock.process.assert_called_with(
+        Namespace(
+            **{
+                "from": "test-pdir",
+                "requirement": "test-reqs",
+                "entrypoint": "test-epoint",
+            }
+        )
+    )
+
+
+def test_charm_builder_infrastructure_called(config):
+    """Check that build.Builder is properly called."""
+    config.set(type="charm")
+    with patch("charmcraft.commands.build.Validator", autospec=True) as validator_mock:
+        validator_mock().process.return_value = "processed args"
+        with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+            builder_class_mock.return_value = builder_instance_mock = MagicMock()
+            PackCommand("group", config).run(noargs)
+    builder_class_mock.assert_called_with("processed args", config)
+    builder_instance_mock.run.assert_called_with()

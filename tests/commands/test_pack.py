@@ -56,7 +56,7 @@ def bundle_yaml(tmp_path):
 # -- tests for the project type decissor
 
 
-def test_decissor_charm_type(config):
+def test_resolve_charm_type(config):
     """The config indicates the project is a charm."""
     config.set(type="charm")
     cmd = PackCommand("group", config)
@@ -66,7 +66,7 @@ def test_decissor_charm_type(config):
     mock.assert_called_with(noargs)
 
 
-def test_decissor_bundle_type(config):
+def test_resolve_bundle_type(config):
     """The config indicates the project is a bundle."""
     config.set(type="bundle")
     cmd = PackCommand("group", config)
@@ -76,8 +76,8 @@ def test_decissor_bundle_type(config):
     mock.assert_called_with()
 
 
-def test_decissor_no_given_config(config):
-    """There is no config."""
+def test_resolve_no_config_packs_charm(config):
+    """There is no config, so it's decided to pack a charm."""
     config.set(project=Project(config_provided=False))
     cmd = PackCommand("group", config)
 
@@ -86,7 +86,7 @@ def test_decissor_no_given_config(config):
     mock.assert_called_with(noargs)
 
 
-def test_decissor_bundle_with_requirement(config):
+def test_resolve_bundle_with_requirement(config):
     """The requirement option is not valid when packing a bundle."""
     config.set(type="bundle")
     args = Namespace(requirement="reqs.txt", entrypoint=None)
@@ -99,7 +99,7 @@ def test_decissor_bundle_with_requirement(config):
     )
 
 
-def test_decissor_bundle_with_entrypoint(config):
+def test_resolve_bundle_with_entrypoint(config):
     """The entrypoint option is not valid when packing a bundle."""
     config.set(type="bundle")
     args = Namespace(requirement=None, entrypoint="mycharm.py")

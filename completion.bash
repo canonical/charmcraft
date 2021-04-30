@@ -93,6 +93,19 @@ _charmcraft()
                     ;;
             esac
             ;;
+        pack)
+            case "$prev" in
+                -r|--requirement)
+                    _filedir txt
+                    ;;
+                -e|--entrypoint)
+                    _filedir py
+                    ;;
+                *)
+                    COMPREPLY=( $(compgen -W "${globals[*]} --entrypoint --requirement" -- "$cur") )
+                    ;;
+            esac
+            ;;
         release)
             COMPREPLY=( $(compgen -W "${globals[*]} --revision --channel --resource" -- "$cur") )
             ;;

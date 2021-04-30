@@ -87,7 +87,11 @@ def config(tmp_path):
             for k, v in kwargs.items():
                 object.__setattr__(self, k, v)
 
-    project = config_module.Project(dirpath=tmp_path, started_at=datetime.datetime.utcnow())
+    project = config_module.Project(
+        dirpath=tmp_path,
+        started_at=datetime.datetime.utcnow(),
+        config_provided=True,
+    )
     return TestConfig(type='bundle', project=project)
 
 

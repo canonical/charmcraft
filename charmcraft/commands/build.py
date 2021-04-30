@@ -55,13 +55,16 @@ HOOKS_DIR = "hooks"
 
 def _pip_needs_system():
     """Determine whether pip3 defaults to --user, needing --system to turn it off."""
-    try:
-        from pip.commands.install import InstallCommand
-
-        return InstallCommand().cmd_opts.get_option("--system") is not None
-    except (ImportError, AttributeError, TypeError):
-        # probably not the bionic pip version then
-        return False
+    cmd = [
+        "python3",
+        "-c",
+        (
+            "from pip.commands.install import InstallCommand; "
+            'assert InstallCommand().cmd_opts.get_option("--system") is not None'
+        ),
+    ]
+    proc = subprocess.run(cmd, capture_output=True)
+    return proc.returncode == 0
 
 
 def polite_exec(cmd):

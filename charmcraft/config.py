@@ -235,7 +235,9 @@ class Project(
     dirpath: pydantic.DirectoryPath
     content: Dict[str, Any] = {}
     config_provided: bool = False
-    started_at: datetime.datetime
+
+    # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
+    started_at: datetime.datetime = datetime.datetime.utcnow()
 
 
 class Config(
@@ -297,7 +299,6 @@ def load(dirpath):
     else:
         dirpath = pathlib.Path(dirpath).expanduser().resolve()
 
-    # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
     now = datetime.datetime.utcnow()
 
     content = load_yaml(dirpath / "charmcraft.yaml")

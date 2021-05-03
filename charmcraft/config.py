@@ -35,7 +35,7 @@ parts:
 
 import datetime
 import pathlib
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import pydantic
 
@@ -175,19 +175,18 @@ class Config(
     pydantic.BaseModel,
     extra=pydantic.Extra.forbid,
     frozen=True,
-    validate_all=True,
 ):
     """Definition of charmcraft.yaml configuration."""
 
-    type: pydantic.StrictStr
+    type: Optional[str]
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Parts = Parts(__root__={})
     project: Project
 
     @pydantic.validator("type")
-    def validate_charm_type(cls, charm_type):
+    def validate_charm_type(cls, charm_type, values):
         """Verify charm type is valid with exception when instantiated without YAML."""
-        if charm_type not in ["bundle", "charm", "undefined"]:
+        if charm_type not in ["bundle", "charm"]:
             raise ValueError("must be either 'charm' or 'bundle'")
         return charm_type
 
@@ -204,6 +203,11 @@ class Config(
         :raises CommandError: On failure to unmarshal object.
         """
         try:
+            # Ensure optional type is specified if loading the yaml.
+            # This can be removed once charmcraft.yaml is mandatory.
+            if "type" not in obj:
+                obj["type"] = None
+
             return cls.parse_obj({"project": project, **obj})
         except pydantic.error_wrappers.ValidationError as error:
             raise CommandError(format_pydantic_errors(error.errors()))
@@ -242,7 +246,6 @@ def load(dirpath):
                 config_provided=False,
                 started_at=now,
             ),
-            type="undefined",
         )
 
     else:

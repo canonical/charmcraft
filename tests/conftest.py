@@ -61,7 +61,8 @@ def config(tmp_path):
         def set(self, prime=None, **kwargs):
             # prime is special, so we don't need to write all this structure in all tests
             if prime is not None:
-                self.parts.__root__["bundle"] = config_module.Part(prime=prime)
+                self.parts.bundle.prime.clear()
+                self.parts.bundle.prime.extend(prime)
             else:
                 self.parts = config_module.Parts()
 

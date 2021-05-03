@@ -386,6 +386,25 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
     )
 
 
+def test_schema_unsupported_part(create_config, check_schema_error):
+    """Instantiate charmhub using a bad structure."""
+    """Schema validation, basic prime with bad bundle."""
+    create_config(
+        """
+        type: charm  # mandatory
+        parts:
+            not-bundle: 1
+    """
+    )
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - extra fields not permitted in field 'parts.not-bundle'"""
+        )
+    )
+
+
 # -- tests for different validators
 
 

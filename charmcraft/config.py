@@ -134,20 +134,23 @@ class Part(
     prime: List[RelativePath] = []
 
 
-class Parts(pydantic.BaseModel, frozen=True, validate_all=True):
+class Parts(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
     """Definition of parts to build."""
 
-    __root__: Dict[pydantic.StrictStr, Part] = {}
+    bundle: Part = Part()
 
     def get(self, part_name) -> Part:
         """Get part by name.
 
         :returns: Part if exists, None if not.
+
+        :raises KeyError: if part does not exist.
         """
-        try:
-            return self.__root__[part_name]
-        except KeyError:
-            return None
+        if part_name == "bundle":
+            return self.bundle
+        raise KeyError(part_name)
 
 
 class CharmhubConfig(
@@ -180,7 +183,7 @@ class Config(
 
     type: Optional[str]
     charmhub: CharmhubConfig = CharmhubConfig()
-    parts: Parts = Parts(__root__={})
+    parts: Parts = Parts()
     project: Project
 
     @pydantic.validator("type")

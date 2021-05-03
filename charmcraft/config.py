@@ -19,96 +19,17 @@
 Using pydantic's BaseModel, this module supports the translation of the
 charmcraft.yaml to a python object.
 
-An equivalent json schema is available for the configuration:
->>> from charmcraft import config
->>> print(config.Config.schema_json(indent=4))
-{
-    "title": "Config",
-    "description": "Definition of charmcraft.yaml configuration.",
-    "type": "object",
-    "properties": {
-        "type": {
-            "title": "Type",
-            "type": "string"
-        },
-        "charmhub": {
-            "title": "Charmhub",
-            "default": {
-                "api_url": "https://api.charmhub.io",
-                "storage_url": "https://storage.snapcraftcontent.com"
-            },
-            "allOf": [
-                {
-                    "$ref": "#/definitions/CharmhubConfig"
-                }
-            ]
-        },
-        "parts": {
-            "title": "Parts",
-            "default": {},
-            "allOf": [
-                {
-                    "$ref": "#/definitions/Parts"
-                }
-            ]
-        }
-    },
-    "required": [
-        "type"
-    ],
-    "additionalProperties": false,
-    "definitions": {
-        "CharmhubConfig": {
-            "title": "CharmhubConfig",
-            "description": "Definition of Charmhub endpoint configuration.",
-            "type": "object",
-            "properties": {
-                "api_url": {
-                    "title": "Api Url",
-                    "default": "https://api.charmhub.io",
-                    "minLength": 1,
-                    "maxLength": 2083,
-                    "format": "uri",
-                    "type": "string"
-                },
-                "storage_url": {
-                    "title": "Storage Url",
-                    "default": "https://storage.snapcraftcontent.com",
-                    "minLength": 1,
-                    "maxLength": 2083,
-                    "format": "uri",
-                    "type": "string"
-                }
-            },
-            "additionalProperties": false
-        },
-        "Part": {
-            "title": "Part",
-            "description": "Definition of part to build.",
-            "type": "object",
-            "properties": {
-                "prime": {
-                    "title": "Prime",
-                    "default": [],
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            },
-            "additionalProperties": false
-        },
-        "Parts": {
-            "title": "Parts",
-            "description": "Definition of parts to build.",
-            "default": {},
-            "type": "object",
-            "additionalProperties": {
-                "$ref": "#/definitions/Part"
-            }
-        }
-    }
-}
+Configuration schema:
+
+type: [string] one of "charm" or "bundle"
+
+charmhub:
+  api_url: [HttpUrl] optional, defaults to "https://api.charmhub.io"
+  storage_url: [HttpUrl] optional, defaults to "https://storage.snapcraftcontent.com"
+
+parts:
+  bundle:
+    prime: [list of strings]
 
 """
 

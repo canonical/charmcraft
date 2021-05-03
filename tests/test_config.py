@@ -15,14 +15,12 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
-import doctest
 import os
 from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
 
-from charmcraft import config as config_module
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
     CharmhubConfig,
@@ -463,10 +461,3 @@ def test_basicprime_empty():
     """Building with an empty list."""
     config = Part(prime=[])
     assert config.prime == []
-
-
-def test_config_schema_doctest(monkeypatch):
-    failure_count, test_count = doctest.testmod(config_module, verbose=True)
-
-    assert failure_count == 0
-    assert test_count == 2

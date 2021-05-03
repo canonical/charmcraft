@@ -75,7 +75,9 @@ def config(tmp_path):
                 object.__setattr__(self, k, v)
 
     project = config_module.Project(
-        dirpath=tmp_path, started_at=datetime.datetime.utcnow()
+        dirpath=tmp_path,
+        started_at=datetime.datetime.utcnow(),
+        config_provided=True,
     )
     return TestConfig(type="bundle", project=project)
 

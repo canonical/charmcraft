@@ -25,7 +25,7 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
     CharmhubConfig,
     Part,
-    check_relative_paths,
+    RelativePath,
     load,
 )
 
@@ -375,7 +375,7 @@ def test_schema_basicprime_bad_content_type(create_config, check_schema_error):
             """\
             Bad charmcraft.yaml content:
             - field: parts.bundle.prime[0]
-              reason: string type expected"""
+              reason: must be a valid relative path"""
         )
     )
 
@@ -405,27 +405,27 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
 
 def test_relativepaths_ok():
     """Indicated paths must be relative."""
-    assert check_relative_paths("foo/bar")
+    assert RelativePath("foo/bar")
 
 
 def test_relativepaths_absolute():
     """Indicated paths must be relative."""
     with pytest.raises(ValueError) as cm:
-        check_relative_paths("/foo/bar")
+        RelativePath("/foo/bar")
     assert str(cm.value) == "must be a valid relative path"
 
 
 def test_relativepaths_empty():
     """Indicated paths must be relative."""
     with pytest.raises(ValueError) as cm:
-        check_relative_paths("")
+        RelativePath("")
     assert str(cm.value) == "must be a valid relative path"
 
 
 def test_relativepaths_nonstring():
     """Indicated paths must be relative."""
     with pytest.raises(ValueError) as cm:
-        check_relative_paths(33)
+        RelativePath(33)
     assert str(cm.value) == "must be a valid relative path"
 
 

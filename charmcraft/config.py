@@ -43,14 +43,31 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.utils import load_yaml
 
 
-def check_relative_paths(value):
-    """Check that the received paths are all valid relative ones."""
-    if isinstance(value, str):
-        # check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
-        # config is independent of the platform where charmcraft is running)
-        if value and value[0] != "/":
-            return value
-    raise ValueError("must be a valid relative path")
+class RelativePath(pydantic.StrictStr):
+    """Constrainted string which must be a relative path."""
+
+    def __new__(cls, value: str):
+        """Create new relative path."""
+        cls.validate_relative_path(value)
+        return super().__new__(cls, value)
+
+    @classmethod
+    def __get_validators__(cls):
+        """Validate callables."""
+        super().__get_validators__()
+        yield cls.validate_relative_path
+
+    @classmethod
+    def validate_relative_path(cls, value: str) -> str:
+        """Validate relative path.
+
+        Check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
+        config is independent of the platform where charmcraft is running.
+        """
+        if not isinstance(value, str) or not value or value[0] == "/":
+            raise ValueError("must be a valid relative path")
+
+        return value
 
 
 def format_pydantic_error_location(loc):
@@ -115,12 +132,7 @@ class Part(
 ):
     """Definition of part to build."""
 
-    prime: List[pydantic.StrictStr] = []
-
-    @pydantic.validator("prime", each_item=True)
-    def validate_relative_paths(cls, prime):
-        """Verify relative paths are used in prime."""
-        return check_relative_paths(prime)
+    prime: List[RelativePath] = []
 
 
 class Parts(pydantic.BaseModel, frozen=True, validate_all=True):

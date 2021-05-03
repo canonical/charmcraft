@@ -165,7 +165,6 @@ class Project(
     """Internal-only project configuration."""
 
     dirpath: pydantic.DirectoryPath
-    content: Dict[str, Any] = {}
     config_provided: bool = False
 
     # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
@@ -240,7 +239,6 @@ def load(dirpath):
         return Config(
             project=Project(
                 dirpath=dirpath,
-                content={},
                 config_provided=False,
                 started_at=now,
             ),
@@ -252,7 +250,6 @@ def load(dirpath):
             content,
             project=Project(
                 dirpath=dirpath,
-                content=content.copy(),
                 config_provided=True,
                 started_at=now,
             ),

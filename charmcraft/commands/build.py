@@ -63,7 +63,7 @@ def _pip_needs_system():
             'assert InstallCommand().cmd_opts.get_option("--system") is not None'
         ),
     ]
-    proc = subprocess.run(cmd, capture_output=True)
+    proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return proc.returncode == 0
 
 

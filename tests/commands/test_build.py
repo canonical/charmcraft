@@ -20,6 +20,7 @@ import logging
 import os
 import pathlib
 import socket
+import subprocess
 import sys
 import zipfile
 from collections import namedtuple
@@ -1037,7 +1038,8 @@ def test_build_dependencies_virtualenv_simple(tmp_path, config):
                     'assert InstallCommand().cmd_opts.get_option("--system") is not None'
                 ),
             ],
-            capture_output=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         ),
     ]
 

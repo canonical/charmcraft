@@ -92,7 +92,7 @@ def format_pydantic_error_location(loc):
     return loc
 
 
-def format_pydantic_error_msg(msg):
+def format_pydantic_error_message(msg):
     """Format pydantic's error message field."""
     # Replace shorthand "str" with "string".
     msg = msg.replace("str type expected", "string type expected")
@@ -118,11 +118,10 @@ def format_pydantic_errors(errors):
     """
     combined = ["Bad charmcraft.yaml content:"]
     for error in errors:
-        loc = "- field: " + format_pydantic_error_location(error["loc"])
-        combined.append(loc)
+        formatted_loc = format_pydantic_error_location(error["loc"])
+        formatted_msg = format_pydantic_error_message(error["msg"])
 
-        msg = "  reason: " + format_pydantic_error_msg(error["msg"])
-        combined.append(msg)
+        combined.append(f"- {formatted_msg} in field {formatted_loc!r}")
 
     return "\n".join(combined)
 

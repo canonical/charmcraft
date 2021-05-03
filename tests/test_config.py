@@ -148,8 +148,7 @@ def test_schema_top_level_no_extra_properties(create_config, check_schema_error)
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: whatever
-              reason: extra fields not permitted"""
+            - extra fields not permitted in field 'whatever'"""
         )
     )
 
@@ -166,8 +165,7 @@ def test_schema_type_missing(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: type
-              reason: field required"""
+            - field required in field 'type'"""
         )
     )
 
@@ -183,8 +181,7 @@ def test_schema_type_bad_type(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: type
-              reason: string type expected"""
+            - string type expected in field 'type'"""
         )
     )
 
@@ -200,8 +197,7 @@ def test_schema_type_limited_values(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: type
-              reason: must be either 'charm' or 'bundle'"""
+            - must be either 'charm' or 'bundle' in field 'type'"""
         )
     )
 
@@ -219,8 +215,7 @@ def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: charmhub.api_url
-              reason: invalid or missing URL scheme"""
+            - invalid or missing URL scheme in field 'charmhub.api_url'"""
         )
     )
 
@@ -238,8 +233,7 @@ def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: charmhub.api_url
-              reason: invalid or missing URL scheme"""
+            - invalid or missing URL scheme in field 'charmhub.api_url'"""
         )
     )
 
@@ -257,8 +251,7 @@ def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error)
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: charmhub.storage_url
-              reason: invalid or missing URL scheme"""
+            - invalid or missing URL scheme in field 'charmhub.storage_url'"""
         )
     )
 
@@ -276,8 +269,7 @@ def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_erro
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: charmhub.storage_url
-              reason: invalid or missing URL scheme"""
+            - invalid or missing URL scheme in field 'charmhub.storage_url'"""
         )
     )
 
@@ -296,8 +288,7 @@ def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: charmhub.crazy
-              reason: extra fields not permitted"""
+            - extra fields not permitted in field 'charmhub.crazy'"""
         )
     )
 
@@ -314,8 +305,7 @@ def test_schema_basicprime_bad_init_structure(create_config, check_schema_error)
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: parts
-              reason: value is not a valid dict"""
+            - value is not a valid dict in field 'parts'"""
         )
     )
 
@@ -334,8 +324,7 @@ def test_schema_basicprime_bad_bundle_structure(create_config, check_schema_erro
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: parts.bundle
-              reason: value is not a valid dict"""
+            - value is not a valid dict in field 'parts.bundle'"""
         )
     )
 
@@ -354,8 +343,7 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: parts.bundle.prime
-              reason: value is not a valid list"""
+            - value is not a valid list in field 'parts.bundle.prime'"""
         )
     )
 
@@ -374,8 +362,7 @@ def test_schema_basicprime_bad_content_type(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: parts.bundle.prime[0]
-              reason: must be a valid relative path"""
+            - must be a valid relative path in field 'parts.bundle.prime[0]'"""
         )
     )
 
@@ -394,8 +381,7 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field: parts.bundle.prime[0]
-              reason: must be a valid relative path"""
+            - must be a valid relative path in field 'parts.bundle.prime[0]'"""
         )
     )
 

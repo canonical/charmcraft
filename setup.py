@@ -31,10 +31,12 @@ with open("README.md", "rt", encoding="utf8") as fh:
 install_requires = [
     "appdirs",
     "attrs",
+    "craft-providers",
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
     "macaroonbakery",
+    "pydantic",
     "python-dateutil",
     "pyyaml",
     "requests",

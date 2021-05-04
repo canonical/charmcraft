@@ -14,16 +14,17 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import datetime
 import os
+from textwrap import dedent
 from unittest.mock import patch
 
-import attr
 import pytest
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
-    BasicPrime,
     CharmhubConfig,
+    Part,
     check_relative_paths,
     check_url,
     load,
@@ -53,13 +54,14 @@ def test_load_current_directory(create_config, monkeypatch):
     """
     )
     monkeypatch.chdir(tmp_path)
+    fake_utcnow = datetime.datetime(1970, 1, 1, 0, 0, 2, tzinfo=datetime.timezone.utc)
     with patch("datetime.datetime") as mock:
-        mock.utcnow.return_value = "test_timestamp"
+        mock.utcnow.return_value = fake_utcnow
         config = load(None)
     assert config.type == "charm"
     assert config.project.dirpath == tmp_path
     assert config.project.config_provided
-    assert config.project.started_at == "test_timestamp"
+    assert config.project.started_at == fake_utcnow
 
 
 def test_load_specific_directory_ok(create_config):
@@ -77,7 +79,7 @@ def test_load_specific_directory_ok(create_config):
 def test_load_optional_charmcraft_missing(tmp_path):
     """Specify a directory where the file is missing."""
     config = load(tmp_path)
-    assert config.type is None
+    assert config.type == "no-charmcraft-yaml"
     assert config.project.dirpath == tmp_path
     assert not config.project.config_provided
 
@@ -144,7 +146,12 @@ def test_schema_top_level_no_extra_properties(create_config, check_schema_error)
     """
     )
     check_schema_error(
-        "Additional properties are not allowed ('whatever' was unexpected)"
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: whatever
+              reason: extra fields not permitted"""
+        )
     )
 
 
@@ -153,10 +160,17 @@ def test_schema_type_missing(create_config, check_schema_error):
     create_config(
         """
         charmhub:
-            api_url: 33
+            api_url: https://www.canonical.com
     """
     )
-    check_schema_error("Bad charmcraft.yaml content; missing fields: type.")
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: type
+              reason: field required"""
+        )
+    )
 
 
 def test_schema_type_bad_type(create_config, check_schema_error):
@@ -167,7 +181,12 @@ def test_schema_type_bad_type(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'type' field must be a string: got 'int'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: type
+              reason: string type expected"""
+        )
     )
 
 
@@ -179,7 +198,12 @@ def test_schema_type_limited_values(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'type' field must be one of: 'charm', 'bundle'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: type
+              reason: must be either 'charm' or 'bundle'"""
+        )
     )
 
 
@@ -193,7 +217,12 @@ def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'charmhub.api_url' field must be a string: got 'int'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: charmhub.api_url
+              reason: string type expected"""
+        )
     )
 
 
@@ -207,8 +236,12 @@ def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'charmhub.api_url' field must be a full URL (e.g. "
-        "'https://some.server.com'): got 'stuff.com'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: charmhub.api_url
+              reason: must be a fully qualified URL (such as 'https://some.server.com')"""
+        )
     )
 
 
@@ -222,8 +255,12 @@ def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error)
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a string: "
-        "got 'int'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: charmhub.storage_url
+              reason: string type expected"""
+        )
     )
 
 
@@ -237,8 +274,12 @@ def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_erro
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'charmhub.storage_url' field must be a full URL (e.g. "
-        "'https://some.server.com'): got 'stuff.com'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: charmhub.storage_url
+              reason: must be a fully qualified URL (such as 'https://some.server.com')"""
+        )
     )
 
 
@@ -252,7 +293,14 @@ def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
             crazy: false
     """
     )
-    check_schema_error("Additional properties are not allowed ('crazy' was unexpected)")
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: charmhub.crazy
+              reason: extra fields not permitted"""
+        )
+    )
 
 
 def test_schema_basicprime_bad_init_structure(create_config, check_schema_error):
@@ -264,7 +312,12 @@ def test_schema_basicprime_bad_init_structure(create_config, check_schema_error)
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'parts' field must be a dict: got 'list'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: parts
+              reason: value is not a valid dict"""
+        )
     )
 
 
@@ -279,7 +332,12 @@ def test_schema_basicprime_bad_bundle_structure(create_config, check_schema_erro
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'parts.bundle' field must be a dict: got 'list'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: parts.bundle
+              reason: value is not a valid dict"""
+        )
     )
 
 
@@ -294,7 +352,12 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the 'parts.bundle.prime' field must be a list: got 'str'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: parts.bundle.prime
+              reason: value is not a valid list"""
+        )
     )
 
 
@@ -309,8 +372,12 @@ def test_schema_basicprime_bad_content_type(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
-        "a string: got 'int'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: parts.bundle.prime[0]
+              reason: string type expected"""
+        )
     )
 
 
@@ -325,8 +392,12 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
     """
     )
     check_schema_error(
-        "Bad charmcraft.yaml content; the item 0 in 'parts.bundle.prime' field must be "
-        "a valid relative URL: got '/bar/foo'."
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field: parts.bundle.prime[0]
+              reason: must be a valid relative path"""
+        )
     )
 
 
@@ -342,14 +413,20 @@ def test_url_no_scheme():
     """URL format is wrong, missing scheme."""
     with pytest.raises(ValueError) as cm:
         check_url("some.server.com")
-    assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
+    assert (
+        str(cm.value)
+        == "must be a fully qualified URL (such as 'https://some.server.com')"
+    )
 
 
 def test_url_no_netloc():
     """URL format is wrong, missing network location."""
     with pytest.raises(ValueError) as cm:
         check_url("https://")
-    assert str(cm.value) == "must be a full URL (e.g. 'https://some.server.com')"
+    assert (
+        str(cm.value)
+        == "must be a fully qualified URL (such as 'https://some.server.com')"
+    )
 
 
 def test_relativepaths_ok():
@@ -361,21 +438,21 @@ def test_relativepaths_absolute():
     """Indicated paths must be relative."""
     with pytest.raises(ValueError) as cm:
         check_relative_paths("/foo/bar")
-    assert str(cm.value) == "must be a valid relative URL"
+    assert str(cm.value) == "must be a valid relative path"
 
 
 def test_relativepaths_empty():
     """Indicated paths must be relative."""
     with pytest.raises(ValueError) as cm:
         check_relative_paths("")
-    assert str(cm.value) == "must be a valid relative URL"
+    assert str(cm.value) == "must be a valid relative path"
 
 
 def test_relativepaths_nonstring():
     """Indicated paths must be relative."""
     with pytest.raises(ValueError) as cm:
         check_relative_paths(33)
-    assert str(cm.value) == "must be a valid relative URL"
+    assert str(cm.value) == "must be a valid relative path"
 
 
 # -- tests for Charmhub config
@@ -384,7 +461,7 @@ def test_relativepaths_nonstring():
 def test_charmhub_frozen():
     """Cannot change values from the charmhub config."""
     config = CharmhubConfig()
-    with pytest.raises(attr.exceptions.FrozenInstanceError):
+    with pytest.raises(TypeError):
         config.api_url = "broken"
 
 
@@ -393,36 +470,20 @@ def test_charmhub_frozen():
 
 def test_basicprime_frozen():
     """Cannot change values from the charmhub config."""
-    config = BasicPrime.from_dict(
-        {
-            "bundle": {
-                "prime": ["foo", "bar"],
-            }
-        }
-    )
+    config = Part(prime=["foo", "bar"])
     with pytest.raises(TypeError):
         config[0] = "broken"
 
 
 def test_basicprime_ok():
     """A simple building ok."""
-    config = BasicPrime.from_dict(
-        {
-            "bundle": {
-                "prime": ["foo", "bar"],
-            }
-        }
-    )
-    assert config == ("foo", "bar")
+    config = Part(prime=["foo", "bar"])
+    with pytest.raises(TypeError):
+        config.prime = "broken"
+    assert config.prime == ["foo", "bar"]
 
 
 def test_basicprime_empty():
     """Building with an empty list."""
-    config = BasicPrime.from_dict(
-        {
-            "bundle": {
-                "prime": [],
-            }
-        }
-    )
-    assert config == ()
+    config = Part(prime=[])
+    assert config.prime == []

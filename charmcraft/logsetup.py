@@ -25,7 +25,7 @@ from charmcraft import __version__
 FORMATTER_SIMPLE = "%(message)s"
 FORMATTER_DETAILED = "%(asctime)s  %(name)-30s %(levelname)-8s %(message)s"
 
-_logger = logging.getLogger("charmcraft")
+_logger = logging.getLogger()
 _logger.setLevel(logging.DEBUG)
 
 

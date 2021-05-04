@@ -18,167 +18,195 @@
 
 import datetime
 import pathlib
+from typing import Any, Dict, List
 from urllib.parse import urlparse
 
-import attr
-import jsonschema
+import pydantic
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.utils import load_yaml
 
-format_checker = jsonschema.FormatChecker()
 
-# translator between "json" and pythonic yaml names
-TYPE_TRANSLATOR = {
-    "object": "dict",
-    "array": "list",
-}
-
-
-def get_field_reference(path):
-    """Get a field indicator from the received path."""
-    if isinstance(path[-1], int):
-        field = ".".join(list(path)[:-1])
-        ref = "item {} in '{}' field".format(path[-1], field)
-    else:
-        field = ".".join(path)
-        ref = "'{}' field".format(field)
-    return ref
-
-
-def adapt_validation_error(error):
-    """Take a jsonschema.ValidationError and create a proper CommandError."""
-    if error.validator == "required":
-        msg = "Bad charmcraft.yaml content; missing fields: {}.".format(
-            ", ".join(error.validator_value)
-        )
-    elif error.validator == "type":
-        expected_type = TYPE_TRANSLATOR.get(
-            error.validator_value, error.validator_value
-        )
-        field_ref = get_field_reference(error.absolute_path)
-        msg = "Bad charmcraft.yaml content; the {} must be a {}: got '{}'.".format(
-            field_ref, expected_type, error.instance.__class__.__name__
-        )
-    elif error.validator == "enum":
-        field_ref = get_field_reference(error.absolute_path)
-        msg = "Bad charmcraft.yaml content; the {} must be one of: {}.".format(
-            field_ref, ", ".join(map(repr, error.validator_value))
-        )
-    elif error.validator == "format":
-        field_ref = get_field_reference(error.absolute_path)
-        msg = "Bad charmcraft.yaml content; the {} {}: got {!r}.".format(
-            field_ref, error.cause, error.instance
-        )
-    else:
-        # safe fallback
-        msg = error.message
-
-    raise CommandError(msg)
-
-
-@format_checker.checks("url", raises=ValueError)
 def check_url(value):
     """Check that the URL has at least scheme and net location."""
     if isinstance(value, str):
         url = urlparse(value)
         if url.scheme and url.netloc:
-            return True
-    raise ValueError("must be a full URL (e.g. 'https://some.server.com')")
+            return value
+    raise ValueError(
+        "must be a fully qualified URL (such as 'https://some.server.com')"
+    )
 
 
-@format_checker.checks("relative_path", raises=ValueError)
 def check_relative_paths(value):
     """Check that the received paths are all valid relative ones."""
     if isinstance(value, str):
         # check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
         # config is independent of the platform where charmcraft is running)
         if value and value[0] != "/":
-            return True
-    raise ValueError("must be a valid relative URL")
+            return value
+    raise ValueError("must be a valid relative path")
 
 
-@attr.s(kw_only=True, frozen=True)
-class CharmhubConfig:
-    """Configuration for all Charmhub related options."""
+def format_pydantic_error_location(loc):
+    """Format location."""
+    loc_parts = []
+    for loc_part in loc:
+        if isinstance(loc_part, str):
+            loc_parts.append(loc_part)
+        elif isinstance(loc_part, int):
+            # Integer indicates an index. Go
+            # back and fix up previous part.
+            previous_part = loc_parts.pop()
+            previous_part += f"[{loc_part}]"
+            loc_parts.append(previous_part)
+        else:
+            raise RuntimeError(f"unhandled loc: {loc_part}")
 
-    api_url = attr.ib(default="https://api.charmhub.io")
-    storage_url = attr.ib(default="https://storage.snapcraftcontent.com")
+    loc = ".".join(loc_parts)
 
-    @classmethod
-    def from_dict(cls, source):
-        """Build from a raw dict."""
-        return cls(**source)
+    # Filter out internal __root__ detail.
+    loc = loc.replace(".__root__", "")
+    return loc
 
 
-class BasicPrime(tuple):
-    """Hold the list of files to include, specified under parts/bundle/prime configs.
+def format_pydantic_error_msg(msg):
+    """Format pydantic's error message field."""
+    # Replace shorthand "str" with "string".
+    msg = msg.replace("str type expected", "string type expected")
+    return msg
 
-    This is a intermediate structure until we have the full Lifecycle in place.
+
+def format_pydantic_errors(errors):
+    """Format errors.
+
+    Example 1: Single error.
+
+    Bad charmcraft.yaml content:
+    - field: <some field>
+      reason: <some reason>
+
+    Example 2: Multiple errors.
+
+    Bad charmcraft.yaml content:
+    - field: <some field>
+      reason: <some reason>
+    - field: <some field 2>
+      reason: <some reason 2>
     """
+    combined = ["Bad charmcraft.yaml content:"]
+    for error in errors:
+        loc = "- field: " + format_pydantic_error_location(error["loc"])
+        combined.append(loc)
 
-    @classmethod
-    def from_dict(cls, parts):
-        """Build from a dicts sequence."""
-        prime = parts.get("bundle", {}).get("prime", [])
-        return cls(prime)
+        msg = "  reason: " + format_pydantic_error_msg(error["msg"])
+        combined.append(msg)
+
+    return "\n".join(combined)
 
 
-@attr.s(kw_only=True, frozen=True)
-class Project:
+class Part(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
+    """Placeholder representation for part.  To be replaced by craft-parts."""
+
+    prime: List[pydantic.StrictStr] = []
+
+    @pydantic.validator("prime", each_item=True)
+    def validate_relative_paths(cls, prime):
+        """Verify relative paths are used in prime."""
+        return check_relative_paths(prime)
+
+
+class Parts(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
+    """Represents parts: top-level key.  To be replaced by craft-parts."""
+
+    __root__: Dict[pydantic.StrictStr, Part] = {}
+
+    def get(self, part_name) -> Part:
+        """Get part by name.
+
+        :returns: Part if exists, None if not.
+        """
+        try:
+            return self.__root__[part_name]
+        except KeyError:
+            return None
+
+
+class CharmhubConfig(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
+    """Represents top-level charmhub object."""
+
+    api_url: pydantic.StrictStr = "https://api.charmhub.io"
+    storage_url: pydantic.StrictStr = "https://storage.snapcraftcontent.com"
+
+    @pydantic.validator("api_url", "storage_url")
+    def validate_urls(cls, url):
+        """Verify valid URLs are used for api and storage."""
+        return check_url(url)
+
+
+class Project(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
     """Configuration for all project-related options, used internally."""
 
-    dirpath = attr.ib(default=None)
-    config_provided = attr.ib(default=None)
-    started_at = attr.ib(default=None)
+    dirpath: pydantic.DirectoryPath
+    content: Dict[str, Any] = {}
+    config_provided: bool = False
+    started_at: datetime.datetime
+
+    @pydantic.validator("dirpath")
+    def validate_path(cls, path):
+        """Verify valid URLs are used for api and storage."""
+        if not isinstance(path, pathlib.Path):
+            raise ValueError("invalid path")
+        return path
 
 
-@attr.s(kw_only=True, frozen=True)
-class Config:
-    """Root of all the configuration."""
+class Config(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
+    """Charmcraft config.
 
-    charmhub = attr.ib(default={}, converter=CharmhubConfig.from_dict)
-    parts = attr.ib(default={}, converter=BasicPrime.from_dict)
-    type = attr.ib(default=None)
+    :ivar type: If none, no charmcraft.yaml is present.
+    :ivar charmhub: Charmhub configuration.
+    :ivar parts: Build parts.
+    :ivar project: Project details.
+    """
 
-    # this item is provided by the code itself, not the user, as convenience for the
-    # rest of the code
-    project = attr.ib(default=None)
+    type: pydantic.StrictStr
+    charmhub: CharmhubConfig = CharmhubConfig()
+    parts: Parts = Parts()
+    project: Project
 
+    @pydantic.validator("type")
+    def validate_charm_type(cls, charm_type):
+        """Verify charm type is valid with exception when instantiated without YAML."""
+        if charm_type not in ["bundle", "charm", "no-charmcraft-yaml"]:
+            raise ValueError("must be either 'charm' or 'bundle'")
+        return charm_type
 
-CONFIG_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "type": {"type": "string", "enum": ["charm", "bundle"]},
-        "charmhub": {
-            "type": "object",
-            "properties": {
-                "api_url": {"type": "string", "format": "url"},
-                "storage_url": {"type": "string", "format": "url"},
-            },
-            "additionalProperties": False,
-        },
-        "parts": {
-            "type": "object",
-            "properties": {
-                "bundle": {
-                    "type": "object",
-                    "properties": {
-                        "prime": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "format": "relative_path",
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    },
-    "required": ["type"],
-    "additionalProperties": False,
-}
+    @classmethod
+    def unmarshal(cls, obj: Dict[str, Any]):
+        """Unmarshal object with necessary translations and error handling.
+
+        (1) Perform any necessary translations.
+
+        (2) Standardize error reporting.
+
+        :returns: valid CharmcraftConfig.
+
+        :raises CommandError: On failure to unmarshal object.
+        """
+        try:
+            return cls.parse_obj(obj)
+        except pydantic.error_wrappers.ValidationError as error:
+            raise CommandError(format_pydantic_errors(error.errors()))
 
 
 def load(dirpath):
@@ -188,29 +216,32 @@ def load(dirpath):
     else:
         dirpath = pathlib.Path(dirpath).expanduser().resolve()
 
+    # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
+    now = datetime.datetime.utcnow()
+
     content = load_yaml(dirpath / "charmcraft.yaml")
     if content is None:
         # configuration is mandatory only for some commands; when not provided, it will
         # be initialized all with defaults (but marked as not provided for later verification)
-        content = {}
-        config_provided = False
+        return Config(
+            project=Project(
+                dirpath=dirpath,
+                content={},
+                config_provided=False,
+                started_at=now,
+            ),
+            type="no-charmcraft-yaml",
+        )
 
     else:
-        # config provided! validate the loaded config is ok and mark as such
-        try:
-            jsonschema.validate(
-                instance=content, schema=CONFIG_SCHEMA, format_checker=format_checker
-            )
-        except jsonschema.ValidationError as exc:
-            adapt_validation_error(exc)
         config_provided = True
 
-    # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
-    now = datetime.datetime.utcnow()
+        # inject project's config
+        content["project"] = {
+            "dirpath": str(dirpath),
+            "content": content,
+            "config_provided": config_provided,
+            "started_at": str(now),
+        }
 
-    # inject project's config
-    content["project"] = Project(
-        dirpath=dirpath, config_provided=config_provided, started_at=now
-    )
-
-    return Config(**content)
+        return Config.unmarshal(content)

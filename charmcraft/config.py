@@ -166,7 +166,7 @@ class Project(
     config_provided: bool = False
 
     # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
-    started_at: datetime.datetime = datetime.datetime.utcnow()
+    started_at: datetime.datetime
 
 
 class Config(

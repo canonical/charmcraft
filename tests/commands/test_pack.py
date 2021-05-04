@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import datetime
 import logging
 import pathlib
 import zipfile
@@ -78,7 +79,13 @@ def test_resolve_bundle_type(config):
 
 def test_resolve_no_config_packs_charm(config, tmp_path):
     """There is no config, so it's decided to pack a charm."""
-    config.set(project=Project(config_provided=False, dirpath=tmp_path))
+    config.set(
+        project=Project(
+            config_provided=False,
+            dirpath=tmp_path,
+            started_at=datetime.datetime.utcnow(),
+        )
+    )
     cmd = PackCommand("group", config)
 
     with patch.object(cmd, "_pack_charm") as mock:
@@ -422,7 +429,10 @@ def test_charm_parameters_entrypoint(config):
 def test_charm_parameters_validator(config, tmp_path):
     """Check that build.Builder is properly called."""
     args = Namespace(requirement="test-reqs", entrypoint="test-epoint")
-    config.set(type="charm", project=Project(dirpath=tmp_path))
+    config.set(
+        type="charm",
+        project=Project(dirpath=tmp_path, started_at=datetime.datetime.utcnow()),
+    )
     with patch(
         "charmcraft.commands.build.Validator", autospec=True
     ) as validator_class_mock:

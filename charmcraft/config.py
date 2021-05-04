@@ -46,15 +46,10 @@ from charmcraft.utils import load_yaml
 class RelativePath(pydantic.StrictStr):
     """Constrainted string which must be a relative path."""
 
-    def __new__(cls, value: str):
-        """Create new relative path."""
-        cls.validate_relative_path(value)
-        return super().__new__(cls, value)
-
     @classmethod
     def __get_validators__(cls):
-        """Validate callables."""
-        super().__get_validators__()
+        """Yield the relevant validators."""
+        yield from super().__get_validators__()
         yield cls.validate_relative_path
 
     @classmethod
@@ -64,7 +59,7 @@ class RelativePath(pydantic.StrictStr):
         Check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
         config is independent of the platform where charmcraft is running.
         """
-        if not isinstance(value, str) or not value or value[0] == "/":
+        if not value or value[0] == "/":
             raise ValueError("must be a valid relative path")
 
         return value

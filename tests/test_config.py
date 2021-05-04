@@ -25,7 +25,6 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
     CharmhubConfig,
     Part,
-    RelativePath,
     load,
 )
 
@@ -348,7 +347,7 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
     )
 
 
-def test_schema_basicprime_bad_content_type(create_config, check_schema_error):
+def test_schema_basicprime_bad_prime_type_int(create_config, check_schema_error):
     """Schema validation, basic prime with a prime holding not strings."""
     create_config(
         """
@@ -356,6 +355,25 @@ def test_schema_basicprime_bad_content_type(create_config, check_schema_error):
         parts:
             bundle:
                 prime: [33, 'foo']
+    """
+    )
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - string type expected in field 'parts.bundle.prime[0]'"""
+        )
+    )
+
+
+def test_schema_basicprime_bad_prime_type_empty(create_config, check_schema_error):
+    """Schema validation, basic prime with a prime holding not strings."""
+    create_config(
+        """
+        type: charm  # mandatory
+        parts:
+            bundle:
+                prime: ['', 'foo']
     """
     )
     check_schema_error(
@@ -403,35 +421,6 @@ def test_schema_unsupported_part(create_config, check_schema_error):
             - extra fields not permitted in field 'parts.not-bundle'"""
         )
     )
-
-
-# -- tests for different validators
-
-
-def test_relativepaths_ok():
-    """Indicated paths must be relative."""
-    assert RelativePath("foo/bar")
-
-
-def test_relativepaths_absolute():
-    """Indicated paths must be relative."""
-    with pytest.raises(ValueError) as cm:
-        RelativePath("/foo/bar")
-    assert str(cm.value) == "must be a valid relative path"
-
-
-def test_relativepaths_empty():
-    """Indicated paths must be relative."""
-    with pytest.raises(ValueError) as cm:
-        RelativePath("")
-    assert str(cm.value) == "must be a valid relative path"
-
-
-def test_relativepaths_nonstring():
-    """Indicated paths must be relative."""
-    with pytest.raises(ValueError) as cm:
-        RelativePath(33)
-    assert str(cm.value) == "must be a valid relative path"
 
 
 # -- tests for Charmhub config

@@ -59,8 +59,15 @@ class RelativePath(pydantic.StrictStr):
         Check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
         config is independent of the platform where charmcraft is running.
         """
-        if not value or value[0] == "/":
-            raise ValueError("must be a valid relative path")
+        if not value:
+            raise ValueError(
+                f"{value!r} must be a valid relative path (cannot be empty)"
+            )
+
+        if value[0] == "/":
+            raise ValueError(
+                f"{value!r} must be a valid relative path (cannot start with '/')"
+            )
 
         return value
 

@@ -377,10 +377,10 @@ def test_schema_basicprime_bad_prime_type_empty(create_config, check_schema_erro
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - must be a valid relative path in field 'parts.bundle.prime[0]'"""
+        (
+            "Bad charmcraft.yaml content:\n"
+            "- '' must be a valid relative path (cannot be empty)"
+            " in field 'parts.bundle.prime[0]'"
         )
     )
 
@@ -396,10 +396,11 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - must be a valid relative path in field 'parts.bundle.prime[0]'"""
+        (
+            "Bad charmcraft.yaml content:\n"
+            "- '/bar/foo' must be a valid relative path (cannot start with '/')"
+            " in field 'parts.bundle.prime[0]'"
+            ""
         )
     )
 

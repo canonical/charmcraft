@@ -263,6 +263,35 @@ class Config(ModelConfigDefaults, validate_all=False):
         return charm_type
 
     @classmethod
+    def expand_short_form_bases(cls, bases: List[Dict[str, Any]]) -> None:
+        """Expand short-form base configuration into long-form in-place."""
+        for index, base in enumerate(bases):
+            # Skip if already long-form. Account for common typos in case user
+            # intends to use long-form, but did so incorrectly (for better
+            # error message handling).
+            if (
+                "run-on" in base
+                or "run_on" in base
+                or "build-on" in base
+                or "build_on" in base
+            ):
+                continue
+
+            try:
+                converted_base = Base(**base)
+            except pydantic.error_wrappers.ValidationError as error:
+                # Rewrite location to assist user.
+                pydantic_errors = error.errors()
+                for pydantic_error in pydantic_errors:
+                    pydantic_error["loc"] = ("bases", index, pydantic_error["loc"][0])
+
+                raise CommandError(format_pydantic_errors(pydantic_errors))
+
+            base.clear()
+            base["build-on"] = [converted_base.dict()]
+            base["run-on"] = [converted_base.dict()]
+
+    @classmethod
     def unmarshal(cls, obj: Dict[str, Any], project: Project):
         """Unmarshal object with necessary translations and error handling.
 
@@ -279,6 +308,13 @@ class Config(ModelConfigDefaults, validate_all=False):
             # This can be removed once charmcraft.yaml is mandatory.
             if "type" not in obj:
                 obj["type"] = None
+
+            # Ensure short-form bases are expanded into long-form
+            # base configurations.  Doing it here rather than a Union
+            # type will simplify user facing errors.
+            bases = obj.get("bases")
+            if bases is not None and isinstance(bases, list):
+                cls.expand_short_form_bases(bases)
 
             return cls.parse_obj({"project": project, **obj})
         except pydantic.error_wrappers.ValidationError as error:

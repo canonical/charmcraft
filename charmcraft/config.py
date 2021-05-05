@@ -19,7 +19,8 @@
 Using pydantic's BaseModel, this module supports the translation of the
 charmcraft.yaml to a python object.
 
-Configuration schema:
+Configuration Schema
+====================
 
 type: [string] one of "charm" or "bundle"
 
@@ -31,6 +32,26 @@ parts:
   bundle:
     prime: [list of strings]
 
+bases: [list of bases and/or long-form base configurations]
+
+Object Definitions
+==================
+
+Base
+****
+
+Object with the following properties:
+- name: [string] name of base
+- channel: [string] name of channel
+- architectures: [list of strings], defaults to [<host-architecture>]
+
+BaseConfiguration
+*****************
+
+Object with the following properties:
+- build-on: [list of bases] to build on
+- run-on: [list of bases] that build-on entries may run on
+
 """
 
 import datetime
@@ -40,7 +61,7 @@ from typing import Any, Dict, List, Optional
 import pydantic
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.utils import load_yaml
+from charmcraft.utils import get_host_architecture, load_yaml
 
 
 class RelativePath(pydantic.StrictStr):
@@ -164,6 +185,29 @@ class CharmhubConfig(
     storage_url: pydantic.HttpUrl = "https://storage.snapcraftcontent.com"
 
 
+class Base(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
+    """Represents a base."""
+
+    name: pydantic.StrictStr
+    channel: pydantic.StrictStr
+    architectures: List[pydantic.StrictStr] = [get_host_architecture()]
+
+
+class BasesConfiguration(
+    pydantic.BaseModel,
+    extra=pydantic.Extra.forbid,
+    frozen=True,
+    validate_all=True,
+    alias_generator=lambda s: s.replace("_", "-"),
+):
+    """Definition of build-on/run-on combinations."""
+
+    build_on: List[Base]
+    run_on: List[Base]
+
+
 class Project(
     pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
 ):
@@ -186,6 +230,8 @@ class Config(
     type: Optional[str]
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Parts = Parts()
+    bases: Optional[List[BasesConfiguration]] = None
+
     project: Project
 
     @pydantic.validator("type")

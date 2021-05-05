@@ -23,10 +23,13 @@ import pytest
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import (
+    Base,
+    BasesConfiguration,
     CharmhubConfig,
     Part,
     load,
 )
+from charmcraft.utils import get_host_architecture
 
 
 @pytest.fixture
@@ -456,3 +459,295 @@ def test_basicprime_empty():
     """Building with an empty list."""
     config = Part(prime=[])
     assert config.prime == []
+
+
+# -- tests for bases
+
+
+def test_no_bases_ok(create_config):
+    tmp_path = create_config(
+        """
+        type: charm
+    """
+    )
+    config = load(tmp_path)
+    assert config.bases is None
+
+
+def test_bases_minimal_long_form(create_config):
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - build-on:
+              - name: test-build-name
+                channel: test-build-channel
+            run-on:
+              - name: test-run-name
+                channel: test-run-channel
+    """
+    )
+
+    config = load(tmp_path)
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-build-name",
+                        channel="test-build-channel",
+                        architectures=[get_host_architecture()],
+                    ),
+                ],
+                "run-on": [
+                    Base(
+                        name="test-run-name",
+                        channel="test-run-channel",
+                        architectures=[get_host_architecture()],
+                    ),
+                ],
+            }
+        )
+    ]
+
+
+def test_bases_extra_field_error(create_config, check_schema_error):
+    create_config(
+        """
+        type: charm
+        bases:
+          - build-on:
+              - name: test-name
+                channel: test-build-channel
+                extra-extra: read all about it
+            run-on:
+              - name: test-name
+                channel: test-run-channel
+    """
+    )
+
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - extra fields not permitted in field 'bases[0].build-on[0].extra-extra'"""
+        )
+    )
+
+
+def test_bases_underscores_error(create_config, check_schema_error):
+    create_config(
+        """
+        type: charm
+        bases:
+          - build_on:
+              - name: test-name
+                channel: test-build-channel
+            run_on:
+              - name: test-name
+                channel: test-run-channel
+    """
+    )
+
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field required in field 'bases[0].build-on'
+            - field required in field 'bases[0].run-on'
+            - extra fields not permitted in field 'bases[0].build_on'
+            - extra fields not permitted in field 'bases[0].run_on'"""
+        )
+    )
+
+
+def test_channel_is_yaml_number(create_config, check_schema_error):
+    create_config(
+        """
+        type: charm
+        bases:
+          - build-on:
+              - name: test-build-name
+                channel: 20.10
+            run-on:
+              - name: test-run-name
+                channel: test-run-channel
+    """
+    )
+
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - string type expected in field 'bases[0].build-on[0].channel'"""
+        )
+    )
+
+
+def test_minimal_long_form_bases(create_config):
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - build-on:
+              - name: test-build-name
+                channel: test-build-channel
+            run-on:
+              - name: test-run-name
+                channel: test-run-channel
+    """
+    )
+
+    config = load(tmp_path)
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-build-name",
+                        channel="test-build-channel",
+                        architectures=[get_host_architecture()],
+                    ),
+                ],
+                "run-on": [
+                    Base(
+                        name="test-run-name",
+                        channel="test-run-channel",
+                        architectures=[get_host_architecture()],
+                    ),
+                ],
+            }
+        )
+    ]
+
+
+def test_complex_long_form_bases(create_config):
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - build-on:
+              - name: test-build-name-1
+                channel: test-build-channel-1
+              - name: test-build-name-2
+                channel: test-build-channel-2
+              - name: test-build-name-3
+                channel: test-build-channel-3
+                architectures: [riscVI]
+            run-on:
+              - name: test-run-name-1
+                channel: test-run-channel-1
+                architectures: [amd64]
+              - name: test-run-name-2
+                channel: test-run-channel-2
+                architectures: [amd64, arm64]
+              - name: test-run-name-3
+                channel: test-run-channel-3
+                architectures: [amd64, arm64, riscVI]
+    """
+    )
+
+    config = load(tmp_path)
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-build-name-1",
+                        channel="test-build-channel-1",
+                        architectures=[get_host_architecture()],
+                    ),
+                    Base(
+                        name="test-build-name-2",
+                        channel="test-build-channel-2",
+                        architectures=[get_host_architecture()],
+                    ),
+                    Base(
+                        name="test-build-name-3",
+                        channel="test-build-channel-3",
+                        architectures=["riscVI"],
+                    ),
+                ],
+                "run-on": [
+                    Base(
+                        name="test-run-name-1",
+                        channel="test-run-channel-1",
+                        architectures=["amd64"],
+                    ),
+                    Base(
+                        name="test-run-name-2",
+                        channel="test-run-channel-2",
+                        architectures=["amd64", "arm64"],
+                    ),
+                    Base(
+                        name="test-run-name-3",
+                        channel="test-run-channel-3",
+                        architectures=["amd64", "arm64", "riscVI"],
+                    ),
+                ],
+            }
+        )
+    ]
+
+
+def test_multiple_long_form_bases(create_config):
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - build-on:
+              - name: test-build-name-1
+                channel: test-build-channel-1
+            run-on:
+              - name: test-run-name-1
+                channel: test-run-channel-1
+                architectures: [amd64, arm64]
+          - build-on:
+              - name: test-build-name-2
+                channel: test-build-channel-2
+            run-on:
+              - name: test-run-name-2
+                channel: test-run-channel-2
+                architectures: [amd64, arm64]
+    """
+    )
+
+    config = load(tmp_path)
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-build-name-1",
+                        channel="test-build-channel-1",
+                        architectures=[get_host_architecture()],
+                    ),
+                ],
+                "run-on": [
+                    Base(
+                        name="test-run-name-1",
+                        channel="test-run-channel-1",
+                        architectures=["amd64", "arm64"],
+                    ),
+                ],
+            }
+        ),
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-build-name-2",
+                        channel="test-build-channel-2",
+                        architectures=[get_host_architecture()],
+                    ),
+                ],
+                "run-on": [
+                    Base(
+                        name="test-run-name-2",
+                        channel="test-run-channel-2",
+                        architectures=["amd64", "arm64"],
+                    ),
+                ],
+            }
+        ),
+    ]

@@ -33,6 +33,7 @@ from charmcraft.utils import (
     SingleOptionEnsurer,
     create_manifest,
     get_os_platform,
+    get_host_architecture,
     load_yaml,
     make_executable,
     useful_filepath,
@@ -326,6 +327,23 @@ def test_get_os_platform_windows():
     assert os_platform.system == "Windows"
     assert os_platform.release == "10"
     assert os_platform.machine == "AMD64"
+
+
+@pytest.mark.parametrize(
+    "platform_arch,deb_arch",
+    [
+        ("aarch64", "arm64"),
+        ("armv7l", "armhf"),
+        ("ppc", "powerpc"),
+        ("ppc64le", "ppc64el"),
+        ("x86_64", "amd64"),
+        ("unknown-arch", "unknown-arch"),
+    ],
+)
+def test_get_host_architecture(platform_arch, deb_arch):
+    """Test all platform mappings in addition to unknown."""
+    with patch("platform.machine", return_value=platform_arch):
+        assert get_host_architecture() == deb_arch
 
 
 # -- tests for the manifest creation

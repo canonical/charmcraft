@@ -116,11 +116,12 @@ class Builder:
 
         linked_entrypoint = self.handle_generic_paths()
 
-        # Do not create dispatch or venv in built charm if we're building a
+        # Do not create dispatch in built charm if we're building a
         # bare charm
         if not self.bare:
             self.handle_dispatcher(linked_entrypoint)
-            self.handle_dependencies()
+
+        self.handle_dependencies()
         zipname = self.handle_package()
 
         logger.info("Created '%s'.", zipname)
@@ -313,7 +314,7 @@ class Validator:
 
     _options = [
         "from",  # this needs to be processed first, as it's a base dir to find other files
-        "bare",
+        "bare",  # we check this next, as it obviates the need for the following two
         "entrypoint",
         "requirement",
     ]
@@ -356,7 +357,9 @@ class Validator:
 
     def validate_entrypoint(self, filepath):
         """Validate that the entrypoint exists and is executable."""
-        if self.bare:
+        if filepath is not None and self.bare:
+            raise CommandError("Cannot specify 'bare' and 'entrypoint'")
+        elif self.bare:
             return ""
 
         if filepath is None:
@@ -385,9 +388,6 @@ class Validator:
 
         If not specified, default to requirements.txt if there.
         """
-        if self.bare:
-            return []
-
         if filepaths is None:
             req = self.basedir / "requirements.txt"
             if req.exists() and os.access(req, os.R_OK):

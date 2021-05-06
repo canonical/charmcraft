@@ -17,7 +17,7 @@
 import logging
 import pathlib
 import zipfile
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, _StoreTrueAction
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -412,6 +412,15 @@ def test_charm_parameters_entrypoint(config):
     (action,) = [action for action in parser._actions if action.dest == "entrypoint"]
     assert isinstance(action.type, SingleOptionEnsurer)
     assert action.type.converter is useful_filepath
+
+
+def test_charm_parameters_bare(config):
+    """The --bare option implies a set of validations."""
+    cmd = PackCommand("group", config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == "bare"]
+    assert isinstance(action, _StoreTrueAction)
 
 
 def test_charm_parameters_validator(config):

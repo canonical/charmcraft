@@ -222,6 +222,29 @@ def test_validator_entrypoint_exec(tmp_path):
         validator.validate_entrypoint(testfile)
 
 
+def test_validator_entrypoint_bare_true(tmp_path):
+    """'entrypoint' param: check empty when using 'bare' option."""
+    validator = Validator()
+    validator.basedir = tmp_path
+    validator.bare = True
+    resp = validator.validate_entrypoint(None)
+    assert resp == ""
+
+
+def test_validator_entrypoint_bare_true_and_entrypoint(tmp_path):
+    """'entrypoint' param: check error when using 'bare' option."""
+    testfile = tmp_path / "testfile"
+    testfile.touch(mode=0o444)
+
+    validator = Validator()
+    validator.basedir = tmp_path
+    validator.bare = True
+
+    expected_msg = "Cannot specify 'bare' and 'entrypoint'"
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_entrypoint(testfile)
+
+
 def test_validator_requirement_simple(tmp_path):
     """'requirement' param: simple validation."""
     testfile = tmp_path / "testfile"
@@ -307,6 +330,15 @@ def test_validator_requirement_exist():
     expected_msg = "the requirements file was not found: '/not_really_there.txt'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_requirement([pathlib.Path("/not_really_there.txt")])
+
+
+def test_validator_bare_simple():
+    """'bare' param: simple validation."""
+    validator = Validator()
+    bare = True
+    resp = validator.validate_bare(bare)
+    assert validator.bare == bare
+    assert resp == bare
 
 
 # --- Polite Executor tests
@@ -427,6 +459,51 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
     assert zf.read("hooks/start") == dispatch
     assert zf.read("hooks/upgrade-charm") == dispatch
     assert zf.read("lib/ops/stuff.txt") == b"ops stuff"
+
+    # check the manifest is present and with particular values that depend on given info
+    manifest = yaml.safe_load(zf.read("manifest.yaml"))
+    assert (
+        manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
+    )
+
+
+def test_build_basic_complete_structure_bare(tmp_path, monkeypatch, config):
+    """Integration test: a simple structure with hooks dir and no entrypoint"""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    # the metadata (save it and restore to later check)
+    metadata_data = {"name": "name-from-metadata"}
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_raw = yaml.dump(metadata_data).encode("ascii")
+    with metadata_file.open("wb") as fh:
+        fh.write(metadata_raw)
+
+    # simple source code
+    hooks_dir = tmp_path / "hooks"
+    hooks_dir.mkdir()
+    charm_hook = hooks_dir / "install"
+    with charm_hook.open("wb") as fh:
+        fh.write(b"all the magic")
+
+    monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
+    builder = Builder(
+        {
+            "from": tmp_path,
+            "entrypoint": None,
+            "requirement": [],
+            "bare": True,
+        },
+        config,
+    )
+    zipname = builder.run()
+
+    # check all is properly inside the zip
+    # contents!), and all relative to build dir
+    zf = zipfile.ZipFile(zipname)
+    assert zf.read("metadata.yaml") == metadata_raw
+    assert zf.read("hooks/install") == b"all the magic"
+    assert "dispatch" not in zf.filelist
 
     # check the manifest is present and with particular values that depend on given info
     manifest = yaml.safe_load(zf.read("manifest.yaml"))

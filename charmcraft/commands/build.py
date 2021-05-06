@@ -25,10 +25,9 @@ import subprocess
 import zipfile
 
 import yaml
-
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
-from charmcraft.utils import make_executable, create_manifest
+from charmcraft.utils import create_manifest, make_executable
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +97,7 @@ class Builder:
     def __init__(self, args, config):
         self.charmdir = args["from"]
         self.entrypoint = args["entrypoint"]
+        self.bare = args["bare"]
         self.requirement_paths = args["requirement"]
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
@@ -115,8 +115,12 @@ class Builder:
         create_manifest(self.buildpath, self.config.project.started_at)
 
         linked_entrypoint = self.handle_generic_paths()
-        self.handle_dispatcher(linked_entrypoint)
-        self.handle_dependencies()
+
+        # Do not create dispatch or venv in built charm if we're building a
+        # bare charm
+        if not self.bare:
+            self.handle_dispatcher(linked_entrypoint)
+            self.handle_dependencies()
         zipname = self.handle_package()
 
         logger.info("Created '%s'.", zipname)
@@ -205,6 +209,11 @@ class Builder:
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
                     logger.debug("Ignoring file because of type: '%s'", rel_path)
+
+        # If we're building a bare charm with no dispatch/python then
+        # return nothing
+        if self.bare:
+            return ""
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
@@ -304,12 +313,14 @@ class Validator:
 
     _options = [
         "from",  # this needs to be processed first, as it's a base dir to find other files
+        "bare",
         "entrypoint",
         "requirement",
     ]
 
     def __init__(self):
         self.basedir = None  # this will be fulfilled when processing 'from'
+        self.bare = False  # this will be fulfilled when processing 'bare'
 
     def process(self, parsed_args):
         """Process the received options."""
@@ -318,6 +329,11 @@ class Validator:
             meth = getattr(self, "validate_" + opt)
             result[opt] = meth(getattr(parsed_args, opt, None))
         return result
+
+    def validate_bare(self, bare):
+        """Validate that the charm dir is there and yes, a directory."""
+        self.bare = bare
+        return bare
 
     def validate_from(self, dirpath):
         """Validate that the charm dir is there and yes, a directory."""
@@ -340,6 +356,9 @@ class Validator:
 
     def validate_entrypoint(self, filepath):
         """Validate that the entrypoint exists and is executable."""
+        if self.bare:
+            return ""
+
         if filepath is None:
             filepath = self.basedir / "src" / "charm.py"
         else:
@@ -366,6 +385,9 @@ class Validator:
 
         If not specified, default to requirements.txt if there.
         """
+        if self.bare:
+            return []
+
         if filepaths is None:
             req = self.basedir / "requirements.txt"
             if req.exists() and os.access(req, os.R_OK):
@@ -405,6 +427,16 @@ class BuildCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        parser.add_argument(
+            "-b",
+            "--bare",
+            action="store_true",
+            help=(
+                "Build a bare charm with no included Python dispatch or virtualenv. "
+                "WARNING: Advanced, not recommended for use with Charmed Operator"
+                " Framework"
+            ),
+        )
         parser.add_argument(
             "-f",
             "--from",

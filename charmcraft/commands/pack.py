@@ -98,6 +98,16 @@ class PackCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
+            "-b",
+            "--bare",
+            action="store_true",
+            help=(
+                "Build a bare charm with no included Python dispatch or virtualenv. "
+                "WARNING: Advanced, not recommended for use with Charmed Operator"
+                " Framework"
+            ),
+        )
+        parser.add_argument(
             "-e",
             "--entrypoint",
             type=SingleOptionEnsurer(useful_filepath),
@@ -130,6 +140,10 @@ class PackCommand(BaseCommand):
                 raise CommandError(
                     "The -r/--requirement option is valid only when packing a charm"
                 )
+            if parsed_args.bare is not None:
+                raise CommandError(
+                    "The -b/--bare option is valid only when packing a charm"
+                )
             self._pack_bundle()
 
     def _pack_charm(self, parsed_args):
@@ -140,6 +154,7 @@ class PackCommand(BaseCommand):
                 "from": self.config.project.dirpath,
                 "entrypoint": parsed_args.entrypoint,
                 "requirement": parsed_args.requirement,
+                "bare": parsed_args.bare,
             }
         )
 

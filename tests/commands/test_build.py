@@ -23,24 +23,22 @@ import socket
 import sys
 import zipfile
 from collections import namedtuple
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 import pytest
 import yaml
-
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
-    Builder,
     CHARM_METADATA,
     DISPATCH_CONTENT,
     DISPATCH_FILENAME,
     VENV_DIRNAME,
+    Builder,
     Validator,
     polite_exec,
     relativise,
 )
-
 
 # --- Validator tests
 
@@ -224,6 +222,29 @@ def test_validator_entrypoint_exec(tmp_path):
         validator.validate_entrypoint(testfile)
 
 
+def test_validator_entrypoint_bare_true(tmp_path):
+    """'entrypoint' param: check empty when using 'bare' option."""
+    validator = Validator()
+    validator.basedir = tmp_path
+    validator.bare = True
+    resp = validator.validate_entrypoint(None)
+    assert resp == ""
+
+
+def test_validator_entrypoint_bare_true_and_entrypoint(tmp_path):
+    """'entrypoint' param: check error when using 'bare' option."""
+    testfile = tmp_path / "testfile"
+    testfile.touch(mode=0o444)
+
+    validator = Validator()
+    validator.basedir = tmp_path
+    validator.bare = True
+
+    expected_msg = "Cannot specify 'bare' and 'entrypoint'"
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_entrypoint(testfile)
+
+
 def test_validator_requirement_simple(tmp_path):
     """'requirement' param: simple validation."""
     testfile = tmp_path / "testfile"
@@ -309,6 +330,15 @@ def test_validator_requirement_exist():
     expected_msg = "the requirements file was not found: '/not_really_there.txt'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_requirement([pathlib.Path("/not_really_there.txt")])
+
+
+def test_validator_bare_simple():
+    """'bare' param: simple validation."""
+    validator = Validator()
+    bare = True
+    resp = validator.validate_bare(bare)
+    assert validator.bare == bare
+    assert resp == bare
 
 
 # --- Polite Executor tests
@@ -410,6 +440,7 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
             "from": tmp_path,
             "entrypoint": charm_script,
             "requirement": [],
+            "bare": False,
         },
         config,
     )
@@ -436,6 +467,51 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
     )
 
 
+def test_build_basic_complete_structure_bare(tmp_path, monkeypatch, config):
+    """Integration test: a simple structure with hooks dir and no entrypoint"""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    # the metadata (save it and restore to later check)
+    metadata_data = {"name": "name-from-metadata"}
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_raw = yaml.dump(metadata_data).encode("ascii")
+    with metadata_file.open("wb") as fh:
+        fh.write(metadata_raw)
+
+    # simple source code
+    hooks_dir = tmp_path / "hooks"
+    hooks_dir.mkdir()
+    charm_hook = hooks_dir / "install"
+    with charm_hook.open("wb") as fh:
+        fh.write(b"all the magic")
+
+    monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
+    builder = Builder(
+        {
+            "from": tmp_path,
+            "entrypoint": None,
+            "requirement": [],
+            "bare": True,
+        },
+        config,
+    )
+    zipname = builder.run()
+
+    # check all is properly inside the zip
+    # contents!), and all relative to build dir
+    zf = zipfile.ZipFile(zipname)
+    assert zf.read("metadata.yaml") == metadata_raw
+    assert zf.read("hooks/install") == b"all the magic"
+    assert "dispatch" not in zf.filelist
+
+    # check the manifest is present and with particular values that depend on given info
+    manifest = yaml.safe_load(zf.read("manifest.yaml"))
+    assert (
+        manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
+    )
+
+
 def test_build_generics_simple_files(tmp_path, config):
     """Check transferred metadata and simple entrypoint, also return proper linked entrypoint."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -447,11 +523,7 @@ def test_build_generics_simple_files(tmp_path, config):
     entrypoint.touch()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     linked_entrypoint = builder.handle_generic_paths()
@@ -480,11 +552,7 @@ def test_build_generics_simple_dir(tmp_path, config):
     somedir.mkdir(mode=0o700)
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     builder.handle_generic_paths()
@@ -509,11 +577,7 @@ def test_build_generics_ignored_file(tmp_path, caplog, config):
     entrypoint.touch()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
 
@@ -543,11 +607,7 @@ def test_build_generics_ignored_dir(tmp_path, caplog, config):
     entrypoint.touch()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
 
@@ -601,11 +661,7 @@ def _test_build_generics_tree(tmp_path, caplog, config, *, expect_hardlinks):
     dir5.mkdir()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
 
@@ -678,11 +734,7 @@ def test_build_generics_symlink_file(tmp_path, config):
     the_symlink.symlink_to(entrypoint)
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     builder.handle_generic_paths()
@@ -709,11 +761,7 @@ def test_build_generics_symlink_dir(tmp_path, config):
     the_symlink.symlink_to(somedir)
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     builder.handle_generic_paths()
@@ -745,11 +793,7 @@ def test_build_generics_symlink_deep(tmp_path, config):
     the_symlink.symlink_to(original_target)
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     builder.handle_generic_paths()
@@ -783,6 +827,7 @@ def test_build_generics_symlink_file_outside(tmp_path, caplog, config):
             "from": project_dir,
             "entrypoint": entrypoint,
             "requirement": [],
+            "bare": False,
         },
         config,
     )
@@ -815,6 +860,7 @@ def test_build_generics_symlink_directory_outside(tmp_path, caplog, config):
             "from": project_dir,
             "entrypoint": entrypoint,
             "requirement": [],
+            "bare": False,
         },
         config,
     )
@@ -847,6 +893,7 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch, config
             "from": tmp_path,
             "entrypoint": tmp_path / entrypoint,
             "requirement": [],
+            "bare": False,
         },
         config,
     )
@@ -865,11 +912,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
     linked_entrypoint = build_dir / "somestuff.py"
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     builder.handle_dispatcher(linked_entrypoint)
@@ -892,11 +935,7 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
         fh.write(b"abc")
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     builder.handle_dispatcher("whatever")
@@ -914,11 +953,7 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path, config):
     included_dispatcher = build_dir / DISPATCH_FILENAME
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     with patch("charmcraft.commands.build.MANDATORY_HOOK_NAMES", {"testhook"}):
@@ -945,11 +980,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path, config):
     linked_entrypoint = build_dir / "somestuff.py"
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     with patch("charmcraft.commands.build.MANDATORY_HOOK_NAMES", {"testhook"}):
@@ -984,11 +1015,7 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(
     included_dispatcher = build_dir / DISPATCH_FILENAME
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     builder.handle_dispatcher(built_charm_script)
@@ -1010,6 +1037,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["reqs.txt"],
+            "bare": False,
         },
         config,
     )
@@ -1037,6 +1065,7 @@ def test_build_dependencies_needs_system(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["reqs"],
+            "bare": False,
         },
         config,
     )
@@ -1072,6 +1101,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["reqs1.txt", "reqs2.txt"],
+            "bare": False,
         },
         config,
     )
@@ -1101,11 +1131,7 @@ def test_build_dependencies_virtualenv_none(tmp_path, config):
     build_dir.mkdir()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
 
@@ -1125,6 +1151,7 @@ def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["something"],
+            "bare": False,
         },
         config,
     )
@@ -1145,6 +1172,7 @@ def test_build_dependencies_virtualenv_error_installing(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["something"],
+            "bare": False,
         },
         config,
     )
@@ -1203,11 +1231,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     zipname = builder.handle_package()
@@ -1240,11 +1264,7 @@ def test_build_package_name(tmp_path, monkeypatch, config):
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     zipname = builder.handle_package()
@@ -1258,11 +1278,7 @@ def test_builder_without_jujuignore(tmp_path, config):
     build_dir.mkdir()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     ignore = builder._load_juju_ignore()
@@ -1279,11 +1295,7 @@ def test_builder_with_jujuignore(tmp_path, config):
         ignores.write("*.py\n" "/h\xef.txt\n")
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     ignore = builder._load_juju_ignore()

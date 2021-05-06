@@ -331,7 +331,7 @@ class Validator:
         return result
 
     def validate_bare(self, bare):
-        """Validate that the charm dir is there and yes, a directory."""
+        """Check if we're building a bare (non-operator framework) charm."""
         self.bare = bare
         return bare
 

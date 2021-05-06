@@ -17,24 +17,19 @@
 import logging
 import pathlib
 import zipfile
-from argparse import Namespace, ArgumentParser
-from unittest.mock import patch, MagicMock
+from argparse import ArgumentParser, Namespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-
 from charmcraft.cmdbase import CommandError
-from charmcraft.config import Project
 from charmcraft.commands import pack
-from charmcraft.commands.pack import (
-    PackCommand,
-    build_zip,
-    get_paths_to_include,
-)
-from charmcraft.utils import useful_filepath, SingleOptionEnsurer
+from charmcraft.commands.pack import PackCommand, build_zip, get_paths_to_include
+from charmcraft.config import Project
+from charmcraft.utils import SingleOptionEnsurer, useful_filepath
 
 # empty namespace
-noargs = Namespace(entrypoint=None, requirement=None)
+noargs = Namespace(entrypoint=None, requirement=None, bare=None)
 
 
 @pytest.fixture
@@ -421,7 +416,7 @@ def test_charm_parameters_entrypoint(config):
 
 def test_charm_parameters_validator(config):
     """Check that build.Builder is properly called."""
-    args = Namespace(requirement="test-reqs", entrypoint="test-epoint")
+    args = Namespace(requirement="test-reqs", entrypoint="test-epoint", bare=False)
     config.set(type="charm", project=Project(dirpath="test-pdir"))
     with patch(
         "charmcraft.commands.build.Validator", autospec=True
@@ -435,6 +430,7 @@ def test_charm_parameters_validator(config):
                 "from": "test-pdir",
                 "requirement": "test-reqs",
                 "entrypoint": "test-epoint",
+                "bare": False,
             }
         )
     )

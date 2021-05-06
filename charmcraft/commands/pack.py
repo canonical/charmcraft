@@ -22,8 +22,12 @@ from argparse import Namespace
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build
-from charmcraft.utils import (SingleOptionEnsurer, create_manifest, load_yaml,
-                              useful_filepath)
+from charmcraft.utils import (
+    SingleOptionEnsurer,
+    create_manifest,
+    load_yaml,
+    useful_filepath,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +154,7 @@ class PackCommand(BaseCommand):
                 "from": self.config.project.dirpath,
                 "entrypoint": parsed_args.entrypoint,
                 "requirement": parsed_args.requirement,
-                "bare": parsed_args.bare
+                "bare": parsed_args.bare,
             }
         )
 

@@ -23,24 +23,22 @@ import socket
 import sys
 import zipfile
 from collections import namedtuple
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 import pytest
 import yaml
-
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
-    Builder,
     CHARM_METADATA,
     DISPATCH_CONTENT,
     DISPATCH_FILENAME,
     VENV_DIRNAME,
+    Builder,
     Validator,
     polite_exec,
     relativise,
 )
-
 
 # --- Validator tests
 
@@ -410,6 +408,7 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
             "from": tmp_path,
             "entrypoint": charm_script,
             "requirement": [],
+            "bare": False,
         },
         config,
     )
@@ -447,11 +446,7 @@ def test_build_generics_simple_files(tmp_path, config):
     entrypoint.touch()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     linked_entrypoint = builder.handle_generic_paths()
@@ -480,11 +475,7 @@ def test_build_generics_simple_dir(tmp_path, config):
     somedir.mkdir(mode=0o700)
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     builder.handle_generic_paths()
@@ -509,11 +500,7 @@ def test_build_generics_ignored_file(tmp_path, caplog, config):
     entrypoint.touch()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
 
@@ -543,11 +530,7 @@ def test_build_generics_ignored_dir(tmp_path, caplog, config):
     entrypoint.touch()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
 
@@ -601,11 +584,7 @@ def _test_build_generics_tree(tmp_path, caplog, config, *, expect_hardlinks):
     dir5.mkdir()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
 
@@ -678,11 +657,7 @@ def test_build_generics_symlink_file(tmp_path, config):
     the_symlink.symlink_to(entrypoint)
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     builder.handle_generic_paths()
@@ -709,11 +684,7 @@ def test_build_generics_symlink_dir(tmp_path, config):
     the_symlink.symlink_to(somedir)
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     builder.handle_generic_paths()
@@ -745,11 +716,7 @@ def test_build_generics_symlink_deep(tmp_path, config):
     the_symlink.symlink_to(original_target)
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": entrypoint, "requirement": [], "bare": False},
         config,
     )
     builder.handle_generic_paths()
@@ -783,6 +750,7 @@ def test_build_generics_symlink_file_outside(tmp_path, caplog, config):
             "from": project_dir,
             "entrypoint": entrypoint,
             "requirement": [],
+            "bare": False,
         },
         config,
     )
@@ -815,6 +783,7 @@ def test_build_generics_symlink_directory_outside(tmp_path, caplog, config):
             "from": project_dir,
             "entrypoint": entrypoint,
             "requirement": [],
+            "bare": False,
         },
         config,
     )
@@ -847,6 +816,7 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch, config
             "from": tmp_path,
             "entrypoint": tmp_path / entrypoint,
             "requirement": [],
+            "bare": False,
         },
         config,
     )
@@ -865,11 +835,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
     linked_entrypoint = build_dir / "somestuff.py"
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     builder.handle_dispatcher(linked_entrypoint)
@@ -892,11 +858,7 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
         fh.write(b"abc")
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     builder.handle_dispatcher("whatever")
@@ -914,11 +876,7 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path, config):
     included_dispatcher = build_dir / DISPATCH_FILENAME
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     with patch("charmcraft.commands.build.MANDATORY_HOOK_NAMES", {"testhook"}):
@@ -945,11 +903,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path, config):
     linked_entrypoint = build_dir / "somestuff.py"
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     with patch("charmcraft.commands.build.MANDATORY_HOOK_NAMES", {"testhook"}):
@@ -984,11 +938,7 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(
     included_dispatcher = build_dir / DISPATCH_FILENAME
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     builder.handle_dispatcher(built_charm_script)
@@ -1010,6 +960,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["reqs.txt"],
+            "bare": False,
         },
         config,
     )
@@ -1037,6 +988,7 @@ def test_build_dependencies_needs_system(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["reqs"],
+            "bare": False,
         },
         config,
     )
@@ -1072,6 +1024,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["reqs1.txt", "reqs2.txt"],
+            "bare": False,
         },
         config,
     )
@@ -1101,11 +1054,7 @@ def test_build_dependencies_virtualenv_none(tmp_path, config):
     build_dir.mkdir()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
 
@@ -1125,6 +1074,7 @@ def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["something"],
+            "bare": False,
         },
         config,
     )
@@ -1145,6 +1095,7 @@ def test_build_dependencies_virtualenv_error_installing(tmp_path, config):
             "from": tmp_path,
             "entrypoint": "whatever",
             "requirement": ["something"],
+            "bare": False,
         },
         config,
     )
@@ -1203,11 +1154,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     zipname = builder.handle_package()
@@ -1240,11 +1187,7 @@ def test_build_package_name(tmp_path, monkeypatch, config):
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     zipname = builder.handle_package()
@@ -1258,11 +1201,7 @@ def test_builder_without_jujuignore(tmp_path, config):
     build_dir.mkdir()
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     ignore = builder._load_juju_ignore()
@@ -1279,11 +1218,7 @@ def test_builder_with_jujuignore(tmp_path, config):
         ignores.write("*.py\n" "/h\xef.txt\n")
 
     builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-        },
+        {"from": tmp_path, "entrypoint": "whatever", "requirement": [], "bare": False},
         config,
     )
     ignore = builder._load_juju_ignore()

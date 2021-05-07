@@ -35,6 +35,7 @@ install_requires = [
     "jsonschema",
     "jinja2",
     "macaroonbakery",
+    "pydantic",
     "python-dateutil",
     "pyyaml",
     "requests",

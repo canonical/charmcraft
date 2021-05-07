@@ -13,5 +13,5 @@ else
 fi
 
 flake8
-coverage run --source=src -m unittest -v "$@"
+coverage run --branch --source=src -m unittest -v "$@"
 coverage report -m

@@ -28,11 +28,11 @@ multi-cloud application management.
 
 ## Install
 
-The easiest way to install `charmcraft` is with
+The easiest way to install `charmcraft` is from the stable channel with
 
-    sudo snap install charmcraft --beta
+    sudo snap install charmcraft
 
-There are multiple channels other than `--beta`. See the full list with
+There are multiple channels other than `stable`. See the full list with
 `snap info charmcraft`. We recommend either `latest/stable` or `latest/beta`
 for everyday charming. With the snap you will always be up to date as
 Charmhub services and APIs evolve.

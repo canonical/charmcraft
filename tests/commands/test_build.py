@@ -20,6 +20,7 @@ import logging
 import os
 import pathlib
 import socket
+import subprocess
 import sys
 import zipfile
 from collections import namedtuple
@@ -1014,15 +1015,31 @@ def test_build_dependencies_virtualenv_simple(tmp_path, config):
         config,
     )
 
-    with patch("charmcraft.commands.build.polite_exec") as mock:
-        mock.return_value = 0
-        builder.handle_dependencies()
+    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
+        mock_run.return_value.returncode = 1
+        with patch("charmcraft.commands.build.polite_exec") as mock:
+            mock.return_value = 0
+            builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
     assert mock.mock_calls == [
         call(["pip3", "list"]),
         call(
             ["pip3", "install", "--target={}".format(envpath), "--requirement=reqs.txt"]
+        ),
+    ]
+    assert mock_run.mock_calls == [
+        call(
+            [
+                "python3",
+                "-c",
+                (
+                    "from pip.commands.install import InstallCommand; "
+                    'assert InstallCommand().cmd_opts.get_option("--system") is not None'
+                ),
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         ),
     ]
 
@@ -1041,8 +1058,8 @@ def test_build_dependencies_needs_system(tmp_path, config):
         config,
     )
 
-    with patch("charmcraft.commands.build._pip_needs_system") as is_bionic:
-        is_bionic.return_value = True
+    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
+        mock_run.return_value.returncode = 0
         with patch("charmcraft.commands.build.polite_exec") as mock:
             mock.return_value = 0
             builder.handle_dependencies()
@@ -1076,9 +1093,11 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, config):
         config,
     )
 
-    with patch("charmcraft.commands.build.polite_exec") as mock:
-        mock.return_value = 0
-        builder.handle_dependencies()
+    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
+        mock_run.return_value.returncode = 1
+        with patch("charmcraft.commands.build.polite_exec") as mock:
+            mock.return_value = 0
+            builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
     assert mock.mock_calls == [
@@ -1129,10 +1148,12 @@ def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
         config,
     )
 
-    with patch("charmcraft.commands.build.polite_exec") as mock:
-        mock.return_value = -7
-        with pytest.raises(CommandError, match="problems using pip"):
-            builder.handle_dependencies()
+    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
+        mock_run.return_value.returncode = 1
+        with patch("charmcraft.commands.build.polite_exec") as mock:
+            mock.return_value = -7
+            with pytest.raises(CommandError, match="problems using pip"):
+                builder.handle_dependencies()
 
 
 def test_build_dependencies_virtualenv_error_installing(tmp_path, config):
@@ -1149,10 +1170,12 @@ def test_build_dependencies_virtualenv_error_installing(tmp_path, config):
         config,
     )
 
-    with patch("charmcraft.commands.build.polite_exec") as mock:
-        mock.side_effect = [0, -7]
-        with pytest.raises(CommandError, match="problems installing dependencies"):
-            builder.handle_dependencies()
+    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
+        mock_run.return_value.returncode = 1
+        with patch("charmcraft.commands.build.polite_exec") as mock:
+            mock.side_effect = [0, -7]
+            with pytest.raises(CommandError, match="problems installing dependencies"):
+                builder.handle_dependencies()
 
 
 def test_build_package_tree_structure(tmp_path, monkeypatch, config):

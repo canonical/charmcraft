@@ -182,6 +182,12 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
     return OSPlatform(system=system, release=release, machine=machine)
 
 
+def get_host_architecture():
+    """Get host architecture in deb format suitable for base definition."""
+    os_platform = get_os_platform()
+    return ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)
+
+
 def create_manifest(basedir, started_at):
     """Save context information for the charm execution.
 
@@ -191,7 +197,7 @@ def create_manifest(basedir, started_at):
 
     # XXX Facundo 2021-03-29: the architectures list will be provided by the caller when
     # we integrate lifecycle lib in future branches
-    architectures = [ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)]
+    architectures = [get_host_architecture()]
 
     # XXX Facundo 2021-04-19: these are temporary translations until charmcraft
     # changes to be a "classic" snap

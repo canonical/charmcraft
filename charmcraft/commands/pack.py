@@ -56,10 +56,12 @@ def get_paths_to_include(config):
         allpaths.add(fpath)
 
     # the extra files (relative paths)
-    for spec in config.parts:
-        fpaths = sorted(fpath for fpath in dirpath.glob(spec) if fpath.is_file())
-        logger.debug("Including per prime config %r: %s.", spec, fpaths)
-        allpaths.update(fpaths)
+    bundle = config.parts.get("bundle")
+    if bundle is not None:
+        for spec in bundle.prime:
+            fpaths = sorted(fpath for fpath in dirpath.glob(spec) if fpath.is_file())
+            logger.debug("Including per prime config %r: %s.", spec, fpaths)
+            allpaths.update(fpaths)
 
     return sorted(allpaths)
 

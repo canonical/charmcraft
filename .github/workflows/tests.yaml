@@ -33,3 +33,48 @@ jobs:
       - name: Run tests
         run: |
           pytest -ra tests
+
+  snap-build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Build snap
+        uses: snapcore/action-build@v1
+        id: snapcraft
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+
+  snap-tests:
+    needs: [snap-build]
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download snap artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: snap
+          path: snap-artifacts
+      - name: Install snap
+        run: |
+          sudo snap install --classic --dangerous snap-artifacts/*.snap
+          rm -rf snap-artifacts
+      - name: Install test dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip python3-setuptools python3-wheel
+      - name: Run smoke tests
+        run: |
+          mkdir -p charm-smoke-test
+          cd charm-smoke-test
+          charmcraft -v init --author testuser
+          charmcraft -v build
+          test -f *.charm

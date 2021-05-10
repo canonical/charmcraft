@@ -185,6 +185,8 @@ parts:
       - lib/python_dateutil-*.dist-info
       - lib/requests_toolbelt
       - lib/requests_toolbelt-*.dist-info
+      - lib/typing_extensions.py
+      - lib/typing_extensions-*.dist-info
       - lib/yaml
       # this effectively means we're shipping pip and wheel twice (once above,
       # and once below), but untangling that is probably not worth it.

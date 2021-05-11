@@ -64,6 +64,12 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.utils import get_host_architecture, load_yaml
 
 
+class ModelConfigDefaults(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
+    """Define Charmcraft's defaults for the BaseModel configuration."""
+
+
 class RelativePath(pydantic.StrictStr):
     """Constrainted string which must be a relative path."""
 
@@ -149,17 +155,13 @@ def format_pydantic_errors(errors):
     return "\n".join(combined)
 
 
-class Part(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class Part(ModelConfigDefaults):
     """Definition of part to build."""
 
     prime: List[RelativePath] = []
 
 
-class Parts(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class Parts(ModelConfigDefaults):
     """Definition of parts to build."""
 
     bundle: Part = Part()
@@ -176,18 +178,14 @@ class Parts(
         raise KeyError(part_name)
 
 
-class CharmhubConfig(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class CharmhubConfig(ModelConfigDefaults):
     """Definition of Charmhub endpoint configuration."""
 
     api_url: pydantic.HttpUrl = "https://api.charmhub.io"
     storage_url: pydantic.HttpUrl = "https://storage.snapcraftcontent.com"
 
 
-class Base(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class Base(ModelConfigDefaults):
     """Represents a base."""
 
     name: pydantic.StrictStr
@@ -196,10 +194,7 @@ class Base(
 
 
 class BasesConfiguration(
-    pydantic.BaseModel,
-    extra=pydantic.Extra.forbid,
-    frozen=True,
-    validate_all=True,
+    ModelConfigDefaults,
     alias_generator=lambda s: s.replace("_", "-"),
 ):
     """Definition of build-on/run-on combinations."""
@@ -208,9 +203,7 @@ class BasesConfiguration(
     run_on: List[Base]
 
 
-class Project(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class Project(ModelConfigDefaults):
     """Internal-only project configuration."""
 
     dirpath: pydantic.DirectoryPath
@@ -220,11 +213,7 @@ class Project(
     started_at: datetime.datetime
 
 
-class Config(
-    pydantic.BaseModel,
-    extra=pydantic.Extra.forbid,
-    frozen=True,
-):
+class Config(ModelConfigDefaults, validate_all=False):
     """Definition of charmcraft.yaml configuration."""
 
     type: Optional[str]

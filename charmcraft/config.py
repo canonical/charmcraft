@@ -56,7 +56,7 @@ Object with the following properties:
 
 import datetime
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pydantic
 
@@ -128,6 +128,27 @@ def format_pydantic_error_message(msg):
     return msg
 
 
+def printable_field_location_split(location: str) -> Tuple[str, str]:
+    """Return split field location.
+
+    If top-level, location is returned as unquoted "top-level".
+    If not top-level, location is returned as quoted location.
+
+    Examples:
+    (1) field1[idx].foo => 'foo', 'field1[idx]'
+    (2) field2 => 'field2', top-level
+
+    :returns: Tuple of <field name>, <location> as printable representations.
+    """
+    loc_split = location.split(".")
+    field_name = repr(loc_split.pop())
+
+    if loc_split:
+        return field_name, repr(".".join(loc_split))
+
+    return field_name, "top-level"
+
+
 def format_pydantic_errors(errors):
     """Format errors.
 
@@ -150,7 +171,18 @@ def format_pydantic_errors(errors):
         formatted_loc = format_pydantic_error_location(error["loc"])
         formatted_msg = format_pydantic_error_message(error["msg"])
 
-        combined.append(f"- {formatted_msg} in field {formatted_loc!r}")
+        if formatted_msg == "field required":
+            field_name, location = printable_field_location_split(formatted_loc)
+            combined.append(
+                f"- field {field_name} required for {location} configuration"
+            )
+        elif formatted_msg == "extra fields not permitted":
+            field_name, location = printable_field_location_split(formatted_loc)
+            combined.append(
+                f"- extra field {field_name} not permitted for {location} configuration"
+            )
+        else:
+            combined.append(f"- {formatted_msg} in field {formatted_loc!r}")
 
     return "\n".join(combined)
 

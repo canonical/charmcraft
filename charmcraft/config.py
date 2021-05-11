@@ -19,7 +19,8 @@
 Using pydantic's BaseModel, this module supports the translation of the
 charmcraft.yaml to a python object.
 
-Configuration schema:
+Configuration Schema
+====================
 
 type: [string] one of "charm" or "bundle"
 
@@ -31,6 +32,26 @@ parts:
   bundle:
     prime: [list of strings]
 
+bases: [list of bases and/or long-form base configurations]
+
+Object Definitions
+==================
+
+Base
+****
+
+Object with the following properties:
+- name: [string] name of base
+- channel: [string] name of channel
+- architectures: [list of strings], defaults to [<host-architecture>]
+
+BaseConfiguration
+*****************
+
+Object with the following properties:
+- build-on: [list of bases] to build on
+- run-on: [list of bases] that build-on entries may run on
+
 """
 
 import datetime
@@ -40,7 +61,13 @@ from typing import Any, Dict, List, Optional
 import pydantic
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.utils import load_yaml
+from charmcraft.utils import get_host_architecture, load_yaml
+
+
+class ModelConfigDefaults(
+    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+):
+    """Define Charmcraft's defaults for the BaseModel configuration."""
 
 
 class RelativePath(pydantic.StrictStr):
@@ -128,17 +155,13 @@ def format_pydantic_errors(errors):
     return "\n".join(combined)
 
 
-class Part(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class Part(ModelConfigDefaults):
     """Definition of part to build."""
 
     prime: List[RelativePath] = []
 
 
-class Parts(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class Parts(ModelConfigDefaults):
     """Definition of parts to build."""
 
     bundle: Part = Part()
@@ -155,18 +178,32 @@ class Parts(
         raise KeyError(part_name)
 
 
-class CharmhubConfig(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
-):
+class CharmhubConfig(ModelConfigDefaults):
     """Definition of Charmhub endpoint configuration."""
 
     api_url: pydantic.HttpUrl = "https://api.charmhub.io"
     storage_url: pydantic.HttpUrl = "https://storage.snapcraftcontent.com"
 
 
-class Project(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+class Base(ModelConfigDefaults):
+    """Represents a base."""
+
+    name: pydantic.StrictStr
+    channel: pydantic.StrictStr
+    architectures: List[pydantic.StrictStr] = [get_host_architecture()]
+
+
+class BasesConfiguration(
+    ModelConfigDefaults,
+    alias_generator=lambda s: s.replace("_", "-"),
 ):
+    """Definition of build-on/run-on combinations."""
+
+    build_on: List[Base]
+    run_on: List[Base]
+
+
+class Project(ModelConfigDefaults):
     """Internal-only project configuration."""
 
     dirpath: pydantic.DirectoryPath
@@ -176,16 +213,14 @@ class Project(
     started_at: datetime.datetime
 
 
-class Config(
-    pydantic.BaseModel,
-    extra=pydantic.Extra.forbid,
-    frozen=True,
-):
+class Config(ModelConfigDefaults, validate_all=False):
     """Definition of charmcraft.yaml configuration."""
 
     type: Optional[str]
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Parts = Parts()
+    bases: Optional[List[BasesConfiguration]] = None
+
     project: Project
 
     @pydantic.validator("type")

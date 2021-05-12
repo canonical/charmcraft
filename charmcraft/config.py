@@ -174,12 +174,12 @@ def format_pydantic_errors(errors):
         if formatted_msg == "field required":
             field_name, location = printable_field_location_split(formatted_loc)
             combined.append(
-                f"- field {field_name} required for {location} configuration"
+                f"- field {field_name} required in {location} configuration"
             )
         elif formatted_msg == "extra fields not permitted":
             field_name, location = printable_field_location_split(formatted_loc)
             combined.append(
-                f"- extra field {field_name} not permitted for {location} configuration"
+                f"- extra field {field_name} not permitted in {location} configuration"
             )
         else:
             combined.append(f"- {formatted_msg} in field {formatted_loc!r}")

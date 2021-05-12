@@ -150,7 +150,7 @@ def test_schema_top_level_no_extra_properties(create_config, check_schema_error)
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra field 'whatever' not permitted for top-level configuration"""
+            - extra field 'whatever' not permitted in top-level configuration"""
         )
     )
 
@@ -290,7 +290,7 @@ def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra field 'crazy' not permitted for 'charmhub' configuration"""
+            - extra field 'crazy' not permitted in 'charmhub' configuration"""
         )
     )
 
@@ -422,7 +422,7 @@ def test_schema_unsupported_part(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra field 'not-bundle' not permitted for 'parts' configuration"""
+            - extra field 'not-bundle' not permitted in 'parts' configuration"""
         )
     )
 
@@ -530,7 +530,7 @@ def test_bases_extra_field_error(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra field 'extra-extra' not permitted for 'bases[0].build-on[0]' configuration"""
+            - extra field 'extra-extra' not permitted in 'bases[0].build-on[0]' configuration"""
         )
     )
 
@@ -553,10 +553,10 @@ def test_bases_underscores_error(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field 'build-on' required for 'bases[0]' configuration
-            - field 'run-on' required for 'bases[0]' configuration
-            - extra field 'build_on' not permitted for 'bases[0]' configuration
-            - extra field 'run_on' not permitted for 'bases[0]' configuration"""
+            - field 'build-on' required in 'bases[0]' configuration
+            - field 'run-on' required in 'bases[0]' configuration
+            - extra field 'build_on' not permitted in 'bases[0]' configuration
+            - extra field 'run_on' not permitted in 'bases[0]' configuration"""
         )
     )
 

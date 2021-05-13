@@ -150,7 +150,7 @@ def test_schema_top_level_no_extra_properties(create_config, check_schema_error)
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra fields not permitted in field 'whatever'"""
+            - extra field 'whatever' not permitted in top-level configuration"""
         )
     )
 
@@ -290,7 +290,7 @@ def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra fields not permitted in field 'charmhub.crazy'"""
+            - extra field 'crazy' not permitted in 'charmhub' configuration"""
         )
     )
 
@@ -422,7 +422,7 @@ def test_schema_unsupported_part(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra fields not permitted in field 'parts.not-bundle'"""
+            - extra field 'not-bundle' not permitted in 'parts' configuration"""
         )
     )
 
@@ -530,7 +530,7 @@ def test_bases_extra_field_error(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra fields not permitted in field 'bases[0].build-on[0].extra-extra'"""
+            - extra field 'extra-extra' not permitted in 'bases[0].build-on[0]' configuration"""
         )
     )
 
@@ -553,10 +553,10 @@ def test_bases_underscores_error(create_config, check_schema_error):
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - field required in field 'bases[0].build-on'
-            - field required in field 'bases[0].run-on'
-            - extra fields not permitted in field 'bases[0].build_on'
-            - extra fields not permitted in field 'bases[0].run_on'"""
+            - field 'build-on' required in 'bases[0]' configuration
+            - field 'run-on' required in 'bases[0]' configuration
+            - extra field 'build_on' not permitted in 'bases[0]' configuration
+            - extra field 'run_on' not permitted in 'bases[0]' configuration"""
         )
     )
 

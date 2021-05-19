@@ -751,3 +751,97 @@ def test_multiple_long_form_bases(create_config):
             }
         ),
     ]
+
+
+def test_bases_minimal_short_form(create_config):
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - name: test-name
+            channel: test-channel
+    """
+    )
+
+    config = load(tmp_path)
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[get_host_architecture()],
+                    ),
+                ],
+                "run-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[get_host_architecture()],
+                    ),
+                ],
+            }
+        )
+    ]
+
+
+def test_bases_short_form_extra_field_error(create_config, check_schema_error):
+    create_config(
+        """
+        type: charm
+        bases:
+          - name: test-name
+            channel: test-channel
+            extra-extra: read all about it
+    """
+    )
+
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - extra field 'extra-extra' not permitted in 'bases[0]' configuration"""
+        )
+    )
+
+
+def test_bases_short_form_missing_field_error(create_config, check_schema_error):
+    create_config(
+        """
+        type: charm
+        bases:
+          - name: test-name
+    """
+    )
+
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field 'channel' required in 'bases[0]' configuration"""
+        )
+    )
+
+
+def test_bases_mixed_form_errors(create_config, check_schema_error):
+    """Only the short-form errors are exposed as its the first validation pass."""
+    create_config(
+        """
+        type: charm
+        bases:
+          - name: test-name
+          - build-on:
+              - name: test-build-name
+            run-on:
+              - name: test-run-name
+    """
+    )
+
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field 'channel' required in 'bases[0]' configuration"""
+        )
+    )

@@ -1349,7 +1349,7 @@ class UploadResourceCommand(BaseCommand):
 
         Push a resource content to Charmhub, associating it to the
         specified charm. This charm needs to have the resource declared
-        in its metadata (in a preoviously uploaded to Charmhub revision).
+        in its metadata (in a previously uploaded to Charmhub revision).
 
         The resource can be a file from your computer (use the '--filepath'
         option) or an OCI Image (use the '--image' option).

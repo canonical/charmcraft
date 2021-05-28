@@ -42,6 +42,7 @@ Library = namedtuple(
 )
 Resource = namedtuple("Resource", "name optional revision resource_type")
 ResourceRevision = namedtuple("ResourceRevision", "revision created_at size")
+RegistryCredentials = namedtuple("RegistryCredentials", "image_name username password")
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -331,3 +332,25 @@ class Store:
         response = self._client.get(endpoint)
         result = [_build_resource_revision(item) for item in response["revisions"]]
         return result
+
+    def get_oci_registry_credentials(self, charm_name, resource_name):
+        """Get credentials to upload a resource to the Canonical's OCI Registry."""
+        endpoint = "/v1/charm/{}/resources/{}/oci-image/upload-credentials".format(
+            charm_name, resource_name
+        )
+        response = self._client.get(endpoint)
+        return RegistryCredentials(
+            image_name=response["image-name"],
+            username=response["username"],
+            password=response["password"],
+        )
+
+    def get_oci_image_blob(self, charm_name, resource_name, digest):
+        """Get the blob that points to the OCI image in the Canonical's OCI Registry."""
+        payload = {"image-digest": digest}
+        endpoint = "/v1/charm/{}/resources/{}/oci-image/blob".format(
+            charm_name, resource_name
+        )
+        content = self._client.post(endpoint, payload, parse_json=False)
+        # the response here is returned as is, because it's opaque to charmcraft
+        return content

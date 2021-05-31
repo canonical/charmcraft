@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
+import logging
 import os
 from textwrap import dedent
 from unittest.mock import patch
@@ -160,7 +161,7 @@ def test_schema_type_missing(create_config, check_schema_error):
     create_config(
         """
         charmhub:
-            api_url: https://www.canonical.com
+            api-url: https://www.canonical.com
     """
     )
     check_schema_error(
@@ -205,73 +206,109 @@ def test_schema_type_limited_values(create_config, check_schema_error):
 
 
 def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
-    """Schema validation, charmhub.api_url must be a string."""
+    """Schema validation, charmhub.api-url must be a string."""
     create_config(
         """
         type: charm  # mandatory
         charmhub:
-            api_url: 33
+            api-url: 33
     """
     )
     check_schema_error(
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.api_url'"""
+            - invalid or missing URL scheme in field 'charmhub.api-url'"""
         )
     )
 
 
 def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
-    """Schema validation, charmhub.api_url must be a full URL."""
+    """Schema validation, charmhub.api-url must be a full URL."""
     create_config(
         """
         type: charm  # mandatory
         charmhub:
-            api_url: stuff.com
+            api-url: stuff.com
     """
     )
     check_schema_error(
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.api_url'"""
+            - invalid or missing URL scheme in field 'charmhub.api-url'"""
         )
     )
 
 
 def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error):
-    """Schema validation, charmhub.storage_url must be a string."""
+    """Schema validation, charmhub.storage-url must be a string."""
     create_config(
         """
         type: charm  # mandatory
         charmhub:
-            storage_url: 33
+            storage-url: 33
     """
     )
     check_schema_error(
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.storage_url'"""
+            - invalid or missing URL scheme in field 'charmhub.storage-url'"""
         )
     )
 
 
 def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_error):
-    """Schema validation, charmhub.storage_url must be a full URL."""
+    """Schema validation, charmhub.storage-url must be a full URL."""
     create_config(
         """
         type: charm  # mandatory
         charmhub:
-            storage_url: stuff.com
+            storage-url: stuff.com
     """
     )
     check_schema_error(
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.storage_url'"""
+            - invalid or missing URL scheme in field 'charmhub.storage-url'"""
+        )
+    )
+
+
+def test_schema_charmhub_registry_url_bad_type(create_config, check_schema_error):
+    """Schema validation, charmhub.registry-url must be a string."""
+    create_config(
+        """
+        type: charm  # mandatory
+        charmhub:
+            registry-url: 33
+    """
+    )
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - invalid or missing URL scheme in field 'charmhub.registry-url'"""
+        )
+    )
+
+
+def test_schema_charmhub_registry_url_bad_format(create_config, check_schema_error):
+    """Schema validation, charmhub.registry-url must be a full URL."""
+    create_config(
+        """
+        type: charm  # mandatory
+        charmhub:
+            registry-url: stuff.com
+    """
+    )
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - invalid or missing URL scheme in field 'charmhub.registry-url'"""
         )
     )
 
@@ -282,7 +319,7 @@ def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
         """
         type: bundle
         charmhub:
-            storage_url: https://some.server.com
+            storage-url: https://some.server.com
             crazy: false
     """
     )
@@ -435,6 +472,29 @@ def test_charmhub_frozen():
     config = CharmhubConfig()
     with pytest.raises(TypeError):
         config.api_url = "broken"
+
+
+def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, caplog):
+    """Support underscore in these attributes for a while."""
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+
+    create_config(
+        """
+        type: charm  # mandatory
+        charmhub:
+            storage_url: https://server1.com
+            api_url: https://server2.com
+            registry_url: https://server3.com
+    """
+    )
+    cfg = load(tmp_path)
+    assert cfg.charmhub.storage_url == "https://server1.com"
+    assert cfg.charmhub.api_url == "https://server2.com"
+    assert cfg.charmhub.registry_url == "https://server3.com"
+    deprecation_msg = (
+        "DEPRECATED: Configuration keywords are now separated using dashes."
+    )
+    assert deprecation_msg in [rec.message for rec in caplog.records]
 
 
 # -- tests for BasicPrime config

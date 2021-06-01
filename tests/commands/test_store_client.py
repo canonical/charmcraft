@@ -356,6 +356,10 @@ class FakeResponse:
     def json(self):
         return json.loads(self.content)
 
+    @property
+    def text(self):
+        return self.content
+
 
 def test_client_get():
     """Passes the correct method."""
@@ -395,6 +399,19 @@ def test_client_hit_success_simple(caplog):
         "Store ok: 200",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+def test_client_hit_success_without_json_parsing():
+    """Hits the server, all ok, return the raw response without parsing the json."""
+    response_value = "whatever test response"
+    fake_response = FakeResponse(content=response_value, status_code=200)
+    with patch("charmcraft.commands.store.client._AuthHolder") as mock_auth:
+        mock_auth().request.return_value = fake_response
+        client = Client("http://api.test", "http://storage.test")
+    result = client._hit("GET", "/somepath", parse_json=False)
+
+    mock_auth().request.assert_called_once_with("GET", "http://api.test/somepath", None)
+    assert result == response_value
 
 
 def test_client_hit_url_extra_slash():

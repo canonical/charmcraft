@@ -230,7 +230,7 @@ class Client:
         if parse_json:
             # XXX Facundo 2020-06-30: we need to wrap this .json() call, and raise UnknownError
             # (after logging in debug the received raw response). This would catch weird "html"
-            # responses, for example, without making charmcraft to badly crash. Related: issue #73.
+            # responses, for example, without making charmcraft to crash. Related: issue #73.
             data = resp.json()
         else:
             data = resp.text

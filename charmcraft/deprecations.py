@@ -29,16 +29,26 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+# the message to show for each deprecation ID (this needs to be in sync with the
+# documentation)
 _DEPRECATION_MESSAGES = {
     "dn01": "Configuration keywords are now separated using dashes.",
 }
 
+# the URL to point to the deprecation entry in the documentation
 _DEPRECATION_URL_FMT = "https://discourse.charmhub.io/t/4652#heading--{deprecation_id}"
+
+# already-notified deprecations will be stored here to not log them twice
+_ALREADY_NOTIFIED = set()
 
 
 def notify_deprecation(deprecation_id):
     """Present proper messages to the user for the indicated deprecation id."""
+    if deprecation_id in _ALREADY_NOTIFIED:
+        return
+
     message = _DEPRECATION_MESSAGES[deprecation_id]
     logger.warning("DEPRECATED: %s", message)
     url = _DEPRECATION_URL_FMT.format(deprecation_id=deprecation_id)
     logger.warning("See %s for more information.", url)
+    _ALREADY_NOTIFIED.add(deprecation_id)

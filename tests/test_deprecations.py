@@ -23,6 +23,16 @@ from charmcraft import deprecations
 from charmcraft.deprecations import notify_deprecation, _DEPRECATION_MESSAGES
 
 
+@pytest.fixture(autouse=True)
+def clean_already_notified():
+    """Clear the already-notified structure for each test.
+
+    This is needed as that structure is a module-level one (by design), so otherwise
+    it will be dirty between tests.
+    """
+    deprecations._ALREADY_NOTIFIED.clear()
+
+
 def test_notice_ok(monkeypatch, caplog):
     """Present proper messages to the user."""
     caplog.set_level(logging.WARNING, logger="charmcraft")
@@ -51,3 +61,22 @@ def test_check_real_deprecation_messages(message):
     """Verify all the real messages conform some rules."""
     assert message[0].isupper()
     assert message[-1] == "."
+
+
+def test_log_deprecation_only_once(monkeypatch, caplog):
+    """Show the message only once even if it was called several times."""
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+
+    monkeypatch.setitem(_DEPRECATION_MESSAGES, "dn666", "Test message for the user.")
+    monkeypatch.setattr(
+        deprecations, "_DEPRECATION_URL_FMT", "http://docs.com/#{deprecation_id}"
+    )
+
+    # call twice, log once
+    notify_deprecation("dn666")
+    notify_deprecation("dn666")
+    expected = [
+        "DEPRECATED: Test message for the user.",
+        "See http://docs.com/#dn666 for more information.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]

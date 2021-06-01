@@ -25,8 +25,9 @@ Configuration Schema
 type: [string] one of "charm" or "bundle"
 
 charmhub:
-  api_url: [HttpUrl] optional, defaults to "https://api.charmhub.io"
-  storage_url: [HttpUrl] optional, defaults to "https://storage.snapcraftcontent.com"
+  api-url: [HttpUrl] optional, defaults to "https://api.charmhub.io"
+  storage-url: [HttpUrl] optional, defaults to "https://storage.snapcraftcontent.com"
+  registry-url = [HttpUrl] optional, defaults to "https://registry.jujucharms.com"
 
 parts:
   bundle:
@@ -61,6 +62,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import pydantic
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.deprecations import notify_deprecation
 from charmcraft.utils import get_host_architecture, load_yaml
 
 
@@ -210,11 +212,20 @@ class Parts(ModelConfigDefaults):
         raise KeyError(part_name)
 
 
-class CharmhubConfig(ModelConfigDefaults):
+# XXX Facundo 2020-05-31: for backwards compatibility, we'll support the user writing
+# these attributes using underscores; when that period is done we remove the
+# `allow_population_by_field_name` parameter here in the class definition and only
+# regular dashes will be allowed.
+class CharmhubConfig(
+    ModelConfigDefaults,
+    alias_generator=lambda s: s.replace("_", "-"),
+    allow_population_by_field_name=True,
+):
     """Definition of Charmhub endpoint configuration."""
 
     api_url: pydantic.HttpUrl = "https://api.charmhub.io"
     storage_url: pydantic.HttpUrl = "https://storage.snapcraftcontent.com"
+    registry_url: pydantic.HttpUrl = "https://registry.jujucharms.com"
 
 
 class Base(ModelConfigDefaults):
@@ -356,12 +367,14 @@ def load(dirpath):
             ),
         )
 
-    else:
-        return Config.unmarshal(
-            content,
-            project=Project(
-                dirpath=dirpath,
-                config_provided=True,
-                started_at=now,
-            ),
-        )
+    if any("_" in x for x in content.get("charmhub", {}).keys()):
+        # underscores in config attribs deprecated on 2021-05-31
+        notify_deprecation("dn01")
+    return Config.unmarshal(
+        content,
+        project=Project(
+            dirpath=dirpath,
+            config_provided=True,
+            started_at=now,
+        ),
+    )

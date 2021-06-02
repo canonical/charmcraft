@@ -16,6 +16,7 @@
 
 """Tests for the OCI Registry related functionality (code in store/registry.py)."""
 
+import base64
 import io
 import json
 import logging
@@ -122,7 +123,7 @@ def test_auth_simple(responses):
         json={"token": "test-token"},
     )
 
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
     auth_info = dict(
         realm="https://auth.fakereg.com", service="test-service", scope="test-scope"
     )
@@ -142,15 +143,20 @@ def test_auth_with_credentials(caplog, responses):
         json={"token": "test-token"},
     )
 
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
-    ocireg.auth_encoded_credentials = "some encoded stuff"
+    ocireg = OCIRegistry(
+        "https://fakereg.com",
+        "test-image",
+        username="test-user",
+        password="test-password",
+    )
     auth_info = dict(
         realm="https://auth.fakereg.com", service="test-service", scope="test-scope"
     )
     token = ocireg._authenticate(auth_info)
     assert token == "test-token"
     sent_auth_header = responses.calls[0].request.headers.get("Authorization")
-    assert sent_auth_header == "Basic some encoded stuff"
+    expected_encoded = base64.b64encode(b"test-user:test-password")
+    assert sent_auth_header == "Basic " + expected_encoded.decode("ascii")
 
     # generic auth indication is logged but NOT the credentials
     expected = "Authenticating! {}".format(auth_info)
@@ -162,7 +168,7 @@ def test_hit_simple_initial_auth_ok(caplog, responses):
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
     # set the Registry with an initial token
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
     ocireg.auth_token = "some auth token"
 
     # fake a 200 response
@@ -184,7 +190,7 @@ def test_hit_simple_initial_auth_ok(caplog, responses):
 def test_hit_simple_re_auth_ok(responses):
     """Simple GET but needing to re-authenticate."""
     # set the Registry
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
     ocireg.auth_token = "some auth token"
 
     # need to set up two responses!
@@ -224,7 +230,7 @@ def test_hit_simple_re_auth_ok(responses):
 
 def test_hit_simple_re_auth_problems(responses):
     """Bad response from the re-authentication process."""
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
 
     # set only one response, a 401 which is broken and all will end there
     headers = {"Www-Authenticate": "broken header"}
@@ -244,7 +250,7 @@ def test_hit_simple_re_auth_problems(responses):
 def test_hit_different_method(responses):
     """Simple request using something else than GET."""
     # set the Registry with an initial token
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
     ocireg.auth_token = "some auth token"
 
     # fake a 200 response
@@ -258,7 +264,7 @@ def test_hit_different_method(responses):
 def test_hit_including_headers(responses):
     """A request including more headers."""
     # set the Registry with an initial token
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
     ocireg.auth_token = "some auth token"
 
     # fake a 200 response
@@ -278,7 +284,7 @@ def test_hit_including_headers(responses):
 
 def test_hit_extra_parameters(responses):
     """The request can include extra parameters."""
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
 
     # fake a 200 response
     responses.add(responses.PUT, "https://fakereg.com/api/stuff")
@@ -294,14 +300,14 @@ def test_hit_extra_parameters(responses):
 
 def test_get_fully_qualified_url():
     """Check that the url is built correctly."""
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
     url = ocireg.get_fully_qualified_url("sha256:thehash")
     assert url == "fakereg.com/test-orga/test-image@sha256:thehash"
 
 
 def test_is_manifest_uploaded():
     """Check the simple call with correct path to the generic verifier."""
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
     with patch.object(ocireg, "_is_item_already_uploaded") as mock_verifier:
         mock_verifier.return_value = "whatever"
         result = ocireg.is_manifest_already_uploaded("test-reference")
@@ -312,7 +318,7 @@ def test_is_manifest_uploaded():
 
 def test_is_item_uploaded_simple_yes(responses):
     """Simple case for the item already uploaded."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
     url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url)
 
@@ -323,7 +329,7 @@ def test_is_item_uploaded_simple_yes(responses):
 
 def test_is_item_uploaded_simple_no(responses):
     """Simple case for the item NOT already uploaded."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
     url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url, status=404)
 
@@ -335,7 +341,7 @@ def test_is_item_uploaded_simple_no(responses):
 @pytest.mark.parametrize("redir_status", [302, 307])
 def test_is_item_uploaded_redirect(responses, redir_status):
     """The verification is redirected to somewhere else."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
     url1 = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
     url2 = "http://fakereg.com/real-check/test-orga/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url1, status=redir_status, headers={"Location": url2})
@@ -350,7 +356,7 @@ def test_is_item_uploaded_strange_response(responses, caplog):
     """Unexpected response."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga", "test-image")
+    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
     url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url, status=400, headers={"foo": "bar"})
 
@@ -372,7 +378,7 @@ def test_get_manifest_simple_v2(responses, caplog):
     """Straightforward download of a v2 manifest."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
     url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
     response_headers = {"Docker-Content-Digest": "test-digest"}
     response_content = {"schemaVersion": 2, "foo": "bar", "unicodecontent": "moño"}
@@ -397,7 +403,7 @@ def test_get_manifest_v1_and_redownload(responses, caplog):
     """Get a v2 manifest after initially getting a v1."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
     # first response with v1 manifest
     url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
     response_headers = {"Docker-Content-Digest": "test-digest"}
@@ -430,7 +436,7 @@ def test_get_manifest_v1_and_redownload(responses, caplog):
 
 def test_get_manifest_simple_multiple(responses):
     """Straightforward download of a multiple manifest."""
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
     url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
     response_headers = {"Docker-Content-Digest": "test-digest"}
     lot_of_manifests = [
@@ -452,7 +458,7 @@ def test_get_manifest_simple_multiple(responses):
 def test_get_manifest_bad_v2(responses, caplog):
     """Couldn't get a v2 manifest."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
-    ocireg = OCIRegistry("fakereg.com", "test-orga", "test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
 
     url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
     response_headers = {"Docker-Content-Digest": "test-digest"}
@@ -488,14 +494,15 @@ def mocked_imagehandler():
 
     This is to isolate the use of the registry from the internal behaviour.
     """
-    im = ImageHandler("test-orga", "test-name")
-    with patch.object(im, "dst_registry", autospec=True):
+    registry = OCIRegistry("https://registry.hub.docker.com", "test-orga/test-image")
+    im = ImageHandler(registry)
+    with patch.object(im, "registry", autospec=True):
         yield im
 
 
 def test_imagehandler_getdestinationurl_ok(mocked_imagehandler):
     """Get the destination URL ok."""
-    dst_registry = mocked_imagehandler.dst_registry
+    dst_registry = mocked_imagehandler.registry
     dst_registry.is_manifest_already_uploaded.return_value = True
 
     manifest_info = (
@@ -519,7 +526,7 @@ def test_imagehandler_getdestinationurl_ok(mocked_imagehandler):
 
 def test_imagehandler_getdestinationurl_missing(mocked_imagehandler):
     """The indicated reference does not exist in the registry."""
-    mocked_imagehandler.dst_registry.is_manifest_already_uploaded.return_value = False
+    mocked_imagehandler.registry.is_manifest_already_uploaded.return_value = False
     expected_error = (
         "The 'test-reference' image does not exist in the destination registry"
     )

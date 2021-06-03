@@ -163,6 +163,25 @@ def test_auth_with_credentials(caplog, responses):
     assert [expected] == [rec.message for rec in caplog.records]
 
 
+def test_auth_with_just_username(caplog, responses):
+    """Authenticate passing credentials."""
+    responses.add(
+        responses.GET,
+        "https://auth.fakereg.com?service=test-service&scope=test-scope",
+        json={"token": "test-token"},
+    )
+
+    ocireg = OCIRegistry("https://fakereg.com", "test-image", username="test-user")
+    auth_info = dict(
+        realm="https://auth.fakereg.com", service="test-service", scope="test-scope"
+    )
+    token = ocireg._authenticate(auth_info)
+    assert token == "test-token"
+    sent_auth_header = responses.calls[0].request.headers.get("Authorization")
+    expected_encoded = base64.b64encode(b"test-user:")
+    assert sent_auth_header == "Basic " + expected_encoded.decode("ascii")
+
+
 def test_hit_simple_initial_auth_ok(caplog, responses):
     """Simple GET with auth working at once."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")

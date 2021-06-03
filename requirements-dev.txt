@@ -45,4 +45,4 @@ snowballstemmer==2.1.0
 tabulate==0.8.9
 toml==0.10.2
 typing-extensions==3.7.4.3
-urllib3==1.26.4
+urllib3==1.26.5

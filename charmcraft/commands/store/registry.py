@@ -16,7 +16,9 @@
 
 """Module to work with OCI registries."""
 
+import base64
 import logging
+import urllib.parse
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
@@ -64,13 +66,25 @@ def assert_response_ok(response, expected_status=200):
 class OCIRegistry:
     """Interface to a generic OCI Registry."""
 
-    def __init__(self, server, organization, image_name):
+    def __init__(self, server, image_name, *, username="", password=""):
         self.server = server
-        self.orga = organization
-        self.name = image_name
-
+        self.image_name = image_name
         self.auth_token = None
-        self.auth_encoded_credentials = None
+
+        if username:
+            _u_p = "{}:{}".format(username, password)
+            self.auth_encoded_credentials = base64.b64encode(
+                _u_p.encode("ascii")
+            ).decode("ascii")
+        else:
+            self.auth_encoded_credentials = None
+
+    def __eq__(self, other):
+        return (
+            self.server == other.server
+            and self.image_name == other.image_name
+            and self.auth_encoded_credentials == other.auth_encoded_credentials
+        )
 
     def _authenticate(self, auth_info):
         """Get the auth token."""
@@ -88,9 +102,7 @@ class OCIRegistry:
 
     def _get_url(self, subpath):
         """Build the URL completing the subpath."""
-        return "https://{}/v2/{}/{}/{}".format(
-            self.server, self.orga, self.name, subpath
-        )
+        return "{}/v2/{}/{}".format(self.server, self.image_name, subpath)
 
     def _get_auth_info(self, response):
         """Parse a 401 response and get the needed auth parameters."""
@@ -125,7 +137,8 @@ class OCIRegistry:
 
     def get_fully_qualified_url(self, digest):
         """Return the fully qualified URL univocally specifying the element in the registry."""
-        return "{}/{}/{}@{}".format(self.server, self.orga, self.name, digest)
+        netloc = urllib.parse.urlparse(self.server).netloc
+        return "{}/{}@{}".format(netloc, self.image_name, digest)
 
     def _is_item_already_uploaded(self, url):
         """Verify if a generic item is uploaded."""
@@ -195,22 +208,15 @@ class OCIRegistry:
         return (None, digest, response.text)
 
 
-class PublicDockerhubRegistry(OCIRegistry):
-    """Dockerhub registry without special credentials."""
-
-    def __init__(self, organization, image_name):
-        super().__init__("registry.hub.docker.com", organization, image_name)
-
-
 class ImageHandler:
     """Provide specific functionalities around images."""
 
-    def __init__(self, organization, image_name):
-        self.dst_registry = PublicDockerhubRegistry(organization, image_name)
+    def __init__(self, registry):
+        self.registry = registry
 
     def get_destination_url(self, reference):
         """Get the fully qualified URL in the destination registry for a tag/digest reference."""
-        if not self.dst_registry.is_manifest_already_uploaded(reference):
+        if not self.registry.is_manifest_already_uploaded(reference):
             raise CommandError(
                 "The {!r} image does not exist in the destination registry".format(
                     reference
@@ -218,6 +224,6 @@ class ImageHandler:
             )
 
         # need to actually get the manifest, because this is what we'll end up getting the v2 one
-        _, digest, _ = self.dst_registry.get_manifest(reference)
-        final_fqu = self.dst_registry.get_fully_qualified_url(digest)
+        _, digest, _ = self.registry.get_manifest(reference)
+        final_fqu = self.registry.get_fully_qualified_url(digest)
         return final_fqu

@@ -43,6 +43,7 @@ from charmcraft.commands.store import (
     LoginCommand,
     LogoutCommand,
     OCIImageSpec,
+    OCIRegistry,
     PublishLibCommand,
     RegisterBundleNameCommand,
     RegisterCharmNameCommand,
@@ -2843,8 +2844,9 @@ def test_uploadresource_image_call_ok(caplog, store_mock, config, tmp_path):
         UploadResourceCommand("group", config).run(args)
 
     # validate how ImageHandler was used
+    registry = OCIRegistry("https://registry.hub.docker.com", "test-orga/test-image")
     assert im_class_mock.mock_calls == [
-        call("test-orga", "test-image"),
+        call(registry),
         call().get_destination_url("test-tag"),
     ]
     assert im_mock.mock_calls == [call.get_destination_url("test-tag")]

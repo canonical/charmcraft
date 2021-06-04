@@ -41,7 +41,7 @@ from charmcraft.utils import (
 )
 
 from .store import Store
-from .registry import ImageHandler
+from .registry import ImageHandler, OCIRegistry
 
 logger = logging.getLogger("charmcraft.commands.store")
 
@@ -1399,7 +1399,11 @@ class UploadResourceCommand(BaseCommand):
             logger.debug(
                 "Uploading resource from image %s at Dockerhub", parsed_args.image
             )
-            ih = ImageHandler(parsed_args.image.organization, parsed_args.image.name)
+            full_image_name = "/".join(
+                (parsed_args.image.organization, parsed_args.image.name)
+            )
+            registry = OCIRegistry("https://registry.hub.docker.com", full_image_name)
+            ih = ImageHandler(registry)
             final_resource_url = ih.get_destination_url(parsed_args.image.reference)
             logger.debug("Resource URL: %s", final_resource_url)
             resource_type = "oci-image"

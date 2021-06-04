@@ -218,7 +218,7 @@ def test_hit_simple_re_auth_ok(responses):
     headers = {
         "Www-Authenticate": (
             'Bearer realm="https://auth.fakereg.com/token",'
-            'service="https://fakereg.com",scope="repository:library/stuff:pull"'
+            'service="fakereg.com",scope="repository:library/stuff:pull"'
         )
     }
     responses.add(
@@ -235,7 +235,7 @@ def test_hit_simple_re_auth_ok(responses):
         {
             "realm": "https://auth.fakereg.com/token",
             "scope": "repository:library/stuff:pull",
-            "service": "https://fakereg.com",
+            "service": "fakereg.com",
         }
     )
 

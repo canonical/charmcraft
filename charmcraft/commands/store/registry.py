@@ -180,12 +180,11 @@ class OCIRegistry:
         url = self._get_url("blobs/{}".format(reference))
         return self._is_item_already_uploaded(url)
 
-    def upload_manifest(self, manifest_data, reference, *, multiple_manifest=False):
+    def upload_manifest(self, manifest_data, reference):
         """Upload a manifest."""
-        mimetype = MANIFEST_LISTS if multiple_manifest else MANIFEST_V2_MIMETYPE
         url = self._get_url("manifests/{}".format(reference))
         headers = {
-            "Content-Type": mimetype,
+            "Content-Type": MANIFEST_V2_MIMETYPE,
         }
         logger.debug("Uploading manifest with reference %s", reference)
         response = self._hit(

@@ -337,6 +337,7 @@ def test_ociregistry_is_manifest_uploaded():
     url = "https://fakereg.com/v2/test-image/manifests/test-reference"
     mock_verifier.assert_called_with(url)
 
+
 def test_ociregistry_is_blob_uploaded():
     """Check the simple call with correct path to the generic verifier."""
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
@@ -344,9 +345,8 @@ def test_ociregistry_is_blob_uploaded():
         mock_verifier.return_value = "whatever"
         result = ocireg.is_blob_already_uploaded("test-reference")
     assert result == "whatever"
-    url = "https://fakereg.com/v2/test-image/manifests/test-reference"
+    url = "https://fakereg.com/v2/test-image/blobs/test-reference"
     mock_verifier.assert_called_with(url)
-
 
 
 def test_is_item_uploaded_simple_yes(responses):
@@ -404,7 +404,8 @@ def test_is_item_uploaded_strange_response(responses, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-# -- tests for the OCIRegistry manifest upload
+# -- test for the OCIRegistry manifest upload
+
 
 def test_ociregistry_upload_manifest_v2(responses, caplog):
     """Upload a V2 manifest."""
@@ -426,22 +427,6 @@ def test_ociregistry_upload_manifest_v2(responses, caplog):
     # check header and data sent
     assert responses.calls[0].request.headers["Content-Type"] == MANIFEST_V2_MIMETYPE
     assert responses.calls[0].request.body == raw_manifest_data.encode("ascii")
-
-
-def test_ociregistry_upload_manifest_list(responses):
-    """Upload a "multiple" manifest."""
-    ocireg = OCIRegistry("https://fakereg.com", "test-image")
-
-    url = "https://fakereg.com/v2/test-image/manifests/test-reference"
-    responses.add(responses.PUT, url, status=201)
-
-    # try it
-    ocireg.upload_manifest("test-manifest", "test-reference", multiple_manifest=True)
-
-    # check header and data sent
-    assert responses.calls[0].request.headers["Content-Type"] == MANIFEST_LISTS
-
-
 
 
 # -- tests for the OCIRegistry manifest download

@@ -337,6 +337,7 @@ def test_ociregistry_is_manifest_uploaded():
     url = "https://fakereg.com/v2/test-image/manifests/test-reference"
     mock_verifier.assert_called_with(url)
 
+
 def test_ociregistry_is_blob_uploaded():
     """Check the simple call with correct path to the generic verifier."""
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
@@ -345,6 +346,8 @@ def test_ociregistry_is_blob_uploaded():
         result = ocireg.is_blob_already_uploaded("test-reference")
     assert result == "whatever"
     url = "https://fakereg.com/v2/test-image/blobs/test-reference"
+    mock_verifier.assert_called_with(url)
+
 
 def test_ociregistry_is_item_uploaded_simple_yes(responses):
     """Simple case for the item already uploaded."""

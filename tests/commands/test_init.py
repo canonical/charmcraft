@@ -15,11 +15,14 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import os
+import pwd
 import subprocess
 import sys
 from argparse import Namespace
+from unittest.mock import patch
 
 import pytest
+
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
 from charmcraft.utils import S_IXALL
@@ -120,3 +123,28 @@ def test_tests(tmp_path, config):
     cmd.run(Namespace(name="my-charm", author="だれだれ", series="k8s", force=False))
 
     subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)
+
+
+def test_gecos_missing_in_getpwuid_response(config):
+    """No GECOS field in getpwuid response."""
+    cmd = InitCommand("group", config)
+
+    with patch("pwd.getpwuid") as mock_pwd:
+        # return a fack passwd struct with an empty gecos (5th parameter)
+        mock_pwd.return_value = pwd.struct_passwd(
+            ("user", "pass", 1, 1, "", "dir", "shell")
+        )
+        msg = "Author not given, and nothing in GECOS field"
+        with pytest.raises(CommandError, match=msg):
+            cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))
+
+
+def test_gecos_missing_user_information(config):
+    """No information at all for the requested user."""
+    cmd = InitCommand("group", config)
+
+    with patch("pwd.getpwuid") as mock_pwd:
+        mock_pwd.side_effect = KeyError("no user")
+        msg = "Author not given, and nothing in GECOS field"
+        with pytest.raises(CommandError, match=msg):
+            cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))

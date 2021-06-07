@@ -171,6 +171,28 @@ class OCIRegistry:
         url = self._get_url("manifests/{}".format(reference))
         return self._is_item_already_uploaded(url)
 
+    def is_blob_already_uploaded(self, reference):
+        """Verify if the blob is already uploaded, using a generic reference.
+
+        If yes, return its digest.
+        """
+        logger.debug("Checking if the blob is already uploaded")
+        url = self._get_url("blobs/{}".format(reference))
+        return self._is_item_already_uploaded(url)
+
+    def upload_manifest(self, manifest_data, reference):
+        """Upload a manifest."""
+        url = self._get_url("manifests/{}".format(reference))
+        headers = {
+            "Content-Type": MANIFEST_V2_MIMETYPE,
+        }
+        logger.debug("Uploading manifest with reference %s", reference)
+        response = self._hit(
+            "PUT", url, headers=headers, data=manifest_data.encode("utf8")
+        )
+        assert_response_ok(response, expected_status=201)
+        logger.debug("Manifest uploaded OK")
+
     def get_manifest(self, reference):
         """Get the manifest for the indicated reference."""
         url = self._get_url("manifests/{}".format(reference))

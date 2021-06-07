@@ -97,7 +97,7 @@ def test_dispatcher_config_needed_ok(tmp_path):
     dispatcher.run()
 
 
-def test_dispatcher_config_needed_problem():
+def test_dispatcher_config_needed_problem(tmp_path):
     """Command needs a config, which is not there."""
 
     class MyCommand(BaseCommand):
@@ -109,7 +109,7 @@ def test_dispatcher_config_needed_problem():
             pass
 
     groups = [("test-group", "title", [MyCommand])]
-    dispatcher = Dispatcher(["cmdname"], groups)
+    dispatcher = Dispatcher(["cmdname", "--project-dir", tmp_path], groups)
     with pytest.raises(CommandError) as err:
         dispatcher.run()
     assert str(err.value) == (

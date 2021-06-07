@@ -218,7 +218,7 @@ def test_hit_simple_re_auth_ok(responses):
     headers = {
         "Www-Authenticate": (
             'Bearer realm="https://auth.fakereg.com/token",'
-            'service="fakereg.com",scope="repository:library/stuff:pull"'
+            'service="https://fakereg.com",scope="repository:library/stuff:pull"'
         )
     }
     responses.add(
@@ -235,7 +235,7 @@ def test_hit_simple_re_auth_ok(responses):
         {
             "realm": "https://auth.fakereg.com/token",
             "scope": "repository:library/stuff:pull",
-            "service": "fakereg.com",
+            "service": "https://fakereg.com",
         }
     )
 
@@ -349,10 +349,10 @@ def test_ociregistry_is_blob_uploaded():
     mock_verifier.assert_called_with(url)
 
 
-def test_is_item_uploaded_simple_yes(responses):
+def test_ociregistry_is_item_uploaded_simple_yes(responses):
     """Simple case for the item already uploaded."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
-    url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
+    ocireg = OCIRegistry("http://fakereg.com/", "test-image")
+    url = "http://fakereg.com/v2/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url)
 
     # try it
@@ -360,10 +360,10 @@ def test_is_item_uploaded_simple_yes(responses):
     assert result is True
 
 
-def test_is_item_uploaded_simple_no(responses):
+def test_ociregistry_is_item_uploaded_simple_no(responses):
     """Simple case for the item NOT already uploaded."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
-    url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
+    ocireg = OCIRegistry("http://fakereg.com/", "test-image")
+    url = "http://fakereg.com/v2/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url, status=404)
 
     # try it
@@ -372,11 +372,11 @@ def test_is_item_uploaded_simple_no(responses):
 
 
 @pytest.mark.parametrize("redir_status", [302, 307])
-def test_is_item_uploaded_redirect(responses, redir_status):
+def test_ociregistry_is_item_uploaded_redirect(responses, redir_status):
     """The verification is redirected to somewhere else."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
-    url1 = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
-    url2 = "http://fakereg.com/real-check/test-orga/test-image/stuff/some-reference"
+    ocireg = OCIRegistry("http://fakereg.com/", "test-image")
+    url1 = "http://fakereg.com/v2/test-image/stuff/some-reference"
+    url2 = "http://fakereg.com/real-check/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url1, status=redir_status, headers={"Location": url2})
     responses.add(responses.HEAD, url2, status=200)
 
@@ -385,12 +385,12 @@ def test_is_item_uploaded_redirect(responses, redir_status):
     assert result is True
 
 
-def test_is_item_uploaded_strange_response(responses, caplog):
+def test_ociregistry_is_item_uploaded_strange_response(responses, caplog):
     """Unexpected response."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
-    url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
+    ocireg = OCIRegistry("http://fakereg.com/", "test-image")
+    url = "http://fakereg.com/v2/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url, status=400, headers={"foo": "bar"})
 
     # try it
@@ -398,7 +398,7 @@ def test_is_item_uploaded_strange_response(responses, caplog):
     assert result is False
     expected = (
         "Bad response when checking for uploaded "
-        "'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference': 400 "
+        "'http://fakereg.com/v2/test-image/stuff/some-reference': 400 "
         "(headers={'Content-Type': 'text/plain', 'foo': 'bar'})"
     )
     assert expected in [rec.message for rec in caplog.records]

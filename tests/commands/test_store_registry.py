@@ -26,8 +26,10 @@ import pytest
 import requests
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.commands.store import registry
 from charmcraft.commands.store.registry import (
     ImageHandler,
+    OCTET_STREAM_MIMETYPE,
     MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
     OCIRegistry,
@@ -314,6 +316,24 @@ def test_hit_extra_parameters(responses):
     assert responses.calls[0].request.body == b"test-payload"
 
 
+def test_hit_no_log(caplog, responses):
+    """Simple request but avoiding log."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # set the Registry with an initial token
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    ocireg.auth_token = "some auth token"
+
+    # fake a 200 response
+    responses.add(responses.PUT, "https://fakereg.com/api/stuff")
+
+    # try it
+    ocireg._hit("PUT", "https://fakereg.com/api/stuff", log=False)
+
+    # no logs!
+    assert not caplog.records
+
+
 # -- tests for other OCIRegistry helpers: full url and checkers if stuff uploaded
 
 
@@ -427,6 +447,288 @@ def test_ociregistry_upload_manifest_v2(responses, caplog):
     # check header and data sent
     assert responses.calls[0].request.headers["Content-Type"] == MANIFEST_V2_MIMETYPE
     assert responses.calls[0].request.body == raw_manifest_data.encode("ascii")
+
+
+# -- tests for the OCIRegistry blob upload
+
+
+def test_ociregistry_upload_blob_complete(tmp_path, caplog, responses, monkeypatch):
+    """Complete upload of a binary to the registry."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    base_url = "https://fakereg.com/v2/test-image/"
+
+    # fake the first initial response
+    pump_url_1 = base_url + "fakeurl-1"
+    responses.add(
+        responses.POST,
+        base_url + "blobs/uploads/",
+        status=202,
+        headers={"Location": pump_url_1, "Range": "0-0"},
+    )
+
+    # and the intermediate ones, chained
+    pump_url_2 = base_url + "fakeurl-2"
+    pump_url_3 = base_url + "fakeurl-3"
+    pump_url_4 = base_url + "fakeurl-4"
+    responses.add(
+        responses.PATCH, pump_url_1, status=202, headers={"Location": pump_url_2}
+    )
+    responses.add(
+        responses.PATCH, pump_url_2, status=202, headers={"Location": pump_url_3}
+    )
+    responses.add(
+        responses.PATCH, pump_url_3, status=202, headers={"Location": pump_url_4}
+    )
+
+    # finally, the closing url
+    responses.add(
+        responses.PUT,
+        base_url + "fakeurl-4&digest=test-digest",
+        status=201,
+        headers={"Docker-Content-Digest": "test-digest"},
+    )
+
+    # prepare a fake content that will be pushed in 3 parts
+    monkeypatch.setattr(registry, "CHUNK_SIZE", 3)
+    bytes_source = tmp_path / "testfile"
+    bytes_source.write_text("abcdefgh")
+
+    # call!
+    ocireg.upload_blob(bytes_source, 8, "test-digest")
+
+    # check all the sent headers
+    expected_headers_per_request = [
+        {},  # nothing special in the initial one
+        {
+            "Content-Length": "3",
+            "Content-Range": "0-3",
+            "Content-Type": OCTET_STREAM_MIMETYPE,
+        },
+        {
+            "Content-Length": "3",
+            "Content-Range": "3-6",
+            "Content-Type": OCTET_STREAM_MIMETYPE,
+        },
+        {
+            "Content-Length": "2",
+            "Content-Range": "6-8",
+            "Content-Type": OCTET_STREAM_MIMETYPE,
+        },
+        {"Content-Length": "0", "Connection": "close"},  # closing
+    ]
+    for idx, expected_headers in enumerate(expected_headers_per_request):
+        sent_headers = responses.calls[idx].request.headers
+        for key, value in expected_headers.items():
+            assert sent_headers.get(key) == value
+
+    expected = [
+        "Getting URL to push the blob",
+        "Hitting the registry: POST https://fakereg.com/v2/test-image/blobs/uploads/",
+        "Got upload URL ok with range 0-0",
+        "Closing the upload",
+        "Hitting the registry: PUT https://fakereg.com/v2/test-image/fakeurl-4&digest=test-digest",
+        "Upload finished OK",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_ociregistry_upload_blob_bad_initial_response(responses):
+    """Bad initial response when starting to upload."""
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    base_url = "https://fakereg.com/v2/test-image/"
+
+    # fake the first initial response with problems
+    responses.add(responses.POST, base_url + "blobs/uploads/", status=500)
+
+    # call!
+    msg = r"Wrong status code from server \(expected=202, got=500\).*"
+    with pytest.raises(CommandError, match=msg):
+        ocireg.upload_blob("test-filepath", 8, "test-digest")
+
+
+def test_ociregistry_upload_blob_bad_upload_range(responses):
+    """Received a broken range info."""
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    base_url = "https://fakereg.com/v2/test-image/"
+
+    # fake the first initial response with problems
+    responses.add(
+        responses.POST,
+        base_url + "blobs/uploads/",
+        status=202,
+        headers={"Location": "test-next-url", "Range": "9-9"},
+    )
+
+    # call!
+    msg = "Server error: bad range received"
+    with pytest.raises(CommandError, match=msg):
+        ocireg.upload_blob("test-filepath", 8, "test-digest")
+
+
+def test_ociregistry_upload_blob_resumed(tmp_path, caplog, responses):
+    """The upload is resumed after server indication to do so."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    base_url = "https://fakereg.com/v2/test-image/"
+
+    # fake the first initial response, indicating that the store has already the first 5 bytes
+    pump_url_1 = base_url + "fakeurl-1"
+    responses.add(
+        responses.POST,
+        base_url + "blobs/uploads/",
+        status=202,
+        headers={"Location": pump_url_1, "Range": "0-4"},
+    )  # has bytes in position 0, 1, 2, 3 & 4
+
+    # and the intermediate one
+    pump_url_2 = base_url + "fakeurl-2"
+    responses.add(
+        responses.PATCH, pump_url_1, status=202, headers={"Location": pump_url_2}
+    )
+
+    # finally, the closing url
+    responses.add(
+        responses.PUT,
+        base_url + "fakeurl-2&digest=test-digest",
+        status=201,
+        headers={"Docker-Content-Digest": "test-digest"},
+    )
+
+    # prepare a fake content
+    bytes_source = tmp_path / "testfile"
+    bytes_source.write_text("abcdefgh")
+
+    # call!
+    ocireg.upload_blob(bytes_source, 8, "test-digest")
+
+    # check all the sent headers
+    expected_headers_per_request = [
+        {},  # nothing special in the initial one
+        {
+            "Content-Length": "3",
+            "Content-Range": "5-8",
+            "Content-Type": OCTET_STREAM_MIMETYPE,
+        },
+        {"Content-Length": "0", "Connection": "close"},  # closing
+    ]
+    for idx, expected_headers in enumerate(expected_headers_per_request):
+        sent_headers = responses.calls[idx].request.headers
+        for key, value in expected_headers.items():
+            assert sent_headers.get(key) == value
+
+    expected = [
+        "Getting URL to push the blob",
+        "Hitting the registry: POST https://fakereg.com/v2/test-image/blobs/uploads/",
+        "Got upload URL ok with range 0-4",
+        "Closing the upload",
+        "Hitting the registry: PUT https://fakereg.com/v2/test-image/fakeurl-2&digest=test-digest",
+        "Upload finished OK",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_ociregistry_upload_blob_bad_response_middle(tmp_path, responses, monkeypatch):
+    """Bad response from the server when pumping bytes."""
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    base_url = "https://fakereg.com/v2/test-image/"
+
+    # fake the first initial response
+    pump_url_1 = base_url + "fakeurl-1"
+    responses.add(
+        responses.POST,
+        base_url + "blobs/uploads/",
+        status=202,
+        headers={"Location": pump_url_1, "Range": "0-0"},
+    )
+
+    # and the intermediate ones, chained, with a crash
+    pump_url_2 = base_url + "fakeurl-2"
+    responses.add(
+        responses.PATCH, pump_url_1, status=202, headers={"Location": pump_url_2}
+    )
+    responses.add(responses.PATCH, pump_url_2, status=504)
+
+    # prepare a fake content that will be pushed in 3 parts
+    monkeypatch.setattr(registry, "CHUNK_SIZE", 3)
+    bytes_source = tmp_path / "testfile"
+    bytes_source.write_text("abcdefgh")
+
+    # call!
+    msg = r"Wrong status code from server \(expected=202, got=504\).*"
+    with pytest.raises(CommandError, match=msg):
+        ocireg.upload_blob(bytes_source, 8, "test-digest")
+
+
+def test_ociregistry_upload_blob_bad_response_closing(tmp_path, responses):
+    """Bad response from the server when closing the upload."""
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    base_url = "https://fakereg.com/v2/test-image/"
+
+    # fake the first initial response
+    pump_url_1 = base_url + "fakeurl-1"
+    responses.add(
+        responses.POST,
+        base_url + "blobs/uploads/",
+        status=202,
+        headers={"Location": pump_url_1, "Range": "0-0"},
+    )
+
+    # and the intermediate one
+    pump_url_2 = base_url + "fakeurl-2"
+    responses.add(
+        responses.PATCH, pump_url_1, status=202, headers={"Location": pump_url_2}
+    )
+
+    # finally, the closing url, crashing
+    responses.add(responses.PUT, base_url + "fakeurl-2&digest=test-digest", status=502)
+
+    # prepare a fake content
+    bytes_source = tmp_path / "testfile"
+    bytes_source.write_text("abcdefgh")
+
+    # call!
+    msg = r"Wrong status code from server \(expected=201, got=502\).*"
+    with pytest.raises(CommandError, match=msg):
+        ocireg.upload_blob(bytes_source, 8, "test-digest")
+
+
+def test_ociregistry_upload_blob_bad_final_digest(tmp_path, responses):
+    """Bad digest from server after closing the upload."""
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    base_url = "https://fakereg.com/v2/test-image/"
+
+    # fake the first initial response
+    pump_url_1 = base_url + "fakeurl-1"
+    responses.add(
+        responses.POST,
+        base_url + "blobs/uploads/",
+        status=202,
+        headers={"Location": pump_url_1, "Range": "0-0"},
+    )
+
+    # and the intermediate one
+    pump_url_2 = base_url + "fakeurl-2"
+    responses.add(
+        responses.PATCH, pump_url_1, status=202, headers={"Location": pump_url_2}
+    )
+
+    # finally, the closing url, bad digest
+    responses.add(
+        responses.PUT,
+        base_url + "fakeurl-2&digest=test-digest",
+        status=201,
+        headers={"Docker-Content-Digest": "somethingelse"},
+    )
+
+    # prepare a fake content
+    bytes_source = tmp_path / "testfile"
+    bytes_source.write_text("abcdefgh")
+
+    # call!
+    msg = "Server error: the upload is corrupted"
+    with pytest.raises(CommandError, match=msg):
+        ocireg.upload_blob(bytes_source, 8, "test-digest")
 
 
 # -- tests for the OCIRegistry manifest download

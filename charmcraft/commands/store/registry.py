@@ -17,8 +17,13 @@
 """Module to work with OCI registries."""
 
 import base64
+import gzip
+import hashlib
+import io
 import logging
-import urllib.parse
+import os
+import tempfile
+import urllib
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
@@ -37,6 +42,9 @@ JSON_RELATED_MIMETYPES = {
     MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
 }
+
+# downloads and uploads happen in chunks
+CHUNK_SIZE = 2 ** 20
 
 
 def assert_response_ok(response, expected_status=200):
@@ -230,6 +238,28 @@ class OCIRegistry:
         return (None, digest, response.text)
 
 
+class HashingTemporaryFile(io.FileIO):
+    """A temporary file that keeps the hash and length of what is written."""
+
+    def __init__(self):
+        tmp_file = tempfile.NamedTemporaryFile(mode="wb", delete=False)
+        self.file_handler = tmp_file.file
+        super().__init__(tmp_file.name, mode="wb")
+        self.total_length = 0
+        self.hasher = hashlib.sha256()
+
+    @property
+    def hexdigest(self):
+        """Calculate the digest."""
+        return self.hasher.hexdigest()
+
+    def write(self, data):
+        """Intercept real write to feed hasher and length count."""
+        self.total_length += len(data)
+        self.hasher.update(data)
+        super().write(data)
+
+
 class ImageHandler:
     """Provide specific functionalities around images."""
 
@@ -249,3 +279,34 @@ class ImageHandler:
         _, digest, _ = self.registry.get_manifest(reference)
         final_fqu = self.registry.get_fully_qualified_url(digest)
         return final_fqu
+
+    def _extract_file(self, image_tar, name, compress=False):
+        """Extract a file from the tar and return its info. Optionally, gzip the content."""
+        logger.debug("Extracting file %r from local tar (compress=%s)", name, compress)
+        src_fh = image_tar.extractfile(name)
+        mtime = image_tar.getmember(name).mtime
+
+        hashing_temp_file = HashingTemporaryFile()
+        if compress:
+            # open the gzip file using the temporary file handler; use the original name and time
+            # as 'filename' and 'mtime' correspondingly as those go to the gzip headers,
+            # to ensure same final hash across different runs
+            dst_filehandler = gzip.GzipFile(
+                fileobj=hashing_temp_file,
+                mode="wb",
+                filename=os.path.basename(name),
+                mtime=mtime,
+            )
+        else:
+            dst_filehandler = hashing_temp_file
+        while True:
+            chunk = src_fh.read(CHUNK_SIZE)
+            if not chunk:
+                break
+            dst_filehandler.write(chunk)
+        dst_filehandler.close()
+        # gzip does not automatically close the underlying file handler, so let's do it manually
+        hashing_temp_file.close()
+
+        digest = "sha256:{}".format(hashing_temp_file.hexdigest)
+        return hashing_temp_file.name, hashing_temp_file.total_length, digest

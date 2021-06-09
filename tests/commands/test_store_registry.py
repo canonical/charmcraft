@@ -17,9 +17,12 @@
 """Tests for the OCI Registry related functionality (code in store/registry.py)."""
 
 import base64
+import gzip
+import hashlib
 import io
 import json
 import logging
+import tarfile
 from unittest.mock import patch
 
 import pytest
@@ -590,3 +593,76 @@ def test_imagehandler_getdestinationurl_missing(mocked_imagehandler):
     )
     with pytest.raises(CommandError, match=expected_error):
         mocked_imagehandler.get_destination_url("test-reference")
+
+
+def test_imagehandler_extract_file_simple(tmp_path, caplog):
+    """Extract a file from the tarfile and gets its info."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # create a tar file with one file inside
+    test_content = b"test content for the sample file"
+    sample_file = tmp_path / "testfile.txt"
+    sample_file.write_bytes(test_content)
+    tar_filepath = tmp_path / "testfile.tar"
+    with tarfile.open(tar_filepath, "w") as tar:
+        tar.add(sample_file, "testfile.txt")
+
+    im = ImageHandler("registry")
+    with tarfile.open(tar_filepath, "r") as tar:
+        tmp_filepath, size, digest = im._extract_file(tar, "testfile.txt")
+
+    assert size == len(test_content)
+    assert digest == "sha256:" + hashlib.sha256(test_content).hexdigest()
+    assert open(tmp_filepath, "rb").read() == test_content
+
+    expected = [
+        "Extracting file 'testfile.txt' from local tar (compress=False)",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_imagehandler_extract_file_compressed_ok(tmp_path, caplog):
+    """Extract a file from the tarfile and gets its info after compressed."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # create a tar file with one file inside
+    test_content = b"test content for the sample file"
+    sample_file = tmp_path / "testfile.txt"
+    sample_file.write_bytes(test_content)
+    tar_filepath = tmp_path / "testfile.tar"
+    with tarfile.open(tar_filepath, "w") as tar:
+        tar.add(sample_file, "testfile.txt")
+
+    im = ImageHandler("registry")
+    with tarfile.open(tar_filepath, "r") as tar:
+        tmp_filepath, size, digest = im._extract_file(
+            tar, "testfile.txt", compress=True
+        )
+
+    compressed_content = open(tmp_filepath, "rb").read()
+    assert size == len(compressed_content)
+    assert digest == "sha256:" + hashlib.sha256(compressed_content).hexdigest()
+    assert gzip.decompress(compressed_content) == test_content
+
+    expected = [
+        "Extracting file 'testfile.txt' from local tar (compress=True)",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_imagehandler_extract_file_compressed_deterministic(tmp_path, caplog):
+    """Different compressions for the same file give the exact same data."""
+    # create a tar file with one file inside
+    test_content = b"test content for the sample file"
+    sample_file = tmp_path / "testfile.txt"
+    sample_file.write_bytes(test_content)
+    tar_filepath = tmp_path / "testfile.tar"
+    with tarfile.open(tar_filepath, "w") as tar:
+        tar.add(sample_file, "testfile.txt")
+
+    im = ImageHandler("registry")
+    with tarfile.open(tar_filepath, "r") as tar:
+        _, _, digest1 = im._extract_file(tar, "testfile.txt", compress=True)
+        _, _, digest2 = im._extract_file(tar, "testfile.txt", compress=True)
+
+    assert digest1 == digest2

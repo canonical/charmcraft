@@ -590,3 +590,50 @@ def test_imagehandler_getdestinationurl_missing(mocked_imagehandler):
     )
     with pytest.raises(CommandError, match=expected_error):
         mocked_imagehandler.get_destination_url("test-reference")
+
+
+class FakeRegistry:
+    """A fake registry to mimic behaviour of the real one and record actions."""
+
+    def __init__(self, image_name=None):
+        self.image_name = image_name
+        self.stored_manifests = {}
+        self.stored_blobs = {}
+
+    def is_manifest_already_uploaded(self, reference):
+        return reference in self.stored_manifests
+
+    def upload_manifest(self, content, reference, multiple_manifest=False):
+        self.stored_manifests[reference] = (content, multiple_manifest)
+
+    def get_manifest(self, reference):
+        return self.stored_manifests[reference]
+
+    def is_blob_already_uploaded(self, reference):
+        return reference in self.stored_blobs
+
+    def upload_blob(self, filepath, size, digest):
+        self.stored_blobs[digest] = (open(filepath, "rb").read(), size)
+
+
+def test_imagehandler_check_in_registry_yes():
+    """Check if an image is in the registry and find it."""
+    fake_registry = FakeRegistry()
+    fake_registry.stored_manifests["test-reference"] = (
+        None,
+        "test-digest",
+        "test-manifest",
+    )
+
+    im = ImageHandler(fake_registry)
+    result = im.check_in_registry("test-reference")
+    assert result is True
+
+
+def test_imagehandler_check_in_registry_no():
+    """Check if an image is in the registry and don't find it."""
+    fake_registry = FakeRegistry()
+
+    im = ImageHandler(fake_registry)
+    result = im.check_in_registry("test-reference")
+    assert result is False

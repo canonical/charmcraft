@@ -92,7 +92,11 @@ class InitCommand(BaseCommand):
         logger.debug("Using project directory '%s'", self.config.project.dirpath)
 
         if args.author is None:
-            gecos = pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]
+            try:
+                gecos = pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]
+            except KeyError:
+                # no info for the user
+                gecos = None
             if not gecos:
                 raise CommandError("Author not given, and nothing in GECOS field")
             logger.debug("Setting author to %r from GECOS field", gecos)

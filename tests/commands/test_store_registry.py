@@ -218,7 +218,7 @@ def test_hit_simple_re_auth_ok(responses):
     headers = {
         "Www-Authenticate": (
             'Bearer realm="https://auth.fakereg.com/token",'
-            'service="fakereg.com",scope="repository:library/stuff:pull"'
+            'service="https://fakereg.com",scope="repository:library/stuff:pull"'
         )
     }
     responses.add(
@@ -235,7 +235,7 @@ def test_hit_simple_re_auth_ok(responses):
         {
             "realm": "https://auth.fakereg.com/token",
             "scope": "repository:library/stuff:pull",
-            "service": "fakereg.com",
+            "service": "https://fakereg.com",
         }
     )
 
@@ -324,21 +324,35 @@ def test_get_fully_qualified_url():
     assert url == "fakereg.com/test-orga/test-image@sha256:thehash"
 
 
-def test_is_manifest_uploaded():
+# -- tests for some OCIRegistry helpers
+
+
+def test_ociregistry_is_manifest_uploaded():
     """Check the simple call with correct path to the generic verifier."""
-    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
     with patch.object(ocireg, "_is_item_already_uploaded") as mock_verifier:
         mock_verifier.return_value = "whatever"
         result = ocireg.is_manifest_already_uploaded("test-reference")
     assert result == "whatever"
-    url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
+    url = "https://fakereg.com/v2/test-image/manifests/test-reference"
     mock_verifier.assert_called_with(url)
 
 
-def test_is_item_uploaded_simple_yes(responses):
+def test_ociregistry_is_blob_uploaded():
+    """Check the simple call with correct path to the generic verifier."""
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+    with patch.object(ocireg, "_is_item_already_uploaded") as mock_verifier:
+        mock_verifier.return_value = "whatever"
+        result = ocireg.is_blob_already_uploaded("test-reference")
+    assert result == "whatever"
+    url = "https://fakereg.com/v2/test-image/blobs/test-reference"
+    mock_verifier.assert_called_with(url)
+
+
+def test_ociregistry_is_item_uploaded_simple_yes(responses):
     """Simple case for the item already uploaded."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
-    url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
+    ocireg = OCIRegistry("http://fakereg.com/", "test-image")
+    url = "http://fakereg.com/v2/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url)
 
     # try it
@@ -346,10 +360,10 @@ def test_is_item_uploaded_simple_yes(responses):
     assert result is True
 
 
-def test_is_item_uploaded_simple_no(responses):
+def test_ociregistry_is_item_uploaded_simple_no(responses):
     """Simple case for the item NOT already uploaded."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
-    url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
+    ocireg = OCIRegistry("http://fakereg.com/", "test-image")
+    url = "http://fakereg.com/v2/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url, status=404)
 
     # try it
@@ -358,11 +372,11 @@ def test_is_item_uploaded_simple_no(responses):
 
 
 @pytest.mark.parametrize("redir_status", [302, 307])
-def test_is_item_uploaded_redirect(responses, redir_status):
+def test_ociregistry_is_item_uploaded_redirect(responses, redir_status):
     """The verification is redirected to somewhere else."""
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
-    url1 = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
-    url2 = "http://fakereg.com/real-check/test-orga/test-image/stuff/some-reference"
+    ocireg = OCIRegistry("http://fakereg.com/", "test-image")
+    url1 = "http://fakereg.com/v2/test-image/stuff/some-reference"
+    url2 = "http://fakereg.com/real-check/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url1, status=redir_status, headers={"Location": url2})
     responses.add(responses.HEAD, url2, status=200)
 
@@ -371,12 +385,12 @@ def test_is_item_uploaded_redirect(responses, redir_status):
     assert result is True
 
 
-def test_is_item_uploaded_strange_response(responses, caplog):
+def test_ociregistry_is_item_uploaded_strange_response(responses, caplog):
     """Unexpected response."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
-    ocireg = OCIRegistry("http://fakereg.com/", "test-orga/test-image")
-    url = "http://fakereg.com/v2/test-orga/test-image/stuff/some-reference"
+    ocireg = OCIRegistry("http://fakereg.com/", "test-image")
+    url = "http://fakereg.com/v2/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url, status=400, headers={"foo": "bar"})
 
     # try it
@@ -384,10 +398,35 @@ def test_is_item_uploaded_strange_response(responses, caplog):
     assert result is False
     expected = (
         "Bad response when checking for uploaded "
-        "'http://fakereg.com/v2/test-orga/test-image/stuff/some-reference': 400 "
+        "'http://fakereg.com/v2/test-image/stuff/some-reference': 400 "
         "(headers={'Content-Type': 'text/plain', 'foo': 'bar'})"
     )
     assert expected in [rec.message for rec in caplog.records]
+
+
+# -- test for the OCIRegistry manifest upload
+
+
+def test_ociregistry_upload_manifest_v2(responses, caplog):
+    """Upload a V2 manifest."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    ocireg = OCIRegistry("https://fakereg.com", "test-image")
+
+    url = "https://fakereg.com/v2/test-image/manifests/test-reference"
+    responses.add(responses.PUT, url, status=201)
+
+    # try it
+    raw_manifest_data = "test-manifest"
+    ocireg.upload_manifest(raw_manifest_data, "test-reference")
+
+    # check logs
+    log_lines = [rec.message for rec in caplog.records]
+    assert "Uploading manifest with reference test-reference" in log_lines
+    assert "Manifest uploaded OK" in log_lines
+
+    # check header and data sent
+    assert responses.calls[0].request.headers["Content-Type"] == MANIFEST_V2_MIMETYPE
+    assert responses.calls[0].request.body == raw_manifest_data.encode("ascii")
 
 
 # -- tests for the OCIRegistry manifest download

@@ -249,3 +249,7 @@ class ImageHandler:
         _, digest, _ = self.registry.get_manifest(reference)
         final_fqu = self.registry.get_fully_qualified_url(digest)
         return final_fqu
+
+    def check_in_registry(self, digest):
+        """Verify if the image is present in the registry."""
+        return self.registry.is_manifest_already_uploaded(digest)

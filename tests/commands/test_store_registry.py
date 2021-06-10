@@ -641,6 +641,7 @@ def test_imagehandler_check_in_registry_no():
     result = im.check_in_registry("test-reference")
     assert result is False
 
+
 def test_imagehandler_extract_file_simple(tmp_path, caplog):
     """Extract a file from the tarfile and gets its info."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")

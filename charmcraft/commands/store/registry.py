@@ -23,7 +23,7 @@ import io
 import logging
 import os
 import tempfile
-import urllib
+import urllib.parse
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests

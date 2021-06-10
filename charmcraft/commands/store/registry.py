@@ -282,6 +282,10 @@ class ImageHandler:
         final_fqu = self.registry.get_fully_qualified_url(digest)
         return final_fqu
 
+    def check_in_registry(self, digest):
+        """Verify if the image is present in the registry."""
+        return self.registry.is_manifest_already_uploaded(digest)
+
     def _extract_file(self, image_tar, name, compress=False):
         """Extract a file from the tar and return its info. Optionally, gzip the content."""
         logger.debug("Extracting file %r from local tar (compress=%s)", name, compress)

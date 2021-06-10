@@ -283,7 +283,7 @@ class ImageHandler:
     def _extract_file(self, image_tar, name, compress=False):
         """Extract a file from the tar and return its info. Optionally, gzip the content."""
         logger.debug("Extracting file %r from local tar (compress=%s)", name, compress)
-        src_fh = image_tar.extractfile(name)
+        src_filehandler = image_tar.extractfile(name)
         mtime = image_tar.getmember(name).mtime
 
         hashing_temp_file = HashingTemporaryFile()
@@ -300,7 +300,7 @@ class ImageHandler:
         else:
             dst_filehandler = hashing_temp_file
         while True:
-            chunk = src_fh.read(CHUNK_SIZE)
+            chunk = src_filehandler.read(CHUNK_SIZE)
             if not chunk:
                 break
             dst_filehandler.write(chunk)

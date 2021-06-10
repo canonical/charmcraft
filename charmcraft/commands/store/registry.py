@@ -43,7 +43,9 @@ JSON_RELATED_MIMETYPES = {
     MANIFEST_V2_MIMETYPE,
 }
 
-# downloads and uploads happen in chunks
+# downloads and uploads happen in chunks; this size is mostly driven by the usage in the upload
+# blob, where the cost in time is similar for small and large chunks (we need to balance having
+# it large enough for speed, but not too large because of memory consumption)
 CHUNK_SIZE = 2 ** 20
 
 
@@ -299,14 +301,16 @@ class ImageHandler:
             )
         else:
             dst_filehandler = hashing_temp_file
-        while True:
-            chunk = src_filehandler.read(CHUNK_SIZE)
-            if not chunk:
-                break
-            dst_filehandler.write(chunk)
-        dst_filehandler.close()
-        # gzip does not automatically close the underlying file handler, so let's do it manually
-        hashing_temp_file.close()
+        try:
+            while True:
+                chunk = src_filehandler.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                dst_filehandler.write(chunk)
+        finally:
+            dst_filehandler.close()
+            # gzip does not automatically close the underlying file handler, let's do it manually
+            hashing_temp_file.close()
 
         digest = "sha256:{}".format(hashing_temp_file.hexdigest)
         return hashing_temp_file.name, hashing_temp_file.total_length, digest

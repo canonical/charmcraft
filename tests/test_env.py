@@ -75,6 +75,25 @@ def test_is_charmcraft_running_in_developer_mode(monkeypatch, developer, result)
 
 
 @pytest.mark.parametrize(
+    "managed,result",
+    [
+        (None, False),
+        ("y", True),
+        ("n", False),
+        ("1", True),
+        ("0", False),
+    ],
+)
+def test_is_charmcraft_running_in_managed_mode(monkeypatch, managed, result):
+    if managed is None:
+        monkeypatch.delenv("CHARMCRAFT_MANAGED_MODE", raising=False)
+    else:
+        monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", managed)
+
+    assert env.is_charmcraft_running_in_managed_mode() == result
+
+
+@pytest.mark.parametrize(
     "as_snap",
     [False, True],
 )

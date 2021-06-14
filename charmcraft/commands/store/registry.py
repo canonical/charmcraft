@@ -398,4 +398,3 @@ class ImageHandler:
 
         # finally remove the temp filepath
         os.unlink(filepath)
-

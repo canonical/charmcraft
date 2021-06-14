@@ -1060,4 +1060,3 @@ def test_imagehandler_uploadblob_duplicated(caplog, tmp_path):
         "Blob was already uploaded",
     ]
     assert expected == [rec.message for rec in caplog.records]
-

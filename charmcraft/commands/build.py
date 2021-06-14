@@ -23,9 +23,11 @@ import pathlib
 import shutil
 import subprocess
 import zipfile
+from typing import List, Optional
 
 import yaml
 
+from charmcraft.config import Base, BasesConfiguration
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable, create_manifest
@@ -51,6 +53,41 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
 HOOKS_DIR = "hooks"
+
+
+def _format_architectures(architectures: List[str]) -> str:
+    """Formulate charm string for architectures list section."""
+    return "-".join(architectures)
+
+
+def _format_run_on_base(base: Base) -> str:
+    """Formulate charm string for base section."""
+    return "-".join(
+        [base.name, base.channel, _format_architectures(base.architectures)]
+    )
+
+
+def _format_bases_config(bases_config: BasesConfiguration) -> str:
+    """Formulate charm string for bases configuration section."""
+    return "_".join([_format_run_on_base(r) for r in bases_config.run_on])
+
+
+def format_charm_file_name(
+    *, charm_name: str, bases_config: Optional[BasesConfiguration] = None
+) -> str:
+    """Formulate charm file name.
+
+    :param charm_name: Name of charm.
+    :param bases_config: Bases configuration for charm.  None will use legacy
+        format that will be removed shortly.
+
+    :returns: File name string, including .zip extension.
+    """
+    # TODO: Patterson 2021-06-14 Temporary legacy support prior to bases configuration.
+    if bases_config is None:
+        return charm_name + ".charm"
+
+    return "_".join([charm_name, _format_bases_config(bases_config)]) + ".charm"
 
 
 def _pip_needs_system():
@@ -290,7 +327,7 @@ class Builder:
             metadata = yaml.safe_load(fh)
 
         logger.debug("Creating the package itself")
-        zipname = metadata["name"] + ".charm"
+        zipname = format_charm_file_name(charm_name=metadata["name"])
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
             dirpath = pathlib.Path(dirpath)

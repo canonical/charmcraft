@@ -34,7 +34,7 @@ def is_charmcraft_running_in_developer_mode():
 
 
 def is_charmcraft_running_in_supported_environment():
-    """Check if Charmcraft is running under developer mode."""
+    """Check if Charmcraft is running in a supported environment."""
     return sys.platform == "linux" and is_charmcraft_running_from_snap()
 
 

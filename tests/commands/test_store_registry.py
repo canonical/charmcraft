@@ -32,10 +32,10 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import registry
 from charmcraft.commands.store.registry import (
     ImageHandler,
-    OCTET_STREAM_MIMETYPE,
     MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
     OCIRegistry,
+    OCTET_STREAM_MIMETYPE,
     assert_response_ok,
 )
 
@@ -1015,3 +1015,49 @@ def test_imagehandler_extract_file_compressed_deterministic(tmp_path, caplog):
         _, _, digest2 = im._extract_file(tar, "testfile.txt", compress=True)
 
     assert digest1 == digest2
+
+
+def test_imagehandler_uploadblob_first_time(caplog, tmp_path):
+    """Upload a blob for the first time."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    tmp_file = tmp_path / "somebinary.dat"
+    tmp_file.write_text("testcontent")
+
+    fake_registry = FakeRegistry()
+
+    im = ImageHandler(fake_registry)
+    im._upload_blob(str(tmp_file), 20, "superdigest")
+
+    # check it was uploaded
+    assert fake_registry.stored_blobs["superdigest"] == (b"testcontent", 20)
+
+    # verify the file is cleaned
+    assert not tmp_file.exists()
+
+    assert len(caplog.records) == 0
+
+
+def test_imagehandler_uploadblob_duplicated(caplog, tmp_path):
+    """Upload a blob that was already there."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    tmp_file = tmp_path / "somebinary.dat"
+    tmp_file.write_text("testcontent")
+
+    fake_registry = FakeRegistry()
+    # add the entry for the blob, the value is not important
+    fake_registry.stored_blobs["superdigest"] = None
+
+    im = ImageHandler(fake_registry)
+    im._upload_blob(str(tmp_file), 20, "superdigest")
+
+    # check it was NOT uploaded again
+    assert fake_registry.stored_blobs["superdigest"] is None
+
+    # verify the file is cleaned
+    assert not tmp_file.exists()
+
+    expected = [
+        "Blob was already uploaded",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+

@@ -23,7 +23,7 @@ import pathlib
 import shutil
 import subprocess
 import zipfile
-from typing import List, Optional
+from typing import Optional
 
 import yaml
 
@@ -55,16 +55,9 @@ MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
 HOOKS_DIR = "hooks"
 
 
-def _format_architectures(architectures: List[str]) -> str:
-    """Formulate charm string for architectures list section."""
-    return "-".join(architectures)
-
-
 def _format_run_on_base(base: Base) -> str:
     """Formulate charm string for base section."""
-    return "-".join(
-        [base.name, base.channel, _format_architectures(base.architectures)]
-    )
+    return "-".join([base.name, base.channel, *base.architectures])
 
 
 def _format_bases_config(bases_config: BasesConfiguration) -> str:

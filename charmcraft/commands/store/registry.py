@@ -224,11 +224,19 @@ class OCIRegistry:
         )
         if range_from != 0:
             raise CommandError("Server error: bad range received")
+
+        # this `range_to_inclusive` alteration is a side effect of the range being inclusive. The
+        # server tells us that it already has "0-80", means that it has 81 bytes (from 0 to 80
+        # inclusive), we set from_position in 81 and read from there. Going down, "0-1" would mean
+        # it has bytes 0 and 1; But "0-0" is special, it's what the server returns when it does
+        # not have ANY bytes at all. So we comply with Range parameter, but addressing this
+        # special case; worst think it could happen is that we start from 0 when the server
+        # has 1 byte already, which is not a problem.
         if range_to_inclusive == 0:
             range_to_inclusive = -1
+        from_position = range_to_inclusive + 1
 
         # start the chunked upload
-        from_position = range_to_inclusive + 1
         with open(filepath, "rb") as fh:
             fh.seek(from_position)
             while True:
@@ -243,6 +251,8 @@ class OCIRegistry:
                     "Content-Type": OCTET_STREAM_MIMETYPE,
                 }
                 progress = 100 * end_position / size
+                # XXX Facundo 2021-06-14: replace this print for the proper call to show progress
+                # when we have integrated the full "messages to the user" library (GH #381)
                 print("Uploading.. {:.2f}%\r".format(progress), end="", flush=True)
                 response = self._hit(
                     "PATCH", upload_url, headers=headers, data=chunk, log=False

@@ -42,6 +42,10 @@ JSON_RELATED_MIMETYPES = {
     MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
 }
+OCTET_STREAM_MIMETYPE = "application/octet-stream"
+
+# downloads and uploads happen in chunks
+CHUNK_SIZE = 2 ** 20
 
 # downloads and uploads happen in chunks; this size is mostly driven by the usage in the upload
 # blob, where the cost in time is similar for small and large chunks (we need to balance having
@@ -122,14 +126,15 @@ class OCIRegistry:
         info = parse_keqv_list(parse_http_list(www_auth[7:]))
         return info
 
-    def _hit(self, method, url, headers=None, **kwargs):
+    def _hit(self, method, url, headers=None, log=True, **kwargs):
         """Hit the specific URL, taking care of the authentication."""
         if headers is None:
             headers = {}
         if self.auth_token is not None:
             headers["Authorization"] = "Bearer {}".format(self.auth_token)
 
-        logger.debug("Hitting the registry: %s %s", method, url)
+        if log:
+            logger.debug("Hitting the registry: %s %s", method, url)
         response = requests.request(method, url, headers=headers, **kwargs)
         if response.status_code == 401:
             # token expired or missing, let's get another one and retry
@@ -202,6 +207,73 @@ class OCIRegistry:
         )
         assert_response_ok(response, expected_status=201)
         logger.debug("Manifest uploaded OK")
+
+    def upload_blob(self, filepath, size, digest):
+        """Upload the blob from a file."""
+        # get the first URL to start pushing the blob
+        logger.debug("Getting URL to push the blob")
+        url = self._get_url("blobs/uploads/")
+        response = self._hit("POST", url)
+        assert_response_ok(response, expected_status=202)
+        upload_url = response.headers["Location"]
+        range_from, range_to_inclusive = [
+            int(x) for x in response.headers["Range"].split("-")
+        ]
+        logger.debug(
+            "Got upload URL ok with range %s-%s", range_from, range_to_inclusive
+        )
+        if range_from != 0:
+            raise CommandError("Server error: bad range received")
+
+        # this `range_to_inclusive` alteration is a side effect of the range being inclusive. The
+        # server tells us that it already has "0-80", means that it has 81 bytes (from 0 to 80
+        # inclusive), we set from_position in 81 and read from there. Going down, "0-1" would mean
+        # it has bytes 0 and 1; But "0-0" is special, it's what the server returns when it does
+        # not have ANY bytes at all. So we comply with Range parameter, but addressing this
+        # special case; worst think it could happen is that we start from 0 when the server
+        # has 1 byte already, which is not a problem.
+        if range_to_inclusive == 0:
+            range_to_inclusive = -1
+        from_position = range_to_inclusive + 1
+
+        # start the chunked upload
+        with open(filepath, "rb") as fh:
+            fh.seek(from_position)
+            while True:
+                chunk = fh.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+
+                end_position = from_position + len(chunk)
+                headers = {
+                    "Content-Length": str(len(chunk)),
+                    "Content-Range": "{}-{}".format(from_position, end_position),
+                    "Content-Type": OCTET_STREAM_MIMETYPE,
+                }
+                progress = 100 * end_position / size
+                # XXX Facundo 2021-06-14: replace this print for the proper call to show progress
+                # when we have integrated the full "messages to the user" library (GH #381)
+                print("Uploading.. {:.2f}%\r".format(progress), end="", flush=True)
+                response = self._hit(
+                    "PATCH", upload_url, headers=headers, data=chunk, log=False
+                )
+                assert_response_ok(response, expected_status=202)
+
+                upload_url = response.headers["Location"]
+                from_position += len(chunk)
+
+        headers = {
+            "Content-Length": "0",
+            "Connection": "close",
+        }
+        logger.debug("Closing the upload")
+        closing_url = "{}&digest={}".format(upload_url, digest)
+
+        response = self._hit("PUT", closing_url, headers=headers, data="")
+        assert_response_ok(response, expected_status=201)
+        logger.debug("Upload finished OK")
+        if response.headers["Docker-Content-Digest"] != digest:
+            raise CommandError("Server error: the upload is corrupted")
 
     def get_manifest(self, reference):
         """Get the manifest for the indicated reference."""

@@ -66,7 +66,7 @@ def _format_bases_config(bases_config: BasesConfiguration) -> str:
 
 
 def format_charm_file_name(
-    *, charm_name: str, bases_config: Optional[BasesConfiguration] = None
+    charm_name: str, bases_config: Optional[BasesConfiguration] = None
 ) -> str:
     """Formulate charm file name.
 
@@ -320,7 +320,7 @@ class Builder:
             metadata = yaml.safe_load(fh)
 
         logger.debug("Creating the package itself")
-        zipname = format_charm_file_name(charm_name=metadata["name"])
+        zipname = format_charm_file_name(metadata["name"], None)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
             dirpath = pathlib.Path(dirpath)

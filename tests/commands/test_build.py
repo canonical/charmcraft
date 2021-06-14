@@ -1365,10 +1365,7 @@ def test_relativise_different_parents_deep():
 
 def test_format_charm_file_name_legacy():
     """Basic entry."""
-    assert (
-        format_charm_file_name(charm_name="charm-name", bases_config=None)
-        == "charm-name.charm"
-    )
+    assert format_charm_file_name("charm-name", None) == "charm-name.charm"
 
 
 def test_format_charm_file_name_basic():
@@ -1383,7 +1380,7 @@ def test_format_charm_file_name_basic():
     )
 
     assert (
-        format_charm_file_name(charm_name="charm-name", bases_config=bases_config)
+        format_charm_file_name("charm-name", bases_config)
         == "charm-name_xname-xchannel-xarch1.charm"
     )
 
@@ -1404,7 +1401,7 @@ def test_format_charm_file_name_multi_arch():
     )
 
     assert (
-        format_charm_file_name(charm_name="charm-name", bases_config=bases_config)
+        format_charm_file_name("charm-name", bases_config)
         == "charm-name_xname-xchannel-xarch1-xarch2-xarch3.charm"
     )
 
@@ -1426,6 +1423,6 @@ def test_format_charm_file_name_multi_run_on():
     )
 
     assert (
-        format_charm_file_name(charm_name="charm-name", bases_config=bases_config)
+        format_charm_file_name("charm-name", bases_config)
         == "charm-name_x1name-x1channel-x1arch_x2name-x2channel-x2arch1-x2arch2.charm"
     )

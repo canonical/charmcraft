@@ -81,7 +81,7 @@ def format_charm_file_name(
     :param bases_config: Bases configuration for charm.  None will use legacy
         format that will be removed shortly.
 
-    :returns: File name string, including .zip extension.
+    :returns: File name string, including .charm extension.
     """
     # TODO: Patterson 2021-06-14 Temporary legacy support prior to bases configuration.
     if bases_config is None:

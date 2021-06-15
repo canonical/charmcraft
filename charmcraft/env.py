@@ -17,6 +17,7 @@
 """Charmcraft environment utilities."""
 
 
+import distutils.util
 import os
 import sys
 
@@ -30,7 +31,8 @@ def is_charmcraft_running_from_snap():
 
 def is_charmcraft_running_in_developer_mode():
     """Check if Charmcraft is running under developer mode."""
-    return os.getenv("CHARMCRAFT_DEVELOPER") == "1"
+    developer_flag = os.getenv("CHARMCRAFT_DEVELOPER", "n")
+    return distutils.util.strtobool(developer_flag) == 1
 
 
 def is_charmcraft_running_in_supported_environment():

@@ -44,9 +44,6 @@ JSON_RELATED_MIMETYPES = {
 }
 OCTET_STREAM_MIMETYPE = "application/octet-stream"
 
-# downloads and uploads happen in chunks
-CHUNK_SIZE = 2 ** 20
-
 # downloads and uploads happen in chunks; this size is mostly driven by the usage in the upload
 # blob, where the cost in time is similar for small and large chunks (we need to balance having
 # it large enough for speed, but not too large because of memory consumption)
@@ -390,3 +387,14 @@ class ImageHandler:
 
         digest = "sha256:{}".format(hashing_temp_file.hexdigest)
         return hashing_temp_file.name, hashing_temp_file.total_length, digest
+
+    def _upload_blob(self, filepath, size, digest):
+        """Upload the blob (if necessary)."""
+        # if it's already uploaded, nothing to do
+        if self.registry.is_blob_already_uploaded(digest):
+            logger.debug("Blob was already uploaded")
+        else:
+            self.registry.upload_blob(filepath, size, digest)
+
+        # finally remove the temp filepath
+        os.unlink(filepath)

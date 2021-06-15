@@ -20,8 +20,10 @@ import base64
 import gzip
 import hashlib
 import io
+import json
 import logging
 import os
+import tarfile
 import tempfile
 import urllib.parse
 from typing import Union
@@ -35,6 +37,7 @@ from charmcraft.cmdbase import CommandError
 logger = logging.getLogger(__name__)
 
 # some mimetypes
+CONFIG_MIMETYPE = "application/vnd.docker.container.image.v1+json"
 MANIFEST_LISTS = "application/vnd.docker.distribution.manifest.list.v2+json"
 MANIFEST_V2_MIMETYPE = "application/vnd.docker.distribution.manifest.v2+json"
 LAYER_MIMETYPE = "application/vnd.docker.image.rootfs.diff.tar.gzip"
@@ -52,10 +55,13 @@ OCTET_STREAM_MIMETYPE = "application/octet-stream"
 CHUNK_SIZE = 2 ** 20
 
 
-def assert_response_ok(response, expected_status=200):
+def assert_response_ok(
+    response: requests.Response, expected_status: int = 200
+) -> Union[dict, None]:
     """Assert the response is ok."""
     if response.status_code != expected_status:
-        if response.headers.get("Content-Type") in JSON_RELATED_MIMETYPES:
+        ct = response.headers.get("Content-Type", "")
+        if ct.split(";")[0] in JSON_RELATED_MIMETYPES:
             errors = response.json().get("errors")
         else:
             errors = None
@@ -393,11 +399,13 @@ class ImageHandler:
         final_fqu = self.registry.get_fully_qualified_url(digest)
         return final_fqu
 
-    def check_in_registry(self, digest):
+    def check_in_registry(self, digest: str) -> bool:
         """Verify if the image is present in the registry."""
         return self.registry.is_manifest_already_uploaded(digest)
 
-    def _extract_file(self, image_tar, name, compress=False):
+    def _extract_file(
+        self, image_tar: str, name: str, compress: bool = False
+    ) -> (str, int, str):
         """Extract a file from the tar and return its info. Optionally, gzip the content."""
         logger.debug("Extracting file %r from local tar (compress=%s)", name, compress)
         src_filehandler = image_tar.extractfile(name)
@@ -430,7 +438,7 @@ class ImageHandler:
         digest = "sha256:{}".format(hashing_temp_file.hexdigest)
         return hashing_temp_file.name, hashing_temp_file.total_length, digest
 
-    def _upload_blob(self, filepath, size, digest):
+    def _upload_blob(self, filepath: str, size: int, digest: str) -> None:
         """Upload the blob (if necessary)."""
         # if it's already uploaded, nothing to do
         if self.registry.is_blob_already_uploaded(digest):
@@ -440,3 +448,77 @@ class ImageHandler:
 
         # finally remove the temp filepath
         os.unlink(filepath)
+
+    def upload_from_local(self, digest: str) -> str:
+        """Upload the image from the local registry."""
+        dockerd = LocalDockerdInterface()
+
+        # validate the image is present locally
+        logger.debug("Checking image is present locally")
+        image_info = dockerd.get_image_info(digest)
+        if image_info is None:
+            return
+        local_image_size = image_info["Size"]
+
+        logger.debug("Getting the image from the local repo; size=%s", local_image_size)
+        response = dockerd.get_streamed_image_content(digest)
+
+        tmp_exported = tempfile.NamedTemporaryFile(mode="wb")
+        extracted_total = 0
+        for chunk in response.iter_content(2 ** 20):
+            extracted_total += len(chunk)
+            progress = 100 * extracted_total / local_image_size
+            print("Extracting... {:.2f}%\r".format(progress), end="", flush=True)
+            tmp_exported.file.write(chunk)
+
+        # open the image tar and inspect it to get the config and layers for the manifest
+        tmp_exported.file.flush()
+        image_tar = tarfile.open(tmp_exported.name)
+        tmp_exported.close()  # closing implies deletion, but the tar lib already grabbed it ok
+        local_manifest = json.load(image_tar.extractfile("manifest.json"))
+        (local_manifest,) = local_manifest
+        config_name = local_manifest.get("Config")
+        layer_names = local_manifest["Layers"]
+        manifest = {
+            "mediaType": MANIFEST_V2_MIMETYPE,
+            "schemaVersion": 2,
+        }
+
+        if config_name is not None:
+            fpath, size, digest = self._extract_file(image_tar, config_name)
+            logger.debug("Uploading config blob, size=%s, digest=%s", size, digest)
+            self._upload_blob(fpath, size, digest)
+            manifest["config"] = {
+                "digest": digest,
+                "mediaType": CONFIG_MIMETYPE,
+                "size": size,
+            }
+
+        manifest["layers"] = manifest_layers = []
+        for idx, layer_name in enumerate(layer_names, 1):
+            fpath, size, digest = self._extract_file(
+                image_tar, layer_name, compress=True
+            )
+            logger.debug(
+                "Uploading layer blob %s/%s, size=%s, digest=%s",
+                idx,
+                len(layer_names),
+                size,
+                digest,
+            )
+            self._upload_blob(fpath, size, digest)
+            manifest_layers.append(
+                {
+                    "digest": digest,
+                    "mediaType": LAYER_MIMETYPE,
+                    "size": size,
+                }
+            )
+
+        # upload the manifest
+        manifest_data = json.dumps(manifest)
+        digest = "sha256:{}".format(
+            hashlib.sha256(manifest_data.encode("utf8")).hexdigest()
+        )
+        self.registry.upload_manifest(manifest_data, digest)
+        return digest

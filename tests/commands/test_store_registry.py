@@ -34,6 +34,7 @@ from charmcraft.commands.store.registry import (
     ImageHandler,
     MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
+    LocalDockerdInterface,
     OCIRegistry,
     OCTET_STREAM_MIMETYPE,
     assert_response_ok,
@@ -848,7 +849,7 @@ def test_get_manifest_bad_v2(responses, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
-# -- tests for the ImageHandler 'get_destination_url' functionality
+# -- tests for the ImageHandler helpers and functionalities
 
 
 @pytest.fixture
@@ -895,6 +896,92 @@ def test_imagehandler_getdestinationurl_missing(mocked_imagehandler):
     )
     with pytest.raises(CommandError, match=expected_error):
         mocked_imagehandler.get_destination_url("test-reference")
+
+
+def test_localdockerinterface_get_info_ok(responses, caplog):
+    """Get image info ok."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    test_image_info = {"some": "stuff"}
+    responses.add(
+        responses.GET,
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/json",
+        json=test_image_info,
+    )
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info("test-digest")
+    assert resp == test_image_info
+
+    assert not caplog.records
+
+
+def test_localdockerinterface_get_info_not_found(responses, caplog):
+    """Get image info for something that is not there."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # return 404, which means that the image was not found
+    responses.add(
+        responses.GET,
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/json",
+        status=404,
+    )
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info("test-digest")
+    assert resp is None
+
+    assert not caplog.records
+
+
+def test_localdockerinterface_get_info_bad_response(responses, caplog):
+    """Docker answered badly when checking for the image."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # weird dockerd behaviour
+    responses.add(
+        responses.GET,
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/json",
+        status=500,
+    )
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info("test-digest")
+    assert resp is None
+
+    expected = [
+        "Bad response when validation local image: 500",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_localdockerinterface_get_info_disconnected(caplog, responses):
+    """No daemon to talk to (see responses used as fixture but no listening)."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info("test-digest")
+    assert resp is None
+
+    expected = [
+        "Cannot connect to /var/run/docker.sock , please ensure dockerd is running.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_localdockerinterface_get_streamed_content(responses):
+    """Get the content streamed."""
+    test_content = b"123456789"
+    responses.add(
+        responses.GET,
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/get",
+        body=test_content,
+        stream=True,
+    )
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_streamed_image_content("test-digest")
+    streamed = resp.iter_content(5)
+    assert next(streamed) == b"12345"
+    assert next(streamed) == b"6789"
+    with pytest.raises(StopIteration):
+        next(streamed)
 
 
 class FakeRegistry:

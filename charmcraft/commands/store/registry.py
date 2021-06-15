@@ -27,6 +27,7 @@ import urllib.parse
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
+import requests_unixsocket
 
 from charmcraft.cmdbase import CommandError
 
@@ -329,6 +330,45 @@ class HashingTemporaryFile(io.FileIO):
         self.total_length += len(data)
         self.hasher.update(data)
         super().write(data)
+
+
+class LocalDockerdInterface:
+    """Functionality to interact with a local Docker daemon."""
+
+    # the address of the dockerd socket
+    dockerd_socket_baseurl = "http+unix://%2Fvar%2Frun%2Fdocker.sock"
+
+    def __init__(self):
+        self.session = requests_unixsocket.Session()
+
+    def get_image_info(self, digest):
+        """Get the info for a specific image."""
+        url = self.dockerd_socket_baseurl + "/images/{}/json".format(digest)
+        try:
+            response = self.session.get(url)
+        except requests.exceptions.ConnectionError:
+            logger.debug(
+                "Cannot connect to /var/run/docker.sock , please ensure dockerd is running.",
+            )
+            return
+
+        if response.status_code == 200:
+            # image is there, we're fine
+            pass
+        elif response.status_code == 404:
+            # image not found (known error)
+            return
+        else:
+            logger.debug(
+                "Bad response when validation local image: %s", response.status_code
+            )
+            return
+        return response.json()
+
+    def get_streamed_image_content(self, digest):
+        """Stream the content of a specific image."""
+        url = self.dockerd_socket_baseurl + "/images/{}/get".format(digest)
+        return self.session.get(url, stream=True)
 
 
 class ImageHandler:

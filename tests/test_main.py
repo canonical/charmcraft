@@ -30,6 +30,16 @@ from tests.factory import create_command
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def mock_is_charmcraft_running_in_supported_environment(monkeypatch):
+    """Bypass entry point check for running as snap."""
+    with patch(
+        "charmcraft.env.is_charmcraft_running_in_supported_environment",
+        return_value=True,
+    ) as mock_supported:
+        yield mock_supported
+
+
 # --- Tests for the Dispatcher
 
 
@@ -377,6 +387,19 @@ def test_main_controlled_error():
     mh_mock.ended_cmderror.assert_called_once_with(simulated_exception)
 
 
+def test_main_environment_is_supported_error(
+    mock_is_charmcraft_running_in_supported_environment,
+):
+    mock_is_charmcraft_running_in_supported_environment.return_value = False
+    with patch("charmcraft.main.message_handler") as mh_mock:
+        with patch("charmcraft.main.Dispatcher.run") as d_mock:
+            d_mock.return_value = None
+            retcode = main(["charmcraft", "version"])
+
+    assert retcode == 1
+    assert mh_mock.ended_cmderror.call_count == 1
+
+
 def test_main_crash():
     """Work crashed: message handler notified properly, return code in 1."""
     simulated_exception = ValueError("boom")
@@ -491,6 +514,10 @@ def test_commands():
     cmds = [cmd.name for _, _, cmds in COMMAND_GROUPS for cmd in cmds]
 
     env = os.environ.copy()
+
+    # Bypass unsupported environment error.
+    env["CHARMCRAFT_DEVELOPER"] = "1"
+
     env_paths = [p for p in sys.path if "env/lib/python" in p]
     if env_paths:
         if "PYTHONPATH" in env:

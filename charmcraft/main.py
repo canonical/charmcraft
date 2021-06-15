@@ -21,7 +21,7 @@ import logging
 import sys
 from collections import namedtuple
 
-from charmcraft import helptexts, config
+from charmcraft import helptexts, config, env
 from charmcraft.commands import version, build, store, init, pack
 from charmcraft.cmdbase import CommandError, BaseCommand
 from charmcraft.logsetup import message_handler
@@ -356,6 +356,7 @@ def main(argv=None):
 
     # process
     try:
+        env.ensure_charmcraft_environment_is_supported()
         dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
         dispatcher.run()
     except CommandError as err:

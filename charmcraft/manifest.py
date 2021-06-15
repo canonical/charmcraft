@@ -64,7 +64,14 @@ def create_manifest(
             }
         ]
     else:
-        bases = [r.dict() for r in bases_config.run_on]
+        bases = [
+            {
+                "name": r.name,
+                "channel": r.channel,
+                "architectures": r.architectures,
+            }
+            for r in bases_config.run_on
+        ]
 
     content = {
         "charmcraft-version": __version__,

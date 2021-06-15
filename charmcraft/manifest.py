@@ -49,13 +49,8 @@ def create_manifest(
         # we integrate lifecycle lib in future branches
         architectures = [utils.get_host_architecture()]
 
-        # XXX Facundo 2021-04-19: these are temporary translations until charmcraft
-        # changes to be a "classic" snap
-        name_translation = {"ubuntu-core": "ubuntu"}
-        channel_translation = {"20": "20.04"}
         name = os_platform.system.lower()
-        name = name_translation.get(name, name)
-        channel = channel_translation.get(os_platform.release, os_platform.release)
+        channel = os_platform.release
         bases = [
             {
                 "name": name,

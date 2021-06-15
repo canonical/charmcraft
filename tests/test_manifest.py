@@ -63,18 +63,6 @@ def test_manifest_architecture_translated(tmp_path, monkeypatch):
     assert saved["bases"][0]["architectures"] == ["nice_arch"]
 
 
-def test_manifest_fields_from_strict_snap(tmp_path, monkeypatch):
-    """Fields found in a strict snap must be translated."""
-    os_platform = OSPlatform(system="ubuntu-core", release="20", machine="amd64")
-    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
-        result_filepath = create_manifest(tmp_path, datetime.datetime.now())
-
-    saved = yaml.safe_load(result_filepath.read_text())
-    base = saved["bases"][0]
-    assert base["name"] == "ubuntu"
-    assert base["channel"] == "20.04"
-
-
 def test_manifest_dont_overwrite(tmp_path):
     """Don't overwrite the already-existing file."""
     (tmp_path / "manifest.yaml").touch()

@@ -36,7 +36,7 @@ def is_charmcraft_running_in_developer_mode():
 
 
 def is_charmcraft_running_in_managed_mode():
-    """Check if charmcraft is running in managed environment."""
+    """Check if charmcraft is running in a managed environment."""
     managed_flag = os.getenv("CHARMCRAFT_MANAGED_MODE", "n")
     return distutils.util.strtobool(managed_flag) == 1
 

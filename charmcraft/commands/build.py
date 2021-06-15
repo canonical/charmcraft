@@ -28,7 +28,8 @@ import yaml
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
-from charmcraft.utils import make_executable, create_manifest
+from charmcraft.manifest import create_manifest
+from charmcraft.utils import make_executable
 
 logger = logging.getLogger(__name__)
 

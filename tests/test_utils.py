@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import datetime
 import logging
 import os
 import pathlib
@@ -22,16 +21,11 @@ from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
-import yaml
 
-from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
 from charmcraft.utils import (
-    ARCH_TRANSLATIONS,
     ResourceOption,
-    OSPlatform,
     SingleOptionEnsurer,
-    create_manifest,
     get_os_platform,
     get_host_architecture,
     load_yaml,
@@ -344,62 +338,3 @@ def test_get_host_architecture(platform_arch, deb_arch):
     """Test all platform mappings in addition to unknown."""
     with patch("platform.machine", return_value=platform_arch):
         assert get_host_architecture() == deb_arch
-
-
-# -- tests for the manifest creation
-
-
-def test_manifest_simple_ok(tmp_path):
-    """Simple construct."""
-    tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
-    os_platform = OSPlatform(system="SuperUbuntu", release="40.10", machine="SomeRISC")
-    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
-        result_filepath = create_manifest(tmp_path, tstamp)
-
-    assert result_filepath == tmp_path / "manifest.yaml"
-    saved = yaml.safe_load(result_filepath.read_text())
-    expected = {
-        "charmcraft-started-at": "2020-02-01T15:40:33Z",
-        "charmcraft-version": __version__,
-        "bases": [
-            {
-                "name": "superubuntu",
-                "channel": "40.10",
-                "architectures": ["SomeRISC"],
-            }
-        ],
-    }
-    assert saved == expected
-
-
-def test_manifest_architecture_translated(tmp_path, monkeypatch):
-    """All known architectures must be translated."""
-    monkeypatch.setitem(ARCH_TRANSLATIONS, "weird_arch", "nice_arch")
-    os_platform = OSPlatform(system="Ubuntu", release="40.10", machine="weird_arch")
-    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
-        result_filepath = create_manifest(tmp_path, datetime.datetime.now())
-
-    saved = yaml.safe_load(result_filepath.read_text())
-    assert saved["bases"][0]["architectures"] == ["nice_arch"]
-
-
-def test_manifest_fields_from_strict_snap(tmp_path, monkeypatch):
-    """Fields found in a strict snap must be translated."""
-    os_platform = OSPlatform(system="ubuntu-core", release="20", machine="amd64")
-    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
-        result_filepath = create_manifest(tmp_path, datetime.datetime.now())
-
-    saved = yaml.safe_load(result_filepath.read_text())
-    base = saved["bases"][0]
-    assert base["name"] == "ubuntu"
-    assert base["channel"] == "20.04"
-
-
-def test_manifest_dont_overwrite(tmp_path):
-    """Don't overwrite the already-existing file."""
-    (tmp_path / "manifest.yaml").touch()
-    with pytest.raises(CommandError) as cm:
-        create_manifest(tmp_path, datetime.datetime.now())
-    assert str(cm.value) == (
-        "Cannot write the manifest as there is already a 'manifest.yaml' in disk."
-    )

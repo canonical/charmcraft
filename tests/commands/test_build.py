@@ -29,6 +29,7 @@ from unittest.mock import patch, call
 import pytest
 import yaml
 
+from charmcraft.config import Base, BasesConfiguration
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
@@ -38,6 +39,7 @@ from charmcraft.commands.build import (
     DISPATCH_FILENAME,
     VENV_DIRNAME,
     Validator,
+    format_charm_file_name,
     polite_exec,
     relativise,
 )
@@ -1359,3 +1361,68 @@ def test_relativise_different_parents_deep():
     dst = pathlib.Path("/tmp/foo/baz1/baz2/baz3/dst.txt")
     rel = relativise(src, dst)
     assert rel == pathlib.Path("../../baz1/baz2/baz3/dst.txt")
+
+
+def test_format_charm_file_name_legacy():
+    """Basic entry."""
+    assert format_charm_file_name("charm-name", None) == "charm-name.charm"
+
+
+def test_format_charm_file_name_basic():
+    """Basic entry."""
+    bases_config = BasesConfiguration(
+        **{
+            "build-on": [],
+            "run-on": [
+                Base(name="xname", channel="xchannel", architectures=["xarch1"])
+            ],
+        }
+    )
+
+    assert (
+        format_charm_file_name("charm-name", bases_config)
+        == "charm-name_xname-xchannel-xarch1.charm"
+    )
+
+
+def test_format_charm_file_name_multi_arch():
+    """Multiple architectures."""
+    bases_config = BasesConfiguration(
+        **{
+            "build-on": [],
+            "run-on": [
+                Base(
+                    name="xname",
+                    channel="xchannel",
+                    architectures=["xarch1", "xarch2", "xarch3"],
+                )
+            ],
+        }
+    )
+
+    assert (
+        format_charm_file_name("charm-name", bases_config)
+        == "charm-name_xname-xchannel-xarch1-xarch2-xarch3.charm"
+    )
+
+
+def test_format_charm_file_name_multi_run_on():
+    """Multiple run-on entries."""
+    bases_config = BasesConfiguration(
+        **{
+            "build-on": [],
+            "run-on": [
+                Base(name="x1name", channel="x1channel", architectures=["x1arch"]),
+                Base(
+                    name="x2name",
+                    channel="x2channel",
+                    architectures=["x2arch1", "x2arch2"],
+                ),
+            ],
+        }
+    )
+
+    assert (
+        format_charm_file_name("charm-name", bases_config)
+        == "charm-name_x1name-x1channel-x1arch_x2name-x2channel-x2arch1-x2arch2.charm"
+    )

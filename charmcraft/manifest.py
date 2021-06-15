@@ -19,11 +19,10 @@
 import datetime
 import logging
 import pathlib
-from typing import Optional
 
 import yaml
 
-from charmcraft import __version__, config, utils
+from charmcraft import __version__, config
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ logger = logging.getLogger(__name__)
 def create_manifest(
     basedir: pathlib.Path,
     started_at: datetime.datetime,
-    bases_config: Optional[config.BasesConfiguration] = None,
+    bases_config: config.BasesConfiguration,
 ):
     """Create manifest.yaml in basedir for given base configuration.
 
@@ -42,31 +41,14 @@ def create_manifest(
 
     :returns: Path to created manifest.yaml.
     """
-    if bases_config is None:
-        os_platform = utils.get_os_platform()
-
-        # XXX Facundo 2021-03-29: the architectures list will be provided by the caller when
-        # we integrate lifecycle lib in future branches
-        architectures = [utils.get_host_architecture()]
-
-        name = os_platform.system.lower()
-        channel = os_platform.release
-        bases = [
-            {
-                "name": name,
-                "channel": channel,
-                "architectures": architectures,
-            }
-        ]
-    else:
-        bases = [
-            {
-                "name": r.name,
-                "channel": r.channel,
-                "architectures": r.architectures,
-            }
-            for r in bases_config.run_on
-        ]
+    bases = [
+        {
+            "name": r.name,
+            "channel": r.channel,
+            "architectures": r.architectures,
+        }
+        for r in bases_config.run_on
+    ]
 
     content = {
         "charmcraft-version": __version__,

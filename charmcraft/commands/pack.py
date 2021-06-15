@@ -176,7 +176,9 @@ class PackCommand(BaseCommand):
 
         # pack everything
         project = self.config.project
-        manifest_filepath = create_manifest(project.dirpath, project.started_at)
+        manifest_filepath = create_manifest(
+            project.dirpath, project.started_at, build.DEFAULT_BASES_CONFIGURATION
+        )
         try:
             paths = get_paths_to_include(self.config)
             zipname = project.dirpath / (bundle_name + ".zip")

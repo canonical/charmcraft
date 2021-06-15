@@ -23,7 +23,6 @@ import pathlib
 import shutil
 import subprocess
 import zipfile
-from typing import Optional
 
 import yaml
 
@@ -31,7 +30,8 @@ from charmcraft.config import Base, BasesConfiguration
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.manifest import create_manifest
-from charmcraft.utils import make_executable
+from charmcraft.utils import get_host_architecture, make_executable
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,17 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
 HOOKS_DIR = "hooks"
 
+# Default bases configuration if unspecified.
+DEFAULT_BASE = Base(
+    name="ubuntu", channel="20.04", architectures=[get_host_architecture()]
+)
+DEFAULT_BASES_CONFIGURATION = BasesConfiguration(
+    **{
+        "build-on": [DEFAULT_BASE.copy()],
+        "run-on": [DEFAULT_BASE.copy()],
+    }
+)
+
 
 def _format_run_on_base(base: Base) -> str:
     """Formulate charm string for base section."""
@@ -66,9 +77,7 @@ def _format_bases_config(bases_config: BasesConfiguration) -> str:
     return "_".join([_format_run_on_base(r) for r in bases_config.run_on])
 
 
-def format_charm_file_name(
-    charm_name: str, bases_config: Optional[BasesConfiguration] = None
-) -> str:
+def format_charm_file_name(charm_name: str, bases_config: BasesConfiguration) -> str:
     """Formulate charm file name.
 
     :param charm_name: Name of charm.
@@ -77,10 +86,6 @@ def format_charm_file_name(
 
     :returns: File name string, including .charm extension.
     """
-    # TODO: Patterson 2021-06-14 Temporary legacy support prior to bases configuration.
-    if bases_config is None:
-        return charm_name + ".charm"
-
     return "_".join([charm_name, _format_bases_config(bases_config)]) + ".charm"
 
 
@@ -138,7 +143,7 @@ class Builder:
         self.ignore_rules = self._load_juju_ignore()
         self.config = config
 
-    def run(self):
+    def build_charm(self, bases_config: BasesConfiguration):
         """Build the charm."""
         logger.debug("Building charm in '%s'", self.buildpath)
 
@@ -146,15 +151,19 @@ class Builder:
             shutil.rmtree(str(self.buildpath))
         self.buildpath.mkdir()
 
-        create_manifest(self.buildpath, self.config.project.started_at)
+        create_manifest(self.buildpath, self.config.project.started_at, bases_config)
 
         linked_entrypoint = self.handle_generic_paths()
         self.handle_dispatcher(linked_entrypoint)
         self.handle_dependencies()
-        zipname = self.handle_package()
+        zipname = self.handle_package(bases_config)
 
         logger.info("Created '%s'.", zipname)
         return zipname
+
+    def run(self) -> str:
+        """Run build process."""
+        return self.build_charm(DEFAULT_BASES_CONFIGURATION)
 
     def _load_juju_ignore(self):
         ignore = JujuIgnore(default_juju_ignore)
@@ -314,14 +323,14 @@ class Builder:
             if retcode:
                 raise CommandError("problems installing dependencies")
 
-    def handle_package(self):
+    def handle_package(self, bases_config: BasesConfiguration):
         """Handle the final package creation."""
         logger.debug("Parsing the project's metadata")
         with (self.charmdir / CHARM_METADATA).open("rt", encoding="utf8") as fh:
             metadata = yaml.safe_load(fh)
 
         logger.debug("Creating the package itself")
-        zipname = format_charm_file_name(metadata["name"], None)
+        zipname = format_charm_file_name(metadata["name"], bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
             dirpath = pathlib.Path(dirpath)

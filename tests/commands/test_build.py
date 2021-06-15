@@ -31,10 +31,12 @@ import yaml
 
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.cmdbase import CommandError
+from charmcraft.utils import get_host_architecture
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
     Builder,
     CHARM_METADATA,
+    DEFAULT_BASES_CONFIGURATION,
     DISPATCH_CONTENT,
     DISPATCH_FILENAME,
     VENV_DIRNAME,
@@ -417,6 +419,8 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
         config,
     )
     zipname = builder.run()
+    host_arch = get_host_architecture()
+    assert zipname == f"name-from-metadata_ubuntu-20.04-{host_arch}.charm"
 
     # check all is properly inside the zip
     # contents!), and all relative to build dir
@@ -437,6 +441,13 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
     assert (
         manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
     )
+    assert manifest["bases"] == [
+        {
+            "architectures": [host_arch],
+            "channel": "20.04",
+            "name": "ubuntu",
+        }
+    ]
 
 
 def test_build_generics_simple_files(tmp_path, config):
@@ -1235,7 +1246,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
         },
         config,
     )
-    zipname = builder.handle_package()
+    zipname = builder.handle_package(DEFAULT_BASES_CONFIGURATION)
 
     # check the stuff outside is not in the zip, the stuff inside is zipped (with
     # contents!), and all relative to build dir
@@ -1272,9 +1283,9 @@ def test_build_package_name(tmp_path, monkeypatch, config):
         },
         config,
     )
-    zipname = builder.handle_package()
+    zipname = builder.handle_package(DEFAULT_BASES_CONFIGURATION)
 
-    assert zipname == "name-from-metadata.charm"
+    assert zipname == f"name-from-metadata_ubuntu-20.04-{get_host_architecture()}.charm"
 
 
 def test_builder_without_jujuignore(tmp_path, config):
@@ -1361,11 +1372,6 @@ def test_relativise_different_parents_deep():
     dst = pathlib.Path("/tmp/foo/baz1/baz2/baz3/dst.txt")
     rel = relativise(src, dst)
     assert rel == pathlib.Path("../../baz1/baz2/baz3/dst.txt")
-
-
-def test_format_charm_file_name_legacy():
-    """Basic entry."""
-    assert format_charm_file_name("charm-name", None) == "charm-name.charm"
 
 
 def test_format_charm_file_name_basic():

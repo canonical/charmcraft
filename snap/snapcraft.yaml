@@ -175,6 +175,8 @@ parts:
       - lib/pyrsistent
       - lib/pyrsistent-*.dist-info
       - lib/requests
+      - lib/requests_unixsocket
+      - lib/requests_unixsocket-*.dist-info
       - lib/six.py
       - lib/six-*.dist-info
       - lib/tabulate.py

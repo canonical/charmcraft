@@ -40,6 +40,7 @@ install_requires = [
     "pyyaml",
     "requests",
     "requests-toolbelt",
+    "requests-unixsocket",
     "tabulate",
 ]
 

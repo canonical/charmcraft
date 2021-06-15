@@ -24,6 +24,7 @@ import logging
 import os
 import tempfile
 import urllib.parse
+from typing import Union
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
@@ -341,8 +342,11 @@ class LocalDockerdInterface:
     def __init__(self):
         self.session = requests_unixsocket.Session()
 
-    def get_image_info(self, digest):
-        """Get the info for a specific image."""
+    def get_image_info(self, digest: str) -> Union[dict, None]:
+        """Get the info for a specific image.
+
+        Returns None to flag that the requested digest was not found by any reason.
+        """
         url = self.dockerd_socket_baseurl + "/images/{}/json".format(digest)
         try:
             response = self.session.get(url)
@@ -354,18 +358,16 @@ class LocalDockerdInterface:
 
         if response.status_code == 200:
             # image is there, we're fine
-            pass
-        elif response.status_code == 404:
-            # image not found (known error)
-            return
-        else:
+            return response.json()
+
+        # 404 is the standard response to "not found", if not exactly that let's log
+        # for proper debugging
+        if response.status_code != 404:
             logger.debug(
                 "Bad response when validation local image: %s", response.status_code
             )
-            return
-        return response.json()
 
-    def get_streamed_image_content(self, digest):
+    def get_streamed_image_content(self, digest: str) -> requests.Response:
         """Stream the content of a specific image."""
         url = self.dockerd_socket_baseurl + "/images/{}/get".format(digest)
         return self.session.get(url, stream=True)

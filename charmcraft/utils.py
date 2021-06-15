@@ -27,7 +27,6 @@ import attr
 import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
-from charmcraft import __version__
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger("charmcraft.commands")
@@ -186,42 +185,3 @@ def get_host_architecture():
     """Get host architecture in deb format suitable for base definition."""
     os_platform = get_os_platform()
     return ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)
-
-
-def create_manifest(basedir, started_at):
-    """Save context information for the charm execution.
-
-    Mostly to be used by builders.
-    """
-    os_platform = get_os_platform()
-
-    # XXX Facundo 2021-03-29: the architectures list will be provided by the caller when
-    # we integrate lifecycle lib in future branches
-    architectures = [get_host_architecture()]
-
-    # XXX Facundo 2021-04-19: these are temporary translations until charmcraft
-    # changes to be a "classic" snap
-    name_translation = {"ubuntu-core": "ubuntu"}
-    channel_translation = {"20": "20.04"}
-    name = os_platform.system.lower()
-    name = name_translation.get(name, name)
-    channel = channel_translation.get(os_platform.release, os_platform.release)
-
-    content = {
-        "charmcraft-version": __version__,
-        "charmcraft-started-at": started_at.isoformat() + "Z",
-        "bases": [
-            {
-                "name": name,
-                "channel": channel,
-                "architectures": architectures,
-            }
-        ],
-    }
-    filepath = basedir / "manifest.yaml"
-    if filepath.exists():
-        raise CommandError(
-            "Cannot write the manifest as there is already a 'manifest.yaml' in disk."
-        )
-    filepath.write_text(yaml.dump(content))
-    return filepath

@@ -21,8 +21,8 @@ import gzip
 import hashlib
 import io
 import json
-import logging
 import tarfile
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -31,10 +31,12 @@ import requests
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import registry
 from charmcraft.commands.store.registry import (
+    CONFIG_MIMETYPE,
     ImageHandler,
+    LAYER_MIMETYPE,
+    LocalDockerdInterface,
     MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
-    LocalDockerdInterface,
     OCIRegistry,
     OCTET_STREAM_MIMETYPE,
     assert_response_ok,
@@ -44,13 +46,15 @@ from charmcraft.commands.store.registry import (
 # -- tests for response verifications
 
 
-def create_response(status_code=200, headers=None, raw_content=b"", json_content=None):
+def create_response(
+    status_code=200, headers=None, raw_content=b"", json_content=None, content_type=None
+):
     """Create a fake requests' response."""
     if headers is None:
         headers = {}
 
     if json_content is not None:
-        headers.setdefault("Content-Type", "application/json")
+        headers.setdefault("Content-Type", content_type or "application/json")
         content_bytes = json.dumps(json_content).encode("utf8")
     else:
         content_bytes = raw_content
@@ -105,6 +109,23 @@ def test_assert_response_bad_status_code_with_json_errors():
     assert str(cm.value) == (
         "Wrong status code from server (expected=200, got=404) errors={} "
         "headers={{'Content-Type': 'application/json'}}".format(errors)
+    )
+
+
+def test_assert_response_bad_status_code_with_extra_json_errors():
+    """The server still including errors, weird content type."""
+    errors = [{"foo": "bar"}]
+    test_content = {"errors": errors}
+    response = create_response(
+        status_code=404,
+        json_content=test_content,
+        content_type="application/json;stuff",
+    )
+    with pytest.raises(CommandError) as cm:
+        assert_response_ok(response)
+    assert str(cm.value) == (
+        "Wrong status code from server (expected=200, got=404) errors={} "
+        "headers={{'Content-Type': 'application/json;stuff'}}".format(errors)
     )
 
 
@@ -1008,6 +1029,35 @@ class FakeRegistry:
         self.stored_blobs[digest] = (open(filepath, "rb").read(), size)
 
 
+class FakeDockerd:
+    """A fake dockerd interface to mimic behaviour of the real one."""
+
+    def __init__(self, image_info, image_content):
+        self.image_info = image_info
+        self.image_content = image_content
+        self.used_digest = None
+
+    def get_image_info(self, digest):
+        self.used_digest = digest
+        return self.image_info.get(digest)
+
+    def get_streamed_image_content(self, digest):
+        assert digest == self.used_digest
+
+        class FakeResponse:
+            def __init__(self, content):
+                self.content = io.BytesIO(content)
+
+            def iter_content(self, chunk_size):
+                while True:
+                    chunk = self.content.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+
+        return FakeResponse(self.image_content)
+
+
 def test_imagehandler_check_in_registry_yes():
     """Check if an image is in the registry and find it."""
     fake_registry = FakeRegistry()
@@ -1145,5 +1195,222 @@ def test_imagehandler_uploadblob_duplicated(caplog, tmp_path):
 
     expected = [
         "Blob was already uploaded",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_imagehandler_uploadfromlocal_complete(
+    caplog, tmp_path, responses, monkeypatch
+):
+    """Complete process of uploading a local image."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # fake an image in disk (a tar file with config, layers, and a manifest)."""
+    test_tar_image = tmp_path / "test-image.tar"
+    test_tar_config_content = b"fake config for the image"
+    test_tar_layer1_content = b"fake first layer content for the image"
+    test_tar_layer2_content = b"fake second layer content for the image"
+    test_manifest_content = json.dumps(
+        [
+            {
+                "Config": "config.yaml",
+                "Layers": ["layer1.bin", "layer2.bin"],
+            }
+        ]
+    ).encode("ascii")
+    tar_file = tarfile.TarFile(test_tar_image, "w")
+    tar_content = [
+        ("manifest.json", test_manifest_content),
+        ("config.yaml", test_tar_config_content),
+        ("layer1.bin", test_tar_layer1_content),
+        ("layer2.bin", test_tar_layer2_content),
+    ]
+    for name, content in tar_content:
+        ti = tarfile.TarInfo(name)
+        ti.size = len(content)
+        tar_file.addfile(ti, fileobj=io.BytesIO(content))
+    tar_file.close()
+
+    # return 200 with the image info
+    image_size = test_tar_image.stat().st_size
+    image_info = {"Size": image_size, "foobar": "etc"}
+    fakedockerd = FakeDockerd({"test-digest": image_info}, test_tar_image.read_bytes())
+    monkeypatch.setattr(registry, "LocalDockerdInterface", lambda: fakedockerd)
+
+    fake_registry = FakeRegistry()
+    im = ImageHandler(fake_registry)
+    main_call_result = im.upload_from_local("test-digest")
+
+    # check the uploaded blobs: first the config (as is), then the layers (compressed)
+    (
+        uploaded_config,
+        uploaded_layer1,
+        uploaded_layer2,
+    ) = fake_registry.stored_blobs.items()
+
+    (u_config_digest, (u_config_content, u_config_size)) = uploaded_config
+    assert u_config_content == test_tar_config_content
+    assert u_config_size == len(u_config_content)
+    assert u_config_digest == "sha256:" + hashlib.sha256(u_config_content).hexdigest()
+
+    (u_layer1_digest, (u_layer1_content, u_layer1_size)) = uploaded_layer1
+    assert gzip.decompress(u_layer1_content) == test_tar_layer1_content
+    assert u_layer1_size == len(u_layer1_content)
+    assert u_layer1_digest == "sha256:" + hashlib.sha256(u_layer1_content).hexdigest()
+
+    (u_layer2_digest, (u_layer2_content, u_layer2_size)) = uploaded_layer2
+    assert gzip.decompress(u_layer2_content) == test_tar_layer2_content
+    assert u_layer2_size == len(u_layer2_content)
+    assert u_layer2_digest == "sha256:" + hashlib.sha256(u_layer2_content).hexdigest()
+
+    # check the uploaded manifest metadata and real content
+    (uploaded_manifest,) = fake_registry.stored_manifests.items()
+    (u_manifest_digest, (u_manifest_content, u_manifest_multiple)) = uploaded_manifest
+    assert (
+        u_manifest_digest
+        == "sha256:" + hashlib.sha256(u_manifest_content.encode("utf8")).hexdigest()
+    )
+    assert u_manifest_multiple is False
+
+    # the response from the function we're testing is the final remote digest
+    assert main_call_result == u_manifest_digest
+
+    u_manifest = json.loads(u_manifest_content)
+    assert u_manifest["mediaType"] == MANIFEST_V2_MIMETYPE
+    assert u_manifest["schemaVersion"] == 2
+
+    assert u_manifest["config"] == {
+        "digest": u_config_digest,
+        "mediaType": CONFIG_MIMETYPE,
+        "size": u_config_size,
+    }
+
+    assert u_manifest["layers"] == [
+        {
+            "digest": u_layer1_digest,
+            "mediaType": LAYER_MIMETYPE,
+            "size": u_layer1_size,
+        },
+        {
+            "digest": u_layer2_digest,
+            "mediaType": LAYER_MIMETYPE,
+            "size": u_layer2_size,
+        },
+    ]
+
+    # check the output logs
+    expected = [
+        "Checking image is present locally",
+        "Getting the image from the local repo; size={}".format(image_size),
+        "Extracting file 'config.yaml' from local tar (compress=False)",
+        "Uploading config blob, size={}, digest={}".format(
+            u_config_size, u_config_digest
+        ),
+        "Extracting file 'layer1.bin' from local tar (compress=True)",
+        "Uploading layer blob 1/2, size={}, digest={}".format(
+            u_layer1_size, u_layer1_digest
+        ),
+        "Extracting file 'layer2.bin' from local tar (compress=True)",
+        "Uploading layer blob 2/2, size={}, digest={}".format(
+            u_layer2_size, u_layer2_digest
+        ),
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_imagehandler_uploadfromlocal_not_found_locally(caplog, monkeypatch):
+    """The requested image is not presented locally."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # will not find the image
+    fakedockerd = FakeDockerd({}, b"")
+    monkeypatch.setattr(registry, "LocalDockerdInterface", lambda: fakedockerd)
+
+    im = ImageHandler("a-registry")
+    result = im.upload_from_local("test-digest")
+    assert result is None
+
+    expected = [
+        "Checking image is present locally",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_imagehandler_uploadfromlocal_no_config(caplog, tmp_path, monkeypatch):
+    """Particular case of a manifest without config."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # fake an image in disk (a tar file with NO config, a layer, and a manifest)."""
+    test_tar_image = tmp_path / "test-image.tar"
+    test_tar_layer_content = b"fake layer content for the image"
+    test_manifest_content = json.dumps(
+        [
+            {
+                "Layers": ["layer.bin"],
+            }
+        ]
+    ).encode("ascii")
+    tar_file = tarfile.TarFile(test_tar_image, "w")
+    tar_content = [
+        ("manifest.json", test_manifest_content),
+        ("layer.bin", test_tar_layer_content),
+    ]
+    for name, content in tar_content:
+        ti = tarfile.TarInfo(name)
+        ti.size = len(content)
+        tar_file.addfile(ti, fileobj=io.BytesIO(content))
+    tar_file.close()
+
+    # return 200 with the image info
+    image_size = test_tar_image.stat().st_size
+    image_info = {"Size": image_size, "foobar": "etc"}
+    fakedockerd = FakeDockerd({"test-digest": image_info}, test_tar_image.read_bytes())
+    monkeypatch.setattr(registry, "LocalDockerdInterface", lambda: fakedockerd)
+
+    fake_registry = FakeRegistry()
+    im = ImageHandler(fake_registry)
+    main_call_result = im.upload_from_local("test-digest")
+
+    # check the uploaded blob: just the compressed layer
+    (uploaded_layer,) = fake_registry.stored_blobs.items()
+
+    (u_layer_digest, (u_layer_content, u_layer_size)) = uploaded_layer
+    assert gzip.decompress(u_layer_content) == test_tar_layer_content
+    assert u_layer_size == len(u_layer_content)
+    assert u_layer_digest == "sha256:" + hashlib.sha256(u_layer_content).hexdigest()
+
+    # check the uploaded manifest metadata and real content
+    (uploaded_manifest,) = fake_registry.stored_manifests.items()
+    (u_manifest_digest, (u_manifest_content, u_manifest_multiple)) = uploaded_manifest
+    assert (
+        u_manifest_digest
+        == "sha256:" + hashlib.sha256(u_manifest_content.encode("utf8")).hexdigest()
+    )
+    assert u_manifest_multiple is False
+
+    # the response from the function we're testing is the final remote digest
+    assert main_call_result == u_manifest_digest
+
+    u_manifest = json.loads(u_manifest_content)
+    assert u_manifest["mediaType"] == MANIFEST_V2_MIMETYPE
+    assert u_manifest["schemaVersion"] == 2
+
+    assert "config" not in u_manifest
+    assert u_manifest["layers"] == [
+        {
+            "digest": u_layer_digest,
+            "mediaType": LAYER_MIMETYPE,
+            "size": u_layer_size,
+        }
+    ]
+
+    # check the output logs
+    expected = [
+        "Checking image is present locally",
+        "Getting the image from the local repo; size={}".format(image_size),
+        "Extracting file 'layer.bin' from local tar (compress=True)",
+        "Uploading layer blob 1/1, size={}, digest={}".format(
+            u_layer_size, u_layer_digest
+        ),
     ]
     assert expected == [rec.message for rec in caplog.records]

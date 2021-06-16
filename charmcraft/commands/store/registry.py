@@ -26,7 +26,7 @@ import os
 import tarfile
 import tempfile
 import urllib.parse
-from typing import Union
+from typing import Union, Dict, Any
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
@@ -57,7 +57,7 @@ CHUNK_SIZE = 2 ** 20
 
 def assert_response_ok(
     response: requests.Response, expected_status: int = 200
-) -> Union[dict, None]:
+) -> Union[Dict[str, Any], None]:
     """Assert the response is ok."""
     if response.status_code != expected_status:
         ct = response.headers.get("Content-Type", "")
@@ -449,8 +449,11 @@ class ImageHandler:
         # finally remove the temp filepath
         os.unlink(filepath)
 
-    def upload_from_local(self, digest: str) -> str:
-        """Upload the image from the local registry."""
+    def upload_from_local(self, digest: str) -> Union[str, None]:
+        """Upload the image from the local registry.
+
+        Returns the new remote digest, or None if the image was not found locally.
+        """
         dockerd = LocalDockerdInterface()
 
         # validate the image is present locally

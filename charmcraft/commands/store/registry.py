@@ -463,18 +463,18 @@ class ImageHandler:
         logger.debug("Getting the image from the local repo; size=%s", local_image_size)
         response = dockerd.get_streamed_image_content(digest)
 
-        tmp_exported = tempfile.NamedTemporaryFile(mode="wb")
+        tmp_exported = tempfile.NamedTemporaryFile(mode="wb", delete=False)
         extracted_total = 0
-        for chunk in response.iter_content(2 ** 20):
+        for chunk in response.iter_content(CHUNK_SIZE):
             extracted_total += len(chunk)
             progress = 100 * extracted_total / local_image_size
             print("Extracting... {:.2f}%\r".format(progress), end="", flush=True)
             tmp_exported.file.write(chunk)
+        tmp_exported.close()
 
-        # open the image tar and inspect it to get the config and layers for the manifest
-        tmp_exported.file.flush()
+        # open the image tar and inspect it to get the config and layers from the only one
+        # manifest inside (as it's a list of one)
         image_tar = tarfile.open(tmp_exported.name)
-        tmp_exported.close()  # closing implies deletion, but the tar lib already grabbed it ok
         local_manifest = json.load(image_tar.extractfile("manifest.json"))
         (local_manifest,) = local_manifest
         config_name = local_manifest.get("Config")
@@ -514,6 +514,9 @@ class ImageHandler:
                     "size": size,
                 }
             )
+
+        # remove the temp tar file
+        os.unlink(tmp_exported.name)
 
         # upload the manifest
         manifest_data = json.dumps(manifest)

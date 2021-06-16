@@ -35,6 +35,12 @@ def is_charmcraft_running_in_developer_mode():
     return distutils.util.strtobool(developer_flag) == 1
 
 
+def is_charmcraft_running_in_managed_mode():
+    """Check if charmcraft is running in a managed environment."""
+    managed_flag = os.getenv("CHARMCRAFT_MANAGED_MODE", "n")
+    return distutils.util.strtobool(managed_flag) == 1
+
+
 def is_charmcraft_running_in_supported_environment():
     """Check if Charmcraft is running in a supported environment."""
     return sys.platform == "linux" and is_charmcraft_running_from_snap()

@@ -299,7 +299,7 @@ def get_name_from_zip(filepath):
     try:
         zf = zipfile.ZipFile(str(filepath))
     except zipfile.BadZipFile:
-        raise CommandError("Cannot open {!r} (bad zip file).".format(str(filepath)))
+        raise CommandError("Cannot open {!r} (bad zip file).".format(str(filepath))) #FIXME
 
     # get the name from the given file (trying first if it's a charm, then a bundle,
     # otherwise it's an error)
@@ -307,7 +307,7 @@ def get_name_from_zip(filepath):
         try:
             name = yaml.safe_load(zf.read("metadata.yaml"))["name"]
         except Exception:
-            raise CommandError(
+            raise CommandError( #FIXME
                 "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
                 "a 'name' key.".format(str(filepath))
             )
@@ -315,12 +315,12 @@ def get_name_from_zip(filepath):
         try:
             name = yaml.safe_load(zf.read("bundle.yaml"))["name"]
         except Exception:
-            raise CommandError(
+            raise CommandError( #FIXME
                 "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
                 "a 'name' key.".format(str(filepath))
             )
     else:
-        raise CommandError(
+        raise CommandError( #FIXME
             "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
             "nor a bundle ('bundle.yaml' not found).".format(str(filepath))
         )
@@ -779,7 +779,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
                 try:
                     field, value = [x.strip() for x in line.split(b"=")]
                 except ValueError:
-                    raise CommandError(
+                    raise CommandError( #FIXME
                         "Bad metadata line in {}: {!r}".format(lib_path, line)
                     )
                 metadata[field] = value
@@ -788,7 +788,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
 
     missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
     if missing:
-        raise CommandError(
+        raise CommandError( #FIXME
             "Library {} is missing the mandatory metadata fields: {}.".format(
                 lib_path, ", ".join(sorted(missing))
             )
@@ -796,7 +796,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
 
     bad_api_patch_msg = (
         "Library {} metadata field {} is not zero or a positive integer."
-    )
+    ) #FIXME
     try:
         libapi = _get_positive_int(metadata[b"LIBAPI"])
     except ValueError:
@@ -810,17 +810,17 @@ def _get_lib_info(*, full_name=None, lib_path=None):
         raise CommandError(
             "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
                 lib_path
-            )
+            ) #FIXME
         )
 
     if libapi != api_from_path:
-        raise CommandError(
+        raise CommandError( #FIXME
             "Library {} metadata field LIBAPI is different from the version in the path.".format(
                 lib_path
             )
         )
 
-    bad_libid_msg = "Library {} metadata field LIBID must be a non-empty ASCII string."
+    bad_libid_msg = "Library {} metadata field LIBID must be a non-empty ASCII string." #FIXME
     try:
         libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
     except (ValueError, UnicodeDecodeError):
@@ -869,7 +869,7 @@ def _get_libs_from_tree(charm_name=None):
                     local_libs_data.append(_get_lib_info(lib_path=libfile))
 
     found_libs = [lib_data.full_name for lib_data in local_libs_data]
-    logger.debug("Libraries found under %s: %s", base_dir, found_libs)
+    logger.debug("Libraries found under %s: %s", base_dir, found_libs) #FIXME
     return local_libs_data
 
 
@@ -936,7 +936,7 @@ class CreateLibCommand(BaseCommand):
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CommandError("This library already exists: {}".format(lib_path))
+            raise CommandError("This library already exists: {}".format(lib_path)) #FIXME
 
         store = Store(self.config.charmhub)
         lib_id = store.create_library_id(charm_name, lib_name)
@@ -949,7 +949,7 @@ class CreateLibCommand(BaseCommand):
             lib_path.parent.mkdir(parents=True, exist_ok=True)
             lib_path.write_text(template.render(context))
         except OSError as exc:
-            raise CommandError(
+            raise CommandError( #FIXME
                 "Error writing the library in {}: {!r}.".format(lib_path, exc)
             )
 
@@ -994,7 +994,7 @@ class PublishLibCommand(BaseCommand):
         if parsed_args.library:
             lib_data = _get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
-                raise CommandError(
+                raise CommandError( #FIXME
                     "The specified library was not found at path {}.".format(
                         lib_data.path
                     )
@@ -1394,7 +1394,7 @@ class UploadResourceCommand(BaseCommand):
             resource_filepath = parsed_args.filepath
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
-            logger.debug("Uploading resource directly from file %s", resource_filepath)
+            logger.debug("Uploading resource directly from file %s", resource_filepath) #FIXME
         elif parsed_args.image:
             logger.debug(
                 "Uploading resource from image %s at Dockerhub", parsed_args.image

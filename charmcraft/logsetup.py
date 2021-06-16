@@ -99,7 +99,7 @@ class _MessageHandler:
         if err.argsparsing:
             print(err)
         else:
-            msg = "{} (full execution logs in {})".format(err, self._log_filepath)
+            msg = "{} (full execution logs in {})".format(err, self._log_filepath) #FIXME
             _logger.error(msg)
 
     def ended_crash(self, err):

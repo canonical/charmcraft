@@ -27,7 +27,7 @@ FORMATTER_DETAILED = "%(asctime)s  %(name)-30s %(levelname)-8s %(message)s"
 
 logger = logging.getLogger("charmcraft")
 enabled_loggers = [
-    logging.getLogger("charmcraft"),
+    logger,
     logging.getLogger("craft_providers"),
 ]
 

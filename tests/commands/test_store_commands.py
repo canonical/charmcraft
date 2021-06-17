@@ -2798,8 +2798,8 @@ def test_uploadresource_filepath_call_ok(caplog, store_mock, config, tmp_path):
         call.upload_resource("mycharm", "myresource", "file", test_resource)
     ]
     expected = [
-        "Uploading resource directly from file {}".format(test_resource),
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+        "Uploading resource directly from file '{}'.".format(test_resource),
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
     ]
     assert expected == [rec.message for rec in caplog.records]
     assert test_resource.exists()  # provided by the user, don't touch it
@@ -2885,9 +2885,12 @@ def test_uploadresource_image_call_already_uploaded(caplog, store_mock, config):
     ]
 
     expected = [
-        "Uploading resource from image charm/charm-id/test-image-name @ test-digest-given-by-user",
-        "Using OCI image from Canonical's registry",
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+        (
+            "Uploading resource from image "
+            "charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Using OCI image from Canonical's registry.",
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -2948,10 +2951,13 @@ def test_uploadresource_image_call_upload_from_local(caplog, store_mock, config)
     ]
 
     expected = [
-        "Uploading resource from image charm/charm-id/test-image-name @ test-digest-given-by-user",
-        "Remote image not found, uploading from local registry",
-        "Image uploaded, new remote digest: new-digest-after-upload",
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+        (
+            "Uploading resource from image "
+            "charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Remote image not found, uploading from local registry.",
+        "Image uploaded, new remote digest: new-digest-after-upload.",
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -3002,11 +3008,14 @@ def test_uploadresource_image_call_missing_everywhere(caplog, store_mock, config
     ]
 
     expected = [
-        "Uploading resource from image charm/charm-id/test-image-name @ test-digest-given-by-user",
-        "Remote image not found, uploading from local registry",
+        (
+            "Uploading resource from "
+            "image charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Remote image not found, uploading from local registry.",
         (
             "Image with digest test-digest-given-by-user is not available in "
-            "the Canonical's registry nor locally"
+            "the Canonical's registry nor locally."
         ),
     ]
     assert expected == [rec.message for rec in caplog.records]

@@ -1353,7 +1353,9 @@ class UploadResourceCommand(BaseCommand):
             resource_filepath = parsed_args.filepath
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
-            logger.debug("Uploading resource directly from file %s", resource_filepath)
+            logger.debug(
+                "Uploading resource directly from file %r.", str(resource_filepath)
+            )
         elif parsed_args.image:
             image_digest = parsed_args.image
             credentials = store.get_oci_registry_credentials(
@@ -1361,7 +1363,7 @@ class UploadResourceCommand(BaseCommand):
             )
             image_name = credentials.image_name.split("/", 1)[1]
             logger.debug(
-                "Uploading resource from image %s @ %s", image_name, image_digest
+                "Uploading resource from image %s @ %s.", image_name, image_digest
             )
 
             # build the image handler
@@ -1376,19 +1378,19 @@ class UploadResourceCommand(BaseCommand):
             # check if the specific image is already in Canonical's registry
             already_uploaded = ih.check_in_registry(image_digest)
             if already_uploaded:
-                logger.info("Using OCI image from Canonical's registry")
+                logger.info("Using OCI image from Canonical's registry.")
             else:
                 # upload it from local registry
-                logger.info("Remote image not found, uploading from local registry")
+                logger.info("Remote image not found, uploading from local registry.")
                 image_digest = ih.upload_from_local(image_digest)
                 if image_digest is None:
                     logger.info(
                         "Image with digest %s is not available in the Canonical's registry "
-                        "nor locally",
+                        "nor locally.",
                         parsed_args.image,
                     )
                     return
-                logger.info("Image uploaded, new remote digest: %s", image_digest)
+                logger.info("Image uploaded, new remote digest: %s.", image_digest)
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(
@@ -1413,7 +1415,7 @@ class UploadResourceCommand(BaseCommand):
 
         if result.ok:
             logger.info(
-                "Revision %s created of resource %r for charm %r",
+                "Revision %s created of resource %r for charm %r.",
                 result.revision,
                 parsed_args.resource_name,
                 parsed_args.charm_name,

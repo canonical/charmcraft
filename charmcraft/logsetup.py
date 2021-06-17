@@ -23,7 +23,7 @@ import tempfile
 from charmcraft import __version__
 
 FORMATTER_SIMPLE = "%(message)s"
-FORMATTER_DETAILED = "%(asctime)s  %(name)-30s %(levelname)-8s %(message)s"
+FORMATTER_DETAILED = "%(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
 
 logger = logging.getLogger("charmcraft")
 enabled_loggers = [

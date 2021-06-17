@@ -23,12 +23,14 @@ import pathlib
 import shutil
 import subprocess
 import zipfile
-from typing import Optional
+from typing import List, Optional
 
 import yaml
 
+from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.env import is_charmcraft_running_in_managed_mode
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.manifest import create_manifest
 from charmcraft.utils import make_executable
@@ -138,23 +140,84 @@ class Builder:
         self.ignore_rules = self._load_juju_ignore()
         self.config = config
 
-    def run(self):
-        """Build the charm."""
+    def build_charm(self, bases_config: Optional[BasesConfiguration]) -> str:
+        """Build the charm.
+
+        :param bases_config: Bases configuration to use for build.
+
+        :returns: File name of charm.
+        """
         logger.debug("Building charm in '%s'", self.buildpath)
 
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
         self.buildpath.mkdir()
 
-        create_manifest(self.buildpath, self.config.project.started_at)
+        create_manifest(self.buildpath, self.config.project.started_at, bases_config)
 
         linked_entrypoint = self.handle_generic_paths()
         self.handle_dispatcher(linked_entrypoint)
         self.handle_dependencies()
-        zipname = self.handle_package()
+        zipname = self.handle_package(bases_config)
 
         logger.info("Created '%s'.", zipname)
         return zipname
+
+    def run(self) -> List[str]:
+        """Run build process.
+
+        In managed-mode (and eventually destructive-mode), build for each bases
+        configuration which has a matching build-on to the host we are executing
+        on.  Warn for each base configuration that is incompatible.  Error if
+        unable to produce any builds for any bases configuration.
+
+        Otherwise, build the charm in the legacy mode until we have complete
+        provider support and can drop it.
+
+        :returns: List of charm files created.
+        """
+        charms: List[str] = []
+
+        if is_charmcraft_running_in_managed_mode():
+            if self.config.bases is None:
+                # XXX: 2021-06-16 Patterson temporary until we have the default base
+                raise CommandError("Bases are currently required in managed-mode.")
+
+            for i, bases_config in enumerate(self.config.bases):
+                for j, build_on in enumerate(bases_config.build_on):
+                    matches, reason = check_if_base_matches_host(build_on)
+                    if matches:
+                        logger.debug(
+                            "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
+                            i,
+                            j,
+                        )
+                        charm_name = self.build_charm(bases_config)
+                        charms.append(charm_name)
+                        break
+                    else:
+                        logger.debug(
+                            "Host does not match 'bases[%d].build-on[%d]' (%s)",
+                            i,
+                            j,
+                            reason,
+                        )
+                else:
+                    logger.warning(
+                        "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
+                        i,
+                    )
+
+            if not charms:
+                raise CommandError(
+                    "No suitable 'build-on' environment found in any 'bases' configuration."
+                )
+
+        else:
+            charm_name = self.build_charm(None)
+            charms.append(charm_name)
+
+        return charms
 
     def _load_juju_ignore(self):
         ignore = JujuIgnore(default_juju_ignore)
@@ -314,14 +377,14 @@ class Builder:
             if retcode:
                 raise CommandError("problems installing dependencies")
 
-    def handle_package(self):
+    def handle_package(self, bases_config: Optional[BasesConfiguration] = None):
         """Handle the final package creation."""
         logger.debug("Parsing the project's metadata")
         with (self.charmdir / CHARM_METADATA).open("rt", encoding="utf8") as fh:
             metadata = yaml.safe_load(fh)
 
         logger.debug("Creating the package itself")
-        zipname = format_charm_file_name(metadata["name"], None)
+        zipname = format_charm_file_name(metadata["name"], bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
             dirpath = pathlib.Path(dirpath)

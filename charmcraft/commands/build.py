@@ -168,7 +168,7 @@ class Builder:
 
         In managed-mode (and eventually destructive-mode), build for each bases
         configuration which has a matching build-on to the host we are executing
-        on.  Warn for each bases configuration that is unbuildable.  Error if
+        on.  Warn for each base configuration that is incompatible.  Error if
         unable to produce any builds for any bases configuration.
 
         Otherwise, build the charm in the legacy mode until we have complete

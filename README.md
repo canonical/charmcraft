@@ -154,7 +154,7 @@ Get the source from github with:
     virtualenv venv
     . venv/bin/activate
     pip install -r requirements.txt
-    python -m charmcraft
+    CHARMCRAFT_DEVLOPER=1 python -m charmcraft
 
 If you would like to run the tests you can do so with
 

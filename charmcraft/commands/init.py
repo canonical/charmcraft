@@ -37,6 +37,7 @@ It will setup the following tree of files and directories:
 .
 ├── metadata.yaml        - Charm operator package description
 ├── README.md            - Frontpage for your charmhub.io/charm/
+├── CONTRIBUTING.md      - Instructions for how to build and develop your charm
 ├── actions.yaml         - Day-2 action declarations, e.g. backup, restore
 ├── config.yaml          - Config schema for your operator
 ├── LICENSE              - Your charm license, we recommend Apache 2

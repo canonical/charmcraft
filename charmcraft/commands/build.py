@@ -163,7 +163,7 @@ class Builder:
         logger.info("Created '%s'.", zipname)
         return zipname
 
-    def run(self) -> List[str]:
+    def run(self, bases_indices: Optional[List[int]] = None) -> List[str]:
         """Run build process.
 
         In managed-mode (and eventually destructive-mode), build for each bases
@@ -178,12 +178,29 @@ class Builder:
         """
         charms: List[str] = []
 
+        # Validate base indices, if any.
+        if bases_indices:
+            invalid_indices = [
+                i for i in bases_indices if i < 0 or i >= len(self.config.bases)
+            ]
+            if invalid_indices:
+                raise CommandError(
+                    f"Specified base index '{invalid_indices[0]}' is out of range."
+                )
+
         if is_charmcraft_running_in_managed_mode():
             if self.config.bases is None:
                 # XXX: 2021-06-16 Patterson temporary until we have the default base
                 raise CommandError("Bases are currently required in managed-mode.")
 
             for i, bases_config in enumerate(self.config.bases):
+                if bases_indices and i not in bases_indices:
+                    logger.debug(
+                        "Ingoring 'bases[%d]' due to --base-index usage.",
+                        i,
+                    )
+                    continue
+
                 for j, build_on in enumerate(bases_config.build_on):
                     matches, reason = check_if_base_matches_host(build_on)
                     if matches:

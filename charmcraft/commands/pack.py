@@ -117,6 +117,13 @@ class PackCommand(BaseCommand):
                 "times); defaults to 'requirements.txt'"
             ),
         )
+        parser.add_argument(
+            "--bases-index",
+            action="append",
+            type=int,
+            help="Index of 'bases' configuration to build (can be used multiple "
+            "times); defaults to all",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -137,7 +144,7 @@ class PackCommand(BaseCommand):
     def _pack_charm(self, parsed_args):
         """Pack a charm."""
         # adapt arguments to use the build infrastructure
-        parsed_args = Namespace(
+        build_args = Namespace(
             **{
                 "from": self.config.project.dirpath,
                 "entrypoint": parsed_args.entrypoint,
@@ -147,10 +154,10 @@ class PackCommand(BaseCommand):
 
         # mimic the "build" command
         validator = build.Validator()
-        args = validator.process(parsed_args)
+        args = validator.process(build_args)
         logger.debug("working arguments: %s", args)
         builder = build.Builder(args, self.config)
-        builder.run()
+        builder.run(parsed_args.bases_index)
 
     def _pack_bundle(self):
         """Pack a bundle."""

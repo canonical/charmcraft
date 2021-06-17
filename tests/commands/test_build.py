@@ -567,6 +567,85 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
+def test_build_bases_index_scenarios(basic_project, monkeypatch, caplog):
+    """Test cases for base-index parameter."""
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                    run-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                  - build-on:
+                      - name: unmatched-name
+                        channel: unmatched-channel
+                        architectures: [unmatched-arch1]
+                    run-on:
+                      - name: unmatched-name
+                        channel: unmatched-channel
+                        architectures: [unmatched-arch1]
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                    run-on:
+                      - name: cross-name
+                        channel: cross-channel
+                        architectures: [cross-arch1]
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    zipnames = builder.run([0])
+    assert zipnames == [
+        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm",
+    ]
+
+    with pytest.raises(
+        CommandError,
+        match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
+    ):
+        builder.run([1])
+
+    zipnames = builder.run([2])
+    assert zipnames == [
+        "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
+    ]
+
+    # Invalid indices.
+    with pytest.raises(
+        CommandError,
+        match=r"Specified base index '3' is out of range.",
+    ):
+        builder.run([3])
+
+    with pytest.raises(
+        CommandError,
+        match=r"Specified base index '-1' is out of range.",
+    ):
+        builder.run([-1])
+
+
 @patch(
     "charmcraft.bases.get_host_as_base",
     return_value=Base(name="xname", channel="xchannel", architectures=["xarch"]),

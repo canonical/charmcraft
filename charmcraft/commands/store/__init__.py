@@ -1361,6 +1361,10 @@ class UploadResourceCommand(BaseCommand):
             credentials = store.get_oci_registry_credentials(
                 parsed_args.charm_name, parsed_args.resource_name
             )
+
+            # convert the standard OCI registry image name (which is something like
+            # 'registry.jujucharms.com/charm/45kk8smbiyn2e/redis-image') to the image
+            # name that we use internally (just remove the initial "server host" part)
             image_name = credentials.image_name.split("/", 1)[1]
             logger.debug(
                 "Uploading resource from image %s @ %s.", image_name, image_digest

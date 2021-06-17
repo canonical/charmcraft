@@ -188,18 +188,24 @@ class Builder:
                     matches, reason = check_if_base_matches_host(build_on)
                     if matches:
                         logger.debug(
-                            f"Building for 'bases[{i}]' as host matches 'build-on[{j}]'."
+                            "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
+                            i,
+                            j,
                         )
                         charm_name = self.build_charm(bases_config)
                         charms.append(charm_name)
                         break
                     else:
                         logger.debug(
-                            f"Host does not match 'bases[{i}].build-on[{j}]' ({reason})"
+                            "Host does not match 'bases[%d].build-on[%d]' (%s)",
+                            i,
+                            j,
+                            reason,
                         )
                 else:
                     logger.warning(
-                        f"No suitable 'build-on' environment found in 'bases[{i}]' configuration."
+                        "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
+                        i,
                     )
 
             if not charms:

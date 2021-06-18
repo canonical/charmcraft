@@ -1,5 +1,8 @@
 # Copyright {{ year }} {{ author }}
 # See LICENSE file for licensing details.
+
+# For a complete list of supported options, see:
+# https://discourse.charmhub.io/t/charm-metadata-v2/3674/15
 name: {{ name }}
 display-name: |
   TEMPLATE-TODO: fill out a display name for the Charmcraft store
@@ -7,19 +10,6 @@ description: |
   TEMPLATE-TODO: fill out the charm's description
 summary: |
   TEMPLATE-TODO: fill out the charm's summary
-tags: |
-  TEMPLATE-TODO: fill out the tags your charm will present
-
-# TEMPLATE-TODO: replace with any services your charm provides to other charms and the interfaces it presents them on
-provides:
-  some_functionality:
-    interface: some_interface
-
-# TEMPLATE-TODO: replace with any services your charm requires from other charms and the interfaces it finds them on
-requires:
-  some_functionality:
-    interface: some_interface
-    limit: 1
 
 # TEMPLATE-TODO: replace with containers for your workload (delete for non-k8s)
 containers:

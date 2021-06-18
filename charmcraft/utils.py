@@ -62,13 +62,13 @@ def make_executable(fh):
 def load_yaml(fpath):
     """Return the content of a YAML file."""
     if not fpath.is_file():
-        logger.debug("Couldn't find config file %s", fpath)  #FIXME
+        logger.debug("Couldn't find config file %r", str(fpath))
         return
     try:
         with fpath.open("rb") as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
-        logger.error("Failed to read/parse config file %s: %r", fpath, err)  #FIXME
+        logger.error("Failed to read/parse config file %r: %r", str(fpath), err)
         return
     return content
 
@@ -147,9 +147,9 @@ def useful_filepath(filepath):
     """
     filepath = pathlib.Path(filepath).expanduser()
     if not os.access(filepath, os.R_OK):
-        raise CommandError("Cannot access {!r}.".format(str(filepath)))  #FIXME
+        raise CommandError("Cannot access {!r}.".format(str(filepath)))
     if not filepath.is_file():
-        raise CommandError("{!r} is not a file.".format(str(filepath)))  #FIXME
+        raise CommandError("{!r} is not a file.".format(str(filepath)))
     return filepath
 
 

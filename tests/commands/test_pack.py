@@ -169,7 +169,9 @@ def test_bundle_missing_other_mandatory_file(tmp_path, config, bundle_yaml):
     # build without a README!
     with pytest.raises(CommandError) as cm:
         PackCommand("group", config).run(noargs)
-    assert str(cm.value) == "Missing mandatory file: {}.".format(tmp_path / "README.md")
+    assert str(cm.value) == "Missing mandatory file: {!r}.".format(
+        str(tmp_path / "README.md")
+    )
 
 
 def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, config):

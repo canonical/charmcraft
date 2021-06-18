@@ -157,8 +157,8 @@ def test_ended_commanderror_regular(caplog, create_message_handler):
     mh.init(mh.NORMAL)
     mh.ended_cmderror(CommandError("test controlled error"))
 
-    expected_msg = "test controlled error (full execution logs in {})".format(
-        mh._log_filepath
+    expected_msg = "test controlled error (full execution logs in {!r})".format(
+        str(mh._log_filepath)
     )
 
     # file is present, and it has the error

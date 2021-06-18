@@ -87,19 +87,21 @@ class _AuthHolder:
         """Clear stored credentials."""
         if os.path.exists(self._cookiejar_filepath):
             os.unlink(self._cookiejar_filepath)
-            logger.debug( #FIXME
-                "Credentials cleared: file '%s' removed", self._cookiejar_filepath
+            logger.debug(
+                "Credentials cleared: file %r removed", str(self._cookiejar_filepath)
             )
         else:
-            logger.debug( #FIXME
-                "Credentials file not found to be removed: '%s'",
+            logger.debug(
+                "Credentials file not found to be removed: %r",
                 self._cookiejar_filepath,
             )
 
     def _save_credentials_if_changed(self):
         """Save credentials if changed."""
         if list(self._cookiejar) != self._old_cookies:
-            logger.debug("Saving credentials to file: '%s'", self._cookiejar_filepath) #FIXME
+            logger.debug(
+                "Saving credentials to file: %r", str(self._cookiejar_filepath)
+            )
             dirpath = os.path.dirname(self._cookiejar_filepath)
             os.makedirs(dirpath, exist_ok=True)
 
@@ -118,8 +120,8 @@ class _AuthHolder:
         )
 
         if os.path.exists(self._cookiejar_filepath):
-            logger.debug( #FIXME
-                "Loading credentials from file: '%s'", self._cookiejar_filepath
+            logger.debug(
+                "Loading credentials from file: %r", str(self._cookiejar_filepath)
             )
             try:
                 self._cookiejar.load()
@@ -128,7 +130,9 @@ class _AuthHolder:
                 # will be asked to authenticate)
                 logger.warning("Failed to read credentials: %r", err)
         else:
-            logger.debug("Credentials file not found: '%s'", self._cookiejar_filepath) #FIXME
+            logger.debug(
+                "Credentials file not found: %r", str(self._cookiejar_filepath)
+            )
 
         # iterates the cookiejar (which is mutable, may change later) and get the cookies
         # for comparison after hitting the endpoint
@@ -246,7 +250,7 @@ class Client:
 
     def push(self, filepath):
         """Push the bytes from filepath to the Storage."""
-        logger.debug("Starting to push %s", filepath) #FIXME
+        logger.debug("Starting to push %r", str(filepath))
 
         def _progress(monitor):
             # XXX Facundo 2020-07-01: use a real progress bar

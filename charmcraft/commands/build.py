@@ -140,7 +140,7 @@ class Builder:
 
     def run(self):
         """Build the charm."""
-        logger.debug("Building charm in '%s'", self.buildpath) #FIXME
+        logger.debug("Building charm in %r", str(self.buildpath))
 
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
@@ -175,8 +175,9 @@ class Builder:
             dest_path.symlink_to(relative_link)
         else:
             rel_path = src_path.relative_to(self.charmdir)
-            logger.warning( #FIXME
-                "Ignoring symlink because targets outside the project: '%s'", rel_path
+            logger.warning(
+                "Ignoring symlink because targets outside the project: %r",
+                str(rel_path),
             )
 
     def handle_generic_paths(self):
@@ -203,7 +204,9 @@ class Builder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    logger.debug("Ignoring directory because of rules: '%s'", rel_path) #FIXME
+                    logger.debug(
+                        "Ignoring directory because of rules: %r", str(rel_path)
+                    )
                     ignored.append(pos)
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
@@ -222,7 +225,7 @@ class Builder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    logger.debug("Ignoring file because of rules: '%s'", rel_path) #FIXME
+                    logger.debug("Ignoring file because of rules: %r", str(rel_path))
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
                     self.create_symlink(abs_path, dest_path)
@@ -238,7 +241,7 @@ class Builder:
                             raise
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
-                    logger.debug("Ignoring file because of type: '%s'", rel_path) #FIXME
+                    logger.debug("Ignoring file because of type: %r", str(rel_path))
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
@@ -361,11 +364,11 @@ class Validator:
             dirpath = dirpath.expanduser().absolute()
 
         if not dirpath.exists():
-            raise CommandError( #FIXME
+            raise CommandError(
                 "Charm directory was not found: {!r}".format(str(dirpath))
             )
         if not dirpath.is_dir():
-            raise CommandError( #FIXME
+            raise CommandError(
                 "Charm directory is not really a directory: {!r}".format(str(dirpath))
             )
 
@@ -380,17 +383,17 @@ class Validator:
             filepath = filepath.expanduser().absolute()
 
         if not filepath.exists():
-            raise CommandError( #FIXME
+            raise CommandError(
                 "Charm entry point was not found: {!r}".format(str(filepath))
             )
         if self.basedir not in filepath.parents:
-            raise CommandError( #FIXME
+            raise CommandError(
                 "Charm entry point must be inside the project: {!r}".format(
                     str(filepath)
                 )
             )
         if not os.access(filepath, os.X_OK):
-            raise CommandError( #FIXME
+            raise CommandError(
                 "Charm entry point must be executable: {!r}".format(str(filepath))
             )
         return filepath
@@ -409,7 +412,7 @@ class Validator:
         filepaths = [x.expanduser().absolute() for x in filepaths]
         for fpath in filepaths:
             if not fpath.exists():
-                raise CommandError( #FIXME
+                raise CommandError(
                     "the requirements file was not found: {!r}".format(str(fpath))
                 )
         return filepaths

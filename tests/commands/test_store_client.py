@@ -587,7 +587,7 @@ def test_client_push_simple_ok(caplog, tmp_path, capsys):
 
     # check proper logs
     expected = [
-        "Starting to push {}".format(str(test_filepath)),
+        "Starting to push {!r}".format(str(test_filepath)),
         "Uploading bytes ended, id test-upload-id",
     ]
     assert expected == [rec.message for rec in caplog.records]

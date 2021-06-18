@@ -52,7 +52,7 @@ def get_paths_to_include(config):
     for fname in MANDATORY_FILES:
         fpath = dirpath / fname
         if not fpath.exists():
-            raise CommandError("Missing mandatory file: {}.".format(fpath)) #FIXME
+            raise CommandError("Missing mandatory file: {!r}.".format(str(fpath)))
         allpaths.add(fpath)
 
     # the extra files (relative paths)
@@ -158,14 +158,16 @@ class PackCommand(BaseCommand):
         bundle_filepath = self.config.project.dirpath / "bundle.yaml"
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
-            raise CommandError( #FIXME
-                "Missing or invalid main bundle file: '{}'.".format(bundle_filepath)
+            raise CommandError(
+                "Missing or invalid main bundle file: {!r}.".format(
+                    str(bundle_filepath)
+                )
             )
         bundle_name = bundle_config.get("name")
         if not bundle_name:
-            raise CommandError( #FIXME
+            raise CommandError(
                 "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
-                "file '{}'.".format(bundle_filepath)
+                "file {!r}.".format(str(bundle_filepath))
             )
 
         # so far 'pack' works for bundles only (later this will operate also on charms)
@@ -183,4 +185,4 @@ class PackCommand(BaseCommand):
             build_zip(zipname, project.dirpath, paths)
         finally:
             manifest_filepath.unlink()
-        logger.info("Created '%s'.", zipname) #FIXME
+        logger.info("Created %r.", str(zipname))

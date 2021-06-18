@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,12 +24,14 @@ import subprocess
 import sys
 import zipfile
 from collections import namedtuple
+from textwrap import dedent
 from unittest.mock import patch, call
 
 import pytest
 import yaml
 
-from charmcraft.config import Base, BasesConfiguration
+from charmcraft.bases import get_host_as_base
+from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
@@ -43,6 +45,35 @@ from charmcraft.commands.build import (
     polite_exec,
     relativise,
 )
+
+
+@pytest.fixture
+def basic_project(tmp_path):
+    """Create a basic Charmcraft project."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    # the metadata
+    metadata_data = {"name": "name-from-metadata"}
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_raw = yaml.dump(metadata_data).encode("ascii")
+    metadata_file.write_bytes(metadata_raw)
+
+    # a lib dir
+    lib_dir = tmp_path / "lib"
+    lib_dir.mkdir()
+    ops_lib_dir = lib_dir / "ops"
+    ops_lib_dir.mkdir()
+    ops_stuff = ops_lib_dir / "stuff.txt"
+    ops_stuff.write_bytes(b"ops stuff")
+
+    # simple source code
+    src_dir = tmp_path / "src"
+    src_dir.mkdir()
+    charm_script = src_dir / "charm.py"
+    charm_script.write_bytes(b"all the magic")
+
+    yield tmp_path
 
 
 # --- Validator tests
@@ -379,48 +410,28 @@ def test_politeexec_crashed(caplog, tmp_path):
 # --- (real) build tests
 
 
-def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
+def test_build_basic_complete_structure(basic_project, monkeypatch, config):
     """Integration test: a simple structure with custom lib and normal src dir."""
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    # the metadata (save it and restore to later check)
-    metadata_data = {"name": "name-from-metadata"}
-    metadata_file = tmp_path / "metadata.yaml"
-    metadata_raw = yaml.dump(metadata_data).encode("ascii")
-    with metadata_file.open("wb") as fh:
-        fh.write(metadata_raw)
-
-    # a lib dir
-    lib_dir = tmp_path / "lib"
-    lib_dir.mkdir()
-    ops_lib_dir = lib_dir / "ops"
-    ops_lib_dir.mkdir()
-    ops_stuff = ops_lib_dir / "stuff.txt"
-    with ops_stuff.open("wb") as fh:
-        fh.write(b"ops stuff")
-
-    # simple source code
-    src_dir = tmp_path / "src"
-    src_dir.mkdir()
-    charm_script = src_dir / "charm.py"
-    with charm_script.open("wb") as fh:
-        fh.write(b"all the magic")
-
-    monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
+    monkeypatch.chdir(basic_project)  # so the zip file is left in the temp dir
     builder = Builder(
         {
-            "from": tmp_path,
-            "entrypoint": charm_script,
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
             "requirement": [],
         },
         config,
     )
-    zipname = builder.run()
+
+    # save original metadata and verify later
+    metadata_file = basic_project / "metadata.yaml"
+    metadata_raw = metadata_file.read_bytes()
+
+    zipnames = builder.run()
+    assert zipnames == ["name-from-metadata.charm"]
 
     # check all is properly inside the zip
     # contents!), and all relative to build dir
-    zf = zipfile.ZipFile(zipname)
+    zf = zipfile.ZipFile(zipnames[0])
     assert zf.read("metadata.yaml") == metadata_raw
     assert zf.read("src/charm.py") == b"all the magic"
     dispatch = DISPATCH_CONTENT.format(entrypoint_relative_path="src/charm.py").encode(
@@ -436,6 +447,201 @@ def test_build_basic_complete_structure(tmp_path, monkeypatch, config):
     manifest = yaml.safe_load(zf.read("manifest.yaml"))
     assert (
         manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
+    )
+
+
+def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
+    """Integration test: a simple structure with custom lib and normal src dir."""
+    host_base = get_host_as_base()
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                    run-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                """
+        )
+    )
+
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    # Legacy build.
+    zipnames = builder.run()
+    assert zipnames == ["name-from-metadata.charm"]
+
+    # Managed bases build.
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    zipnames = builder.run()
+
+    host_arch = host_base.architectures[0]
+    assert zipnames == [
+        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
+    ]
+
+
+def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog):
+    """Build multiple charms for multiple matching bases, skipping one unmatched config."""
+    host_base = get_host_as_base()
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                    run-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                  - build-on:
+                      - name: unmatched-name
+                        channel: unmatched-channel
+                        architectures: [unmatched-arch1]
+                    run-on:
+                      - name: unmatched-name
+                        channel: unmatched-channel
+                        architectures: [unmatched-arch1]
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                    run-on:
+                      - name: cross-name
+                        channel: cross-channel
+                        architectures: [cross-arch1]
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    # Legacy build.
+    zipnames = builder.run()
+    assert zipnames == ["name-from-metadata.charm"]
+
+    # Managed bases build.
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    zipnames = builder.run()
+
+    host_arch = host_base.architectures[0]
+    assert zipnames == [
+        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm",
+        "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
+    ]
+
+    records = [r.message for r in caplog.records]
+
+    assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
+    assert (
+        "No suitable 'build-on' environment found in 'bases[1]' configuration."
+        in records
+    )
+    assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
+
+
+@patch(
+    "charmcraft.bases.get_host_as_base",
+    return_value=Base(name="xname", channel="xchannel", architectures=["xarch"]),
+)
+def test_build_error_no_match_with_charmcraft_yaml(
+    mock_host_base, basic_project, monkeypatch, caplog
+):
+    """Error when no charms are buildable with host base, verifying each mismatched reason."""
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            """\
+                type: charm
+                bases:
+                  - name: unmatched-name
+                    channel: xchannel
+                    architectures: [xarch]
+                  - name: xname
+                    channel: unmatched-channel
+                    architectures: [xarch]
+                  - name: xname
+                    channel: xchannel
+                    architectures: [unmatched-arch1, unmatched-arch2]
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    # Legacy build.
+    zipnames = builder.run()
+    assert zipnames == ["name-from-metadata.charm"]
+
+    # Managed bases build.
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with pytest.raises(
+        CommandError,
+        match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
+    ):
+        builder.run()
+
+    records = [r.message for r in caplog.records]
+
+    assert (
+        "Host does not match 'bases[0].build-on[0]' "
+        "(name 'unmatched-name' does not match host 'xname')"
+    ) in records
+    assert (
+        "No suitable 'build-on' environment found in 'bases[0]' configuration."
+        in records
+    )
+    assert (
+        "Host does not match 'bases[1].build-on[0]' "
+        "(channel 'unmatched-channel' does not match host 'xchannel')"
+    ) in records
+    assert (
+        "No suitable 'build-on' environment found in 'bases[1]' configuration."
+        in records
+    )
+    assert (
+        "Host does not match 'bases[2].build-on[0]' "
+        "(host architecture 'xarch' not in base "
+        "architectures ['unmatched-arch1', 'unmatched-arch2'])"
+    ) in records
+    assert (
+        "No suitable 'build-on' environment found in 'bases[2]' configuration."
+        in records
     )
 
 

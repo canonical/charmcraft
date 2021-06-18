@@ -18,12 +18,11 @@
 
 import datetime
 import hashlib
-import json
 import logging
 import pathlib
 import zipfile
 from argparse import Namespace, ArgumentParser
-from unittest.mock import patch, call, MagicMock
+from unittest.mock import patch, call, MagicMock, ANY
 
 import dateutil.parser
 import pytest
@@ -42,8 +41,6 @@ from charmcraft.commands.store import (
     ListRevisionsCommand,
     LoginCommand,
     LogoutCommand,
-    OCIImageSpec,
-    OCIRegistry,
     PublishLibCommand,
     RegisterBundleNameCommand,
     RegisterCharmNameCommand,
@@ -55,13 +52,13 @@ from charmcraft.commands.store import (
     _get_lib_info,
     get_name_from_metadata,
     get_name_from_zip,
-    oci_image_spec,
 )
 from charmcraft.commands.store.store import (
     Channel,
     Entity,
     Error,
     Library,
+    RegistryCredentials,
     Release,
     Resource,
     ResourceRevision,
@@ -2730,7 +2727,7 @@ def test_uploadresource_options_image_type(config):
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "image"]
     assert isinstance(action.type, SingleOptionEnsurer)
-    assert action.type.converter is oci_image_spec
+    assert action.type.converter is str
 
 
 @pytest.mark.parametrize(
@@ -2801,21 +2798,30 @@ def test_uploadresource_filepath_call_ok(caplog, store_mock, config, tmp_path):
         call.upload_resource("mycharm", "myresource", "file", test_resource)
     ]
     expected = [
-        "Uploading resource directly from file {!r}".format(str(test_resource)),
+        "Uploading resource directly from file {!r}.".format(str(test_resource)),
         "Revision 7 created of resource 'myresource' for charm 'mycharm'",
     ]
     assert expected == [rec.message for rec in caplog.records]
     assert test_resource.exists()  # provided by the user, don't touch it
 
 
-def test_uploadresource_image_call_ok(caplog, store_mock, config, tmp_path):
-    """Simple upload, success result."""
+def test_uploadresource_image_call_already_uploaded(caplog, store_mock, config):
+    """Upload an oci-image resource, the image itself already being in the registry."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    # fake credentials for the charm/resource, and the final json content
+    store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
+        username="testusername",
+        password="testpassword",
+        image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
+    )
+
+    test_json_content = "from charmhub we came, from charmhub we shall return"
+    store_mock.get_oci_image_blob.return_value = test_json_content
 
     # hack into the store mock to save for later the uploaded resource bytes
     uploaded_resource_content = None
     uploaded_resource_filepath = None
-    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
 
     def interceptor(charm_name, resource_name, resource_type, resource_filepath):
         """Intercept the call to save real content (and validate params)."""
@@ -2827,38 +2833,190 @@ def test_uploadresource_image_call_ok(caplog, store_mock, config, tmp_path):
         assert charm_name == "mycharm"
         assert resource_name == "myresource"
         assert resource_type == "oci-image"
-        return store_response
+        return Uploaded(ok=True, status=200, revision=7, errors=[])
 
     store_mock.upload_resource.side_effect = interceptor
 
-    spec = OCIImageSpec("test-orga", "test-image", "test-tag")
+    # test
+    original_image_digest = "test-digest-given-by-user"
     args = Namespace(
-        charm_name="mycharm", resource_name="myresource", filepath=None, image=spec
+        charm_name="mycharm",
+        resource_name="myresource",
+        filepath=None,
+        image=original_image_digest,
     )
-
     with patch(
         "charmcraft.commands.store.ImageHandler", autospec=True
     ) as im_class_mock:
-        im_class_mock.return_value = im_mock = MagicMock()
-        im_mock.get_destination_url.return_value = "test-final-url"
-        UploadResourceCommand("group", config).run(args)
+        with patch(
+            "charmcraft.commands.store.OCIRegistry", autospec=True
+        ) as reg_class_mock:
+            reg_class_mock.return_value = reg_mock = MagicMock()
+            im_class_mock.return_value = im_mock = MagicMock()
+            im_mock.check_in_registry.return_value = True
+            UploadResourceCommand("group", config).run(args)
+
+    # validate how OCIRegistry was instantiated
+    assert reg_class_mock.mock_calls == [
+        call(
+            config.charmhub.registry_url,
+            "charm/charm-id/test-image-name",
+            username="testusername",
+            password="testpassword",
+        )
+    ]
 
     # validate how ImageHandler was used
-    registry = OCIRegistry("https://registry.hub.docker.com", "test-orga/test-image")
     assert im_class_mock.mock_calls == [
-        call(registry),
-        call().get_destination_url("test-tag"),
+        call(reg_mock),
+        call().check_in_registry(original_image_digest),
     ]
-    assert im_mock.mock_calls == [call.get_destination_url("test-tag")]
 
     # check that the uploaded file is fine and that was cleaned
-    assert json.loads(uploaded_resource_content) == {"ImageName": "test-final-url"}
-    assert not uploaded_resource_filepath.exists()  # temporary! has to be cleaned
+    assert uploaded_resource_content == test_json_content
+    assert not uploaded_resource_filepath.exists()  # temporary! shall be cleaned
+
+    assert store_mock.mock_calls == [
+        call.get_oci_registry_credentials("mycharm", "myresource"),
+        call.get_oci_image_blob("mycharm", "myresource", original_image_digest),
+        call.upload_resource(
+            "mycharm", "myresource", "oci-image", uploaded_resource_filepath
+        ),
+    ]
 
     expected = [
-        "Uploading resource from image {} at Dockerhub".format(spec),
-        "Resource URL: test-final-url",
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+        (
+            "Uploading resource from image "
+            "charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Using OCI image from Canonical's registry.",
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_uploadresource_image_call_upload_from_local(caplog, store_mock, config):
+    """Upload an oci-image resource, the image is upload from local to Canonical's registry."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    # fake credentials for the charm/resource, the final json content, and the upload result
+    store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
+        username="testusername",
+        password="testpassword",
+        image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
+    )
+
+    test_json_content = "from charmhub we came, from charmhub we shall return"
+    store_mock.get_oci_image_blob.return_value = test_json_content
+
+    store_mock.upload_resource.return_value = Uploaded(
+        ok=True, status=200, revision=7, errors=[]
+    )
+
+    # test
+    original_image_digest = "test-digest-given-by-user"
+    args = Namespace(
+        charm_name="mycharm",
+        resource_name="myresource",
+        filepath=None,
+        image=original_image_digest,
+    )
+    with patch(
+        "charmcraft.commands.store.ImageHandler", autospec=True
+    ) as im_class_mock:
+        with patch(
+            "charmcraft.commands.store.OCIRegistry", autospec=True
+        ) as reg_class_mock:
+            reg_class_mock.return_value = reg_mock = MagicMock()
+            im_class_mock.return_value = im_mock = MagicMock()
+
+            # not in the registry, and then uploaded ok
+            im_mock.check_in_registry.return_value = False
+            new_image_digest = "new-digest-after-upload"
+            im_mock.upload_from_local.return_value = new_image_digest
+
+            UploadResourceCommand("group", config).run(args)
+
+    # validate how ImageHandler was used
+    assert im_class_mock.mock_calls == [
+        call(reg_mock),
+        call().check_in_registry(original_image_digest),
+        call().upload_from_local(original_image_digest),
+    ]
+
+    assert store_mock.mock_calls == [
+        call.get_oci_registry_credentials("mycharm", "myresource"),
+        call.get_oci_image_blob("mycharm", "myresource", new_image_digest),
+        call.upload_resource("mycharm", "myresource", "oci-image", ANY),
+    ]
+
+    expected = [
+        (
+            "Uploading resource from image "
+            "charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Remote image not found, uploading from local registry.",
+        "Image uploaded, new remote digest: new-digest-after-upload.",
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_uploadresource_image_call_missing_everywhere(caplog, store_mock, config):
+    """Upload an oci-image resource, but the image is not found remote nor locally."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    # fake credentials for the charm/resource, the final json content, and the upload result
+    store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
+        username="testusername",
+        password="testpassword",
+        image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
+    )
+
+    # test
+    original_image_digest = "test-digest-given-by-user"
+    args = Namespace(
+        charm_name="mycharm",
+        resource_name="myresource",
+        filepath=None,
+        image=original_image_digest,
+    )
+    with patch(
+        "charmcraft.commands.store.ImageHandler", autospec=True
+    ) as im_class_mock:
+        with patch(
+            "charmcraft.commands.store.OCIRegistry", autospec=True
+        ) as reg_class_mock:
+            reg_class_mock.return_value = reg_mock = MagicMock()
+            im_class_mock.return_value = im_mock = MagicMock()
+
+            # not in the remote registry, not locally either
+            im_mock.check_in_registry.return_value = False
+            im_mock.upload_from_local.return_value = None
+
+            UploadResourceCommand("group", config).run(args)
+
+    # validate how ImageHandler was used
+    assert im_class_mock.mock_calls == [
+        call(reg_mock),
+        call().check_in_registry(original_image_digest),
+        call().upload_from_local(original_image_digest),
+    ]
+
+    assert store_mock.mock_calls == [
+        call.get_oci_registry_credentials("mycharm", "myresource"),
+    ]
+
+    expected = [
+        (
+            "Uploading resource from "
+            "image charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Remote image not found, uploading from local registry.",
+        (
+            "Image with digest test-digest-given-by-user is not available in "
+            "the Canonical's registry nor locally."
+        ),
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -2887,50 +3045,6 @@ def test_uploadresource_call_error(caplog, store_mock, config, tmp_path):
         "- broken: other long error text",
     ]
     assert expected == [rec.message for rec in caplog.records]
-
-
-@pytest.mark.parametrize(
-    "source,expected",
-    [
-        ("testname", OCIImageSpec("library", "testname", "latest")),
-        ("testorga/testname", OCIImageSpec("testorga", "testname", "latest")),
-        ("testname:sometag", OCIImageSpec("library", "testname", "sometag")),
-        ("testorga/testname:sometag", OCIImageSpec("testorga", "testname", "sometag")),
-        ("testname@somedigest", OCIImageSpec("library", "testname", "somedigest")),
-        (
-            "testorga/testname@somedigest",
-            OCIImageSpec("testorga", "testname", "somedigest"),
-        ),
-    ],
-)
-def test_uploadresource_ociimagespec_ok(source, expected):
-    """Check oci image spec format, different good combinations."""
-    result = oci_image_spec(source)
-    assert result == expected
-
-
-@pytest.mark.parametrize(
-    "source,partial_error_message",
-    [
-        ("testname:tag@digest", "Cannot specify both tag and digest"),
-        ("testname@digest:tag", "Cannot specify both tag and digest"),
-        ("@digest:tag", "Cannot specify both tag and digest"),
-        ("", "The image name is mandatory"),
-        (":tag", "The image name is mandatory"),
-        (
-            "server/testorga/name",
-            "The registry server cannot be specified as part of the image",
-        ),
-    ],
-)
-def test_uploadresource_ociimagespec_error(source, partial_error_message):
-    """Check oci image spec format, different bad combinations."""
-    error_message = partial_error_message + (
-        " (the format is [organization/]name[:tag|@digest])."
-    )
-    with pytest.raises(CommandError) as cm:
-        oci_image_spec(source)
-    assert str(cm.value) == error_message
 
 
 # -- tests for list resource revisions command

@@ -121,7 +121,7 @@ _charmcraft()
                     _filedir
                     ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath --image" -- "$cur") )
                     ;;
             esac
             ;;

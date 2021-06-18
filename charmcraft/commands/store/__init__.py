@@ -18,7 +18,6 @@
 
 import ast
 import hashlib
-import json
 import logging
 import pathlib
 import string
@@ -55,7 +54,6 @@ LibData = namedtuple(
     "LibData",
     "lib_id api patch content content_hash full_name path lib_name charm_name",
 )
-OCIImageSpec = namedtuple("OCIImageSpec", "organization name reference")
 
 # The token used in the 'init' command (as bytes for easier comparison)
 INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
@@ -1301,43 +1299,6 @@ class ListResourcesCommand(BaseCommand):
             logger.info(line)
 
 
-class _BadOCIImageSpecError(CommandError):
-    """Subclass to provide a specific error for a bad OCI Image specification."""
-
-    def __init__(self, base_error):
-        super().__init__(
-            base_error + " (the format is [organization/]name[:tag|@digest])."
-        )
-
-
-def oci_image_spec(value):
-    """Build a full OCI image spec, using defaults for non specified parts."""
-    # separate the organization
-    if "/" in value:
-        if value.count("/") > 1:
-            raise _BadOCIImageSpecError(
-                "The registry server cannot be specified as part of the image"
-            )
-        orga, value = value.split("/")
-    else:
-        orga = "library"
-
-    # get the digest XOR tag
-    if "@" in value and ":" in value:
-        raise _BadOCIImageSpecError("Cannot specify both tag and digest")
-    if "@" in value:
-        name, reference = value.split("@")
-    elif ":" in value:
-        name, reference = value.split(":")
-    else:
-        name = value
-        reference = "latest"
-
-    if not name:
-        raise _BadOCIImageSpecError("The image name is mandatory")
-    return OCIImageSpec(organization=orga, name=name, reference=reference)
-
-
 class UploadResourceCommand(BaseCommand):
     """Upload a resource to Charmhub."""
 
@@ -1352,12 +1313,10 @@ class UploadResourceCommand(BaseCommand):
         in its metadata (in a previously uploaded to Charmhub revision).
 
         The resource can be a file from your computer (use the '--filepath'
-        option) or an OCI Image (use the '--image' option).
-
-        The OCI image description uses the [organization/]name[:tag|@digest]
-        form. The name is mandatory but organization and reference (a digest
-        or a tag) are optional, defaulting to 'library' and 'latest'
-        correspondingly.
+        option) or an OCI Image (use the '--image' option to indicate the
+        image digest), which can be already in Canonical's registry and
+        used directly, or locally in your computer and will be uploaded
+        and used.
 
         Upload will take you through login if needed.
     """
@@ -1382,8 +1341,8 @@ class UploadResourceCommand(BaseCommand):
         )
         group.add_argument(
             "--image",
-            type=SingleOptionEnsurer(oci_image_spec),
-            help="The image specification with the [organization/]name[:tag|@digest] form",
+            type=SingleOptionEnsurer(str),
+            help="The digest of the OCI image",
         )
 
     def run(self, parsed_args):
@@ -1394,28 +1353,58 @@ class UploadResourceCommand(BaseCommand):
             resource_filepath = parsed_args.filepath
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
-            logger.debug("Uploading resource directly from file %s", resource_filepath)
-        elif parsed_args.image:
             logger.debug(
-                "Uploading resource from image %s at Dockerhub", parsed_args.image
+                "Uploading resource directly from file %r.", str(resource_filepath)
             )
-            full_image_name = "/".join(
-                (parsed_args.image.organization, parsed_args.image.name)
+        elif parsed_args.image:
+            image_digest = parsed_args.image
+            credentials = store.get_oci_registry_credentials(
+                parsed_args.charm_name, parsed_args.resource_name
             )
-            registry = OCIRegistry("https://registry.hub.docker.com", full_image_name)
-            ih = ImageHandler(registry)
-            final_resource_url = ih.get_destination_url(parsed_args.image.reference)
-            logger.debug("Resource URL: %s", final_resource_url)
-            resource_type = "oci-image"
 
-            # create a JSON pointing to the unique image URL (to be uploaded to Charmhub)
-            resource_metadata = {
-                "ImageName": final_resource_url,
-            }
+            # convert the standard OCI registry image name (which is something like
+            # 'registry.jujucharms.com/charm/45kk8smbiyn2e/redis-image') to the image
+            # name that we use internally (just remove the initial "server host" part)
+            image_name = credentials.image_name.split("/", 1)[1]
+            logger.debug(
+                "Uploading resource from image %s @ %s.", image_name, image_digest
+            )
+
+            # build the image handler
+            registry = OCIRegistry(
+                self.config.charmhub.registry_url,
+                image_name,
+                username=credentials.username,
+                password=credentials.password,
+            )
+            ih = ImageHandler(registry)
+
+            # check if the specific image is already in Canonical's registry
+            already_uploaded = ih.check_in_registry(image_digest)
+            if already_uploaded:
+                logger.info("Using OCI image from Canonical's registry.")
+            else:
+                # upload it from local registry
+                logger.info("Remote image not found, uploading from local registry.")
+                image_digest = ih.upload_from_local(image_digest)
+                if image_digest is None:
+                    logger.info(
+                        "Image with digest %s is not available in the Canonical's registry "
+                        "nor locally.",
+                        parsed_args.image,
+                    )
+                    return
+                logger.info("Image uploaded, new remote digest: %s.", image_digest)
+
+            # all is green, get the blob to upload to Charmhub
+            content = store.get_oci_image_blob(
+                parsed_args.charm_name, parsed_args.resource_name, image_digest
+            )
             _, tname = tempfile.mkstemp(prefix="image-resource", suffix=".json")
             resource_filepath = pathlib.Path(tname)
             resource_filepath_is_temp = True
-            resource_filepath.write_text(json.dumps(resource_metadata))
+            resource_filepath.write_text(content)
+            resource_type = ResourceType.oci_image
 
         result = store.upload_resource(
             parsed_args.charm_name,
@@ -1430,7 +1419,7 @@ class UploadResourceCommand(BaseCommand):
 
         if result.ok:
             logger.info(
-                "Revision %s created of resource %r for charm %r",
+                "Revision %s created of resource %r for charm %r.",
                 result.revision,
                 parsed_args.resource_name,
                 parsed_args.charm_name,

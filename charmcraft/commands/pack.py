@@ -149,6 +149,7 @@ class PackCommand(BaseCommand):
                 "from": self.config.project.dirpath,
                 "entrypoint": parsed_args.entrypoint,
                 "requirement": parsed_args.requirement,
+                "bases_indices": parsed_args.bases_index,
             }
         )
 

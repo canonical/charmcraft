@@ -445,6 +445,7 @@ def test_charm_parameters_validator(config, tmp_path):
                 "from": tmp_path,
                 "requirement": "test-reqs",
                 "entrypoint": "test-epoint",
+                "bases_indices": [],
             }
         )
     )

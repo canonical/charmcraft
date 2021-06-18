@@ -19,6 +19,7 @@ import filecmp
 import logging
 import os
 import pathlib
+import re
 import socket
 import subprocess
 import sys
@@ -168,6 +169,15 @@ def test_validator_from_isdir(tmp_path):
     expected_msg = "Charm directory is not really a directory: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_from(testfile)
+
+
+@pytest.mark.parametrize("bases_indices", [[-1], [0, -1], [0, 1, -1]])
+def test_validator_bases_index_invalid(bases_indices):
+    """'entrypoint' param: checks that the file exists."""
+    validator = Validator()
+    expected_msg = re.escape("Bases index '-1' is invalid (must be >= 0).")
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_bases_indices(bases_indices)
 
 
 def test_validator_entrypoint_simple(tmp_path):
@@ -635,15 +645,9 @@ def test_build_bases_index_scenarios(basic_project, monkeypatch, caplog):
     # Invalid indices.
     with pytest.raises(
         CommandError,
-        match=r"Specified base index '3' is out of range.",
+        match=r"No bases configuration found for specified index '3'.",
     ):
         builder.run([3])
-
-    with pytest.raises(
-        CommandError,
-        match=r"Specified base index '-1' is out of range.",
-    ):
-        builder.run([-1])
 
 
 @patch(

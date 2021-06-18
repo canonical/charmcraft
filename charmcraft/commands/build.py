@@ -163,6 +163,19 @@ class Builder:
         logger.info("Created '%s'.", zipname)
         return zipname
 
+    def validate_bases_indices(self, bases_indices: List[int]) -> None:
+        """Validate the indices for bases.
+
+        :param bases_indeces: List of indices.
+
+        :raises CommandError: if invalid.
+        """
+        for base_index in bases_indices:
+            if base_index >= len(self.config.bases):
+                raise CommandError(
+                    f"No bases configuration found for specified index '{base_index}'."
+                )
+
     def run(self, bases_indices: Optional[List[int]] = None) -> List[str]:
         """Run build process.
 
@@ -178,15 +191,9 @@ class Builder:
         """
         charms: List[str] = []
 
-        # Validate base indices, if any.
+        # Validate base indices in advance, if any.
         if bases_indices:
-            invalid_indices = [
-                i for i in bases_indices if i < 0 or i >= len(self.config.bases)
-            ]
-            if invalid_indices:
-                raise CommandError(
-                    f"Specified base index '{invalid_indices[0]}' is out of range."
-                )
+            self.validate_bases_indices(bases_indices)
 
         if is_charmcraft_running_in_managed_mode():
             if self.config.bases is None:
@@ -420,6 +427,7 @@ class Validator:
         "from",  # this needs to be processed first, as it's a base dir to find other files
         "entrypoint",
         "requirement",
+        "bases_indices",
     ]
 
     def __init__(self):
@@ -429,9 +437,21 @@ class Validator:
         """Process the received options."""
         result = {}
         for opt in self._options:
-            meth = getattr(self, "validate_" + opt)
+            print(parsed_args)
+            meth = getattr(self, "validate_" + opt.replace("-", "_"))
             result[opt] = meth(getattr(parsed_args, opt, None))
         return result
+
+    def validate_bases_indices(self, bases_indices):
+        """Validate that bases index is valid."""
+        if not bases_indices:
+            return
+
+        for bases_index in bases_indices:
+            if bases_index < 0:
+                raise CommandError(
+                    f"Bases index '{bases_index}' is invalid (must be >= 0)."
+                )
 
     def validate_from(self, dirpath):
         """Validate that the charm dir is there and yes, a directory."""

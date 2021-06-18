@@ -2799,7 +2799,7 @@ def test_uploadresource_filepath_call_ok(caplog, store_mock, config, tmp_path):
     ]
     expected = [
         "Uploading resource directly from file {!r}.".format(str(test_resource)),
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
     ]
     assert expected == [rec.message for rec in caplog.records]
     assert test_resource.exists()  # provided by the user, don't touch it

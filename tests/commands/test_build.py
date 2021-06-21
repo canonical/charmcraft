@@ -26,26 +26,26 @@ import sys
 import zipfile
 from collections import namedtuple
 from textwrap import dedent
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 import pytest
 import yaml
 
 from charmcraft.bases import get_host_as_base
-from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
-    Builder,
     CHARM_METADATA,
     DISPATCH_CONTENT,
     DISPATCH_FILENAME,
     VENV_DIRNAME,
+    Builder,
     Validator,
     format_charm_file_name,
     polite_exec,
     relativise,
 )
+from charmcraft.config import Base, BasesConfiguration, load
 
 
 @pytest.fixture
@@ -480,6 +480,25 @@ def test_build_basic_complete_structure(basic_project, monkeypatch, config):
     )
 
 
+def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
+    """Validate error if trying to build project without metadata.yaml."""
+    metadata = basic_project / CHARM_METADATA
+    metadata.unlink()
+
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+
+    with pytest.raises(CommandError, match=r"Missing mandatory metadata.yaml."):
+        Builder(
+            {
+                "from": basic_project,
+                "entrypoint": basic_project / "src" / "charm.py",
+                "requirement": [],
+            },
+            config,
+        )
+
+
 def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
     """Integration test: a simple structure with custom lib and normal src dir."""
     host_base = get_host_as_base()
@@ -749,7 +768,8 @@ def test_build_generics_simple_files(tmp_path, config):
     build_dir.mkdir()
 
     metadata = tmp_path / CHARM_METADATA
-    metadata.touch()
+    metadata.write_text("name: crazycharm")
+
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
 
@@ -782,6 +802,8 @@ def test_build_generics_simple_dir(tmp_path, config):
     build_dir.mkdir()
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
 
     somedir = tmp_path / "somedir"
     somedir.mkdir(mode=0o700)
@@ -806,6 +828,8 @@ def test_build_generics_ignored_file(tmp_path, caplog, config):
     caplog.set_level(logging.DEBUG)
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
 
     # create two files (and the needed entrypoint)
     file1 = tmp_path / "file1.txt"
@@ -840,6 +864,8 @@ def test_build_generics_ignored_dir(tmp_path, caplog, config):
     caplog.set_level(logging.DEBUG)
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
 
     # create two files (and the needed entrypoint)
     dir1 = tmp_path / "dir1"
@@ -888,6 +914,8 @@ def _test_build_generics_tree(tmp_path, caplog, config, *, expect_hardlinks):
     #    └─ dir5
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     file1 = tmp_path / "file1.txt"
     file1.touch()
     dir1 = tmp_path / "dir1"
@@ -979,6 +1007,8 @@ def test_build_generics_symlink_file(tmp_path, config):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
     the_symlink = tmp_path / "somehook.py"
@@ -1006,6 +1036,8 @@ def test_build_generics_symlink_dir(tmp_path, config):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
     somedir = tmp_path / "somedir"
@@ -1039,6 +1071,9 @@ def test_build_generics_symlink_deep(tmp_path, config):
     """Correctly re-links a symlink across deep dirs."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
 
@@ -1075,6 +1110,8 @@ def test_build_generics_symlink_file_outside(tmp_path, caplog, config):
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
+    metadata = project_dir / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = project_dir / BUILD_DIRNAME
     build_dir.mkdir()
     entrypoint = project_dir / "crazycharm.py"
@@ -1107,6 +1144,8 @@ def test_build_generics_symlink_directory_outside(tmp_path, caplog, config):
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
+    metadata = project_dir / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = project_dir / BUILD_DIRNAME
     build_dir.mkdir()
     entrypoint = project_dir / "crazycharm.py"
@@ -1140,6 +1179,8 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch, config
     # will be too long for mac os
     monkeypatch.chdir(tmp_path)
 
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = pathlib.Path(BUILD_DIRNAME)
     build_dir.mkdir()
     entrypoint = pathlib.Path("crazycharm.py")
@@ -1166,6 +1207,8 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch, config
 
 def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
     """The dispatcher script is properly built."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1191,6 +1234,8 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
 
 def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
     """The already included dispatcher script is left untouched."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1214,6 +1259,8 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
 
 def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path, config):
     """The mandatory classic hooks are implemented ok if not present."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1240,6 +1287,8 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path, config):
 
 def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path, config):
     """The already included mandatory classic hooks are left untouched."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1272,6 +1321,8 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(
     """Hooks that are just a symlink to the entrypoint are replaced."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1309,6 +1360,8 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(
 
 def test_build_dependencies_virtualenv_simple(tmp_path, config):
     """A virtualenv is created with the specified requirements file."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1352,6 +1405,8 @@ def test_build_dependencies_virtualenv_simple(tmp_path, config):
 
 def test_build_dependencies_needs_system(tmp_path, config):
     """pip3 is called with --system when pip3 needs it."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1387,6 +1442,8 @@ def test_build_dependencies_needs_system(tmp_path, config):
 
 def test_build_dependencies_virtualenv_multiple(tmp_path, config):
     """A virtualenv is created with multiple requirements files."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1422,6 +1479,8 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, config):
 
 def test_build_dependencies_virtualenv_none(tmp_path, config):
     """The virtualenv is NOT created if no needed."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1442,6 +1501,8 @@ def test_build_dependencies_virtualenv_none(tmp_path, config):
 
 def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
     """Process is properly interrupted if using pip fails."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1464,6 +1525,8 @@ def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
 
 def test_build_dependencies_virtualenv_error_installing(tmp_path, config):
     """Process is properly interrupted if virtualenv creation fails."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1583,6 +1646,8 @@ def test_build_package_name(tmp_path, monkeypatch, config):
 
 def test_builder_without_jujuignore(tmp_path, config):
     """Without a .jujuignore we still have a default set of ignores"""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1602,6 +1667,8 @@ def test_builder_without_jujuignore(tmp_path, config):
 
 def test_builder_with_jujuignore(tmp_path, config):
     """With a .jujuignore we will include additional ignores."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
     with (tmp_path / ".jujuignore").open("w", encoding="utf-8") as ignores:

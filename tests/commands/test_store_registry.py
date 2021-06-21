@@ -35,7 +35,6 @@ from charmcraft.commands.store.registry import (
     ImageHandler,
     LAYER_MIMETYPE,
     LocalDockerdInterface,
-    MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
     OCIRegistry,
     OCTET_STREAM_MIMETYPE,
@@ -359,17 +358,7 @@ def test_hit_no_log(caplog, responses):
     assert not caplog.records
 
 
-# -- tests for other OCIRegistry helpers: full url and checkers if stuff uploaded
-
-
-def test_get_fully_qualified_url():
-    """Check that the url is built correctly."""
-    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
-    url = ocireg.get_fully_qualified_url("sha256:thehash")
-    assert url == "fakereg.com/test-orga/test-image@sha256:thehash"
-
-
-# -- tests for some OCIRegistry helpers
+# -- tests for other OCIRegistry helpers: checkers if stuff uploaded
 
 
 def test_ociregistry_is_manifest_uploaded():
@@ -756,167 +745,7 @@ def test_ociregistry_upload_blob_bad_final_digest(tmp_path, responses):
         ocireg.upload_blob(bytes_source, 8, "test-digest")
 
 
-# -- tests for the OCIRegistry manifest download
-
-
-def test_get_manifest_simple_v2(responses, caplog):
-    """Straightforward download of a v2 manifest."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-
-    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
-    url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
-    response_headers = {"Docker-Content-Digest": "test-digest"}
-    response_content = {"schemaVersion": 2, "foo": "bar", "unicodecontent": "moño"}
-    responses.add(
-        responses.GET, url, status=200, headers=response_headers, json=response_content
-    )
-
-    # try it
-    sublist, digest, raw_manifest = ocireg.get_manifest("test-reference")
-    assert sublist is None
-    assert digest == "test-digest"
-    assert raw_manifest == responses.calls[0].response.text  # must be exactly the same
-
-    log_lines = [rec.message for rec in caplog.records]
-    assert "Getting manifests list for test-reference" in log_lines
-    assert "Got the manifest directly, schema 2" in log_lines
-
-    assert responses.calls[0].request.headers["Accept"] == MANIFEST_LISTS
-
-
-def test_get_manifest_v1_and_redownload(responses, caplog):
-    """Get a v2 manifest after initially getting a v1."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-
-    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
-    # first response with v1 manifest
-    url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
-    response_headers = {"Docker-Content-Digest": "test-digest"}
-    response_content = {"schemaVersion": 1}
-    responses.add(
-        responses.GET, url, status=200, headers=response_headers, json=response_content
-    )
-    # second response with v2 manifest, note the changed digest!
-    url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
-    response_headers = {"Docker-Content-Digest": "test-digest-for-real"}
-    response_content = {"schemaVersion": 2}
-    responses.add(
-        responses.GET, url, status=200, headers=response_headers, json=response_content
-    )
-
-    # try it
-    sublist, digest, raw_manifest = ocireg.get_manifest("test-reference")
-    assert sublist is None
-    assert digest == "test-digest-for-real"
-    assert raw_manifest == responses.calls[1].response.text  # the second one
-
-    log_lines = [rec.message for rec in caplog.records]
-    assert "Getting manifests list for test-reference" in log_lines
-    assert "Got the manifest directly, schema 1" in log_lines
-    assert "Got the v2 manifest ok" in log_lines
-
-    assert responses.calls[0].request.headers["Accept"] == MANIFEST_LISTS
-    assert responses.calls[1].request.headers["Accept"] == MANIFEST_V2_MIMETYPE
-
-
-def test_get_manifest_simple_multiple(responses):
-    """Straightforward download of a multiple manifest."""
-    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
-    url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
-    response_headers = {"Docker-Content-Digest": "test-digest"}
-    lot_of_manifests = [
-        {"manifest1": "stuff"},
-        {"manifest2": "morestuff", "foo": "bar"},
-    ]
-    response_content = {"manifests": lot_of_manifests}
-    responses.add(
-        responses.GET, url, status=200, headers=response_headers, json=response_content
-    )
-
-    # try it
-    sublist, digest, raw_manifest = ocireg.get_manifest("test-reference")
-    assert sublist == lot_of_manifests
-    assert digest == "test-digest"
-    assert raw_manifest == responses.calls[0].response.text  # exact
-
-
-def test_get_manifest_bad_v2(responses, caplog):
-    """Couldn't get a v2 manifest."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-    ocireg = OCIRegistry("https://fakereg.com", "test-orga/test-image")
-
-    url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
-    response_headers = {"Docker-Content-Digest": "test-digest"}
-    response_content = {"schemaVersion": 1}
-    responses.add(
-        responses.GET, url, status=200, headers=response_headers, json=response_content
-    )
-
-    # second response with a bad manifest
-    url = "https://fakereg.com/v2/test-orga/test-image/manifests/test-reference"
-    response_headers = {"Docker-Content-Digest": "test-digest-for-real"}
-    response_content = {"sadly broken": ":("}
-    responses.add(
-        responses.GET, url, status=200, headers=response_headers, json=response_content
-    )
-
-    # try it
-    with pytest.raises(CommandError) as cm:
-        ocireg.get_manifest("test-reference")
-    assert str(cm.value) == "Manifest v2 not found for 'test-reference'."
-    expected = (
-        "Got something else when asking for a v2 manifest: {'sadly broken': ':('}"
-    )
-    assert expected in [rec.message for rec in caplog.records]
-
-
 # -- tests for the ImageHandler helpers and functionalities
-
-
-@pytest.fixture
-def mocked_imagehandler():
-    """Provide an ImageHandler with a mocked registry.
-
-    This is to isolate the use of the registry from the internal behaviour.
-    """
-    registry = OCIRegistry("https://registry.hub.docker.com", "test-orga/test-image")
-    im = ImageHandler(registry)
-    with patch.object(im, "registry", autospec=True):
-        yield im
-
-
-def test_imagehandler_getdestinationurl_ok(mocked_imagehandler):
-    """Get the destination URL ok."""
-    dst_registry = mocked_imagehandler.registry
-    dst_registry.is_manifest_already_uploaded.return_value = True
-
-    manifest_info = (
-        "dontcare",
-        "test-digest",
-        "dontcare",
-    )  # (sublist, digest, raw_manifest)
-    dst_registry.get_manifest.return_value = manifest_info
-
-    dst_registry.get_fully_qualified_url.return_value = "test-final-url"
-
-    # call and check final result
-    result = mocked_imagehandler.get_destination_url("test-reference")
-    assert result == "test-final-url"
-
-    # check the registry was called properly
-    dst_registry.is_manifest_already_uploaded.assert_called_with("test-reference")
-    dst_registry.get_manifest.assert_called_with("test-reference")
-    dst_registry.get_fully_qualified_url.assert_called_with("test-digest")
-
-
-def test_imagehandler_getdestinationurl_missing(mocked_imagehandler):
-    """The indicated reference does not exist in the registry."""
-    mocked_imagehandler.registry.is_manifest_already_uploaded.return_value = False
-    expected_error = (
-        "The 'test-reference' image does not exist in the destination registry"
-    )
-    with pytest.raises(CommandError, match=expected_error):
-        mocked_imagehandler.get_destination_url("test-reference")
 
 
 def test_localdockerinterface_get_info_ok(responses, caplog):

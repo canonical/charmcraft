@@ -23,10 +23,13 @@ import tempfile
 from charmcraft import __version__
 
 FORMATTER_SIMPLE = "%(message)s"
-FORMATTER_DETAILED = "%(asctime)s  %(name)-30s %(levelname)-8s %(message)s"
+FORMATTER_DETAILED = "%(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
 
-_logger = logging.getLogger("charmcraft")
-_logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("charmcraft")
+enabled_loggers = [
+    logger,
+    logging.getLogger("craft_providers"),
+]
 
 
 class _MessageHandler:
@@ -47,7 +50,9 @@ class _MessageHandler:
 
     def __init__(self):
         self._stderr_handler = logging.StreamHandler()
-        _logger.addHandler(self._stderr_handler)
+        for enabled_logger in enabled_loggers:
+            enabled_logger.setLevel(logging.DEBUG)
+            enabled_logger.addHandler(self._stderr_handler)
 
         # autoset modes constants for simpler interface
         for k in self._modes:
@@ -65,7 +70,7 @@ class _MessageHandler:
         self._stderr_handler.setFormatter(logging.Formatter(format_string))
         self._stderr_handler.setLevel(level)
         if mode == self.VERBOSE:
-            _logger.debug("Starting charmcraft version %s", __version__)
+            logger.debug("Starting charmcraft version %s", __version__)
 
     def _set_filehandler(self):
         """Set the file handler to log everything to the temp file."""
@@ -74,7 +79,8 @@ class _MessageHandler:
         file_handler = logging.FileHandler(self._log_filepath)
         file_handler.setFormatter(logging.Formatter(FORMATTER_DETAILED))
         file_handler.setLevel(0)  # log eeeeeverything
-        _logger.addHandler(file_handler)
+        for enabled_logger in enabled_loggers:
+            enabled_logger.addHandler(file_handler)
 
         # a logger for only the file
         self._file_logger = logging.getLogger("charmcraft.guard")
@@ -89,9 +95,9 @@ class _MessageHandler:
     def ended_interrupt(self):
         """Clean up on keyboard interrupt."""
         if self.mode == self.VERBOSE:
-            _logger.exception("Interrupted.")
+            logger.exception("Interrupted.")
         else:
-            _logger.error("Interrupted.")
+            logger.error("Interrupted.")
         os.unlink(self._log_filepath)
 
     def ended_cmderror(self, err):
@@ -102,7 +108,7 @@ class _MessageHandler:
             msg = "{} (full execution logs in {!r})".format(
                 err, str(self._log_filepath)
             )
-            _logger.error(msg)
+            logger.error(msg)
 
     def ended_crash(self, err):
         """Report the internal error and logfile location.
@@ -114,10 +120,10 @@ class _MessageHandler:
         )
         if self.mode == self.VERBOSE:
             # both to screen and file!
-            _logger.exception(msg)
+            logger.exception(msg)
         else:
             # the error to screen and file, plus the traceback to the file
-            _logger.error(msg)
+            logger.error(msg)
             self._file_logger.exception("")
 
 

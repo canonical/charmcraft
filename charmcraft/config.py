@@ -63,7 +63,10 @@ import pydantic
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.deprecations import notify_deprecation
-from charmcraft.env import is_charmcraft_running_in_managed_mode, get_managed_environment_project_path
+from charmcraft.env import (
+    get_managed_environment_project_path,
+    is_charmcraft_running_in_managed_mode,
+)
 from charmcraft.utils import get_host_architecture, load_yaml
 
 

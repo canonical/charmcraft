@@ -33,9 +33,9 @@ Uploaded = namedtuple("Uploaded", "ok status revision errors")
 # XXX Facundo 2020-07-23: Need to do a massive rename to call `revno` to the "revision as
 # the number" inside the "revision as the structure", this gets super confusing in the code with
 # time, and now it's the moment to do it (also in Release below!)
-Revision = namedtuple("Revision", "revision version created_at status errors")
+Revision = namedtuple("Revision", "revision version created_at status errors bases")
 Error = namedtuple("Error", "message code")
-Release = namedtuple("Release", "revision channel expires_at resources")
+Release = namedtuple("Release", "revision channel expires_at resources base")
 Channel = namedtuple("Channel", "name fallback track risk branch")
 Library = namedtuple(
     "Library", "api content content_hash lib_id lib_name charm_name patch"
@@ -43,6 +43,7 @@ Library = namedtuple(
 Resource = namedtuple("Resource", "name optional revision resource_type")
 ResourceRevision = namedtuple("ResourceRevision", "revision created_at size")
 RegistryCredentials = namedtuple("RegistryCredentials", "image_name username password")
+Base = namedtuple("Base", "architecture channel name")
 
 # those statuses after upload that flag that the review ended (and if it ended succesfully or not)
 UPLOAD_ENDING_STATUSES = {
@@ -65,6 +66,7 @@ def _build_revision(item):
         created_at=parser.parse(item["created-at"]),
         status=item["status"],
         errors=_build_errors(item),
+        bases=[Base(**base) for base in item["bases"]],
     )
     return rev
 
@@ -239,6 +241,7 @@ class Store:
                     channel=item["channel"],
                     expires_at=expires_at,
                     resources=resources,
+                    base=Base(**item["base"]),
                 )
             )
 

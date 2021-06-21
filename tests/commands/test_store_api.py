@@ -391,6 +391,9 @@ def test_list_revisions_ok(client_mock, config):
                 "created-at": "2020-06-29T22:11:00.123",
                 "status": "approved",
                 "errors": None,
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             }
         ]
     }
@@ -432,6 +435,9 @@ def test_list_revisions_errors(client_mock, config):
                     {"message": "error text 1", "code": "error-code-1"},
                     {"message": "error text 2", "code": "error-code-2"},
                 ],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             }
         ]
     }
@@ -460,6 +466,9 @@ def test_list_revisions_several_mixed(client_mock, config):
                 "errors": [
                     {"message": "error", "code": "code"},
                 ],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
             {
                 "revision": 2,
@@ -467,6 +476,9 @@ def test_list_revisions_several_mixed(client_mock, config):
                 "created-at": "2020-06-29T22:11:02",
                 "status": "approved",
                 "errors": None,
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
         ]
     }
@@ -560,20 +572,20 @@ def test_status_ok(client_mock, config):
             {
                 "channel": "latest/beta",
                 "expiration-date": None,
-                "platform": {"architecture": "all", "os": "all", "series": "all"},
                 "progressive": {"paused": None, "percentage": None},
                 "revision": 5,
                 "when": "2020-07-16T18:45:24Z",
                 "resources": [],
+                "base": {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"},
             },
             {
                 "channel": "latest/edge/mybranch",
                 "expiration-date": "2020-08-16T18:46:02Z",
-                "platform": {"architecture": "all", "os": "all", "series": "all"},
                 "progressive": {"paused": None, "percentage": None},
                 "revision": 10,
                 "when": "2020-07-16T18:46:02Z",
                 "resources": [],
+                "base": {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"},
             },
         ],
         "package": {
@@ -601,6 +613,9 @@ def test_status_ok(client_mock, config):
                 "created-at": "2020-06-29T22:11:05",
                 "status": "approved",
                 "errors": None,
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
             {
                 "revision": 10,
@@ -608,6 +623,9 @@ def test_status_ok(client_mock, config):
                 "created-at": "2020-06-29T22:11:10",
                 "status": "approved",
                 "errors": None,
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
         ],
     }
@@ -626,10 +644,16 @@ def test_status_ok(client_mock, config):
     assert cmap1.channel == "latest/beta"
     assert cmap1.expires_at is None
     assert cmap1.resources == []
+    assert cmap1.base.name == "ubuntu"
+    assert cmap1.base.channel == "20.04"
+    assert cmap1.base.architecture == "amd64"
     assert cmap2.revision == 10
     assert cmap2.channel == "latest/edge/mybranch"
     assert cmap2.expires_at == parser.parse("2020-08-16T18:46:02Z")
     assert cmap2.resources == []
+    assert cmap2.base.name == "ubuntu"
+    assert cmap2.base.channel == "20.04"
+    assert cmap2.base.architecture == "amd64"
 
     channel1, channel2 = channels
     assert channel1.name == "latest/stable"
@@ -647,11 +671,19 @@ def test_status_ok(client_mock, config):
     assert rev1.created_at == parser.parse("2020-06-29T22:11:05")
     assert rev1.status == "approved"
     assert rev1.errors == []
+    (base,) = rev1.bases
+    assert base.name == "ubuntu"
+    assert base.channel == "20.04"
+    assert base.architecture == "amd64"
     assert rev2.revision == 10
     assert rev2.version == "63a852b"
     assert rev2.created_at == parser.parse("2020-06-29T22:11:10")
     assert rev2.status == "approved"
     assert rev2.errors == []
+    (base,) = rev2.bases
+    assert base.name == "ubuntu"
+    assert base.channel == "20.04"
+    assert base.architecture == "amd64"
 
 
 def test_status_with_resources(client_mock, config):
@@ -661,7 +693,6 @@ def test_status_with_resources(client_mock, config):
             {
                 "channel": "latest/stable",
                 "expiration-date": None,
-                "platform": {"architecture": "all", "os": "all", "series": "all"},
                 "progressive": {"paused": None, "percentage": None},
                 "revision": 5,
                 "when": "2020-07-16T18:45:24Z",
@@ -672,11 +703,11 @@ def test_status_with_resources(client_mock, config):
                         "type": "file",
                     },
                 ],
+                "base": {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"},
             },
             {
                 "channel": "latest/edge",
                 "expiration-date": "2020-08-16T18:46:02Z",
-                "platform": {"architecture": "all", "os": "all", "series": "all"},
                 "progressive": {"paused": None, "percentage": None},
                 "revision": 5,
                 "when": "2020-07-16T18:46:02Z",
@@ -692,6 +723,7 @@ def test_status_with_resources(client_mock, config):
                         "type": "file",
                     },
                 ],
+                "base": {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"},
             },
         ],
         "package": {
@@ -719,6 +751,9 @@ def test_status_with_resources(client_mock, config):
                 "created-at": "2020-06-29T22:11:05",
                 "status": "approved",
                 "errors": None,
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
         ],
     }

@@ -3,6 +3,7 @@ attrs==21.2.0
 certifi==2021.5.30
 cffi==1.14.5
 chardet==4.0.0
+craft-providers==0.0.1
 humanize==3.9.0
 idna==2.10
 Jinja2==3.0.1

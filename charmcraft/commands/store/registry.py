@@ -25,7 +25,6 @@ import logging
 import os
 import tarfile
 import tempfile
-import urllib.parse
 from typing import Union, Dict, Any
 from urllib.request import parse_http_list, parse_keqv_list
 
@@ -38,13 +37,11 @@ logger = logging.getLogger(__name__)
 
 # some mimetypes
 CONFIG_MIMETYPE = "application/vnd.docker.container.image.v1+json"
-MANIFEST_LISTS = "application/vnd.docker.distribution.manifest.list.v2+json"
 MANIFEST_V2_MIMETYPE = "application/vnd.docker.distribution.manifest.v2+json"
 LAYER_MIMETYPE = "application/vnd.docker.image.rootfs.diff.tar.gzip"
 JSON_RELATED_MIMETYPES = {
     "application/json",
     "application/vnd.docker.distribution.manifest.v1+prettyjws",  # signed manifest
-    MANIFEST_LISTS,
     MANIFEST_V2_MIMETYPE,
 }
 OCTET_STREAM_MIMETYPE = "application/octet-stream"
@@ -154,11 +151,6 @@ class OCIRegistry:
             response = requests.request(method, url, headers=headers, **kwargs)
 
         return response
-
-    def get_fully_qualified_url(self, digest):
-        """Return the fully qualified URL univocally specifying the element in the registry."""
-        netloc = urllib.parse.urlparse(self.server).netloc
-        return "{}/{}@{}".format(netloc, self.image_name, digest)
 
     def _is_item_already_uploaded(self, url):
         """Verify if a generic item is uploaded."""
@@ -280,42 +272,6 @@ class OCIRegistry:
         if response.headers["Docker-Content-Digest"] != digest:
             raise CommandError("Server error: the upload is corrupted")
 
-    def get_manifest(self, reference):
-        """Get the manifest for the indicated reference."""
-        url = self._get_url("manifests/{}".format(reference))
-        logger.debug("Getting manifests list for %s", reference)
-        headers = {
-            "Accept": MANIFEST_LISTS,
-        }
-        response = self._hit("GET", url, headers=headers)
-        result = assert_response_ok(response)
-        digest = response.headers["Docker-Content-Digest"]
-
-        # the response can be the manifest itself or a list of manifests (only determined
-        # by the presence of the 'manifests' key
-        manifests = result.get("manifests")
-
-        if manifests is not None:
-            return (manifests, digest, response.text)
-
-        logger.debug("Got the manifest directly, schema %s", result["schemaVersion"])
-        if result["schemaVersion"] != 2:
-            # get the manifest in v2! cannot request it directly, as that will avoid us
-            # getting the manifests list when available
-            headers = {
-                "Accept": MANIFEST_V2_MIMETYPE,
-            }
-            response = self._hit("GET", url, headers=headers)
-            result = assert_response_ok(response)
-            if result.get("schemaVersion") != 2:
-                logger.debug(
-                    "Got something else when asking for a v2 manifest: %s", result
-                )
-                raise CommandError("Manifest v2 not found for {!r}.".format(reference))
-            logger.debug("Got the v2 manifest ok")
-            digest = response.headers["Docker-Content-Digest"]
-        return (None, digest, response.text)
-
 
 class HashingTemporaryFile(io.FileIO):
     """A temporary file that keeps the hash and length of what is written."""
@@ -384,20 +340,6 @@ class ImageHandler:
 
     def __init__(self, registry):
         self.registry = registry
-
-    def get_destination_url(self, reference):
-        """Get the fully qualified URL in the destination registry for a tag/digest reference."""
-        if not self.registry.is_manifest_already_uploaded(reference):
-            raise CommandError(
-                "The {!r} image does not exist in the destination registry".format(
-                    reference
-                )
-            )
-
-        # need to actually get the manifest, because this is what we'll end up getting the v2 one
-        _, digest, _ = self.registry.get_manifest(reference)
-        final_fqu = self.registry.get_fully_qualified_url(digest)
-        return final_fqu
 
     def check_in_registry(self, digest: str) -> bool:
         """Verify if the image is present in the registry."""

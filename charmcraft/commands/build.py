@@ -437,8 +437,7 @@ class Validator:
         """Process the received options."""
         result = {}
         for opt in self._options:
-            print(parsed_args)
-            meth = getattr(self, "validate_" + opt.replace("-", "_"))
+            meth = getattr(self, "validate_" + opt)
             result[opt] = meth(getattr(parsed_args, opt, None))
         return result
 

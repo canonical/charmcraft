@@ -63,6 +63,7 @@ import pydantic
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.deprecations import notify_deprecation
+from charmcraft.env import is_charmcraft_running_in_managed_mode, get_managed_environment_project_path
 from charmcraft.utils import get_host_architecture, load_yaml
 
 
@@ -349,7 +350,10 @@ class Config(ModelConfigDefaults, validate_all=False):
 def load(dirpath):
     """Load the config from charmcraft.yaml in the indicated directory."""
     if dirpath is None:
-        dirpath = pathlib.Path.cwd()
+        if is_charmcraft_running_in_managed_mode():
+            dirpath = get_managed_environment_project_path()
+        else:
+            dirpath = pathlib.Path.cwd()
     else:
         dirpath = pathlib.Path(dirpath).expanduser().resolve()
 

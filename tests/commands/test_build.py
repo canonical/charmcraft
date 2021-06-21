@@ -80,7 +80,7 @@ def basic_project(tmp_path):
 # --- Validator tests
 
 
-def test_validator_process_simple():
+def test_validator_process_simple(config):
     """Process the present options and store the result."""
 
     class TestValidator(Validator):
@@ -95,12 +95,12 @@ def test_validator_process_simple():
             return 80
 
     test_args = namedtuple("T", "foo bar")(35, 45)
-    validator = TestValidator()
+    validator = TestValidator(config)
     result = validator.process(test_args)
     assert result == dict(foo=70, bar=80)
 
 
-def test_validator_process_notpresent():
+def test_validator_process_notpresent(config):
     """Process an option after not finding the value."""
 
     class TestValidator(Validator):
@@ -111,27 +111,27 @@ def test_validator_process_notpresent():
             return 70
 
     test_args = namedtuple("T", "bar")(35)
-    validator = TestValidator()
+    validator = TestValidator(config)
     result = validator.process(test_args)
     assert result == dict(foo=70)
 
 
-def test_validator_from_simple(tmp_path):
+def test_validator_from_simple(tmp_path, config):
     """'from' param: simple validation and setting in Validation."""
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_from(tmp_path)
     assert resp == tmp_path
     assert validator.basedir == tmp_path
 
 
-def test_validator_from_default():
+def test_validator_from_default(config):
     """'from' param: default value."""
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_from(None)
     assert resp == pathlib.Path(".").absolute()
 
 
-def test_validator_from_absolutized(tmp_path, monkeypatch):
+def test_validator_from_absolutized(tmp_path, monkeypatch, config):
     """'from' param: check it's made absolute."""
     # change dir to the temp one, where we will have the 'dir1/dir2' tree
     dir1 = tmp_path / "dir1"
@@ -140,70 +140,90 @@ def test_validator_from_absolutized(tmp_path, monkeypatch):
     dir2.mkdir()
     monkeypatch.chdir(tmp_path)
 
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_from(pathlib.Path("dir1/dir2"))
     assert resp == dir2
 
 
-def test_validator_from_expanded():
+def test_validator_from_expanded(config):
     """'from' param: expands the user-home prefix."""
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_from(pathlib.Path("~"))
     assert resp == pathlib.Path.home()
 
 
-def test_validator_from_exist():
+def test_validator_from_exist(config):
     """'from' param: checks that the directory exists."""
-    validator = Validator()
+    validator = Validator(config)
     expected_msg = "Charm directory was not found: '/not_really_there'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_from(pathlib.Path("/not_really_there"))
 
 
-def test_validator_from_isdir(tmp_path):
+def test_validator_from_isdir(tmp_path, config):
     """'from' param: checks that the directory is really that."""
     testfile = tmp_path / "testfile"
     testfile.touch()
 
-    validator = Validator()
+    validator = Validator(config)
     expected_msg = "Charm directory is not really a directory: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_from(testfile)
 
 
-@pytest.mark.parametrize("bases_indices", [[-1], [0, -1], [0, 1, -1]])
-def test_validator_bases_index_invalid(bases_indices):
+def test_validator_bases_index_without_bases(config):
     """'entrypoint' param: checks that the file exists."""
-    validator = Validator()
+    validator = Validator(config)
+    expected_msg = re.escape(
+        "No bases configuration found, required when using --bases-index."
+    )
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_bases_indices([0])
+
+
+@pytest.mark.parametrize("bases_indices", [[-1], [0, -1], [0, 1, -1]])
+def test_validator_bases_index_invalid(bases_indices, config):
+    """'entrypoint' param: checks that the file exists."""
+    config.set(
+        bases=[
+            BasesConfiguration(
+                **{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]}
+            ),
+            BasesConfiguration(
+                **{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]}
+            ),
+        ]
+    )
+    validator = Validator(config)
     expected_msg = re.escape("Bases index '-1' is invalid (must be >= 0).")
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_bases_indices(bases_indices)
 
 
-def test_validator_entrypoint_simple(tmp_path):
+def test_validator_entrypoint_simple(tmp_path, config):
     """'entrypoint' param: simple validation."""
     testfile = tmp_path / "testfile"
     testfile.touch(mode=0o777)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_entrypoint(testfile)
     assert resp == testfile
 
 
-def test_validator_entrypoint_default(tmp_path):
+def test_validator_entrypoint_default(tmp_path, config):
     """'entrypoint' param: default value."""
     default_entrypoint = tmp_path / "src" / "charm.py"
     default_entrypoint.parent.mkdir()
     default_entrypoint.touch(mode=0o777)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_entrypoint(None)
     assert resp == default_entrypoint
 
 
-def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
+def test_validator_entrypoint_absolutized(tmp_path, monkeypatch, config):
     """'entrypoint' param: check it's made absolute."""
     # change dir to the temp one, where we will have the 'dirX/file.py' stuff
     dirx = tmp_path / "dirX"
@@ -212,13 +232,13 @@ def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
     testfile.touch(mode=0o777)
     monkeypatch.chdir(tmp_path)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_entrypoint(pathlib.Path("dirX/file.py"))
     assert resp == testfile
 
 
-def test_validator_entrypoint_expanded(tmp_path):
+def test_validator_entrypoint_expanded(tmp_path, config):
     """'entrypoint' param: expands the user-home prefix."""
     fake_home = tmp_path / "homedir"
     fake_home.mkdir()
@@ -226,7 +246,7 @@ def test_validator_entrypoint_expanded(tmp_path):
     testfile = fake_home / "testfile"
     testfile.touch(mode=0o777)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
 
     with patch.dict(os.environ, {"HOME": str(fake_home)}):
@@ -234,21 +254,21 @@ def test_validator_entrypoint_expanded(tmp_path):
     assert resp == testfile
 
 
-def test_validator_entrypoint_exist():
+def test_validator_entrypoint_exist(config):
     """'entrypoint' param: checks that the file exists."""
-    validator = Validator()
+    validator = Validator(config)
     expected_msg = "Charm entry point was not found: '/not_really_there.py'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_entrypoint(pathlib.Path("/not_really_there.py"))
 
 
-def test_validator_entrypoint_inside_project(tmp_path):
+def test_validator_entrypoint_inside_project(tmp_path, config):
     """'entrypoint' param: checks that it's part of the project."""
     project_dir = tmp_path / "test-project"
     testfile = tmp_path / "testfile"
     testfile.touch(mode=0o777)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = project_dir
 
     expected_msg = "Charm entry point must be inside the project: '{}'".format(testfile)
@@ -256,83 +276,83 @@ def test_validator_entrypoint_inside_project(tmp_path):
         validator.validate_entrypoint(testfile)
 
 
-def test_validator_entrypoint_exec(tmp_path):
+def test_validator_entrypoint_exec(tmp_path, config):
     """'entrypoint' param: checks that the file is executable."""
     testfile = tmp_path / "testfile"
     testfile.touch(mode=0o444)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     expected_msg = "Charm entry point must be executable: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_entrypoint(testfile)
 
 
-def test_validator_requirement_simple(tmp_path):
+def test_validator_requirement_simple(tmp_path, config):
     """'requirement' param: simple validation."""
     testfile = tmp_path / "testfile"
     testfile.touch()
 
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_requirement([testfile])
     assert resp == [testfile]
 
 
-def test_validator_requirement_multiple(tmp_path):
+def test_validator_requirement_multiple(tmp_path, config):
     """'requirement' param: multiple files."""
     testfile1 = tmp_path / "testfile1"
     testfile1.touch()
     testfile2 = tmp_path / "testfile2"
     testfile2.touch()
 
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_requirement([testfile1, testfile2])
     assert resp == [testfile1, testfile2]
 
 
-def test_validator_requirement_default_present_ok(tmp_path):
+def test_validator_requirement_default_present_ok(tmp_path, config):
     """'requirement' param: default value when a requirements.txt is there and readable."""
     default_requirement = tmp_path / "requirements.txt"
     default_requirement.touch()
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_requirement(None)
     assert resp == [default_requirement]
 
 
-def test_validator_requirement_default_present_not_readable(tmp_path):
+def test_validator_requirement_default_present_not_readable(tmp_path, config):
     """'requirement' param: default value when a requirements.txt is there but not readable."""
     default_requirement = tmp_path / "requirements.txt"
     default_requirement.touch(0o230)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_requirement(None)
     assert resp == []
 
 
-def test_validator_requirement_default_missing(tmp_path):
+def test_validator_requirement_default_missing(tmp_path, config):
     """'requirement' param: default value when no requirements.txt is there."""
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_requirement(None)
     assert resp == []
 
 
-def test_validator_requirement_absolutized(tmp_path, monkeypatch):
+def test_validator_requirement_absolutized(tmp_path, monkeypatch, config):
     """'requirement' param: check it's made absolute."""
     # change dir to the temp one, where we will have the reqs file
     testfile = tmp_path / "reqs.txt"
     testfile.touch()
     monkeypatch.chdir(tmp_path)
 
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_requirement([pathlib.Path("reqs.txt")])
     assert resp == [testfile]
 
 
-def test_validator_requirement_expanded(tmp_path):
+def test_validator_requirement_expanded(tmp_path, config):
     """'requirement' param: expands the user-home prefix."""
     fake_home = tmp_path / "homedir"
     fake_home.mkdir()
@@ -340,16 +360,16 @@ def test_validator_requirement_expanded(tmp_path):
     requirement = fake_home / "requirements.txt"
     requirement.touch(0o230)
 
-    validator = Validator()
+    validator = Validator(config)
 
     with patch.dict(os.environ, {"HOME": str(fake_home)}):
         resp = validator.validate_requirement([pathlib.Path("~/requirements.txt")])
     assert resp == [requirement]
 
 
-def test_validator_requirement_exist():
+def test_validator_requirement_exist(config):
     """'requirement' param: checks that the file exists."""
-    validator = Validator()
+    validator = Validator(config)
     expected_msg = "the requirements file was not found: '/not_really_there.txt'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_requirement([pathlib.Path("/not_really_there.txt")])
@@ -508,6 +528,7 @@ def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
 
 def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""
+    caplog.set_level(logging.DEBUG)
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
     charmcraft_file.write_text(
@@ -642,13 +663,6 @@ def test_build_bases_index_scenarios(basic_project, monkeypatch, caplog):
         "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
     ]
 
-    # Invalid indices.
-    with pytest.raises(
-        CommandError,
-        match=r"No bases configuration found for specified index '3'.",
-    ):
-        builder.run([3])
-
 
 @patch(
     "charmcraft.bases.get_host_as_base",
@@ -658,6 +672,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     mock_host_base, basic_project, monkeypatch, caplog
 ):
     """Error when no charms are buildable with host base, verifying each mismatched reason."""
+    caplog.set_level(logging.DEBUG)
     charmcraft_file = basic_project / "charmcraft.yaml"
     charmcraft_file.write_text(
         dedent(

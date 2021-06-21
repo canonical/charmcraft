@@ -154,7 +154,7 @@ class PackCommand(BaseCommand):
         )
 
         # mimic the "build" command
-        validator = build.Validator()
+        validator = build.Validator(self.config)
         args = validator.process(build_args)
         logger.debug("working arguments: %s", args)
         builder = build.Builder(args, self.config)

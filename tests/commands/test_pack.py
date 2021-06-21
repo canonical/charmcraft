@@ -455,7 +455,7 @@ def test_charm_builder_infrastructure_called(config):
     """Check that build.Builder is properly called."""
     config.set(type="charm")
     with patch("charmcraft.commands.build.Validator", autospec=True) as validator_mock:
-        validator_mock().process.return_value = "processed args"
+        validator_mock(config).process.return_value = "processed args"
         with patch("charmcraft.commands.build.Builder") as builder_class_mock:
             builder_class_mock.return_value = builder_instance_mock = MagicMock()
             PackCommand("group", config).run(noargs)

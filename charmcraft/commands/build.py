@@ -28,7 +28,7 @@ from typing import List, Optional
 import yaml
 
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.config import Base, BasesConfiguration
+from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.env import is_charmcraft_running_in_managed_mode
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
@@ -163,19 +163,6 @@ class Builder:
         logger.info("Created '%s'.", zipname)
         return zipname
 
-    def validate_bases_indices(self, bases_indices: List[int]) -> None:
-        """Validate the indices for bases.
-
-        :param bases_indeces: List of indices.
-
-        :raises CommandError: if invalid.
-        """
-        for base_index in bases_indices:
-            if base_index >= len(self.config.bases):
-                raise CommandError(
-                    f"No bases configuration found for specified index '{base_index}'."
-                )
-
     def run(self, bases_indices: Optional[List[int]] = None) -> List[str]:
         """Run build process.
 
@@ -190,10 +177,6 @@ class Builder:
         :returns: List of charm files created.
         """
         charms: List[str] = []
-
-        # Validate base indices in advance, if any.
-        if bases_indices:
-            self.validate_bases_indices(bases_indices)
 
         if is_charmcraft_running_in_managed_mode():
             if self.config.bases is None:
@@ -430,8 +413,9 @@ class Validator:
         "bases_indices",
     ]
 
-    def __init__(self):
+    def __init__(self, config: Config):
         self.basedir = None  # this will be fulfilled when processing 'from'
+        self.config = config
 
     def process(self, parsed_args):
         """Process the received options."""
@@ -450,6 +434,16 @@ class Validator:
             if bases_index < 0:
                 raise CommandError(
                     f"Bases index '{bases_index}' is invalid (must be >= 0)."
+                )
+
+            if not self.config.bases:
+                raise CommandError(
+                    "No bases configuration found, required when using --bases-index.",
+                )
+
+            if bases_index >= len(self.config.bases):
+                raise CommandError(
+                    f"No bases configuration found for specified index '{bases_index}'."
                 )
 
     def validate_from(self, dirpath):
@@ -563,7 +557,7 @@ class BuildCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        validator = Validator()
+        validator = Validator(self.config)
         args = validator.process(parsed_args)
         logger.debug("working arguments: %s", args)
         builder = Builder(args, self.config)

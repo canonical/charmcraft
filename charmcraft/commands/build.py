@@ -28,7 +28,7 @@ from typing import List, Optional
 import yaml
 
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.config import Base, BasesConfiguration
+from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.env import is_charmcraft_running_in_managed_mode
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
@@ -163,7 +163,7 @@ class Builder:
         logger.info("Created '%s'.", zipname)
         return zipname
 
-    def run(self) -> List[str]:
+    def run(self, bases_indices: Optional[List[int]] = None) -> List[str]:
         """Run build process.
 
         In managed-mode (and eventually destructive-mode), build for each bases
@@ -184,6 +184,13 @@ class Builder:
                 raise CommandError("Bases are currently required in managed-mode.")
 
             for i, bases_config in enumerate(self.config.bases):
+                if bases_indices and i not in bases_indices:
+                    logger.debug(
+                        "Ingoring 'bases[%d]' due to --base-index usage.",
+                        i,
+                    )
+                    continue
+
                 for j, build_on in enumerate(bases_config.build_on):
                     matches, reason = check_if_base_matches_host(build_on)
                     if matches:
@@ -403,10 +410,12 @@ class Validator:
         "from",  # this needs to be processed first, as it's a base dir to find other files
         "entrypoint",
         "requirement",
+        "bases_indices",
     ]
 
-    def __init__(self):
+    def __init__(self, config: Config):
         self.basedir = None  # this will be fulfilled when processing 'from'
+        self.config = config
 
     def process(self, parsed_args):
         """Process the received options."""
@@ -415,6 +424,27 @@ class Validator:
             meth = getattr(self, "validate_" + opt)
             result[opt] = meth(getattr(parsed_args, opt, None))
         return result
+
+    def validate_bases_indices(self, bases_indices):
+        """Validate that bases index is valid."""
+        if not bases_indices:
+            return
+
+        for bases_index in bases_indices:
+            if bases_index < 0:
+                raise CommandError(
+                    f"Bases index '{bases_index}' is invalid (must be >= 0)."
+                )
+
+            if not self.config.bases:
+                raise CommandError(
+                    "No bases configuration found, required when using --bases-index.",
+                )
+
+            if bases_index >= len(self.config.bases):
+                raise CommandError(
+                    f"No bases configuration found for specified index '{bases_index}'."
+                )
 
     def validate_from(self, dirpath):
         """Validate that the charm dir is there and yes, a directory."""
@@ -527,7 +557,7 @@ class BuildCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        validator = Validator()
+        validator = Validator(self.config)
         args = validator.process(parsed_args)
         logger.debug("working arguments: %s", args)
         builder = Builder(args, self.config)

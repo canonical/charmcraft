@@ -85,6 +85,8 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
 
             - charmcraft installed
 
+            - python3 pip and setuptools installed
+
         :param executor: Executor for target container.
         :param retry_wait: Duration to sleep() between status checks (if
             required).

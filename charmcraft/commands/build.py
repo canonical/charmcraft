@@ -23,13 +23,13 @@ import pathlib
 import shutil
 import subprocess
 import zipfile
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.env import is_charmcraft_running_in_managed_mode
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.manifest import create_manifest
@@ -139,6 +139,7 @@ class Builder:
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.ignore_rules = self._load_juju_ignore()
         self.config = config
+        self.metadata = self.parse_metadata()
 
     def build_charm(self, bases_config: Optional[BasesConfiguration]) -> str:
         """Build the charm.
@@ -386,12 +387,8 @@ class Builder:
 
     def handle_package(self, bases_config: Optional[BasesConfiguration] = None):
         """Handle the final package creation."""
-        logger.debug("Parsing the project's metadata")
-        with (self.charmdir / CHARM_METADATA).open("rt", encoding="utf8") as fh:
-            metadata = yaml.safe_load(fh)
-
         logger.debug("Creating the package itself")
-        zipname = format_charm_file_name(metadata["name"], bases_config)
+        zipname = format_charm_file_name(self.metadata["name"], bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
             dirpath = pathlib.Path(dirpath)
@@ -401,6 +398,19 @@ class Builder:
 
         zipfh.close()
         return zipname
+
+    def parse_metadata(self) -> Dict[str, Any]:
+        """Parse project's metadata.yaml.
+
+        :returns: Metadata dictionary object, if it exists.
+        """
+        logger.debug("Parsing the project's metadata")
+        metadata_path = self.charmdir / CHARM_METADATA
+        if not metadata_path.exists():
+            raise CommandError("Missing mandatory metadata.yaml.")
+
+        with metadata_path.open("rt", encoding="utf8") as fh:
+            return yaml.safe_load(fh)
 
 
 class Validator:

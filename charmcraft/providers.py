@@ -32,18 +32,9 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
     :cvar compatibility_tag: Tag/Version for variant of build configuration and
         setup.  Any change to this version would indicate that prior [versioned]
         instances are incompatible and must be cleaned.  As such, any new value
-        should be unique to old values (e.g. incrementing).
-    :cvar instance_config_path: Path to persistent environment configuration
-        used for compatibility checks (or other data).  Set to
-        /etc/craft-instance.conf, but may be overridden for application-specific
-        reasons.
-    :cvar instance_config_class: Class defining instance configuration.  May be
-        overridden with an application-specific subclass of InstanceConfiguration
-        to enable application-specific extensions.
-
-    :param alias: Base alias / version.
-    :param environment: Environment to set in /etc/environment.
-    :param hostname: Hostname to configure.
+        should be unique to old values (e.g. incrementing).  Charmcraft extends
+        the buildd tag to include its own version indicator (.0) and namespace
+        ("charmcraft").
     """
 
     compatibility_tag: str = f"charmcraft-{bases.BuilddBase.compatibility_tag}.0"
@@ -57,31 +48,7 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
     ) -> None:
         """Prepare base instance for use by the application.
 
-        Wait for environment to become ready and configure it.  At completion of
-        setup, the executor environment should have networking up and have all
-        of the installed dependencies required for subsequent use by the
-        application.
-
-        Setup may be called more than once in a given instance to refresh/update
-        the environment.
-
-        If timeout is specified, abort operation if time has been exceeded.
-
-        Guarantees provided by buildd's setup:
-
-            - configured /etc/environment
-
-            - configured hostname
-
-            - networking available (IP & DNS resolution)
-
-            - apt cache up-to-date
-
-            - snapd configured and ready
-
-            - system services are started and ready
-
-        Additional guarantees provided by Charmcraft's setup:
+        In addition to the guarantees provided by buildd:
 
             - charmcraft installed
 

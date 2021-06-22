@@ -64,6 +64,8 @@ def test_base_configuration_setup(mock_executor, mock_inject, monkeypatch, alias
         call(executor=mock_executor, snap_name="charmcraft", classic=True)
     ]
 
+    assert config.compatibility_tag == "charmcraft-buildd-base-v0.0"
+
 
 def test_base_configuration_setup_apt_error(mock_executor):
     alias = bases.BuilddBaseAlias.FOCAL

@@ -19,9 +19,15 @@
 
 import distutils.util
 import os
+import pathlib
 import sys
 
 from charmcraft.cmdbase import CommandError
+
+
+def get_managed_environment_project_path():
+    """Path for project when running in managed environment."""
+    return pathlib.Path("/root/project")
 
 
 def is_charmcraft_running_from_snap():

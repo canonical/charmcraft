@@ -958,11 +958,11 @@ def test_status_simple_ok(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel    Version       Revision",
-        "latest   stable     v7            7",
-        "         candidate  v7            7",
-        "         beta       2.0           80",
-        "         edge       git-0db35ea1  156",
+        "Track    Base                  Channel    Version       Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     v7            7",
+        "                               candidate  v7            7",
+        "                               beta       2.0           80",
+        "                               edge       git-0db35ea1  156",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1002,11 +1002,11 @@ def test_status_channels_not_released_with_fallback(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel    Version    Revision",
-        "latest   stable     v7         7",
-        "         candidate  ↑          ↑",
-        "         beta       ↑          ↑",
-        "         edge       2.0        80",
+        "Track    Base                  Channel    Version    Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     v7         7",
+        "                               candidate  ↑          ↑",
+        "                               beta       ↑          ↑",
+        "                               edge       2.0        80",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1034,11 +1034,11 @@ def test_status_channels_not_released_without_fallback(caplog, store_mock, confi
     ]
 
     expected = [
-        "Track    Channel    Version      Revision",
-        "latest   stable     -            -",
-        "         candidate  -            -",
-        "         beta       5.1          5",
-        "         edge       almostready  12",
+        "Track    Base                  Channel    Version      Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     -            -",
+        "                               candidate  -            -",
+        "                               beta       5.1          5",
+        "                               edge       almostready  12",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1068,15 +1068,15 @@ def test_status_multiple_tracks(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel    Version    Revision",
-        "latest   stable     7.5.3      503",
-        "         candidate  ↑          ↑",
-        "         beta       ↑          ↑",
-        "         edge       ↑          ↑",
-        "2.0      stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       1          1",
+        "Track    Base                  Channel    Version    Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     7.5.3      503",
+        "                               candidate  ↑          ↑",
+        "                               beta       ↑          ↑",
+        "                               edge       ↑          ↑",
+        "2.0      ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       1          1",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1112,23 +1112,23 @@ def test_status_tracks_order(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel    Version    Revision",
-        "latest   stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       v1         1",
-        "zzz      stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       v4         4",
-        "2.0      stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       v3         3",
-        "aaa      stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       v2         2",
+        "Track    Base                  Channel    Version    Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v1         1",
+        "zzz      ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v4         4",
+        "2.0      ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v3         3",
+        "aaa      ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v2         2",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1170,12 +1170,12 @@ def test_status_with_one_branch(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel        Version    Revision    Expires at",
-        "latest   stable         -          -",
-        "         candidate      -          -",
-        "         beta           5.1        5",
-        "         edge           ↑          ↑",
-        "         beta/mybranch  ver.12     12          2020-07-03T20:30:40+00:00",
+        "Track    Base                  Channel        Version    Revision    Expires at",
+        "latest   ubuntu 20.04 (amd64)  stable         -          -",
+        "                               candidate      -          -",
+        "                               beta           5.1        5",
+        "                               edge           ↑          ↑",
+        "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40+00:00",  # NOQA
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1224,13 +1224,13 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel        Version    Revision    Expires at",
-        "latest   stable         -          -",
-        "         candidate      -          -",
-        "         beta           5.1        5",
-        "         edge           ↑          ↑",
-        "         beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",
-        "         beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",
+        "Track    Base                  Channel        Version    Revision    Expires at",
+        "latest   ubuntu 20.04 (amd64)  stable         -          -",
+        "                               candidate      -          -",
+        "                               beta           5.1        5",
+        "                               edge           ↑          ↑",
+        "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",  # NOQA
+        "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",  # NOQA
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1255,11 +1255,11 @@ def test_status_with_resources(caplog, store_mock, config):
     StatusCommand("group", config).run(args)
 
     expected = [
-        "Track    Channel    Version    Revision    Resources",
-        "latest   stable     -          -           -",
-        "         candidate  5.1        5           resource1 (r1), resource2 (r54)",
-        "         beta       5.1        5           resource1 (r1)",
-        "         edge       ↑          ↑           ↑",
+        "Track    Base                  Channel    Version    Revision    Resources",
+        "latest   ubuntu 20.04 (amd64)  stable     -          -           -",
+        "                               candidate  5.1        5           resource1 (r1), resource2 (r54)",  # NOQA
+        "                               beta       5.1        5           resource1 (r1)",
+        "                               edge       ↑          ↑           ↑",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1286,11 +1286,11 @@ def test_status_with_resources_missing_after_closed_channel(caplog, store_mock, 
     StatusCommand("group", config).run(args)
 
     expected = [
-        "Track    Channel    Version    Revision    Resources",
-        "latest   stable     5.1        5           resource (r1)",
-        "         candidate  ↑          ↑           ↑",
-        "         beta       5.1        5           -",
-        "         edge       5.1        5           resource (r1)",
+        "Track    Base                  Channel    Version    Revision    Resources",
+        "latest   ubuntu 20.04 (amd64)  stable     5.1        5           resource (r1)",
+        "                               candidate  ↑          ↑           ↑",
+        "                               beta       5.1        5           -",
+        "                               edge       5.1        5           resource (r1)",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1331,12 +1331,205 @@ def test_status_with_resources_and_branches(caplog, store_mock, config):
     StatusCommand("group", config).run(args)
 
     expected = [
-        "Track    Channel        Version    Revision    Resources      Expires at",
-        "latest   stable         -          -           -",
-        "         candidate      -          -           -",
-        "         beta           7.0.0      23          testres (r14)",
-        "         edge           ↑          ↑           ↑",
-        "         edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40+00:00",
+        "Track    Base                  Channel        Version    Revision    Resources      Expires at",  # NOQA
+        "latest   ubuntu 20.04 (amd64)  stable         -          -           -",
+        "                               candidate      -          -           -",
+        "                               beta           7.0.0      23          testres (r14)",
+        "                               edge           ↑          ↑           ↑",
+        "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40+00:00",  # NOQA
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_multiplebases_single_track(caplog, store_mock, config):
+    """Multiple bases with one track."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    other_base = Base(architecture="16b", channel="1", name="xz")
+    channel_map = [
+        _build_release(revision=7, channel="latest/stable", base=other_base),
+        _build_release(revision=7, channel="latest/candidate"),
+        _build_release(revision=80, channel="latest/beta", base=other_base),
+        _build_release(revision=156, channel="latest/edge"),
+    ]
+    channels = _build_channels()
+    revisions = [
+        _build_revision(revno=7, version="v7"),
+        _build_revision(revno=80, version="2.0"),
+        _build_revision(revno=156, version="git-0db35ea1"),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm")
+    StatusCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base                  Channel    Version       Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     -             -",
+        "                               candidate  v7            7",
+        "                               beta       ↑             ↑",
+        "                               edge       git-0db35ea1  156",
+        "         xz 1 (16b)            stable     v7            7",
+        "                               candidate  ↑             ↑",
+        "                               beta       2.0           80",
+        "                               edge       ↑             ↑",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_multiplebases_multiple_tracks(caplog, store_mock, config):
+    """Multiple bases with several tracks."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    other_base = Base(architecture="16b", channel="1", name="xz")
+    channel_map = [
+        _build_release(revision=7, channel="latest/stable", base=other_base),
+        _build_release(revision=7, channel="latest/candidate"),
+        _build_release(revision=80, channel="latest/beta", base=other_base),
+        _build_release(revision=156, channel="latest/edge"),
+        _build_release(revision=7, channel="2.0/stable", base=other_base),
+        _build_release(revision=7, channel="2.0/candidate"),
+        _build_release(revision=80, channel="2.0/beta", base=other_base),
+        _build_release(revision=156, channel="2.0/edge"),
+        _build_release(revision=156, channel="3.0/edge"),
+    ]
+    channels = (
+        _build_channels() + _build_channels(track="2.0") + _build_channels(track="3.0")
+    )
+    revisions = [
+        _build_revision(revno=7, version="v7"),
+        _build_revision(revno=80, version="2.0"),
+        _build_revision(revno=156, version="git-0db35ea1"),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm")
+    StatusCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base                  Channel    Version       Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     -             -",
+        "                               candidate  v7            7",
+        "                               beta       ↑             ↑",
+        "                               edge       git-0db35ea1  156",
+        "         xz 1 (16b)            stable     v7            7",
+        "                               candidate  ↑             ↑",
+        "                               beta       2.0           80",
+        "                               edge       ↑             ↑",
+        "2.0      ubuntu 20.04 (amd64)  stable     -             -",
+        "                               candidate  v7            7",
+        "                               beta       ↑             ↑",
+        "                               edge       git-0db35ea1  156",
+        "         xz 1 (16b)            stable     v7            7",
+        "                               candidate  ↑             ↑",
+        "                               beta       2.0           80",
+        "                               edge       ↑             ↑",
+        "3.0      ubuntu 20.04 (amd64)  stable     -             -",
+        "                               candidate  -             -",
+        "                               beta       -             -",
+        "                               edge       git-0db35ea1  156",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_multiplebases_everything_combined(caplog, store_mock, config):
+    """Multiple bases with several other modifiers, just a sanity check."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    other_base = Base(architecture="16b", channel="1", name="xz")
+    tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
+    resource = Resource(name="testres", optional=True, revision=1, resource_type="file")
+    channel_map = [
+        _build_release(revision=7, channel="latest/candidate"),
+        _build_release(revision=156, channel="latest/edge"),
+        _build_release(revision=7, channel="latest/candidate/br1", expires_at=tstamp),
+        _build_release(revision=7, channel="latest/stable", base=other_base),
+        _build_release(revision=80, channel="latest/beta", base=other_base),
+        _build_release(
+            revision=99,
+            channel="latest/beta/br2",
+            base=other_base,
+            expires_at=tstamp,
+            resources=[resource],
+        ),
+        _build_release(revision=7, channel="2.0/candidate"),
+        _build_release(revision=80, channel="2.0/beta"),
+        _build_release(revision=7, channel="2.0/stable", base=other_base),
+        _build_release(revision=80, channel="2.0/edge", base=other_base),
+        _build_release(
+            revision=80, channel="2.0/edge/foobar", base=other_base, expires_at=tstamp
+        ),
+    ]
+    channels = _build_channels() + _build_channels(track="2.0")
+    channels.extend(
+        [
+            Channel(
+                name="latest/candidate/br1",
+                fallback="latest/candidate",
+                track="latest",
+                risk="candidate",
+                branch="br1",
+            ),
+            Channel(
+                name="latest/beta/br2",
+                fallback="latest/beta",
+                track="latest",
+                risk="beta",
+                branch="br2",
+            ),
+            Channel(
+                name="2.0/edge/foobar",
+                fallback="2.0/edge",
+                track="2.0",
+                risk="edge",
+                branch="foobar",
+            ),
+        ]
+    )
+    revisions = [
+        _build_revision(revno=7, version="v7"),
+        _build_revision(revno=80, version="2.0"),
+        _build_revision(revno=156, version="git-0db35ea1"),
+        _build_revision(revno=99, version="weird"),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm")
+    StatusCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base                  Channel        Version       Revision    Resources     Expires at",  # NOQA
+        "latest   ubuntu 20.04 (amd64)  stable         -             -           -",
+        "                               candidate      v7            7           -",
+        "                               beta           ↑             ↑           ↑",
+        "                               edge           git-0db35ea1  156         -",
+        "                               candidate/br1  v7            7           -             2020-07-03T20:30:40+00:00",  # NOQA
+        "         xz 1 (16b)            stable         v7            7           -",
+        "                               candidate      ↑             ↑           ↑",
+        "                               beta           2.0           80          -",
+        "                               edge           ↑             ↑           ↑",
+        "                               beta/br2       weird         99          testres (r1)  2020-07-03T20:30:40+00:00",  # NOQA
+        "2.0      ubuntu 20.04 (amd64)  stable         -             -           -",
+        "                               candidate      v7            7           -",
+        "                               beta           2.0           80          -",
+        "                               edge           ↑             ↑           ↑",
+        "         xz 1 (16b)            stable         v7            7           -",
+        "                               candidate      ↑             ↑           ↑",
+        "                               beta           ↑             ↑           ↑",
+        "                               edge           2.0           80          -",
+        "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40+00:00",  # NOQA
     ]
     assert expected == [rec.message for rec in caplog.records]
 

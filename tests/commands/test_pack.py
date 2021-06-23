@@ -35,7 +35,7 @@ from charmcraft.commands.pack import (
 from charmcraft.utils import useful_filepath, SingleOptionEnsurer
 
 # empty namespace
-noargs = Namespace(entrypoint=None, requirement=None)
+noargs = Namespace(entrypoint=None, requirement=None, bases_index=[])
 
 
 @pytest.fixture
@@ -430,7 +430,7 @@ def test_charm_parameters_entrypoint(config):
 
 def test_charm_parameters_validator(config, tmp_path):
     """Check that build.Builder is properly called."""
-    args = Namespace(requirement="test-reqs", entrypoint="test-epoint")
+    args = Namespace(requirement="test-reqs", entrypoint="test-epoint", bases_index=[])
     config.set(
         type="charm",
         project=Project(dirpath=tmp_path, started_at=datetime.datetime.utcnow()),
@@ -447,6 +447,7 @@ def test_charm_parameters_validator(config, tmp_path):
                 "from": tmp_path,
                 "requirement": "test-reqs",
                 "entrypoint": "test-epoint",
+                "bases_indices": [],
             }
         )
     )
@@ -456,9 +457,9 @@ def test_charm_builder_infrastructure_called(config):
     """Check that build.Builder is properly called."""
     config.set(type="charm")
     with patch("charmcraft.commands.build.Validator", autospec=True) as validator_mock:
-        validator_mock().process.return_value = "processed args"
+        validator_mock(config).process.return_value = "processed args"
         with patch("charmcraft.commands.build.Builder") as builder_class_mock:
             builder_class_mock.return_value = builder_instance_mock = MagicMock()
             PackCommand("group", config).run(noargs)
     builder_class_mock.assert_called_with("processed args", config)
-    builder_instance_mock.run.assert_called_with()
+    builder_instance_mock.run.assert_called_with([])

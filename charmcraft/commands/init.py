@@ -84,12 +84,9 @@ class InitCommand(BaseCommand):
     def run(self, args):
         """Execute command's actual functionality."""
         if any(self.config.project.dirpath.iterdir()) and not args.force:
-            raise CommandError(
-                "{} is not empty (consider using --force to work on nonempty directories)".format(
-                    self.config.project.dirpath
-                )
-            )
-        logger.debug("Using project directory '%s'", self.config.project.dirpath)
+            tpl = "{!r} is not empty (consider using --force to work on nonempty directories)"
+            raise CommandError(tpl.format(str(self.config.project.dirpath)))
+        logger.debug("Using project directory %r", str(self.config.project.dirpath))
 
         if args.author is None:
             try:

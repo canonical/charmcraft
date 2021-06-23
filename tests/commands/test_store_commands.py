@@ -1453,7 +1453,7 @@ def test_createlib_path_already_there(tmp_path, monkeypatch, config):
             CreateLibCommand("group", config).run(args)
 
     assert str(err.value) == (
-        "This library already exists: lib/charms/test_charm_name/v0/testlib.py"
+        "This library already exists: 'lib/charms/test_charm_name/v0/testlib.py'."
     )
 
 
@@ -1578,7 +1578,7 @@ def test_publishlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
         "charms.testcharm_1.v1.testlib-b",
     ]
     expected = [
-        "Libraries found under lib/charms/testcharm_1: " + str(names),
+        "Libraries found under 'lib/charms/testcharm_1': " + str(names),
         "Library charms.testcharm_1.v0.testlib-a sent to the store with version 0.1",
         "Library charms.testcharm_1.v0.testlib-b sent to the store with version 0.1",
         "Library charms.testcharm_1.v1.testlib-b sent to the store with version 1.3",
@@ -1599,7 +1599,7 @@ def test_publishlib_not_found(caplog, store_mock, tmp_path, monkeypatch, config)
             PublishLibCommand("group", config).run(args)
 
         assert str(cm.value) == (
-            "The specified library was not found at path lib/charms/testcharm/v0/testlib.py."
+            "The specified library was not found at path 'lib/charms/testcharm/v0/testlib.py'."
         )
 
 
@@ -2026,8 +2026,8 @@ def test_getlibinfo_malformed_metadata_field(tmp_path, monkeypatch):
     test_path = _create_lib(metadata_id="LIBID = foo = 23")
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
-    assert str(err.value) == r"Bad metadata line in {}: b'LIBID = foo = 23\n'".format(
-        test_path
+    assert str(err.value) == r"Bad metadata line in {!r}: b'LIBID = foo = 23\n'".format(
+        str(test_path)
     )
 
 
@@ -2038,8 +2038,8 @@ def test_getlibinfo_missing_metadata_field(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} is missing the mandatory metadata fields: LIBAPI, LIBPATCH.".format(
-            test_path
+        "Library {!r} is missing the mandatory metadata fields: LIBAPI, LIBPATCH.".format(
+            str(test_path)
         )
     )
 
@@ -2051,8 +2051,8 @@ def test_getlibinfo_api_not_int(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBAPI is not zero or a positive integer.".format(
-            test_path
+        "Library {!r} metadata field LIBAPI is not zero or a positive integer.".format(
+            str(test_path)
         )
     )
 
@@ -2064,8 +2064,8 @@ def test_getlibinfo_api_negative(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBAPI is not zero or a positive integer.".format(
-            test_path
+        "Library {!r} metadata field LIBAPI is not zero or a positive integer.".format(
+            str(test_path)
         )
     )
 
@@ -2077,8 +2077,8 @@ def test_getlibinfo_patch_not_int(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBPATCH is not zero or a positive integer.".format(
-            test_path
+        "Library {!r} metadata field LIBPATCH is not zero or a positive integer.".format(
+            str(test_path)
         )
     )
 
@@ -2090,8 +2090,8 @@ def test_getlibinfo_patch_negative(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBPATCH is not zero or a positive integer.".format(
-            test_path
+        "Library {!r} metadata field LIBPATCH is not zero or a positive integer.".format(
+            str(test_path)
         )
     )
 
@@ -2103,8 +2103,8 @@ def test_getlibinfo_api_patch_both_zero(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-            test_path
+        "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
+            str(test_path)
         )
     )
 
@@ -2116,8 +2116,8 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBAPI is different from the version in the path.".format(
-            test_path
+        "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
+            str(test_path)
         )
     )
 
@@ -2129,8 +2129,8 @@ def test_getlibinfo_libid_non_string(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBID must be a non-empty ASCII string.".format(
-            test_path
+        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
+            str(test_path)
         )
     )
 
@@ -2142,8 +2142,8 @@ def test_getlibinfo_libid_non_ascii(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBID must be a non-empty ASCII string.".format(
-            test_path
+        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
+            str(test_path)
         )
     )
 
@@ -2155,8 +2155,8 @@ def test_getlibinfo_libid_empty(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBID must be a non-empty ASCII string.".format(
-            test_path
+        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
+            str(test_path)
         )
     )
 
@@ -2412,7 +2412,7 @@ def test_fetchlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
         "charms.testcharm2.v3.testlib2",
     ]
     expected = [
-        "Libraries found under lib/charms: " + str(names),
+        "Libraries found under 'lib/charms': " + str(names),
         "Library charms.testcharm1.v0.testlib1 updated to version 0.2.",
         "Library charms.testcharm2.v3.testlib2 updated to version 3.14.",
     ]
@@ -2825,7 +2825,7 @@ def test_uploadresource_filepath_call_ok(caplog, store_mock, config, tmp_path):
         call.upload_resource("mycharm", "myresource", "file", test_resource)
     ]
     expected = [
-        "Uploading resource directly from file '{}'.".format(test_resource),
+        "Uploading resource directly from file {!r}.".format(str(test_resource)),
         "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
     ]
     assert expected == [rec.message for rec in caplog.records]

@@ -105,7 +105,9 @@ class _MessageHandler:
         if err.argsparsing:
             print(err)
         else:
-            msg = "{} (full execution logs in {})".format(err, self._log_filepath)
+            msg = "{} (full execution logs in {!r})".format(
+                err, str(self._log_filepath)
+            )
             logger.error(msg)
 
     def ended_crash(self, err):

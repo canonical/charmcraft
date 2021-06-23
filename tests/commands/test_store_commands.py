@@ -54,6 +54,7 @@ from charmcraft.commands.store import (
     get_name_from_zip,
 )
 from charmcraft.commands.store.store import (
+    Base,
     Channel,
     Entity,
     Error,
@@ -570,6 +571,7 @@ def test_revisions_simple(caplog, store_mock, config):
     """Happy path of one result from the Store."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
             revision=1,
@@ -577,6 +579,7 @@ def test_revisions_simple(caplog, store_mock, config):
             created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
             status="accepted",
             errors=[],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -617,15 +620,31 @@ def test_revisions_ordered_by_revision(caplog, store_mock, config):
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
     tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
-            revision=1, version="v1", created_at=tstamp, status="accepted", errors=[]
+            revision=1,
+            version="v1",
+            created_at=tstamp,
+            status="accepted",
+            errors=[],
+            bases=bases,
         ),
         Revision(
-            revision=3, version="v1", created_at=tstamp, status="accepted", errors=[]
+            revision=3,
+            version="v1",
+            created_at=tstamp,
+            status="accepted",
+            errors=[],
+            bases=bases,
         ),
         Revision(
-            revision=2, version="v1", created_at=tstamp, status="accepted", errors=[]
+            revision=2,
+            version="v1",
+            created_at=tstamp,
+            status="accepted",
+            errors=[],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -646,6 +665,7 @@ def test_revisions_version_null(caplog, store_mock, config):
     """Support the case of version being None."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
             revision=1,
@@ -653,6 +673,7 @@ def test_revisions_version_null(caplog, store_mock, config):
             created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
             status="accepted",
             errors=[],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -671,6 +692,7 @@ def test_revisions_errors_simple(caplog, store_mock, config):
     """Support having one case with a simple error."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
             revision=1,
@@ -678,6 +700,7 @@ def test_revisions_errors_simple(caplog, store_mock, config):
             created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
             status="rejected",
             errors=[Error(message="error text", code="broken")],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -696,6 +719,7 @@ def test_revisions_errors_multiple(caplog, store_mock, config):
     """Support having one case with multiple errors."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
             revision=1,
@@ -706,6 +730,7 @@ def test_revisions_errors_multiple(caplog, store_mock, config):
                 Error(message="text 1", code="missing-stuff"),
                 Error(message="other long error text", code="broken"),
             ],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -888,6 +913,22 @@ def _build_revision(revno, version):
         created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
         status="accepted",
         errors=[],
+        bases=[Base(architecture="amd64", channel="20.04", name="ubuntu")],
+    )
+
+
+def _build_release(revision, channel, expires_at=None, resources=None, base=None):
+    """Helper to build a release."""
+    if resources is None:
+        resources = []
+    if base is None:
+        base = Base(architecture="amd64", channel="20.04", name="ubuntu")
+    return Release(
+        revision=revision,
+        channel=channel,
+        expires_at=expires_at,
+        resources=resources,
+        base=base,
     )
 
 
@@ -896,10 +937,10 @@ def test_status_simple_ok(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=7, channel="latest/stable", expires_at=None, resources=[]),
-        Release(revision=7, channel="latest/candidate", expires_at=None, resources=[]),
-        Release(revision=80, channel="latest/beta", expires_at=None, resources=[]),
-        Release(revision=156, channel="latest/edge", expires_at=None, resources=[]),
+        _build_release(revision=7, channel="latest/stable"),
+        _build_release(revision=7, channel="latest/candidate"),
+        _build_release(revision=80, channel="latest/beta"),
+        _build_release(revision=156, channel="latest/edge"),
     ]
     channels = _build_channels()
     revisions = [
@@ -943,8 +984,8 @@ def test_status_channels_not_released_with_fallback(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=7, channel="latest/stable", expires_at=None, resources=[]),
-        Release(revision=80, channel="latest/edge", expires_at=None, resources=[]),
+        _build_release(revision=7, channel="latest/stable"),
+        _build_release(revision=80, channel="latest/edge"),
     ]
     channels = _build_channels()
     revisions = [
@@ -975,8 +1016,8 @@ def test_status_channels_not_released_without_fallback(caplog, store_mock, confi
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[]),
-        Release(revision=12, channel="latest/edge", expires_at=None, resources=[]),
+        _build_release(revision=5, channel="latest/beta"),
+        _build_release(revision=12, channel="latest/edge"),
     ]
     channels = _build_channels()
     revisions = [
@@ -1007,8 +1048,8 @@ def test_status_multiple_tracks(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=503, channel="latest/stable", expires_at=None, resources=[]),
-        Release(revision=1, channel="2.0/edge", expires_at=None, resources=[]),
+        _build_release(revision=503, channel="latest/stable"),
+        _build_release(revision=1, channel="2.0/edge"),
     ]
     channels_latest = _build_channels()
     channels_track = _build_channels(track="2.0")
@@ -1045,10 +1086,10 @@ def test_status_tracks_order(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=1, channel="latest/edge", expires_at=None, resources=[]),
-        Release(revision=2, channel="aaa/edge", expires_at=None, resources=[]),
-        Release(revision=3, channel="2.0/edge", expires_at=None, resources=[]),
-        Release(revision=4, channel="zzz/edge", expires_at=None, resources=[]),
+        _build_release(revision=1, channel="latest/edge"),
+        _build_release(revision=2, channel="aaa/edge"),
+        _build_release(revision=3, channel="2.0/edge"),
+        _build_release(revision=4, channel="zzz/edge"),
     ]
     channels_latest = _build_channels()
     channels_track_1 = _build_channels(track="zzz")
@@ -1098,12 +1139,11 @@ def test_status_with_one_branch(caplog, store_mock, config):
 
     tstamp_with_timezone = dateutil.parser.parse("2020-07-03T20:30:40Z")
     channel_map = [
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[]),
-        Release(
+        _build_release(revision=5, channel="latest/beta"),
+        _build_release(
             revision=12,
             channel="latest/beta/mybranch",
             expires_at=tstamp_with_timezone,
-            resources=[],
         ),
     ]
     channels = _build_channels()
@@ -1146,13 +1186,9 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
 
     tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
     channel_map = [
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[]),
-        Release(
-            revision=12, channel="latest/beta/branch-1", expires_at=tstamp, resources=[]
-        ),
-        Release(
-            revision=15, channel="latest/beta/branch-2", expires_at=tstamp, resources=[]
-        ),
+        _build_release(revision=5, channel="latest/beta"),
+        _build_release(revision=12, channel="latest/beta/branch-1", expires_at=tstamp),
+        _build_release(revision=15, channel="latest/beta/branch-2", expires_at=tstamp),
     ]
     channels = _build_channels()
     channels.extend(
@@ -1206,13 +1242,8 @@ def test_status_with_resources(caplog, store_mock, config):
     res1 = Resource(name="resource1", optional=True, revision=1, resource_type="file")
     res2 = Resource(name="resource2", optional=True, revision=54, resource_type="file")
     channel_map = [
-        Release(
-            revision=5,
-            channel="latest/candidate",
-            expires_at=None,
-            resources=[res1, res2],
-        ),
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[res1]),
+        _build_release(revision=5, channel="latest/candidate", resources=[res1, res2]),
+        _build_release(revision=5, channel="latest/beta", resources=[res1]),
     ]
     channels = _build_channels()
     revisions = [
@@ -1241,13 +1272,9 @@ def test_status_with_resources_missing_after_closed_channel(caplog, store_mock, 
         name="resource", optional=True, revision=1, resource_type="file"
     )
     channel_map = [
-        Release(
-            revision=5, channel="latest/stable", expires_at=None, resources=[resource]
-        ),
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[]),
-        Release(
-            revision=5, channel="latest/edge", expires_at=None, resources=[resource]
-        ),
+        _build_release(revision=5, channel="latest/stable", resources=[resource]),
+        _build_release(revision=5, channel="latest/beta", resources=[]),
+        _build_release(revision=5, channel="latest/edge", resources=[resource]),
     ]
     channels = _build_channels()
     revisions = [
@@ -1276,8 +1303,8 @@ def test_status_with_resources_and_branches(caplog, store_mock, config):
     res1 = Resource(name="testres", optional=True, revision=1, resource_type="file")
     res2 = Resource(name="testres", optional=True, revision=14, resource_type="file")
     channel_map = [
-        Release(revision=23, channel="latest/beta", expires_at=None, resources=[res2]),
-        Release(
+        _build_release(revision=23, channel="latest/beta", resources=[res2]),
+        _build_release(
             revision=5,
             channel="latest/edge/mybranch",
             expires_at=tstamp,

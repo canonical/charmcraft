@@ -63,7 +63,7 @@ def test_load_yaml_no_file(tmp_path, caplog):
     content = load_yaml(test_file)
     assert content is None
 
-    expected = "Couldn't find config file {}".format(test_file)
+    expected = "Couldn't find config file {!r}".format(str(test_file))
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -75,7 +75,7 @@ def test_load_yaml_directory(tmp_path, caplog):
     content = load_yaml(test_file)
     assert content is None
 
-    expected = "Couldn't find config file {}".format(test_file)
+    expected = "Couldn't find config file {!r}".format(str(test_file))
     assert [expected] == [rec.message for rec in caplog.records]
 
 
@@ -92,7 +92,7 @@ def test_load_yaml_corrupted_format(tmp_path, caplog):
     assert content is None
 
     (logged,) = [rec.message for rec in caplog.records]
-    assert "Failed to read/parse config file {}".format(test_file) in logged
+    assert "Failed to read/parse config file {!r}".format(str(test_file)) in logged
     assert "ParserError" in logged
 
 
@@ -110,7 +110,7 @@ def test_load_yaml_file_problem(tmp_path, caplog):
     assert content is None
 
     (logged,) = [rec.message for rec in caplog.records]
-    assert "Failed to read/parse config file {}".format(test_file) in logged
+    assert "Failed to read/parse config file {!r}".format(str(test_file)) in logged
     assert "PermissionError" in logged
 
 

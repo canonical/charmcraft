@@ -148,7 +148,7 @@ class Builder:
 
         :returns: File name of charm.
         """
-        logger.debug("Building charm in '%s'", self.buildpath)
+        logger.debug("Building charm in %r", str(self.buildpath))
 
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
@@ -247,7 +247,8 @@ class Builder:
         else:
             rel_path = src_path.relative_to(self.charmdir)
             logger.warning(
-                "Ignoring symlink because targets outside the project: '%s'", rel_path
+                "Ignoring symlink because targets outside the project: %r",
+                str(rel_path),
             )
 
     def handle_generic_paths(self):
@@ -274,7 +275,9 @@ class Builder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    logger.debug("Ignoring directory because of rules: '%s'", rel_path)
+                    logger.debug(
+                        "Ignoring directory because of rules: %r", str(rel_path)
+                    )
                     ignored.append(pos)
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
@@ -293,7 +296,7 @@ class Builder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    logger.debug("Ignoring file because of rules: '%s'", rel_path)
+                    logger.debug("Ignoring file because of rules: %r", str(rel_path))
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
                     self.create_symlink(abs_path, dest_path)
@@ -309,7 +312,7 @@ class Builder:
                             raise
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
-                    logger.debug("Ignoring file because of type: '%s'", rel_path)
+                    logger.debug("Ignoring file because of type: %r", str(rel_path))
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)

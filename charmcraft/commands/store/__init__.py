@@ -778,7 +778,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
                     field, value = [x.strip() for x in line.split(b"=")]
                 except ValueError:
                     raise CommandError(
-                        "Bad metadata line in {}: {!r}".format(lib_path, line)
+                        "Bad metadata line in {!r}: {!r}".format(str(lib_path), line)
                     )
                 metadata[field] = value
             else:
@@ -787,44 +787,46 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
     if missing:
         raise CommandError(
-            "Library {} is missing the mandatory metadata fields: {}.".format(
-                lib_path, ", ".join(sorted(missing))
+            "Library {!r} is missing the mandatory metadata fields: {}.".format(
+                str(lib_path), ", ".join(sorted(missing))
             )
         )
 
     bad_api_patch_msg = (
-        "Library {} metadata field {} is not zero or a positive integer."
+        "Library {!r} metadata field {} is not zero or a positive integer."
     )
     try:
         libapi = _get_positive_int(metadata[b"LIBAPI"])
     except ValueError:
-        raise CommandError(bad_api_patch_msg.format(lib_path, "LIBAPI"))
+        raise CommandError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
     try:
         libpatch = _get_positive_int(metadata[b"LIBPATCH"])
     except ValueError:
-        raise CommandError(bad_api_patch_msg.format(lib_path, "LIBPATCH"))
+        raise CommandError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
 
     if libapi == 0 and libpatch == 0:
         raise CommandError(
-            "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-                lib_path
+            "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
+                str(lib_path)
             )
         )
 
     if libapi != api_from_path:
         raise CommandError(
-            "Library {} metadata field LIBAPI is different from the version in the path.".format(
-                lib_path
+            "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
+                str(lib_path)
             )
         )
 
-    bad_libid_msg = "Library {} metadata field LIBID must be a non-empty ASCII string."
+    bad_libid_msg = (
+        "Library {!r} metadata field LIBID must be a non-empty ASCII string."
+    )
     try:
         libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
     except (ValueError, UnicodeDecodeError):
-        raise CommandError(bad_libid_msg.format(lib_path))
+        raise CommandError(bad_libid_msg.format(str(lib_path)))
     if not libid or not isinstance(libid, str):
-        raise CommandError(bad_libid_msg.format(lib_path))
+        raise CommandError(bad_libid_msg.format(str(lib_path)))
 
     content_hash = hasher.hexdigest()
     content = lib_path.read_text()
@@ -867,7 +869,7 @@ def _get_libs_from_tree(charm_name=None):
                     local_libs_data.append(_get_lib_info(lib_path=libfile))
 
     found_libs = [lib_data.full_name for lib_data in local_libs_data]
-    logger.debug("Libraries found under %s: %s", base_dir, found_libs)
+    logger.debug("Libraries found under %r: %s", str(base_dir), found_libs)
     return local_libs_data
 
 
@@ -934,7 +936,9 @@ class CreateLibCommand(BaseCommand):
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CommandError("This library already exists: {}".format(lib_path))
+            raise CommandError(
+                "This library already exists: {!r}.".format(str(lib_path))
+            )
 
         store = Store(self.config.charmhub)
         lib_id = store.create_library_id(charm_name, lib_name)
@@ -948,7 +952,7 @@ class CreateLibCommand(BaseCommand):
             lib_path.write_text(template.render(context))
         except OSError as exc:
             raise CommandError(
-                "Error writing the library in {}: {!r}.".format(lib_path, exc)
+                "Error writing the library in {!r}: {!r}.".format(str(lib_path), exc)
             )
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
@@ -993,8 +997,8 @@ class PublishLibCommand(BaseCommand):
             lib_data = _get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
                 raise CommandError(
-                    "The specified library was not found at path {}.".format(
-                        lib_data.path
+                    "The specified library was not found at path {!r}.".format(
+                        str(lib_data.path)
                     )
                 )
             if lib_data.charm_name != charm_name:

@@ -24,14 +24,14 @@ import pydantic
 import yaml
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.config import ModelConfigDefaults, format_pydantic_errors
+from charmcraft.config import format_pydantic_errors
 
 logger = logging.getLogger(__name__)
 
 CHARM_METADATA = "metadata.yaml"
 
 
-class CharmMetadata(ModelConfigDefaults):
+class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
     """Object representing metadata.yaml contents."""
 
     name: pydantic.StrictStr

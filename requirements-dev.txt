@@ -6,7 +6,7 @@ cffi==1.14.5
 chardet==4.0.0
 click==8.0.1
 coverage==5.5
-craft-providers==0.0.1
+craft-providers==0.0.2
 flake8==3.9.2
 humanize==3.9.0
 idna==2.10

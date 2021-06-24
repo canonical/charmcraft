@@ -135,6 +135,8 @@ parts:
       - pyvenv.cfg
       - lib/charmcraft
       - lib/charmcraft-*.egg-info
+      - lib/craft_providers
+      - lib/craft_providers-*.egg-info
       - lib/pip
       - lib/pip-*.dist-info
       - lib/wheel

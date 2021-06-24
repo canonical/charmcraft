@@ -17,13 +17,27 @@
 """Build environment provider support for charmcraft."""
 
 import logging
+import os
 import subprocess
-from typing import Optional
+from typing import Dict, Optional
 
 from craft_providers import Executor, bases
 from craft_providers.actions import snap_installer
 
 logger = logging.getLogger(__name__)
+
+
+def get_command_environment() -> Dict[str, str]:
+    """Construct the required environment."""
+    env = bases.buildd.default_command_environment()
+    env["CHARMCRAFT_MANAGED_MODE"] = "1"
+
+    # Pass-through host environment that target may need.
+    for env_key in ["http_proxy", "https_proxy", "no_proxy"]:
+        if env_key in os.environ:
+            env[env_key] = os.environ[env_key]
+
+    return env
 
 
 class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):

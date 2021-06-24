@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import os
 import subprocess
 from unittest import mock
 from unittest.mock import call
@@ -37,11 +38,22 @@ def mock_executor():
 
 
 @pytest.fixture
+def mock_lxd(monkeypatch):
+    with mock.patch("charmcraft.providers.lxd", autospec=True) as mock_lxd:
+        yield mock_lxd
+
+
+@pytest.fixture
 def mock_inject():
     with mock.patch(
         "craft_providers.actions.snap_installer.inject_from_host"
     ) as mock_inject:
         yield mock_inject
+
+
+@pytest.fixture(autouse=True)
+def clear_environment(monkeypatch):
+    monkeypatch.setattr(os, "environ", {})
 
 
 @pytest.mark.parametrize(
@@ -100,3 +112,32 @@ def test_base_configuration_setup_snap_injection_error(mock_executor, mock_injec
         config.setup(executor=mock_executor)
 
     assert exc_info.value.__cause__ is not None
+
+
+def test_get_command_environment_minimal(monkeypatch):
+    monkeypatch.setattr(os, "environ", {})
+
+    env = providers.get_command_environment()
+
+    assert env == {
+        "CHARMCRAFT_MANAGED_MODE": "1",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+    }
+
+
+def test_get_command_environment_all_opts(monkeypatch):
+    monkeypatch.setattr(os, "environ", {})
+
+    monkeypatch.setenv("http_proxy", "test-http-proxy")
+    monkeypatch.setenv("https_proxy", "test-https-proxy")
+    monkeypatch.setenv("no_proxy", "test-no-proxy")
+
+    env = providers.get_command_environment()
+
+    assert env == {
+        "CHARMCRAFT_MANAGED_MODE": "1",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+        "http_proxy": "test-http-proxy",
+        "https_proxy": "test-https-proxy",
+        "no_proxy": "test-no-proxy",
+    }

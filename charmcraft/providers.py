@@ -26,6 +26,33 @@ from craft_providers.actions import snap_installer
 logger = logging.getLogger(__name__)
 
 
+def get_instance_name(
+    *, bases_index: int, build_on_index: int, project_name: str, target_arch: str
+) -> str:
+    """Formulate the name for an instance using each of the given parameters.
+
+    Incorporate each of the parameters into the name to come up with a
+    predictable naming schema that avoids name collisions across multiple,
+    potentially complex, projects.
+
+    :param bases_index: Index of `bases:` entry.
+    :param build_on_index: Index of `build-on` within bases entry.
+    :param project_name: Name of charm project.
+    :param target_arch: Targetted architecture, used in the name to prevent
+        collisions should future work enable multiple architectures on the same
+        platform.
+    """
+    return "-".join(
+        [
+            "charmcraft",
+            project_name,
+            str(bases_index),
+            str(build_on_index),
+            target_arch,
+        ]
+    )
+
+
 class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
     """Base configuration for Charmcraft.
 

@@ -18,10 +18,11 @@
 
 import logging
 import os
+import re
 import subprocess
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
-from craft_providers import Executor, bases
+from craft_providers import Executor, bases, lxd
 from craft_providers.actions import snap_installer
 
 from charmcraft.config import Base
@@ -103,6 +104,37 @@ def get_command_environment() -> Dict[str, str]:
             env[env_key] = os.environ[env_key]
 
     return env
+
+
+def clean_project_environments(
+    charm_name: str,
+    *,
+    lxd_project: str = "charmcraft",
+    lxd_remote: str = "local",
+) -> List[str]:
+    """Clean up any environments created for project.
+
+    :param charm_name: Name of project.
+    :param lxd_project: Name of LXD project.
+    :param lxd_remote: Name of LXD remote.
+
+    :returns: List of containers deleted.
+    """
+    deleted: List[str] = []
+    lxc = lxd.LXC()
+
+    for name in lxc.list_names(project=lxd_project, remote=lxd_remote):
+        match_regex = f"^charmcraft-{charm_name}-.*-.*-.*$"
+        if re.match(match_regex, name):
+            logger.debug("Deleting container: %s", name)
+            lxc.delete(
+                instance_name=name, force=True, project=lxd_project, remote=lxd_remote
+            )
+            deleted.append(name)
+        else:
+            logger.debug("Not deleting container: %s", name)
+
+    return deleted
 
 
 class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):

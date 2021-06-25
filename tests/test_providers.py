@@ -125,6 +125,7 @@ def test_clean_project_environments(mock_lxc):
     mock_lxc.return_value.list_names.return_value = [
         "do-not-delete-me-please",
         "charmcraft-testcharm-b-c-d",
+        "charmcraft-my-charm---",
         "charmcraft-my-charm-project-0-0-amd99",
         "charmcraft-my-charm-project-999-444-arm64",
         "charmcraft_a_b_c_d",

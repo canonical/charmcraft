@@ -124,7 +124,7 @@ def clean_project_environments(
     lxc = lxd.LXC()
 
     for name in lxc.list_names(project=lxd_project, remote=lxd_remote):
-        match_regex = f"^charmcraft-{charm_name}-.*-.*-.*$"
+        match_regex = f"^charmcraft-{charm_name}-.+-.+-.+$"
         if re.match(match_regex, name):
             logger.debug("Deleting container: %s", name)
             lxc.delete(

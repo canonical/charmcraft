@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import os
+import pathlib
 import subprocess
 from unittest import mock
 from unittest.mock import call
@@ -31,6 +32,15 @@ from charmcraft.config import Base
 def bypass_buildd_base_setup(monkeypatch):
     """Patch out inherited setup steps."""
     monkeypatch.setattr(bases.BuilddBase, "setup", lambda *args, **kwargs: None)
+
+
+@pytest.fixture()
+def mock_configure_buildd_image_remote():
+    with mock.patch(
+        "charmcraft.providers.configure_buildd_image_remote",
+        return_value="buildd-remote",
+    ) as mock_remote:
+        yield mock_remote
 
 
 @pytest.fixture
@@ -210,3 +220,91 @@ def test_is_base_providable(
     valid, reason = providers.is_base_providable(base)
 
     assert (valid, reason) == (expected_valid, expected_reason)
+
+
+@pytest.mark.parametrize(
+    "channel,alias",
+    [("18.04", bases.BuilddBaseAlias.BIONIC), ("20.04", bases.BuilddBaseAlias.FOCAL)],
+)
+def test_launched_environment(
+    channel, alias, mock_configure_buildd_image_remote, mock_lxd, monkeypatch, tmp_path
+):
+    expected_environment = {
+        "CHARMCRAFT_MANAGED_MODE": "1",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+    }
+
+    monkeypatch.setattr(providers, "get_host_architecture", lambda: "host-arch")
+    base = Base(name="ubuntu", channel=channel, architectures=["host-arch"])
+
+    with mock.patch(
+        "charmcraft.providers.CharmcraftBuilddBaseConfiguration"
+    ) as mock_base_config:
+        with providers.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+            lxd_project="charmcraft",
+            lxd_remote="local",
+        ) as instance:
+            assert instance is not None
+            assert mock_configure_buildd_image_remote.mock_calls == [mock.call()]
+            assert mock_lxd.mock_calls == [
+                mock.call.launch(
+                    name="charmcraft-test-charm-1-2-host-arch",
+                    base_configuration=mock_base_config.return_value,
+                    image_name=channel,
+                    image_remote="buildd-remote",
+                    auto_clean=True,
+                    auto_create_project=True,
+                    map_user_uid=True,
+                    use_snapshots=True,
+                    project="charmcraft",
+                    remote="local",
+                ),
+                mock.call.launch().mount(
+                    host_source=tmp_path, target=pathlib.Path("/root/project")
+                ),
+            ]
+            assert mock_base_config.mock_calls == [
+                call(
+                    alias=alias,
+                    environment=expected_environment,
+                    hostname="charmcraft-test-charm-1-2-host-arch",
+                )
+            ]
+
+            mock_lxd.reset_mock()
+
+        assert mock_lxd.mock_calls == [
+            mock.call.launch().unmount_all(),
+            mock.call.launch().stop(),
+        ]
+
+
+def test_launched_environment_unmounts_and_stops_after_error(
+    mock_configure_buildd_image_remote, mock_lxd, monkeypatch, tmp_path
+):
+    monkeypatch.setattr(providers, "get_host_architecture", lambda: "host-arch")
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+
+    with pytest.raises(RuntimeError):
+        with mock.patch("charmcraft.providers.CharmcraftBuilddBaseConfiguration"):
+            with providers.launched_environment(
+                charm_name="test-charm",
+                project_path=tmp_path,
+                base=base,
+                bases_index=1,
+                build_on_index=2,
+                lxd_project="charmcraft",
+                lxd_remote="local",
+            ):
+                mock_lxd.reset_mock()
+                raise RuntimeError("this is a test")
+
+    assert mock_lxd.mock_calls == [
+        mock.call.launch().unmount_all(),
+        mock.call.launch().stop(),
+    ]

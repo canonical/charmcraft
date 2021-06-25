@@ -16,15 +16,19 @@
 
 """Build environment provider support for charmcraft."""
 
+import contextlib
 import logging
 import os
+import pathlib
 import subprocess
 from typing import Dict, Optional, Tuple, Union
 
-from craft_providers import Executor, bases
+from craft_providers import Executor, bases, lxd
 from craft_providers.actions import snap_installer
+from craft_providers.lxd.remotes import configure_buildd_image_remote
 
 from charmcraft.config import Base
+from charmcraft.env import get_managed_environment_project_path
 from charmcraft.utils import get_host_architecture
 
 logger = logging.getLogger(__name__)
@@ -103,6 +107,66 @@ def get_command_environment() -> Dict[str, str]:
             env[env_key] = os.environ[env_key]
 
     return env
+
+
+@contextlib.contextmanager
+def launched_environment(
+    *,
+    charm_name: str,
+    project_path: pathlib.Path,
+    base: Base,
+    bases_index: int,
+    build_on_index: int,
+    lxd_project: str = "charmcraft",
+    lxd_remote: str = "local",
+):
+    """Launch environment for specified base.
+
+    :param charm_name: Name of project.
+    :param project_path: Path to project.
+    :param base: Base to create.
+    :param bases_index: Index of `bases:` entry.
+    :param build_on_index: Index of `build-on` within bases entry.
+    """
+    alias = BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS[base.channel]
+    target_arch = get_host_architecture()
+
+    instance_name = get_instance_name(
+        bases_index=bases_index,
+        build_on_index=build_on_index,
+        project_name=charm_name,
+        target_arch=target_arch,
+    )
+
+    environment = get_command_environment()
+    image_remote = configure_buildd_image_remote()
+    base_configuration = CharmcraftBuilddBaseConfiguration(
+        alias=alias, environment=environment, hostname=instance_name
+    )
+    instance = lxd.launch(
+        name=instance_name,
+        base_configuration=base_configuration,
+        image_name=base.channel,
+        image_remote=image_remote,
+        auto_clean=True,
+        auto_create_project=True,
+        map_user_uid=True,
+        use_snapshots=True,
+        project=lxd_project,
+        remote=lxd_remote,
+    )
+
+    # Mount project.
+    instance.mount(
+        host_source=project_path, target=get_managed_environment_project_path()
+    )
+
+    try:
+        yield instance
+    finally:
+        # Ensure to unmount everything and stop instance upon completion.
+        instance.unmount_all()
+        instance.stop()
 
 
 class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):

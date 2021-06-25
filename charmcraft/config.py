@@ -155,7 +155,7 @@ def printable_field_location_split(location: str) -> Tuple[str, str]:
     return field_name, "top-level"
 
 
-def format_pydantic_errors(errors):
+def format_pydantic_errors(errors, *, file_name: str = "charmcraft.yaml"):
     """Format errors.
 
     Example 1: Single error.
@@ -172,7 +172,7 @@ def format_pydantic_errors(errors):
     - field: <some field 2>
       reason: <some reason 2>
     """
-    combined = ["Bad charmcraft.yaml content:"]
+    combined = [f"Bad {file_name} content:"]
     for error in errors:
         formatted_loc = format_pydantic_error_location(error["loc"])
         formatted_msg = format_pydantic_error_message(error["msg"])

@@ -23,6 +23,7 @@ from craft_providers import Executor, bases
 from craft_providers.actions import snap_installer
 
 from charmcraft import providers
+from charmcraft.config import Base
 
 
 @pytest.fixture(autouse=True)
@@ -127,3 +128,43 @@ def test_get_instance_name(
         )
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "name,channel,architectures,expected_valid,expected_reason",
+    [
+        ("ubuntu", "18.04", ["host-arch"], True, None),
+        ("ubuntu", "20.04", ["host-arch"], True, None),
+        ("ubuntu", "20.04", ["extra-arch", "host-arch"], True, None),
+        (
+            "not-ubuntu",
+            "20.04",
+            ["host-arch"],
+            False,
+            "name 'not-ubuntu' is not yet supported (must be 'ubuntu')",
+        ),
+        (
+            "ubuntu",
+            "10.04",
+            ["host-arch"],
+            False,
+            "channel '10.04' is not yet supported (must be '18.04' or '20.04')",
+        ),
+        (
+            "ubuntu",
+            "20.04",
+            ["other-arch"],
+            False,
+            "host architecture 'host-arch' not in base architectures ['other-arch']",
+        ),
+    ],
+)
+def test_is_base_providable(
+    monkeypatch, name, channel, architectures, expected_valid, expected_reason
+):
+    monkeypatch.setattr(providers, "get_host_architecture", lambda: "host-arch")
+    base = Base(name=name, channel=channel, architectures=architectures)
+
+    valid, reason = providers.is_base_providable(base)
+
+    assert (valid, reason) == (expected_valid, expected_reason)

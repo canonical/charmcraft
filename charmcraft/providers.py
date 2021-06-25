@@ -18,12 +18,50 @@
 
 import logging
 import subprocess
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 from craft_providers import Executor, bases
 from craft_providers.actions import snap_installer
 
+from charmcraft.config import Base
+from charmcraft.utils import get_host_architecture
+
 logger = logging.getLogger(__name__)
+
+BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
+    "18.04": bases.BuilddBaseAlias.BIONIC,
+    "20.04": bases.BuilddBaseAlias.FOCAL,
+}
+
+
+def is_base_providable(base: Base) -> Tuple[bool, Union[str, None]]:
+    """Check if provider can provide an environment matching given base.
+
+    :param base: Base to check.
+
+    :returns: Tuple of bool indicating whether it is a match, with optional
+              reason if not a match.
+    """
+    host_arch = get_host_architecture()
+    if host_arch not in base.architectures:
+        return (
+            False,
+            f"host architecture {host_arch!r} not in base architectures {base.architectures!r}",
+        )
+
+    if base.name != "ubuntu":
+        return (
+            False,
+            f"name {base.name!r} is not yet supported (must be 'ubuntu')",
+        )
+
+    if base.channel not in BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS.keys():
+        return (
+            False,
+            f"channel {base.channel!r} is not yet supported (must be '18.04' or '20.04')",
+        )
+
+    return True, None
 
 
 def get_instance_name(

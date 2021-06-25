@@ -104,6 +104,33 @@ def test_base_configuration_setup_snap_injection_error(mock_executor, mock_injec
 
 
 @pytest.mark.parametrize(
+    "bases_index,build_on_index,project_name,target_arch,expected",
+    [
+        (0, 0, "mycharm", "test-arch1", "charmcraft-mycharm-0-0-test-arch1"),
+        (
+            1,
+            2,
+            "my-other-charm",
+            "test-arch2",
+            "charmcraft-my-other-charm-1-2-test-arch2",
+        ),
+    ],
+)
+def test_get_instance_name(
+    bases_index, build_on_index, project_name, target_arch, expected
+):
+    assert (
+        providers.get_instance_name(
+            bases_index=bases_index,
+            build_on_index=build_on_index,
+            project_name=project_name,
+            target_arch=target_arch,
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
     "name,channel,architectures,expected_valid,expected_reason",
     [
         ("ubuntu", "18.04", ["host-arch"], True, None),

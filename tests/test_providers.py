@@ -115,7 +115,8 @@ def test_base_configuration_setup_snap_injection_error(mock_executor, mock_injec
 
 
 def test_get_command_environment_minimal(monkeypatch):
-    monkeypatch.setattr(os, "environ", {})
+    monkeypatch.setenv("IGNORE_ME", "or-im-failing")
+    monkeypatch.setenv("PATH", "not-using-host-path")
 
     env = providers.get_command_environment()
 
@@ -126,8 +127,8 @@ def test_get_command_environment_minimal(monkeypatch):
 
 
 def test_get_command_environment_all_opts(monkeypatch):
-    monkeypatch.setattr(os, "environ", {})
-
+    monkeypatch.setenv("IGNORE_ME", "or-im-failing")
+    monkeypatch.setenv("PATH", "not-using-host-path")
     monkeypatch.setenv("http_proxy", "test-http-proxy")
     monkeypatch.setenv("https_proxy", "test-https-proxy")
     monkeypatch.setenv("no_proxy", "test-no-proxy")

@@ -226,7 +226,7 @@ def test_is_base_providable(
     "channel,alias",
     [("18.04", bases.BuilddBaseAlias.BIONIC), ("20.04", bases.BuilddBaseAlias.FOCAL)],
 )
-def test_launch_environment(
+def test_launched_environment(
     channel, alias, mock_configure_buildd_image_remote, mock_lxd, monkeypatch, tmp_path
 ):
     expected_environment = {
@@ -240,7 +240,7 @@ def test_launch_environment(
     with mock.patch(
         "charmcraft.providers.CharmcraftBuilddBaseConfiguration"
     ) as mock_base_config:
-        with providers.launch_environment(
+        with providers.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
             base=base,

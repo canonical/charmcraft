@@ -110,7 +110,7 @@ def get_command_environment() -> Dict[str, str]:
 
 
 @contextlib.contextmanager
-def launch_environment(
+def launched_environment(
     *,
     charm_name: str,
     project_path: pathlib.Path,

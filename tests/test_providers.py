@@ -282,3 +282,29 @@ def test_launched_environment(
             mock.call.launch().unmount_all(),
             mock.call.launch().stop(),
         ]
+
+
+def test_launched_environment_unmounts_and_stops_after_error(
+    mock_configure_buildd_image_remote, mock_lxd, monkeypatch, tmp_path
+):
+    monkeypatch.setattr(providers, "get_host_architecture", lambda: "host-arch")
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+
+    with pytest.raises(RuntimeError):
+        with mock.patch("charmcraft.providers.CharmcraftBuilddBaseConfiguration"):
+            with providers.launched_environment(
+                charm_name="test-charm",
+                project_path=tmp_path,
+                base=base,
+                bases_index=1,
+                build_on_index=2,
+                lxd_project="charmcraft",
+                lxd_remote="local",
+            ):
+                mock_lxd.reset_mock()
+                raise RuntimeError("this is a test")
+
+    assert mock_lxd.mock_calls == [
+        mock.call.launch().unmount_all(),
+        mock.call.launch().stop(),
+    ]

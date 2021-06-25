@@ -161,12 +161,12 @@ def launched_environment(
         host_source=project_path, target=get_managed_environment_project_path()
     )
 
-    yield instance
-
-    # Unmount everything.
-    instance.unmount_all()
-
-    instance.stop()
+    try:
+        yield instance
+    finally:
+        # Ensure to unmount everything and stop instance upon completion.
+        instance.unmount_all()
+        instance.stop()
 
 
 class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):

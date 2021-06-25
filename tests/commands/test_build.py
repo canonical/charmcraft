@@ -35,7 +35,6 @@ from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
-    CHARM_METADATA,
     DISPATCH_CONTENT,
     DISPATCH_FILENAME,
     VENV_DIRNAME,
@@ -46,6 +45,7 @@ from charmcraft.commands.build import (
     relativise,
 )
 from charmcraft.config import Base, BasesConfiguration, load
+from charmcraft.metadata import CHARM_METADATA
 
 
 @pytest.fixture

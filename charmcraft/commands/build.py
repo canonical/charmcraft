@@ -146,7 +146,7 @@ class Builder:
         self.config = config
         self.metadata = parse_metadata_yaml(self.charmdir)
 
-    def build_charm(self, bases_config: Optional[BasesConfiguration]) -> str:
+    def build_charm(self, bases_config: BasesConfiguration) -> str:
         """Build the charm.
 
         :param bases_config: Bases configuration to use for build.

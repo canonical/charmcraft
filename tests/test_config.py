@@ -533,14 +533,27 @@ def test_basicprime_empty():
 # -- tests for bases
 
 
-def test_no_bases_ok(create_config):
-    tmp_path = create_config(
+def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(caplog, create_config, tmp_path):
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+    create_config(
         """
         type: charm
     """
     )
+
     config = load(tmp_path)
-    assert config.bases is None
+
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [Base(name="ubuntu", channel="20.04")],
+                "run-on": [Base(name="ubuntu", channel="20.04")],
+            }
+        )
+    ]
+    assert "DEPRECATED: Bases configuration is now required." in [
+        rec.message for rec in caplog.records
+    ]
 
 
 def test_bases_minimal_long_form(create_config):

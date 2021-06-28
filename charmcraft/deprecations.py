@@ -33,6 +33,8 @@ logger = logging.getLogger(__name__)
 # documentation)
 _DEPRECATION_MESSAGES = {
     "dn01": "Configuration keywords are now separated using dashes.",
+    "dn02": "A charmcraft.yaml configuration file is now required.",
+    "dn03": "Bases configuration is now required.",
 }
 
 # the URL to point to the deprecation entry in the documentation

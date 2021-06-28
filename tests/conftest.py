@@ -21,6 +21,7 @@ import pytest
 import responses as responses_module
 
 from charmcraft import config as config_module
+from charmcraft import deprecations
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -76,6 +77,11 @@ def config(tmp_path):
         config_provided=True,
     )
     return TestConfig(type="bundle", project=project)
+
+
+@pytest.fixture(autouse=True)
+def reset_deprecation_notices(monkeypatch):
+    deprecations._ALREADY_NOTIFIED = set()
 
 
 @pytest.fixture

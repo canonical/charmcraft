@@ -214,7 +214,7 @@ class Builder:
                                 bases_index=bases_index,
                                 build_on_index=build_on_index,
                             ) as instance:
-                                charm_name = self.build_charm_in_instance(
+                                charm_name = self.pack_charm_in_instance(
                                     instance, bases_index
                                 )
 
@@ -244,7 +244,7 @@ class Builder:
 
         return charms
 
-    def build_charm_in_instance(self, instance: Executor, bases_index: int) -> str:
+    def pack_charm_in_instance(self, instance: Executor, bases_index: int) -> str:
         """Pack instance in Charm."""
         try:
             instance.execute_run(

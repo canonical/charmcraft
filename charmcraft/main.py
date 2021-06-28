@@ -21,9 +21,9 @@ import logging
 import sys
 from collections import namedtuple
 
-from charmcraft import helptexts, config, env
-from charmcraft.commands import version, build, store, init, pack
-from charmcraft.cmdbase import CommandError, BaseCommand
+from charmcraft import config, env, helptexts
+from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.commands import build, clean, init, pack, store, version
 from charmcraft.logsetup import message_handler
 
 logger = logging.getLogger(__name__)
@@ -95,6 +95,7 @@ COMMAND_GROUPS = [
         [
             HelpCommand,
             build.BuildCommand,
+            clean.CleanCommand,
             pack.PackCommand,
             init.InitCommand,
             version.VersionCommand,

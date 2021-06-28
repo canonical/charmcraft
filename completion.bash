@@ -20,7 +20,8 @@ _charmcraft()
 {
     local cur prev words cword cmd cmds
     cmds=(
-        build 
+        build
+        clean
         create-lib 
         fetch-lib 
         help init 

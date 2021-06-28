@@ -184,15 +184,15 @@ class Builder:
         charms: List[str] = []
 
         if self.config.bases:
-            for i, bases_config in enumerate(self.config.bases):
-                if bases_indices and i not in bases_indices:
+            for bases_index, bases_config in enumerate(self.config.bases):
+                if bases_indices and bases_index not in bases_indices:
                     logger.debug(
                         "Ingoring 'bases[%d]' due to --base-index usage.",
-                        i,
+                        bases_index,
                     )
                     continue
 
-                for j, build_on in enumerate(bases_config.build_on):
+                for build_on_index, build_on in enumerate(bases_config.build_on):
                     if is_charmcraft_running_in_managed_mode():
                         matches, reason = check_if_base_matches_host(build_on)
                     else:
@@ -201,8 +201,8 @@ class Builder:
                     if matches:
                         logger.debug(
                             "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
-                            i,
-                            j,
+                            bases_index,
+                            build_on_index,
                         )
                         if is_charmcraft_running_in_managed_mode():
                             charm_name = self.build_charm(bases_config)
@@ -211,24 +211,26 @@ class Builder:
                                 charm_name=self.metadata.name,
                                 project_path=self.charmdir,
                                 base=build_on,
-                                bases_index=i,
-                                build_on_index=j,
+                                bases_index=bases_index,
+                                build_on_index=build_on_index,
                             ) as instance:
-                                charm_name = self.build_charm_in_instance(instance, i)
+                                charm_name = self.build_charm_in_instance(
+                                    instance, bases_index
+                                )
 
                         charms.append(charm_name)
                         break
                     else:
                         logger.debug(
                             "Host does not match 'bases[%d].build-on[%d]' (%s)",
-                            i,
-                            j,
+                            bases_index,
+                            build_on_index,
                             reason,
                         )
                 else:
                     logger.warning(
                         "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
-                        i,
+                        bases_index,
                     )
 
             if not charms:

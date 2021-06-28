@@ -531,10 +531,6 @@ def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
         config,
     )
 
-    # Legacy build.
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
-
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     zipnames = builder.run()
@@ -593,10 +589,6 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
         config,
     )
 
-    # Legacy build.
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
-
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     zipnames = builder.run()
@@ -617,7 +609,129 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
-def test_build_bases_index_scenarios(basic_project, monkeypatch, caplog):
+def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog):
+    """Test cases for base-index parameter."""
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - name: ubuntu
+                    channel: "18.04"
+                    architectures: {host_base.architectures!r}
+                  - name: ubuntu
+                    channel: "20.04"
+                    architectures: {host_base.architectures!r}
+                  - name: ubuntu
+                    channel: "unsupported-channel"
+                    architectures: {host_base.architectures!r}
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment") as mock_launch:
+        zipnames = builder.run([0])
+        assert zipnames == [
+            f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+        ]
+
+        assert mock_launch.mock_calls == [
+            call(
+                charm_name="name-from-metadata",
+                project_path=basic_project,
+                base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+                bases_index=0,
+                build_on_index=0,
+            ),
+            call().__enter__(),
+            call()
+            .__enter__()
+            .execute_run(
+                ["charmcraft", "pack", "--bases-index", "0"], cwd="/root/project"
+            ),
+            call().__exit__(None, None, None),
+        ]
+        mock_launch.reset_mock()
+
+        zipnames = builder.run([1])
+        assert zipnames == [
+            f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+        ]
+        assert mock_launch.mock_calls == [
+            call(
+                charm_name="name-from-metadata",
+                project_path=basic_project,
+                base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+                bases_index=1,
+                build_on_index=0,
+            ),
+            call().__enter__(),
+            call()
+            .__enter__()
+            .execute_run(
+                ["charmcraft", "pack", "--bases-index", "1"], cwd="/root/project"
+            ),
+            call().__exit__(None, None, None),
+        ]
+        mock_launch.reset_mock()
+
+        zipnames = builder.run([0, 1])
+        assert zipnames == [
+            f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+            f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+        ]
+        assert mock_launch.mock_calls == [
+            call(
+                charm_name="name-from-metadata",
+                project_path=basic_project,
+                base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+                bases_index=0,
+                build_on_index=0,
+            ),
+            call().__enter__(),
+            call()
+            .__enter__()
+            .execute_run(
+                ["charmcraft", "pack", "--bases-index", "0"], cwd="/root/project"
+            ),
+            call().__exit__(None, None, None),
+            call(
+                charm_name="name-from-metadata",
+                project_path=basic_project,
+                base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+                bases_index=1,
+                build_on_index=0,
+            ),
+            call().__enter__(),
+            call()
+            .__enter__()
+            .execute_run(
+                ["charmcraft", "pack", "--bases-index", "1"], cwd="/root/project"
+            ),
+            call().__exit__(None, None, None),
+        ]
+
+        with pytest.raises(
+            CommandError,
+            match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
+        ):
+            builder.run([3])
+
+
+def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, caplog):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
@@ -720,10 +834,6 @@ def test_build_error_no_match_with_charmcraft_yaml(
         },
         config,
     )
-
-    # Legacy build.
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
 
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")

@@ -567,11 +567,11 @@ class StatusCommand(BaseCommand):
         For example:
 
           $ charmcraft status
-          Track    Channel    Version    Revision
-          latest   stable     -          -
-                   candidate  -          -
-                   beta       -          -
-                   edge       1          1
+          Track    Base                   Channel    Version    Revision
+          latest   ubuntu 20.04 (amd64)   stable     -          -
+                                          candidate  -          -
+                                          beta       -          -
+                                          edge       1          1
 
         Showing channels will take you through login if needed.
     """
@@ -598,20 +598,22 @@ class StatusCommand(BaseCommand):
             logger.info("Nothing has been released yet.")
             return
 
-        # build easier to access structures
-        releases_by_channel = {item.channel: item for item in channel_map}
+        # group released revision by track and base
+        releases_by_track = {}
+        for item in channel_map:
+            track = item.channel.split("/")[0]
+            by_base = releases_by_track.setdefault(track, {})
+            base_str = "{0.name} {0.channel} ({0.architecture})".format(item.base)
+            by_channel = by_base.setdefault(base_str, {})
+            by_channel[item.channel] = item
+
+        # groupe revision objects by revision number
         revisions_by_revno = {item.revision: item for item in revisions}
 
         # process and order the channels, while preserving the tracks order
-        all_tracks = []
         per_track = {}
         branch_present = False
         for channel in channels:
-            # it's super rare to have a more than just a bunch of tracks (furthermore, normally
-            # there's only one), so it's ok to do this sequential search
-            if channel.track not in all_tracks:
-                all_tracks.append(channel.track)
-
             nonbranches_list, branches_list = per_track.setdefault(
                 channel.track, ([], [])
             )
@@ -627,55 +629,65 @@ class StatusCommand(BaseCommand):
                 branches_list.append(channel)
                 branch_present = True
 
-        headers = ["Track", "Channel", "Version", "Revision"]
+        headers = ["Track", "Base", "Channel", "Version", "Revision"]
         resources_present = any(release.resources for release in channel_map)
         if resources_present:
             headers.append("Resources")
         if branch_present:
             headers.append("Expires at")
 
-        # show everything, grouped by tracks, with regular channels at first and
+        # show everything, grouped by tracks and bases, with regular channels at first and
         # branches (if any) after those
         data = []
-        for track in all_tracks:
-            release_shown_for_this_track = False
+        for track, (channels, branches) in per_track.items():
+            releases_by_base = releases_by_track[track]
             shown_track = track
-            channels, branches = per_track[track]
 
-            for channel in channels:
-                description = channel.risk
+            # bases are shown alphabetically ordered
+            for base in sorted(releases_by_base):
+                releases_by_channel = releases_by_base[base]
+                shown_base = base
 
-                # get the release of the channel, fallbacking accordingly
-                release = releases_by_channel.get(channel.name)
-                if release is None:
-                    version = revno = resources = (
-                        "↑" if release_shown_for_this_track else "-"
-                    )
-                else:
-                    release_shown_for_this_track = True
-                    revno = release.revision
-                    revision = revisions_by_revno[revno]
-                    version = revision.version
-                    resources = self._build_resources_repr(release.resources)
+                release_shown_for_this_track_base = False
 
-                datum = [shown_track, description, version, revno]
-                if resources_present:
-                    datum.append(resources)
-                data.append(datum)
+                for channel in channels:
+                    description = channel.risk
 
-                # stop showing the track name for the rest of the track
-                shown_track = ""
+                    # get the release of the channel, fallbacking accordingly
+                    release = releases_by_channel.get(channel.name)
+                    if release is None:
+                        version = revno = resources = (
+                            "↑" if release_shown_for_this_track_base else "-"
+                        )
+                    else:
+                        release_shown_for_this_track_base = True
+                        revno = release.revision
+                        revision = revisions_by_revno[revno]
+                        version = revision.version
+                        resources = self._build_resources_repr(release.resources)
 
-            for branch in branches:
-                description = "/".join((branch.risk, branch.branch))
-                release = releases_by_channel[branch.name]
-                expiration = release.expires_at.isoformat()
-                revision = revisions_by_revno[release.revision]
-                datum = ["", description, revision.version, release.revision]
-                if resources_present:
-                    datum.append(self._build_resources_repr(release.resources))
-                datum.append(expiration)
-                data.append(datum)
+                    datum = [shown_track, shown_base, description, version, revno]
+                    if resources_present:
+                        datum.append(resources)
+                    data.append(datum)
+
+                    # stop showing the track and base for the rest of the struct
+                    shown_track = ""
+                    shown_base = ""
+
+                for branch in branches:
+                    release = releases_by_channel.get(branch.name)
+                    if release is None:
+                        # not for this base!
+                        continue
+                    description = "/".join((branch.risk, branch.branch))
+                    expiration = release.expires_at.isoformat()
+                    revision = revisions_by_revno[release.revision]
+                    datum = ["", "", description, revision.version, release.revision]
+                    if resources_present:
+                        datum.append(self._build_resources_repr(release.resources))
+                    datum.append(expiration)
+                    data.append(datum)
 
         table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():

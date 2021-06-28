@@ -77,6 +77,12 @@ def basic_project(tmp_path):
     yield tmp_path
 
 
+@pytest.fixture(autouse=True)
+def mock_ensure_provider_is_available():
+    with patch("charmcraft.commands.build.ensure_provider_is_available") as mock_ensure:
+        yield mock_ensure
+
+
 # --- Validator tests
 
 
@@ -541,6 +547,43 @@ def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
     ]
 
 
+def test_build_checks_provider(basic_project, mock_ensure_provider_is_available):
+    """Test cases for base-index parameter."""
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment"):
+        builder.run()
+
+    mock_ensure_provider_is_available.assert_called_once()
+
+
+def test_build_checks_provider_error(basic_project, mock_ensure_provider_is_available):
+    """Test cases for base-index parameter."""
+    mock_ensure_provider_is_available.side_effect = RuntimeError("foo")
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with pytest.raises(RuntimeError, match="foo"):
+        builder.run()
+
+    mock_ensure_provider_is_available.assert_called_once()
+
+
 def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkeypatch):
     """Test cases for base-index parameter."""
     config = load(basic_project)
@@ -629,7 +672,9 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
-def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog):
+def test_build_bases_index_scenarios_provider(
+    basic_project, caplog, mock_ensure_provider_is_available, monkeypatch
+):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
@@ -684,6 +729,7 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             ),
             call().__exit__(None, None, None),
         ]
+        mock_ensure_provider_is_available.assert_called_once()
         mock_launch.reset_mock()
 
         zipnames = builder.run([1])

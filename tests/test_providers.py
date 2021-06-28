@@ -16,6 +16,7 @@
 
 import os
 import pathlib
+import re
 import subprocess
 from unittest import mock
 from unittest.mock import call
@@ -25,6 +26,7 @@ from craft_providers import Executor, bases
 from craft_providers.actions import snap_installer
 
 from charmcraft import providers
+from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
 
 
@@ -58,6 +60,14 @@ def mock_lxc(monkeypatch):
 def mock_lxd(monkeypatch):
     with mock.patch("charmcraft.providers.lxd", autospec=True) as mock_lxd:
         yield mock_lxd
+
+
+@pytest.fixture(autouse=True)
+def mock_lxd_is_installed(monkeypatch):
+    with mock.patch(
+        "charmcraft.providers.lxd_installer.is_installed", return_value=True
+    ) as mock_is_intalled:
+        yield mock_is_intalled
 
 
 @pytest.fixture
@@ -131,6 +141,20 @@ def test_base_configuration_setup_snap_injection_error(mock_executor, mock_injec
     assert exc_info.value.__cause__ is not None
 
 
+def test_clean_project_environments_without_lxd(mock_lxc, mock_lxd_is_installed):
+    mock_lxd_is_installed.return_value = False
+
+    assert (
+        providers.clean_project_environments(
+            charm_name="my-charm", lxd_project="test-project", lxd_remote="test-remote"
+        )
+        == []
+    )
+
+    assert mock_lxd_is_installed.mock_calls == [mock.call()]
+    assert mock_lxc.mock_calls == []
+
+
 def test_clean_project_environments(mock_lxc):
     mock_lxc.return_value.list_names.return_value = [
         "do-not-delete-me-please",
@@ -196,6 +220,27 @@ def test_clean_project_environments(mock_lxc):
         mock.call(),
         mock.call().list_names(project="test-project", remote="test-remote"),
     ]
+
+
+def test_ensure_provider_is_available_ok_when_installed():
+    with mock.patch(
+        "charmcraft.providers.lxd_installer.is_installed", return_value=True
+    ):
+        providers.ensure_provider_is_available()
+
+
+def test_ensure_provider_is_available_errors_when_not_installed():
+    with mock.patch(
+        "charmcraft.providers.lxd_installer.is_installed", return_value=False
+    ):
+        with pytest.raises(
+            CommandError,
+            match=re.escape(
+                "LXD is required - check out https://snapcraft.io/lxd for "
+                "instructions on how to install the LXD snap for your distribution"
+            ),
+        ):
+            providers.ensure_provider_is_available()
 
 
 def test_get_command_environment_minimal(monkeypatch):
@@ -293,6 +338,14 @@ def test_is_base_providable(
     valid, reason = providers.is_base_providable(base)
 
     assert (valid, reason) == (expected_valid, expected_reason)
+
+
+@pytest.mark.parametrize("is_installed", [True, False])
+def test_is_provider_available(is_installed):
+    with mock.patch(
+        "charmcraft.providers.lxd_installer.is_installed", return_value=is_installed
+    ):
+        assert providers.is_provider_available() == is_installed
 
 
 @pytest.mark.parametrize(

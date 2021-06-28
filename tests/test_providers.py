@@ -49,6 +49,12 @@ def mock_executor():
 
 
 @pytest.fixture
+def mock_lxc(monkeypatch):
+    with mock.patch("charmcraft.providers.lxd.LXC", autospec=True) as mock_lxc:
+        yield mock_lxc
+
+
+@pytest.fixture
 def mock_lxd(monkeypatch):
     with mock.patch("charmcraft.providers.lxd", autospec=True) as mock_lxd:
         yield mock_lxd
@@ -123,6 +129,73 @@ def test_base_configuration_setup_snap_injection_error(mock_executor, mock_injec
         config.setup(executor=mock_executor)
 
     assert exc_info.value.__cause__ is not None
+
+
+def test_clean_project_environments(mock_lxc):
+    mock_lxc.return_value.list_names.return_value = [
+        "do-not-delete-me-please",
+        "charmcraft-testcharm-b-c-d",
+        "charmcraft-my-charm---",
+        "charmcraft-my-charm-project-0-0-amd99",
+        "charmcraft-my-charm-project-999-444-arm64",
+        "charmcraft_a_b_c_d",
+    ]
+
+    assert providers.clean_project_environments(
+        charm_name="my-charm", lxd_project="test-project", lxd_remote="test-remote"
+    ) == [
+        "charmcraft-my-charm-project-0-0-amd99",
+        "charmcraft-my-charm-project-999-444-arm64",
+    ]
+    assert mock_lxc.mock_calls == [
+        mock.call(),
+        mock.call().list_names(project="test-project", remote="test-remote"),
+        mock.call().delete(
+            instance_name="charmcraft-my-charm-project-0-0-amd99",
+            force=True,
+            project="test-project",
+            remote="test-remote",
+        ),
+        mock.call().delete(
+            instance_name="charmcraft-my-charm-project-999-444-arm64",
+            force=True,
+            project="test-project",
+            remote="test-remote",
+        ),
+    ]
+
+    mock_lxc.reset_mock()
+
+    assert providers.clean_project_environments(
+        charm_name="testcharm", lxd_project="test-project", lxd_remote="test-remote"
+    ) == [
+        "charmcraft-testcharm-b-c-d",
+    ]
+    assert mock_lxc.mock_calls == [
+        mock.call(),
+        mock.call().list_names(project="test-project", remote="test-remote"),
+        mock.call().delete(
+            instance_name="charmcraft-testcharm-b-c-d",
+            force=True,
+            project="test-project",
+            remote="test-remote",
+        ),
+    ]
+
+    mock_lxc.reset_mock()
+
+    assert (
+        providers.clean_project_environments(
+            charm_name="unknown-charm",
+            lxd_project="test-project",
+            lxd_remote="test-remote",
+        )
+        == []
+    )
+    assert mock_lxc.mock_calls == [
+        mock.call(),
+        mock.call().list_names(project="test-project", remote="test-remote"),
+    ]
 
 
 def test_get_command_environment_minimal(monkeypatch):

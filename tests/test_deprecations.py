@@ -16,21 +16,12 @@
 
 import logging
 import re
+from unittest.mock import patch
 
 import pytest
 
 from charmcraft import deprecations
-from charmcraft.deprecations import notify_deprecation, _DEPRECATION_MESSAGES
-
-
-@pytest.fixture(autouse=True)
-def clean_already_notified():
-    """Clear the already-notified structure for each test.
-
-    This is needed as that structure is a module-level one (by design), so otherwise
-    it will be dirty between tests.
-    """
-    deprecations._ALREADY_NOTIFIED.clear()
+from charmcraft.deprecations import _DEPRECATION_MESSAGES, notify_deprecation
 
 
 def test_notice_ok(monkeypatch, caplog):
@@ -48,6 +39,24 @@ def test_notice_ok(monkeypatch, caplog):
         "See http://docs.com/#dn666 for more information.",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+def test_notice_skipped_in_managed_mode(monkeypatch, caplog):
+    """Present proper messages to the user."""
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+
+    monkeypatch.setitem(_DEPRECATION_MESSAGES, "dn666", "Test message for the user.")
+    monkeypatch.setattr(
+        deprecations, "_DEPRECATION_URL_FMT", "http://docs.com/#{deprecation_id}"
+    )
+
+    with patch(
+        "charmcraft.deprecations.is_charmcraft_running_in_managed_mode",
+        return_value=True,
+    ):
+        notify_deprecation("dn666")
+
+    assert [rec.message for rec in caplog.records] == []
 
 
 @pytest.mark.parametrize("deprecation_id", _DEPRECATION_MESSAGES.keys())

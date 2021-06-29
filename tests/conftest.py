@@ -22,6 +22,7 @@ import pytest
 import responses as responses_module
 
 from charmcraft import config as config_module
+from charmcraft import deprecations
 
 
 @pytest.fixture()
@@ -87,6 +88,16 @@ def config(tmp_path):
         config_provided=True,
     )
     return TestConfig(type="bundle", project=project)
+
+
+@pytest.fixture(autouse=True)
+def clean_already_notified():
+    """Clear the already-notified structure for each test.
+
+    This is needed as that structure is a module-level one (by design), so otherwise
+    it will be dirty between tests.
+    """
+    deprecations._ALREADY_NOTIFIED.clear()
 
 
 @pytest.fixture

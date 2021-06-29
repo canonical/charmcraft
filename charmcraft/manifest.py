@@ -23,7 +23,7 @@ from typing import Optional
 
 import yaml
 
-from charmcraft import __version__, config, utils
+from charmcraft import __version__, config
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger(__name__)
@@ -32,33 +32,26 @@ logger = logging.getLogger(__name__)
 def create_manifest(
     basedir: pathlib.Path,
     started_at: datetime.datetime,
-    bases_config: Optional[config.BasesConfiguration] = None,
+    bases_config: Optional[config.BasesConfiguration],
 ):
     """Create manifest.yaml in basedir for given base configuration.
 
+    For packing bundles, `bases` will be skipped when bases_config is None.
+    Charms should always include a valid bases_config.
+
     :param basedir: Directory to create Charm in.
     :param started_at: Build start time.
-    :param bases_config: Relevant bases configuration.
+    :param bases_config: Relevant bases configuration, if any.
 
     :returns: Path to created manifest.yaml.
     """
-    if bases_config is None:
-        os_platform = utils.get_os_platform()
+    content = {
+        "charmcraft-version": __version__,
+        "charmcraft-started-at": started_at.isoformat() + "Z",
+    }
 
-        # XXX Facundo 2021-03-29: the architectures list will be provided by the caller when
-        # we integrate lifecycle lib in future branches
-        architectures = [utils.get_host_architecture()]
-
-        name = os_platform.system.lower()
-        channel = os_platform.release
-        bases = [
-            {
-                "name": name,
-                "channel": channel,
-                "architectures": architectures,
-            }
-        ]
-    else:
+    # Annotate bases only if bases_config is not None.
+    if bases_config is not None:
         bases = [
             {
                 "name": r.name,
@@ -67,12 +60,8 @@ def create_manifest(
             }
             for r in bases_config.run_on
         ]
+        content["bases"] = bases
 
-    content = {
-        "charmcraft-version": __version__,
-        "charmcraft-started-at": started_at.isoformat() + "Z",
-        "bases": bases,
-    }
     filepath = basedir / "manifest.yaml"
     if filepath.exists():
         raise CommandError(

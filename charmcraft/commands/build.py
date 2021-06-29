@@ -185,7 +185,7 @@ class Builder:
         charms: List[str] = []
         is_managed_mode = is_charmcraft_running_in_managed_mode()
 
-        if not (self.charmdir / "charmcraft.yaml").exists() and not is_managed_mode:
+        if not (self.charmdir / "charmcraft.yaml").exists():
             notify_deprecation("dn02")
 
         for bases_index, bases_config in enumerate(self.config.bases):

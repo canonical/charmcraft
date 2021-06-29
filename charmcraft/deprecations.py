@@ -26,6 +26,8 @@ Then add that ID along with the deprecation title in the list below.
 
 import logging
 
+from charmcraft.env import is_charmcraft_running_in_managed_mode
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,8 +47,13 @@ _ALREADY_NOTIFIED = set()
 
 
 def notify_deprecation(deprecation_id):
-    """Present proper messages to the user for the indicated deprecation id."""
-    if deprecation_id in _ALREADY_NOTIFIED:
+    """Present proper messages to the user for the indicated deprecation id.
+
+    Prevent issuing duplicate warnings to the user by ignoring notifications if:
+    - running in managed-mode
+    - already issued by running process
+    """
+    if is_charmcraft_running_in_managed_mode() or deprecation_id in _ALREADY_NOTIFIED:
         return
 
     message = _DEPRECATION_MESSAGES[deprecation_id]

@@ -91,8 +91,13 @@ def config(tmp_path):
 
 
 @pytest.fixture(autouse=True)
-def reset_deprecation_notices(monkeypatch):
-    deprecations._ALREADY_NOTIFIED = set()
+def clean_already_notified():
+    """Clear the already-notified structure for each test.
+
+    This is needed as that structure is a module-level one (by design), so otherwise
+    it will be dirty between tests.
+    """
+    deprecations._ALREADY_NOTIFIED.clear()
 
 
 @pytest.fixture

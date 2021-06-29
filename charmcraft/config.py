@@ -336,6 +336,7 @@ class Config(ModelConfigDefaults, validate_all=False):
             # type will simplify user facing errors.
             bases = obj.get("bases")
             if bases is None:
+                notify_deprecation("dn03")
                 # Set default bases to Ubuntu 20.04 to match strict snap's
                 # effective behavior.
                 bases = [
@@ -345,8 +346,6 @@ class Config(ModelConfigDefaults, validate_all=False):
                         "architectures": [get_host_architecture()],
                     }
                 ]
-                if not is_charmcraft_running_in_managed_mode():
-                    notify_deprecation("dn03")
 
             # Expand short-form bases if only the bases is a valid list. If it
             # is not a valid list, parse_obj() will properly handle the error.

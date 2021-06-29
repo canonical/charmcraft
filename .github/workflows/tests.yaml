@@ -71,10 +71,26 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel
+      - name: Install LXD dependency on 18.04
+        if: ${{ matrix.os == 'ubuntu-18.04' }}
+        run: |
+          sudo apt remove -y lxd
+          sudo snap install lxd
+      - name: Refresh LXD dependency on 20.04
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        run: |
+          sudo snap refresh lxd
+      - name: Configured LXD
+        run: |
+          sudo groupadd --force --system lxd
+          sudo usermod --append --groups lxd $USER
+          sudo snap start lxd
+          sudo lxd waitready --timeout=30
+          sudo lxd init --auto
       - name: Run smoke tests
         run: |
           mkdir -p charm-smoke-test
           cd charm-smoke-test
           charmcraft -v init --author testuser
-          charmcraft -v build
+          sg lxd -c "charmcraft -v build"
           test -f *.charm

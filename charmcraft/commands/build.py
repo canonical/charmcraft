@@ -30,6 +30,7 @@ from craft_providers import Executor
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
+from charmcraft.deprecations import notify_deprecation
 from charmcraft.env import (
     get_managed_environment_project_path,
     is_charmcraft_running_in_managed_mode,
@@ -146,7 +147,7 @@ class Builder:
         self.config = config
         self.metadata = parse_metadata_yaml(self.charmdir)
 
-    def build_charm(self, bases_config: Optional[BasesConfiguration]) -> str:
+    def build_charm(self, bases_config: BasesConfiguration) -> str:
         """Build the charm.
 
         :param bases_config: Bases configuration to use for build.
@@ -183,65 +184,64 @@ class Builder:
         :returns: List of charm files created.
         """
         charms: List[str] = []
+        is_managed_mode = is_charmcraft_running_in_managed_mode()
 
-        if self.config.bases:
-            for bases_index, bases_config in enumerate(self.config.bases):
-                if bases_indices and bases_index not in bases_indices:
-                    logger.debug(
-                        "Ingoring 'bases[%d]' due to --base-index usage.",
-                        bases_index,
-                    )
-                    continue
+        if not (self.charmdir / "charmcraft.yaml").exists():
+            notify_deprecation("dn02")
 
-                for build_on_index, build_on in enumerate(bases_config.build_on):
-                    if is_charmcraft_running_in_managed_mode():
-                        matches, reason = check_if_base_matches_host(build_on)
-                    else:
-                        matches, reason = is_base_providable(build_on)
+        for bases_index, bases_config in enumerate(self.config.bases):
+            if bases_indices and bases_index not in bases_indices:
+                logger.debug(
+                    "Ingoring 'bases[%d]' due to --base-index usage.",
+                    bases_index,
+                )
+                continue
 
-                    if matches:
-                        logger.debug(
-                            "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
-                            bases_index,
-                            build_on_index,
-                        )
-                        if is_charmcraft_running_in_managed_mode():
-                            charm_name = self.build_charm(bases_config)
-                        else:
-                            with launched_environment(
-                                charm_name=self.metadata.name,
-                                project_path=self.charmdir,
-                                base=build_on,
-                                bases_index=bases_index,
-                                build_on_index=build_on_index,
-                            ) as instance:
-                                charm_name = self.pack_charm_in_instance(
-                                    instance, bases_index
-                                )
-
-                        charms.append(charm_name)
-                        break
-                    else:
-                        logger.debug(
-                            "Host does not match 'bases[%d].build-on[%d]' (%s)",
-                            bases_index,
-                            build_on_index,
-                            reason,
-                        )
+            for build_on_index, build_on in enumerate(bases_config.build_on):
+                if is_managed_mode:
+                    matches, reason = check_if_base_matches_host(build_on)
                 else:
-                    logger.warning(
-                        "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
-                        bases_index,
-                    )
+                    matches, reason = is_base_providable(build_on)
 
-            if not charms:
-                raise CommandError(
-                    "No suitable 'build-on' environment found in any 'bases' configuration."
+                if matches:
+                    logger.debug(
+                        "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
+                        bases_index,
+                        build_on_index,
+                    )
+                    if is_managed_mode:
+                        charm_name = self.build_charm(bases_config)
+                    else:
+                        with launched_environment(
+                            charm_name=self.metadata.name,
+                            project_path=self.charmdir,
+                            base=build_on,
+                            bases_index=bases_index,
+                            build_on_index=build_on_index,
+                        ) as instance:
+                            charm_name = self.pack_charm_in_instance(
+                                instance, bases_index
+                            )
+
+                    charms.append(charm_name)
+                    break
+                else:
+                    logger.debug(
+                        "Host does not match 'bases[%d].build-on[%d]' (%s)",
+                        bases_index,
+                        build_on_index,
+                        reason,
+                    )
+            else:
+                logger.warning(
+                    "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
+                    bases_index,
                 )
 
-        else:
-            charm_name = self.build_charm(None)
-            charms.append(charm_name)
+        if not charms:
+            raise CommandError(
+                "No suitable 'build-on' environment found in any 'bases' configuration."
+            )
 
         return charms
 

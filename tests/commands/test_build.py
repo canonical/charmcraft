@@ -182,16 +182,6 @@ def test_validator_from_isdir(tmp_path, config):
         validator.validate_from(testfile)
 
 
-def test_validator_bases_index_without_bases(config):
-    """'entrypoint' param: checks that the file exists."""
-    validator = Validator(config)
-    expected_msg = re.escape(
-        "No bases configuration found, required when using --bases-index."
-    )
-    with pytest.raises(CommandError, match=expected_msg):
-        validator.validate_bases_indices([0])
-
-
 @pytest.mark.parametrize("bases_indices", [[-1], [0, -1], [0, 1, -1]])
 def test_validator_bases_index_invalid(bases_indices, config):
     """'entrypoint' param: checks that the file exists."""
@@ -451,8 +441,11 @@ def test_politeexec_crashed(caplog, tmp_path):
 # --- (real) build tests
 
 
-def test_build_basic_complete_structure(basic_project, monkeypatch, config):
+def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, config):
     """Integration test: a simple structure with custom lib and normal src dir."""
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
     monkeypatch.chdir(basic_project)  # so the zip file is left in the temp dir
     builder = Builder(
         {
@@ -467,8 +460,14 @@ def test_build_basic_complete_structure(basic_project, monkeypatch, config):
     metadata_file = basic_project / "metadata.yaml"
     metadata_raw = metadata_file.read_bytes()
 
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch(
+        "charmcraft.commands.build.check_if_base_matches_host",
+        return_value=(True, None),
+    ):
+        zipnames = builder.run()
+
+    assert zipnames == [f"name-from-metadata_ubuntu-20.04-{host_arch}.charm"]
 
     # check all is properly inside the zip
     # contents!), and all relative to build dir
@@ -489,6 +488,7 @@ def test_build_basic_complete_structure(basic_project, monkeypatch, config):
     assert (
         manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
     )
+    assert caplog.records == []
 
 
 def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
@@ -549,6 +549,26 @@ def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
     host_arch = host_base.architectures[0]
     assert zipnames == [
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
+    ]
+
+
+def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkeypatch):
+    """Test cases for base-index parameter."""
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment"):
+        builder.run()
+
+    assert "DEPRECATED: A charmcraft.yaml configuration file is now required." in [
+        r.message for r in caplog.records
     ]
 
 

@@ -58,6 +58,8 @@ class _MessageHandler:
         for k in self._modes:
             setattr(self, k.upper(), k)
 
+        self.mode = self.NORMAL
+
     def init(self, initial_mode):
         """Initialize internal structures; this must be done before start logging."""
         self._set_filehandler()

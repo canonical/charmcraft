@@ -78,16 +78,6 @@ def basic_project(tmp_path):
     yield tmp_path
 
 
-@pytest.fixture(autouse=True)
-def set_message_handler_mode():
-    message_handler.mode = message_handler.NORMAL
-
-    def set_mode(mode):
-        message_handler.mode = mode
-
-    return set_mode
-
-
 # --- Validator tests
 
 
@@ -649,10 +639,10 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
     ],
 )
 def test_build_bases_index_scenarios_provider(
-    basic_project, monkeypatch, caplog, set_message_handler_mode, mode, cmd_flags
+    basic_project, monkeypatch, caplog, mode, cmd_flags
 ):
     """Test cases for base-index parameter."""
-    set_message_handler_mode(mode)
+    monkeypatch.setattr(message_handler, "mode", mode)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     charmcraft_file = basic_project / "charmcraft.yaml"

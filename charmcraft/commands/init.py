@@ -38,6 +38,7 @@ It will setup the following tree of files and directories:
 ├── metadata.yaml        - Charm operator package description
 ├── README.md            - Frontpage for your charmhub.io/charm/
 ├── actions.yaml         - Day-2 action declarations, e.g. backup, restore
+├── charmcraft.yaml      - Charm build configuration
 ├── config.yaml          - Config schema for your operator
 ├── LICENSE              - Your charm license, we recommend Apache 2
 ├── requirements.txt     - PyPI dependencies for your charm, with `ops`

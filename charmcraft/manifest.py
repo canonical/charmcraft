@@ -36,6 +36,9 @@ def create_manifest(
 ):
     """Create manifest.yaml in basedir for given base configuration.
 
+    For packing bundles, `bases` will be skipped when bases_config is None.
+    Charms should always include a valid bases_config.
+
     :param basedir: Directory to create Charm in.
     :param started_at: Build start time.
     :param bases_config: Relevant bases configuration, if any.
@@ -47,6 +50,7 @@ def create_manifest(
         "charmcraft-started-at": started_at.isoformat() + "Z",
     }
 
+    # Annotate bases only if bases_config is not None.
     if bases_config is not None:
         bases = [
             {

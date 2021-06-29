@@ -61,6 +61,7 @@ def test_all_the_files(tmp_path, config):
         "LICENSE",
         "README.md",
         "actions.yaml",
+        "charmcraft.yaml",
         "config.yaml",
         "metadata.yaml",
         "requirements-dev.txt",

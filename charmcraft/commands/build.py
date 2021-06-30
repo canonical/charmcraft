@@ -36,6 +36,7 @@ from charmcraft.env import (
     is_charmcraft_running_in_managed_mode,
 )
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
+from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.providers import is_base_providable, launched_environment
@@ -247,8 +248,15 @@ class Builder:
     def pack_charm_in_instance(self, instance: Executor, bases_index: int) -> str:
         """Pack instance in Charm."""
         try:
+            cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
+
+            if message_handler.mode == message_handler.VERBOSE:
+                cmd.append("--verbose")
+            elif message_handler.mode == message_handler.QUIET:
+                cmd.append("--quiet")
+
             instance.execute_run(
-                ["charmcraft", "pack", "--bases-index", str(bases_index)],
+                cmd,
                 cwd=get_managed_environment_project_path().as_posix(),
             )
         except subprocess.CalledProcessError as error:

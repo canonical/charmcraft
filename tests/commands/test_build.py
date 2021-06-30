@@ -45,6 +45,7 @@ from charmcraft.commands.build import (
     relativise,
 )
 from charmcraft.config import Base, BasesConfiguration, load
+from charmcraft.logsetup import message_handler
 from charmcraft.metadata import CHARM_METADATA
 
 
@@ -629,8 +630,19 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
-def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog):
+@pytest.mark.parametrize(
+    "mode,cmd_flags",
+    [
+        (message_handler.VERBOSE, ["--verbose"]),
+        (message_handler.QUIET, ["--quiet"]),
+        (message_handler.NORMAL, []),
+    ],
+)
+def test_build_bases_index_scenarios_provider(
+    basic_project, monkeypatch, caplog, mode, cmd_flags
+):
     """Test cases for base-index parameter."""
+    monkeypatch.setattr(message_handler, "mode", mode)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -680,7 +692,8 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             call()
             .__enter__()
             .execute_run(
-                ["charmcraft", "pack", "--bases-index", "0"], cwd="/root/project"
+                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+                cwd="/root/project",
             ),
             call().__exit__(None, None, None),
         ]
@@ -702,7 +715,8 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             call()
             .__enter__()
             .execute_run(
-                ["charmcraft", "pack", "--bases-index", "1"], cwd="/root/project"
+                ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+                cwd="/root/project",
             ),
             call().__exit__(None, None, None),
         ]
@@ -725,7 +739,8 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             call()
             .__enter__()
             .execute_run(
-                ["charmcraft", "pack", "--bases-index", "0"], cwd="/root/project"
+                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+                cwd="/root/project",
             ),
             call().__exit__(None, None, None),
             call(
@@ -739,7 +754,8 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             call()
             .__enter__()
             .execute_run(
-                ["charmcraft", "pack", "--bases-index", "1"], cwd="/root/project"
+                ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+                cwd="/root/project",
             ),
             call().__exit__(None, None, None),
         ]

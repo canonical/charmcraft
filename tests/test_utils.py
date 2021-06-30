@@ -18,7 +18,7 @@ import logging
 import os
 import pathlib
 from textwrap import dedent
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 
@@ -26,12 +26,33 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
-    get_os_platform,
+    confirm_with_user,
     get_host_architecture,
+    get_os_platform,
     load_yaml,
     make_executable,
     useful_filepath,
 )
+
+
+@pytest.fixture
+def mock_isatty():
+    with patch("charmcraft.utils.sys.stdin.isatty", return_value=True) as mock_isatty:
+        yield mock_isatty
+
+
+@pytest.fixture
+def mock_input():
+    with patch("charmcraft.utils.input", return_value="") as mock_input:
+        yield mock_input
+
+
+@pytest.fixture
+def mock_is_charmcraft_running_in_managed_mode():
+    with patch(
+        "charmcraft.utils.is_charmcraft_running_in_managed_mode", return_value=False
+    ) as mock_managed:
+        yield mock_managed
 
 
 def test_make_executable_read_bits(tmp_path):
@@ -338,3 +359,53 @@ def test_get_host_architecture(platform_arch, deb_arch):
     """Test all platform mappings in addition to unknown."""
     with patch("platform.machine", return_value=platform_arch):
         assert get_host_architecture() == deb_arch
+
+
+def test_confirm_with_user_defaults_with_tty(mock_input, mock_isatty):
+    mock_input.return_value = ""
+    mock_isatty.return_value = True
+
+    assert confirm_with_user("prompt", default=True) is True
+    assert mock_input.mock_calls == [call("prompt [Y/n]: ")]
+    mock_input.reset_mock()
+
+    assert confirm_with_user("prompt", default=False) is False
+    assert mock_input.mock_calls == [call("prompt [y/N]: ")]
+
+
+def test_confirm_with_user_defaults_without_tty(mock_input, mock_isatty):
+    mock_isatty.return_value = False
+
+    assert confirm_with_user("prompt", default=True) is True
+    assert confirm_with_user("prompt", default=False) is False
+
+    assert mock_input.mock_calls == []
+
+
+@pytest.mark.parametrize(
+    "user_input,expected",
+    [
+        ("y", True),
+        ("Y", True),
+        ("yes", True),
+        ("YES", True),
+        ("n", False),
+        ("N", False),
+        ("no", False),
+        ("NO", False),
+    ],
+)
+def test_confirm_with_user(user_input, expected, mock_input, mock_isatty):
+    mock_input.return_value = user_input
+
+    assert confirm_with_user("prompt") == expected
+    assert mock_input.mock_calls == [call("prompt [y/N]: ")]
+
+
+def test_confirm_with_user_errors_in_managed_mode(
+    mock_is_charmcraft_running_in_managed_mode,
+):
+    mock_is_charmcraft_running_in_managed_mode.return_value = True
+
+    with pytest.raises(RuntimeError):
+        confirm_with_user("prompt")

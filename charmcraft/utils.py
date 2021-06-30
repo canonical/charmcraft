@@ -20,8 +20,9 @@ import logging
 import os
 import pathlib
 import platform
+import sys
 from collections import namedtuple
-from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
+from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 
 import attr
 import yaml
@@ -185,3 +186,26 @@ def get_host_architecture():
     """Get host architecture in deb format suitable for base definition."""
     os_platform = get_os_platform()
     return ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)
+
+
+def confirm_with_user(prompt, default=False) -> bool:
+    """Query user for yes/no answer.
+
+    If TTY is not interaction, returns default value.
+    If answer is empty (""), returns default value.
+
+    :returns: True if yes (Y,y,YES,yes), otherwise false.
+    """
+    if not sys.stdin.isatty():
+        return default
+
+    choices = " [Y/n]: " if default else " [y/N]: "
+    default_answer = "y" if default else "n"
+
+    reply = str(input(prompt + choices)).lower().strip() or default_answer
+    if reply[0] == "y":
+        return True
+    if reply[0] == "n":
+        return False
+    else:
+        return default

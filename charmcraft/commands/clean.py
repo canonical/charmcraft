@@ -41,9 +41,9 @@ class CleanCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        metadata = parse_metadata_yaml(self.config.project.dirpath)
+        project_path = self.config.project.dirpath
+        metadata = parse_metadata_yaml(project_path)
         logger.debug("Cleaning project %r.", metadata.name)
 
-        clean_project_environments(metadata.name)
-
+        clean_project_environments(metadata.name, project_path)
         logger.info("Cleaned project %r.", metadata.name)

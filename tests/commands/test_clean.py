@@ -47,4 +47,4 @@ def test_clean(
         (logging.DEBUG, "Cleaning project 'foo'."),
         (logging.INFO, "Cleaned project 'foo'."),
     ]
-    assert mock_clean_project_environments.mock_calls == [mock.call("foo")]
+    assert mock_clean_project_environments.mock_calls == [mock.call("foo", tmp_path)]

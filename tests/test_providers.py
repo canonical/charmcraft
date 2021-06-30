@@ -78,6 +78,13 @@ def mock_inject():
         yield mock_inject
 
 
+@pytest.fixture
+def mock_path():
+    mock_path = mock.Mock(spec=pathlib.Path)
+    mock_path.stat.return_value.st_ino = 445566
+    yield mock_path
+
+
 @pytest.fixture(autouse=True)
 def clear_environment(monkeypatch):
     monkeypatch.setattr(os, "environ", {})
@@ -162,12 +169,17 @@ def test_capture_logs_from_instance(mock_executor, tmp_path):
     ]
 
 
-def test_clean_project_environments_without_lxd(mock_lxc, mock_lxd_is_installed):
+def test_clean_project_environments_without_lxd(
+    mock_lxc, mock_lxd_is_installed, mock_path
+):
     mock_lxd_is_installed.return_value = False
 
     assert (
         providers.clean_project_environments(
-            charm_name="my-charm", lxd_project="test-project", lxd_remote="test-remote"
+            charm_name="my-charm",
+            project_path=mock_path,
+            lxd_project="test-project",
+            lxd_remote="test-remote",
         )
         == []
     )
@@ -176,33 +188,37 @@ def test_clean_project_environments_without_lxd(mock_lxc, mock_lxd_is_installed)
     assert mock_lxc.mock_calls == []
 
 
-def test_clean_project_environments(mock_lxc):
+def test_clean_project_environments(mock_lxc, mock_path):
     mock_lxc.return_value.list_names.return_value = [
         "do-not-delete-me-please",
-        "charmcraft-testcharm-b-c-d",
+        "charmcraft-testcharm-445566-b-c-d",
         "charmcraft-my-charm---",
-        "charmcraft-my-charm-project-0-0-amd99",
-        "charmcraft-my-charm-project-999-444-arm64",
-        "charmcraft_a_b_c_d",
+        "charmcraft-my-charm-445566---",
+        "charmcraft-my-charm-project-445566-0-0-amd99",
+        "charmcraft-my-charm-project-445566-999-444-arm64",
+        "charmcraft_445566_a_b_c_d",
     ]
 
     assert providers.clean_project_environments(
-        charm_name="my-charm", lxd_project="test-project", lxd_remote="test-remote"
+        charm_name="my-charm-project",
+        project_path=mock_path,
+        lxd_project="test-project",
+        lxd_remote="test-remote",
     ) == [
-        "charmcraft-my-charm-project-0-0-amd99",
-        "charmcraft-my-charm-project-999-444-arm64",
+        "charmcraft-my-charm-project-445566-0-0-amd99",
+        "charmcraft-my-charm-project-445566-999-444-arm64",
     ]
     assert mock_lxc.mock_calls == [
         mock.call(),
         mock.call().list_names(project="test-project", remote="test-remote"),
         mock.call().delete(
-            instance_name="charmcraft-my-charm-project-0-0-amd99",
+            instance_name="charmcraft-my-charm-project-445566-0-0-amd99",
             force=True,
             project="test-project",
             remote="test-remote",
         ),
         mock.call().delete(
-            instance_name="charmcraft-my-charm-project-999-444-arm64",
+            instance_name="charmcraft-my-charm-project-445566-999-444-arm64",
             force=True,
             project="test-project",
             remote="test-remote",
@@ -212,15 +228,18 @@ def test_clean_project_environments(mock_lxc):
     mock_lxc.reset_mock()
 
     assert providers.clean_project_environments(
-        charm_name="testcharm", lxd_project="test-project", lxd_remote="test-remote"
+        charm_name="testcharm",
+        project_path=mock_path,
+        lxd_project="test-project",
+        lxd_remote="test-remote",
     ) == [
-        "charmcraft-testcharm-b-c-d",
+        "charmcraft-testcharm-445566-b-c-d",
     ]
     assert mock_lxc.mock_calls == [
         mock.call(),
         mock.call().list_names(project="test-project", remote="test-remote"),
         mock.call().delete(
-            instance_name="charmcraft-testcharm-b-c-d",
+            instance_name="charmcraft-testcharm-445566-b-c-d",
             force=True,
             project="test-project",
             remote="test-remote",
@@ -232,6 +251,7 @@ def test_clean_project_environments(mock_lxc):
     assert (
         providers.clean_project_environments(
             charm_name="unknown-charm",
+            project_path=mock_path,
             lxd_project="test-project",
             lxd_remote="test-remote",
         )
@@ -297,27 +317,28 @@ def test_get_command_environment_all_opts(monkeypatch):
 @pytest.mark.parametrize(
     "bases_index,build_on_index,project_name,target_arch,expected",
     [
-        (0, 0, "mycharm", "test-arch1", "charmcraft-mycharm-0-0-test-arch1"),
+        (0, 0, "mycharm", "test-arch1", "charmcraft-mycharm-{inode}-0-0-test-arch1"),
         (
             1,
             2,
             "my-other-charm",
             "test-arch2",
-            "charmcraft-my-other-charm-1-2-test-arch2",
+            "charmcraft-my-other-charm-{inode}-1-2-test-arch2",
         ),
     ],
 )
 def test_get_instance_name(
-    bases_index, build_on_index, project_name, target_arch, expected
+    bases_index, build_on_index, project_name, target_arch, expected, mock_path
 ):
     assert (
         providers.get_instance_name(
             bases_index=bases_index,
             build_on_index=build_on_index,
             project_name=project_name,
+            project_path=mock_path,
             target_arch=target_arch,
         )
-        == expected
+        == expected.format(inode="445566")
     )
 
 
@@ -374,7 +395,13 @@ def test_is_provider_available(is_installed):
     [("18.04", bases.BuilddBaseAlias.BIONIC), ("20.04", bases.BuilddBaseAlias.FOCAL)],
 )
 def test_launched_environment(
-    channel, alias, mock_configure_buildd_image_remote, mock_lxd, monkeypatch, tmp_path
+    channel,
+    alias,
+    mock_configure_buildd_image_remote,
+    mock_lxd,
+    monkeypatch,
+    tmp_path,
+    mock_path,
 ):
     expected_environment = {
         "CHARMCRAFT_MANAGED_MODE": "1",
@@ -389,7 +416,7 @@ def test_launched_environment(
     ) as mock_base_config:
         with providers.launched_environment(
             charm_name="test-charm",
-            project_path=tmp_path,
+            project_path=mock_path,
             base=base,
             bases_index=1,
             build_on_index=2,
@@ -400,7 +427,7 @@ def test_launched_environment(
             assert mock_configure_buildd_image_remote.mock_calls == [mock.call()]
             assert mock_lxd.mock_calls == [
                 mock.call.launch(
-                    name="charmcraft-test-charm-1-2-host-arch",
+                    name="charmcraft-test-charm-445566-1-2-host-arch",
                     base_configuration=mock_base_config.return_value,
                     image_name=channel,
                     image_remote="buildd-remote",
@@ -412,14 +439,14 @@ def test_launched_environment(
                     remote="local",
                 ),
                 mock.call.launch().mount(
-                    host_source=tmp_path, target=pathlib.Path("/root/project")
+                    host_source=mock_path, target=pathlib.Path("/root/project")
                 ),
             ]
             assert mock_base_config.mock_calls == [
                 call(
                     alias=alias,
                     environment=expected_environment,
-                    hostname="charmcraft-test-charm-1-2-host-arch",
+                    hostname="charmcraft-test-charm-445566-1-2-host-arch",
                 )
             ]
 

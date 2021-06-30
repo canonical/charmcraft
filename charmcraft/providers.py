@@ -66,6 +66,7 @@ def capture_logs_from_instance(instance: Executor) -> None:
 
 def clean_project_environments(
     charm_name: str,
+    project_path: pathlib.Path,
     *,
     lxd_project: str = "charmcraft",
     lxd_remote: str = "local",
@@ -73,6 +74,7 @@ def clean_project_environments(
     """Clean up any environments created for project.
 
     :param charm_name: Name of project.
+    :param project_path: Directory of charm project.
     :param lxd_project: Name of LXD project.
     :param lxd_remote: Name of LXD remote.
 
@@ -84,10 +86,11 @@ def clean_project_environments(
     if not is_provider_available():
         return deleted
 
+    inode = str(project_path.stat().st_ino)
     lxc = lxd.LXC()
 
     for name in lxc.list_names(project=lxd_project, remote=lxd_remote):
-        match_regex = f"^charmcraft-{charm_name}-.+-.+-.+$"
+        match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
         if re.match(match_regex, name):
             logger.debug("Deleting container %r.", name)
             lxc.delete(
@@ -145,7 +148,12 @@ def is_base_providable(base: Base) -> Tuple[bool, Union[str, None]]:
 
 
 def get_instance_name(
-    *, bases_index: int, build_on_index: int, project_name: str, target_arch: str
+    *,
+    bases_index: int,
+    build_on_index: int,
+    project_name: str,
+    project_path: pathlib.Path,
+    target_arch: str,
 ) -> str:
     """Formulate the name for an instance using each of the given parameters.
 
@@ -156,6 +164,7 @@ def get_instance_name(
     :param bases_index: Index of `bases:` entry.
     :param build_on_index: Index of `build-on` within bases entry.
     :param project_name: Name of charm project.
+    :param project_path: Directory of charm project.
     :param target_arch: Targetted architecture, used in the name to prevent
         collisions should future work enable multiple architectures on the same
         platform.
@@ -164,6 +173,7 @@ def get_instance_name(
         [
             "charmcraft",
             project_name,
+            str(project_path.stat().st_ino),
             str(bases_index),
             str(build_on_index),
             target_arch,
@@ -218,6 +228,7 @@ def launched_environment(
         bases_index=bases_index,
         build_on_index=build_on_index,
         project_name=charm_name,
+        project_path=project_path,
         target_arch=target_arch,
     )
 

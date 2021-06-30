@@ -28,6 +28,7 @@ from charmcraft.env import (
 
 FORMATTER_SIMPLE = "%(message)s"
 FORMATTER_DETAILED = "%(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
+FORMATTER_DETAILED_MANAGED = "mm %(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
 
 logger = logging.getLogger("charmcraft")
 enabled_loggers = [
@@ -88,9 +89,7 @@ class _MessageHandler:
 
         file_handler = logging.FileHandler(self._log_filepath, mode="w")
 
-        log_format = FORMATTER_DETAILED
-        if managed_mode:
-            log_format = "mm " + log_format
+        log_format = FORMATTER_DETAILED_MANAGED if managed_mode else FORMATTER_DETAILED
 
         file_handler.setFormatter(logging.Formatter(log_format))
         file_handler.setLevel(0)  # log eeeeeverything

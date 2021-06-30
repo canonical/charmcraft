@@ -144,21 +144,3 @@ latest/edge
 Use `charmcraft upload` to get a new revision number for your freshly built
 charmed operator, and `charmcraft release` to release a revision into any
 particular channel for your users.
-
-# Charmcraft source
-
-Get the source from github with:
-
-    git clone https://github.com/canonical/charmcraft.git
-    cd charmcraft
-    virtualenv venv
-    . venv/bin/activate
-    pip install -r requirements.txt
-    CHARMCRAFT_DEVELOPER=1 python -m charmcraft
-
-If you would like to run the tests you can do so with
-
-    pip install -r requirements-dev.txt
-    ./run_tests
-
-Contributions welcome!

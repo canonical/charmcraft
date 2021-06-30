@@ -39,7 +39,11 @@ from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
-from charmcraft.providers import is_base_providable, launched_environment
+from charmcraft.providers import (
+    ensure_provider_is_available,
+    is_base_providable,
+    launched_environment,
+)
 from charmcraft.utils import make_executable
 
 logger = logging.getLogger(__name__)
@@ -184,7 +188,10 @@ class Builder:
         :returns: List of charm files created.
         """
         charms: List[str] = []
+
         is_managed_mode = is_charmcraft_running_in_managed_mode()
+        if not is_managed_mode:
+            ensure_provider_is_available()
 
         if not (self.charmdir / "charmcraft.yaml").exists():
             notify_deprecation("dn02")

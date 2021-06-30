@@ -26,8 +26,10 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from craft_providers import Executor, bases, lxd
 from craft_providers.actions import snap_installer
+from craft_providers.lxd import installer as lxd_installer
 from craft_providers.lxd.remotes import configure_buildd_image_remote
 
+from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
 from charmcraft.env import get_managed_environment_project_path
 from charmcraft.utils import get_host_architecture
@@ -38,6 +40,56 @@ BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
     "18.04": bases.BuilddBaseAlias.BIONIC,
     "20.04": bases.BuilddBaseAlias.FOCAL,
 }
+
+
+def clean_project_environments(
+    charm_name: str,
+    *,
+    lxd_project: str = "charmcraft",
+    lxd_remote: str = "local",
+) -> List[str]:
+    """Clean up any environments created for project.
+
+    :param charm_name: Name of project.
+    :param lxd_project: Name of LXD project.
+    :param lxd_remote: Name of LXD remote.
+
+    :returns: List of containers deleted.
+    """
+    deleted: List[str] = []
+
+    # Nothing to do if provider is not installed.
+    if not is_provider_available():
+        return deleted
+
+    lxc = lxd.LXC()
+
+    for name in lxc.list_names(project=lxd_project, remote=lxd_remote):
+        match_regex = f"^charmcraft-{charm_name}-.+-.+-.+$"
+        if re.match(match_regex, name):
+            logger.debug("Deleting container %r.", name)
+            lxc.delete(
+                instance_name=name, force=True, project=lxd_project, remote=lxd_remote
+            )
+            deleted.append(name)
+        else:
+            logger.debug("Not deleting container %r.", name)
+
+    return deleted
+
+
+def ensure_provider_is_available() -> None:
+    """Ensure provider is available.
+
+    :raises CommandError: if provider is not available.
+    """
+    if is_provider_available():
+        return
+
+    raise CommandError(
+        "LXD is required - check out https://snapcraft.io/lxd for "
+        "instructions on how to install the LXD snap for your distribution"
+    )
 
 
 def is_base_providable(base: Base) -> Tuple[bool, Union[str, None]]:
@@ -110,35 +162,12 @@ def get_command_environment() -> Dict[str, str]:
     return env
 
 
-def clean_project_environments(
-    charm_name: str,
-    *,
-    lxd_project: str = "charmcraft",
-    lxd_remote: str = "local",
-) -> List[str]:
-    """Clean up any environments created for project.
+def is_provider_available() -> bool:
+    """Check if provider is installed and available for use.
 
-    :param charm_name: Name of project.
-    :param lxd_project: Name of LXD project.
-    :param lxd_remote: Name of LXD remote.
-
-    :returns: List of containers deleted.
+    :returns: True if installed.
     """
-    deleted: List[str] = []
-    lxc = lxd.LXC()
-
-    for name in lxc.list_names(project=lxd_project, remote=lxd_remote):
-        match_regex = f"^charmcraft-{charm_name}-.+-.+-.+$"
-        if re.match(match_regex, name):
-            logger.debug("Deleting container: %s", name)
-            lxc.delete(
-                instance_name=name, force=True, project=lxd_project, remote=lxd_remote
-            )
-            deleted.append(name)
-        else:
-            logger.debug("Not deleting container: %s", name)
-
-    return deleted
+    return lxd_installer.is_installed()
 
 
 @contextlib.contextmanager

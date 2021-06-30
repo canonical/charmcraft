@@ -23,6 +23,12 @@ from charmcraft import env
 from charmcraft.cmdbase import CommandError
 
 
+def test_get_managed_environment_log_path():
+    dirpath = env.get_managed_environment_log_path()
+
+    assert dirpath == pathlib.Path("/tmp/charmcraft.log")
+
+
 def test_get_managed_environment_project_path():
     dirpath = env.get_managed_environment_project_path()
 

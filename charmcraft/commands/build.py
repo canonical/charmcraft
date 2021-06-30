@@ -258,15 +258,14 @@ class Builder:
         charm_name = format_charm_file_name(
             self.metadata.name, self.config.bases[bases_index]
         )
+        cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
+
+        if message_handler.mode == message_handler.VERBOSE:
+            cmd.append("--verbose")
+        elif message_handler.mode == message_handler.QUIET:
+            cmd.append("--quiet")
 
         try:
-            cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
-
-            if message_handler.mode == message_handler.VERBOSE:
-                cmd.append("--verbose")
-            elif message_handler.mode == message_handler.QUIET:
-                cmd.append("--quiet")
-
             instance.execute_run(
                 cmd,
                 check=True,
@@ -274,7 +273,6 @@ class Builder:
             )
         except subprocess.CalledProcessError as error:
             capture_logs_from_instance(instance)
-
             raise CommandError(
                 f"Failed to build charm for bases index '{bases_index}'."
             ) from error

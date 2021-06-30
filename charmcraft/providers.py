@@ -67,13 +67,13 @@ def clean_project_environments(
     for name in lxc.list_names(project=lxd_project, remote=lxd_remote):
         match_regex = f"^charmcraft-{charm_name}-.+-.+-.+$"
         if re.match(match_regex, name):
-            logger.debug("Deleting container: %s", name)
+            logger.debug("Deleting container %r.", name)
             lxc.delete(
                 instance_name=name, force=True, project=lxd_project, remote=lxd_remote
             )
             deleted.append(name)
         else:
-            logger.debug("Not deleting container: %s", name)
+            logger.debug("Not deleting container %r.", name)
 
     return deleted
 

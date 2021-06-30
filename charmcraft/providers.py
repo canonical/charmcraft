@@ -22,6 +22,7 @@ import os
 import pathlib
 import re
 import subprocess
+import tempfile
 from typing import Dict, List, Optional, Tuple, Union
 
 from craft_providers import Executor, bases, lxd
@@ -31,7 +32,10 @@ from craft_providers.lxd.remotes import configure_buildd_image_remote
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
-from charmcraft.env import get_managed_environment_project_path
+from charmcraft.env import (
+    get_managed_environment_log_path,
+    get_managed_environment_project_path,
+)
 from charmcraft.utils import get_host_architecture
 
 logger = logging.getLogger(__name__)
@@ -40,6 +44,24 @@ BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
     "18.04": bases.BuilddBaseAlias.BIONIC,
     "20.04": bases.BuilddBaseAlias.FOCAL,
 }
+
+
+def capture_logs_from_instance(instance: Executor) -> None:
+    """Retrieve logs from instance.
+
+    :param instance: Instance to retrieve logs from.
+
+    :returns: String of logs.
+    """
+    _, tmp_path = tempfile.mkstemp(prefix="charmcraft-")
+    local_log_path = pathlib.Path(tmp_path)
+    instance_log_path = get_managed_environment_log_path()
+
+    instance.pull_file(source=instance_log_path, destination=local_log_path)
+    logs = local_log_path.read_text()
+    local_log_path.unlink()
+
+    logger.debug("Logs captured from managed instance:\n%s", logs)
 
 
 def clean_project_environments(

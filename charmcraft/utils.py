@@ -191,21 +191,23 @@ def get_host_architecture():
 def confirm_with_user(prompt, default=False) -> bool:
     """Query user for yes/no answer.
 
-    If TTY is not interaction, returns default value.
-    If answer is empty (""), returns default value.
+    If stdin is not a tty, the default value is returned.
 
-    :returns: True if yes (Y,y,YES,yes), otherwise false.
+    If user returns an empty answer, the default value is returned.
+    returns default value.
+
+    :returns: True if answer starts with [yY], False if answer starts with [nN],
+        otherwise the default.
     """
     if not sys.stdin.isatty():
         return default
 
     choices = " [Y/n]: " if default else " [y/N]: "
-    default_answer = "y" if default else "n"
 
-    reply = str(input(prompt + choices)).lower().strip() or default_answer
-    if reply[0] == "y":
+    reply = str(input(prompt + choices)).lower().strip()
+    if reply and reply[0] == "y":
         return True
-    if reply[0] == "n":
+    elif reply and reply[0] == "n":
         return False
     else:
         return default

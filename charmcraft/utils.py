@@ -20,14 +20,16 @@ import logging
 import os
 import pathlib
 import platform
+import sys
 from collections import namedtuple
-from stat import S_IXUSR, S_IXGRP, S_IXOTH, S_IRUSR, S_IRGRP, S_IROTH
+from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 
 import attr
 import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.env import is_charmcraft_running_in_managed_mode
 
 logger = logging.getLogger("charmcraft.commands")
 
@@ -185,3 +187,31 @@ def get_host_architecture():
     """Get host architecture in deb format suitable for base definition."""
     os_platform = get_os_platform()
     return ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)
+
+
+def confirm_with_user(prompt, default=False) -> bool:
+    """Query user for yes/no answer.
+
+    If stdin is not a tty, the default value is returned.
+
+    If user returns an empty answer, the default value is returned.
+    returns default value.
+
+    :returns: True if answer starts with [yY], False if answer starts with [nN],
+        otherwise the default.
+    """
+    if is_charmcraft_running_in_managed_mode():
+        raise RuntimeError("confirmation not yet supported in managed-mode")
+
+    if not sys.stdin.isatty():
+        return default
+
+    choices = " [Y/n]: " if default else " [y/N]: "
+
+    reply = str(input(prompt + choices)).lower().strip()
+    if reply and reply[0] == "y":
+        return True
+    elif reply and reply[0] == "n":
+        return False
+    else:
+        return default

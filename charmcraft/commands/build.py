@@ -40,6 +40,7 @@ from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.providers import (
+    capture_logs_from_instance,
     ensure_provider_is_available,
     is_base_providable,
     launched_environment,
@@ -254,26 +255,29 @@ class Builder:
 
     def pack_charm_in_instance(self, instance: Executor, bases_index: int) -> str:
         """Pack instance in Charm."""
+        charm_name = format_charm_file_name(
+            self.metadata.name, self.config.bases[bases_index]
+        )
+        cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
+
+        if message_handler.mode == message_handler.VERBOSE:
+            cmd.append("--verbose")
+        elif message_handler.mode == message_handler.QUIET:
+            cmd.append("--quiet")
+
         try:
-            cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
-
-            if message_handler.mode == message_handler.VERBOSE:
-                cmd.append("--verbose")
-            elif message_handler.mode == message_handler.QUIET:
-                cmd.append("--quiet")
-
             instance.execute_run(
                 cmd,
+                check=True,
                 cwd=get_managed_environment_project_path().as_posix(),
             )
         except subprocess.CalledProcessError as error:
+            capture_logs_from_instance(instance)
             raise CommandError(
                 f"Failed to build charm for bases index '{bases_index}'."
             ) from error
 
-        return format_charm_file_name(
-            self.metadata.name, self.config.bases[bases_index]
-        )
+        return charm_name
 
     def _load_juju_ignore(self):
         ignore = JujuIgnore(default_juju_ignore)

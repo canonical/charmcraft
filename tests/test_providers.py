@@ -141,6 +141,27 @@ def test_base_configuration_setup_snap_injection_error(mock_executor, mock_injec
     assert exc_info.value.__cause__ is not None
 
 
+def test_capture_logs_from_instance(mock_executor, tmp_path):
+    fake_log_data = "some\nlog data\nhere"
+    fake_log = tmp_path / "x.log"
+    fake_log.write_text(fake_log_data)
+
+    with mock.patch(
+        "charmcraft.providers.tempfile.mkstemp", return_value=(None, str(fake_log))
+    ):
+        with mock.patch("charmcraft.providers.logger") as mock_logger:
+            providers.capture_logs_from_instance(mock_executor)
+
+    assert mock_executor.mock_calls == [
+        mock.call.pull_file(
+            source=pathlib.Path("/tmp/charmcraft.log"), destination=fake_log
+        ),
+    ]
+    assert mock_logger.mock_calls == [
+        mock.call.debug("Logs captured from managed instance:\n%s", fake_log_data)
+    ]
+
+
 def test_clean_project_environments_without_lxd(mock_lxc, mock_lxd_is_installed):
     mock_lxd_is_installed.return_value = False
 

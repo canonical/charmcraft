@@ -47,6 +47,14 @@ def mock_input():
         yield mock_input
 
 
+@pytest.fixture
+def mock_is_charmcraft_running_in_managed_mode():
+    with patch(
+        "charmcraft.utils.is_charmcraft_running_in_managed_mode", return_value=False
+    ) as mock_managed:
+        yield mock_managed
+
+
 def test_make_executable_read_bits(tmp_path):
     pth = tmp_path / "test"
     pth.touch(mode=0o640)
@@ -392,3 +400,12 @@ def test_confirm_with_user(user_input, expected, mock_input, mock_isatty):
 
     assert confirm_with_user("prompt") == expected
     assert mock_input.mock_calls == [call("prompt [y/N]: ")]
+
+
+def test_confirm_with_user_errors_in_managed_mode(
+    mock_is_charmcraft_running_in_managed_mode,
+):
+    mock_is_charmcraft_running_in_managed_mode.return_value = True
+
+    with pytest.raises(RuntimeError):
+        confirm_with_user("prompt")

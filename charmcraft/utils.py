@@ -29,6 +29,7 @@ import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.env import is_charmcraft_running_in_managed_mode
 
 logger = logging.getLogger("charmcraft.commands")
 
@@ -199,6 +200,9 @@ def confirm_with_user(prompt, default=False) -> bool:
     :returns: True if answer starts with [yY], False if answer starts with [nN],
         otherwise the default.
     """
+    if is_charmcraft_running_in_managed_mode():
+        raise RuntimeError("confirmation not yet supported in managed-mode")
+
     if not sys.stdin.isatty():
         return default
 

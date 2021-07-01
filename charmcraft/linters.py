@@ -61,7 +61,6 @@ class Language:
         except IOError:
             return cls.Result.unknown
 
-
         entrypoint = basedir / entrypoint_str
         if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
             return cls.Result.python

@@ -61,6 +61,12 @@ def mock_executor():
 
 
 @pytest.fixture
+def mock_logger():
+    with mock.patch("charmcraft.providers.logger") as mock_logger:
+        yield mock_logger
+
+
+@pytest.fixture
 def mock_lxc(monkeypatch):
     with mock.patch("charmcraft.providers.lxd.LXC", autospec=True) as mock_lxc:
         yield mock_lxc
@@ -84,6 +90,12 @@ def mock_lxd_is_installed():
 def mock_lxd_install():
     with mock.patch("charmcraft.providers.lxd_installer.install") as mock_install:
         yield mock_install
+
+
+@pytest.fixture()
+def mock_mkstemp():
+    with mock.patch("charmcraft.providers.tempfile.mkstemp") as mock_mkstemp:
+        yield mock_mkstemp
 
 
 @pytest.fixture
@@ -164,16 +176,14 @@ def test_base_configuration_setup_snap_injection_error(mock_executor, mock_injec
     assert exc_info.value.__cause__ is not None
 
 
-def test_capture_logs_from_instance(mock_executor, tmp_path):
-    fake_log_data = "some\nlog data\nhere"
+def test_capture_logs_from_instance(mock_executor, mock_logger, mock_mkstemp, tmp_path):
     fake_log = tmp_path / "x.log"
+    mock_mkstemp.return_value = (None, str(fake_log))
+
+    fake_log_data = "some\nlog data\nhere"
     fake_log.write_text(fake_log_data)
 
-    with mock.patch(
-        "charmcraft.providers.tempfile.mkstemp", return_value=(None, str(fake_log))
-    ):
-        with mock.patch("charmcraft.providers.logger") as mock_logger:
-            providers.capture_logs_from_instance(mock_executor)
+    providers.capture_logs_from_instance(mock_executor)
 
     assert mock_executor.mock_calls == [
         mock.call.pull_file(
@@ -183,6 +193,23 @@ def test_capture_logs_from_instance(mock_executor, tmp_path):
     assert mock_logger.mock_calls == [
         mock.call.debug("Logs captured from managed instance:\n%s", fake_log_data)
     ]
+
+
+def test_capture_logs_from_instance_not_found(
+    mock_executor, mock_logger, mock_mkstemp, tmp_path
+):
+    fake_log = tmp_path / "x.log"
+    mock_mkstemp.return_value = (None, str(fake_log))
+    mock_executor.pull_file.side_effect = FileNotFoundError()
+
+    providers.capture_logs_from_instance(mock_executor)
+
+    assert mock_executor.mock_calls == [
+        mock.call.pull_file(
+            source=pathlib.Path("/tmp/charmcraft.log"), destination=fake_log
+        ),
+    ]
+    assert mock_logger.mock_calls == [mock.call.debug("No logs found in instance.")]
 
 
 def test_clean_project_environments_without_lxd(

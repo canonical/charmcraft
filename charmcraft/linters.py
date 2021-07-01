@@ -38,7 +38,7 @@ class Language:
 
     check_type = CheckType.trait
     name = "language"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--language"  # FIXME: confirm url
+    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--language"
     text = "The charm is written with Python."
 
     # different result constants

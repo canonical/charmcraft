@@ -43,6 +43,15 @@ def test_language_no_dispatch(tmp_path):
     assert result == Language.Result.unknown
 
 
+def test_language_inaccessible_dispatch(tmp_path):
+    """The charm has a dispatch we can't use."""
+    dispatch = tmp_path / "dispatch"
+    dispatch.touch()
+    dispatch.chmod(0o000)
+    result = Language.run(tmp_path)
+    assert result == Language.Result.unknown
+
+
 def test_language_empty_dispatch(tmp_path):
     """The charm dispatch is empty."""
     dispatch = tmp_path / "dispatch"

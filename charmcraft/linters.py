@@ -50,13 +50,17 @@ class Language:
         # get the entrypoint from the last useful dispatch line
         dispatch = basedir / "dispatch"
         entrypoint_str = ""
-        if dispatch.exists():
-            last_line = None
-            for line in dispatch.open("rt", encoding="utf8"):
-                if line.strip():
-                    last_line = line
-            if last_line:
-                entrypoint_str = shlex.split(last_line)[-1]
+        try:
+            with dispatch.open("rt", encoding="utf8") as fh:
+                last_line = None
+                for line in fh:
+                    if line.strip():
+                        last_line = line
+                if last_line:
+                    entrypoint_str = shlex.split(last_line)[-1]
+        except IOError:
+            return cls.Result.unknown
+
 
         entrypoint = basedir / entrypoint_str
         if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):

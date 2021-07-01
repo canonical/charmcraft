@@ -58,7 +58,7 @@ class Language:
                         last_line = line
                 if last_line:
                     entrypoint_str = shlex.split(last_line)[-1]
-        except IOError:
+        except (IOError, UnicodeDecodeError):
             return cls.Result.unknown
 
         entrypoint = basedir / entrypoint_str

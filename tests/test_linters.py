@@ -52,6 +52,14 @@ def test_language_inaccessible_dispatch(tmp_path):
     assert result == Language.Result.unknown
 
 
+def test_language_broken_dispatch(tmp_path):
+    """The charm has a dispatch which we can't decode."""
+    dispatch = tmp_path / "dispatch"
+    dispatch.write_bytes(b"\xC0\xC0")
+    result = Language.run(tmp_path)
+    assert result == Language.Result.unknown
+
+
 def test_language_empty_dispatch(tmp_path):
     """The charm dispatch is empty."""
     dispatch = tmp_path / "dispatch"

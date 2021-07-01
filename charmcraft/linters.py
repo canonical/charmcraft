@@ -17,6 +17,7 @@
 """Analyze and lint charm structures and files."""
 
 import os
+import pathlib
 import shlex
 from collections import namedtuple
 
@@ -40,12 +41,11 @@ class Language:
     url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--language"  # FIXME: confirm url
     text = "The charm is written with Python."
 
-    # different result constatns
-    PYTHON = "python"
-    UNKNOWN = "unknown"
+    # different result constants
+    Result = namedtuple("Result", "python unknown")(python="python", unknown="unkwnon")
 
     @classmethod
-    def run(cls, basedir):
+    def run(cls, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         # get the entrypoint from the last useful dispatch line
         dispatch = basedir / "dispatch"
@@ -60,5 +60,5 @@ class Language:
 
         entrypoint = basedir / entrypoint_str
         if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
-            return cls.PYTHON
-        return cls.UNKNOWN
+            return cls.Result.python
+        return cls.Result.unknown

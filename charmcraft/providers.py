@@ -326,6 +326,7 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
                     "apt-get",
                     "install",
                     "-y",
+                    "git",
                     "python3-pip",
                     "python3-setuptools",
                 ],
@@ -334,7 +335,7 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
             )
         except subprocess.CalledProcessError as error:
             raise bases.BaseConfigurationError(
-                brief="Failed to install python3-pip and python3-setuptools.",
+                brief="Failed to install the required dependencies.",
             ) from error
 
         try:

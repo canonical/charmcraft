@@ -24,6 +24,7 @@ from unittest.mock import call
 import pytest
 from craft_providers import Executor, bases
 from craft_providers.actions import snap_installer
+from craft_providers.lxd import LXDInstallationError
 
 from charmcraft import providers
 from charmcraft.cmdbase import CommandError
@@ -46,6 +47,15 @@ def mock_configure_buildd_image_remote():
 
 
 @pytest.fixture
+def mock_confirm_with_user():
+    with mock.patch(
+        "charmcraft.providers.confirm_with_user",
+        return_value=False,
+    ) as mock_confirm:
+        yield mock_confirm
+
+
+@pytest.fixture
 def mock_executor():
     yield mock.Mock(spec=Executor)
 
@@ -63,11 +73,17 @@ def mock_lxd(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def mock_lxd_is_installed(monkeypatch):
+def mock_lxd_is_installed():
     with mock.patch(
         "charmcraft.providers.lxd_installer.is_installed", return_value=True
-    ) as mock_is_intalled:
-        yield mock_is_intalled
+    ) as mock_is_installed:
+        yield mock_is_installed
+
+
+@pytest.fixture()
+def mock_lxd_install():
+    with mock.patch("charmcraft.providers.lxd_installer.install") as mock_install:
+        yield mock_install
 
 
 @pytest.fixture
@@ -243,25 +259,59 @@ def test_clean_project_environments(mock_lxc):
     ]
 
 
-def test_ensure_provider_is_available_ok_when_installed():
-    with mock.patch(
-        "charmcraft.providers.lxd_installer.is_installed", return_value=True
+def test_ensure_provider_is_available_ok_when_installed(mock_lxd_is_installed):
+    mock_lxd_is_installed.return_value = True
+    providers.ensure_provider_is_available()
+
+
+def test_ensure_provider_is_available_errors_when_user_declines(
+    mock_confirm_with_user, mock_lxd_is_installed
+):
+    mock_confirm_with_user.return_value = False
+    mock_lxd_is_installed.return_value = False
+
+    with pytest.raises(
+        CommandError,
+        match=re.escape(
+            "LXD is required, but not installed. Please visit https://snapcraft.io/lxd for "
+            "instructions on how to install the LXD snap for your distribution"
+        ),
     ):
         providers.ensure_provider_is_available()
 
+    assert mock_confirm_with_user.mock_calls == [
+        mock.call(
+            "LXD is required, but not installed. "
+            "Do you wish to install LXD and configure it with the defaults?",
+            default=False,
+        )
+    ]
 
-def test_ensure_provider_is_available_errors_when_not_installed():
-    with mock.patch(
-        "charmcraft.providers.lxd_installer.is_installed", return_value=False
-    ):
-        with pytest.raises(
-            CommandError,
-            match=re.escape(
-                "LXD is required - check out https://snapcraft.io/lxd for "
-                "instructions on how to install the LXD snap for your distribution"
-            ),
-        ):
-            providers.ensure_provider_is_available()
+
+def test_ensure_provider_is_available_errors_when_lxd_install_fails(
+    mock_confirm_with_user, mock_lxd_is_installed, mock_lxd_install
+):
+    mock_confirm_with_user.return_value = True
+    mock_lxd_is_installed.return_value = False
+    mock_lxd_install.side_effect = LXDInstallationError("foo")
+
+    with pytest.raises(
+        CommandError,
+        match=re.escape(
+            "Failed to install LXD. Please visit https://snapcraft.io/lxd for "
+            "instructions on how to install the LXD snap for your distribution"
+        ),
+    ) as exc_info:
+        providers.ensure_provider_is_available()
+
+    assert mock_confirm_with_user.mock_calls == [
+        mock.call(
+            "LXD is required, but not installed. "
+            "Do you wish to install LXD and configure it with the defaults?",
+            default=False,
+        )
+    ]
+    assert exc_info.value.__cause__ == mock_lxd_install.side_effect
 
 
 def test_get_command_environment_minimal(monkeypatch):

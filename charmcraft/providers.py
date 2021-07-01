@@ -27,6 +27,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from craft_providers import Executor, bases, lxd
 from craft_providers.actions import snap_installer
+from craft_providers.lxd import LXDInstallationError
 from craft_providers.lxd import installer as lxd_installer
 from craft_providers.lxd.remotes import configure_buildd_image_remote
 
@@ -36,7 +37,7 @@ from charmcraft.env import (
     get_managed_environment_log_path,
     get_managed_environment_project_path,
 )
-from charmcraft.utils import get_host_architecture
+from charmcraft.utils import confirm_with_user, get_host_architecture
 
 logger = logging.getLogger(__name__)
 
@@ -101,17 +102,30 @@ def clean_project_environments(
 
 
 def ensure_provider_is_available() -> None:
-    """Ensure provider is available.
+    """Ensure provider is available, prompting the user to install it if required.
 
     :raises CommandError: if provider is not available.
     """
     if is_provider_available():
         return
 
-    raise CommandError(
-        "LXD is required - check out https://snapcraft.io/lxd for "
-        "instructions on how to install the LXD snap for your distribution"
-    )
+    if confirm_with_user(
+        "LXD is required, but not installed. Do you wish to install LXD "
+        "and configure it with the defaults?",
+        default=False,
+    ):
+        try:
+            lxd_installer.install()
+        except LXDInstallationError as error:
+            raise CommandError(
+                "Failed to install LXD. Please visit https://snapcraft.io/lxd for "
+                "instructions on how to install the LXD snap for your distribution"
+            ) from error
+    else:
+        raise CommandError(
+            "LXD is required, but not installed. Please visit https://snapcraft.io/lxd for "
+            "instructions on how to install the LXD snap for your distribution"
+        )
 
 
 def is_base_providable(base: Base) -> Tuple[bool, Union[str, None]]:

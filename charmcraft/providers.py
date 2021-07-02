@@ -331,6 +331,7 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
                     "git",
                     "python3-pip",
                     "python3-setuptools",
+                    "python3-wheel",
                 ],
                 check=True,
                 capture_output=True,

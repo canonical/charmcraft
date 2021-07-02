@@ -128,7 +128,15 @@ def test_base_configuration_setup(mock_executor, mock_inject, monkeypatch, alias
 
     assert mock_executor.mock_calls == [
         call.execute_run(
-            ["apt-get", "install", "-y", "git", "python3-pip", "python3-setuptools"],
+            [
+                "apt-get",
+                "install",
+                "-y",
+                "git",
+                "python3-pip",
+                "python3-setuptools",
+                "python3-wheel",
+            ],
             check=True,
             capture_output=True,
         ),

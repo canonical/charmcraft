@@ -25,7 +25,6 @@ import subprocess
 import zipfile
 from typing import List, Optional
 
-from craft_providers import Executor
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -220,16 +219,11 @@ class Builder:
                     if is_managed_mode:
                         charm_name = self.build_charm(bases_config)
                     else:
-                        with launched_environment(
-                            charm_name=self.metadata.name,
-                            project_path=self.charmdir,
-                            base=build_on,
+                        charm_name = self.pack_charm_in_instance(
                             bases_index=bases_index,
+                            build_on=build_on,
                             build_on_index=build_on_index,
-                        ) as instance:
-                            charm_name = self.pack_charm_in_instance(
-                                instance, bases_index
-                            )
+                        )
 
                     charms.append(charm_name)
                     break
@@ -253,7 +247,9 @@ class Builder:
 
         return charms
 
-    def pack_charm_in_instance(self, instance: Executor, bases_index: int) -> str:
+    def pack_charm_in_instance(
+        self, *, bases_index: int, build_on: Base, build_on_index: int
+    ) -> str:
         """Pack instance in Charm."""
         charm_name = format_charm_file_name(
             self.metadata.name, self.config.bases[bases_index]
@@ -265,17 +261,25 @@ class Builder:
         elif message_handler.mode == message_handler.QUIET:
             cmd.append("--quiet")
 
-        try:
-            instance.execute_run(
-                cmd,
-                check=True,
-                cwd=get_managed_environment_project_path().as_posix(),
-            )
-        except subprocess.CalledProcessError as error:
-            capture_logs_from_instance(instance)
-            raise CommandError(
-                f"Failed to build charm for bases index '{bases_index}'."
-            ) from error
+        logger.info(f"Packing charm {charm_name!r}...")
+        with launched_environment(
+            charm_name=self.metadata.name,
+            project_path=self.charmdir,
+            base=build_on,
+            bases_index=bases_index,
+            build_on_index=build_on_index,
+        ) as instance:
+            try:
+                instance.execute_run(
+                    cmd,
+                    check=True,
+                    cwd=get_managed_environment_project_path().as_posix(),
+                )
+            except subprocess.CalledProcessError as error:
+                capture_logs_from_instance(instance)
+                raise CommandError(
+                    f"Failed to build charm for bases index '{bases_index}'."
+                ) from error
 
         return charm_name
 

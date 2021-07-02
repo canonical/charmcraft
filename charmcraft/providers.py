@@ -321,11 +321,14 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
         super().setup(executor=executor, retry_wait=retry_wait, timeout=timeout)
 
         try:
+            # XXX Patterson 2021-07-02: craft-parts will determine/install these
+            # deps as a matter of the plugin(s) and source(s) being used.
             executor.execute_run(
                 [
                     "apt-get",
                     "install",
                     "-y",
+                    "git",
                     "python3-pip",
                     "python3-setuptools",
                 ],
@@ -334,7 +337,7 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
             )
         except subprocess.CalledProcessError as error:
             raise bases.BaseConfigurationError(
-                brief="Failed to install python3-pip and python3-setuptools.",
+                brief="Failed to install the required dependencies.",
             ) from error
 
         try:

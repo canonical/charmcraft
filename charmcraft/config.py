@@ -266,7 +266,14 @@ class Config(ModelConfigDefaults, validate_all=False):
     type: Optional[str]
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Parts = Parts()
-    bases: Optional[List[BasesConfiguration]] = None
+    bases: List[BasesConfiguration] = [
+        BasesConfiguration(
+            **{
+                "build-on": [Base(name="ubuntu", channel="20.04")],
+                "run-on": [Base(name="ubuntu", channel="20.04")],
+            }
+        )
+    ]
 
     project: Project
 
@@ -328,7 +335,21 @@ class Config(ModelConfigDefaults, validate_all=False):
             # base configurations.  Doing it here rather than a Union
             # type will simplify user facing errors.
             bases = obj.get("bases")
-            if bases is not None and isinstance(bases, list):
+            if bases is None:
+                notify_deprecation("dn03")
+                # Set default bases to Ubuntu 20.04 to match strict snap's
+                # effective behavior.
+                bases = [
+                    {
+                        "name": "ubuntu",
+                        "channel": "20.04",
+                        "architectures": [get_host_architecture()],
+                    }
+                ]
+
+            # Expand short-form bases if only the bases is a valid list. If it
+            # is not a valid list, parse_obj() will properly handle the error.
+            if isinstance(bases, list):
                 cls.expand_short_form_bases(bases)
 
             return cls.parse_obj({"project": project, **obj})

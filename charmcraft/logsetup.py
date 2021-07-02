@@ -21,9 +21,14 @@ import os
 import tempfile
 
 from charmcraft import __version__
+from charmcraft.env import (
+    get_managed_environment_log_path,
+    is_charmcraft_running_in_managed_mode,
+)
 
 FORMATTER_SIMPLE = "%(message)s"
 FORMATTER_DETAILED = "%(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
+FORMATTER_DETAILED_MANAGED = "mm %(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
 
 logger = logging.getLogger("charmcraft")
 enabled_loggers = [
@@ -58,6 +63,8 @@ class _MessageHandler:
         for k in self._modes:
             setattr(self, k.upper(), k)
 
+        self.mode = self.NORMAL
+
     def init(self, initial_mode):
         """Initialize internal structures; this must be done before start logging."""
         self._set_filehandler()
@@ -74,10 +81,17 @@ class _MessageHandler:
 
     def _set_filehandler(self):
         """Set the file handler to log everything to the temp file."""
-        _, self._log_filepath = tempfile.mkstemp(prefix="charmcraft-log-")
+        managed_mode = is_charmcraft_running_in_managed_mode()
+        if managed_mode:
+            self._log_filepath = str(get_managed_environment_log_path())
+        else:
+            _, self._log_filepath = tempfile.mkstemp(prefix="charmcraft-log-")
 
-        file_handler = logging.FileHandler(self._log_filepath)
-        file_handler.setFormatter(logging.Formatter(FORMATTER_DETAILED))
+        file_handler = logging.FileHandler(self._log_filepath, mode="w")
+
+        log_format = FORMATTER_DETAILED_MANAGED if managed_mode else FORMATTER_DETAILED
+
+        file_handler.setFormatter(logging.Formatter(log_format))
         file_handler.setLevel(0)  # log eeeeeverything
         for enabled_logger in enabled_loggers:
             enabled_logger.addHandler(file_handler)

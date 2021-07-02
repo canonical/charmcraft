@@ -45,6 +45,7 @@ from charmcraft.commands.build import (
     relativise,
 )
 from charmcraft.config import Base, BasesConfiguration, load
+from charmcraft.logsetup import message_handler
 from charmcraft.metadata import CHARM_METADATA
 
 
@@ -75,6 +76,18 @@ def basic_project(tmp_path):
     charm_script.write_bytes(b"all the magic")
 
     yield tmp_path
+
+
+@pytest.fixture
+def mock_capture_logs_from_instance():
+    with patch("charmcraft.commands.build.capture_logs_from_instance") as mock_capture:
+        yield mock_capture
+
+
+@pytest.fixture(autouse=True)
+def mock_ensure_provider_is_available():
+    with patch("charmcraft.commands.build.ensure_provider_is_available") as mock_ensure:
+        yield mock_ensure
 
 
 # --- Validator tests
@@ -169,16 +182,6 @@ def test_validator_from_isdir(tmp_path, config):
     expected_msg = "Charm directory is not really a directory: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_from(testfile)
-
-
-def test_validator_bases_index_without_bases(config):
-    """'entrypoint' param: checks that the file exists."""
-    validator = Validator(config)
-    expected_msg = re.escape(
-        "No bases configuration found, required when using --bases-index."
-    )
-    with pytest.raises(CommandError, match=expected_msg):
-        validator.validate_bases_indices([0])
 
 
 @pytest.mark.parametrize("bases_indices", [[-1], [0, -1], [0, 1, -1]])
@@ -440,8 +443,11 @@ def test_politeexec_crashed(caplog, tmp_path):
 # --- (real) build tests
 
 
-def test_build_basic_complete_structure(basic_project, monkeypatch, config):
+def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, config):
     """Integration test: a simple structure with custom lib and normal src dir."""
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
     monkeypatch.chdir(basic_project)  # so the zip file is left in the temp dir
     builder = Builder(
         {
@@ -456,8 +462,14 @@ def test_build_basic_complete_structure(basic_project, monkeypatch, config):
     metadata_file = basic_project / "metadata.yaml"
     metadata_raw = metadata_file.read_bytes()
 
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch(
+        "charmcraft.commands.build.check_if_base_matches_host",
+        return_value=(True, None),
+    ):
+        zipnames = builder.run()
+
+    assert zipnames == [f"name-from-metadata_ubuntu-20.04-{host_arch}.charm"]
 
     # check all is properly inside the zip
     # contents!), and all relative to build dir
@@ -478,6 +490,7 @@ def test_build_basic_complete_structure(basic_project, monkeypatch, config):
     assert (
         manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
     )
+    assert caplog.records == []
 
 
 def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
@@ -538,6 +551,63 @@ def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
     host_arch = host_base.architectures[0]
     assert zipnames == [
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
+    ]
+
+
+def test_build_checks_provider(basic_project, mock_ensure_provider_is_available):
+    """Test cases for base-index parameter."""
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment"):
+        builder.run()
+
+    mock_ensure_provider_is_available.assert_called_once()
+
+
+def test_build_checks_provider_error(basic_project, mock_ensure_provider_is_available):
+    """Test cases for base-index parameter."""
+    mock_ensure_provider_is_available.side_effect = RuntimeError("foo")
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with pytest.raises(RuntimeError, match="foo"):
+        builder.run()
+
+    mock_ensure_provider_is_available.assert_called_once()
+
+
+def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkeypatch):
+    """Test cases for base-index parameter."""
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment"):
+        builder.run()
+
+    assert "DEPRECATED: A charmcraft.yaml configuration file is now required." in [
+        r.message for r in caplog.records
     ]
 
 
@@ -609,8 +679,25 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
-def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog):
+@pytest.mark.parametrize(
+    "mode,cmd_flags",
+    [
+        (message_handler.VERBOSE, ["--verbose"]),
+        (message_handler.QUIET, ["--quiet"]),
+        (message_handler.NORMAL, []),
+    ],
+)
+def test_build_bases_index_scenarios_provider(
+    mode,
+    cmd_flags,
+    basic_project,
+    caplog,
+    mock_capture_logs_from_instance,
+    mock_ensure_provider_is_available,
+    monkeypatch,
+):
     """Test cases for base-index parameter."""
+    monkeypatch.setattr(message_handler, "mode", mode)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -660,10 +747,13 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             call()
             .__enter__()
             .execute_run(
-                ["charmcraft", "pack", "--bases-index", "0"], cwd="/root/project"
+                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
             ),
             call().__exit__(None, None, None),
         ]
+        mock_ensure_provider_is_available.assert_called_once()
         mock_launch.reset_mock()
 
         zipnames = builder.run([1])
@@ -682,7 +772,9 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             call()
             .__enter__()
             .execute_run(
-                ["charmcraft", "pack", "--bases-index", "1"], cwd="/root/project"
+                ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
             ),
             call().__exit__(None, None, None),
         ]
@@ -705,7 +797,9 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             call()
             .__enter__()
             .execute_run(
-                ["charmcraft", "pack", "--bases-index", "0"], cwd="/root/project"
+                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
             ),
             call().__exit__(None, None, None),
             call(
@@ -719,7 +813,9 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             call()
             .__enter__()
             .execute_run(
-                ["charmcraft", "pack", "--bases-index", "1"], cwd="/root/project"
+                ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
             ),
             call().__exit__(None, None, None),
         ]
@@ -729,6 +825,31 @@ def test_build_bases_index_scenarios_provider(basic_project, monkeypatch, caplog
             match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
         ):
             builder.run([3])
+
+        mock_launch.reset_mock()
+
+        expected_msg = re.escape("Failed to build charm for bases index '0'.")
+        with pytest.raises(
+            CommandError,
+            match=expected_msg,
+        ):
+            mock_instance = mock_launch.return_value.__enter__.return_value
+            mock_instance.execute_run.side_effect = subprocess.CalledProcessError(
+                -1,
+                ["charmcraft", "pack", "..."],
+                "some output",
+                "some error",
+            )
+            builder.run([0])
+
+        assert mock_instance.mock_calls == [
+            call.execute_run(
+                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
+            ),
+        ]
+        assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]
 
 
 def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, caplog):

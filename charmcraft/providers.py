@@ -22,15 +22,22 @@ import os
 import pathlib
 import re
 import subprocess
+import tempfile
 from typing import Dict, List, Optional, Tuple, Union
 
 from craft_providers import Executor, bases, lxd
 from craft_providers.actions import snap_installer
+from craft_providers.lxd import LXDInstallationError
+from craft_providers.lxd import installer as lxd_installer
 from craft_providers.lxd.remotes import configure_buildd_image_remote
 
+from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
-from charmcraft.env import get_managed_environment_project_path
-from charmcraft.utils import get_host_architecture
+from charmcraft.env import (
+    get_managed_environment_log_path,
+    get_managed_environment_project_path,
+)
+from charmcraft.utils import confirm_with_user, get_host_architecture
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +45,95 @@ BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
     "18.04": bases.BuilddBaseAlias.BIONIC,
     "20.04": bases.BuilddBaseAlias.FOCAL,
 }
+
+
+def capture_logs_from_instance(instance: Executor) -> None:
+    """Retrieve logs from instance.
+
+    :param instance: Instance to retrieve logs from.
+
+    :returns: String of logs.
+    """
+    _, tmp_path = tempfile.mkstemp(prefix="charmcraft-")
+    local_log_path = pathlib.Path(tmp_path)
+    instance_log_path = get_managed_environment_log_path()
+
+    try:
+        instance.pull_file(source=instance_log_path, destination=local_log_path)
+    except FileNotFoundError:
+        logger.debug("No logs found in instance.")
+        return
+
+    logs = local_log_path.read_text()
+    local_log_path.unlink()
+
+    logger.debug("Logs captured from managed instance:\n%s", logs)
+
+
+def clean_project_environments(
+    charm_name: str,
+    project_path: pathlib.Path,
+    *,
+    lxd_project: str = "charmcraft",
+    lxd_remote: str = "local",
+) -> List[str]:
+    """Clean up any environments created for project.
+
+    :param charm_name: Name of project.
+    :param project_path: Directory of charm project.
+    :param lxd_project: Name of LXD project.
+    :param lxd_remote: Name of LXD remote.
+
+    :returns: List of containers deleted.
+    """
+    deleted: List[str] = []
+
+    # Nothing to do if provider is not installed.
+    if not is_provider_available():
+        return deleted
+
+    inode = str(project_path.stat().st_ino)
+    lxc = lxd.LXC()
+
+    for name in lxc.list_names(project=lxd_project, remote=lxd_remote):
+        match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
+        if re.match(match_regex, name):
+            logger.debug("Deleting container %r.", name)
+            lxc.delete(
+                instance_name=name, force=True, project=lxd_project, remote=lxd_remote
+            )
+            deleted.append(name)
+        else:
+            logger.debug("Not deleting container %r.", name)
+
+    return deleted
+
+
+def ensure_provider_is_available() -> None:
+    """Ensure provider is available, prompting the user to install it if required.
+
+    :raises CommandError: if provider is not available.
+    """
+    if is_provider_available():
+        return
+
+    if confirm_with_user(
+        "LXD is required, but not installed. Do you wish to install LXD "
+        "and configure it with the defaults?",
+        default=False,
+    ):
+        try:
+            lxd_installer.install()
+        except LXDInstallationError as error:
+            raise CommandError(
+                "Failed to install LXD. Please visit https://snapcraft.io/lxd for "
+                "instructions on how to install the LXD snap for your distribution"
+            ) from error
+    else:
+        raise CommandError(
+            "LXD is required, but not installed. Please visit https://snapcraft.io/lxd for "
+            "instructions on how to install the LXD snap for your distribution"
+        )
 
 
 def is_base_providable(base: Base) -> Tuple[bool, Union[str, None]]:
@@ -71,7 +167,12 @@ def is_base_providable(base: Base) -> Tuple[bool, Union[str, None]]:
 
 
 def get_instance_name(
-    *, bases_index: int, build_on_index: int, project_name: str, target_arch: str
+    *,
+    bases_index: int,
+    build_on_index: int,
+    project_name: str,
+    project_path: pathlib.Path,
+    target_arch: str,
 ) -> str:
     """Formulate the name for an instance using each of the given parameters.
 
@@ -82,6 +183,7 @@ def get_instance_name(
     :param bases_index: Index of `bases:` entry.
     :param build_on_index: Index of `build-on` within bases entry.
     :param project_name: Name of charm project.
+    :param project_path: Directory of charm project.
     :param target_arch: Targetted architecture, used in the name to prevent
         collisions should future work enable multiple architectures on the same
         platform.
@@ -90,6 +192,7 @@ def get_instance_name(
         [
             "charmcraft",
             project_name,
+            str(project_path.stat().st_ino),
             str(bases_index),
             str(build_on_index),
             target_arch,
@@ -110,35 +213,12 @@ def get_command_environment() -> Dict[str, str]:
     return env
 
 
-def clean_project_environments(
-    charm_name: str,
-    *,
-    lxd_project: str = "charmcraft",
-    lxd_remote: str = "local",
-) -> List[str]:
-    """Clean up any environments created for project.
+def is_provider_available() -> bool:
+    """Check if provider is installed and available for use.
 
-    :param charm_name: Name of project.
-    :param lxd_project: Name of LXD project.
-    :param lxd_remote: Name of LXD remote.
-
-    :returns: List of containers deleted.
+    :returns: True if installed.
     """
-    deleted: List[str] = []
-    lxc = lxd.LXC()
-
-    for name in lxc.list_names(project=lxd_project, remote=lxd_remote):
-        match_regex = f"^charmcraft-{charm_name}-.+-.+-.+$"
-        if re.match(match_regex, name):
-            logger.debug("Deleting container: %s", name)
-            lxc.delete(
-                instance_name=name, force=True, project=lxd_project, remote=lxd_remote
-            )
-            deleted.append(name)
-        else:
-            logger.debug("Not deleting container: %s", name)
-
-    return deleted
+    return lxd_installer.is_installed()
 
 
 @contextlib.contextmanager
@@ -167,6 +247,7 @@ def launched_environment(
         bases_index=bases_index,
         build_on_index=build_on_index,
         project_name=charm_name,
+        project_path=project_path,
         target_arch=target_arch,
     )
 

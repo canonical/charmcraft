@@ -16,11 +16,23 @@
 
 import datetime
 import tempfile
+from typing import List, Tuple
 
 import pytest
 import responses as responses_module
 
 from charmcraft import config as config_module
+from charmcraft import deprecations
+
+
+@pytest.fixture()
+def caplog_filter(caplog):
+    """Simplify log checking by filtering for desired module and return list of (lvl,msg)."""
+
+    def filter(logger_name) -> List[Tuple[int, str]]:
+        return [(r.levelno, r.message) for r in caplog.records if r.name == logger_name]
+
+    return filter
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -76,6 +88,16 @@ def config(tmp_path):
         config_provided=True,
     )
     return TestConfig(type="bundle", project=project)
+
+
+@pytest.fixture(autouse=True)
+def clean_already_notified():
+    """Clear the already-notified structure for each test.
+
+    This is needed as that structure is a module-level one (by design), so otherwise
+    it will be dirty between tests.
+    """
+    deprecations._ALREADY_NOTIFIED.clear()
 
 
 @pytest.fixture

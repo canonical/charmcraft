@@ -25,6 +25,11 @@ import sys
 from charmcraft.cmdbase import CommandError
 
 
+def get_managed_environment_log_path():
+    """Path for charmcraft log when running in managed environment."""
+    return pathlib.Path("/tmp/charmcraft.log")
+
+
 def get_managed_environment_project_path():
     """Path for project when running in managed environment."""
     return pathlib.Path("/root/project")

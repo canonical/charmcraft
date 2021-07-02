@@ -753,6 +753,10 @@ def test_build_bases_index_scenarios_provider(
             ),
             call().__exit__(None, None, None),
         ]
+        assert (
+            f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..."
+            in [r.message for r in caplog.records]
+        )
         mock_ensure_provider_is_available.assert_called_once()
         mock_launch.reset_mock()
 

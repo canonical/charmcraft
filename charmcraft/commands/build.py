@@ -261,7 +261,7 @@ class Builder:
         elif message_handler.mode == message_handler.QUIET:
             cmd.append("--quiet")
 
-        logger.info(f"Packing charm {charm_name!r} which may take several minutes...")
+        logger.info(f"Packing charm {charm_name!r}...")
         with launched_environment(
             charm_name=self.metadata.name,
             project_path=self.charmdir,

@@ -200,7 +200,7 @@ class Builder:
         for bases_index, bases_config in enumerate(self.config.bases):
             if bases_indices and bases_index not in bases_indices:
                 logger.debug(
-                    "Ingoring 'bases[%d]' due to --base-index usage.",
+                    "Skipping 'bases[%d]' due to --base-index usage.",
                     bases_index,
                 )
                 continue
@@ -235,7 +235,7 @@ class Builder:
                     break
                 else:
                     logger.info(
-                        "Ignoring 'bases[%d].build-on[%d]': %s.",
+                        "Skipping 'bases[%d].build-on[%d]': %s.",
                         bases_index,
                         build_on_index,
                         reason,

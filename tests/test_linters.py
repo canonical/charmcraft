@@ -16,7 +16,11 @@
 
 """Tests for analyze and lint code."""
 
-from charmcraft.linters import Language
+import textwrap
+
+import pytest
+
+from charmcraft.linters import Language, Framework, shared_state
 
 
 EXAMPLE_DISPATCH = """
@@ -100,3 +104,112 @@ def test_language_entrypoint_no_exec(tmp_path):
     entrypoint.touch()
     result = Language.run(tmp_path)
     assert result == Language.Result.unknown
+
+
+@pytest.mark.parametrize("import_line", [
+    "import ops",
+    "from ops import charm",
+    "from ops.charm import CharmBase",
+])
+def test_framework_operator_used(tmp_path, monkeypatch, import_line):
+    """All conditions for 'framework' are in place."""
+    # an entry point that import ops
+    entrypoint = tmp_path / "charm.py"
+    entrypoint.write_text(textwrap.dedent(f"""
+        {import_line}
+
+        class Foo:
+            pass
+    """))
+
+    # an ops directory inside venv
+    opsdir = tmp_path / 'venv' / 'ops'
+    opsdir.mkdir(parents=True)
+
+    # the result from previously run Language
+    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': entrypoint})
+
+    # check
+    result = Framework.run(tmp_path)
+    assert result == Framework.Result.operator
+
+
+def test_framework_language_not_python(tmp_path, monkeypatch):
+    """The language trait is not set to Python."""
+    # the result from previously run Language
+    monkeypatch.setitem(shared_state, 'language', {'result': 'unknown'})
+
+    # check
+    result = Framework.run(tmp_path)
+    assert result == Framework.Result.unknown
+
+
+def test_framework_venv_directory_missing(tmp_path, monkeypatch):
+    """The charm has not a specific 'venv' dir."""
+    # the result from previously run Language
+    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': 'whatever'})
+
+    # check
+    result = Framework.run(tmp_path)
+    assert result == Framework.Result.unknown
+
+
+def test_framework_no_venv_ops_directory(tmp_path, monkeypatch):
+    """The charm *has not* a specific 'venv/ops' dir."""
+    # the result from previously run Language
+    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': 'whatever'})
+
+    # an empty venv
+    venvdir = tmp_path / 'venv'
+    venvdir.mkdir()
+
+    # check
+    result = Framework.run(tmp_path)
+    assert result == Framework.Result.unknown
+
+
+def test_framework_venv_ops_directory_is_not_a_dir(tmp_path, monkeypatch):
+    """The charm has not a specific 'venv/ops' *dir*."""
+    # the result from previously run Language
+    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': 'whatever'})
+
+    # an ops *file* inside venv
+    venvdir = tmp_path / 'venv'
+    venvdir.mkdir()
+    opsfile = venvdir / 'ops'
+    opsfile.touch()
+
+    # check
+    result = Framework.run(tmp_path)
+    assert result == Framework.Result.unknown
+
+
+@pytest.mark.parametrize("import_line", [
+    "import logging",
+    "import whatever.ops",
+    "from stuff import ops",
+    "from stuff.ops import whatever",
+])
+def test_framework_no_ops_imported(tmp_path, monkeypatch, import_line):
+    """."""
+    # an entry point that import ops
+    entrypoint = tmp_path / "charm.py"
+    entrypoint.write_text(textwrap.dedent(f"""
+        {import_line}
+
+        class Foo:
+            pass
+    """))
+
+    # an ops directory inside venv
+    opsdir = tmp_path / 'venv' / 'ops'
+    opsdir.mkdir(parents=True)
+
+    # the result from previously run Language
+    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': entrypoint})
+
+    # check
+    result = Framework.run(tmp_path)
+    assert result == Framework.Result.unknown
+
+fixme: add "reactive" stuff

@@ -321,6 +321,8 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
         super().setup(executor=executor, retry_wait=retry_wait, timeout=timeout)
 
         try:
+            # XXX Patterson 2021-07-02: craft-parts will determine/install these
+            # deps as a matter of the plugin(s) and source(s) being used.
             executor.execute_run(
                 [
                     "apt-get",

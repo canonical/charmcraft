@@ -967,25 +967,25 @@ def test_build_error_no_match_with_charmcraft_yaml(
     records = [r.message for r in caplog.records]
 
     assert (
-        "Host does not match 'bases[0].build-on[0]' "
-        "(name 'unmatched-name' does not match host 'xname')"
+        "Ignoring 'bases[0].build-on[0]': "
+        "name 'unmatched-name' does not match host 'xname'."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[0]' configuration."
         in records
     )
     assert (
-        "Host does not match 'bases[1].build-on[0]' "
-        "(channel 'unmatched-channel' does not match host 'xchannel')"
+        "Ignoring 'bases[1].build-on[0]': "
+        "channel 'unmatched-channel' does not match host 'xchannel'."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[1]' configuration."
         in records
     )
     assert (
-        "Host does not match 'bases[2].build-on[0]' "
-        "(host architecture 'xarch' not in base "
-        "architectures ['unmatched-arch1', 'unmatched-arch2'])"
+        "Ignoring 'bases[2].build-on[0]': "
+        "host architecture 'xarch' not in base architectures "
+        "['unmatched-arch1', 'unmatched-arch2']."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[2]' configuration."

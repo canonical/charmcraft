@@ -234,8 +234,8 @@ class Builder:
                     charms.append(charm_name)
                     break
                 else:
-                    logger.debug(
-                        "Host does not match 'bases[%d].build-on[%d]' (%s)",
+                    logger.info(
+                        "Ignoring 'bases[%d].build-on[%d]': %s.",
                         bases_index,
                         build_on_index,
                         reason,

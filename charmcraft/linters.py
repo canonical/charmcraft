@@ -21,9 +21,9 @@ import os
 import pathlib
 import shlex
 from collections import namedtuple
-from typing import List
+from typing import List, Generator
 
-from charmcraft import config
+from charmcraft.metadata import parse_metadata_yaml
 
 # type of checker/linter
 CheckType = namedtuple("CheckType", "trait warning error")(
@@ -106,40 +106,72 @@ class Framework:
     Result = namedtuple("Result", "operator reactive unknown")(
         operator="operator", reactive="reactive", unknown=UNKNOWN)
 
-    @classmethod
-    def run(cls, basedir: pathlib.Path) -> str:
-        """Run the proper verifications."""
-        language_info = shared_state[Language.name]
-        if language_info['result'] != Language.Result.python:
-            return cls.Result.unknown
+    @staticmethod
+    def _get_imports(filepath: pathlib.Path) -> Generator[List[str], None, None]:
+        """Parse a Python filepath and yield its imports.
 
-        opsdir = basedir / 'venv' / 'ops'
-        if not opsdir.exists() or not opsdir.is_dir():
-            return cls.Result.unknown
+        If the file does not exist or can't be parsed, return empty. Otherwise
+        return the name for each imported module, splitted by possible dots.
+        """
+        if not os.access(filepath, os.R_OK):
+            return
+        try:
+            parsed = ast.parse(filepath.read_bytes())
+        except SyntaxError:
+            return
 
-        entrypoint = language_info['entrypoint']
-        parsed = ast.parse(entrypoint.read_bytes())
         for node in ast.walk(parsed):
             if isinstance(node, ast.Import):
                 for name in node.names:
-                    if name.name == 'ops':
-                        return cls.Result.operator
+                    yield name.name.split(".")
             elif isinstance(node, ast.ImportFrom):
-                if node.module.split('.')[0] == 'ops':
-                    return cls.Result.operator
+                yield node.module.split('.')
 
-        # no import found
-        return cls.Result.unknown
+    @classmethod
+    def _check_operator(cls, basedir: pathlib.Path) -> bool:
+        """Detects if the Operator Framework is used."""
+        language_info = shared_state[Language.name]
+        if language_info['result'] != Language.Result.python:
+            return False
 
+        opsdir = basedir / 'venv' / 'ops'
+        if not opsdir.exists() or not opsdir.is_dir():
+            return False
 
-# all checkers to run; the order here is important, as some checkers depend on the
-# results from others
-CHECKERS = [
-    Language,
-    Framework,
-]
+        entrypoint = language_info['entrypoint']
+        for import_parts in cls._get_imports(entrypoint):
+            if import_parts[0] == "ops":
+                return True
+        return False
 
+    @classmethod
+    def _check_reactive(cls, basedir: pathlib.Path) -> bool:
+        """Detects if the Reactive Framework is used."""
+        try:
+            entrypoint_name = parse_metadata_yaml(basedir).name
+        except Exception:
+            # file not found, corrupted, no name in it, etc.
+            return False
 
-def analyze(config: config.Config) -> List[CheckResult]:
-    """Run all checkers and linters."""
-    fixme
+        wheelhouse_dir = basedir / "wheelhouse"
+        if not wheelhouse_dir.exists():
+            return False
+        if not any(f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()):
+            return False
+
+        entrypoint = basedir / "reactive" / f"{entrypoint_name}.py"
+        for import_parts in cls._get_imports(entrypoint):
+            if import_parts[0] == "charms" and import_parts[1] == "reactive" :
+                return True
+        return False
+
+    @classmethod
+    def run(cls, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        if cls._check_operator(basedir):
+            result = cls.Result.operator
+        elif cls._check_reactive(basedir):
+            result = cls.Result.reactive
+        else:
+            result = cls.Result.unknown
+        return result

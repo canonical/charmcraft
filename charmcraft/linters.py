@@ -104,7 +104,8 @@ class Framework:
 
     # different result constants
     Result = namedtuple("Result", "operator reactive unknown")(
-        operator="operator", reactive="reactive", unknown=UNKNOWN)
+        operator="operator", reactive="reactive", unknown=UNKNOWN
+    )
 
     @staticmethod
     def _get_imports(filepath: pathlib.Path) -> Generator[List[str], None, None]:
@@ -125,20 +126,20 @@ class Framework:
                 for name in node.names:
                     yield name.name.split(".")
             elif isinstance(node, ast.ImportFrom):
-                yield node.module.split('.')
+                yield node.module.split(".")
 
     @classmethod
     def _check_operator(cls, basedir: pathlib.Path) -> bool:
-        """Detects if the Operator Framework is used."""
+        """Detect if the Operator Framework is used."""
         language_info = shared_state[Language.name]
-        if language_info['result'] != Language.Result.python:
+        if language_info["result"] != Language.Result.python:
             return False
 
-        opsdir = basedir / 'venv' / 'ops'
+        opsdir = basedir / "venv" / "ops"
         if not opsdir.exists() or not opsdir.is_dir():
             return False
 
-        entrypoint = language_info['entrypoint']
+        entrypoint = language_info["entrypoint"]
         for import_parts in cls._get_imports(entrypoint):
             if import_parts[0] == "ops":
                 return True
@@ -146,7 +147,7 @@ class Framework:
 
     @classmethod
     def _check_reactive(cls, basedir: pathlib.Path) -> bool:
-        """Detects if the Reactive Framework is used."""
+        """Detect if the Reactive Framework is used."""
         try:
             entrypoint_name = parse_metadata_yaml(basedir).name
         except Exception:
@@ -156,12 +157,14 @@ class Framework:
         wheelhouse_dir = basedir / "wheelhouse"
         if not wheelhouse_dir.exists():
             return False
-        if not any(f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()):
+        if not any(
+            f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()
+        ):
             return False
 
         entrypoint = basedir / "reactive" / f"{entrypoint_name}.py"
         for import_parts in cls._get_imports(entrypoint):
-            if import_parts[0] == "charms" and import_parts[1] == "reactive" :
+            if import_parts[0] == "charms" and import_parts[1] == "reactive":
                 return True
         return False
 

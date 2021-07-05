@@ -108,33 +108,36 @@ def test_language_entrypoint_no_exec(tmp_path):
 
 def test_framework_run_operator():
     """Check for Operator Framework was succesful."""
-    with patch.object(Framework, '_check_operator', lambda path: True):
-        result = Framework.run('somepath')
+    with patch.object(Framework, "_check_operator", lambda path: True):
+        result = Framework.run("somepath")
     assert result == Framework.Result.operator
 
 
 def test_framework_run_reactive():
     """Check for Reactive Framework was succesful."""
-    with patch.object(Framework, '_check_operator', lambda path: False):
-        with patch.object(Framework, '_check_reactive', lambda path: True):
-            result = Framework.run('somepath')
+    with patch.object(Framework, "_check_operator", lambda path: False):
+        with patch.object(Framework, "_check_reactive", lambda path: True):
+            result = Framework.run("somepath")
     assert result == Framework.Result.reactive
 
 
 def test_framework_run_unknown():
     """No check for any framework was succesful."""
-    with patch.object(Framework, '_check_operator', lambda path: False):
-        with patch.object(Framework, '_check_reactive', lambda path: False):
-            result = Framework.run('somepath')
+    with patch.object(Framework, "_check_operator", lambda path: False):
+        with patch.object(Framework, "_check_reactive", lambda path: False):
+            result = Framework.run("somepath")
     assert result == Framework.Result.unknown
 
 
-@pytest.mark.parametrize("import_line", [
-    "import ops",
-    "import stuff, ops, morestuff",
-    "from ops import charm",
-    "from ops.charm import CharmBase",
-])
+@pytest.mark.parametrize(
+    "import_line",
+    [
+        "import ops",
+        "import stuff, ops, morestuff",
+        "from ops import charm",
+        "from ops.charm import CharmBase",
+    ],
+)
 def test_framework_operator_used_ok(tmp_path, monkeypatch, import_line):
     """All conditions for 'framework' are in place."""
     # an entry point that import ops
@@ -142,11 +145,13 @@ def test_framework_operator_used_ok(tmp_path, monkeypatch, import_line):
     entrypoint.write_text(f"{import_line}")
 
     # an ops directory inside venv
-    opsdir = tmp_path / 'venv' / 'ops'
+    opsdir = tmp_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
     # the result from previously run Language
-    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': entrypoint})
+    monkeypatch.setitem(
+        shared_state, "language", {"result": "python", "entrypoint": entrypoint}
+    )
 
     # check
     result = Framework._check_operator(tmp_path)
@@ -160,11 +165,11 @@ def test_framework_operator_language_not_python(tmp_path, monkeypatch):
     entrypoint.write_text("no python :)")
 
     # an ops directory inside venv
-    opsdir = tmp_path / 'venv' / 'ops'
+    opsdir = tmp_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
     # the result from previously run Language
-    monkeypatch.setitem(shared_state, 'language', {'result': 'unknown'})
+    monkeypatch.setitem(shared_state, "language", {"result": "unknown"})
 
     # check
     result = Framework._check_operator(tmp_path)
@@ -178,7 +183,9 @@ def test_framework_operator_venv_directory_missing(tmp_path, monkeypatch):
     entrypoint.write_text("import ops")
 
     # the result from previously run Language
-    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': 'whatever'})
+    monkeypatch.setitem(
+        shared_state, "language", {"result": "python", "entrypoint": "whatever"}
+    )
 
     # check
     result = Framework._check_operator(tmp_path)
@@ -192,10 +199,12 @@ def test_framework_operator_no_venv_ops_directory(tmp_path, monkeypatch):
     entrypoint.write_text("import ops")
 
     # the result from previously run Language
-    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': 'whatever'})
+    monkeypatch.setitem(
+        shared_state, "language", {"result": "python", "entrypoint": "whatever"}
+    )
 
     # an empty venv
-    venvdir = tmp_path / 'venv'
+    venvdir = tmp_path / "venv"
     venvdir.mkdir()
 
     # check
@@ -210,10 +219,12 @@ def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path, monkeypatc
     entrypoint.write_text("import ops")
 
     # the result from previously run Language
-    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': 'whatever'})
+    monkeypatch.setitem(
+        shared_state, "language", {"result": "python", "entrypoint": "whatever"}
+    )
 
     # an ops *file* inside venv
-    opsfile = tmp_path / 'venv' / 'ops'
+    opsfile = tmp_path / "venv" / "ops"
     opsfile.parent.mkdir()
     opsfile.touch()
 
@@ -229,23 +240,28 @@ def test_framework_operator_corrupted_entrypoint(tmp_path, monkeypatch):
     entrypoint.write_text("xx --")  # not really Python
 
     # an ops directory inside venv
-    opsdir = tmp_path / 'venv' / 'ops'
+    opsdir = tmp_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
     # the result from previously run Language
-    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': entrypoint})
+    monkeypatch.setitem(
+        shared_state, "language", {"result": "python", "entrypoint": entrypoint}
+    )
 
     # check
     result = Framework._check_operator(tmp_path)
     assert result is False
 
 
-@pytest.mark.parametrize("import_line", [
-    "import logging",
-    "import whatever.ops",
-    "from stuff import ops",
-    "from stuff.ops import whatever",
-])
+@pytest.mark.parametrize(
+    "import_line",
+    [
+        "import logging",
+        "import whatever.ops",
+        "from stuff import ops",
+        "from stuff.ops import whatever",
+    ],
+)
 def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     """Different imports that are NOT importing the Operator Framework."""
     # an entry point that import ops
@@ -253,23 +269,28 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     entrypoint.write_text(f"{import_line}")
 
     # an ops directory inside venv
-    opsdir = tmp_path / 'venv' / 'ops'
+    opsdir = tmp_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
     # the result from previously run Language
-    monkeypatch.setitem(shared_state, 'language', {'result': 'python', 'entrypoint': entrypoint})
+    monkeypatch.setitem(
+        shared_state, "language", {"result": "python", "entrypoint": entrypoint}
+    )
 
     # check
     result = Framework._check_operator(tmp_path)
     assert result is False
 
 
-@pytest.mark.parametrize("import_line", [
-    "import charms.reactive",
-    "import stuff, charms.reactive, morestuff",
-    "from charms.reactive import stuff",
-    "from charms.reactive.stuff import Stuff",
-])
+@pytest.mark.parametrize(
+    "import_line",
+    [
+        "import charms.reactive",
+        "import stuff, charms.reactive, morestuff",
+        "from charms.reactive import stuff",
+        "from charms.reactive.stuff import Stuff",
+    ],
+)
 def test_framework_reactive_used_ok(tmp_path, monkeypatch, import_line):
     """The reactive framework was used."""
     # metdata file with proper name
@@ -404,14 +425,17 @@ def test_framework_reactive_no_reactive_lib(tmp_path):
     assert result is False
 
 
-@pytest.mark.parametrize("import_line", [
-    "import logging",
-    "import whatever.charms.reactive",
-    "import charms.whatever.reactive",
-    "from stuff.charms import reactive",
-    "from charms.stuff import reactive",
-    "from stuff.charms.reactive import whatever",
-])
+@pytest.mark.parametrize(
+    "import_line",
+    [
+        "import logging",
+        "import whatever.charms.reactive",
+        "import charms.whatever.reactive",
+        "from stuff.charms import reactive",
+        "from charms.stuff import reactive",
+        "from stuff.charms.reactive import whatever",
+    ],
+)
 def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_line):
     """Different imports that are NOT importing the Reactive Framework."""
     # metdata file with proper name

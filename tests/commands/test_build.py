@@ -753,6 +753,10 @@ def test_build_bases_index_scenarios_provider(
             ),
             call().__exit__(None, None, None),
         ]
+        assert (
+            f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..."
+            in [r.message for r in caplog.records]
+        )
         mock_ensure_provider_is_available.assert_called_once()
         mock_launch.reset_mock()
 
@@ -967,25 +971,25 @@ def test_build_error_no_match_with_charmcraft_yaml(
     records = [r.message for r in caplog.records]
 
     assert (
-        "Host does not match 'bases[0].build-on[0]' "
-        "(name 'unmatched-name' does not match host 'xname')"
+        "Skipping 'bases[0].build-on[0]': "
+        "name 'unmatched-name' does not match host 'xname'."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[0]' configuration."
         in records
     )
     assert (
-        "Host does not match 'bases[1].build-on[0]' "
-        "(channel 'unmatched-channel' does not match host 'xchannel')"
+        "Skipping 'bases[1].build-on[0]': "
+        "channel 'unmatched-channel' does not match host 'xchannel'."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[1]' configuration."
         in records
     )
     assert (
-        "Host does not match 'bases[2].build-on[0]' "
-        "(host architecture 'xarch' not in base "
-        "architectures ['unmatched-arch1', 'unmatched-arch2'])"
+        "Skipping 'bases[2].build-on[0]': "
+        "host architecture 'xarch' not in base architectures "
+        "['unmatched-arch1', 'unmatched-arch2']."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[2]' configuration."

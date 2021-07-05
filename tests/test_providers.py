@@ -128,7 +128,15 @@ def test_base_configuration_setup(mock_executor, mock_inject, monkeypatch, alias
 
     assert mock_executor.mock_calls == [
         call.execute_run(
-            ["apt-get", "install", "-y", "python3-pip", "python3-setuptools"],
+            [
+                "apt-get",
+                "install",
+                "-y",
+                "git",
+                "python3-pip",
+                "python3-setuptools",
+                "python3-wheel",
+            ],
             check=True,
             capture_output=True,
         ),
@@ -143,7 +151,7 @@ def test_base_configuration_setup(mock_executor, mock_inject, monkeypatch, alias
 
 def test_base_configuration_setup_apt_error(mock_executor):
     alias = bases.BuilddBaseAlias.FOCAL
-    apt_cmd = ["apt-get", "install", "-y", "python3-pip", "python3-setuptools"]
+    apt_cmd = ["apt-get", "install", "-y", "git", "python3-pip", "python3-setuptools"]
     mock_executor.execute_run.side_effect = subprocess.CalledProcessError(
         -1,
         apt_cmd,
@@ -155,7 +163,7 @@ def test_base_configuration_setup_apt_error(mock_executor):
 
     with pytest.raises(
         bases.BaseConfigurationError,
-        match=r"Failed to install python3-pip and python3-setuptools.",
+        match=r"Failed to install the required dependencies.",
     ) as exc_info:
         config.setup(executor=mock_executor)
 

@@ -106,27 +106,39 @@ def test_language_entrypoint_no_exec(tmp_path):
     assert result == Language.Result.unknown
 
 
+def test_framework_no_useful_text():
+    """The text property was accessed before running the checker."""
+    with pytest.raises(RuntimeError):
+        Framework().text
+
+
 def test_framework_run_operator():
     """Check for Operator Framework was succesful."""
-    with patch.object(Framework, "_check_operator", lambda path: True):
-        result = Framework.run("somepath")
+    checker = Framework()
+    with patch.object(Framework, "_check_operator", lambda self, path: True):
+        result = checker.run("somepath")
     assert result == Framework.Result.operator
+    assert checker.text == "The charm is based on the Operator Framework."
 
 
 def test_framework_run_reactive():
     """Check for Reactive Framework was succesful."""
-    with patch.object(Framework, "_check_operator", lambda path: False):
-        with patch.object(Framework, "_check_reactive", lambda path: True):
-            result = Framework.run("somepath")
+    checker = Framework()
+    with patch.object(Framework, "_check_operator", lambda self, path: False):
+        with patch.object(Framework, "_check_reactive", lambda self, path: True):
+            result = checker.run("somepath")
     assert result == Framework.Result.reactive
+    assert checker.text == "The charm is based on the Reactive Framework."
 
 
 def test_framework_run_unknown():
     """No check for any framework was succesful."""
-    with patch.object(Framework, "_check_operator", lambda path: False):
-        with patch.object(Framework, "_check_reactive", lambda path: False):
-            result = Framework.run("somepath")
+    checker = Framework()
+    with patch.object(Framework, "_check_operator", lambda self, path: False):
+        with patch.object(Framework, "_check_reactive", lambda self, path: False):
+            result = checker.run("somepath")
     assert result == Framework.Result.unknown
+    assert checker.text == "The charm is not based on any known Framework."
 
 
 @pytest.mark.parametrize(
@@ -154,7 +166,7 @@ def test_framework_operator_used_ok(tmp_path, monkeypatch, import_line):
     )
 
     # check
-    result = Framework._check_operator(tmp_path)
+    result = Framework()._check_operator(tmp_path)
     assert result is True
 
 
@@ -172,7 +184,7 @@ def test_framework_operator_language_not_python(tmp_path, monkeypatch):
     monkeypatch.setitem(shared_state, "language", {"result": "unknown"})
 
     # check
-    result = Framework._check_operator(tmp_path)
+    result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
@@ -188,7 +200,7 @@ def test_framework_operator_venv_directory_missing(tmp_path, monkeypatch):
     )
 
     # check
-    result = Framework._check_operator(tmp_path)
+    result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
@@ -208,7 +220,7 @@ def test_framework_operator_no_venv_ops_directory(tmp_path, monkeypatch):
     venvdir.mkdir()
 
     # check
-    result = Framework._check_operator(tmp_path)
+    result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
@@ -229,7 +241,7 @@ def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path, monkeypatc
     opsfile.touch()
 
     # check
-    result = Framework._check_operator(tmp_path)
+    result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
@@ -249,7 +261,7 @@ def test_framework_operator_corrupted_entrypoint(tmp_path, monkeypatch):
     )
 
     # check
-    result = Framework._check_operator(tmp_path)
+    result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
@@ -278,7 +290,7 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     )
 
     # check
-    result = Framework._check_operator(tmp_path)
+    result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
@@ -308,7 +320,7 @@ def test_framework_reactive_used_ok(tmp_path, monkeypatch, import_line):
     reactive_lib.touch()
 
     # check
-    result = Framework._check_reactive(tmp_path)
+    result = Framework()._check_reactive(tmp_path)
     assert result is True
 
 
@@ -325,7 +337,7 @@ def test_framework_reactive_no_metadata(tmp_path):
     reactive_lib.touch()
 
     # check
-    result = Framework._check_reactive(tmp_path)
+    result = Framework()._check_reactive(tmp_path)
     assert result is False
 
 
@@ -341,7 +353,7 @@ def test_framework_reactive_no_entrypoint(tmp_path):
     reactive_lib.touch()
 
     # check
-    result = Framework._check_reactive(tmp_path)
+    result = Framework()._check_reactive(tmp_path)
     assert result is False
 
 
@@ -363,7 +375,7 @@ def test_framework_reactive_unaccesible_entrypoint(tmp_path):
     reactive_lib.touch()
 
     # check
-    result = Framework._check_reactive(tmp_path)
+    result = Framework()._check_reactive(tmp_path)
     assert result is False
 
 
@@ -384,7 +396,7 @@ def test_framework_reactive_corrupted_entrypoint(tmp_path):
     reactive_lib.touch()
 
     # check
-    result = Framework._check_reactive(tmp_path)
+    result = Framework()._check_reactive(tmp_path)
     assert result is False
 
 
@@ -400,7 +412,7 @@ def test_framework_reactive_no_wheelhouse(tmp_path):
     entrypoint.write_text("import charms.reactive")
 
     # check
-    result = Framework._check_reactive(tmp_path)
+    result = Framework()._check_reactive(tmp_path)
     assert result is False
 
 
@@ -421,7 +433,7 @@ def test_framework_reactive_no_reactive_lib(tmp_path):
     reactive_lib.touch()
 
     # check
-    result = Framework._check_reactive(tmp_path)
+    result = Framework()._check_reactive(tmp_path)
     assert result is False
 
 
@@ -453,5 +465,5 @@ def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_l
     reactive_lib.touch()
 
     # check
-    result = Framework._check_reactive(tmp_path)
+    result = Framework()._check_reactive(tmp_path)
     assert result is False

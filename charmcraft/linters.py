@@ -99,15 +99,32 @@ class Framework:
     check_type = CheckType.trait
     name = "framework"
     url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--framework"
-    text = "The charm is based on the Operator Framework."
 
     # different result constants
     Result = namedtuple("Result", "operator reactive unknown")(
         operator="operator", reactive="reactive", unknown=UNKNOWN
     )
 
-    @staticmethod
-    def _get_imports(filepath: pathlib.Path) -> Generator[List[str], None, None]:
+    # different texts to be exposed as `text` (see the property below)
+    result_texts = {
+        Result.operator: "The charm is based on the Operator Framework.",
+        Result.reactive: "The charm is based on the Reactive Framework.",
+        Result.unknown: "The charm is not based on any known Framework.",
+    }
+
+    def __init__(self):
+        self.result = None
+
+    @property
+    def text(self):
+        """Return a text in function of the result state."""
+        if self.result is None:
+            raise RuntimeError(
+                "Cannot access text before running the Framework checker."
+            )
+        return self.result_texts[self.result]
+
+    def _get_imports(self, filepath: pathlib.Path) -> Generator[List[str], None, None]:
         """Parse a Python filepath and yield its imports.
 
         If the file does not exist or cannot be parsed, return empty. Otherwise
@@ -127,8 +144,7 @@ class Framework:
             elif isinstance(node, ast.ImportFrom):
                 yield node.module.split(".")
 
-    @classmethod
-    def _check_operator(cls, basedir: pathlib.Path) -> bool:
+    def _check_operator(self, basedir: pathlib.Path) -> bool:
         """Detect if the Operator Framework is used."""
         language_info = shared_state[Language.name]
         if language_info["result"] != Language.Result.python:
@@ -139,13 +155,12 @@ class Framework:
             return False
 
         entrypoint = language_info["entrypoint"]
-        for import_parts in cls._get_imports(entrypoint):
+        for import_parts in self._get_imports(entrypoint):
             if import_parts[0] == "ops":
                 return True
         return False
 
-    @classmethod
-    def _check_reactive(cls, basedir: pathlib.Path) -> bool:
+    def _check_reactive(self, basedir: pathlib.Path) -> bool:
         """Detect if the Reactive Framework is used."""
         try:
             entrypoint_name = parse_metadata_yaml(basedir).name
@@ -162,18 +177,18 @@ class Framework:
             return False
 
         entrypoint = basedir / "reactive" / f"{entrypoint_name}.py"
-        for import_parts in cls._get_imports(entrypoint):
+        for import_parts in self._get_imports(entrypoint):
             if import_parts[0] == "charms" and import_parts[1] == "reactive":
                 return True
         return False
 
-    @classmethod
-    def run(cls, basedir: pathlib.Path) -> str:
+    def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        if cls._check_operator(basedir):
-            result = cls.Result.operator
-        elif cls._check_reactive(basedir):
-            result = cls.Result.reactive
+        if self._check_operator(basedir):
+            result = self.Result.operator
+        elif self._check_reactive(basedir):
+            result = self.Result.reactive
         else:
-            result = cls.Result.unknown
+            result = self.Result.unknown
+        self.result = result
         return result

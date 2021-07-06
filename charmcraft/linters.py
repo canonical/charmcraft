@@ -82,7 +82,7 @@ class Language:
 
 
 class Framework:
-    """Check on which framework the charm is based on.
+    """Check the framework the charm is based on.
 
     Currently it detects if the Operator Framework is used, if...
 
@@ -93,7 +93,7 @@ class Framework:
     ...or the Reactive Framework is used, if the charm...
 
     - has a metadata.yaml with "name" in it
-    - has a reactive/<name>,py file that imports "charms.reactive"
+    - has a reactive/<name>.py file that imports "charms.reactive"
     - has a file inside "wheelhouse" dir whose name starts with "charms.reactive-"
     """
 
@@ -111,7 +111,7 @@ class Framework:
     def _get_imports(filepath: pathlib.Path) -> Generator[List[str], None, None]:
         """Parse a Python filepath and yield its imports.
 
-        If the file does not exist or can't be parsed, return empty. Otherwise
+        If the file does not exist or cannot be parsed, return empty. Otherwise
         return the name for each imported module, splitted by possible dots.
         """
         if not os.access(filepath, os.R_OK):

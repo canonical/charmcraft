@@ -25,9 +25,8 @@ from typing import List, Generator
 
 from charmcraft.metadata import parse_metadata_yaml
 
-# type of checker/linter
-CheckType = namedtuple("CheckType", "trait warning error")(
-    trait="trait", warning="warning", error="error"
+CheckType = namedtuple("CheckType", "attribute warning error")(
+    attribute="attribute", warning="warning", error="error"
 )
 
 # result information from each checker/linter
@@ -50,7 +49,7 @@ class Language:
     - the entry point file is executable
     """
 
-    check_type = CheckType.trait
+    check_type = CheckType.attribute
     name = "language"
     url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--language"
     text = "The charm is written with Python."

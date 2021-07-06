@@ -58,8 +58,7 @@ class Language:
     # different result constants
     Result = namedtuple("Result", "python unknown")(python="python", unknown=UNKNOWN)
 
-    @classmethod
-    def run(cls, basedir: pathlib.Path) -> str:
+    def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         # get the entrypoint from the last useful dispatch line
         dispatch = basedir / "dispatch"
@@ -73,12 +72,12 @@ class Language:
                 if last_line:
                     entrypoint_str = shlex.split(last_line)[-1]
         except (IOError, UnicodeDecodeError):
-            return cls.Result.unknown
+            return self.Result.unknown
 
         entrypoint = basedir / entrypoint_str
         if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
-            return cls.Result.python
-        return cls.Result.unknown
+            return self.Result.python
+        return self.Result.unknown
 
 
 class Framework:

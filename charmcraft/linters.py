@@ -84,7 +84,7 @@ class Framework:
 
     Currently it detects if the Operator Framework is used, if...
 
-    - the language trait is set to python
+    - the language attribute is set to python
     - the charm contains venv/ops
     - the charm imports ops in the entry point.
 
@@ -95,7 +95,7 @@ class Framework:
     - has a file inside "wheelhouse" dir whose name starts with "charms.reactive-"
     """
 
-    check_type = CheckType.trait
+    check_type = CheckType.attribute
     name = "framework"
     url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--framework"
 

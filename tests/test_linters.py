@@ -33,13 +33,13 @@ def test_language_python(tmp_path):
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
     entrypoint.chmod(0o700)
-    result = Language.run(tmp_path)
+    result = Language().run(tmp_path)
     assert result == Language.Result.python
 
 
 def test_language_no_dispatch(tmp_path):
     """The charm has no dispatch at all."""
-    result = Language.run(tmp_path)
+    result = Language().run(tmp_path)
     assert result == Language.Result.unknown
 
 
@@ -48,7 +48,7 @@ def test_language_inaccessible_dispatch(tmp_path):
     dispatch = tmp_path / "dispatch"
     dispatch.touch()
     dispatch.chmod(0o000)
-    result = Language.run(tmp_path)
+    result = Language().run(tmp_path)
     assert result == Language.Result.unknown
 
 
@@ -56,7 +56,7 @@ def test_language_broken_dispatch(tmp_path):
     """The charm has a dispatch which we can't decode."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_bytes(b"\xC0\xC0")
-    result = Language.run(tmp_path)
+    result = Language().run(tmp_path)
     assert result == Language.Result.unknown
 
 
@@ -64,7 +64,7 @@ def test_language_empty_dispatch(tmp_path):
     """The charm dispatch is empty."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text("")
-    result = Language.run(tmp_path)
+    result = Language().run(tmp_path)
     assert result == Language.Result.unknown
 
 
@@ -72,7 +72,7 @@ def test_language_no_entrypoint(tmp_path):
     """Cannot find the entrypoint used in dispatch."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text(EXAMPLE_DISPATCH)
-    result = Language.run(tmp_path)
+    result = Language().run(tmp_path)
     assert result == Language.Result.unknown
 
 
@@ -88,7 +88,7 @@ def test_language_entrypoint_is_no_python(tmp_path):
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
     entrypoint.chmod(0o700)
-    result = Language.run(tmp_path)
+    result = Language().run(tmp_path)
     assert result == Language.Result.unknown
 
 
@@ -98,5 +98,5 @@ def test_language_entrypoint_no_exec(tmp_path):
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
-    result = Language.run(tmp_path)
+    result = Language().run(tmp_path)
     assert result == Language.Result.unknown

@@ -92,7 +92,7 @@ class Framework:
 
     - has a metadata.yaml with "name" in it
     - has a reactive/<name>.py file that imports "charms.reactive"
-    - has a file inside "wheelhouse" dir whose name starts with "charms.reactive-"
+    - has a file name that starts with "charms.reactive-" inside the "wheelhouse" directory
     """
 
     check_type = CheckType.attribute

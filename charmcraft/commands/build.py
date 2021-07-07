@@ -25,12 +25,12 @@ import subprocess
 import zipfile
 from typing import List, Optional
 
-
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.deprecations import notify_deprecation
 from charmcraft.env import (
+    get_managed_environment_home_path,
     get_managed_environment_project_path,
     is_charmcraft_running_in_managed_mode,
 )
@@ -254,6 +254,19 @@ class Builder:
         charm_name = format_charm_file_name(
             self.metadata.name, self.config.bases[bases_index]
         )
+
+        # If building in project directory, use the project path as the working
+        # directory. The output charms will be placed in the correct directory
+        # without needing retrieval. If outputing to a directory other than the
+        # charm project directory, we need to output the charm outside the
+        # project directory and can retrieve it when complete.
+        if os.getcwd() == str(self.charmdir):
+            instance_output_dir = get_managed_environment_project_path()
+            pull_charm = False
+        else:
+            instance_output_dir = get_managed_environment_home_path()
+            pull_charm = True
+
         cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
 
         if message_handler.mode == message_handler.VERBOSE:
@@ -273,13 +286,24 @@ class Builder:
                 instance.execute_run(
                     cmd,
                     check=True,
-                    cwd=get_managed_environment_project_path().as_posix(),
+                    cwd=instance_output_dir.as_posix(),
                 )
             except subprocess.CalledProcessError as error:
                 capture_logs_from_instance(instance)
                 raise CommandError(
                     f"Failed to build charm for bases index '{bases_index}'."
                 ) from error
+
+            if pull_charm:
+                try:
+                    instance.pull_file(
+                        source=instance_output_dir / charm_name,
+                        destination=pathlib.Path(charm_name),
+                    )
+                except FileNotFoundError as error:
+                    raise CommandError(
+                        "Unexpected error retrieving charm from instance."
+                    ) from error
 
         return charm_name
 

@@ -20,7 +20,7 @@ from unittest.mock import patch
 
 import pytest
 
-from charmcraft.linters import Language, Framework, shared_state
+from charmcraft.linters import Language, Framework, shared_state, analyze
 
 
 EXAMPLE_DISPATCH = """
@@ -467,3 +467,41 @@ def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_l
     # check
     result = Framework()._check_reactive(tmp_path)
     assert result is False
+
+
+def test_analyze_run_everything(config):
+    """Check that analyze runs all and collect the results."""
+
+    class FakeChecker1:
+        check_type = "type1"
+        name = "name1"
+        url = "url1"
+        text = "text1"
+
+        def run(self, basedir):
+            assert basedir == config.project.dirpath
+            return "result1"
+
+    class FakeChecker2:
+        check_type = "type2"
+        name = "name2"
+        url = "url2"
+        text = "text2"
+
+        def run(self, _):
+            return "result2"
+
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
+        result = analyze(config)
+
+    r1, r2 = result
+    assert r1.check_type == "type1"
+    assert r1.name == "name1"
+    assert r1.url == "url1"
+    assert r1.text == "text1"
+    assert r1.result == "result1"
+    assert r2.check_type == "type2"
+    assert r2.name == "name2"
+    assert r2.url == "url2"
+    assert r2.text == "text2"
+    assert r2.result == "result2"

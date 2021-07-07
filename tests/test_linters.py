@@ -80,7 +80,7 @@ def test_language_no_entrypoint(tmp_path):
     assert result == Language.Result.unknown
 
 
-def test_language_entrypoint_is_no_python(tmp_path):
+def test_language_entrypoint_is_not_python(tmp_path):
     """The charm entrypoint has not a .py extension."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text(
@@ -106,7 +106,7 @@ def test_language_entrypoint_no_exec(tmp_path):
     assert result == Language.Result.unknown
 
 
-def test_framework_no_useful_text():
+def test_framework_text_before_check():
     """The text property was accessed before running the checker."""
     with pytest.raises(RuntimeError):
         Framework().text

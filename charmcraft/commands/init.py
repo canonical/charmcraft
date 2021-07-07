@@ -37,6 +37,7 @@ It will setup the following tree of files and directories:
 .
 ├── metadata.yaml        - Charm operator package description
 ├── README.md            - Frontpage for your charmhub.io/charm/
+├── CONTRIBUTING.md      - Instructions for how to build and develop your charm
 ├── actions.yaml         - Day-2 action declarations, e.g. backup, restore
 ├── charmcraft.yaml      - Charm build configuration
 ├── config.yaml          - Config schema for your operator

@@ -18,12 +18,11 @@
 
 import datetime
 import hashlib
-import json
 import logging
 import pathlib
 import zipfile
 from argparse import Namespace, ArgumentParser
-from unittest.mock import patch, call, MagicMock
+from unittest.mock import patch, call, MagicMock, ANY
 
 import dateutil.parser
 import pytest
@@ -42,8 +41,6 @@ from charmcraft.commands.store import (
     ListRevisionsCommand,
     LoginCommand,
     LogoutCommand,
-    OCIImageSpec,
-    OCIRegistry,
     PublishLibCommand,
     RegisterBundleNameCommand,
     RegisterCharmNameCommand,
@@ -55,13 +52,14 @@ from charmcraft.commands.store import (
     _get_lib_info,
     get_name_from_metadata,
     get_name_from_zip,
-    oci_image_spec,
 )
 from charmcraft.commands.store.store import (
+    Base,
     Channel,
     Entity,
     Error,
     Library,
+    RegistryCredentials,
     Release,
     Resource,
     ResourceRevision,
@@ -573,6 +571,7 @@ def test_revisions_simple(caplog, store_mock, config):
     """Happy path of one result from the Store."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
             revision=1,
@@ -580,6 +579,7 @@ def test_revisions_simple(caplog, store_mock, config):
             created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
             status="accepted",
             errors=[],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -620,15 +620,31 @@ def test_revisions_ordered_by_revision(caplog, store_mock, config):
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
     tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
-            revision=1, version="v1", created_at=tstamp, status="accepted", errors=[]
+            revision=1,
+            version="v1",
+            created_at=tstamp,
+            status="accepted",
+            errors=[],
+            bases=bases,
         ),
         Revision(
-            revision=3, version="v1", created_at=tstamp, status="accepted", errors=[]
+            revision=3,
+            version="v1",
+            created_at=tstamp,
+            status="accepted",
+            errors=[],
+            bases=bases,
         ),
         Revision(
-            revision=2, version="v1", created_at=tstamp, status="accepted", errors=[]
+            revision=2,
+            version="v1",
+            created_at=tstamp,
+            status="accepted",
+            errors=[],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -649,6 +665,7 @@ def test_revisions_version_null(caplog, store_mock, config):
     """Support the case of version being None."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
             revision=1,
@@ -656,6 +673,7 @@ def test_revisions_version_null(caplog, store_mock, config):
             created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
             status="accepted",
             errors=[],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -674,6 +692,7 @@ def test_revisions_errors_simple(caplog, store_mock, config):
     """Support having one case with a simple error."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
             revision=1,
@@ -681,6 +700,7 @@ def test_revisions_errors_simple(caplog, store_mock, config):
             created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
             status="rejected",
             errors=[Error(message="error text", code="broken")],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -699,6 +719,7 @@ def test_revisions_errors_multiple(caplog, store_mock, config):
     """Support having one case with multiple errors."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
+    bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
             revision=1,
@@ -709,6 +730,7 @@ def test_revisions_errors_multiple(caplog, store_mock, config):
                 Error(message="text 1", code="missing-stuff"),
                 Error(message="other long error text", code="broken"),
             ],
+            bases=bases,
         ),
     ]
     store_mock.list_revisions.return_value = store_response
@@ -891,6 +913,22 @@ def _build_revision(revno, version):
         created_at=datetime.datetime(2020, 7, 3, 20, 30, 40),
         status="accepted",
         errors=[],
+        bases=[Base(architecture="amd64", channel="20.04", name="ubuntu")],
+    )
+
+
+def _build_release(revision, channel, expires_at=None, resources=None, base=None):
+    """Helper to build a release."""
+    if resources is None:
+        resources = []
+    if base is None:
+        base = Base(architecture="amd64", channel="20.04", name="ubuntu")
+    return Release(
+        revision=revision,
+        channel=channel,
+        expires_at=expires_at,
+        resources=resources,
+        base=base,
     )
 
 
@@ -899,10 +937,10 @@ def test_status_simple_ok(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=7, channel="latest/stable", expires_at=None, resources=[]),
-        Release(revision=7, channel="latest/candidate", expires_at=None, resources=[]),
-        Release(revision=80, channel="latest/beta", expires_at=None, resources=[]),
-        Release(revision=156, channel="latest/edge", expires_at=None, resources=[]),
+        _build_release(revision=7, channel="latest/stable"),
+        _build_release(revision=7, channel="latest/candidate"),
+        _build_release(revision=80, channel="latest/beta"),
+        _build_release(revision=156, channel="latest/edge"),
     ]
     channels = _build_channels()
     revisions = [
@@ -920,11 +958,11 @@ def test_status_simple_ok(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel    Version       Revision",
-        "latest   stable     v7            7",
-        "         candidate  v7            7",
-        "         beta       2.0           80",
-        "         edge       git-0db35ea1  156",
+        "Track    Base                  Channel    Version       Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     v7            7",
+        "                               candidate  v7            7",
+        "                               beta       2.0           80",
+        "                               edge       git-0db35ea1  156",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -946,8 +984,8 @@ def test_status_channels_not_released_with_fallback(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=7, channel="latest/stable", expires_at=None, resources=[]),
-        Release(revision=80, channel="latest/edge", expires_at=None, resources=[]),
+        _build_release(revision=7, channel="latest/stable"),
+        _build_release(revision=80, channel="latest/edge"),
     ]
     channels = _build_channels()
     revisions = [
@@ -964,11 +1002,11 @@ def test_status_channels_not_released_with_fallback(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel    Version    Revision",
-        "latest   stable     v7         7",
-        "         candidate  ↑          ↑",
-        "         beta       ↑          ↑",
-        "         edge       2.0        80",
+        "Track    Base                  Channel    Version    Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     v7         7",
+        "                               candidate  ↑          ↑",
+        "                               beta       ↑          ↑",
+        "                               edge       2.0        80",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -978,8 +1016,8 @@ def test_status_channels_not_released_without_fallback(caplog, store_mock, confi
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[]),
-        Release(revision=12, channel="latest/edge", expires_at=None, resources=[]),
+        _build_release(revision=5, channel="latest/beta"),
+        _build_release(revision=12, channel="latest/edge"),
     ]
     channels = _build_channels()
     revisions = [
@@ -996,11 +1034,11 @@ def test_status_channels_not_released_without_fallback(caplog, store_mock, confi
     ]
 
     expected = [
-        "Track    Channel    Version      Revision",
-        "latest   stable     -            -",
-        "         candidate  -            -",
-        "         beta       5.1          5",
-        "         edge       almostready  12",
+        "Track    Base                  Channel    Version      Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     -            -",
+        "                               candidate  -            -",
+        "                               beta       5.1          5",
+        "                               edge       almostready  12",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1010,8 +1048,8 @@ def test_status_multiple_tracks(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=503, channel="latest/stable", expires_at=None, resources=[]),
-        Release(revision=1, channel="2.0/edge", expires_at=None, resources=[]),
+        _build_release(revision=503, channel="latest/stable"),
+        _build_release(revision=1, channel="2.0/edge"),
     ]
     channels_latest = _build_channels()
     channels_track = _build_channels(track="2.0")
@@ -1030,15 +1068,15 @@ def test_status_multiple_tracks(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel    Version    Revision",
-        "latest   stable     7.5.3      503",
-        "         candidate  ↑          ↑",
-        "         beta       ↑          ↑",
-        "         edge       ↑          ↑",
-        "2.0      stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       1          1",
+        "Track    Base                  Channel    Version    Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     7.5.3      503",
+        "                               candidate  ↑          ↑",
+        "                               beta       ↑          ↑",
+        "                               edge       ↑          ↑",
+        "2.0      ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       1          1",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1048,10 +1086,10 @@ def test_status_tracks_order(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     channel_map = [
-        Release(revision=1, channel="latest/edge", expires_at=None, resources=[]),
-        Release(revision=2, channel="aaa/edge", expires_at=None, resources=[]),
-        Release(revision=3, channel="2.0/edge", expires_at=None, resources=[]),
-        Release(revision=4, channel="zzz/edge", expires_at=None, resources=[]),
+        _build_release(revision=1, channel="latest/edge"),
+        _build_release(revision=2, channel="aaa/edge"),
+        _build_release(revision=3, channel="2.0/edge"),
+        _build_release(revision=4, channel="zzz/edge"),
     ]
     channels_latest = _build_channels()
     channels_track_1 = _build_channels(track="zzz")
@@ -1074,23 +1112,23 @@ def test_status_tracks_order(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel    Version    Revision",
-        "latest   stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       v1         1",
-        "zzz      stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       v4         4",
-        "2.0      stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       v3         3",
-        "aaa      stable     -          -",
-        "         candidate  -          -",
-        "         beta       -          -",
-        "         edge       v2         2",
+        "Track    Base                  Channel    Version    Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v1         1",
+        "zzz      ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v4         4",
+        "2.0      ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v3         3",
+        "aaa      ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v2         2",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1101,12 +1139,11 @@ def test_status_with_one_branch(caplog, store_mock, config):
 
     tstamp_with_timezone = dateutil.parser.parse("2020-07-03T20:30:40Z")
     channel_map = [
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[]),
-        Release(
+        _build_release(revision=5, channel="latest/beta"),
+        _build_release(
             revision=12,
             channel="latest/beta/mybranch",
             expires_at=tstamp_with_timezone,
-            resources=[],
         ),
     ]
     channels = _build_channels()
@@ -1133,12 +1170,12 @@ def test_status_with_one_branch(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel        Version    Revision    Expires at",
-        "latest   stable         -          -",
-        "         candidate      -          -",
-        "         beta           5.1        5",
-        "         edge           ↑          ↑",
-        "         beta/mybranch  ver.12     12          2020-07-03T20:30:40+00:00",
+        "Track    Base                  Channel        Version    Revision    Expires at",
+        "latest   ubuntu 20.04 (amd64)  stable         -          -",
+        "                               candidate      -          -",
+        "                               beta           5.1        5",
+        "                               edge           ↑          ↑",
+        "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40+00:00",  # NOQA
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1149,13 +1186,9 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
 
     tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
     channel_map = [
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[]),
-        Release(
-            revision=12, channel="latest/beta/branch-1", expires_at=tstamp, resources=[]
-        ),
-        Release(
-            revision=15, channel="latest/beta/branch-2", expires_at=tstamp, resources=[]
-        ),
+        _build_release(revision=5, channel="latest/beta"),
+        _build_release(revision=12, channel="latest/beta/branch-1", expires_at=tstamp),
+        _build_release(revision=15, channel="latest/beta/branch-2", expires_at=tstamp),
     ]
     channels = _build_channels()
     channels.extend(
@@ -1191,13 +1224,13 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
     ]
 
     expected = [
-        "Track    Channel        Version    Revision    Expires at",
-        "latest   stable         -          -",
-        "         candidate      -          -",
-        "         beta           5.1        5",
-        "         edge           ↑          ↑",
-        "         beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",
-        "         beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",
+        "Track    Base                  Channel        Version    Revision    Expires at",
+        "latest   ubuntu 20.04 (amd64)  stable         -          -",
+        "                               candidate      -          -",
+        "                               beta           5.1        5",
+        "                               edge           ↑          ↑",
+        "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",  # NOQA
+        "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",  # NOQA
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1209,13 +1242,8 @@ def test_status_with_resources(caplog, store_mock, config):
     res1 = Resource(name="resource1", optional=True, revision=1, resource_type="file")
     res2 = Resource(name="resource2", optional=True, revision=54, resource_type="file")
     channel_map = [
-        Release(
-            revision=5,
-            channel="latest/candidate",
-            expires_at=None,
-            resources=[res1, res2],
-        ),
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[res1]),
+        _build_release(revision=5, channel="latest/candidate", resources=[res1, res2]),
+        _build_release(revision=5, channel="latest/beta", resources=[res1]),
     ]
     channels = _build_channels()
     revisions = [
@@ -1227,11 +1255,11 @@ def test_status_with_resources(caplog, store_mock, config):
     StatusCommand("group", config).run(args)
 
     expected = [
-        "Track    Channel    Version    Revision    Resources",
-        "latest   stable     -          -           -",
-        "         candidate  5.1        5           resource1 (r1), resource2 (r54)",
-        "         beta       5.1        5           resource1 (r1)",
-        "         edge       ↑          ↑           ↑",
+        "Track    Base                  Channel    Version    Revision    Resources",
+        "latest   ubuntu 20.04 (amd64)  stable     -          -           -",
+        "                               candidate  5.1        5           resource1 (r1), resource2 (r54)",  # NOQA
+        "                               beta       5.1        5           resource1 (r1)",
+        "                               edge       ↑          ↑           ↑",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1244,13 +1272,9 @@ def test_status_with_resources_missing_after_closed_channel(caplog, store_mock, 
         name="resource", optional=True, revision=1, resource_type="file"
     )
     channel_map = [
-        Release(
-            revision=5, channel="latest/stable", expires_at=None, resources=[resource]
-        ),
-        Release(revision=5, channel="latest/beta", expires_at=None, resources=[]),
-        Release(
-            revision=5, channel="latest/edge", expires_at=None, resources=[resource]
-        ),
+        _build_release(revision=5, channel="latest/stable", resources=[resource]),
+        _build_release(revision=5, channel="latest/beta", resources=[]),
+        _build_release(revision=5, channel="latest/edge", resources=[resource]),
     ]
     channels = _build_channels()
     revisions = [
@@ -1262,11 +1286,11 @@ def test_status_with_resources_missing_after_closed_channel(caplog, store_mock, 
     StatusCommand("group", config).run(args)
 
     expected = [
-        "Track    Channel    Version    Revision    Resources",
-        "latest   stable     5.1        5           resource (r1)",
-        "         candidate  ↑          ↑           ↑",
-        "         beta       5.1        5           -",
-        "         edge       5.1        5           resource (r1)",
+        "Track    Base                  Channel    Version    Revision    Resources",
+        "latest   ubuntu 20.04 (amd64)  stable     5.1        5           resource (r1)",
+        "                               candidate  ↑          ↑           ↑",
+        "                               beta       5.1        5           -",
+        "                               edge       5.1        5           resource (r1)",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1279,8 +1303,8 @@ def test_status_with_resources_and_branches(caplog, store_mock, config):
     res1 = Resource(name="testres", optional=True, revision=1, resource_type="file")
     res2 = Resource(name="testres", optional=True, revision=14, resource_type="file")
     channel_map = [
-        Release(revision=23, channel="latest/beta", expires_at=None, resources=[res2]),
-        Release(
+        _build_release(revision=23, channel="latest/beta", resources=[res2]),
+        _build_release(
             revision=5,
             channel="latest/edge/mybranch",
             expires_at=tstamp,
@@ -1307,12 +1331,205 @@ def test_status_with_resources_and_branches(caplog, store_mock, config):
     StatusCommand("group", config).run(args)
 
     expected = [
-        "Track    Channel        Version    Revision    Resources      Expires at",
-        "latest   stable         -          -           -",
-        "         candidate      -          -           -",
-        "         beta           7.0.0      23          testres (r14)",
-        "         edge           ↑          ↑           ↑",
-        "         edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40+00:00",
+        "Track    Base                  Channel        Version    Revision    Resources      Expires at",  # NOQA
+        "latest   ubuntu 20.04 (amd64)  stable         -          -           -",
+        "                               candidate      -          -           -",
+        "                               beta           7.0.0      23          testres (r14)",
+        "                               edge           ↑          ↑           ↑",
+        "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40+00:00",  # NOQA
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_multiplebases_single_track(caplog, store_mock, config):
+    """Multiple bases with one track."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    other_base = Base(architecture="16b", channel="1", name="xz")
+    channel_map = [
+        _build_release(revision=7, channel="latest/stable", base=other_base),
+        _build_release(revision=7, channel="latest/candidate"),
+        _build_release(revision=80, channel="latest/beta", base=other_base),
+        _build_release(revision=156, channel="latest/edge"),
+    ]
+    channels = _build_channels()
+    revisions = [
+        _build_revision(revno=7, version="v7"),
+        _build_revision(revno=80, version="2.0"),
+        _build_revision(revno=156, version="git-0db35ea1"),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm")
+    StatusCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base                  Channel    Version       Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     -             -",
+        "                               candidate  v7            7",
+        "                               beta       ↑             ↑",
+        "                               edge       git-0db35ea1  156",
+        "         xz 1 (16b)            stable     v7            7",
+        "                               candidate  ↑             ↑",
+        "                               beta       2.0           80",
+        "                               edge       ↑             ↑",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_multiplebases_multiple_tracks(caplog, store_mock, config):
+    """Multiple bases with several tracks."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    other_base = Base(architecture="16b", channel="1", name="xz")
+    channel_map = [
+        _build_release(revision=7, channel="latest/stable", base=other_base),
+        _build_release(revision=7, channel="latest/candidate"),
+        _build_release(revision=80, channel="latest/beta", base=other_base),
+        _build_release(revision=156, channel="latest/edge"),
+        _build_release(revision=7, channel="2.0/stable", base=other_base),
+        _build_release(revision=7, channel="2.0/candidate"),
+        _build_release(revision=80, channel="2.0/beta", base=other_base),
+        _build_release(revision=156, channel="2.0/edge"),
+        _build_release(revision=156, channel="3.0/edge"),
+    ]
+    channels = (
+        _build_channels() + _build_channels(track="2.0") + _build_channels(track="3.0")
+    )
+    revisions = [
+        _build_revision(revno=7, version="v7"),
+        _build_revision(revno=80, version="2.0"),
+        _build_revision(revno=156, version="git-0db35ea1"),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm")
+    StatusCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base                  Channel    Version       Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     -             -",
+        "                               candidate  v7            7",
+        "                               beta       ↑             ↑",
+        "                               edge       git-0db35ea1  156",
+        "         xz 1 (16b)            stable     v7            7",
+        "                               candidate  ↑             ↑",
+        "                               beta       2.0           80",
+        "                               edge       ↑             ↑",
+        "2.0      ubuntu 20.04 (amd64)  stable     -             -",
+        "                               candidate  v7            7",
+        "                               beta       ↑             ↑",
+        "                               edge       git-0db35ea1  156",
+        "         xz 1 (16b)            stable     v7            7",
+        "                               candidate  ↑             ↑",
+        "                               beta       2.0           80",
+        "                               edge       ↑             ↑",
+        "3.0      ubuntu 20.04 (amd64)  stable     -             -",
+        "                               candidate  -             -",
+        "                               beta       -             -",
+        "                               edge       git-0db35ea1  156",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_multiplebases_everything_combined(caplog, store_mock, config):
+    """Multiple bases with several other modifiers, just a sanity check."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    other_base = Base(architecture="16b", channel="1", name="xz")
+    tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
+    resource = Resource(name="testres", optional=True, revision=1, resource_type="file")
+    channel_map = [
+        _build_release(revision=7, channel="latest/candidate"),
+        _build_release(revision=156, channel="latest/edge"),
+        _build_release(revision=7, channel="latest/candidate/br1", expires_at=tstamp),
+        _build_release(revision=7, channel="latest/stable", base=other_base),
+        _build_release(revision=80, channel="latest/beta", base=other_base),
+        _build_release(
+            revision=99,
+            channel="latest/beta/br2",
+            base=other_base,
+            expires_at=tstamp,
+            resources=[resource],
+        ),
+        _build_release(revision=7, channel="2.0/candidate"),
+        _build_release(revision=80, channel="2.0/beta"),
+        _build_release(revision=7, channel="2.0/stable", base=other_base),
+        _build_release(revision=80, channel="2.0/edge", base=other_base),
+        _build_release(
+            revision=80, channel="2.0/edge/foobar", base=other_base, expires_at=tstamp
+        ),
+    ]
+    channels = _build_channels() + _build_channels(track="2.0")
+    channels.extend(
+        [
+            Channel(
+                name="latest/candidate/br1",
+                fallback="latest/candidate",
+                track="latest",
+                risk="candidate",
+                branch="br1",
+            ),
+            Channel(
+                name="latest/beta/br2",
+                fallback="latest/beta",
+                track="latest",
+                risk="beta",
+                branch="br2",
+            ),
+            Channel(
+                name="2.0/edge/foobar",
+                fallback="2.0/edge",
+                track="2.0",
+                risk="edge",
+                branch="foobar",
+            ),
+        ]
+    )
+    revisions = [
+        _build_revision(revno=7, version="v7"),
+        _build_revision(revno=80, version="2.0"),
+        _build_revision(revno=156, version="git-0db35ea1"),
+        _build_revision(revno=99, version="weird"),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm")
+    StatusCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base                  Channel        Version       Revision    Resources     Expires at",  # NOQA
+        "latest   ubuntu 20.04 (amd64)  stable         -             -           -",
+        "                               candidate      v7            7           -",
+        "                               beta           ↑             ↑           ↑",
+        "                               edge           git-0db35ea1  156         -",
+        "                               candidate/br1  v7            7           -             2020-07-03T20:30:40+00:00",  # NOQA
+        "         xz 1 (16b)            stable         v7            7           -",
+        "                               candidate      ↑             ↑           ↑",
+        "                               beta           2.0           80          -",
+        "                               edge           ↑             ↑           ↑",
+        "                               beta/br2       weird         99          testres (r1)  2020-07-03T20:30:40+00:00",  # NOQA
+        "2.0      ubuntu 20.04 (amd64)  stable         -             -           -",
+        "                               candidate      v7            7           -",
+        "                               beta           2.0           80          -",
+        "                               edge           ↑             ↑           ↑",
+        "         xz 1 (16b)            stable         v7            7           -",
+        "                               candidate      ↑             ↑           ↑",
+        "                               beta           ↑             ↑           ↑",
+        "                               edge           2.0           80          -",
+        "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40+00:00",  # NOQA
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -1429,7 +1646,7 @@ def test_createlib_path_already_there(tmp_path, monkeypatch, config):
             CreateLibCommand("group", config).run(args)
 
     assert str(err.value) == (
-        "This library already exists: lib/charms/test_charm_name/v0/testlib.py"
+        "This library already exists: 'lib/charms/test_charm_name/v0/testlib.py'."
     )
 
 
@@ -1554,7 +1771,7 @@ def test_publishlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
         "charms.testcharm_1.v1.testlib-b",
     ]
     expected = [
-        "Libraries found under lib/charms/testcharm_1: " + str(names),
+        "Libraries found under 'lib/charms/testcharm_1': " + str(names),
         "Library charms.testcharm_1.v0.testlib-a sent to the store with version 0.1",
         "Library charms.testcharm_1.v0.testlib-b sent to the store with version 0.1",
         "Library charms.testcharm_1.v1.testlib-b sent to the store with version 1.3",
@@ -1575,7 +1792,7 @@ def test_publishlib_not_found(caplog, store_mock, tmp_path, monkeypatch, config)
             PublishLibCommand("group", config).run(args)
 
         assert str(cm.value) == (
-            "The specified library was not found at path lib/charms/testcharm/v0/testlib.py."
+            "The specified library was not found at path 'lib/charms/testcharm/v0/testlib.py'."
         )
 
 
@@ -2002,8 +2219,8 @@ def test_getlibinfo_malformed_metadata_field(tmp_path, monkeypatch):
     test_path = _create_lib(metadata_id="LIBID = foo = 23")
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
-    assert str(err.value) == r"Bad metadata line in {}: b'LIBID = foo = 23\n'".format(
-        test_path
+    assert str(err.value) == r"Bad metadata line in {!r}: b'LIBID = foo = 23\n'".format(
+        str(test_path)
     )
 
 
@@ -2014,8 +2231,8 @@ def test_getlibinfo_missing_metadata_field(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} is missing the mandatory metadata fields: LIBAPI, LIBPATCH.".format(
-            test_path
+        "Library {!r} is missing the mandatory metadata fields: LIBAPI, LIBPATCH.".format(
+            str(test_path)
         )
     )
 
@@ -2027,8 +2244,8 @@ def test_getlibinfo_api_not_int(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBAPI is not zero or a positive integer.".format(
-            test_path
+        "Library {!r} metadata field LIBAPI is not zero or a positive integer.".format(
+            str(test_path)
         )
     )
 
@@ -2040,8 +2257,8 @@ def test_getlibinfo_api_negative(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBAPI is not zero or a positive integer.".format(
-            test_path
+        "Library {!r} metadata field LIBAPI is not zero or a positive integer.".format(
+            str(test_path)
         )
     )
 
@@ -2053,8 +2270,8 @@ def test_getlibinfo_patch_not_int(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBPATCH is not zero or a positive integer.".format(
-            test_path
+        "Library {!r} metadata field LIBPATCH is not zero or a positive integer.".format(
+            str(test_path)
         )
     )
 
@@ -2066,8 +2283,8 @@ def test_getlibinfo_patch_negative(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBPATCH is not zero or a positive integer.".format(
-            test_path
+        "Library {!r} metadata field LIBPATCH is not zero or a positive integer.".format(
+            str(test_path)
         )
     )
 
@@ -2079,8 +2296,8 @@ def test_getlibinfo_api_patch_both_zero(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-            test_path
+        "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
+            str(test_path)
         )
     )
 
@@ -2092,8 +2309,8 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBAPI is different from the version in the path.".format(
-            test_path
+        "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
+            str(test_path)
         )
     )
 
@@ -2105,8 +2322,8 @@ def test_getlibinfo_libid_non_string(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBID must be a non-empty ASCII string.".format(
-            test_path
+        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
+            str(test_path)
         )
     )
 
@@ -2118,8 +2335,8 @@ def test_getlibinfo_libid_non_ascii(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBID must be a non-empty ASCII string.".format(
-            test_path
+        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
+            str(test_path)
         )
     )
 
@@ -2131,8 +2348,8 @@ def test_getlibinfo_libid_empty(tmp_path, monkeypatch):
     with pytest.raises(CommandError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {} metadata field LIBID must be a non-empty ASCII string.".format(
-            test_path
+        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
+            str(test_path)
         )
     )
 
@@ -2388,7 +2605,7 @@ def test_fetchlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
         "charms.testcharm2.v3.testlib2",
     ]
     expected = [
-        "Libraries found under lib/charms: " + str(names),
+        "Libraries found under 'lib/charms': " + str(names),
         "Library charms.testcharm1.v0.testlib1 updated to version 0.2.",
         "Library charms.testcharm2.v3.testlib2 updated to version 3.14.",
     ]
@@ -2730,7 +2947,7 @@ def test_uploadresource_options_image_type(config):
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "image"]
     assert isinstance(action.type, SingleOptionEnsurer)
-    assert action.type.converter is oci_image_spec
+    assert action.type.converter is str
 
 
 @pytest.mark.parametrize(
@@ -2801,21 +3018,30 @@ def test_uploadresource_filepath_call_ok(caplog, store_mock, config, tmp_path):
         call.upload_resource("mycharm", "myresource", "file", test_resource)
     ]
     expected = [
-        "Uploading resource directly from file {}".format(test_resource),
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+        "Uploading resource directly from file {!r}.".format(str(test_resource)),
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
     ]
     assert expected == [rec.message for rec in caplog.records]
     assert test_resource.exists()  # provided by the user, don't touch it
 
 
-def test_uploadresource_image_call_ok(caplog, store_mock, config, tmp_path):
-    """Simple upload, success result."""
+def test_uploadresource_image_call_already_uploaded(caplog, store_mock, config):
+    """Upload an oci-image resource, the image itself already being in the registry."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    # fake credentials for the charm/resource, and the final json content
+    store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
+        username="testusername",
+        password="testpassword",
+        image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
+    )
+
+    test_json_content = "from charmhub we came, from charmhub we shall return"
+    store_mock.get_oci_image_blob.return_value = test_json_content
 
     # hack into the store mock to save for later the uploaded resource bytes
     uploaded_resource_content = None
     uploaded_resource_filepath = None
-    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
 
     def interceptor(charm_name, resource_name, resource_type, resource_filepath):
         """Intercept the call to save real content (and validate params)."""
@@ -2827,38 +3053,190 @@ def test_uploadresource_image_call_ok(caplog, store_mock, config, tmp_path):
         assert charm_name == "mycharm"
         assert resource_name == "myresource"
         assert resource_type == "oci-image"
-        return store_response
+        return Uploaded(ok=True, status=200, revision=7, errors=[])
 
     store_mock.upload_resource.side_effect = interceptor
 
-    spec = OCIImageSpec("test-orga", "test-image", "test-tag")
+    # test
+    original_image_digest = "test-digest-given-by-user"
     args = Namespace(
-        charm_name="mycharm", resource_name="myresource", filepath=None, image=spec
+        charm_name="mycharm",
+        resource_name="myresource",
+        filepath=None,
+        image=original_image_digest,
     )
-
     with patch(
         "charmcraft.commands.store.ImageHandler", autospec=True
     ) as im_class_mock:
-        im_class_mock.return_value = im_mock = MagicMock()
-        im_mock.get_destination_url.return_value = "test-final-url"
-        UploadResourceCommand("group", config).run(args)
+        with patch(
+            "charmcraft.commands.store.OCIRegistry", autospec=True
+        ) as reg_class_mock:
+            reg_class_mock.return_value = reg_mock = MagicMock()
+            im_class_mock.return_value = im_mock = MagicMock()
+            im_mock.check_in_registry.return_value = True
+            UploadResourceCommand("group", config).run(args)
+
+    # validate how OCIRegistry was instantiated
+    assert reg_class_mock.mock_calls == [
+        call(
+            config.charmhub.registry_url,
+            "charm/charm-id/test-image-name",
+            username="testusername",
+            password="testpassword",
+        )
+    ]
 
     # validate how ImageHandler was used
-    registry = OCIRegistry("https://registry.hub.docker.com", "test-orga/test-image")
     assert im_class_mock.mock_calls == [
-        call(registry),
-        call().get_destination_url("test-tag"),
+        call(reg_mock),
+        call().check_in_registry(original_image_digest),
     ]
-    assert im_mock.mock_calls == [call.get_destination_url("test-tag")]
 
     # check that the uploaded file is fine and that was cleaned
-    assert json.loads(uploaded_resource_content) == {"ImageName": "test-final-url"}
-    assert not uploaded_resource_filepath.exists()  # temporary! has to be cleaned
+    assert uploaded_resource_content == test_json_content
+    assert not uploaded_resource_filepath.exists()  # temporary! shall be cleaned
+
+    assert store_mock.mock_calls == [
+        call.get_oci_registry_credentials("mycharm", "myresource"),
+        call.get_oci_image_blob("mycharm", "myresource", original_image_digest),
+        call.upload_resource(
+            "mycharm", "myresource", "oci-image", uploaded_resource_filepath
+        ),
+    ]
 
     expected = [
-        "Uploading resource from image {} at Dockerhub".format(spec),
-        "Resource URL: test-final-url",
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'",
+        (
+            "Uploading resource from image "
+            "charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Using OCI image from Canonical's registry.",
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_uploadresource_image_call_upload_from_local(caplog, store_mock, config):
+    """Upload an oci-image resource, the image is upload from local to Canonical's registry."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    # fake credentials for the charm/resource, the final json content, and the upload result
+    store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
+        username="testusername",
+        password="testpassword",
+        image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
+    )
+
+    test_json_content = "from charmhub we came, from charmhub we shall return"
+    store_mock.get_oci_image_blob.return_value = test_json_content
+
+    store_mock.upload_resource.return_value = Uploaded(
+        ok=True, status=200, revision=7, errors=[]
+    )
+
+    # test
+    original_image_digest = "test-digest-given-by-user"
+    args = Namespace(
+        charm_name="mycharm",
+        resource_name="myresource",
+        filepath=None,
+        image=original_image_digest,
+    )
+    with patch(
+        "charmcraft.commands.store.ImageHandler", autospec=True
+    ) as im_class_mock:
+        with patch(
+            "charmcraft.commands.store.OCIRegistry", autospec=True
+        ) as reg_class_mock:
+            reg_class_mock.return_value = reg_mock = MagicMock()
+            im_class_mock.return_value = im_mock = MagicMock()
+
+            # not in the registry, and then uploaded ok
+            im_mock.check_in_registry.return_value = False
+            new_image_digest = "new-digest-after-upload"
+            im_mock.upload_from_local.return_value = new_image_digest
+
+            UploadResourceCommand("group", config).run(args)
+
+    # validate how ImageHandler was used
+    assert im_class_mock.mock_calls == [
+        call(reg_mock),
+        call().check_in_registry(original_image_digest),
+        call().upload_from_local(original_image_digest),
+    ]
+
+    assert store_mock.mock_calls == [
+        call.get_oci_registry_credentials("mycharm", "myresource"),
+        call.get_oci_image_blob("mycharm", "myresource", new_image_digest),
+        call.upload_resource("mycharm", "myresource", "oci-image", ANY),
+    ]
+
+    expected = [
+        (
+            "Uploading resource from image "
+            "charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Remote image not found, uploading from local registry.",
+        "Image uploaded, new remote digest: new-digest-after-upload.",
+        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_uploadresource_image_call_missing_everywhere(caplog, store_mock, config):
+    """Upload an oci-image resource, but the image is not found remote nor locally."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+
+    # fake credentials for the charm/resource, the final json content, and the upload result
+    store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
+        username="testusername",
+        password="testpassword",
+        image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
+    )
+
+    # test
+    original_image_digest = "test-digest-given-by-user"
+    args = Namespace(
+        charm_name="mycharm",
+        resource_name="myresource",
+        filepath=None,
+        image=original_image_digest,
+    )
+    with patch(
+        "charmcraft.commands.store.ImageHandler", autospec=True
+    ) as im_class_mock:
+        with patch(
+            "charmcraft.commands.store.OCIRegistry", autospec=True
+        ) as reg_class_mock:
+            reg_class_mock.return_value = reg_mock = MagicMock()
+            im_class_mock.return_value = im_mock = MagicMock()
+
+            # not in the remote registry, not locally either
+            im_mock.check_in_registry.return_value = False
+            im_mock.upload_from_local.return_value = None
+
+            UploadResourceCommand("group", config).run(args)
+
+    # validate how ImageHandler was used
+    assert im_class_mock.mock_calls == [
+        call(reg_mock),
+        call().check_in_registry(original_image_digest),
+        call().upload_from_local(original_image_digest),
+    ]
+
+    assert store_mock.mock_calls == [
+        call.get_oci_registry_credentials("mycharm", "myresource"),
+    ]
+
+    expected = [
+        (
+            "Uploading resource from "
+            "image charm/charm-id/test-image-name @ test-digest-given-by-user."
+        ),
+        "Remote image not found, uploading from local registry.",
+        (
+            "Image with digest test-digest-given-by-user is not available in "
+            "the Canonical's registry nor locally."
+        ),
     ]
     assert expected == [rec.message for rec in caplog.records]
 
@@ -2887,50 +3265,6 @@ def test_uploadresource_call_error(caplog, store_mock, config, tmp_path):
         "- broken: other long error text",
     ]
     assert expected == [rec.message for rec in caplog.records]
-
-
-@pytest.mark.parametrize(
-    "source,expected",
-    [
-        ("testname", OCIImageSpec("library", "testname", "latest")),
-        ("testorga/testname", OCIImageSpec("testorga", "testname", "latest")),
-        ("testname:sometag", OCIImageSpec("library", "testname", "sometag")),
-        ("testorga/testname:sometag", OCIImageSpec("testorga", "testname", "sometag")),
-        ("testname@somedigest", OCIImageSpec("library", "testname", "somedigest")),
-        (
-            "testorga/testname@somedigest",
-            OCIImageSpec("testorga", "testname", "somedigest"),
-        ),
-    ],
-)
-def test_uploadresource_ociimagespec_ok(source, expected):
-    """Check oci image spec format, different good combinations."""
-    result = oci_image_spec(source)
-    assert result == expected
-
-
-@pytest.mark.parametrize(
-    "source,partial_error_message",
-    [
-        ("testname:tag@digest", "Cannot specify both tag and digest"),
-        ("testname@digest:tag", "Cannot specify both tag and digest"),
-        ("@digest:tag", "Cannot specify both tag and digest"),
-        ("", "The image name is mandatory"),
-        (":tag", "The image name is mandatory"),
-        (
-            "server/testorga/name",
-            "The registry server cannot be specified as part of the image",
-        ),
-    ],
-)
-def test_uploadresource_ociimagespec_error(source, partial_error_message):
-    """Check oci image spec format, different bad combinations."""
-    error_message = partial_error_message + (
-        " (the format is [organization/]name[:tag|@digest])."
-    )
-    with pytest.raises(CommandError) as cm:
-        oci_image_spec(source)
-    assert str(cm.value) == error_message
 
 
 # -- tests for list resource revisions command

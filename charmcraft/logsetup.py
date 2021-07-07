@@ -21,12 +21,20 @@ import os
 import tempfile
 
 from charmcraft import __version__
+from charmcraft.env import (
+    get_managed_environment_log_path,
+    is_charmcraft_running_in_managed_mode,
+)
 
 FORMATTER_SIMPLE = "%(message)s"
-FORMATTER_DETAILED = "%(asctime)s  %(name)-30s %(levelname)-8s %(message)s"
+FORMATTER_DETAILED = "%(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
+FORMATTER_DETAILED_MANAGED = "mm %(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
 
-_logger = logging.getLogger("charmcraft")
-_logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("charmcraft")
+enabled_loggers = [
+    logger,
+    logging.getLogger("craft_providers"),
+]
 
 
 class _MessageHandler:
@@ -47,11 +55,15 @@ class _MessageHandler:
 
     def __init__(self):
         self._stderr_handler = logging.StreamHandler()
-        _logger.addHandler(self._stderr_handler)
+        for enabled_logger in enabled_loggers:
+            enabled_logger.setLevel(logging.DEBUG)
+            enabled_logger.addHandler(self._stderr_handler)
 
         # autoset modes constants for simpler interface
         for k in self._modes:
             setattr(self, k.upper(), k)
+
+        self.mode = self.NORMAL
 
     def init(self, initial_mode):
         """Initialize internal structures; this must be done before start logging."""
@@ -65,16 +77,24 @@ class _MessageHandler:
         self._stderr_handler.setFormatter(logging.Formatter(format_string))
         self._stderr_handler.setLevel(level)
         if mode == self.VERBOSE:
-            _logger.debug("Starting charmcraft version %s", __version__)
+            logger.debug("Starting charmcraft version %s", __version__)
 
     def _set_filehandler(self):
         """Set the file handler to log everything to the temp file."""
-        _, self._log_filepath = tempfile.mkstemp(prefix="charmcraft-log-")
+        managed_mode = is_charmcraft_running_in_managed_mode()
+        if managed_mode:
+            self._log_filepath = str(get_managed_environment_log_path())
+        else:
+            _, self._log_filepath = tempfile.mkstemp(prefix="charmcraft-log-")
 
-        file_handler = logging.FileHandler(self._log_filepath)
-        file_handler.setFormatter(logging.Formatter(FORMATTER_DETAILED))
+        file_handler = logging.FileHandler(self._log_filepath, mode="w")
+
+        log_format = FORMATTER_DETAILED_MANAGED if managed_mode else FORMATTER_DETAILED
+
+        file_handler.setFormatter(logging.Formatter(log_format))
         file_handler.setLevel(0)  # log eeeeeverything
-        _logger.addHandler(file_handler)
+        for enabled_logger in enabled_loggers:
+            enabled_logger.addHandler(file_handler)
 
         # a logger for only the file
         self._file_logger = logging.getLogger("charmcraft.guard")
@@ -89,9 +109,9 @@ class _MessageHandler:
     def ended_interrupt(self):
         """Clean up on keyboard interrupt."""
         if self.mode == self.VERBOSE:
-            _logger.exception("Interrupted.")
+            logger.exception("Interrupted.")
         else:
-            _logger.error("Interrupted.")
+            logger.error("Interrupted.")
         os.unlink(self._log_filepath)
 
     def ended_cmderror(self, err):
@@ -99,8 +119,10 @@ class _MessageHandler:
         if err.argsparsing:
             print(err)
         else:
-            msg = "{} (full execution logs in {})".format(err, self._log_filepath)
-            _logger.error(msg)
+            msg = "{} (full execution logs in {!r})".format(
+                err, str(self._log_filepath)
+            )
+            logger.error(msg)
 
     def ended_crash(self, err):
         """Report the internal error and logfile location.
@@ -112,10 +134,10 @@ class _MessageHandler:
         )
         if self.mode == self.VERBOSE:
             # both to screen and file!
-            _logger.exception(msg)
+            logger.exception(msg)
         else:
             # the error to screen and file, plus the traceback to the file
-            _logger.error(msg)
+            logger.error(msg)
             self._file_logger.exception("")
 
 

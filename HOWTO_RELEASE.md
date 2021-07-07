@@ -23,7 +23,7 @@ paste, but do please pay attention to details!
 
 - create release notes after all main changes from last tag
 
-    git log --first-parent master --decorate
+    git log --first-parent master --decorate > release-X.Y.Z.txt
 
 - tag the release (using those release notes)
 
@@ -52,7 +52,7 @@ paste, but do please pay attention to details!
 
 - try the snap (for your arch)
 
-    sudo snap install --dangerous charmcraft_X.Y.Z_amd64.snap
+    sudo snap install --dangerous --classic charmcraft_X.Y.Z_amd64.snap
     cd ~  # wherever out of the project, to avoid any potential "file mispicking"
     charmcraft version
 
@@ -81,11 +81,11 @@ paste, but do please pay attention to details!
 
 - release to Snap Store (for all the archs)
 
-    snapcraft upload charmcraft_X.Y.Z_amd64.snap --release=edge,beta
-    snapcraft upload charmcraft_X.Y.Z_s390x.snap --release=edge,beta
-    snapcraft upload charmcraft_X.Y.Z_arm64.snap --release=edge,beta
-    snapcraft upload charmcraft_X.Y.Z_armhf.snap --release=edge,beta
-    snapcraft upload charmcraft_X.Y.Z_ppc64el.snap --release=edge,beta
+    snapcraft upload charmcraft_X.Y.Z_amd64.snap --release=edge,candidate
+    snapcraft upload charmcraft_X.Y.Z_s390x.snap --release=edge,candidate
+    snapcraft upload charmcraft_X.Y.Z_arm64.snap --release=edge,candidate
+    snapcraft upload charmcraft_X.Y.Z_armhf.snap --release=edge,candidate
+    snapcraft upload charmcraft_X.Y.Z_ppc64el.snap --release=edge,candidate
 
 - verify all archs are consistent:
 
@@ -93,12 +93,6 @@ paste, but do please pay attention to details!
 
 
 ## Final details
-
-- update IRC channel topic
-
-- send a mail with "Release X.Y.Z" title and release notes in the body to
-
-    charmcraft@lists.launchpad.net
 
 - write a new post in Discourse about the release:
 

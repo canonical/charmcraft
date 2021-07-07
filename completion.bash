@@ -20,7 +20,8 @@ _charmcraft()
 {
     local cur prev words cword cmd cmds
     cmds=(
-        build 
+        build
+        clean
         create-lib 
         fetch-lib 
         help init 
@@ -121,7 +122,7 @@ _charmcraft()
                     _filedir
                     ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath --image" -- "$cur") )
                     ;;
             esac
             ;;

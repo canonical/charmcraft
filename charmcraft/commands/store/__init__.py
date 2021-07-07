@@ -18,7 +18,6 @@
 
 import ast
 import hashlib
-import json
 import logging
 import pathlib
 import string
@@ -55,7 +54,6 @@ LibData = namedtuple(
     "LibData",
     "lib_id api patch content content_hash full_name path lib_name charm_name",
 )
-OCIImageSpec = namedtuple("OCIImageSpec", "organization name reference")
 
 # The token used in the 'init' command (as bytes for easier comparison)
 INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
@@ -569,11 +567,11 @@ class StatusCommand(BaseCommand):
         For example:
 
           $ charmcraft status
-          Track    Channel    Version    Revision
-          latest   stable     -          -
-                   candidate  -          -
-                   beta       -          -
-                   edge       1          1
+          Track    Base                   Channel    Version    Revision
+          latest   ubuntu 20.04 (amd64)   stable     -          -
+                                          candidate  -          -
+                                          beta       -          -
+                                          edge       1          1
 
         Showing channels will take you through login if needed.
     """
@@ -600,20 +598,22 @@ class StatusCommand(BaseCommand):
             logger.info("Nothing has been released yet.")
             return
 
-        # build easier to access structures
-        releases_by_channel = {item.channel: item for item in channel_map}
+        # group released revision by track and base
+        releases_by_track = {}
+        for item in channel_map:
+            track = item.channel.split("/")[0]
+            by_base = releases_by_track.setdefault(track, {})
+            base_str = "{0.name} {0.channel} ({0.architecture})".format(item.base)
+            by_channel = by_base.setdefault(base_str, {})
+            by_channel[item.channel] = item
+
+        # groupe revision objects by revision number
         revisions_by_revno = {item.revision: item for item in revisions}
 
         # process and order the channels, while preserving the tracks order
-        all_tracks = []
         per_track = {}
         branch_present = False
         for channel in channels:
-            # it's super rare to have a more than just a bunch of tracks (furthermore, normally
-            # there's only one), so it's ok to do this sequential search
-            if channel.track not in all_tracks:
-                all_tracks.append(channel.track)
-
             nonbranches_list, branches_list = per_track.setdefault(
                 channel.track, ([], [])
             )
@@ -629,55 +629,65 @@ class StatusCommand(BaseCommand):
                 branches_list.append(channel)
                 branch_present = True
 
-        headers = ["Track", "Channel", "Version", "Revision"]
+        headers = ["Track", "Base", "Channel", "Version", "Revision"]
         resources_present = any(release.resources for release in channel_map)
         if resources_present:
             headers.append("Resources")
         if branch_present:
             headers.append("Expires at")
 
-        # show everything, grouped by tracks, with regular channels at first and
+        # show everything, grouped by tracks and bases, with regular channels at first and
         # branches (if any) after those
         data = []
-        for track in all_tracks:
-            release_shown_for_this_track = False
+        for track, (channels, branches) in per_track.items():
+            releases_by_base = releases_by_track[track]
             shown_track = track
-            channels, branches = per_track[track]
 
-            for channel in channels:
-                description = channel.risk
+            # bases are shown alphabetically ordered
+            for base in sorted(releases_by_base):
+                releases_by_channel = releases_by_base[base]
+                shown_base = base
 
-                # get the release of the channel, fallbacking accordingly
-                release = releases_by_channel.get(channel.name)
-                if release is None:
-                    version = revno = resources = (
-                        "↑" if release_shown_for_this_track else "-"
-                    )
-                else:
-                    release_shown_for_this_track = True
-                    revno = release.revision
-                    revision = revisions_by_revno[revno]
-                    version = revision.version
-                    resources = self._build_resources_repr(release.resources)
+                release_shown_for_this_track_base = False
 
-                datum = [shown_track, description, version, revno]
-                if resources_present:
-                    datum.append(resources)
-                data.append(datum)
+                for channel in channels:
+                    description = channel.risk
 
-                # stop showing the track name for the rest of the track
-                shown_track = ""
+                    # get the release of the channel, fallbacking accordingly
+                    release = releases_by_channel.get(channel.name)
+                    if release is None:
+                        version = revno = resources = (
+                            "↑" if release_shown_for_this_track_base else "-"
+                        )
+                    else:
+                        release_shown_for_this_track_base = True
+                        revno = release.revision
+                        revision = revisions_by_revno[revno]
+                        version = revision.version
+                        resources = self._build_resources_repr(release.resources)
 
-            for branch in branches:
-                description = "/".join((branch.risk, branch.branch))
-                release = releases_by_channel[branch.name]
-                expiration = release.expires_at.isoformat()
-                revision = revisions_by_revno[release.revision]
-                datum = ["", description, revision.version, release.revision]
-                if resources_present:
-                    datum.append(self._build_resources_repr(release.resources))
-                datum.append(expiration)
-                data.append(datum)
+                    datum = [shown_track, shown_base, description, version, revno]
+                    if resources_present:
+                        datum.append(resources)
+                    data.append(datum)
+
+                    # stop showing the track and base for the rest of the struct
+                    shown_track = ""
+                    shown_base = ""
+
+                for branch in branches:
+                    release = releases_by_channel.get(branch.name)
+                    if release is None:
+                        # not for this base!
+                        continue
+                    description = "/".join((branch.risk, branch.branch))
+                    expiration = release.expires_at.isoformat()
+                    revision = revisions_by_revno[release.revision]
+                    datum = ["", "", description, revision.version, release.revision]
+                    if resources_present:
+                        datum.append(self._build_resources_repr(release.resources))
+                    datum.append(expiration)
+                    data.append(datum)
 
         table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
@@ -780,7 +790,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
                     field, value = [x.strip() for x in line.split(b"=")]
                 except ValueError:
                     raise CommandError(
-                        "Bad metadata line in {}: {!r}".format(lib_path, line)
+                        "Bad metadata line in {!r}: {!r}".format(str(lib_path), line)
                     )
                 metadata[field] = value
             else:
@@ -789,44 +799,46 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
     if missing:
         raise CommandError(
-            "Library {} is missing the mandatory metadata fields: {}.".format(
-                lib_path, ", ".join(sorted(missing))
+            "Library {!r} is missing the mandatory metadata fields: {}.".format(
+                str(lib_path), ", ".join(sorted(missing))
             )
         )
 
     bad_api_patch_msg = (
-        "Library {} metadata field {} is not zero or a positive integer."
+        "Library {!r} metadata field {} is not zero or a positive integer."
     )
     try:
         libapi = _get_positive_int(metadata[b"LIBAPI"])
     except ValueError:
-        raise CommandError(bad_api_patch_msg.format(lib_path, "LIBAPI"))
+        raise CommandError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
     try:
         libpatch = _get_positive_int(metadata[b"LIBPATCH"])
     except ValueError:
-        raise CommandError(bad_api_patch_msg.format(lib_path, "LIBPATCH"))
+        raise CommandError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
 
     if libapi == 0 and libpatch == 0:
         raise CommandError(
-            "Library {} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-                lib_path
+            "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
+                str(lib_path)
             )
         )
 
     if libapi != api_from_path:
         raise CommandError(
-            "Library {} metadata field LIBAPI is different from the version in the path.".format(
-                lib_path
+            "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
+                str(lib_path)
             )
         )
 
-    bad_libid_msg = "Library {} metadata field LIBID must be a non-empty ASCII string."
+    bad_libid_msg = (
+        "Library {!r} metadata field LIBID must be a non-empty ASCII string."
+    )
     try:
         libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
     except (ValueError, UnicodeDecodeError):
-        raise CommandError(bad_libid_msg.format(lib_path))
+        raise CommandError(bad_libid_msg.format(str(lib_path)))
     if not libid or not isinstance(libid, str):
-        raise CommandError(bad_libid_msg.format(lib_path))
+        raise CommandError(bad_libid_msg.format(str(lib_path)))
 
     content_hash = hasher.hexdigest()
     content = lib_path.read_text()
@@ -869,7 +881,7 @@ def _get_libs_from_tree(charm_name=None):
                     local_libs_data.append(_get_lib_info(lib_path=libfile))
 
     found_libs = [lib_data.full_name for lib_data in local_libs_data]
-    logger.debug("Libraries found under %s: %s", base_dir, found_libs)
+    logger.debug("Libraries found under %r: %s", str(base_dir), found_libs)
     return local_libs_data
 
 
@@ -936,7 +948,9 @@ class CreateLibCommand(BaseCommand):
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CommandError("This library already exists: {}".format(lib_path))
+            raise CommandError(
+                "This library already exists: {!r}.".format(str(lib_path))
+            )
 
         store = Store(self.config.charmhub)
         lib_id = store.create_library_id(charm_name, lib_name)
@@ -950,7 +964,7 @@ class CreateLibCommand(BaseCommand):
             lib_path.write_text(template.render(context))
         except OSError as exc:
             raise CommandError(
-                "Error writing the library in {}: {!r}.".format(lib_path, exc)
+                "Error writing the library in {!r}: {!r}.".format(str(lib_path), exc)
             )
 
         logger.info("Library %s created with id %s.", full_name, lib_id)
@@ -995,8 +1009,8 @@ class PublishLibCommand(BaseCommand):
             lib_data = _get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
                 raise CommandError(
-                    "The specified library was not found at path {}.".format(
-                        lib_data.path
+                    "The specified library was not found at path {!r}.".format(
+                        str(lib_data.path)
                     )
                 )
             if lib_data.charm_name != charm_name:
@@ -1301,43 +1315,6 @@ class ListResourcesCommand(BaseCommand):
             logger.info(line)
 
 
-class _BadOCIImageSpecError(CommandError):
-    """Subclass to provide a specific error for a bad OCI Image specification."""
-
-    def __init__(self, base_error):
-        super().__init__(
-            base_error + " (the format is [organization/]name[:tag|@digest])."
-        )
-
-
-def oci_image_spec(value):
-    """Build a full OCI image spec, using defaults for non specified parts."""
-    # separate the organization
-    if "/" in value:
-        if value.count("/") > 1:
-            raise _BadOCIImageSpecError(
-                "The registry server cannot be specified as part of the image"
-            )
-        orga, value = value.split("/")
-    else:
-        orga = "library"
-
-    # get the digest XOR tag
-    if "@" in value and ":" in value:
-        raise _BadOCIImageSpecError("Cannot specify both tag and digest")
-    if "@" in value:
-        name, reference = value.split("@")
-    elif ":" in value:
-        name, reference = value.split(":")
-    else:
-        name = value
-        reference = "latest"
-
-    if not name:
-        raise _BadOCIImageSpecError("The image name is mandatory")
-    return OCIImageSpec(organization=orga, name=name, reference=reference)
-
-
 class UploadResourceCommand(BaseCommand):
     """Upload a resource to Charmhub."""
 
@@ -1352,12 +1329,10 @@ class UploadResourceCommand(BaseCommand):
         in its metadata (in a previously uploaded to Charmhub revision).
 
         The resource can be a file from your computer (use the '--filepath'
-        option) or an OCI Image (use the '--image' option).
-
-        The OCI image description uses the [organization/]name[:tag|@digest]
-        form. The name is mandatory but organization and reference (a digest
-        or a tag) are optional, defaulting to 'library' and 'latest'
-        correspondingly.
+        option) or an OCI Image (use the '--image' option to indicate the
+        image digest), which can be already in Canonical's registry and
+        used directly, or locally in your computer and will be uploaded
+        and used.
 
         Upload will take you through login if needed.
     """
@@ -1382,8 +1357,8 @@ class UploadResourceCommand(BaseCommand):
         )
         group.add_argument(
             "--image",
-            type=SingleOptionEnsurer(oci_image_spec),
-            help="The image specification with the [organization/]name[:tag|@digest] form",
+            type=SingleOptionEnsurer(str),
+            help="The digest of the OCI image",
         )
 
     def run(self, parsed_args):
@@ -1394,28 +1369,58 @@ class UploadResourceCommand(BaseCommand):
             resource_filepath = parsed_args.filepath
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
-            logger.debug("Uploading resource directly from file %s", resource_filepath)
-        elif parsed_args.image:
             logger.debug(
-                "Uploading resource from image %s at Dockerhub", parsed_args.image
+                "Uploading resource directly from file %r.", str(resource_filepath)
             )
-            full_image_name = "/".join(
-                (parsed_args.image.organization, parsed_args.image.name)
+        elif parsed_args.image:
+            image_digest = parsed_args.image
+            credentials = store.get_oci_registry_credentials(
+                parsed_args.charm_name, parsed_args.resource_name
             )
-            registry = OCIRegistry("https://registry.hub.docker.com", full_image_name)
-            ih = ImageHandler(registry)
-            final_resource_url = ih.get_destination_url(parsed_args.image.reference)
-            logger.debug("Resource URL: %s", final_resource_url)
-            resource_type = "oci-image"
 
-            # create a JSON pointing to the unique image URL (to be uploaded to Charmhub)
-            resource_metadata = {
-                "ImageName": final_resource_url,
-            }
+            # convert the standard OCI registry image name (which is something like
+            # 'registry.jujucharms.com/charm/45kk8smbiyn2e/redis-image') to the image
+            # name that we use internally (just remove the initial "server host" part)
+            image_name = credentials.image_name.split("/", 1)[1]
+            logger.debug(
+                "Uploading resource from image %s @ %s.", image_name, image_digest
+            )
+
+            # build the image handler
+            registry = OCIRegistry(
+                self.config.charmhub.registry_url,
+                image_name,
+                username=credentials.username,
+                password=credentials.password,
+            )
+            ih = ImageHandler(registry)
+
+            # check if the specific image is already in Canonical's registry
+            already_uploaded = ih.check_in_registry(image_digest)
+            if already_uploaded:
+                logger.info("Using OCI image from Canonical's registry.")
+            else:
+                # upload it from local registry
+                logger.info("Remote image not found, uploading from local registry.")
+                image_digest = ih.upload_from_local(image_digest)
+                if image_digest is None:
+                    logger.info(
+                        "Image with digest %s is not available in the Canonical's registry "
+                        "nor locally.",
+                        parsed_args.image,
+                    )
+                    return
+                logger.info("Image uploaded, new remote digest: %s.", image_digest)
+
+            # all is green, get the blob to upload to Charmhub
+            content = store.get_oci_image_blob(
+                parsed_args.charm_name, parsed_args.resource_name, image_digest
+            )
             _, tname = tempfile.mkstemp(prefix="image-resource", suffix=".json")
             resource_filepath = pathlib.Path(tname)
             resource_filepath_is_temp = True
-            resource_filepath.write_text(json.dumps(resource_metadata))
+            resource_filepath.write_text(content)
+            resource_type = ResourceType.oci_image
 
         result = store.upload_resource(
             parsed_args.charm_name,
@@ -1430,7 +1435,7 @@ class UploadResourceCommand(BaseCommand):
 
         if result.ok:
             logger.info(
-                "Revision %s created of resource %r for charm %r",
+                "Revision %s created of resource %r for charm %r.",
                 result.revision,
                 parsed_args.resource_name,
                 parsed_args.charm_name,

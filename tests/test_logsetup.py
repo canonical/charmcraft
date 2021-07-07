@@ -18,10 +18,10 @@ import logging
 import os
 from unittest.mock import patch
 
-from charmcraft.logsetup import _MessageHandler
-from charmcraft.cmdbase import CommandError
-
 import pytest
+
+from charmcraft.cmdbase import CommandError
+from charmcraft.logsetup import _MessageHandler
 
 
 @pytest.fixture
@@ -38,14 +38,6 @@ def create_message_handler(tmp_path):
         p.start()
         patchers.append(p)
 
-        if modes is not None:
-            if "verbose" not in modes:
-                # verbose should always be there, as it's used internally
-                modes["verbose"] = (10, "%(message)s")
-            p = patch.object(_MessageHandler, "_modes", modes)
-            p.start()
-            patchers.append(p)
-
         return _MessageHandler()
 
     yield factory
@@ -58,27 +50,48 @@ def create_message_handler(tmp_path):
 # --- Tests for the MessageHandler
 
 
-def test_mode_setting_init(create_message_handler):
-    """The internal mode is set on init and logger properly changed."""
-    test_level = 123
-    test_format = "test:: %(message)s"
-    mh = create_message_handler({"foo": (test_level, test_format)})
-    mh.init(mh.FOO)
+def test_mode_setting_init_normal(create_message_handler):
+    test_level = 20
+    test_format = "%(message)s"
+    mh = create_message_handler()
+    mh.init(mh.NORMAL)
 
-    assert mh.mode == mh.FOO
+    assert mh.mode == mh.NORMAL
+    assert mh._stderr_handler.formatter._fmt == test_format
+    assert mh._stderr_handler.level == test_level
+
+
+def test_mode_setting_init_quiet(create_message_handler):
+    test_level = 30
+    test_format = "%(message)s"
+    mh = create_message_handler()
+    mh.init(mh.QUIET)
+
+    assert mh.mode == mh.QUIET
+    assert mh._stderr_handler.formatter._fmt == test_format
+    assert mh._stderr_handler.level == test_level
+
+
+def test_mode_setting_init_verbose(create_message_handler):
+    test_level = 10
+    test_format = "%(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
+    mh = create_message_handler()
+    mh.init(mh.VERBOSE)
+
+    assert mh.mode == mh.VERBOSE
     assert mh._stderr_handler.formatter._fmt == test_format
     assert mh._stderr_handler.level == test_level
 
 
 def test_mode_setting_changed(create_message_handler):
-    """The internal mode can be set later and logger properly changed."""
-    test_level = 123
-    test_format = "test:: %(message)s"
-    mh = create_message_handler({"foo": (0, ""), "bar": (test_level, test_format)})
-    mh.init(mh.FOO)
-    mh.set_mode(mh.BAR)
+    """The internal mode is set on init and logger properly changed."""
+    test_level = 10
+    test_format = "%(asctime)s  %(name)-40s %(levelname)-8s %(message)s"
+    mh = create_message_handler()
+    mh.init(mh.NORMAL)
+    mh.init(mh.VERBOSE)
 
-    assert mh.mode == mh.BAR
+    assert mh.mode == mh.VERBOSE
     assert mh._stderr_handler.formatter._fmt == test_format
     assert mh._stderr_handler.level == test_level
 
@@ -157,8 +170,8 @@ def test_ended_commanderror_regular(caplog, create_message_handler):
     mh.init(mh.NORMAL)
     mh.ended_cmderror(CommandError("test controlled error"))
 
-    expected_msg = "test controlled error (full execution logs in {})".format(
-        mh._log_filepath
+    expected_msg = "test controlled error (full execution logs in {!r})".format(
+        str(mh._log_filepath)
     )
 
     # file is present, and it has the error

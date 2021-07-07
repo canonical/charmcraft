@@ -52,7 +52,7 @@ def get_paths_to_include(config):
     for fname in MANDATORY_FILES:
         fpath = dirpath / fname
         if not fpath.exists():
-            raise CommandError("Missing mandatory file: {}.".format(fpath))
+            raise CommandError("Missing mandatory file: {!r}.".format(str(fpath)))
         allpaths.add(fpath)
 
     # the extra files (relative paths)
@@ -117,6 +117,13 @@ class PackCommand(BaseCommand):
                 "times); defaults to 'requirements.txt'"
             ),
         )
+        parser.add_argument(
+            "--bases-index",
+            action="append",
+            type=int,
+            help="Index of 'bases' configuration to build (can be used multiple "
+            "times); defaults to all",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -137,20 +144,21 @@ class PackCommand(BaseCommand):
     def _pack_charm(self, parsed_args):
         """Pack a charm."""
         # adapt arguments to use the build infrastructure
-        parsed_args = Namespace(
+        build_args = Namespace(
             **{
                 "from": self.config.project.dirpath,
                 "entrypoint": parsed_args.entrypoint,
                 "requirement": parsed_args.requirement,
+                "bases_indices": parsed_args.bases_index,
             }
         )
 
         # mimic the "build" command
-        validator = build.Validator()
-        args = validator.process(parsed_args)
+        validator = build.Validator(self.config)
+        args = validator.process(build_args)
         logger.debug("working arguments: %s", args)
         builder = build.Builder(args, self.config)
-        builder.run()
+        builder.run(parsed_args.bases_index)
 
     def _pack_bundle(self):
         """Pack a bundle."""
@@ -159,13 +167,15 @@ class PackCommand(BaseCommand):
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
             raise CommandError(
-                "Missing or invalid main bundle file: '{}'.".format(bundle_filepath)
+                "Missing or invalid main bundle file: {!r}.".format(
+                    str(bundle_filepath)
+                )
             )
         bundle_name = bundle_config.get("name")
         if not bundle_name:
             raise CommandError(
                 "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
-                "file '{}'.".format(bundle_filepath)
+                "file {!r}.".format(str(bundle_filepath))
             )
 
         # so far 'pack' works for bundles only (later this will operate also on charms)
@@ -176,11 +186,11 @@ class PackCommand(BaseCommand):
 
         # pack everything
         project = self.config.project
-        manifest_filepath = create_manifest(project.dirpath, project.started_at)
+        manifest_filepath = create_manifest(project.dirpath, project.started_at, None)
         try:
             paths = get_paths_to_include(self.config)
             zipname = project.dirpath / (bundle_name + ".zip")
             build_zip(zipname, project.dirpath, paths)
         finally:
             manifest_filepath.unlink()
-        logger.info("Created '%s'.", zipname)
+        logger.info("Created %r.", str(zipname))

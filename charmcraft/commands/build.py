@@ -25,20 +25,30 @@ import subprocess
 import zipfile
 from typing import List, Optional
 
-import yaml
 
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.config import Base, BasesConfiguration
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.env import is_charmcraft_running_in_managed_mode
+from charmcraft.config import Base, BasesConfiguration, Config
+from charmcraft.deprecations import notify_deprecation
+from charmcraft.env import (
+    get_managed_environment_project_path,
+    is_charmcraft_running_in_managed_mode,
+)
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
+from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
+from charmcraft.metadata import parse_metadata_yaml
+from charmcraft.providers import (
+    capture_logs_from_instance,
+    ensure_provider_is_available,
+    is_base_providable,
+    launched_environment,
+)
 from charmcraft.utils import make_executable
 
 logger = logging.getLogger(__name__)
 
 # Some constants that are used through the code.
-CHARM_METADATA = "metadata.yaml"
 BUILD_DIRNAME = "build"
 VENV_DIRNAME = "venv"
 
@@ -139,15 +149,16 @@ class Builder:
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.ignore_rules = self._load_juju_ignore()
         self.config = config
+        self.metadata = parse_metadata_yaml(self.charmdir)
 
-    def build_charm(self, bases_config: Optional[BasesConfiguration]) -> str:
+    def build_charm(self, bases_config: BasesConfiguration) -> str:
         """Build the charm.
 
         :param bases_config: Bases configuration to use for build.
 
         :returns: File name of charm.
         """
-        logger.debug("Building charm in '%s'", self.buildpath)
+        logger.debug("Building charm in %r", str(self.buildpath))
 
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
@@ -163,7 +174,7 @@ class Builder:
         logger.info("Created '%s'.", zipname)
         return zipname
 
-    def run(self) -> List[str]:
+    def run(self, bases_indices: Optional[List[int]] = None) -> List[str]:
         """Run build process.
 
         In managed-mode (and eventually destructive-mode), build for each bases
@@ -178,46 +189,99 @@ class Builder:
         """
         charms: List[str] = []
 
-        if is_charmcraft_running_in_managed_mode():
-            if self.config.bases is None:
-                # XXX: 2021-06-16 Patterson temporary until we have the default base
-                raise CommandError("Bases are currently required in managed-mode.")
+        is_managed_mode = is_charmcraft_running_in_managed_mode()
+        if not is_managed_mode:
+            ensure_provider_is_available()
 
-            for i, bases_config in enumerate(self.config.bases):
-                for j, build_on in enumerate(bases_config.build_on):
+        if not (self.charmdir / "charmcraft.yaml").exists():
+            notify_deprecation("dn02")
+
+        for bases_index, bases_config in enumerate(self.config.bases):
+            if bases_indices and bases_index not in bases_indices:
+                logger.debug(
+                    "Skipping 'bases[%d]' due to --base-index usage.",
+                    bases_index,
+                )
+                continue
+
+            for build_on_index, build_on in enumerate(bases_config.build_on):
+                if is_managed_mode:
                     matches, reason = check_if_base_matches_host(build_on)
-                    if matches:
-                        logger.debug(
-                            "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
-                            i,
-                            j,
-                        )
-                        charm_name = self.build_charm(bases_config)
-                        charms.append(charm_name)
-                        break
-                    else:
-                        logger.debug(
-                            "Host does not match 'bases[%d].build-on[%d]' (%s)",
-                            i,
-                            j,
-                            reason,
-                        )
                 else:
-                    logger.warning(
-                        "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
-                        i,
-                    )
+                    matches, reason = is_base_providable(build_on)
 
-            if not charms:
-                raise CommandError(
-                    "No suitable 'build-on' environment found in any 'bases' configuration."
+                if matches:
+                    logger.debug(
+                        "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
+                        bases_index,
+                        build_on_index,
+                    )
+                    if is_managed_mode:
+                        charm_name = self.build_charm(bases_config)
+                    else:
+                        charm_name = self.pack_charm_in_instance(
+                            bases_index=bases_index,
+                            build_on=build_on,
+                            build_on_index=build_on_index,
+                        )
+
+                    charms.append(charm_name)
+                    break
+                else:
+                    logger.info(
+                        "Skipping 'bases[%d].build-on[%d]': %s.",
+                        bases_index,
+                        build_on_index,
+                        reason,
+                    )
+            else:
+                logger.warning(
+                    "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
+                    bases_index,
                 )
 
-        else:
-            charm_name = self.build_charm(None)
-            charms.append(charm_name)
+        if not charms:
+            raise CommandError(
+                "No suitable 'build-on' environment found in any 'bases' configuration."
+            )
 
         return charms
+
+    def pack_charm_in_instance(
+        self, *, bases_index: int, build_on: Base, build_on_index: int
+    ) -> str:
+        """Pack instance in Charm."""
+        charm_name = format_charm_file_name(
+            self.metadata.name, self.config.bases[bases_index]
+        )
+        cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
+
+        if message_handler.mode == message_handler.VERBOSE:
+            cmd.append("--verbose")
+        elif message_handler.mode == message_handler.QUIET:
+            cmd.append("--quiet")
+
+        logger.info(f"Packing charm {charm_name!r}...")
+        with launched_environment(
+            charm_name=self.metadata.name,
+            project_path=self.charmdir,
+            base=build_on,
+            bases_index=bases_index,
+            build_on_index=build_on_index,
+        ) as instance:
+            try:
+                instance.execute_run(
+                    cmd,
+                    check=True,
+                    cwd=get_managed_environment_project_path().as_posix(),
+                )
+            except subprocess.CalledProcessError as error:
+                capture_logs_from_instance(instance)
+                raise CommandError(
+                    f"Failed to build charm for bases index '{bases_index}'."
+                ) from error
+
+        return charm_name
 
     def _load_juju_ignore(self):
         ignore = JujuIgnore(default_juju_ignore)
@@ -239,7 +303,8 @@ class Builder:
         else:
             rel_path = src_path.relative_to(self.charmdir)
             logger.warning(
-                "Ignoring symlink because targets outside the project: '%s'", rel_path
+                "Ignoring symlink because targets outside the project: %r",
+                str(rel_path),
             )
 
     def handle_generic_paths(self):
@@ -266,7 +331,9 @@ class Builder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    logger.debug("Ignoring directory because of rules: '%s'", rel_path)
+                    logger.debug(
+                        "Ignoring directory because of rules: %r", str(rel_path)
+                    )
                     ignored.append(pos)
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
@@ -285,7 +352,7 @@ class Builder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    logger.debug("Ignoring file because of rules: '%s'", rel_path)
+                    logger.debug("Ignoring file because of rules: %r", str(rel_path))
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
                     self.create_symlink(abs_path, dest_path)
@@ -301,7 +368,7 @@ class Builder:
                             raise
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
-                    logger.debug("Ignoring file because of type: '%s'", rel_path)
+                    logger.debug("Ignoring file because of type: %r", str(rel_path))
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
@@ -379,12 +446,8 @@ class Builder:
 
     def handle_package(self, bases_config: Optional[BasesConfiguration] = None):
         """Handle the final package creation."""
-        logger.debug("Parsing the project's metadata")
-        with (self.charmdir / CHARM_METADATA).open("rt", encoding="utf8") as fh:
-            metadata = yaml.safe_load(fh)
-
         logger.debug("Creating the package itself")
-        zipname = format_charm_file_name(metadata["name"], bases_config)
+        zipname = format_charm_file_name(self.metadata.name, bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
             dirpath = pathlib.Path(dirpath)
@@ -403,10 +466,12 @@ class Validator:
         "from",  # this needs to be processed first, as it's a base dir to find other files
         "entrypoint",
         "requirement",
+        "bases_indices",
     ]
 
-    def __init__(self):
+    def __init__(self, config: Config):
         self.basedir = None  # this will be fulfilled when processing 'from'
+        self.config = config
 
     def process(self, parsed_args):
         """Process the received options."""
@@ -415,6 +480,27 @@ class Validator:
             meth = getattr(self, "validate_" + opt)
             result[opt] = meth(getattr(parsed_args, opt, None))
         return result
+
+    def validate_bases_indices(self, bases_indices):
+        """Validate that bases index is valid."""
+        if not bases_indices:
+            return
+
+        for bases_index in bases_indices:
+            if bases_index < 0:
+                raise CommandError(
+                    f"Bases index '{bases_index}' is invalid (must be >= 0)."
+                )
+
+            if not self.config.bases:
+                raise CommandError(
+                    "No bases configuration found, required when using --bases-index.",
+                )
+
+            if bases_index >= len(self.config.bases):
+                raise CommandError(
+                    f"No bases configuration found for specified index '{bases_index}'."
+                )
 
     def validate_from(self, dirpath):
         """Validate that the charm dir is there and yes, a directory."""
@@ -527,7 +613,7 @@ class BuildCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        validator = Validator()
+        validator = Validator(self.config)
         args = validator.process(parsed_args)
         logger.debug("working arguments: %s", args)
         builder = Builder(args, self.config)

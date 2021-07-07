@@ -17,19 +17,14 @@
 import datetime
 import logging
 import os
+import pathlib
 from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.config import (
-    Base,
-    BasesConfiguration,
-    CharmhubConfig,
-    Part,
-    load,
-)
+from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, Part, load
 from charmcraft.utils import get_host_architecture
 
 
@@ -64,6 +59,20 @@ def test_load_current_directory(create_config, monkeypatch):
     assert config.project.dirpath == tmp_path
     assert config.project.config_provided
     assert config.project.started_at == fake_utcnow
+
+
+def test_load_managed_mode_directory(create_config, monkeypatch, tmp_path):
+    """Validate managed-mode default directory is /root/project."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    # Patch out Config (and Project) to prevent directory validation checks.
+    with patch("charmcraft.config.Config"):
+        with patch("charmcraft.config.Project") as mock_project:
+            with patch("charmcraft.config.load_yaml"):
+                load(None)
+
+    assert mock_project.call_args.kwargs["dirpath"] == pathlib.Path("/root/project")
 
 
 def test_load_specific_directory_ok(create_config):
@@ -524,14 +533,27 @@ def test_basicprime_empty():
 # -- tests for bases
 
 
-def test_no_bases_ok(create_config):
-    tmp_path = create_config(
+def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(caplog, create_config, tmp_path):
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+    create_config(
         """
         type: charm
     """
     )
+
     config = load(tmp_path)
-    assert config.bases is None
+
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [Base(name="ubuntu", channel="20.04")],
+                "run-on": [Base(name="ubuntu", channel="20.04")],
+            }
+        )
+    ]
+    assert "DEPRECATED: Bases configuration is now required." in [
+        rec.message for rec in caplog.records
+    ]
 
 
 def test_bases_minimal_long_form(create_config):

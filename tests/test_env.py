@@ -14,12 +14,25 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import pathlib
 import sys
 
 import pytest
 
 from charmcraft import env
 from charmcraft.cmdbase import CommandError
+
+
+def test_get_managed_environment_log_path():
+    dirpath = env.get_managed_environment_log_path()
+
+    assert dirpath == pathlib.Path("/tmp/charmcraft.log")
+
+
+def test_get_managed_environment_project_path():
+    dirpath = env.get_managed_environment_project_path()
+
+    assert dirpath == pathlib.Path("/root/project")
 
 
 @pytest.mark.parametrize(

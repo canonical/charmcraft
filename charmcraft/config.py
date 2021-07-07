@@ -63,6 +63,10 @@ import pydantic
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.deprecations import notify_deprecation
+from charmcraft.env import (
+    get_managed_environment_project_path,
+    is_charmcraft_running_in_managed_mode,
+)
 from charmcraft.utils import get_host_architecture, load_yaml
 
 
@@ -151,7 +155,7 @@ def printable_field_location_split(location: str) -> Tuple[str, str]:
     return field_name, "top-level"
 
 
-def format_pydantic_errors(errors):
+def format_pydantic_errors(errors, *, file_name: str = "charmcraft.yaml"):
     """Format errors.
 
     Example 1: Single error.
@@ -168,7 +172,7 @@ def format_pydantic_errors(errors):
     - field: <some field 2>
       reason: <some reason 2>
     """
-    combined = ["Bad charmcraft.yaml content:"]
+    combined = [f"Bad {file_name} content:"]
     for error in errors:
         formatted_loc = format_pydantic_error_location(error["loc"])
         formatted_msg = format_pydantic_error_message(error["msg"])
@@ -262,7 +266,14 @@ class Config(ModelConfigDefaults, validate_all=False):
     type: Optional[str]
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Parts = Parts()
-    bases: Optional[List[BasesConfiguration]] = None
+    bases: List[BasesConfiguration] = [
+        BasesConfiguration(
+            **{
+                "build-on": [Base(name="ubuntu", channel="20.04")],
+                "run-on": [Base(name="ubuntu", channel="20.04")],
+            }
+        )
+    ]
 
     project: Project
 
@@ -324,7 +335,21 @@ class Config(ModelConfigDefaults, validate_all=False):
             # base configurations.  Doing it here rather than a Union
             # type will simplify user facing errors.
             bases = obj.get("bases")
-            if bases is not None and isinstance(bases, list):
+            if bases is None:
+                notify_deprecation("dn03")
+                # Set default bases to Ubuntu 20.04 to match strict snap's
+                # effective behavior.
+                bases = [
+                    {
+                        "name": "ubuntu",
+                        "channel": "20.04",
+                        "architectures": [get_host_architecture()],
+                    }
+                ]
+
+            # Expand short-form bases if only the bases is a valid list. If it
+            # is not a valid list, parse_obj() will properly handle the error.
+            if isinstance(bases, list):
                 cls.expand_short_form_bases(bases)
 
             return cls.parse_obj({"project": project, **obj})
@@ -349,7 +374,10 @@ class Config(ModelConfigDefaults, validate_all=False):
 def load(dirpath):
     """Load the config from charmcraft.yaml in the indicated directory."""
     if dirpath is None:
-        dirpath = pathlib.Path.cwd()
+        if is_charmcraft_running_in_managed_mode():
+            dirpath = get_managed_environment_project_path()
+        else:
+            dirpath = pathlib.Path.cwd()
     else:
         dirpath = pathlib.Path(dirpath).expanduser().resolve()
 
@@ -370,6 +398,7 @@ def load(dirpath):
     if any("_" in x for x in content.get("charmhub", {}).keys()):
         # underscores in config attribs deprecated on 2021-05-31
         notify_deprecation("dn01")
+
     return Config.unmarshal(
         content,
         project=Project(

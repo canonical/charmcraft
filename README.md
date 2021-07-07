@@ -26,9 +26,10 @@ operators](https://juju.is/universal-operators) that drive Linux and
 Windows apps. The universal operator pattern is very exciting for
 multi-cloud application management.
 
+
 ## Install
 
-The easiest way to install `charmcraft` is from the stable channel with
+The recommended way to install `charmcraft` is from the stable channel with
 
     sudo snap install charmcraft
 
@@ -37,7 +38,6 @@ There are multiple channels other than `stable`. See the full list with
 for everyday charming. With the snap you will always be up to date as
 Charmhub services and APIs evolve.
 
-You can also install from PyPI with `pip3 install --user charmcraft`
 
 ## Initialize a charm operator package file structure
 

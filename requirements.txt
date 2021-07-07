@@ -3,6 +3,7 @@ attrs==21.2.0
 certifi==2021.5.30
 cffi==1.14.5
 chardet==4.0.0
+craft-providers==1.0.0
 humanize==3.9.0
 idna==2.10
 Jinja2==3.0.1
@@ -15,7 +16,7 @@ pydantic==1.8.2
 pymacaroons==0.13.0
 PyNaCl==1.4.0
 pyRFC3339==1.1
-pyrsistent==0.17.3
+pyrsistent==0.18.0
 python-dateutil==2.8.1
 pytz==2021.1
 PyYAML==5.4.1
@@ -25,4 +26,4 @@ requests-unixsocket==0.2.0
 six==1.16.0
 tabulate==0.8.9
 typing-extensions==3.10.0.0
-urllib3==1.26.5
+urllib3==1.26.6

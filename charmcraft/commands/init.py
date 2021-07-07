@@ -39,6 +39,7 @@ It will setup the following tree of files and directories:
 ├── README.md            - Frontpage for your charmhub.io/charm/
 ├── CONTRIBUTING.md      - Instructions for how to build and develop your charm
 ├── actions.yaml         - Day-2 action declarations, e.g. backup, restore
+├── charmcraft.yaml      - Charm build configuration
 ├── config.yaml          - Config schema for your operator
 ├── LICENSE              - Your charm license, we recommend Apache 2
 ├── requirements.txt     - PyPI dependencies for your charm, with `ops`
@@ -85,12 +86,9 @@ class InitCommand(BaseCommand):
     def run(self, args):
         """Execute command's actual functionality."""
         if any(self.config.project.dirpath.iterdir()) and not args.force:
-            raise CommandError(
-                "{} is not empty (consider using --force to work on nonempty directories)".format(
-                    self.config.project.dirpath
-                )
-            )
-        logger.debug("Using project directory '%s'", self.config.project.dirpath)
+            tpl = "{!r} is not empty (consider using --force to work on nonempty directories)"
+            raise CommandError(tpl.format(str(self.config.project.dirpath)))
+        logger.debug("Using project directory %r", str(self.config.project.dirpath))
 
         if args.author is None:
             try:

@@ -19,32 +19,34 @@ import filecmp
 import logging
 import os
 import pathlib
+import re
 import socket
 import subprocess
 import sys
 import zipfile
 from collections import namedtuple
 from textwrap import dedent
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 import pytest
 import yaml
 
 from charmcraft.bases import get_host_as_base
-from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
-    Builder,
-    CHARM_METADATA,
     DISPATCH_CONTENT,
     DISPATCH_FILENAME,
     VENV_DIRNAME,
+    Builder,
     Validator,
     format_charm_file_name,
     polite_exec,
     relativise,
 )
+from charmcraft.config import Base, BasesConfiguration, load
+from charmcraft.logsetup import message_handler
+from charmcraft.metadata import CHARM_METADATA
 
 
 @pytest.fixture
@@ -76,10 +78,22 @@ def basic_project(tmp_path):
     yield tmp_path
 
 
+@pytest.fixture
+def mock_capture_logs_from_instance():
+    with patch("charmcraft.commands.build.capture_logs_from_instance") as mock_capture:
+        yield mock_capture
+
+
+@pytest.fixture(autouse=True)
+def mock_ensure_provider_is_available():
+    with patch("charmcraft.commands.build.ensure_provider_is_available") as mock_ensure:
+        yield mock_ensure
+
+
 # --- Validator tests
 
 
-def test_validator_process_simple():
+def test_validator_process_simple(config):
     """Process the present options and store the result."""
 
     class TestValidator(Validator):
@@ -94,12 +108,12 @@ def test_validator_process_simple():
             return 80
 
     test_args = namedtuple("T", "foo bar")(35, 45)
-    validator = TestValidator()
+    validator = TestValidator(config)
     result = validator.process(test_args)
     assert result == dict(foo=70, bar=80)
 
 
-def test_validator_process_notpresent():
+def test_validator_process_notpresent(config):
     """Process an option after not finding the value."""
 
     class TestValidator(Validator):
@@ -110,27 +124,27 @@ def test_validator_process_notpresent():
             return 70
 
     test_args = namedtuple("T", "bar")(35)
-    validator = TestValidator()
+    validator = TestValidator(config)
     result = validator.process(test_args)
     assert result == dict(foo=70)
 
 
-def test_validator_from_simple(tmp_path):
+def test_validator_from_simple(tmp_path, config):
     """'from' param: simple validation and setting in Validation."""
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_from(tmp_path)
     assert resp == tmp_path
     assert validator.basedir == tmp_path
 
 
-def test_validator_from_default():
+def test_validator_from_default(config):
     """'from' param: default value."""
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_from(None)
     assert resp == pathlib.Path(".").absolute()
 
 
-def test_validator_from_absolutized(tmp_path, monkeypatch):
+def test_validator_from_absolutized(tmp_path, monkeypatch, config):
     """'from' param: check it's made absolute."""
     # change dir to the temp one, where we will have the 'dir1/dir2' tree
     dir1 = tmp_path / "dir1"
@@ -139,61 +153,80 @@ def test_validator_from_absolutized(tmp_path, monkeypatch):
     dir2.mkdir()
     monkeypatch.chdir(tmp_path)
 
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_from(pathlib.Path("dir1/dir2"))
     assert resp == dir2
 
 
-def test_validator_from_expanded():
+def test_validator_from_expanded(config):
     """'from' param: expands the user-home prefix."""
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_from(pathlib.Path("~"))
     assert resp == pathlib.Path.home()
 
 
-def test_validator_from_exist():
+def test_validator_from_exist(config):
     """'from' param: checks that the directory exists."""
-    validator = Validator()
+    validator = Validator(config)
     expected_msg = "Charm directory was not found: '/not_really_there'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_from(pathlib.Path("/not_really_there"))
 
 
-def test_validator_from_isdir(tmp_path):
+def test_validator_from_isdir(tmp_path, config):
     """'from' param: checks that the directory is really that."""
     testfile = tmp_path / "testfile"
     testfile.touch()
 
-    validator = Validator()
+    validator = Validator(config)
     expected_msg = "Charm directory is not really a directory: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_from(testfile)
 
 
-def test_validator_entrypoint_simple(tmp_path):
+@pytest.mark.parametrize("bases_indices", [[-1], [0, -1], [0, 1, -1]])
+def test_validator_bases_index_invalid(bases_indices, config):
+    """'entrypoint' param: checks that the file exists."""
+    config.set(
+        bases=[
+            BasesConfiguration(
+                **{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]}
+            ),
+            BasesConfiguration(
+                **{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]}
+            ),
+        ]
+    )
+    validator = Validator(config)
+    expected_msg = re.escape("Bases index '-1' is invalid (must be >= 0).")
+    with pytest.raises(CommandError, match=expected_msg):
+        validator.validate_bases_indices(bases_indices)
+
+
+def test_validator_entrypoint_simple(tmp_path, config):
     """'entrypoint' param: simple validation."""
     testfile = tmp_path / "testfile"
     testfile.touch(mode=0o777)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_entrypoint(testfile)
     assert resp == testfile
 
 
-def test_validator_entrypoint_default(tmp_path):
+def test_validator_entrypoint_default(tmp_path, config):
     """'entrypoint' param: default value."""
     default_entrypoint = tmp_path / "src" / "charm.py"
     default_entrypoint.parent.mkdir()
     default_entrypoint.touch(mode=0o777)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_entrypoint(None)
     assert resp == default_entrypoint
 
 
-def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
+def test_validator_entrypoint_absolutized(tmp_path, monkeypatch, config):
     """'entrypoint' param: check it's made absolute."""
     # change dir to the temp one, where we will have the 'dirX/file.py' stuff
     dirx = tmp_path / "dirX"
@@ -202,13 +235,13 @@ def test_validator_entrypoint_absolutized(tmp_path, monkeypatch):
     testfile.touch(mode=0o777)
     monkeypatch.chdir(tmp_path)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_entrypoint(pathlib.Path("dirX/file.py"))
     assert resp == testfile
 
 
-def test_validator_entrypoint_expanded(tmp_path):
+def test_validator_entrypoint_expanded(tmp_path, config):
     """'entrypoint' param: expands the user-home prefix."""
     fake_home = tmp_path / "homedir"
     fake_home.mkdir()
@@ -216,7 +249,7 @@ def test_validator_entrypoint_expanded(tmp_path):
     testfile = fake_home / "testfile"
     testfile.touch(mode=0o777)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
 
     with patch.dict(os.environ, {"HOME": str(fake_home)}):
@@ -224,21 +257,21 @@ def test_validator_entrypoint_expanded(tmp_path):
     assert resp == testfile
 
 
-def test_validator_entrypoint_exist():
+def test_validator_entrypoint_exist(config):
     """'entrypoint' param: checks that the file exists."""
-    validator = Validator()
+    validator = Validator(config)
     expected_msg = "Charm entry point was not found: '/not_really_there.py'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_entrypoint(pathlib.Path("/not_really_there.py"))
 
 
-def test_validator_entrypoint_inside_project(tmp_path):
+def test_validator_entrypoint_inside_project(tmp_path, config):
     """'entrypoint' param: checks that it's part of the project."""
     project_dir = tmp_path / "test-project"
     testfile = tmp_path / "testfile"
     testfile.touch(mode=0o777)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = project_dir
 
     expected_msg = "Charm entry point must be inside the project: '{}'".format(testfile)
@@ -246,83 +279,83 @@ def test_validator_entrypoint_inside_project(tmp_path):
         validator.validate_entrypoint(testfile)
 
 
-def test_validator_entrypoint_exec(tmp_path):
+def test_validator_entrypoint_exec(tmp_path, config):
     """'entrypoint' param: checks that the file is executable."""
     testfile = tmp_path / "testfile"
     testfile.touch(mode=0o444)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     expected_msg = "Charm entry point must be executable: '{}'".format(testfile)
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_entrypoint(testfile)
 
 
-def test_validator_requirement_simple(tmp_path):
+def test_validator_requirement_simple(tmp_path, config):
     """'requirement' param: simple validation."""
     testfile = tmp_path / "testfile"
     testfile.touch()
 
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_requirement([testfile])
     assert resp == [testfile]
 
 
-def test_validator_requirement_multiple(tmp_path):
+def test_validator_requirement_multiple(tmp_path, config):
     """'requirement' param: multiple files."""
     testfile1 = tmp_path / "testfile1"
     testfile1.touch()
     testfile2 = tmp_path / "testfile2"
     testfile2.touch()
 
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_requirement([testfile1, testfile2])
     assert resp == [testfile1, testfile2]
 
 
-def test_validator_requirement_default_present_ok(tmp_path):
+def test_validator_requirement_default_present_ok(tmp_path, config):
     """'requirement' param: default value when a requirements.txt is there and readable."""
     default_requirement = tmp_path / "requirements.txt"
     default_requirement.touch()
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_requirement(None)
     assert resp == [default_requirement]
 
 
-def test_validator_requirement_default_present_not_readable(tmp_path):
+def test_validator_requirement_default_present_not_readable(tmp_path, config):
     """'requirement' param: default value when a requirements.txt is there but not readable."""
     default_requirement = tmp_path / "requirements.txt"
     default_requirement.touch(0o230)
 
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_requirement(None)
     assert resp == []
 
 
-def test_validator_requirement_default_missing(tmp_path):
+def test_validator_requirement_default_missing(tmp_path, config):
     """'requirement' param: default value when no requirements.txt is there."""
-    validator = Validator()
+    validator = Validator(config)
     validator.basedir = tmp_path
     resp = validator.validate_requirement(None)
     assert resp == []
 
 
-def test_validator_requirement_absolutized(tmp_path, monkeypatch):
+def test_validator_requirement_absolutized(tmp_path, monkeypatch, config):
     """'requirement' param: check it's made absolute."""
     # change dir to the temp one, where we will have the reqs file
     testfile = tmp_path / "reqs.txt"
     testfile.touch()
     monkeypatch.chdir(tmp_path)
 
-    validator = Validator()
+    validator = Validator(config)
     resp = validator.validate_requirement([pathlib.Path("reqs.txt")])
     assert resp == [testfile]
 
 
-def test_validator_requirement_expanded(tmp_path):
+def test_validator_requirement_expanded(tmp_path, config):
     """'requirement' param: expands the user-home prefix."""
     fake_home = tmp_path / "homedir"
     fake_home.mkdir()
@@ -330,16 +363,16 @@ def test_validator_requirement_expanded(tmp_path):
     requirement = fake_home / "requirements.txt"
     requirement.touch(0o230)
 
-    validator = Validator()
+    validator = Validator(config)
 
     with patch.dict(os.environ, {"HOME": str(fake_home)}):
         resp = validator.validate_requirement([pathlib.Path("~/requirements.txt")])
     assert resp == [requirement]
 
 
-def test_validator_requirement_exist():
+def test_validator_requirement_exist(config):
     """'requirement' param: checks that the file exists."""
-    validator = Validator()
+    validator = Validator(config)
     expected_msg = "the requirements file was not found: '/not_really_there.txt'"
     with pytest.raises(CommandError, match=expected_msg):
         validator.validate_requirement([pathlib.Path("/not_really_there.txt")])
@@ -410,8 +443,11 @@ def test_politeexec_crashed(caplog, tmp_path):
 # --- (real) build tests
 
 
-def test_build_basic_complete_structure(basic_project, monkeypatch, config):
+def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, config):
     """Integration test: a simple structure with custom lib and normal src dir."""
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
     monkeypatch.chdir(basic_project)  # so the zip file is left in the temp dir
     builder = Builder(
         {
@@ -426,8 +462,14 @@ def test_build_basic_complete_structure(basic_project, monkeypatch, config):
     metadata_file = basic_project / "metadata.yaml"
     metadata_raw = metadata_file.read_bytes()
 
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch(
+        "charmcraft.commands.build.check_if_base_matches_host",
+        return_value=(True, None),
+    ):
+        zipnames = builder.run()
+
+    assert zipnames == [f"name-from-metadata_ubuntu-20.04-{host_arch}.charm"]
 
     # check all is properly inside the zip
     # contents!), and all relative to build dir
@@ -448,6 +490,26 @@ def test_build_basic_complete_structure(basic_project, monkeypatch, config):
     assert (
         manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
     )
+    assert caplog.records == []
+
+
+def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
+    """Validate error if trying to build project without metadata.yaml."""
+    metadata = basic_project / CHARM_METADATA
+    metadata.unlink()
+
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+
+    with pytest.raises(CommandError, match=r"Missing mandatory metadata.yaml."):
+        Builder(
+            {
+                "from": basic_project,
+                "entrypoint": basic_project / "src" / "charm.py",
+                "requirement": [],
+            },
+            config,
+        )
 
 
 def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
@@ -482,10 +544,6 @@ def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
         config,
     )
 
-    # Legacy build.
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
-
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     zipnames = builder.run()
@@ -496,8 +554,66 @@ def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
     ]
 
 
+def test_build_checks_provider(basic_project, mock_ensure_provider_is_available):
+    """Test cases for base-index parameter."""
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment"):
+        builder.run()
+
+    mock_ensure_provider_is_available.assert_called_once()
+
+
+def test_build_checks_provider_error(basic_project, mock_ensure_provider_is_available):
+    """Test cases for base-index parameter."""
+    mock_ensure_provider_is_available.side_effect = RuntimeError("foo")
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with pytest.raises(RuntimeError, match="foo"):
+        builder.run()
+
+    mock_ensure_provider_is_available.assert_called_once()
+
+
+def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkeypatch):
+    """Test cases for base-index parameter."""
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment"):
+        builder.run()
+
+    assert "DEPRECATED: A charmcraft.yaml configuration file is now required." in [
+        r.message for r in caplog.records
+    ]
+
+
 def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""
+    caplog.set_level(logging.DEBUG)
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
     charmcraft_file.write_text(
@@ -543,10 +659,6 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
         config,
     )
 
-    # Legacy build.
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
-
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     zipnames = builder.run()
@@ -567,6 +679,249 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
+@pytest.mark.parametrize(
+    "mode,cmd_flags",
+    [
+        (message_handler.VERBOSE, ["--verbose"]),
+        (message_handler.QUIET, ["--quiet"]),
+        (message_handler.NORMAL, []),
+    ],
+)
+def test_build_bases_index_scenarios_provider(
+    mode,
+    cmd_flags,
+    basic_project,
+    caplog,
+    mock_capture_logs_from_instance,
+    mock_ensure_provider_is_available,
+    monkeypatch,
+):
+    """Test cases for base-index parameter."""
+    monkeypatch.setattr(message_handler, "mode", mode)
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - name: ubuntu
+                    channel: "18.04"
+                    architectures: {host_base.architectures!r}
+                  - name: ubuntu
+                    channel: "20.04"
+                    architectures: {host_base.architectures!r}
+                  - name: ubuntu
+                    channel: "unsupported-channel"
+                    architectures: {host_base.architectures!r}
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment") as mock_launch:
+        zipnames = builder.run([0])
+        assert zipnames == [
+            f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+        ]
+
+        assert mock_launch.mock_calls == [
+            call(
+                charm_name="name-from-metadata",
+                project_path=basic_project,
+                base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+                bases_index=0,
+                build_on_index=0,
+            ),
+            call().__enter__(),
+            call()
+            .__enter__()
+            .execute_run(
+                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
+            ),
+            call().__exit__(None, None, None),
+        ]
+        assert (
+            f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..."
+            in [r.message for r in caplog.records]
+        )
+        mock_ensure_provider_is_available.assert_called_once()
+        mock_launch.reset_mock()
+
+        zipnames = builder.run([1])
+        assert zipnames == [
+            f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+        ]
+        assert mock_launch.mock_calls == [
+            call(
+                charm_name="name-from-metadata",
+                project_path=basic_project,
+                base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+                bases_index=1,
+                build_on_index=0,
+            ),
+            call().__enter__(),
+            call()
+            .__enter__()
+            .execute_run(
+                ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
+            ),
+            call().__exit__(None, None, None),
+        ]
+        mock_launch.reset_mock()
+
+        zipnames = builder.run([0, 1])
+        assert zipnames == [
+            f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+            f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+        ]
+        assert mock_launch.mock_calls == [
+            call(
+                charm_name="name-from-metadata",
+                project_path=basic_project,
+                base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+                bases_index=0,
+                build_on_index=0,
+            ),
+            call().__enter__(),
+            call()
+            .__enter__()
+            .execute_run(
+                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
+            ),
+            call().__exit__(None, None, None),
+            call(
+                charm_name="name-from-metadata",
+                project_path=basic_project,
+                base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+                bases_index=1,
+                build_on_index=0,
+            ),
+            call().__enter__(),
+            call()
+            .__enter__()
+            .execute_run(
+                ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
+            ),
+            call().__exit__(None, None, None),
+        ]
+
+        with pytest.raises(
+            CommandError,
+            match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
+        ):
+            builder.run([3])
+
+        mock_launch.reset_mock()
+
+        expected_msg = re.escape("Failed to build charm for bases index '0'.")
+        with pytest.raises(
+            CommandError,
+            match=expected_msg,
+        ):
+            mock_instance = mock_launch.return_value.__enter__.return_value
+            mock_instance.execute_run.side_effect = subprocess.CalledProcessError(
+                -1,
+                ["charmcraft", "pack", "..."],
+                "some output",
+                "some error",
+            )
+            builder.run([0])
+
+        assert mock_instance.mock_calls == [
+            call.execute_run(
+                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+                check=True,
+                cwd="/root/project",
+            ),
+        ]
+        assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]
+
+
+def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, caplog):
+    """Test cases for base-index parameter."""
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                    run-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                  - build-on:
+                      - name: unmatched-name
+                        channel: unmatched-channel
+                        architectures: [unmatched-arch1]
+                    run-on:
+                      - name: unmatched-name
+                        channel: unmatched-channel
+                        architectures: [unmatched-arch1]
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                        architectures: {host_base.architectures!r}
+                    run-on:
+                      - name: cross-name
+                        channel: cross-channel
+                        architectures: [cross-arch1]
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    zipnames = builder.run([0])
+    assert zipnames == [
+        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm",
+    ]
+
+    with pytest.raises(
+        CommandError,
+        match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
+    ):
+        builder.run([1])
+
+    zipnames = builder.run([2])
+    assert zipnames == [
+        "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
+    ]
+
+
 @patch(
     "charmcraft.bases.get_host_as_base",
     return_value=Base(name="xname", channel="xchannel", architectures=["xarch"]),
@@ -575,6 +930,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     mock_host_base, basic_project, monkeypatch, caplog
 ):
     """Error when no charms are buildable with host base, verifying each mismatched reason."""
+    caplog.set_level(logging.DEBUG)
     charmcraft_file = basic_project / "charmcraft.yaml"
     charmcraft_file.write_text(
         dedent(
@@ -604,10 +960,6 @@ def test_build_error_no_match_with_charmcraft_yaml(
         config,
     )
 
-    # Legacy build.
-    zipnames = builder.run()
-    assert zipnames == ["name-from-metadata.charm"]
-
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with pytest.raises(
@@ -619,25 +971,25 @@ def test_build_error_no_match_with_charmcraft_yaml(
     records = [r.message for r in caplog.records]
 
     assert (
-        "Host does not match 'bases[0].build-on[0]' "
-        "(name 'unmatched-name' does not match host 'xname')"
+        "Skipping 'bases[0].build-on[0]': "
+        "name 'unmatched-name' does not match host 'xname'."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[0]' configuration."
         in records
     )
     assert (
-        "Host does not match 'bases[1].build-on[0]' "
-        "(channel 'unmatched-channel' does not match host 'xchannel')"
+        "Skipping 'bases[1].build-on[0]': "
+        "channel 'unmatched-channel' does not match host 'xchannel'."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[1]' configuration."
         in records
     )
     assert (
-        "Host does not match 'bases[2].build-on[0]' "
-        "(host architecture 'xarch' not in base "
-        "architectures ['unmatched-arch1', 'unmatched-arch2'])"
+        "Skipping 'bases[2].build-on[0]': "
+        "host architecture 'xarch' not in base architectures "
+        "['unmatched-arch1', 'unmatched-arch2']."
     ) in records
     assert (
         "No suitable 'build-on' environment found in 'bases[2]' configuration."
@@ -651,7 +1003,8 @@ def test_build_generics_simple_files(tmp_path, config):
     build_dir.mkdir()
 
     metadata = tmp_path / CHARM_METADATA
-    metadata.touch()
+    metadata.write_text("name: crazycharm")
+
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
 
@@ -684,6 +1037,8 @@ def test_build_generics_simple_dir(tmp_path, config):
     build_dir.mkdir()
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
 
     somedir = tmp_path / "somedir"
     somedir.mkdir(mode=0o700)
@@ -708,6 +1063,8 @@ def test_build_generics_ignored_file(tmp_path, caplog, config):
     caplog.set_level(logging.DEBUG)
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
 
     # create two files (and the needed entrypoint)
     file1 = tmp_path / "file1.txt"
@@ -742,6 +1099,8 @@ def test_build_generics_ignored_dir(tmp_path, caplog, config):
     caplog.set_level(logging.DEBUG)
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
 
     # create two files (and the needed entrypoint)
     dir1 = tmp_path / "dir1"
@@ -790,6 +1149,8 @@ def _test_build_generics_tree(tmp_path, caplog, config, *, expect_hardlinks):
     #    └─ dir5
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     file1 = tmp_path / "file1.txt"
     file1.touch()
     dir1 = tmp_path / "dir1"
@@ -881,6 +1242,8 @@ def test_build_generics_symlink_file(tmp_path, config):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
     the_symlink = tmp_path / "somehook.py"
@@ -908,6 +1271,8 @@ def test_build_generics_symlink_dir(tmp_path, config):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
     somedir = tmp_path / "somedir"
@@ -941,6 +1306,9 @@ def test_build_generics_symlink_deep(tmp_path, config):
     """Correctly re-links a symlink across deep dirs."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
 
@@ -977,6 +1345,8 @@ def test_build_generics_symlink_file_outside(tmp_path, caplog, config):
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
+    metadata = project_dir / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = project_dir / BUILD_DIRNAME
     build_dir.mkdir()
     entrypoint = project_dir / "crazycharm.py"
@@ -1009,6 +1379,8 @@ def test_build_generics_symlink_directory_outside(tmp_path, caplog, config):
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
+    metadata = project_dir / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = project_dir / BUILD_DIRNAME
     build_dir.mkdir()
     entrypoint = project_dir / "crazycharm.py"
@@ -1042,6 +1414,8 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch, config
     # will be too long for mac os
     monkeypatch.chdir(tmp_path)
 
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = pathlib.Path(BUILD_DIRNAME)
     build_dir.mkdir()
     entrypoint = pathlib.Path("crazycharm.py")
@@ -1068,6 +1442,8 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch, config
 
 def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
     """The dispatcher script is properly built."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1093,6 +1469,8 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
 
 def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
     """The already included dispatcher script is left untouched."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1116,6 +1494,8 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
 
 def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path, config):
     """The mandatory classic hooks are implemented ok if not present."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1142,6 +1522,8 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path, config):
 
 def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path, config):
     """The already included mandatory classic hooks are left untouched."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1174,6 +1556,8 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(
     """Hooks that are just a symlink to the entrypoint are replaced."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1211,6 +1595,8 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(
 
 def test_build_dependencies_virtualenv_simple(tmp_path, config):
     """A virtualenv is created with the specified requirements file."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1254,6 +1640,8 @@ def test_build_dependencies_virtualenv_simple(tmp_path, config):
 
 def test_build_dependencies_needs_system(tmp_path, config):
     """pip3 is called with --system when pip3 needs it."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1289,6 +1677,8 @@ def test_build_dependencies_needs_system(tmp_path, config):
 
 def test_build_dependencies_virtualenv_multiple(tmp_path, config):
     """A virtualenv is created with multiple requirements files."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1324,6 +1714,8 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, config):
 
 def test_build_dependencies_virtualenv_none(tmp_path, config):
     """The virtualenv is NOT created if no needed."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1344,6 +1736,8 @@ def test_build_dependencies_virtualenv_none(tmp_path, config):
 
 def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
     """Process is properly interrupted if using pip fails."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1366,6 +1760,8 @@ def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
 
 def test_build_dependencies_virtualenv_error_installing(tmp_path, config):
     """Process is properly interrupted if virtualenv creation fails."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1485,6 +1881,8 @@ def test_build_package_name(tmp_path, monkeypatch, config):
 
 def test_builder_without_jujuignore(tmp_path, config):
     """Without a .jujuignore we still have a default set of ignores"""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -1504,6 +1902,8 @@ def test_builder_without_jujuignore(tmp_path, config):
 
 def test_builder_with_jujuignore(tmp_path, config):
     """With a .jujuignore we will include additional ignores."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
     with (tmp_path / ".jujuignore").open("w", encoding="utf-8") as ignores:

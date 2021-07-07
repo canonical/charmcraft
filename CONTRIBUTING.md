@@ -6,7 +6,7 @@ To set up an initial development environment:
     cd charmcraft
     virtualenv venv
     . venv/bin/activate
-    pip install -r requirements-dev.txt
+    pip install -r requirements-dev.txt -e .
 
 
 ## Developing against Charmcraft source

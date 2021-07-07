@@ -800,7 +800,7 @@ def test_build_project_is_not_cwd(
         .__enter__()
         .pull_file(
             source=pathlib.Path("/root") / zipnames[0],
-            destination=pathlib.Path(zipnames[0]),
+            destination=pathlib.Path.cwd() / zipnames[0],
         ),
         call().__exit__(None, None, None),
     ]

@@ -260,7 +260,8 @@ class Builder:
         # without needing retrieval. If outputing to a directory other than the
         # charm project directory, we need to output the charm outside the
         # project directory and can retrieve it when complete.
-        if os.getcwd() == str(self.charmdir):
+        cwd = pathlib.Path.cwd()
+        if cwd == self.charmdir:
             instance_output_dir = get_managed_environment_project_path()
             pull_charm = False
         else:
@@ -298,7 +299,7 @@ class Builder:
                 try:
                     instance.pull_file(
                         source=instance_output_dir / charm_name,
-                        destination=pathlib.Path(charm_name),
+                        destination=cwd / charm_name,
                     )
                 except FileNotFoundError as error:
                     raise CommandError(

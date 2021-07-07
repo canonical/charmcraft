@@ -58,6 +58,7 @@ def test_all_the_files(tmp_path, config):
         ".flake8",
         ".gitignore",
         ".jujuignore",
+        "CONTRIBUTING.md",
         "LICENSE",
         "README.md",
         "actions.yaml",

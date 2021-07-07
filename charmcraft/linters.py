@@ -16,14 +16,27 @@
 
 """Analyze and lint charm structures and files."""
 
+import ast
 import os
 import pathlib
 import shlex
 from collections import namedtuple
+from typing import List, Generator
+
+from charmcraft.metadata import parse_metadata_yaml
 
 CheckType = namedtuple("CheckType", "attribute warning error")(
     attribute="attribute", warning="warning", error="error"
 )
+
+# result information from each checker/linter
+CheckResult = namedtuple("CheckResult", "name result url check_type text")
+
+# generic constant for the common 'unknown' result
+UNKNOWN = "unknown"
+
+# shared state between checkers, to reuse analysis results and/or other intermediate information
+shared_state = {}
 
 
 class Language:
@@ -42,7 +55,7 @@ class Language:
     text = "The charm is written with Python."
 
     # different result constants
-    Result = namedtuple("Result", "python unknown")(python="python", unknown="unkwnon")
+    Result = namedtuple("Result", "python unknown")(python="python", unknown=UNKNOWN)
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
@@ -64,3 +77,117 @@ class Language:
         if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
             return self.Result.python
         return self.Result.unknown
+
+
+class Framework:
+    """Check the framework the charm is based on.
+
+    Currently it detects if the Operator Framework is used, if...
+
+    - the language attribute is set to python
+    - the charm contains venv/ops
+    - the charm imports ops in the entry point.
+
+    ...or the Reactive Framework is used, if the charm...
+
+    - has a metadata.yaml with "name" in it
+    - has a reactive/<name>.py file that imports "charms.reactive"
+    - has a file name that starts with "charms.reactive-" inside the "wheelhouse" directory
+    """
+
+    check_type = CheckType.attribute
+    name = "framework"
+    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--framework"
+
+    # different result constants
+    Result = namedtuple("Result", "operator reactive unknown")(
+        operator="operator", reactive="reactive", unknown=UNKNOWN
+    )
+
+    # different texts to be exposed as `text` (see the property below)
+    result_texts = {
+        Result.operator: "The charm is based on the Operator Framework.",
+        Result.reactive: "The charm is based on the Reactive Framework.",
+        Result.unknown: "The charm is not based on any known Framework.",
+    }
+
+    def __init__(self):
+        self.result = None
+
+    @property
+    def text(self):
+        """Return a text in function of the result state."""
+        if self.result is None:
+            raise RuntimeError(
+                "Cannot access text before running the Framework checker."
+            )
+        return self.result_texts[self.result]
+
+    def _get_imports(self, filepath: pathlib.Path) -> Generator[List[str], None, None]:
+        """Parse a Python filepath and yield its imports.
+
+        If the file does not exist or cannot be parsed, return empty. Otherwise
+        return the name for each imported module, splitted by possible dots.
+        """
+        if not os.access(filepath, os.R_OK):
+            return
+        try:
+            parsed = ast.parse(filepath.read_bytes())
+        except SyntaxError:
+            return
+
+        for node in ast.walk(parsed):
+            if isinstance(node, ast.Import):
+                for name in node.names:
+                    yield name.name.split(".")
+            elif isinstance(node, ast.ImportFrom):
+                yield node.module.split(".")
+
+    def _check_operator(self, basedir: pathlib.Path) -> bool:
+        """Detect if the Operator Framework is used."""
+        language_info = shared_state[Language.name]
+        if language_info["result"] != Language.Result.python:
+            return False
+
+        opsdir = basedir / "venv" / "ops"
+        if not opsdir.exists() or not opsdir.is_dir():
+            return False
+
+        entrypoint = language_info["entrypoint"]
+        for import_parts in self._get_imports(entrypoint):
+            if import_parts[0] == "ops":
+                return True
+        return False
+
+    def _check_reactive(self, basedir: pathlib.Path) -> bool:
+        """Detect if the Reactive Framework is used."""
+        try:
+            entrypoint_name = parse_metadata_yaml(basedir).name
+        except Exception:
+            # file not found, corrupted, no name in it, etc.
+            return False
+
+        wheelhouse_dir = basedir / "wheelhouse"
+        if not wheelhouse_dir.exists():
+            return False
+        if not any(
+            f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()
+        ):
+            return False
+
+        entrypoint = basedir / "reactive" / f"{entrypoint_name}.py"
+        for import_parts in self._get_imports(entrypoint):
+            if import_parts[0] == "charms" and import_parts[1] == "reactive":
+                return True
+        return False
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        if self._check_operator(basedir):
+            result = self.Result.operator
+        elif self._check_reactive(basedir):
+            result = self.Result.reactive
+        else:
+            result = self.Result.unknown
+        self.result = result
+        return result

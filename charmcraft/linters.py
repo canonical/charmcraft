@@ -23,6 +23,7 @@ import shlex
 from collections import namedtuple
 from typing import List, Generator
 
+from charmcraft import config
 from charmcraft.metadata import parse_metadata_yaml
 
 CheckType = namedtuple("CheckType", "attribute warning error")(
@@ -191,3 +192,29 @@ class Framework:
             result = self.Result.unknown
         self.result = result
         return result
+
+
+# all checkers to run; the order here is important, as some checkers depend on the
+# results from others
+CHECKERS = [
+    Language,
+    Framework,
+]
+
+
+def analyze(config: config.Config) -> List[CheckResult]:
+    """Run all checkers and linters."""
+    all_results = []
+    for checker_class in CHECKERS:
+        checker = checker_class()
+        result = checker.run(config.project.dirpath)
+        all_results.append(
+            CheckResult(
+                check_type=checker.check_type,
+                name=checker.name,
+                url=checker.url,
+                text=checker.text,
+                result=result,
+            )
+        )
+    return all_results

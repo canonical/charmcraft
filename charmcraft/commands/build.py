@@ -174,23 +174,22 @@ class Builder:
         logger.info("Created '%s'.", zipname)
         return zipname
 
-    def run(self, bases_indices: Optional[List[int]] = None) -> List[str]:
+    def run(
+        self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
+    ) -> List[str]:
         """Run build process.
 
-        In managed-mode (and eventually destructive-mode), build for each bases
-        configuration which has a matching build-on to the host we are executing
-        on.  Warn for each base configuration that is incompatible.  Error if
-        unable to produce any builds for any bases configuration.
-
-        Otherwise, build the charm in the legacy mode until we have complete
-        provider support and can drop it.
+        In managed-mode or destructive-mode, build for each bases configuration
+        which has a matching build-on to the host we are executing on.  Warn for
+        each base configuration that is incompatible.  Error if unable to
+        produce any builds for any bases configuration.
 
         :returns: List of charm files created.
         """
         charms: List[str] = []
 
         is_managed_mode = is_charmcraft_running_in_managed_mode()
-        if not is_managed_mode:
+        if not is_managed_mode and not destructive_mode:
             ensure_provider_is_available()
 
         if not (self.charmdir / "charmcraft.yaml").exists():
@@ -205,7 +204,7 @@ class Builder:
                 continue
 
             for build_on_index, build_on in enumerate(bases_config.build_on):
-                if is_managed_mode:
+                if is_managed_mode or destructive_mode:
                     matches, reason = check_if_base_matches_host(build_on)
                 else:
                     matches, reason = is_base_providable(build_on)
@@ -216,7 +215,7 @@ class Builder:
                         bases_index,
                         build_on_index,
                     )
-                    if is_managed_mode:
+                    if is_managed_mode or destructive_mode:
                         charm_name = self.build_charm(bases_config)
                     else:
                         charm_name = self.pack_charm_in_instance(
@@ -489,6 +488,7 @@ class Validator:
 
     _options = [
         "from",  # this needs to be processed first, as it's a base dir to find other files
+        "destructive_mode",
         "entrypoint",
         "requirement",
         "bases_indices",
@@ -526,6 +526,13 @@ class Validator:
                 raise CommandError(
                     f"No bases configuration found for specified index '{bases_index}'."
                 )
+
+    def validate_destructive_mode(self, destructive_mode):
+        """Validate that destructive mode option is valid."""
+        if not isinstance(destructive_mode, bool):
+            return False
+
+        return destructive_mode
 
     def validate_from(self, dirpath):
         """Validate that the charm dir is there and yes, a directory."""
@@ -642,4 +649,4 @@ class BuildCommand(BaseCommand):
         args = validator.process(parsed_args)
         logger.debug("working arguments: %s", args)
         builder = Builder(args, self.config)
-        builder.run()
+        builder.run(destructive_mode=args["destructive_mode"])

@@ -20,7 +20,7 @@ from unittest.mock import patch
 
 import pytest
 
-from charmcraft.linters import Language, Framework, shared_state, analyze
+from charmcraft.linters import Language, Framework, shared_state, analyze, CheckType
 
 
 EXAMPLE_DISPATCH = """
@@ -505,3 +505,110 @@ def test_analyze_run_everything(config):
     assert r2.url == "url2"
     assert r2.text == "text2"
     assert r2.result == "result2"
+
+
+def test_analyze_ignore_attribute(config):
+    """Run all checkers except the ignored attribute."""
+
+    class FakeChecker1:
+        check_type = CheckType.attribute
+        name = "name1"
+        url = "url1"
+        text = "text1"
+
+        def run(self, basedir):
+            return "result1"
+
+    class FakeChecker2:
+        check_type = CheckType.warning
+        name = "name2"
+        url = "url2"
+        text = "text2"
+
+        def run(self, _):
+            return "result2"
+
+    config.analysis.ignore.attributes.append("name1")
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
+        result = analyze(config)
+
+    (res,) = result
+    assert res.name == "name2"
+
+
+def test_analyze_ignore_linter_warning(config):
+    """Run all checkers except the ignored warning linter."""
+
+    class FakeChecker1:
+        check_type = CheckType.attribute
+        name = "name1"
+        url = "url1"
+        text = "text1"
+
+        def run(self, basedir):
+            return "result1"
+
+    class FakeChecker2:
+        check_type = CheckType.warning
+        name = "name2"
+        url = "url2"
+        text = "text2"
+
+        def run(self, _):
+            return "result2"
+
+    class FakeChecker3:
+        check_type = CheckType.error
+        name = "name3"
+        url = "url3"
+        text = "text3"
+
+        def run(self, _):
+            return "result3"
+
+    config.analysis.ignore.linters.append("name2")
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]):
+        result = analyze(config)
+
+    res1, res2 = result
+    assert res1.name == "name1"
+    assert res2.name == "name3"
+
+
+def test_analyze_ignore_linter_error(config):
+    """Run all checkers except the ignored error linter."""
+
+    class FakeChecker1:  #FIXME improve
+        check_type = CheckType.attribute
+        name = "name1"
+        url = "url1"
+        text = "text1"
+
+        def run(self, basedir):
+            return "result1"
+
+    class FakeChecker2:
+        check_type = CheckType.warning
+        name = "name2"
+        url = "url2"
+        text = "text2"
+
+        def run(self, _):
+            return "result2"
+
+    class FakeChecker3:
+        check_type = CheckType.error
+        name = "name3"
+        url = "url3"
+        text = "text3"
+
+        def run(self, _):
+            return "result3"
+
+    config.analysis.ignore.linters.append("name3")
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]):
+        result = analyze(config)
+
+    res1, res2 = result
+    assert res1.name == "name1"
+    assert res2.name == "name2"

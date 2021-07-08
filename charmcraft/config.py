@@ -35,6 +35,12 @@ parts:
 
 bases: [list of bases and/or long-form base configurations]
 
+analysis:
+  ignore:
+    attributes: [list of attribute names to ignore]
+    linting: [list of linter names to ignore]
+
+
 Object Definitions
 ==================
 
@@ -102,6 +108,55 @@ class RelativePath(pydantic.StrictStr):
                 f"{value!r} must be a valid relative path (cannot start with '/')"
             )
 
+        return value
+
+
+class AttributeName(pydantic.StrictStr):
+    """Constrainted string which must be the name of an attribute from linters.CHECKERS."""
+
+    @classmethod
+    def __get_validators__(cls):  #FIXME: generalize
+        """Yield the relevant validators."""
+        yield from super().__get_validators__()
+        yield cls.validate_relative_path
+
+    @classmethod
+    def validate_relative_path(cls, value: str) -> str:
+        """Validate attribute name."""
+        from charmcraft import linters  # import here to avoid cyclic imports
+
+        valid_names = [
+            checker.name
+            for checker in linters.CHECKERS
+            if checker.check_type == linters.CheckType.attribute
+        ]
+        if value not in valid_names:
+            raise ValueError(f"Bad attribute name {value!r}")
+        return value
+
+
+class LinterName(pydantic.StrictStr):
+    """Constrainted string which must be the name of a linter from linters.CHECKERS."""
+
+    @classmethod
+    def __get_validators__(cls):  #FIXME: generalize
+        """Yield the relevant validators."""
+        yield from super().__get_validators__()
+        yield cls.validate_relative_path
+
+    @classmethod
+    def validate_relative_path(cls, value: str) -> str:
+        """Validate attribute name."""
+        from charmcraft import linters  # import here to avoid cyclic imports
+
+        valid_names = [
+            checker.name
+            for checker in linters.CHECKERS
+            if checker.check_type == linters.CheckType.warning
+            or checker.check_type == linters.CheckType.error
+        ]
+        if value not in valid_names:
+            raise ValueError(f"Bad linter name {value!r}")
         return value
 
 
@@ -260,6 +315,19 @@ class Project(ModelConfigDefaults):
     started_at: datetime.datetime
 
 
+class Ignore(ModelConfigDefaults):
+    """Definition of `analysis.ignore` configuration."""
+
+    attributes: List[AttributeName] = []
+    linters: List[LinterName] = []
+
+
+class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
+    """Definition of `analysis` configuration."""
+
+    ignore: Ignore = Ignore()
+
+
 class Config(ModelConfigDefaults, validate_all=False):
     """Definition of charmcraft.yaml configuration."""
 
@@ -274,6 +342,7 @@ class Config(ModelConfigDefaults, validate_all=False):
             }
         )
     ]
+    analysis: AnalysisConfig = AnalysisConfig()
 
     project: Project
 

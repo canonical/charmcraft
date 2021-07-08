@@ -206,6 +206,13 @@ def analyze(config: config.Config) -> List[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
     for checker_class in CHECKERS:
+        # do not run the ignored ones
+        if checker_class.check_type == CheckType.attribute and checker_class.name in config.analysis.ignore.attributes:
+            continue
+        if (checker_class.check_type == CheckType.warning or checker_class.check_type == CheckType.error) and checker_class.name in config.analysis.ignore.linters:
+            continue
+
+
         checker = checker_class()
         result = checker.run(config.project.dirpath)
         all_results.append(

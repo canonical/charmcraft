@@ -23,6 +23,12 @@ from charmcraft import env
 from charmcraft.cmdbase import CommandError
 
 
+def test_get_managed_environment_home_path():
+    dirpath = env.get_managed_environment_home_path()
+
+    assert dirpath == pathlib.Path("/root")
+
+
 def test_get_managed_environment_log_path():
     dirpath = env.get_managed_environment_log_path()
 

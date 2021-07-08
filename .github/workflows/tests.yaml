@@ -90,7 +90,16 @@ jobs:
       - name: Run smoke tests
         run: |
           mkdir -p charm-smoke-test
-          cd charm-smoke-test
+          pushd charm-smoke-test
           charmcraft -v init --author testuser
-          sg lxd -c "charmcraft -v build"
+          sg lxd -c "charmcraft -v pack"
           test -f *.charm
+          sg lxd -c "charmcraft -v clean"
+          popd
+
+          mkdir -p another-directory
+          pushd another-directory
+          sg lxd -c "charmcraft -v pack --project-dir ../charm-smoke-test"
+          test -f *.charm
+          sg lxd -c "charmcraft -v clean --project-dir ../charm-smoke-test"
+          popd

@@ -25,6 +25,11 @@ import sys
 from charmcraft.cmdbase import CommandError
 
 
+def get_managed_environment_home_path():
+    """Path for home when running in managed environment."""
+    return pathlib.Path("/root")
+
+
 def get_managed_environment_log_path():
     """Path for charmcraft log when running in managed environment."""
     return pathlib.Path("/tmp/charmcraft.log")
@@ -32,7 +37,7 @@ def get_managed_environment_log_path():
 
 def get_managed_environment_project_path():
     """Path for project when running in managed environment."""
-    return pathlib.Path("/root/project")
+    return get_managed_environment_home_path() / "project"
 
 
 def is_charmcraft_running_from_snap():

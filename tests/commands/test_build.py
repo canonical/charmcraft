@@ -679,6 +679,133 @@ def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog)
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
+def test_build_project_is_cwd(
+    basic_project,
+    caplog,
+    mock_capture_logs_from_instance,
+    mock_ensure_provider_is_available,
+    monkeypatch,
+):
+    """Test cases for base-index parameter."""
+    mode = message_handler.NORMAL
+    monkeypatch.setattr(message_handler, "mode", mode)
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - name: ubuntu
+                    channel: "18.04"
+                    architectures: {host_base.architectures!r}
+                """
+        )
+    )
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    monkeypatch.chdir(basic_project)
+    with patch("charmcraft.commands.build.launched_environment") as mock_launch:
+        zipnames = builder.run([0])
+
+    assert zipnames == [
+        f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+    ]
+    assert mock_launch.mock_calls == [
+        call(
+            charm_name="name-from-metadata",
+            project_path=basic_project,
+            base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+            bases_index=0,
+            build_on_index=0,
+        ),
+        call().__enter__(),
+        call()
+        .__enter__()
+        .execute_run(
+            ["charmcraft", "pack", "--bases-index", "0"],
+            check=True,
+            cwd="/root/project",
+        ),
+        call().__exit__(None, None, None),
+    ]
+
+
+def test_build_project_is_not_cwd(
+    basic_project,
+    caplog,
+    mock_capture_logs_from_instance,
+    mock_ensure_provider_is_available,
+    monkeypatch,
+):
+    """Test cases for base-index parameter."""
+    mode = message_handler.NORMAL
+    monkeypatch.setattr(message_handler, "mode", mode)
+    host_base = get_host_as_base()
+    host_arch = host_base.architectures[0]
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - name: ubuntu
+                    channel: "18.04"
+                    architectures: {host_base.architectures!r}
+                """
+        )
+    )
+    config = load(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    with patch("charmcraft.commands.build.launched_environment") as mock_launch:
+        zipnames = builder.run([0])
+
+    assert zipnames == [
+        f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+    ]
+    assert mock_launch.mock_calls == [
+        call(
+            charm_name="name-from-metadata",
+            project_path=basic_project,
+            base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+            bases_index=0,
+            build_on_index=0,
+        ),
+        call().__enter__(),
+        call()
+        .__enter__()
+        .execute_run(
+            ["charmcraft", "pack", "--bases-index", "0"],
+            check=True,
+            cwd="/root",
+        ),
+        call()
+        .__enter__()
+        .pull_file(
+            source=pathlib.Path("/root") / zipnames[0],
+            destination=pathlib.Path.cwd() / zipnames[0],
+        ),
+        call().__exit__(None, None, None),
+    ]
+
+
 @pytest.mark.parametrize(
     "mode,cmd_flags",
     [

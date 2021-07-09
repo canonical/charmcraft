@@ -103,3 +103,12 @@ jobs:
           test -f *.charm
           sg lxd -c "charmcraft -v clean --project-dir ../charm-smoke-test"
           popd
+
+          mkdir -p destructive-mode-tests
+          pushd destructive-mode-tests
+          source /etc/os-release
+          charmcraft -v init --author testuser
+          sed -i "s|20.04|$VERSION_ID|g" charmcraft.yaml
+          charmcraft -v pack --destructive-mode
+          test -f "destructive-mode-tests_ubuntu-$VERSION_ID-amd64.charm"
+          popd

@@ -202,7 +202,7 @@ CHECKERS = [
 ]
 
 
-def analyze(config: config.Config) -> List[CheckResult]:
+def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
     for checker_class in CHECKERS:
@@ -215,7 +215,7 @@ def analyze(config: config.Config) -> List[CheckResult]:
                 continue
 
         checker = checker_class()
-        result = checker.run(config.project.dirpath)
+        result = checker.run(basedir)
         all_results.append(
             CheckResult(
                 check_type=checker.check_type,

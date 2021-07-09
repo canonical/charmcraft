@@ -501,15 +501,15 @@ def test_analyze_run_everything(config):
         check_type="type2", name="name2", url="url2", text="text2", result="result2"
     )
 
-    # hack the first fake checker to validate that it receives the project's directory path
+    # hack the first fake checker to validate that it receives the indicated path
     def dir_validator(self, basedir):
-        assert basedir == config.project.dirpath
+        assert basedir == "test-buildpath"
         return "result1"
 
     FakeChecker1.run = dir_validator
 
     with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
-        result = analyze(config)
+        result = analyze(config, "test-buildpath")
 
     r1, r2 = result
     assert r1.check_type == "type1"
@@ -531,7 +531,7 @@ def test_analyze_ignore_attribute(config):
 
     config.analysis.ignore.attributes.append("name1")
     with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
-        result = analyze(config)
+        result = analyze(config, "somepath")
 
     (res,) = result
     assert res.name == "name2"
@@ -547,7 +547,7 @@ def test_analyze_ignore_linter_warning(config):
     with patch(
         "charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]
     ):
-        result = analyze(config)
+        result = analyze(config, "somepath")
 
     res1, res2 = result
     assert res1.name == "name1"
@@ -564,7 +564,7 @@ def test_analyze_ignore_linter_error(config):
     with patch(
         "charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]
     ):
-        result = analyze(config)
+        result = analyze(config, "somepath")
 
     res1, res2 = result
     assert res1.name == "name1"

@@ -82,14 +82,18 @@ class ModelConfigDefaults(
     """Define Charmcraft's defaults for the BaseModel configuration."""
 
 
-class RelativePath(pydantic.StrictStr):
-    """Constrainted string which must be a relative path."""
+class CustomStrictStr(pydantic.StrictStr):
+    """Generic class to create custom strict strings validated by pydantic."""
 
     @classmethod
     def __get_validators__(cls):
         """Yield the relevant validators."""
         yield from super().__get_validators__()
         yield cls.validate_relative_path
+
+
+class RelativePath(CustomStrictStr):
+    """Constrainted string which must be a relative path."""
 
     @classmethod
     def validate_relative_path(cls, value: str) -> str:
@@ -111,14 +115,8 @@ class RelativePath(pydantic.StrictStr):
         return value
 
 
-class AttributeName(pydantic.StrictStr):
+class AttributeName(CustomStrictStr):
     """Constrainted string which must be the name of an attribute from linters.CHECKERS."""
-
-    @classmethod
-    def __get_validators__(cls):  #FIXME: generalize
-        """Yield the relevant validators."""
-        yield from super().__get_validators__()
-        yield cls.validate_relative_path
 
     @classmethod
     def validate_relative_path(cls, value: str) -> str:
@@ -135,14 +133,8 @@ class AttributeName(pydantic.StrictStr):
         return value
 
 
-class LinterName(pydantic.StrictStr):
+class LinterName(CustomStrictStr):
     """Constrainted string which must be the name of a linter from linters.CHECKERS."""
-
-    @classmethod
-    def __get_validators__(cls):  #FIXME: generalize
-        """Yield the relevant validators."""
-        yield from super().__get_validators__()
-        yield cls.validate_relative_path
 
     @classmethod
     def validate_relative_path(cls, value: str) -> str:

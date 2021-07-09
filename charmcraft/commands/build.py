@@ -188,8 +188,8 @@ class Builder:
         """
         charms: List[str] = []
 
-        is_managed_mode = is_charmcraft_running_in_managed_mode()
-        if not is_managed_mode and not destructive_mode:
+        managed_mode = is_charmcraft_running_in_managed_mode()
+        if not managed_mode and not destructive_mode:
             ensure_provider_is_available()
 
         if not (self.charmdir / "charmcraft.yaml").exists():
@@ -204,7 +204,7 @@ class Builder:
                 continue
 
             for build_on_index, build_on in enumerate(bases_config.build_on):
-                if is_managed_mode or destructive_mode:
+                if managed_mode or destructive_mode:
                     matches, reason = check_if_base_matches_host(build_on)
                 else:
                     matches, reason = is_base_providable(build_on)
@@ -215,7 +215,7 @@ class Builder:
                         bases_index,
                         build_on_index,
                     )
-                    if is_managed_mode or destructive_mode:
+                    if managed_mode or destructive_mode:
                         charm_name = self.build_charm(bases_config)
                     else:
                         charm_name = self.pack_charm_in_instance(

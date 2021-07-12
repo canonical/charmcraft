@@ -23,11 +23,7 @@ from argparse import Namespace
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
-from charmcraft.utils import (
-    SingleOptionEnsurer,
-    load_yaml,
-    useful_filepath,
-)
+from charmcraft.utils import SingleOptionEnsurer, load_yaml, useful_filepath
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +96,14 @@ class PackCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
+            "--destructive-mode",
+            action="store_true",
+            help=(
+                "Pack charm using current host which may result in breaking "
+                "changes to system configuration"
+            ),
+        )
+        parser.add_argument(
             "-e",
             "--entrypoint",
             type=SingleOptionEnsurer(useful_filepath),
@@ -146,6 +150,7 @@ class PackCommand(BaseCommand):
         # adapt arguments to use the build infrastructure
         build_args = Namespace(
             **{
+                "destructive_mode": parsed_args.destructive_mode,
                 "from": self.config.project.dirpath,
                 "entrypoint": parsed_args.entrypoint,
                 "requirement": parsed_args.requirement,
@@ -158,7 +163,9 @@ class PackCommand(BaseCommand):
         args = validator.process(build_args)
         logger.debug("working arguments: %s", args)
         builder = build.Builder(args, self.config)
-        builder.run(parsed_args.bases_index)
+        builder.run(
+            parsed_args.bases_index, destructive_mode=build_args.destructive_mode
+        )
 
     def _pack_bundle(self):
         """Pack a bundle."""

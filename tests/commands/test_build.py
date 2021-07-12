@@ -26,6 +26,7 @@ import sys
 import zipfile
 from collections import namedtuple
 from textwrap import dedent
+from typing import List
 from unittest.mock import call, patch
 
 import pytest
@@ -77,6 +78,39 @@ def basic_project(tmp_path):
     charm_script.write_bytes(b"all the magic")
 
     yield tmp_path
+
+
+@pytest.fixture
+def basic_project_builder(basic_project):
+    def _basic_project_builder(bases_configs: List[BasesConfiguration]):
+        charmcraft_file = basic_project / "charmcraft.yaml"
+        with charmcraft_file.open("w") as f:
+            print("type: charm", file=f)
+            print("bases:", file=f)
+            for bases_config in bases_configs:
+                print("- build-on:", file=f)
+                for base in bases_config.build_on:
+                    print(f"  - name: {base.name!r}", file=f)
+                    print(f"    channel: {base.channel!r}", file=f)
+                    print(f"    architectures: {base.architectures!r}", file=f)
+
+                print("  run-on:", file=f)
+                for base in bases_config.run_on:
+                    print(f"  - name: {base.name!r}", file=f)
+                    print(f"    channel: {base.channel!r}", file=f)
+                    print(f"    architectures: {base.architectures!r}", file=f)
+
+        config = load(basic_project)
+        return Builder(
+            {
+                "from": basic_project,
+                "entrypoint": basic_project / "src" / "charm.py",
+                "requirement": [],
+            },
+            config,
+        )
+
+    return _basic_project_builder
 
 
 @pytest.fixture
@@ -513,46 +547,43 @@ def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
         )
 
 
-def test_build_with_charmcraft_yaml(basic_project, monkeypatch):
-    """Integration test: a simple structure with custom lib and normal src dir."""
+def test_build_with_charmcraft_yaml_destructive_mode(
+    basic_project_builder, caplog, monkeypatch
+):
     host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                        architectures: {host_base.architectures!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                        architectures: {host_base.architectures!r}
-                """
-        )
+    builder = basic_project_builder(
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     )
 
-    config = load(basic_project)
-    monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-        },
-        config,
-    )
+    zipnames = builder.run(destructive_mode=True)
 
-    # Managed bases build.
+    host_arch = host_base.architectures[0]
+    assert zipnames == [
+        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
+    ]
+
+    records = [r.message for r in caplog.records]
+    assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
+
+
+def test_build_with_charmcraft_yaml_managed_mode(
+    basic_project_builder, caplog, monkeypatch
+):
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    host_base = get_host_as_base()
+    builder = basic_project_builder(
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
+    )
+
     zipnames = builder.run()
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
+
+    records = [r.message for r in caplog.records]
+    assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
 
 
 def test_build_checks_provider(basic_project, mock_ensure_provider_is_available):
@@ -612,55 +643,80 @@ def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkey
     ]
 
 
-def test_build_multiple_with_charmcraft_yaml(basic_project, monkeypatch, caplog):
+def test_build_multiple_with_charmcraft_yaml_destructive_mode(
+    basic_project_builder, monkeypatch, caplog
+):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""
     caplog.set_level(logging.DEBUG)
     host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                        architectures: {host_base.architectures!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                        architectures: {host_base.architectures!r}
-                  - build-on:
-                      - name: unmatched-name
-                        channel: unmatched-channel
-                        architectures: [unmatched-arch1]
-                    run-on:
-                      - name: unmatched-name
-                        channel: unmatched-channel
-                        architectures: [unmatched-arch1]
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                        architectures: {host_base.architectures!r}
-                    run-on:
-                      - name: cross-name
-                        channel: cross-channel
-                        architectures: [cross-arch1]
-                """
-        )
+    unmatched_base = Base(
+        name="unmatched-name",
+        channel="unmatched-channel",
+        architectures=["unmatched-arch1"],
     )
-    config = load(basic_project)
-    monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-        },
-        config,
+    matched_cross_base = Base(
+        name="cross-name",
+        channel="cross-channel",
+        architectures=["cross-arch1"],
+    )
+    builder = basic_project_builder(
+        [
+            BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]}),
+            BasesConfiguration(
+                **{"build-on": [unmatched_base], "run-on": [unmatched_base]}
+            ),
+            BasesConfiguration(
+                **{"build-on": [host_base], "run-on": [matched_cross_base]}
+            ),
+        ]
     )
 
-    # Managed bases build.
+    zipnames = builder.run(destructive_mode=True)
+
+    host_arch = host_base.architectures[0]
+    assert zipnames == [
+        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm",
+        "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
+    ]
+
+    records = [r.message for r in caplog.records]
+
+    assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
+    assert (
+        "No suitable 'build-on' environment found in 'bases[1]' configuration."
+        in records
+    )
+    assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
+
+
+def test_build_multiple_with_charmcraft_yaml_managed_mode(
+    basic_project_builder, monkeypatch, caplog
+):
+    """Build multiple charms for multiple matching bases, skipping one unmatched config."""
+    caplog.set_level(logging.DEBUG)
+    host_base = get_host_as_base()
+    unmatched_base = Base(
+        name="unmatched-name",
+        channel="unmatched-channel",
+        architectures=["unmatched-arch1"],
+    )
+    matched_cross_base = Base(
+        name="cross-name",
+        channel="cross-channel",
+        architectures=["cross-arch1"],
+    )
+    builder = basic_project_builder(
+        [
+            BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]}),
+            BasesConfiguration(
+                **{"build-on": [unmatched_base], "run-on": [unmatched_base]}
+            ),
+            BasesConfiguration(
+                **{"build-on": [host_base], "run-on": [matched_cross_base]}
+            ),
+        ]
+    )
+
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     zipnames = builder.run()
 

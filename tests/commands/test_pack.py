@@ -18,24 +18,25 @@ import datetime
 import logging
 import pathlib
 import zipfile
-from argparse import Namespace, ArgumentParser
-from unittest.mock import patch, MagicMock
+from argparse import ArgumentParser, Namespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.config import Project
 from charmcraft.commands import pack
-from charmcraft.commands.pack import (
-    PackCommand,
-    build_zip,
-    get_paths_to_include,
-)
-from charmcraft.utils import useful_filepath, SingleOptionEnsurer
+from charmcraft.commands.pack import PackCommand, build_zip, get_paths_to_include
+from charmcraft.config import Project
+from charmcraft.utils import SingleOptionEnsurer, useful_filepath
 
 # empty namespace
-noargs = Namespace(entrypoint=None, requirement=None, bases_index=[])
+noargs = Namespace(
+    entrypoint=None,
+    requirement=None,
+    bases_index=[],
+    destructive_mode=False,
+)
 
 
 @pytest.fixture
@@ -430,7 +431,12 @@ def test_charm_parameters_entrypoint(config):
 
 def test_charm_parameters_validator(config, tmp_path):
     """Check that build.Builder is properly called."""
-    args = Namespace(requirement="test-reqs", entrypoint="test-epoint", bases_index=[])
+    args = Namespace(
+        destructive_mode=True,
+        requirement="test-reqs",
+        entrypoint="test-epoint",
+        bases_index=[],
+    )
     config.set(
         type="charm",
         project=Project(dirpath=tmp_path, started_at=datetime.datetime.utcnow()),
@@ -444,6 +450,7 @@ def test_charm_parameters_validator(config, tmp_path):
     validator_instance_mock.process.assert_called_with(
         Namespace(
             **{
+                "destructive_mode": True,
                 "from": tmp_path,
                 "requirement": "test-reqs",
                 "entrypoint": "test-epoint",
@@ -462,4 +469,4 @@ def test_charm_builder_infrastructure_called(config):
             builder_class_mock.return_value = builder_instance_mock = MagicMock()
             PackCommand("group", config).run(noargs)
     builder_class_mock.assert_called_with("processed args", config)
-    builder_instance_mock.run.assert_called_with([])
+    builder_instance_mock.run.assert_called_with([], destructive_mode=False)

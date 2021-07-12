@@ -202,12 +202,20 @@ CHECKERS = [
 ]
 
 
-def analyze(config: config.Config) -> List[CheckResult]:
+def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
     for checker_class in CHECKERS:
+        # do not run the ignored ones
+        if checker_class.check_type == CheckType.attribute:
+            if checker_class.name in config.analysis.ignore.attributes:
+                continue
+        if checker_class.check_type in (CheckType.warning, CheckType.error):
+            if checker_class.name in config.analysis.ignore.linters:
+                continue
+
         checker = checker_class()
-        result = checker.run(config.project.dirpath)
+        result = checker.run(basedir)
         all_results.append(
             CheckResult(
                 check_type=checker.check_type,

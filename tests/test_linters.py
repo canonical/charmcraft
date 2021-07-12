@@ -20,7 +20,7 @@ from unittest.mock import patch
 
 import pytest
 
-from charmcraft.linters import Language, Framework, shared_state, analyze
+from charmcraft.linters import Language, Framework, shared_state, analyze, CheckType
 
 
 EXAMPLE_DISPATCH = """
@@ -469,30 +469,47 @@ def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_l
     assert result is False
 
 
-def test_analyze_run_everything(config):
-    """Check that analyze runs all and collect the results."""
+def create_fake_checker(**kwargs):
+    """Create a fake Checker.
 
-    class FakeChecker1:
-        check_type = "type1"
-        name = "name1"
-        url = "url1"
-        text = "text1"
+    Receive generic kwargs and process them as a dict for the defaults, as we can't declare
+    the name in the function definition and then use it in the class definition.
+    """
+    params = dict(
+        check_type="type", name="name", url="url", text="text", result="result"
+    )
+    params.update(kwargs)
+
+    class FakeChecker:
+        check_type = params["check_type"]
+        name = params["name"]
+        url = params["url"]
+        text = params["text"]
 
         def run(self, basedir):
-            assert basedir == config.project.dirpath
-            return "result1"
+            return params["result"]
 
-    class FakeChecker2:
-        check_type = "type2"
-        name = "name2"
-        url = "url2"
-        text = "text2"
+    return FakeChecker
 
-        def run(self, _):
-            return "result2"
+
+def test_analyze_run_everything(config):
+    """Check that analyze runs all and collect the results."""
+    FakeChecker1 = create_fake_checker(
+        check_type="type1", name="name1", url="url1", text="text1", result="result1"
+    )
+    FakeChecker2 = create_fake_checker(
+        check_type="type2", name="name2", url="url2", text="text2", result="result2"
+    )
+
+    # hack the first fake checker to validate that it receives the indicated path
+    def dir_validator(self, basedir):
+        assert basedir == "test-buildpath"
+        return "result1"
+
+    FakeChecker1.run = dir_validator
 
     with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
-        result = analyze(config)
+        result = analyze(config, "test-buildpath")
 
     r1, r2 = result
     assert r1.check_type == "type1"
@@ -505,3 +522,50 @@ def test_analyze_run_everything(config):
     assert r2.url == "url2"
     assert r2.text == "text2"
     assert r2.result == "result2"
+
+
+def test_analyze_ignore_attribute(config):
+    """Run all checkers except the ignored attribute."""
+    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1")
+    FakeChecker2 = create_fake_checker(check_type=CheckType.warning, name="name2")
+
+    config.analysis.ignore.attributes.append("name1")
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
+        result = analyze(config, "somepath")
+
+    (res,) = result
+    assert res.name == "name2"
+
+
+def test_analyze_ignore_linter_warning(config):
+    """Run all checkers except the ignored warning linter."""
+    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1")
+    FakeChecker2 = create_fake_checker(check_type=CheckType.warning, name="name2")
+    FakeChecker3 = create_fake_checker(check_type=CheckType.error, name="name3")
+
+    config.analysis.ignore.linters.append("name2")
+    with patch(
+        "charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]
+    ):
+        result = analyze(config, "somepath")
+
+    res1, res2 = result
+    assert res1.name == "name1"
+    assert res2.name == "name3"
+
+
+def test_analyze_ignore_linter_error(config):
+    """Run all checkers except the ignored error linter."""
+    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1")
+    FakeChecker2 = create_fake_checker(check_type=CheckType.warning, name="name2")
+    FakeChecker3 = create_fake_checker(check_type=CheckType.error, name="name3")
+
+    config.analysis.ignore.linters.append("name3")
+    with patch(
+        "charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]
+    ):
+        result = analyze(config, "somepath")
+
+    res1, res2 = result
+    assert res1.name == "name1"
+    assert res2.name == "name2"

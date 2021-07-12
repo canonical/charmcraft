@@ -23,6 +23,7 @@ from unittest.mock import patch
 
 import pytest
 
+from charmcraft import linters
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, Part, load
 from charmcraft.utils import get_host_architecture
@@ -925,5 +926,138 @@ def test_bases_mixed_form_errors(create_config, check_schema_error):
             """\
             Bad charmcraft.yaml content:
             - field 'channel' required in 'bases[0]' configuration"""
+        )
+    )
+
+
+# -- tests for analysis
+
+
+@pytest.fixture
+def create_checker(monkeypatch):
+    """Helper to patch and add checkers to the real structure."""
+    test_checkers = []
+    monkeypatch.setattr(linters, "CHECKERS", test_checkers)
+
+    def add_checker(c_name, c_type):
+        class FakeChecker:
+            name = c_name
+            check_type = c_type
+
+        test_checkers.append(FakeChecker)
+
+    return add_checker
+
+
+def test_schema_analysis_missing(create_config, tmp_path):
+    """No analysis configuration leads to some defaults in place."""
+    create_config(
+        """
+        type: charm  # mandatory
+    """
+    )
+    config = load(tmp_path)
+    assert config.analysis.ignore.attributes == []
+    assert config.analysis.ignore.linters == []
+
+
+def test_schema_analysis_full_struct_just_empty(create_config, tmp_path):
+    """Complete analysis structure, empty."""
+    create_config(
+        """
+        type: charm  # mandatory
+        analysis:
+            ignore:
+                attributes: []
+                linters: []
+    """
+    )
+    config = load(tmp_path)
+    assert config.analysis.ignore.attributes == []
+    assert config.analysis.ignore.linters == []
+
+
+def test_schema_analysis_ignore_attributes(
+    create_config, check_schema_error, tmp_path, create_checker
+):
+    """Some attributes are correctly ignored."""
+    create_checker("check_ok_1", linters.CheckType.attribute)
+    create_checker("check_ok_2", linters.CheckType.attribute)
+    create_config(
+        """
+        type: charm  # mandatory
+        analysis:
+            ignore:
+                attributes: [check_ok_1, check_ok_2]
+    """
+    )
+    config = load(tmp_path)
+    assert config.analysis.ignore.attributes == ["check_ok_1", "check_ok_2"]
+    assert config.analysis.ignore.linters == []
+
+
+def test_schema_analysis_ignore_linters(
+    create_config, check_schema_error, tmp_path, create_checker
+):
+    """Some linters are correctly ignored."""
+    create_checker("check_ok_1", linters.CheckType.warning)
+    create_checker("check_ok_2", linters.CheckType.error)
+    create_config(
+        """
+        type: charm  # mandatory
+        analysis:
+            ignore:
+                linters: [check_ok_1, check_ok_2]
+    """
+    )
+    config = load(tmp_path)
+    assert config.analysis.ignore.attributes == []
+    assert config.analysis.ignore.linters == ["check_ok_1", "check_ok_2"]
+
+
+def test_schema_analysis_ignore_attribute_missing(
+    create_config, check_schema_error, tmp_path, create_checker
+):
+    """An attribute specified to ignore is missing in the system."""
+    create_checker("check_ok_1", linters.CheckType.attribute)
+    create_checker("check_ok_2", linters.CheckType.warning)
+    create_config(
+        """
+        type: charm  # mandatory
+        analysis:
+            ignore:
+                attributes: [check_ok_1, check_missing]
+                linters: [check_ok_2]
+    """
+    )
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - Bad attribute name 'check_missing' in field 'analysis.ignore.attributes[1]'"""
+        )
+    )
+
+
+def test_schema_analysis_ignore_linter_missing(
+    create_config, check_schema_error, tmp_path, create_checker
+):
+    """A linter specified to ignore is missing in the system."""
+    create_checker("check_ok_1", linters.CheckType.attribute)
+    create_checker("check_ok_2", linters.CheckType.warning)
+    create_config(
+        """
+        type: charm  # mandatory
+        analysis:
+            ignore:
+                attributes: [check_ok_1]
+                linters: [check_ok_2, check_missing]
+    """
+    )
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - Bad linter name 'check_missing' in field 'analysis.ignore.linters[1]'"""
         )
     )

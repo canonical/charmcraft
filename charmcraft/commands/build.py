@@ -170,7 +170,7 @@ class Builder:
         self.handle_dependencies()
 
         linting_results = []
-        # run linters, present them to the user according to their type, and decide if go on
+        # run linters, present them to the user according to their type, and fail if necessary
         linting_results = linters.analyze(self.config, self.buildpath)
         for result in linting_results:
             if result.check_type == linters.CheckType.attribute:

@@ -20,7 +20,7 @@ import ast
 import os
 import pathlib
 import shlex
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from typing import List, Generator
 
 from charmcraft import config
@@ -37,7 +37,7 @@ CheckResult = namedtuple("CheckResult", "name result url check_type text")
 UNKNOWN = "unknown"
 
 # shared state between checkers, to reuse analysis results and/or other intermediate information
-shared_state = {}
+shared_state = defaultdict(dict)
 
 
 class Language:
@@ -76,6 +76,7 @@ class Language:
 
         entrypoint = basedir / entrypoint_str
         if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
+            shared_state[self.name]["entrypoint"] = entrypoint
             return self.Result.python
         return self.Result.unknown
 
@@ -216,6 +217,7 @@ def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
 
         checker = checker_class()
         result = checker.run(basedir)
+        shared_state[checker.name]["result"] = result
         all_results.append(
             CheckResult(
                 check_type=checker.check_type,

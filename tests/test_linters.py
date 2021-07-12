@@ -20,7 +20,14 @@ from unittest.mock import patch
 
 import pytest
 
-from charmcraft.linters import Language, Framework, shared_state, analyze, CheckType
+from charmcraft.linters import (
+    CHECKERS,
+    CheckType,
+    Framework,
+    Language,
+    analyze,
+    shared_state,
+)
 
 
 EXAMPLE_DISPATCH = """
@@ -569,3 +576,24 @@ def test_analyze_ignore_linter_error(config):
     res1, res2 = result
     assert res1.name == "name1"
     assert res2.name == "name2"
+
+
+def test_shared_state_dependency_language_framework(config, tmp_path):
+    """Verify that dependency between Language and Framework is ok in CHECKERS."""
+    # simplify the list of checkers to run, but keeping the order between the two we want
+    # to exercise
+    test_checkers = [c for c in CHECKERS if c is Language or c is Framework]
+
+    # create a fake complete project for the checkers to run
+    dispatch = tmp_path / "dispatch"
+    dispatch.write_text(EXAMPLE_DISPATCH)
+    entrypoint = tmp_path / "charm.py"
+    entrypoint.touch()
+    entrypoint.chmod(0o700)
+
+    with patch("charmcraft.linters.CHECKERS", test_checkers):
+        result = analyze(config, tmp_path)
+
+    r1, r2 = result
+    assert r1.name == Language.name
+    assert r2.name == Framework.name

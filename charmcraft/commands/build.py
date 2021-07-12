@@ -25,6 +25,7 @@ import subprocess
 import zipfile
 from typing import List, Optional
 
+from charmcraft import linters
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
@@ -164,13 +165,33 @@ class Builder:
             shutil.rmtree(str(self.buildpath))
         self.buildpath.mkdir()
 
-        create_manifest(self.buildpath, self.config.project.started_at, bases_config)
-
         linked_entrypoint = self.handle_generic_paths()
         self.handle_dispatcher(linked_entrypoint)
         self.handle_dependencies()
-        zipname = self.handle_package(bases_config)
 
+        linting_results = []
+        # run linters, present them to the user according to their type, and decide if go on
+        linting_results = linters.analyze(self.config, self.buildpath)
+        for result in linting_results:
+            if result.check_type == linters.CheckType.attribute:
+                logger.debug(
+                    "Check result: %s [%s] %s (%s; see more at %s).",
+                    result.name,
+                    result.check_type,
+                    result.result,
+                    result.text,
+                    result.url,
+                )
+            # XXX Facundo 2021-07-09: support for other check types will be
+            # added in the next branches
+        create_manifest(
+            self.buildpath,
+            self.config.project.started_at,
+            bases_config,
+            linting_results,
+        )
+
+        zipname = self.handle_package(bases_config)
         logger.info("Created '%s'.", zipname)
         return zipname
 

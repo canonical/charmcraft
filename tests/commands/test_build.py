@@ -32,6 +32,7 @@ from unittest.mock import call, patch
 import pytest
 import yaml
 
+from charmcraft import linters
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
@@ -2107,6 +2108,68 @@ def test_builder_with_jujuignore(tmp_path, config):
     assert not ignore.match("hi.txt", is_dir=False)
     assert ignore.match("h\xef.txt", is_dir=False)
     assert not ignore.match("myfile.c", is_dir=False)
+
+
+def test_build_using_linters_attributes(basic_project, caplog, monkeypatch, config):
+    """Use linters, log results, and save them in the manifest."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": basic_project / "src" / "charm.py",
+            "requirement": [],
+        },
+        config,
+    )
+
+    # the results from the analyzer
+    linting_results = [
+        linters.CheckResult(
+            name="check-name-1",
+            check_type=linters.CheckType.attribute,
+            url="url",
+            text="text",
+            result="check-result-1",
+        ),
+        linters.CheckResult(
+            name="check-name-2",
+            check_type=linters.CheckType.attribute,
+            url="url",
+            text="text",
+            result="check-result-2",
+        ),
+    ]
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch(
+        "charmcraft.commands.build.check_if_base_matches_host",
+        return_value=(True, None),
+    ):
+        with patch("charmcraft.linters.analyze") as mock_analyze:
+            mock_analyze.return_value = linting_results
+            zipnames = builder.run()
+
+    # check the analyze function was called properly
+    mock_analyze.assert_called_with(config, builder.buildpath)
+
+    # logs
+    expected = [
+        "Check result: check-name-1 [attribute] check-result-1 (text; see more at url).",
+        "Check result: check-name-2 [attribute] check-result-2 (text; see more at url).",
+    ]
+    logged = [rec.message for rec in caplog.records]
+    assert all(e in logged for e in expected)
+
+    # the manifest should have these results
+    zf = zipfile.ZipFile(zipnames[0])
+    manifest = yaml.safe_load(zf.read("manifest.yaml"))
+    expected = {
+        "attributes": [
+            {"name": "check-name-1", "result": "check-result-1"},
+            {"name": "check-name-2", "result": "check-result-2"},
+        ]
+    }
+    assert manifest["analysis"] == expected
 
 
 # --- tests for relativise helper

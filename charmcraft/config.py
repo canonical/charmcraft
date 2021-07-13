@@ -89,14 +89,14 @@ class CustomStrictStr(pydantic.StrictStr):
     def __get_validators__(cls):
         """Yield the relevant validators."""
         yield from super().__get_validators__()
-        yield cls.validate_relative_path
+        yield cls.custom_validate
 
 
 class RelativePath(CustomStrictStr):
-    """Constrainted string which must be a relative path."""
+    """Constrained string which must be a relative path."""
 
     @classmethod
-    def validate_relative_path(cls, value: str) -> str:
+    def custom_validate(cls, value: str) -> str:
         """Validate relative path.
 
         Check if it's an absolute path using POSIX's '/' (not os.path.sep, as the charm's
@@ -116,10 +116,10 @@ class RelativePath(CustomStrictStr):
 
 
 class AttributeName(CustomStrictStr):
-    """Constrainted string which must be the name of an attribute from linters.CHECKERS."""
+    """Constrained string that must match the name of an attribute from linters.CHECKERS."""
 
     @classmethod
-    def validate_relative_path(cls, value: str) -> str:
+    def custom_validate(cls, value: str) -> str:
         """Validate attribute name."""
         from charmcraft import linters  # import here to avoid cyclic imports
 
@@ -134,10 +134,10 @@ class AttributeName(CustomStrictStr):
 
 
 class LinterName(CustomStrictStr):
-    """Constrainted string which must be the name of a linter from linters.CHECKERS."""
+    """Constrained string that must match the name of a linter from linters.CHECKERS."""
 
     @classmethod
-    def validate_relative_path(cls, value: str) -> str:
+    def custom_validate(cls, value: str) -> str:
         """Validate attribute name."""
         from charmcraft import linters  # import here to avoid cyclic imports
 

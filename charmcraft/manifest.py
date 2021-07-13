@@ -19,11 +19,11 @@
 import datetime
 import logging
 import pathlib
-from typing import Optional
+from typing import Optional, List
 
 import yaml
 
-from charmcraft import __version__, config
+from charmcraft import __version__, config, linters
 from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ def create_manifest(
     basedir: pathlib.Path,
     started_at: datetime.datetime,
     bases_config: Optional[config.BasesConfiguration],
+    linting_results: List[linters.CheckResult],
 ):
     """Create manifest.yaml in basedir for given base configuration.
 
@@ -61,6 +62,14 @@ def create_manifest(
             for r in bases_config.run_on
         ]
         content["bases"] = bases
+
+    # include the linters results (only for attributes)
+    attributes_info = [
+        {"name": result.name, "result": result.result}
+        for result in linting_results
+        if result.check_type == linters.CheckType.attribute
+    ]
+    content["analysis"] = {"attributes": attributes_info}
 
     filepath = basedir / "manifest.yaml"
     if filepath.exists():

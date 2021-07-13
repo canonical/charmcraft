@@ -510,9 +510,7 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     zf = zipfile.ZipFile(zipnames[0])
     assert zf.read("metadata.yaml") == metadata_raw
     assert zf.read("src/charm.py") == b"all the magic"
-    dispatch = DISPATCH_CONTENT.format(entrypoint_relative_path="src/charm.py").encode(
-        "ascii"
-    )
+    dispatch = DISPATCH_CONTENT.format(entrypoint_relative_path="src/charm.py").encode("ascii")
     assert zf.read("dispatch") == dispatch
     assert zf.read("hooks/install") == dispatch
     assert zf.read("hooks/start") == dispatch
@@ -521,9 +519,7 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
 
     # check the manifest is present and with particular values that depend on given info
     manifest = yaml.safe_load(zf.read("manifest.yaml"))
-    assert (
-        manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
-    )
+    assert manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
     assert caplog.records == []
 
 
@@ -546,9 +542,7 @@ def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
         )
 
 
-def test_build_with_charmcraft_yaml_destructive_mode(
-    basic_project_builder, caplog, monkeypatch
-):
+def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, caplog, monkeypatch):
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
@@ -565,9 +559,7 @@ def test_build_with_charmcraft_yaml_destructive_mode(
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
 
 
-def test_build_with_charmcraft_yaml_managed_mode(
-    basic_project_builder, caplog, monkeypatch
-):
+def test_build_with_charmcraft_yaml_managed_mode(basic_project_builder, caplog, monkeypatch):
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     host_base = get_host_as_base()
     builder = basic_project_builder(
@@ -661,12 +653,8 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(
     builder = basic_project_builder(
         [
             BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]}),
-            BasesConfiguration(
-                **{"build-on": [unmatched_base], "run-on": [unmatched_base]}
-            ),
-            BasesConfiguration(
-                **{"build-on": [host_base], "run-on": [matched_cross_base]}
-            ),
+            BasesConfiguration(**{"build-on": [unmatched_base], "run-on": [unmatched_base]}),
+            BasesConfiguration(**{"build-on": [host_base], "run-on": [matched_cross_base]}),
         ]
     )
 
@@ -681,10 +669,7 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(
     records = [r.message for r in caplog.records]
 
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
-    assert (
-        "No suitable 'build-on' environment found in 'bases[1]' configuration."
-        in records
-    )
+    assert "No suitable 'build-on' environment found in 'bases[1]' configuration." in records
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
@@ -707,12 +692,8 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
     builder = basic_project_builder(
         [
             BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]}),
-            BasesConfiguration(
-                **{"build-on": [unmatched_base], "run-on": [unmatched_base]}
-            ),
-            BasesConfiguration(
-                **{"build-on": [host_base], "run-on": [matched_cross_base]}
-            ),
+            BasesConfiguration(**{"build-on": [unmatched_base], "run-on": [unmatched_base]}),
+            BasesConfiguration(**{"build-on": [host_base], "run-on": [matched_cross_base]}),
         ]
     )
 
@@ -728,10 +709,7 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
     records = [r.message for r in caplog.records]
 
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
-    assert (
-        "No suitable 'build-on' environment found in 'bases[1]' configuration."
-        in records
-    )
+    assert "No suitable 'build-on' environment found in 'bases[1]' configuration." in records
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
@@ -936,10 +914,9 @@ def test_build_bases_index_scenarios_provider(
             ),
             call().__exit__(None, None, None),
         ]
-        assert (
-            f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..."
-            in [r.message for r in caplog.records]
-        )
+        assert f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..." in [
+            r.message for r in caplog.records
+        ]
         mock_ensure_provider_is_available.assert_called_once()
         mock_launch.reset_mock()
 
@@ -1154,30 +1131,20 @@ def test_build_error_no_match_with_charmcraft_yaml(
     records = [r.message for r in caplog.records]
 
     assert (
-        "Skipping 'bases[0].build-on[0]': "
-        "name 'unmatched-name' does not match host 'xname'."
+        "Skipping 'bases[0].build-on[0]': " "name 'unmatched-name' does not match host 'xname'."
     ) in records
-    assert (
-        "No suitable 'build-on' environment found in 'bases[0]' configuration."
-        in records
-    )
+    assert "No suitable 'build-on' environment found in 'bases[0]' configuration." in records
     assert (
         "Skipping 'bases[1].build-on[0]': "
         "channel 'unmatched-channel' does not match host 'xchannel'."
     ) in records
-    assert (
-        "No suitable 'build-on' environment found in 'bases[1]' configuration."
-        in records
-    )
+    assert "No suitable 'build-on' environment found in 'bases[1]' configuration." in records
     assert (
         "Skipping 'bases[2].build-on[0]': "
         "host architecture 'xarch' not in base architectures "
         "['unmatched-arch1', 'unmatched-arch2']."
     ) in records
-    assert (
-        "No suitable 'build-on' environment found in 'bases[2]' configuration."
-        in records
-    )
+    assert "No suitable 'build-on' environment found in 'bases[2]' configuration." in records
 
 
 def test_build_generics_simple_files(tmp_path, config):
@@ -1645,9 +1612,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
     included_dispatcher = build_dir / DISPATCH_FILENAME
     with included_dispatcher.open("rt", encoding="utf8") as fh:
         dispatcher_code = fh.read()
-    assert dispatcher_code == DISPATCH_CONTENT.format(
-        entrypoint_relative_path="somestuff.py"
-    )
+    assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path="somestuff.py")
 
 
 def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
@@ -1733,9 +1698,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path, config):
         assert fh.read() == b"abc"
 
 
-def test_build_dispatcher_classic_hooks_linking_charm_replaced(
-    tmp_path, caplog, config
-):
+def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog, config):
     """Hooks that are just a symlink to the entrypoint are replaced."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
@@ -1801,9 +1764,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, config):
     envpath = build_dir / VENV_DIRNAME
     assert mock.mock_calls == [
         call(["pip3", "list"]),
-        call(
-            ["pip3", "install", "--target={}".format(envpath), "--requirement=reqs.txt"]
-        ),
+        call(["pip3", "install", "--target={}".format(envpath), "--requirement=reqs.txt"]),
     ]
     assert mock_run.mock_calls == [
         call(
@@ -2031,9 +1992,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
     assert zf.read("somedir/file_deep_1") == b"content_deep"  # own
     assert zf.read("somedir/file_deep_2") == b"content_in"  # from file inside
     assert zf.read("somedir/file_deep_3") == b"content_out_1"  # from file outside 1
-    assert (
-        zf.read("linkeddir/file_ext") == b"external file"
-    )  # from file in the outside linked dir
+    assert zf.read("linkeddir/file_ext") == b"external file"  # from file in the outside linked dir
 
 
 def test_build_package_name(tmp_path, monkeypatch, config):
@@ -2162,9 +2121,7 @@ def test_format_charm_file_name_basic():
     bases_config = BasesConfiguration(
         **{
             "build-on": [],
-            "run-on": [
-                Base(name="xname", channel="xchannel", architectures=["xarch1"])
-            ],
+            "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
         }
     )
 

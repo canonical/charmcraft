@@ -23,6 +23,24 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.metadata import parse_metadata_yaml
 
 
+def test_parse_metadata_yaml_complete(tmp_path):
+    """Example of parsing with all the optional attributes."""
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text(
+        """
+        name: test-name
+        summary: Test summary
+        description: Lot of text.
+    """
+    )
+
+    metadata = parse_metadata_yaml(tmp_path)
+
+    assert metadata.name == "test-name"
+    assert metadata.summary == "Test summary"
+    assert metadata.description == "Lot of text."
+
+
 @pytest.mark.parametrize("name", ["name1", "my-charm-foo"])
 def test_parse_metadata_yaml_valid_names(tmp_path, name):
     metadata_file = tmp_path / "metadata.yaml"
@@ -50,19 +68,3 @@ def test_parse_metadata_yaml_error_invalid_names(tmp_path, name):
 def test_parse_metadata_yaml_error_missing(tmp_path):
     with pytest.raises(CommandError, match=r"Missing mandatory metadata.yaml."):
         parse_metadata_yaml(tmp_path)
-
-
-def test_parse_metadata_yaml_raw(tmp_path):
-    metadata_file = tmp_path / "metadata.yaml"
-    metadata_file.write_text(
-        """
-        name: testname
-        otherfield: whatever
-    """
-    )
-
-    metadata = parse_metadata_yaml(tmp_path, raw=True)
-    assert metadata == {
-        "name": "testname",
-        "otherfield": "whatever",
-    }

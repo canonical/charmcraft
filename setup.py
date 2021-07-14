@@ -46,6 +46,17 @@ install_requires = [
     "tabulate",
 ]
 
+try:
+    os_release = open("/etc/os-release").read()
+    ubuntu = "ID=ubuntu" in os_release
+except FileNotFoundError:
+    ubuntu = False
+
+if ubuntu:
+    install_requires += [
+        "python-apt",
+    ]
+
 dev_requires = [
     "black",
     "coverage",

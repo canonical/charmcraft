@@ -6,7 +6,7 @@ cffi==1.14.6
 charset-normalizer==2.0.1
 click==8.0.1
 coverage==5.5
-craft-parts==0.0.1
+craft-parts @ https://github.com/canonical/craft-parts/archive/refs/tags/v1.0-alpha.tar.gz
 craft-providers==1.0.0
 flake8==3.9.2
 humanize==3.10.0
@@ -37,7 +37,6 @@ pyparsing==2.4.7
 pyRFC3339==1.1
 pyrsistent==0.18.0
 pytest==6.2.4
-python-apt==2.0.0+ubuntu0.20.4.5
 python-dateutil==2.8.2
 pytz==2021.1
 pyxdg==0.27

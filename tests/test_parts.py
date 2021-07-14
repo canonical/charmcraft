@@ -17,7 +17,17 @@
 import pydantic
 import pytest
 
+from craft_parts import plugins
+
 from charmcraft import parts
+
+
+def setup_module():
+    plugins.register({"charm": parts.CharmPlugin})
+
+
+def teardown_module():
+    plugins.unregister_all()
 
 
 class TestPartValidation:
@@ -25,8 +35,8 @@ class TestPartValidation:
 
     def test_part_validation_happy(self):
         data = {
-            "plugin": "make",
-            "make-parameters": ["stuff"],
+            "plugin": "charm",
+            "charm-requirements": ["stuff"],
             "source": ".",
         }
         parts.validate_part(data)
@@ -41,7 +51,7 @@ class TestPartValidation:
 
     def test_part_validation_bad_property(self):
         data = {
-            "plugin": "make",
+            "plugin": "charm",
             "source": ".",
             "color": "purple",
         }
@@ -54,7 +64,7 @@ class TestPartValidation:
 
     def test_part_validation_bad_type(self):
         data = {
-            "plugin": "make",
+            "plugin": "charm",
             "source": ["."],
         }
         with pytest.raises(pydantic.ValidationError) as raised:
@@ -66,26 +76,26 @@ class TestPartValidation:
 
     def test_part_validation_bad_plugin_property(self):
         data = {
-            "plugin": "make",
-            "make-timeout": "never",
+            "plugin": "charm",
+            "charm-timeout": "never",
             "source": ".",
         }
         with pytest.raises(pydantic.ValidationError) as raised:
             parts.validate_part(data)
         err = raised.value.errors()
         assert len(err) == 1
-        assert err[0]["loc"] == ("make-timeout",)
+        assert err[0]["loc"] == ("charm-timeout",)
         assert err[0]["msg"] == "extra fields not permitted"
 
     def test_part_validation_bad_plugin_type(self):
         data = {
-            "plugin": "make",
-            "make-parameters": ".",
+            "plugin": "charm",
+            "charm-requirements": ".",
             "source": ".",
         }
         with pytest.raises(pydantic.ValidationError) as raised:
             parts.validate_part(data)
         err = raised.value.errors()
         assert len(err) == 1
-        assert err[0]["loc"] == ("make-parameters",)
+        assert err[0]["loc"] == ("charm-requirements",)
         assert err[0]["msg"] == "value is not a valid list"

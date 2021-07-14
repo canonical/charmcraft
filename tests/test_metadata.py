@@ -50,3 +50,19 @@ def test_parse_metadata_yaml_error_invalid_names(tmp_path, name):
 def test_parse_metadata_yaml_error_missing(tmp_path):
     with pytest.raises(CommandError, match=r"Missing mandatory metadata.yaml."):
         parse_metadata_yaml(tmp_path)
+
+
+def test_parse_metadata_yaml_raw(tmp_path):
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text(
+        """
+        name: testname
+        otherfield: whatever
+    """
+    )
+
+    metadata = parse_metadata_yaml(tmp_path, raw=True)
+    assert metadata == {
+        "name": "testname",
+        "otherfield": "whatever",
+    }

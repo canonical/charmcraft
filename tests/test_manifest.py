@@ -141,7 +141,7 @@ def test_manifest_dont_overwrite(tmp_path):
 
 
 def test_manifest_checkers_multiple(tmp_path):
-    """Multiple checkers, attributes, warnings and errors."""
+    """Multiple checkers, attributes and a linter."""
     linting_results = [
         linters.CheckResult(
             name="attrib-name-1",
@@ -158,15 +158,8 @@ def test_manifest_checkers_multiple(tmp_path):
             result="result-2",
         ),
         linters.CheckResult(
-            name="error-name",
-            check_type=linters.CheckType.error,
-            url="url",
-            text="text",
-            result="result",
-        ),
-        linters.CheckResult(
             name="warning-name",
-            check_type=linters.CheckType.warning,
+            check_type=linters.CheckType.lint,
             url="url",
             text="text",
             result="result",

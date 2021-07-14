@@ -2136,7 +2136,7 @@ def test_build_using_linters_attributes(basic_project, caplog, monkeypatch, conf
             check_type=linters.CheckType.attribute,
             url="url",
             text="text",
-            result="check-result-2",
+            result=linters.IGNORED,
         ),
     ]
 
@@ -2152,21 +2152,20 @@ def test_build_using_linters_attributes(basic_project, caplog, monkeypatch, conf
     # check the analyze function was called properly
     mock_analyze.assert_called_with(config, builder.buildpath)
 
-    # logs
+    # logs (do NOT see the ignored check)
     expected = [
         "Check result: check-name-1 [attribute] check-result-1 (text; see more at url).",
-        "Check result: check-name-2 [attribute] check-result-2 (text; see more at url).",
     ]
     logged = [rec.message for rec in caplog.records]
     assert all(e in logged for e in expected)
 
-    # the manifest should have these results
+    # the manifest should have all the results (including the ignored one)
     zf = zipfile.ZipFile(zipnames[0])
     manifest = yaml.safe_load(zf.read("manifest.yaml"))
     expected = {
         "attributes": [
             {"name": "check-name-1", "result": "check-result-1"},
-            {"name": "check-name-2", "result": "check-result-2"},
+            {"name": "check-name-2", "result": "ignored"},
         ]
     }
     assert manifest["analysis"] == expected

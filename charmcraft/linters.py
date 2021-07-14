@@ -26,15 +26,17 @@ from typing import List, Generator
 from charmcraft import config
 from charmcraft.metadata import parse_metadata_yaml
 
-CheckType = namedtuple("CheckType", "attribute warning error")(
-    attribute="attribute", warning="warning", error="error"
+CheckType = namedtuple("CheckType", "attribute lint")(
+    attribute="attribute", lint="lint"
 )
 
 # result information from each checker/linter
 CheckResult = namedtuple("CheckResult", "name result url check_type text")
 
-# generic constant for the common 'unknown' result
+# generic constant for common results
 UNKNOWN = "unknown"
+IGNORED = "ignored"
+FATAL = "fatal"
 
 # shared state between checkers, to reuse analysis results and/or other intermediate information
 shared_state = defaultdict(dict)
@@ -206,17 +208,29 @@ CHECKERS = [
 def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
-    for checker_class in CHECKERS:
+    for cls in CHECKERS:
         # do not run the ignored ones
-        if checker_class.check_type == CheckType.attribute:
-            if checker_class.name in config.analysis.ignore.attributes:
-                continue
-        if checker_class.check_type in (CheckType.warning, CheckType.error):
-            if checker_class.name in config.analysis.ignore.linters:
-                continue
+        if cls.check_type == CheckType.attribute:
+            ignore_list = config.analysis.ignore.attributes
+        else:
+            ignore_list = config.analysis.ignore.linters
+        if cls.name in ignore_list:
+            all_results.append(
+                CheckResult(
+                    check_type=cls.check_type,
+                    name=cls.name,
+                    result=IGNORED,
+                    url=None,
+                    text=None,
+                )
+            )
+            continue
 
-        checker = checker_class()
-        result = checker.run(basedir)
+        checker = cls()
+        try:
+            result = checker.run(basedir)
+        except Exception:
+            result = UNKNOWN if checker.check_type == CheckType.attribute else FATAL
         shared_state[checker.name]["result"] = result
         all_results.append(
             CheckResult(

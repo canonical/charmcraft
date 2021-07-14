@@ -144,11 +144,10 @@ class LinterName(CustomStrictStr):
         valid_names = [
             checker.name
             for checker in linters.CHECKERS
-            if checker.check_type == linters.CheckType.warning
-            or checker.check_type == linters.CheckType.error
+            if checker.check_type == linters.CheckType.lint
         ]
         if value not in valid_names:
-            raise ValueError(f"Bad linter name {value!r}")
+            raise ValueError(f"Bad lint name {value!r}")
         return value
 
 

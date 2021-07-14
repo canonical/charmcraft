@@ -173,7 +173,10 @@ class Builder:
         # run linters, present them to the user according to their type, and fail if necessary
         linting_results = linters.analyze(self.config, self.buildpath)
         for result in linting_results:
-            if result.check_type == linters.CheckType.attribute:
+            if (
+                result.check_type == linters.CheckType.attribute
+                and result.result != linters.IGNORED
+            ):
                 logger.debug(
                     "Check result: %s [%s] %s (%s; see more at %s).",
                     result.name,

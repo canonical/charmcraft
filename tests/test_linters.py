@@ -23,8 +23,11 @@ import pytest
 from charmcraft.linters import (
     CHECKERS,
     CheckType,
+    FATAL,
     Framework,
+    IGNORED,
     Language,
+    UNKNOWN,
     analyze,
     shared_state,
 )
@@ -533,49 +536,82 @@ def test_analyze_run_everything(config):
 
 def test_analyze_ignore_attribute(config):
     """Run all checkers except the ignored attribute."""
-    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1")
-    FakeChecker2 = create_fake_checker(check_type=CheckType.warning, name="name2")
+    FakeChecker1 = create_fake_checker(
+        check_type=CheckType.attribute, name="name1", result="res1"
+    )
+    FakeChecker2 = create_fake_checker(
+        check_type=CheckType.lint, name="name2", result="res2"
+    )
 
     config.analysis.ignore.attributes.append("name1")
     with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
         result = analyze(config, "somepath")
 
-    (res,) = result
-    assert res.name == "name2"
+    res1, res2 = result
+    assert res1.check_type == CheckType.attribute
+    assert res1.name == "name1"
+    assert res1.result == IGNORED
+    assert res2.check_type == CheckType.lint
+    assert res2.name == "name2"
+    assert res2.result == "res2"
 
 
-def test_analyze_ignore_linter_warning(config):
-    """Run all checkers except the ignored warning linter."""
-    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1")
-    FakeChecker2 = create_fake_checker(check_type=CheckType.warning, name="name2")
-    FakeChecker3 = create_fake_checker(check_type=CheckType.error, name="name3")
+def test_analyze_ignore_linter(config):
+    """Run all checkers except the ignored linter."""
+    FakeChecker1 = create_fake_checker(
+        check_type=CheckType.attribute, name="name1", result="res1"
+    )
+    FakeChecker2 = create_fake_checker(
+        check_type=CheckType.lint, name="name2", result="res2"
+    )
 
     config.analysis.ignore.linters.append("name2")
-    with patch(
-        "charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]
-    ):
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
         result = analyze(config, "somepath")
 
     res1, res2 = result
+    assert res1.check_type == CheckType.attribute
     assert res1.name == "name1"
-    assert res2.name == "name3"
-
-
-def test_analyze_ignore_linter_error(config):
-    """Run all checkers except the ignored error linter."""
-    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1")
-    FakeChecker2 = create_fake_checker(check_type=CheckType.warning, name="name2")
-    FakeChecker3 = create_fake_checker(check_type=CheckType.error, name="name3")
-
-    config.analysis.ignore.linters.append("name3")
-    with patch(
-        "charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]
-    ):
-        result = analyze(config, "somepath")
-
-    res1, res2 = result
-    assert res1.name == "name1"
+    assert res1.result == "res1"
+    assert res2.check_type == CheckType.lint
     assert res2.name == "name2"
+    assert res2.result == IGNORED
+
+
+def test_analyze_crash_attribute(config):
+    """The attribute checker crashes."""
+    FakeChecker = create_fake_checker(check_type=CheckType.attribute, name="name")
+
+    def raises(*a):
+        raise ValueError
+
+    FakeChecker.run = raises
+
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker]):
+        result = analyze(config, "somepath")
+
+    (res,) = result
+    assert res.check_type == CheckType.attribute
+    assert res.name == "name"
+    assert res.result == UNKNOWN
+
+
+def test_analyze_crash_lint(config):
+    """The lint checker crashes."""
+    FakeChecker = create_fake_checker(check_type=CheckType.lint, name="name")
+
+    def raises(*a):
+        raise ValueError
+
+    FakeChecker.run = raises
+
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker]):
+        result = analyze(config, "somepath")
+
+    (res,) = result
+    assert res.check_type == CheckType.lint
+    assert res.name == "name"
+    assert res.result == FATAL
 
 
 def test_shared_state_dependency_language_framework(config, tmp_path):

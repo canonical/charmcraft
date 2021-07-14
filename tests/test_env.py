@@ -170,7 +170,7 @@ def test_ensure_environment_is_supported_error(monkeypatch):
         CommandError,
         match=(
             "For a supported user experience, please use the Charmcraft snap. "
-            "For more information, please see https://snapcraft.io/charmcraft"
+            "For more information, please see https://juju.is/docs/sdk/setting-up-charmcraft"
         ),
     ):
         env.ensure_charmcraft_environment_is_supported()

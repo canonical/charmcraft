@@ -5,7 +5,6 @@ requirements_fixups() {
 
   # Python apt library pinned to source.
   sed -i '/^python-apt==/d' "$req_file"
-  sed -i '/^python-distutils-extra==/d' "$req_file"
   sed -i 's!^craft-parts[= ].*!craft-parts @ https://github.com/canonical/craft-parts/archive/refs/tags/v1.0-alpha.tar.gz!' "$req_file"
 }
 

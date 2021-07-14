@@ -1,2 +1,1 @@
-https://launchpad.net/python-distutils-extra/trunk/2.39/+download/python-distutils-extra-2.39.tar.gz; sys_platform == "linux"
 http://archive.ubuntu.com/ubuntu/pool/main/p/python-apt/python-apt_2.0.0ubuntu0.20.04.5.tar.xz; sys_platform == 'linux'

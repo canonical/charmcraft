@@ -151,7 +151,9 @@ def validate_part(data: Dict[str, Any]) -> None:
     if not isinstance(data, dict):
         raise TypeError("value must be a dictionary")
 
+    # copy the original data, we'll modify it
     spec = data.copy()
+
     plugin_name = spec.get("plugin", "")
     if not plugin_name:
         raise ValueError("'plugin' not defined")

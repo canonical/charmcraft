@@ -216,21 +216,19 @@ class JujuMetadata:
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         try:
-            metadata = parse_metadata_yaml(basedir, raw=True)
+            metadata = parse_metadata_yaml(basedir)
         except Exception:
-            # file not found or corrupted
-            name = None
+            # file not found, corrupted, or mandatory "name" not present
+            charm_name = None
             result = self.Result.errors
         else:
-            name = metadata.get("name")
-            if name is None or any(
-                key not in metadata for key in ["summary", "description"]
-            ):
-                result = self.Result.errors
-            else:
+            charm_name = metadata.name
+            if metadata.summary and metadata.description:
                 result = self.Result.ok
+            else:
+                result = self.Result.errors
 
-        shared_state[self.name]["name"] = name
+        shared_state[self.name]["name"] = charm_name
         return result
 
 

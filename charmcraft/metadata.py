@@ -18,7 +18,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 import pydantic
 import yaml
@@ -35,6 +35,8 @@ class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
     """Object representing metadata.yaml contents."""
 
     name: pydantic.StrictStr
+    summary: pydantic.StrictStr = ""
+    description: pydantic.StrictStr = ""
 
     @classmethod
     def unmarshal(cls, obj: Dict[str, Any]):
@@ -52,13 +54,10 @@ class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
             )
 
 
-def parse_metadata_yaml(
-    charm_dir: pathlib.Path, raw: bool = False
-) -> Union[CharmMetadata, Dict[str, Any]]:
+def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
     """Parse project's metadata.yaml.
 
-    :returns: Metadata dictionary object with complete opened metadata if raw, else a
-    CharmMetadata object; raises CommandError if it does not exist.
+    :returns: a CharmMetadata object; raises CommandError if metadata does not exist.
     """
     metadata_path = charm_dir / CHARM_METADATA
     logger.debug("Parsing %r", str(metadata_path))
@@ -68,7 +67,4 @@ def parse_metadata_yaml(
 
     with metadata_path.open("rt", encoding="utf8") as fh:
         metadata = yaml.safe_load(fh)
-        if raw:
-            return metadata
-        else:
-            return CharmMetadata.unmarshal(metadata)
+        return CharmMetadata.unmarshal(metadata)

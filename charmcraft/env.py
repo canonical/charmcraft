@@ -73,5 +73,5 @@ def ensure_charmcraft_environment_is_supported():
     ):
         raise CommandError(
             "For a supported user experience, please use the Charmcraft snap. "
-            "For more information, please see https://snapcraft.io/charmcraft"
+            "For more information, please see https://juju.is/docs/sdk/setting-up-charmcraft"
         )

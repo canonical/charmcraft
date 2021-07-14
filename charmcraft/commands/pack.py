@@ -129,6 +129,12 @@ class PackCommand(BaseCommand):
             "times); defaults to all",
         )
 
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Pack anyway even after finding lint errors.",
+        )
+
     def run(self, parsed_args):
         """Run the command."""
         # decide if this will work on a charm or a bundle
@@ -155,6 +161,7 @@ class PackCommand(BaseCommand):
                 "entrypoint": parsed_args.entrypoint,
                 "requirement": parsed_args.requirement,
                 "bases_indices": parsed_args.bases_index,
+                "force": parsed_args.force, #FIXME: test
             }
         )
 

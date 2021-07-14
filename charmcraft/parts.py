@@ -194,7 +194,7 @@ class PartsLifecycle:
             raise CommandError(err)
 
     @property
-    def prime_dir(self):
+    def prime_dir(self) -> pathlib.Path:
         """Return the parts prime directory path."""
         return self._lcm.project_info.prime_dir
 

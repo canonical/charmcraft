@@ -57,7 +57,9 @@ class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
 def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
     """Parse project's metadata.yaml.
 
-    :returns: a CharmMetadata object; raises CommandError if metadata does not exist.
+    :returns: a CharmMetadata object.
+
+    :raises: CommandError if metadata does not exist.
     """
     metadata_path = charm_dir / CHARM_METADATA
     logger.debug("Parsing %r", str(metadata_path))

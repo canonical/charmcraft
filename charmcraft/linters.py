@@ -36,6 +36,8 @@ CheckResult = namedtuple("CheckResult", "name result url check_type text")
 # generic constant for common results
 UNKNOWN = "unknown"
 IGNORED = "ignored"
+WARNINGS = "warnings"
+ERRORS = "errors"
 FATAL = "fatal"
 
 # shared state between checkers, to reuse analysis results and/or other intermediate information
@@ -211,7 +213,7 @@ class JujuMetadata:
     text = "Problems found with metadata.yaml file."
 
     # different result constants
-    Result = namedtuple("Result", "ok errors")(ok="ok", errors="errors")
+    Result = namedtuple("Result", "ok errors")(ok="ok", errors=ERRORS)
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""

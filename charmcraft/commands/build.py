@@ -153,25 +153,8 @@ class Builder:
         self.config = config
         self.metadata = parse_metadata_yaml(self.charmdir)
 
-    def build_charm(self, bases_config: BasesConfiguration) -> str:
-        """Build the charm.
-
-        :param bases_config: Bases configuration to use for build.
-
-        :returns: File name of charm.
-        """
-        logger.debug("Building charm in %r", str(self.buildpath))
-
-        if self.buildpath.exists():
-            shutil.rmtree(str(self.buildpath))
-        self.buildpath.mkdir()
-
-        linked_entrypoint = self.handle_generic_paths()
-        self.handle_dispatcher(linked_entrypoint)
-        self.handle_dependencies()
-
-        # run linters, and group them for presentation
-        linting_results = linters.analyze(self.config, self.buildpath)
+    def show_linting_results(self, linting_results):
+        """Manage the linters results, show some in different conditions, decide if continue."""
         attribute_results = []
         lint_results_by_outcome = {}
         for result in linting_results:
@@ -195,17 +178,41 @@ class Builder:
 
         # show warnings (if any), then errors (if any)
         template = "- %s: %s (%s)"
-        if linters.WARNING in lint_results_by_outcome: #FIXME: test
+        if linters.WARNINGS in lint_results_by_outcome:
             logger.info("Lint Warnings:")
-            for result in lint_results_by_outcome[linters.WARNING]: #FIXME: test
-                logger.info(template, result.name, result.text, result.url) #FIXME: use **result??
-        if linters.ERROR in lint_results_by_outcome:
-            logger.info("Lint Errors:") #FIXME: test
-            for result in lint_results_by_outcome[linters.ERROR]: #FIXME: test
-                logger.info(template, result.name, result.text, result.url) #FIXME: use **result??
-            if not self.force_packing:  #FIXME: test
+            for result in lint_results_by_outcome[linters.WARNINGS]:
+                logger.info(template, result.name, result.text, result.url)
+        if linters.ERRORS in lint_results_by_outcome:
+            logger.info("Lint Errors:")
+            for result in lint_results_by_outcome[linters.ERRORS]:
+                logger.info(template, result.name, result.text, result.url)
+            if self.force_packing:
+                logger.info("Packing anyway as requested.")
+            else:
                 raise CommandError(
-                    "Exiting after lint errors (use --force to pack anyway).", retcode=2) #FIXME: test
+                    "Exiting after lint errors (use --force to pack anyway).", retcode=2
+                )
+
+    def build_charm(self, bases_config: BasesConfiguration) -> str:
+        """Build the charm.
+
+        :param bases_config: Bases configuration to use for build.
+
+        :returns: File name of charm.
+        """
+        logger.debug("Building charm in %r", str(self.buildpath))
+
+        if self.buildpath.exists():
+            shutil.rmtree(str(self.buildpath))
+        self.buildpath.mkdir()
+
+        linked_entrypoint = self.handle_generic_paths()
+        self.handle_dispatcher(linked_entrypoint)
+        self.handle_dependencies()
+
+        # run linters and show the results
+        linting_results = linters.analyze(self.config, self.buildpath)
+        self.show_linting_results(linting_results)
 
         create_manifest(
             self.buildpath,
@@ -213,6 +220,7 @@ class Builder:
             bases_config,
             linting_results,
         )
+
         zipname = self.handle_package(bases_config)
         logger.info("Created '%s'.", zipname)
         return zipname
@@ -535,6 +543,7 @@ class Validator:
         "entrypoint",
         "requirement",
         "bases_indices",
+        "force",
     ]
 
     def __init__(self, config: Config):
@@ -640,7 +649,7 @@ class Validator:
 
     def validate_force(self, value):
         """Validate the value (just convert to bool to make None explicit)."""
-        return bool(value) #FIXME: test
+        return bool(value)
 
 
 _overview = """

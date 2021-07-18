@@ -1211,8 +1211,7 @@ def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
     mock_run.assert_called_with(
         [
             sys.executable,
-            "-m",
-            "charmcraft.charm_builder",
+            charm_builder.__file__,
             "--charmdir",
             str(tmp_path),
             "--builddir",

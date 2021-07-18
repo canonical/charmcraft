@@ -154,8 +154,7 @@ class Builder:
         # invoke the charm builder
         build_cmd = [
             sys.executable,
-            "-m",
-            "charmcraft.charm_builder",
+            charm_builder.__file__,
             "--charmdir",
             str(self.charmdir),
             "--builddir",

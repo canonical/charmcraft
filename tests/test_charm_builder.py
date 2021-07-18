@@ -910,7 +910,9 @@ def test_builder_arguments_defaults(tmp_path):
     with patch.object(
         sys, "argv", ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]
     ):
-        with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
+        with patch(
+            "charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm
+        ):
             charm_builder.main()
 
 
@@ -943,5 +945,7 @@ def test_builder_arguments_full(tmp_path):
             "reqs2.txt",
         ],
     ):
-        with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm) as mock:
+        with patch(
+            "charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm
+        ):
             charm_builder.main()

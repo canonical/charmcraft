@@ -1199,8 +1199,12 @@ def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.commands.build.polite_exec") as mock_run:
         mock_run.side_effect = [1]
-        with pytest.raises(CommandError, match="problems running charm builder"):
-            builder.run()
+        with patch(
+            "charmcraft.commands.build.check_if_base_matches_host",
+            return_value=(True, None),
+        ):
+            with pytest.raises(CommandError, match="problems running charm builder"):
+                builder.run()
 
     staging_venv_dir = tmp_path / charm_builder.STAGING_VENV_DIRNAME
 

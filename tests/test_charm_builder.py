@@ -906,6 +906,7 @@ def test_builder_arguments_defaults(tmp_path):
         assert self.allow_pip_binary is False
         assert self.python_packages is None
         assert self.requirements is None
+        sys.exit(42)
 
     with patch.object(
         sys, "argv", ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]
@@ -913,7 +914,9 @@ def test_builder_arguments_defaults(tmp_path):
         with patch(
             "charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm
         ):
-            charm_builder.main()
+            with pytest.raises(SystemExit) as raised:
+                charm_builder.main()
+        assert raised.value.code == 42
 
 
 def test_builder_arguments_full(tmp_path):
@@ -926,6 +929,7 @@ def test_builder_arguments_full(tmp_path):
         assert self.allow_pip_binary is True
         assert self.python_packages == ["pkg1", "pkg2"]
         assert self.requirements == ["reqs1.txt", "reqs2.txt"]
+        sys.exit(42)
 
     with patch.object(
         sys,
@@ -948,4 +952,6 @@ def test_builder_arguments_full(tmp_path):
         with patch(
             "charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm
         ):
-            charm_builder.main()
+            with pytest.raises(SystemExit) as raised:
+                charm_builder.main()
+        assert raised.value.code == 42

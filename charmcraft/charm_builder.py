@@ -250,15 +250,15 @@ class CharmBuilder:
         # pip and setuptools will also be installed!
         staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
         logger.debug("create staging venv in %r", str(staging_venv_dir))
-        retcode = _process_run([sys.executable, "-m", "venv", staging_venv_dir])
+        retcode = _process_run([sys.executable, "-m", "venv", str(staging_venv_dir)])
         if retcode:
             raise CommandError("problems creating venv")
 
-        retcode = _process_run(["pip", "--version"])
+        retcode = _process_run(["pip3", "--version"])
         if retcode:
             raise CommandError("problems using pip")
 
-        cmd = ["pip", "install"]
+        cmd = ["pip3", "install"]
 
         if not self.allow_pip_binary:
             cmd.extend(["--no-binary", ":all:"])

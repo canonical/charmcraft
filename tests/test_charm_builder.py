@@ -626,9 +626,9 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
 
     envpath = tmp_path / STAGING_VENV_DIRNAME
     assert mock_run.mock_calls == [
-        call([sys.executable, "-m", "venv", envpath]),
-        call(["pip", "--version"]),
-        call(["pip", "install", "--no-binary", ":all:", "-r", "reqs.txt"]),
+        call([sys.executable, "-m", "venv", str(envpath)]),
+        call(["pip3", "--version"]),
+        call(["pip3", "install", "--no-binary", ":all:", "-r", "reqs.txt"]),
     ]
 
 
@@ -653,9 +653,9 @@ def test_build_dependencies_virtualenv_allow_binary(tmp_path):
 
     envpath = tmp_path / STAGING_VENV_DIRNAME
     assert mock_run.mock_calls == [
-        call([sys.executable, "-m", "venv", envpath]),
-        call(["pip", "--version"]),
-        call(["pip", "install", "-r", "reqs.txt"]),
+        call([sys.executable, "-m", "venv", str(envpath)]),
+        call(["pip3", "--version"]),
+        call(["pip3", "install", "-r", "reqs.txt"]),
     ]
 
 
@@ -679,11 +679,11 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
 
     envpath = tmp_path / STAGING_VENV_DIRNAME
     assert mock_run.mock_calls == [
-        call([sys.executable, "-m", "venv", envpath]),
-        call(["pip", "--version"]),
+        call([sys.executable, "-m", "venv", str(envpath)]),
+        call(["pip3", "--version"]),
         call(
             [
-                "pip",
+                "pip3",
                 "install",
                 "--no-binary",
                 ":all:",
@@ -716,9 +716,9 @@ def test_build_dependencies_virtualenv_packages_simple(tmp_path):
 
     envpath = tmp_path / STAGING_VENV_DIRNAME
     assert mock_run.mock_calls == [
-        call([sys.executable, "-m", "venv", envpath]),
-        call(["pip", "--version"]),
-        call(["pip", "install", "--no-binary", ":all:", "pkg"]),
+        call([sys.executable, "-m", "venv", str(envpath)]),
+        call(["pip3", "--version"]),
+        call(["pip3", "install", "--no-binary", ":all:", "pkg"]),
     ]
 
 
@@ -742,9 +742,9 @@ def test_build_dependencies_virtualenv_packages_multiple(tmp_path):
 
     envpath = tmp_path / STAGING_VENV_DIRNAME
     assert mock_run.mock_calls == [
-        call([sys.executable, "-m", "venv", envpath]),
-        call(["pip", "--version"]),
-        call(["pip", "install", "--no-binary", ":all:", "pkg1", "pkg2"]),
+        call([sys.executable, "-m", "venv", str(envpath)]),
+        call(["pip3", "--version"]),
+        call(["pip3", "install", "--no-binary", ":all:", "pkg1", "pkg2"]),
     ]
 
 
@@ -769,9 +769,9 @@ def test_build_dependencies_virtualenv_reqs_and_packages(tmp_path):
 
     envpath = tmp_path / STAGING_VENV_DIRNAME
     assert mock_run.mock_calls == [
-        call([sys.executable, "-m", "venv", envpath]),
-        call(["pip", "--version"]),
-        call(["pip", "install", "--no-binary", ":all:", "pkg", "-r", "reqs.txt"]),
+        call([sys.executable, "-m", "venv", str(envpath)]),
+        call(["pip3", "--version"]),
+        call(["pip3", "install", "--no-binary", ":all:", "pkg", "-r", "reqs.txt"]),
     ]
 
 

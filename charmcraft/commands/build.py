@@ -94,7 +94,7 @@ def format_charm_file_name(
     return "_".join([charm_name, _format_bases_config(bases_config)]) + ".charm"
 
 
-def polite_exec(cmd, **kwargs):
+def polite_exec(cmd):
     """Execute a command, only showing output if error."""
     logger.debug("Running external command %s", cmd)
     try:
@@ -103,7 +103,6 @@ def polite_exec(cmd, **kwargs):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
-            **kwargs,
         )
     except Exception as err:
         logger.error("Executing %s crashed with %r", cmd, err)
@@ -151,9 +150,27 @@ class Builder:
             "PYTHONUSERBASE": str(staging_venv_dir),
         }
 
+        for key in [
+            "PATH",
+            "SNAP",
+            "SNAP_ARCH",
+            "SNAP_NAME",
+            "SNAP_VERSION",
+            "http_proxy",
+            "https_proxy",
+        ]:
+            if key in os.environ:
+                build_env[key] = os.environ[key]
+
+        env_flags = [f"{key}={value}" for key, value in build_env.items()]
+
         # invoke the charm builder
         build_cmd = [
+            "env",
+            "-i",
+            *env_flags,
             sys.executable,
+            "-I",
             charm_builder.__file__,
             "--charmdir",
             str(self.charmdir),
@@ -168,7 +185,7 @@ class Builder:
         for req in self.requirement_paths:
             build_cmd.extend(["-r", str(req)])
 
-        retcode = polite_exec(build_cmd, env=build_env)
+        retcode = polite_exec(build_cmd)
         if retcode:
             raise CommandError("problems running charm builder")
 

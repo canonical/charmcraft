@@ -24,7 +24,7 @@ import zipfile
 from collections import namedtuple
 from textwrap import dedent
 from typing import List
-from unittest.mock import call, patch
+from unittest.mock import ANY, call, patch
 
 import pytest
 import yaml
@@ -1210,7 +1210,12 @@ def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
 
     mock_run.assert_called_with(
         [
+            "env",
+            "-i",
+            ANY,
+            f"PYTHONUSERBASE={staging_venv_dir}",
             sys.executable,
+            "-I",
             charm_builder.__file__,
             "--charmdir",
             str(tmp_path),
@@ -1224,10 +1229,6 @@ def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
             "-r",
             str(tmp_path / "req2.txt"),
         ],
-        env={
-            "PATH": "{}/bin:${{PATH}}".format(str(staging_venv_dir)),
-            "PYTHONUSERBASE": str(staging_venv_dir),
-        },
     )
 
 

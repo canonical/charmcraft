@@ -145,11 +145,10 @@ class Builder:
 
         # prepare build environment
         staging_venv_dir = self.charmdir / charm_builder.STAGING_VENV_DIRNAME
-        build_env = {
-            "PATH": f"{staging_venv_dir}/bin:${{PATH}}",
-            "PYTHONUSERBASE": str(staging_venv_dir),
-        }
 
+        build_env = dict(
+            LANG="C.UTF-8", LC_ALL="C.UTF-8", PYTHONUSERBASE=str(staging_venv_dir)
+        )
         for key in [
             "PATH",
             "SNAP",
@@ -161,6 +160,12 @@ class Builder:
         ]:
             if key in os.environ:
                 build_env[key] = os.environ[key]
+
+        build_venv_path = f"{staging_venv_dir}/bin"
+        if "PATH" in build_env:
+            build_env["PATH"] = ":".join([build_venv_path, build_env["PATH"]])
+        else:
+            build_env["PATH"] = build_venv_path
 
         env_flags = [f"{key}={value}" for key, value in build_env.items()]
 

@@ -24,7 +24,7 @@ import zipfile
 from collections import namedtuple
 from textwrap import dedent
 from typing import List
-from unittest.mock import ANY, call, patch
+from unittest.mock import call, patch
 
 import pytest
 import yaml
@@ -44,6 +44,11 @@ from charmcraft.commands.build import (
 from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.logsetup import message_handler
 from charmcraft.metadata import CHARM_METADATA
+
+
+class StringContaining(str):
+    def __eq__(self, other):
+        return self in other
 
 
 @pytest.fixture
@@ -1212,8 +1217,10 @@ def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
         [
             "env",
             "-i",
-            ANY,
+            "LANG=C.UTF-8",
+            "LC_ALL=C.UTF-8",
             f"PYTHONUSERBASE={staging_venv_dir}",
+            StringContaining(str(staging_venv_dir / "bin")),
             sys.executable,
             "-I",
             charm_builder.__file__,

@@ -23,7 +23,7 @@ from collections import namedtuple
 
 from charmcraft import config, env, helptexts
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.commands import build, clean, init, pack, store, version
+from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.logsetup import message_handler
 
 logger = logging.getLogger(__name__)
@@ -94,6 +94,7 @@ COMMAND_GROUPS = [
         "Basic",
         [
             HelpCommand,
+            analyze.AnalyzeCommand,
             build.BuildCommand,
             clean.CleanCommand,
             pack.PackCommand,

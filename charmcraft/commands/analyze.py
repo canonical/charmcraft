@@ -1,0 +1,100 @@
+# Copyright 2021 Canonical Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# For further info, check https://github.com/canonical/charmcraft
+
+"""Infrastructure for the 'analyze' command."""
+
+import pathlib
+import tempfile
+import textwrap
+import logging
+import zipfile
+
+from charmcraft import linters
+from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.utils import useful_filepath
+
+logger = logging.getLogger(__name__)
+
+
+class AnalyzeCommand(BaseCommand):
+    """Analyze a charm."""
+
+    name = "analyze"
+    help_msg = "Analyze a charm"
+    overview = textwrap.dedent("""
+        Analyze a charm.
+
+        Report the attributes and lint results directly in the terminal. Use
+        `--force` to run even those configured to be ignored.
+    """)
+    needs_config = False  # optional until we fully support charms here
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            "filepath", type=useful_filepath, help="The charm to analyze"
+        )
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Force to run all checks, even those set to ignore in the configuration",
+        )
+
+    def run(self, parsed_args):
+        """Run the command."""
+        tmpdir = tempfile.mkdtemp()
+        filepath = str(parsed_args.filepath)
+        try:
+            zf = zipfile.ZipFile(filepath)
+            zf.extractall(path=tmpdir)
+        except Exception as exc:
+            raise CommandError("Cannot open the indicated charm file {!r}: {!r}".format(
+                filepath, exc))
+
+        # run the analyzer
+        linting_results = linters.analyze(self.config, pathlib.Path(tmpdir))
+
+        # group by attributes and lint outcomes (discarding ignored ones)
+        #FIXME: what about "fatal" results?
+        #FIXME: what about "ignored" lints?
+        #FIXME if "--force", pass run_ignored=True
+        grouped = {}
+        for result in linting_results:
+            if result.check_type == linters.CheckType.attribute:
+                group_key = linters.CheckType.attribute
+                result_info = result.result
+            else:
+                # linters
+                group_key = result.result
+                if result.result == linters.OK:
+                    result_info = "no issues found"
+                else:
+                    result_info = result.text
+            grouped.setdefault(group_key, []).append((result, result_info))
+
+        # present the results
+        titles = [
+            ("Attributes", linters.CheckType.attribute),
+            ("Lint Warnings", linters.WARNINGS),
+            ("Lint Errors", linters.ERRORS),
+            ("Lint OK", linters.OK),
+        ]
+        for title, key in titles:
+            results = grouped.get(key)
+            if results is not None:
+                logger.info("%s:", title)
+                for result, result_info in results:
+                    logger.info("- %s: %s (%s)", result.name, result_info, result.url)

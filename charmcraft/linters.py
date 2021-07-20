@@ -39,6 +39,7 @@ IGNORED = "ignored"
 WARNINGS = "warnings"
 ERRORS = "errors"
 FATAL = "fatal"
+OK = "ok"
 
 # shared state between checkers, to reuse analysis results and/or other intermediate information
 shared_state = defaultdict(dict)
@@ -213,7 +214,7 @@ class JujuMetadata:
     text = "Problems found with metadata.yaml file."
 
     # different result constants
-    Result = namedtuple("Result", "ok errors")(ok="ok", errors=ERRORS)
+    Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""

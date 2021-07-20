@@ -14,13 +14,10 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import errno
-import filecmp
 import logging
 import os
 import pathlib
 import re
-import socket
 import subprocess
 import sys
 import zipfile
@@ -32,14 +29,12 @@ from unittest.mock import call, patch
 import pytest
 import yaml
 
-from charmcraft import linters
+from charmcraft import charm_builder, linters
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
     DISPATCH_CONTENT,
-    DISPATCH_FILENAME,
-    VENV_DIRNAME,
     Builder,
     Validator,
     format_charm_file_name,
@@ -1211,7 +1206,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     )
 
 
-def test_build_generics_simple_files(tmp_path, config):
+def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
     """Check transferred metadata and simple entrypoint, also return proper linked entrypoint."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1226,796 +1221,59 @@ def test_build_generics_simple_files(tmp_path, config):
         {
             "from": tmp_path,
             "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    linked_entrypoint = builder.handle_generic_paths()
-
-    # check files are there, are files, and are really hard links (so no
-    # check for permissions needed)
-    built_metadata = build_dir / CHARM_METADATA
-    assert built_metadata.is_file()
-    assert built_metadata.stat().st_ino == metadata.stat().st_ino
-
-    built_entrypoint = build_dir / "crazycharm.py"
-    assert built_entrypoint.is_file()
-    assert built_entrypoint.stat().st_ino == entrypoint.stat().st_ino
-
-    assert linked_entrypoint == built_entrypoint
-
-
-def test_build_generics_simple_dir(tmp_path, config):
-    """Check transferred any directory, with proper permissions."""
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-    entrypoint = tmp_path / "crazycharm.py"
-    entrypoint.touch()
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-
-    somedir = tmp_path / "somedir"
-    somedir.mkdir(mode=0o700)
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_generic_paths()
-
-    built_dir = build_dir / "somedir"
-    assert built_dir.is_dir()
-    assert built_dir.stat().st_mode & 0xFFF == 0o700
-
-
-def test_build_generics_ignored_file(tmp_path, caplog, config):
-    """Don't include ignored filed."""
-    caplog.set_level(logging.DEBUG)
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-
-    # create two files (and the needed entrypoint)
-    file1 = tmp_path / "file1.txt"
-    file1.touch()
-    file2 = tmp_path / "file2.txt"
-    file2.touch()
-    entrypoint = tmp_path / "crazycharm.py"
-    entrypoint.touch()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
+            "requirement": [tmp_path / "req1.txt", tmp_path / "req2.txt"],
             "force": False,
         },
         config,
     )
 
-    # set it up to ignore file 2 and make it work
-    builder.ignore_rules.extend_patterns(["file2.*"])
-    builder.handle_generic_paths()
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv("PATH", "/some/path")
+    monkeypatch.setenv("SNAP", "snap_value")
+    monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
+    monkeypatch.setenv("SNAP_NAME", "snap_name_value")
+    monkeypatch.setenv("SNAP_VERSION", "snap_version_value")
+    monkeypatch.setenv("http_proxy", "http_proxy_value")
+    monkeypatch.setenv("https_proxy", "https_proxy_value")
+    monkeypatch.setenv("no_proxy", "no_proxy_value")
+    with patch("charmcraft.commands.build.polite_exec") as mock_run:
+        mock_run.side_effect = [1]
+        with patch(
+            "charmcraft.commands.build.check_if_base_matches_host",
+            return_value=(True, None),
+        ):
+            with pytest.raises(CommandError, match="problems running charm builder"):
+                builder.run()
 
-    assert (build_dir / "file1.txt").exists()
-    assert not (build_dir / "file2.txt").exists()
-
-    expected = "Ignoring file because of rules: 'file2.txt'"
-    assert expected in [rec.message for rec in caplog.records]
-
-
-def test_build_generics_ignored_dir(tmp_path, caplog, config):
-    """Don't include ignored dir."""
-    caplog.set_level(logging.DEBUG)
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-
-    # create two files (and the needed entrypoint)
-    dir1 = tmp_path / "dir1"
-    dir1.mkdir()
-    dir2 = tmp_path / "dir2"
-    dir2.mkdir()
-    entrypoint = tmp_path / "crazycharm.py"
-    entrypoint.touch()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-
-    # set it up to ignore dir 2 and make it work
-    builder.ignore_rules.extend_patterns(["dir2"])
-    builder.handle_generic_paths()
-
-    assert (build_dir / "dir1").exists()
-    assert not (build_dir / "dir2").exists()
-
-    expected = "Ignoring directory because of rules: 'dir2'"
-    assert expected in [rec.message for rec in caplog.records]
-
-
-def _test_build_generics_tree(tmp_path, caplog, config, *, expect_hardlinks):
-    caplog.set_level(logging.DEBUG)
-
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    # create this structure:
-    # ├─ crazycharm.py  (entrypoint)
-    # ├─ file1.txt
-    # ├─ dir1
-    # │  └─ dir3  (ignored!)
-    # └─ dir2
-    #    ├─ file2.txt
-    #    ├─ file3.txt  (ignored!)
-    #    ├─ dir4  (ignored!)
-    #    │   └─ file4.txt
-    #    └─ dir5
-    entrypoint = tmp_path / "crazycharm.py"
-    entrypoint.touch()
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    file1 = tmp_path / "file1.txt"
-    file1.touch()
-    dir1 = tmp_path / "dir1"
-    dir1.mkdir()
-    dir3 = dir1 / "dir3"
-    dir3.mkdir()
-    dir2 = tmp_path / "dir2"
-    dir2.mkdir()
-    file2 = dir2 / "file2.txt"
-    file2.touch()
-    file3 = dir2 / "file3.txt"
-    file3.touch()
-    dir4 = dir2 / "dir4"
-    dir4.mkdir()
-    file4 = dir4 / "file4.txt"
-    file4.touch()
-    dir5 = dir2 / "dir5"
-    dir5.mkdir()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-
-    # set it up to ignore some stuff and make it work
-    builder.ignore_rules.extend_patterns(
+    mock_run.assert_called_with(
         [
-            "dir1/dir3",
-            "dir2/file3.txt",
-            "dir2/dir4",
-        ]
+            "env",
+            "-i",
+            "LANG=C.UTF-8",
+            "LC_ALL=C.UTF-8",
+            "PATH=/some/path",
+            "SNAP=snap_value",
+            "SNAP_ARCH=snap_arch_value",
+            "SNAP_NAME=snap_name_value",
+            "SNAP_VERSION=snap_version_value",
+            "http_proxy=http_proxy_value",
+            "https_proxy=https_proxy_value",
+            "no_proxy=no_proxy_value",
+            sys.executable,
+            "-I",
+            charm_builder.__file__,
+            "--charmdir",
+            str(tmp_path),
+            "--builddir",
+            str(build_dir),
+            "--entrypoint",
+            str(entrypoint),
+            "-r",
+            str(tmp_path / "req1.txt"),
+            "-r",
+            str(tmp_path / "req2.txt"),
+        ],
     )
-    builder.handle_generic_paths()
-
-    assert (build_dir / "crazycharm.py").exists()
-    assert (build_dir / "file1.txt").exists()
-    assert (build_dir / "dir1").exists()
-    assert not (build_dir / "dir1" / "dir3").exists()
-    assert (build_dir / "dir2").exists()
-    assert (build_dir / "dir2" / "file2.txt").exists()
-    assert not (build_dir / "dir2" / "file3.txt").exists()
-    assert not (build_dir / "dir2" / "dir4").exists()
-    assert (build_dir / "dir2" / "dir5").exists()
-
-    for (p1, p2) in [
-        (build_dir / "crazycharm.py", entrypoint),
-        (build_dir / "file1.txt", file1),
-        (build_dir / "dir2" / "file2.txt", file2),
-    ]:
-        if expect_hardlinks:
-            # they're hard links
-            assert p1.samefile(p2)
-        else:
-            # they're *not* hard links
-            assert not p1.samefile(p2)
-            # but they're essentially the same
-            assert filecmp.cmp(str(p1), str(p2), shallow=False)
-            assert p1.stat().st_mode == p2.stat().st_mode
-            assert p1.stat().st_size == p2.stat().st_size
-            assert p1.stat().st_atime == pytest.approx(p2.stat().st_atime)
-            assert p1.stat().st_mtime == pytest.approx(p2.stat().st_mtime)
-
-
-def test_build_generics_tree(tmp_path, caplog, config):
-    """Manages ok a deep tree, including internal ignores."""
-    _test_build_generics_tree(tmp_path, caplog, config, expect_hardlinks=True)
-
-
-def test_build_generics_tree_vagrant(tmp_path, caplog, config):
-    """Manages ok a deep tree, including internal ignores, when hardlinks aren't allowed."""
-    with patch("os.link") as mock_link:
-        mock_link.side_effect = PermissionError("No you don't.")
-        _test_build_generics_tree(tmp_path, caplog, config, expect_hardlinks=False)
-
-
-def test_build_generics_tree_xdev(tmp_path, caplog, config):
-    """Manages ok a deep tree, including internal ignores, when hardlinks can't be done."""
-    with patch("os.link") as mock_link:
-        mock_link.side_effect = OSError(errno.EXDEV, os.strerror(errno.EXDEV))
-        _test_build_generics_tree(tmp_path, caplog, config, expect_hardlinks=False)
-
-
-def test_build_generics_symlink_file(tmp_path, config):
-    """Respects a symlinked file."""
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    entrypoint = tmp_path / "crazycharm.py"
-    entrypoint.touch()
-    the_symlink = tmp_path / "somehook.py"
-    the_symlink.symlink_to(entrypoint)
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_generic_paths()
-
-    built_symlink = build_dir / "somehook.py"
-    assert built_symlink.is_symlink()
-    assert built_symlink.resolve() == build_dir / "crazycharm.py"
-    real_link = os.readlink(str(built_symlink))
-    assert real_link == "crazycharm.py"
-
-
-def test_build_generics_symlink_dir(tmp_path, config):
-    """Respects a symlinked dir."""
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    entrypoint = tmp_path / "crazycharm.py"
-    entrypoint.touch()
-    somedir = tmp_path / "somedir"
-    somedir.mkdir()
-    somefile = somedir / "sanity check"
-    somefile.touch()
-    the_symlink = tmp_path / "thelink"
-    the_symlink.symlink_to(somedir)
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_generic_paths()
-
-    built_symlink = build_dir / "thelink"
-    assert built_symlink.is_symlink()
-    assert built_symlink.resolve() == build_dir / "somedir"
-    real_link = os.readlink(str(built_symlink))
-    assert real_link == "somedir"
-
-    # as a sanity check, the file inside the linked dir should exist
-    assert (build_dir / "thelink" / "sanity check").exists()
-
-
-def test_build_generics_symlink_deep(tmp_path, config):
-    """Correctly re-links a symlink across deep dirs."""
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    entrypoint = tmp_path / "crazycharm.py"
-    entrypoint.touch()
-
-    dir1 = tmp_path / "dir1"
-    dir1.mkdir()
-    dir2 = tmp_path / "dir2"
-    dir2.mkdir()
-    original_target = dir1 / "file.real"
-    original_target.touch()
-    the_symlink = dir2 / "file.link"
-    the_symlink.symlink_to(original_target)
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_generic_paths()
-
-    built_symlink = build_dir / "dir2" / "file.link"
-    assert built_symlink.is_symlink()
-    assert built_symlink.resolve() == build_dir / "dir1" / "file.real"
-    real_link = os.readlink(str(built_symlink))
-    assert real_link == "../dir1/file.real"
-
-
-def test_build_generics_symlink_file_outside(tmp_path, caplog, config):
-    """Ignores (with warning) a symlink pointing a file outside projects dir."""
-    caplog.set_level(logging.WARNING)
-
-    project_dir = tmp_path / "test-project"
-    project_dir.mkdir()
-
-    metadata = project_dir / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = project_dir / BUILD_DIRNAME
-    build_dir.mkdir()
-    entrypoint = project_dir / "crazycharm.py"
-    entrypoint.touch()
-
-    outside_project = tmp_path / "dangerous.txt"
-    outside_project.touch()
-    the_symlink = project_dir / "external-file"
-    the_symlink.symlink_to(outside_project)
-
-    builder = Builder(
-        {
-            "from": project_dir,
-            "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_generic_paths()
-
-    assert not (build_dir / "external-file").exists()
-    expected = "Ignoring symlink because targets outside the project: 'external-file'"
-    assert expected in [rec.message for rec in caplog.records]
-
-
-def test_build_generics_symlink_directory_outside(tmp_path, caplog, config):
-    """Ignores (with warning) a symlink pointing a dir outside projects dir."""
-    caplog.set_level(logging.WARNING)
-
-    project_dir = tmp_path / "test-project"
-    project_dir.mkdir()
-
-    metadata = project_dir / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = project_dir / BUILD_DIRNAME
-    build_dir.mkdir()
-    entrypoint = project_dir / "crazycharm.py"
-    entrypoint.touch()
-
-    outside_project = tmp_path / "dangerous"
-    outside_project.mkdir()
-    the_symlink = project_dir / "external-dir"
-    the_symlink.symlink_to(outside_project)
-
-    builder = Builder(
-        {
-            "from": project_dir,
-            "entrypoint": entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_generic_paths()
-
-    assert not (build_dir / "external-dir").exists()
-    expected = "Ignoring symlink because targets outside the project: 'external-dir'"
-    assert expected in [rec.message for rec in caplog.records]
-
-
-def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch, config):
-    """Ignores whatever is not a regular file, symlink or dir."""
-    caplog.set_level(logging.DEBUG)
-
-    # change into the tmp path and do everything locally, because otherwise the socket path
-    # will be too long for mac os
-    monkeypatch.chdir(tmp_path)
-
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = pathlib.Path(BUILD_DIRNAME)
-    build_dir.mkdir()
-    entrypoint = pathlib.Path("crazycharm.py")
-    entrypoint.touch()
-
-    # create a socket
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.bind("test-socket")
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": tmp_path / entrypoint,
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_generic_paths()
-
-    assert not (build_dir / "test-socket").exists()
-    expected = "Ignoring file because of type: 'test-socket'"
-    assert expected in [rec.message for rec in caplog.records]
-
-
-def test_build_dispatcher_modern_dispatch_created(tmp_path, config):
-    """The dispatcher script is properly built."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    linked_entrypoint = build_dir / "somestuff.py"
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_dispatcher(linked_entrypoint)
-
-    included_dispatcher = build_dir / DISPATCH_FILENAME
-    with included_dispatcher.open("rt", encoding="utf8") as fh:
-        dispatcher_code = fh.read()
-    assert dispatcher_code == DISPATCH_CONTENT.format(
-        entrypoint_relative_path="somestuff.py"
-    )
-
-
-def test_build_dispatcher_modern_dispatch_respected(tmp_path, config):
-    """The already included dispatcher script is left untouched."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    already_present_dispatch = build_dir / DISPATCH_FILENAME
-    with already_present_dispatch.open("wb") as fh:
-        fh.write(b"abc")
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_dispatcher("whatever")
-
-    with already_present_dispatch.open("rb") as fh:
-        assert fh.read() == b"abc"
-
-
-def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path, config):
-    """The mandatory classic hooks are implemented ok if not present."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    linked_entrypoint = build_dir / "somestuff.py"
-    included_dispatcher = build_dir / DISPATCH_FILENAME
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    with patch("charmcraft.commands.build.MANDATORY_HOOK_NAMES", {"testhook"}):
-        builder.handle_dispatcher(linked_entrypoint)
-
-    test_hook = build_dir / "hooks" / "testhook"
-    assert test_hook.is_symlink()
-    assert test_hook.resolve() == included_dispatcher
-    real_link = os.readlink(str(test_hook))
-    assert real_link == os.path.join("..", DISPATCH_FILENAME)
-
-
-def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path, config):
-    """The already included mandatory classic hooks are left untouched."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    built_hooks_dir = build_dir / "hooks"
-    built_hooks_dir.mkdir()
-    test_hook = built_hooks_dir / "testhook"
-    with test_hook.open("wb") as fh:
-        fh.write(b"abc")
-
-    linked_entrypoint = build_dir / "somestuff.py"
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    with patch("charmcraft.commands.build.MANDATORY_HOOK_NAMES", {"testhook"}):
-        builder.handle_dispatcher(linked_entrypoint)
-
-    with test_hook.open("rb") as fh:
-        assert fh.read() == b"abc"
-
-
-def test_build_dispatcher_classic_hooks_linking_charm_replaced(
-    tmp_path, caplog, config
-):
-    """Hooks that are just a symlink to the entrypoint are replaced."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    # simple source code
-    src_dir = build_dir / "src"
-    src_dir.mkdir()
-    built_charm_script = src_dir / "charm.py"
-    with built_charm_script.open("wb") as fh:
-        fh.write(b"all the magic")
-
-    # a test hook, just a symlink to the charm
-    built_hooks_dir = build_dir / "hooks"
-    built_hooks_dir.mkdir()
-    test_hook = built_hooks_dir / "somehook"
-    test_hook.symlink_to(built_charm_script)
-
-    included_dispatcher = build_dir / DISPATCH_FILENAME
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    builder.handle_dispatcher(built_charm_script)
-
-    # the test hook is still there and a symlink, but now pointing to the dispatcher
-    assert test_hook.is_symlink()
-    assert test_hook.resolve() == included_dispatcher
-    expected = "Replacing existing hook 'somehook' as it's a symlink to the entrypoint"
-    assert expected in [rec.message for rec in caplog.records]
-
-
-def test_build_dependencies_virtualenv_simple(tmp_path, config):
-    """A virtualenv is created with the specified requirements file."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": ["reqs.txt"],
-            "force": False,
-        },
-        config,
-    )
-
-    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 1
-        with patch("charmcraft.commands.build.polite_exec") as mock:
-            mock.return_value = 0
-            builder.handle_dependencies()
-
-    envpath = build_dir / VENV_DIRNAME
-    assert mock.mock_calls == [
-        call(["pip3", "list"]),
-        call(
-            ["pip3", "install", "--target={}".format(envpath), "--requirement=reqs.txt"]
-        ),
-    ]
-    assert mock_run.mock_calls == [
-        call(
-            [
-                "python3",
-                "-c",
-                (
-                    "from pip.commands.install import InstallCommand; "
-                    'assert InstallCommand().cmd_opts.get_option("--system") is not None'
-                ),
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ),
-    ]
-
-
-def test_build_dependencies_needs_system(tmp_path, config):
-    """pip3 is called with --system when pip3 needs it."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": ["reqs"],
-            "force": False,
-        },
-        config,
-    )
-
-    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 0
-        with patch("charmcraft.commands.build.polite_exec") as mock:
-            mock.return_value = 0
-            builder.handle_dependencies()
-
-    envpath = build_dir / VENV_DIRNAME
-    assert mock.mock_calls == [
-        call(["pip3", "list"]),
-        call(
-            [
-                "pip3",
-                "install",
-                "--target={}".format(envpath),
-                "--system",
-                "--requirement=reqs",
-            ]
-        ),
-    ]
-
-
-def test_build_dependencies_virtualenv_multiple(tmp_path, config):
-    """A virtualenv is created with multiple requirements files."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": ["reqs1.txt", "reqs2.txt"],
-            "force": False,
-        },
-        config,
-    )
-
-    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 1
-        with patch("charmcraft.commands.build.polite_exec") as mock:
-            mock.return_value = 0
-            builder.handle_dependencies()
-
-    envpath = build_dir / VENV_DIRNAME
-    assert mock.mock_calls == [
-        call(["pip3", "list"]),
-        call(
-            [
-                "pip3",
-                "install",
-                "--target={}".format(envpath),
-                "--requirement=reqs1.txt",
-                "--requirement=reqs2.txt",
-            ]
-        ),
-    ]
-
-
-def test_build_dependencies_virtualenv_none(tmp_path, config):
-    """The virtualenv is NOT created if no needed."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-
-    with patch("charmcraft.commands.build.polite_exec") as mock:
-        builder.handle_dependencies()
-
-    mock.assert_not_called()
-
-
-def test_build_dependencies_virtualenv_error_basicpip(tmp_path, config):
-    """Process is properly interrupted if using pip fails."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": ["something"],
-            "force": False,
-        },
-        config,
-    )
-
-    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 1
-        with patch("charmcraft.commands.build.polite_exec") as mock:
-            mock.return_value = -7
-            with pytest.raises(CommandError, match="problems using pip"):
-                builder.handle_dependencies()
-
-
-def test_build_dependencies_virtualenv_error_installing(tmp_path, config):
-    """Process is properly interrupted if virtualenv creation fails."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": ["something"],
-            "force": False,
-        },
-        config,
-    )
-
-    with patch("charmcraft.commands.build.subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 1
-        with patch("charmcraft.commands.build.polite_exec") as mock:
-            mock.side_effect = [0, -7]
-            with pytest.raises(CommandError, match="problems installing dependencies"):
-                builder.handle_dependencies()
 
 
 def test_build_package_tree_structure(tmp_path, monkeypatch, config):
@@ -2115,55 +1373,6 @@ def test_build_package_name(tmp_path, monkeypatch, config):
     zipname = builder.handle_package()
 
     assert zipname == "name-from-metadata.charm"
-
-
-def test_builder_without_jujuignore(tmp_path, config):
-    """Without a .jujuignore we still have a default set of ignores"""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    ignore = builder._load_juju_ignore()
-    assert ignore.match("/.git", is_dir=True)
-    assert ignore.match("/build", is_dir=True)
-    assert not ignore.match("myfile.py", is_dir=False)
-
-
-def test_builder_with_jujuignore(tmp_path, config):
-    """With a .jujuignore we will include additional ignores."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-    with (tmp_path / ".jujuignore").open("w", encoding="utf-8") as ignores:
-        ignores.write("*.py\n" "/h\xef.txt\n")
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
-    ignore = builder._load_juju_ignore()
-    assert ignore.match("/.git", is_dir=True)
-    assert ignore.match("/build", is_dir=True)
-    assert ignore.match("myfile.py", is_dir=False)
-    assert not ignore.match("hi.txt", is_dir=False)
-    assert ignore.match("h\xef.txt", is_dir=False)
-    assert not ignore.match("myfile.c", is_dir=False)
 
 
 def test_build_using_linters_attributes(basic_project, monkeypatch, config):

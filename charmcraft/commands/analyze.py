@@ -34,12 +34,14 @@ class AnalyzeCommand(BaseCommand):
 
     name = "analyze"
     help_msg = "Analyze a charm"
-    overview = textwrap.dedent("""
+    overview = textwrap.dedent(
+        """
         Analyze a charm.
 
         Report the attributes and lint results directly in the terminal. Use
         `--force` to run even those configured to be ignored.
-    """)
+    """
+    )
     needs_config = False  # optional until we fully support charms here
 
     def fill_parser(self, parser):
@@ -61,14 +63,19 @@ class AnalyzeCommand(BaseCommand):
             zf = zipfile.ZipFile(filepath)
             zf.extractall(path=tmpdir)
         except Exception as exc:
-            raise CommandError("Cannot open the indicated charm file {!r}: {!r}.".format(
-                filepath, exc))
+            raise CommandError(
+                "Cannot open the indicated charm file {!r}: {!r}.".format(filepath, exc)
+            )
 
         # run the analyzer
-        linting_results = linters.analyze(self.config, pathlib.Path(tmpdir))
+        override_ignore_config = bool(parsed_args.force)
+        linting_results = linters.analyze(
+            self.config,
+            pathlib.Path(tmpdir),
+            override_ignore_config=override_ignore_config,
+        )
 
         # group by attributes and lint outcomes (discarding ignored ones)
-        #FIXME if "--force", pass run_ignored=True
         grouped = {}
         for result in linting_results:
             if result.check_type == linters.CheckType.attribute:
@@ -100,6 +107,8 @@ class AnalyzeCommand(BaseCommand):
                 logger.info("%s:", title)
                 for result, result_info in results:
                     if result_info:
-                        logger.info("- %s: %s (%s)", result.name, result_info, result.url)
+                        logger.info(
+                            "- %s: %s (%s)", result.name, result_info, result.url
+                        )
                     else:
                         logger.info("- %s (%s)", result.name, result.url)

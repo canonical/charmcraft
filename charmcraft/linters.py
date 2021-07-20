@@ -244,7 +244,12 @@ CHECKERS = [
 ]
 
 
-def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
+def analyze(
+    config: config.Config,
+    basedir: pathlib.Path,
+    *,
+    override_ignore_config: bool = False,
+) -> List[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
     for cls in CHECKERS:
@@ -253,7 +258,7 @@ def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
             ignore_list = config.analysis.ignore.attributes
         else:
             ignore_list = config.analysis.ignore.linters
-        if cls.name in ignore_list:
+        if cls.name in ignore_list and not override_ignore_config:
             all_results.append(
                 CheckResult(
                     check_type=cls.check_type,

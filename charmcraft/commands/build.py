@@ -152,6 +152,7 @@ class Builder:
             "SNAP_VERSION",
             "http_proxy",
             "https_proxy",
+            "no_proxy",
         ]:
             if key in os.environ:
                 build_env[key] = os.environ[key]

@@ -46,11 +46,6 @@ from charmcraft.logsetup import message_handler
 from charmcraft.metadata import CHARM_METADATA
 
 
-class StringContaining(str):
-    def __eq__(self, other):
-        return self in other
-
-
 @pytest.fixture
 def basic_project(tmp_path):
     """Create a basic Charmcraft project."""
@@ -1202,6 +1197,14 @@ def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
     )
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv("PATH", "/some/path")
+    monkeypatch.setenv("SNAP", "snap_value")
+    monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
+    monkeypatch.setenv("SNAP_NAME", "snap_name_value")
+    monkeypatch.setenv("SNAP_VERSION", "snap_version_value")
+    monkeypatch.setenv("http_proxy", "http_proxy_value")
+    monkeypatch.setenv("https_proxy", "https_proxy_value")
+    monkeypatch.setenv("no_proxy", "no_proxy_value")
     with patch("charmcraft.commands.build.polite_exec") as mock_run:
         mock_run.side_effect = [1]
         with patch(
@@ -1217,7 +1220,14 @@ def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
             "-i",
             "LANG=C.UTF-8",
             "LC_ALL=C.UTF-8",
-            StringContaining(str("PATH=")),
+            "PATH=/some/path",
+            "SNAP=snap_value",
+            "SNAP_ARCH=snap_arch_value",
+            "SNAP_NAME=snap_name_value",
+            "SNAP_VERSION=snap_version_value",
+            "http_proxy=http_proxy_value",
+            "https_proxy=https_proxy_value",
+            "no_proxy=no_proxy_value",
             sys.executable,
             "-I",
             charm_builder.__file__,

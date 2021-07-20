@@ -2330,7 +2330,7 @@ def test_show_linters_lint_errors_normal(basic_project, caplog, config):
     with pytest.raises(CommandError) as cm:
         builder.show_linting_results(linting_results)
     exc = cm.value
-    assert str(exc) == "Exiting after lint errors (use --force to pack anyway)."
+    assert str(exc) == "Aborting due to lint errors (use --force to override)."
     assert exc.retcode == 2
 
     # log the error (with the title!); nothing on DEBUG

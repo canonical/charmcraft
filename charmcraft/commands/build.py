@@ -190,7 +190,7 @@ class Builder:
                 logger.info("Packing anyway as requested.")
             else:
                 raise CommandError(
-                    "Exiting after lint errors (use --force to pack anyway).", retcode=2
+                    "Aborting due to lint errors (use --force to override).", retcode=2
                 )
 
     def build_charm(self, bases_config: BasesConfiguration) -> str:

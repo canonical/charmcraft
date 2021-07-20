@@ -266,15 +266,27 @@ def _pip_needs_system():
     return proc.returncode == 0
 
 
-def _process_run(cmd, **kwargs) -> int:
+def _process_run(cmd) -> int:
     logger.debug("Running external command %s", cmd)
     try:
-        ret = subprocess.run(cmd, **kwargs)
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+        )
     except Exception as err:
         logger.error("Executing %s crashed with %r", cmd, err)
         return 1
 
-    return ret.returncode
+    for line in proc.stdout:
+        logger.debug("   :: %s", line.rstrip())
+    retcode = proc.wait()
+
+    if retcode:
+        logger.error("Executing %s failed with return code %d", cmd, retcode)
+
+    return retcode
 
 
 def _parse_arguments() -> argparse.Namespace:

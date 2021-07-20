@@ -25,6 +25,7 @@ from charmcraft import config, env, helptexts
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build, clean, init, pack, store, version
 from charmcraft.logsetup import message_handler
+from charmcraft.parts import setup_parts
 
 logger = logging.getLogger(__name__)
 
@@ -358,6 +359,7 @@ def main(argv=None):
     # process
     try:
         env.ensure_charmcraft_environment_is_supported()
+        setup_parts()
         dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
         dispatcher.run()
     except CommandError as err:

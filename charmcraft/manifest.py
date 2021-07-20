@@ -24,7 +24,6 @@ from typing import Optional, List
 import yaml
 
 from charmcraft import __version__, config, linters
-from charmcraft.cmdbase import CommandError
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +71,5 @@ def create_manifest(
     content["analysis"] = {"attributes": attributes_info}
 
     filepath = basedir / "manifest.yaml"
-    if filepath.exists():
-        raise CommandError(
-            "Cannot write the manifest as there is already a 'manifest.yaml' in disk."
-        )
     filepath.write_text(yaml.dump(content))
     return filepath

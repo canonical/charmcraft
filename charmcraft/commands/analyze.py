@@ -61,15 +61,13 @@ class AnalyzeCommand(BaseCommand):
             zf = zipfile.ZipFile(filepath)
             zf.extractall(path=tmpdir)
         except Exception as exc:
-            raise CommandError("Cannot open the indicated charm file {!r}: {!r}".format(
+            raise CommandError("Cannot open the indicated charm file {!r}: {!r}.".format(
                 filepath, exc))
 
         # run the analyzer
         linting_results = linters.analyze(self.config, pathlib.Path(tmpdir))
 
         # group by attributes and lint outcomes (discarding ignored ones)
-        #FIXME: what about "fatal" results?
-        #FIXME: what about "ignored" lints?
         #FIXME if "--force", pass run_ignored=True
         grouped = {}
         for result in linting_results:
@@ -81,6 +79,8 @@ class AnalyzeCommand(BaseCommand):
                 group_key = result.result
                 if result.result == linters.OK:
                     result_info = "no issues found"
+                elif result.result in (linters.FATAL, linters.IGNORED):
+                    result_info = None
                 else:
                     result_info = result.text
             grouped.setdefault(group_key, []).append((result, result_info))
@@ -88,8 +88,10 @@ class AnalyzeCommand(BaseCommand):
         # present the results
         titles = [
             ("Attributes", linters.CheckType.attribute),
+            ("Lint Ignored", linters.IGNORED),
             ("Lint Warnings", linters.WARNINGS),
             ("Lint Errors", linters.ERRORS),
+            ("Lint Fatal", linters.FATAL),
             ("Lint OK", linters.OK),
         ]
         for title, key in titles:
@@ -97,4 +99,7 @@ class AnalyzeCommand(BaseCommand):
             if results is not None:
                 logger.info("%s:", title)
                 for result, result_info in results:
-                    logger.info("- %s: %s (%s)", result.name, result_info, result.url)
+                    if result_info:
+                        logger.info("- %s: %s (%s)", result.name, result_info, result.url)
+                    else:
+                        logger.info("- %s (%s)", result.name, result.url)

@@ -15,8 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import logging
-import os
-import pathlib
 import zipfile
 from argparse import Namespace
 
@@ -32,7 +30,7 @@ def test_expanded_charm(config, tmp_path, monkeypatch):
     """Check that the analyze runs on the temp directory with the extracted charm."""
     # prepare a fake charm file with some specific content just to check it was used properly
     charm_file = tmp_path / "foobar.charm"
-    with zipfile.ZipFile(str(charm_file), "w") as zf:  #FIXME
+    with zipfile.ZipFile(str(charm_file), "w") as zf:
         zf.writestr("fake_file", b"fake content")
 
     # this is to flag that the fake analyzer was called (otherwise the internal
@@ -67,15 +65,31 @@ def test_corrupt_charm(tmp_path, config):
         AnalyzeCommand("group", config).run(args)
     assert str(cm.value) == (
         "Cannot open the indicated charm file '{}': "
-        "FileNotFoundError(2, 'No such file or directory')".format(charm_file))
+        "BadZipFile('File is not a zip file').".format(charm_file))
 
 
-def test_integration_linters(tmp_path):
+def create_a_valid_zip(tmp_path):
+    """Prepare a simple zip file."""
+    zip_file = tmp_path / "foobar.charm"
+    with zipfile.ZipFile(str(zip_file), "w") as zf:
+        zf.writestr("fake_file", b"fake content")
+    return zip_file
+
+
+def test_integration_linters(tmp_path, caplog, config, monkeypatch):
     """Integration test with the real linters.analyze function (as other tests fake it)."""
-    fixme
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    fake_charm = create_a_valid_zip(tmp_path)
+    args = Namespace(filepath=fake_charm)
+    AnalyzeCommand("group", config).run(args)
+
+    expected_titles = ["Attributes:", "Lint Errors:"]
+    logged = [rec.message for rec in caplog.records]
+    assert all(x in logged for x in expected_titles)
 
 
-def test_complete_set_of_results(caplog, config, monkeypatch):
+def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path):
     """Show a complete basic case of results."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
@@ -109,26 +123,53 @@ def test_complete_set_of_results(caplog, config, monkeypatch):
             text="text-04",
             result="check-result-04",
         ),
+        linters.CheckResult(
+            name="check-attribute-05",
+            check_type=linters.CheckType.attribute,
+            url="url-05",
+            text="text-05",
+            result=linters.IGNORED,
+        ),
+        linters.CheckResult(
+            name="check-lint-06",
+            check_type=linters.CheckType.lint,
+            url="url-06",
+            text="text-06",
+            result=linters.IGNORED,
+        ),
+        linters.CheckResult(
+            name="check-lint-07",
+            check_type=linters.CheckType.lint,
+            url="url-07",
+            text="text-07",
+            result=linters.FATAL,
+        ),
     ]
 
-    args = Namespace(filepath="somepath")
+    fake_charm = create_a_valid_zip(tmp_path)
+    args = Namespace(filepath=fake_charm)
     monkeypatch.setattr(linters, "analyze", lambda *a: linting_results)
     AnalyzeCommand("group", config).run(args)
 
     expected = [
         "Attributes:",
         "- check-attribute-04: check-result-04 (url-04)",
+        "- check-attribute-05: ignored (url-05)",
+        "Lint Ignored:",
+        "- check-lint-06 (url-06)",
         "Lint Warnings:",
         "- check-lint-01: text-01 (url-01)",
         "Lint Errors:",
         "- check-lint-03: text-03 (url-03)",
+        "Lint Fatal:",
+        "- check-lint-07 (url-07)",
         "Lint OK:",
         "- check-lint-02: no issues found (url-02)",
     ]
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_only_attributes(caplog, config, monkeypatch):
+def test_only_attributes(caplog, config, monkeypatch, tmp_path):
     """Show only attribute results (the rest may be ignored)."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
@@ -143,7 +184,8 @@ def test_only_attributes(caplog, config, monkeypatch):
         ),
     ]
 
-    args = Namespace(filepath="somepath")
+    fake_charm = create_a_valid_zip(tmp_path)
+    args = Namespace(filepath=fake_charm)
     monkeypatch.setattr(linters, "analyze", lambda *a: linting_results)
     AnalyzeCommand("group", config).run(args)
 
@@ -154,34 +196,7 @@ def test_only_attributes(caplog, config, monkeypatch):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_attributes_ignored(caplog, config, monkeypatch):
-    """Show an attribute that is ignored in the config."""
-    fixme
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-
-    # fake results from the analyzer
-    linting_results = [
-        linters.CheckResult(
-            name="check-attribute",
-            check_type=linters.CheckType.attribute,
-            url="url",
-            text="text",
-            result=linters.IGNORED,
-        ),
-    ]
-
-    args = Namespace(filepath="somepath")
-    monkeypatch.setattr(linters, "analyze", lambda *a: linting_results)
-    AnalyzeCommand("group", config).run(args)
-
-    expected = [
-        "Attributes:",
-        "- check-attribute: ignored (url)",
-    ]
-    assert expected == [rec.message for rec in caplog.records]
-
-
-def test_only_warnings(caplog, config, monkeypatch):
+def test_only_warnings(caplog, config, monkeypatch, tmp_path):
     """Show only warning results (the rest may be ignored)."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
@@ -196,7 +211,8 @@ def test_only_warnings(caplog, config, monkeypatch):
         ),
     ]
 
-    args = Namespace(filepath="somepath")
+    fake_charm = create_a_valid_zip(tmp_path)
+    args = Namespace(filepath=fake_charm)
     monkeypatch.setattr(linters, "analyze", lambda *a: linting_results)
     AnalyzeCommand("group", config).run(args)
 
@@ -207,7 +223,7 @@ def test_only_warnings(caplog, config, monkeypatch):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_only_errors(caplog, config, monkeypatch):
+def test_only_errors(caplog, config, monkeypatch, tmp_path):
     """Show only error results (the rest may be ignored)."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
@@ -222,7 +238,8 @@ def test_only_errors(caplog, config, monkeypatch):
         ),
     ]
 
-    args = Namespace(filepath="somepath")
+    fake_charm = create_a_valid_zip(tmp_path)
+    args = Namespace(filepath=fake_charm)
     monkeypatch.setattr(linters, "analyze", lambda *a: linting_results)
     AnalyzeCommand("group", config).run(args)
 
@@ -233,7 +250,7 @@ def test_only_errors(caplog, config, monkeypatch):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_only_lint_ok(caplog, config, monkeypatch):
+def test_only_lint_ok(caplog, config, monkeypatch, tmp_path):
     """Show only lint results that are ok(the rest may be ignored)."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
@@ -248,7 +265,8 @@ def test_only_lint_ok(caplog, config, monkeypatch):
         ),
     ]
 
-    args = Namespace(filepath="somepath")
+    fake_charm = create_a_valid_zip(tmp_path)
+    args = Namespace(filepath=fake_charm)
     monkeypatch.setattr(linters, "analyze", lambda *a: linting_results)
     AnalyzeCommand("group", config).run(args)
 

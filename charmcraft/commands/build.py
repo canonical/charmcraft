@@ -129,10 +129,51 @@ class Builder:
         self.charmdir = args["from"]
         self.entrypoint = args["entrypoint"]
         self.requirement_paths = args["requirement"]
+        self.force_packing = args["force"]
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.config = config
         self.metadata = parse_metadata_yaml(self.charmdir)
+
+    def show_linting_results(self, linting_results):
+        """Manage the linters results, show some in different conditions, decide if continue."""
+        attribute_results = []
+        lint_results_by_outcome = {}
+        for result in linting_results:
+            if result.result == linters.IGNORED:
+                continue
+            if result.check_type == linters.CheckType.attribute:
+                attribute_results.append(result)
+            else:
+                lint_results_by_outcome.setdefault(result.result, []).append(result)
+
+        # show attribute results
+        for result in attribute_results:
+            logger.debug(
+                "Check result: %s [%s] %s (%s; see more at %s).",
+                result.name,
+                result.check_type,
+                result.result,
+                result.text,
+                result.url,
+            )
+
+        # show warnings (if any), then errors (if any)
+        template = "- %s: %s (%s)"
+        if linters.WARNINGS in lint_results_by_outcome:
+            logger.info("Lint Warnings:")
+            for result in lint_results_by_outcome[linters.WARNINGS]:
+                logger.info(template, result.name, result.text, result.url)
+        if linters.ERRORS in lint_results_by_outcome:
+            logger.info("Lint Errors:")
+            for result in lint_results_by_outcome[linters.ERRORS]:
+                logger.info(template, result.name, result.text, result.url)
+            if self.force_packing:
+                logger.info("Packing anyway as requested.")
+            else:
+                raise CommandError(
+                    "Aborting due to lint errors (use --force to override).", retcode=2
+                )
 
     def build_charm(self, bases_config: BasesConfiguration) -> str:
         """Build the charm.
@@ -183,24 +224,10 @@ class Builder:
         if retcode:
             raise CommandError("problems running charm builder")
 
-        linting_results = []
-        # run linters, present them to the user according to their type, and fail if necessary
+        # run linters and show the results
         linting_results = linters.analyze(self.config, self.buildpath)
-        for result in linting_results:
-            if (
-                result.check_type == linters.CheckType.attribute
-                and result.result != linters.IGNORED
-            ):
-                logger.debug(
-                    "Check result: %s [%s] %s (%s; see more at %s).",
-                    result.name,
-                    result.check_type,
-                    result.result,
-                    result.text,
-                    result.url,
-                )
-            # XXX Facundo 2021-07-09: support for other check types will be
-            # added in the next branches
+        self.show_linting_results(linting_results)
+
         create_manifest(
             self.buildpath,
             self.config.project.started_at,
@@ -369,6 +396,7 @@ class Validator:
         "entrypoint",
         "requirement",
         "bases_indices",
+        "force",
     ]
 
     def __init__(self, config: Config):
@@ -471,6 +499,10 @@ class Validator:
                     "the requirements file was not found: {!r}".format(str(fpath))
                 )
         return filepaths
+
+    def validate_force(self, value):
+        """Validate the value (just convert to bool to make None explicit)."""
+        return bool(value)
 
 
 _overview = """

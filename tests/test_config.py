@@ -25,7 +25,7 @@ import pytest
 
 from charmcraft import linters
 from charmcraft.cmdbase import CommandError
-from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, Part, load
+from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, load
 from charmcraft.utils import get_host_architecture
 
 
@@ -354,7 +354,7 @@ def test_schema_basicprime_bad_init_structure(create_config, check_schema_error)
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - value is not a valid dict in field 'parts'"""
+            - value must be a dictionary in field 'parts'"""
         )
     )
 
@@ -366,14 +366,14 @@ def test_schema_basicprime_bad_bundle_structure(create_config, check_schema_erro
         """
         type: charm  # mandatory
         parts:
-            bundle: ['foo', 'bar']
+            charm: ['foo', 'bar']
     """
     )
     check_schema_error(
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - value is not a valid dict in field 'parts.bundle'"""
+            - part 'charm' must be a dictionary in field 'parts'"""
         )
     )
 
@@ -384,7 +384,7 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
         """
         type: charm  # mandatory
         parts:
-            bundle:
+            charm:
                 prime: foo
     """
     )
@@ -392,26 +392,26 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - value is not a valid list in field 'parts.bundle.prime'"""
+            - value is not a valid list in field 'parts.charm.prime'"""
         )
     )
 
 
-def test_schema_basicprime_bad_prime_type_int(create_config, check_schema_error):
+def test_schema_basicprime_bad_prime_type(create_config, check_schema_error):
     """Schema validation, basic prime with a prime holding not strings."""
     create_config(
         """
         type: charm  # mandatory
         parts:
-            bundle:
-                prime: [33, 'foo']
+            charm:
+                prime: [{}, 'foo']
     """
     )
     check_schema_error(
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - string type expected in field 'parts.bundle.prime[0]'"""
+            - string type expected in field 'parts.charm.prime[0]'"""
         )
     )
 
@@ -422,15 +422,14 @@ def test_schema_basicprime_bad_prime_type_empty(create_config, check_schema_erro
         """
         type: charm  # mandatory
         parts:
-            bundle:
+            charm:
                 prime: ['', 'foo']
     """
     )
     check_schema_error(
         (
             "Bad charmcraft.yaml content:\n"
-            "- '' must be a valid relative path (cannot be empty)"
-            " in field 'parts.bundle.prime[0]'"
+            "- path cannot be empty in field 'parts.charm.prime[0]'"
         )
     )
 
@@ -441,35 +440,34 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
         """
         type: charm  # mandatory
         parts:
-            bundle:
+            charm:
                 prime: ['/bar/foo', 'foo']
     """
     )
     check_schema_error(
         (
             "Bad charmcraft.yaml content:\n"
-            "- '/bar/foo' must be a valid relative path (cannot start with '/')"
-            " in field 'parts.bundle.prime[0]'"
+            "- '/bar/foo' must be a relative path (cannot start with '/')"
+            " in field 'parts.charm.prime[0]'"
             ""
         )
     )
 
 
-def test_schema_unsupported_part(create_config, check_schema_error):
-    """Instantiate charmhub using a bad structure."""
-    """Schema validation, basic prime with bad bundle."""
+def test_schema_additional_part(create_config, check_schema_error):
+    """Schema validation, basic prime with bad part."""
     create_config(
         """
         type: charm  # mandatory
         parts:
-            not-bundle: 1
+            other-part: 1
     """
     )
     check_schema_error(
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - extra field 'not-bundle' not permitted in 'parts' configuration"""
+            - part 'other-part' must be a dictionary in field 'parts'"""
         )
     )
 
@@ -505,30 +503,6 @@ def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, ca
         "DEPRECATED: Configuration keywords are now separated using dashes."
     )
     assert deprecation_msg in [rec.message for rec in caplog.records]
-
-
-# -- tests for BasicPrime config
-
-
-def test_basicprime_frozen():
-    """Cannot change values from the charmhub config."""
-    config = Part(prime=["foo", "bar"])
-    with pytest.raises(TypeError):
-        config[0] = "broken"
-
-
-def test_basicprime_ok():
-    """A simple building ok."""
-    config = Part(prime=["foo", "bar"])
-    with pytest.raises(TypeError):
-        config.prime = "broken"
-    assert config.prime == ["foo", "bar"]
-
-
-def test_basicprime_empty():
-    """Building with an empty list."""
-    config = Part(prime=[])
-    assert config.prime == []
 
 
 # -- tests for bases

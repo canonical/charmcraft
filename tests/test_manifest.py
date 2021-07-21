@@ -17,11 +17,9 @@
 import datetime
 from unittest.mock import patch
 
-import pytest
 import yaml
 
 from charmcraft import __version__, config, linters
-from charmcraft.cmdbase import CommandError
 from charmcraft.manifest import create_manifest
 from charmcraft.utils import OSPlatform
 
@@ -112,32 +110,6 @@ def test_manifest_no_bases(tmp_path):
         "charmcraft-version": __version__,
         "analysis": {"attributes": []},
     }
-
-
-def test_manifest_dont_overwrite(tmp_path):
-    """Don't overwrite the already-existing file."""
-    (tmp_path / "manifest.yaml").touch()
-    bases_config = config.BasesConfiguration(
-        **{
-            "build-on": [
-                config.Base(
-                    name="test-name",
-                    channel="test-channel",
-                ),
-            ],
-            "run-on": [
-                config.Base(
-                    name="test-name",
-                    channel="test-channel",
-                ),
-            ],
-        }
-    )
-    with pytest.raises(CommandError) as cm:
-        create_manifest(tmp_path, datetime.datetime.now(), bases_config, [])
-    assert str(cm.value) == (
-        "Cannot write the manifest as there is already a 'manifest.yaml' in disk."
-    )
 
 
 def test_manifest_checkers_multiple(tmp_path):

@@ -153,36 +153,36 @@ def test_bundle_simple_succesful_build(tmp_path, caplog, bundle_yaml, config):
     assert not (tmp_path / "manifest.yaml").exists()
 
 
-def test_bundle_missing_bundle_file(tmp_path, config):
+def test_bundle_missing_bundle_file(tmp_path, bundle_config):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
     with pytest.raises(CommandError) as cm:
-        PackCommand("group", config).run(noargs)
+        PackCommand("group", bundle_config).run(noargs)
     assert str(cm.value) == (
         "Missing or invalid main bundle file: '{}'.".format(tmp_path / "bundle.yaml")
     )
 
 
-def test_bundle_missing_other_mandatory_file(tmp_path, config, bundle_yaml):
+def test_bundle_missing_other_mandatory_file(tmp_path, bundle_config, bundle_yaml):
     """Can not build a bundle without any of the mandatory files."""
     bundle_yaml(name="testbundle")
-    config.set(type="bundle")
+    bundle_config.set(type="bundle")
 
     # build without a README!
     with pytest.raises(CommandError) as cm:
-        PackCommand("group", config).run(noargs)
+        PackCommand("group", bundle_config).run(noargs)
     assert str(cm.value) == "Missing mandatory file: {!r}.".format(
         str(tmp_path / "README.md")
     )
 
 
-def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, config):
+def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
     """Can not build a bundle without name."""
-    config.set(type="bundle")
+    bundle_config.set(type="bundle")
 
     # build!
     with pytest.raises(CommandError) as cm:
-        PackCommand("group", config).run(noargs)
+        PackCommand("group", bundle_config).run(noargs)
     assert str(cm.value) == (
         "Invalid bundle config; "
         "missing a 'name' field indicating the bundle's name in file '{}'.".format(
@@ -208,18 +208,18 @@ def test_getpaths_mandatory_ok(tmp_path, config):
     assert result == [test_file2, test_file1]
 
 
-def test_getpaths_extra_ok(tmp_path, caplog, config):
+def test_getpaths_extra_ok(tmp_path, caplog, bundle_config):
     """Extra files were indicated ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    config.set(prime=["f2.txt", "f1.txt"])
+    bundle_config.set(prime=["f2.txt", "f1.txt"])
     testfile1 = tmp_path / "f1.txt"
     testfile1.touch()
     testfile2 = tmp_path / "f2.txt"
     testfile2.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        result = get_paths_to_include(config)
+        result = get_paths_to_include(bundle_config)
     assert result == [testfile1, testfile2]
 
     expected = [
@@ -229,16 +229,16 @@ def test_getpaths_extra_ok(tmp_path, caplog, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_missing(tmp_path, caplog, config):
+def test_getpaths_extra_missing(tmp_path, caplog, bundle_config):
     """Extra files were indicated but not found."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    config.set(prime=["f2.txt", "f1.txt"])
+    bundle_config.set(prime=["f2.txt", "f1.txt"])
     testfile1 = tmp_path / "f1.txt"
     testfile1.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        result = get_paths_to_include(config)
+        result = get_paths_to_include(bundle_config)
     assert result == [testfile1]
 
     expected = [
@@ -248,23 +248,23 @@ def test_getpaths_extra_missing(tmp_path, caplog, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_long_path(tmp_path, config):
+def test_getpaths_extra_long_path(tmp_path, bundle_config):
     """An extra file can be deep in directories."""
-    config.set(prime=["foo/bar/baz/extra.txt"])
+    bundle_config.set(prime=["foo/bar/baz/extra.txt"])
     testfile = tmp_path / "foo" / "bar" / "baz" / "extra.txt"
     testfile.parent.mkdir(parents=True)
     testfile.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        result = get_paths_to_include(config)
+        result = get_paths_to_include(bundle_config)
     assert result == [testfile]
 
 
-def test_getpaths_extra_wildcards_ok(tmp_path, caplog, config):
+def test_getpaths_extra_wildcards_ok(tmp_path, caplog, bundle_config):
     """Use wildcards to specify several files ok."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    config.set(prime=["*.txt"])
+    bundle_config.set(prime=["*.txt"])
     testfile1 = tmp_path / "f1.txt"
     testfile1.touch()
     testfile2 = tmp_path / "f2.bin"
@@ -273,7 +273,7 @@ def test_getpaths_extra_wildcards_ok(tmp_path, caplog, config):
     testfile3.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        result = get_paths_to_include(config)
+        result = get_paths_to_include(bundle_config)
     assert result == [testfile1, testfile3]
 
     expected = [
@@ -282,14 +282,14 @@ def test_getpaths_extra_wildcards_ok(tmp_path, caplog, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, config):
+def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, bundle_config):
     """Use wildcards to specify several files but nothing found."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
 
-    config.set(prime=["*.txt"])
+    bundle_config.set(prime=["*.txt"])
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        result = get_paths_to_include(config)
+        result = get_paths_to_include(bundle_config)
     assert result == []
 
     expected = [
@@ -298,9 +298,9 @@ def test_getpaths_extra_wildcards_not_found(tmp_path, caplog, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
-def test_getpaths_extra_globstar(tmp_path, config):
+def test_getpaths_extra_globstar(tmp_path, bundle_config):
     """Double star means whatever directories are in the path."""
-    config.set(prime=["lib/**/*"])
+    bundle_config.set(prime=["lib/**/*"])
     srcpaths = (
         ("lib/foo/f1.txt", True),
         ("lib/foo/deep/fx.txt", True),
@@ -318,13 +318,13 @@ def test_getpaths_extra_globstar(tmp_path, config):
             allexpected.append(testfile)
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        result = get_paths_to_include(config)
+        result = get_paths_to_include(bundle_config)
     assert result == sorted(allexpected)
 
 
-def test_getpaths_extra_globstar_specific_files(tmp_path, config):
+def test_getpaths_extra_globstar_specific_files(tmp_path, bundle_config):
     """Combination of both mechanisms."""
-    config.set(prime=["lib/**/*.txt"])
+    bundle_config.set(prime=["lib/**/*.txt"])
     srcpaths = (
         ("lib/foo/f1.txt", True),
         ("lib/foo/f1.nop", False),
@@ -346,7 +346,7 @@ def test_getpaths_extra_globstar_specific_files(tmp_path, config):
             allexpected.append(testfile)
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        result = get_paths_to_include(config)
+        result = get_paths_to_include(bundle_config)
     assert result == sorted(allexpected)
 
 

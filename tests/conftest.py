@@ -101,6 +101,31 @@ def config(tmp_path):
     return TestConfig(type="charm", parts=parts, project=project)
 
 
+@pytest.fixture
+def bundle_config(tmp_path):
+    """Provide a config class with an extra set method for the test to change it."""
+
+    class TestConfig(config_module.Config, frozen=False):
+        """The Config, but with a method to set test values."""
+
+        def set(self, prime=None, **kwargs):
+            # prime is special, so we don't need to write all this structure in all tests
+            if prime is not None:
+                self.parts["bundle"] = {"prime": prime}
+
+            # the rest is direct
+            for k, v in kwargs.items():
+                object.__setattr__(self, k, v)
+
+    project = config_module.Project(
+        dirpath=tmp_path,
+        started_at=datetime.datetime.utcnow(),
+        config_provided=True,
+    )
+
+    return TestConfig(type="bundle", project=project)
+
+
 @pytest.fixture(autouse=True)
 def clean_already_notified():
     """Clear the already-notified structure for each test.

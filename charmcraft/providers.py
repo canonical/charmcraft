@@ -322,7 +322,7 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
 
         try:
             # XXX Claudio 2021-07-22: craft-parts uses sudo, install it until
-            # we adjust it to detect if running as superuser is needed.
+            # we adjust it to detect if changing to superuser is needed.
             executor.execute_run(
                 [
                     "apt-get",

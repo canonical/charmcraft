@@ -139,7 +139,6 @@ def test_base_configuration_setup(mock_executor, mock_inject, monkeypatch, alias
         ),
     ]
 
-
     assert mock_inject.mock_calls == [
         call(executor=mock_executor, snap_name="charmcraft", classic=True)
     ]

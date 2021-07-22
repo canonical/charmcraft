@@ -6,7 +6,7 @@ cffi==1.14.6
 charset-normalizer==2.0.3
 click==8.0.1
 coverage==5.5
-craft-parts @ https://github.com/canonical/craft-parts/archive/refs/tags/v1.0-alpha.1.tar.gz
+craft-parts @ https://github.com/canonical/craft-parts/archive/refs/tags/v1.0-alpha.2.tar.gz
 craft-providers==1.0.1
 flake8==3.9.2
 humanize==3.10.0

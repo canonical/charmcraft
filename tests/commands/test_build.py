@@ -541,8 +541,7 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     assert (
         manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
     )
-    # XXX: temporarily disabled until we land craft-parts PR #98
-    # assert caplog.records == []
+    assert caplog.records == []
 
 
 def test_build_error_without_metadata_yaml(basic_project, monkeypatch):

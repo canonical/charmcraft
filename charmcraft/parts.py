@@ -75,11 +75,7 @@ class CharmPlugin(plugins.Plugin):
 
     def get_build_packages(self) -> Set[str]:
         """Return a set of required packages to install in the build environment."""
-        return {
-            "python3-pip",
-            "python3-setuptools",
-            "python3-wheel",
-        }
+        return {}
 
     def get_build_environment(self) -> Dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""

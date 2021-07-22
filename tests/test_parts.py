@@ -49,11 +49,7 @@ class TestCharmPlugin:
         )
 
     def test_get_build_package(self):
-        assert self._plugin.get_build_packages() == {
-            "python3-pip",
-            "python3-setuptools",
-            "python3-wheel",
-        }
+        assert self._plugin.get_build_packages() == {}
 
     def test_get_build_snaps(self):
         assert self._plugin.get_build_snaps() == set()

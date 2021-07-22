@@ -118,7 +118,7 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${globals[*]} --name --author --force" -- "$cur") )
             ;;
         upload)
-            COMPREPLY=( $(compgen -W "${globals[*]} --release" -- "$cur") )
+            COMPREPLY=( $(compgen -W "${globals[*]} --release --resource" -- "$cur") )
             ;;
         upload-resource)
             case "$prev" in

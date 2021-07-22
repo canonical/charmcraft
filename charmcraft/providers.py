@@ -21,7 +21,6 @@ import logging
 import os
 import pathlib
 import re
-import subprocess
 import tempfile
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -319,27 +318,6 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
         :raises BaseConfigurationError: on other unexpected error.
         """
         super().setup(executor=executor, retry_wait=retry_wait, timeout=timeout)
-
-        try:
-            # XXX Patterson 2021-07-02: craft-parts will determine/install these
-            # deps as a matter of the plugin(s) and source(s) being used.
-            executor.execute_run(
-                [
-                    "apt-get",
-                    "install",
-                    "-y",
-                    "git",
-                    "python3-pip",
-                    "python3-setuptools",
-                    "python3-wheel",
-                ],
-                check=True,
-                capture_output=True,
-            )
-        except subprocess.CalledProcessError as error:
-            raise bases.BaseConfigurationError(
-                brief="Failed to install the required dependencies.",
-            ) from error
 
         try:
             snap_installer.inject_from_host(

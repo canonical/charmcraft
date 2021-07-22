@@ -680,6 +680,29 @@ def test_analyze_ignore_linter(config):
     assert res2.result == IGNORED
 
 
+def test_analyze_override_ignore(config):
+    """Run all checkers even the ignored ones, if requested."""
+    FakeChecker1 = create_fake_checker(
+        check_type=CheckType.attribute, name="name1", result="res1"
+    )
+    FakeChecker2 = create_fake_checker(
+        check_type=CheckType.lint, name="name2", result="res2"
+    )
+
+    config.analysis.ignore.attributes.append("name1")
+    config.analysis.ignore.linters.append("name2")
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
+        result = analyze(config, "somepath", override_ignore_config=True)
+
+    res1, res2 = result
+    assert res1.check_type == CheckType.attribute
+    assert res1.name == "name1"
+    assert res1.result == "res1"
+    assert res2.check_type == CheckType.lint
+    assert res2.name == "name2"
+    assert res2.result == "res2"
+
+
 def test_analyze_crash_attribute(config):
     """The attribute checker crashes."""
     FakeChecker = create_fake_checker(check_type=CheckType.attribute, name="name")

@@ -49,9 +49,7 @@ class AnalyzeCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument(
-            "filepath", type=useful_filepath, help="The charm to analyze"
-        )
+        parser.add_argument("filepath", type=useful_filepath, help="The charm to analyze")
         parser.add_argument(
             "--force",
             action="store_true",
@@ -94,7 +92,7 @@ class AnalyzeCommand(BaseCommand):
                 }
                 for r in linting_results
             ]
-            logger.info(json.dumps(info))
+            logger.info(json.dumps(info, indent=4))
             return
 
         # group by attributes and lint outcomes (discarding ignored ones)
@@ -129,9 +127,7 @@ class AnalyzeCommand(BaseCommand):
                 logger.info("%s:", title)
                 for result, result_info in results:
                     if result_info:
-                        logger.info(
-                            "- %s: %s (%s)", result.name, result_info, result.url
-                        )
+                        logger.info("- %s: %s (%s)", result.name, result_info, result.url)
                     else:
                         logger.info("- %s (%s)", result.name, result.url)
 

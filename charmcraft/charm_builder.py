@@ -124,9 +124,7 @@ class CharmBuilder:
         """
         logger.debug("Linking in generic paths")
 
-        for basedir, dirnames, filenames in os.walk(
-            str(self.charmdir), followlinks=False
-        ):
+        for basedir, dirnames, filenames in os.walk(str(self.charmdir), followlinks=False):
             abs_basedir = pathlib.Path(basedir)
             rel_basedir = abs_basedir.relative_to(self.charmdir)
 
@@ -137,9 +135,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    logger.debug(
-                        "Ignoring directory because of rules: %r", str(rel_path)
-                    )
+                    logger.debug("Ignoring directory because of rules: %r", str(rel_path))
                     ignored.append(pos)
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
@@ -236,17 +232,13 @@ class CharmBuilder:
             cmd = [
                 "pip3",
                 "install",  # base command
-                "--target={}".format(
-                    venvpath
-                ),  # put all the resulting files in that specific dir
+                "--target={}".format(venvpath),  # put all the resulting files in that specific dir
             ]
             if _pip_needs_system():
                 logger.debug("adding --system to work around pip3 defaulting to --user")
                 cmd.append("--system")
             for reqspath in self.requirement_paths:
-                cmd.append(
-                    "--requirement={}".format(reqspath)
-                )  # the dependencies file(s)
+                cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
             retcode = _process_run(cmd)
             if retcode:
                 raise CommandError("problems installing dependencies")

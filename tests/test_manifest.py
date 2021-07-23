@@ -64,9 +64,7 @@ def test_manifest_simple_ok(tmp_path):
     tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
     os_platform = OSPlatform(system="SuperUbuntu", release="40.10", machine="SomeRISC")
     with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
-        result_filepath = create_manifest(
-            tmp_path, tstamp, bases_config, linting_results
-        )
+        result_filepath = create_manifest(tmp_path, tstamp, bases_config, linting_results)
 
     assert result_filepath == tmp_path / "manifest.yaml"
     saved = yaml.safe_load(result_filepath.read_text())

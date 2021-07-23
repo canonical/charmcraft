@@ -461,9 +461,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     included_dispatcher = build_dir / DISPATCH_FILENAME
     with included_dispatcher.open("rt", encoding="utf8") as fh:
         dispatcher_code = fh.read()
-    assert dispatcher_code == DISPATCH_CONTENT.format(
-        entrypoint_relative_path="somestuff.py"
-    )
+    assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path="somestuff.py")
 
 
 def test_build_dispatcher_modern_dispatch_respected(tmp_path):
@@ -601,9 +599,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     envpath = build_dir / VENV_DIRNAME
     assert mock.mock_calls == [
         call(["pip3", "--version"]),
-        call(
-            ["pip3", "install", "--target={}".format(envpath), "--requirement=reqs.txt"]
-        ),
+        call(["pip3", "install", "--target={}".format(envpath), "--requirement=reqs.txt"]),
     ]
     assert mock_run.mock_calls == [
         call(
@@ -802,12 +798,8 @@ def test_builder_arguments_defaults(tmp_path):
         assert self.requirement_paths is None
         sys.exit(42)
 
-    with patch.object(
-        sys, "argv", ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]
-    ):
-        with patch(
-            "charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm
-        ):
+    with patch.object(sys, "argv", ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]):
+        with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
             with pytest.raises(SystemExit) as raised:
                 charm_builder.main()
         assert raised.value.code == 42
@@ -837,9 +829,7 @@ def test_builder_arguments_full(tmp_path):
             "reqs2.txt",
         ],
     ):
-        with patch(
-            "charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm
-        ):
+        with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
             with pytest.raises(SystemExit) as raised:
                 charm_builder.main()
         assert raised.value.code == 42

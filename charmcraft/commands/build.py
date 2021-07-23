@@ -315,9 +315,7 @@ class Builder:
         self, *, bases_index: int, build_on: Base, build_on_index: int
     ) -> str:
         """Pack instance in Charm."""
-        charm_name = format_charm_file_name(
-            self.metadata.name, self.config.bases[bases_index]
-        )
+        charm_name = format_charm_file_name(self.metadata.name, self.config.bases[bases_index])
 
         # If building in project directory, use the project path as the working
         # directory. The output charms will be placed in the correct directory
@@ -418,9 +416,7 @@ class Validator:
 
         for bases_index in bases_indices:
             if bases_index < 0:
-                raise CommandError(
-                    f"Bases index '{bases_index}' is invalid (must be >= 0)."
-                )
+                raise CommandError(f"Bases index '{bases_index}' is invalid (must be >= 0).")
 
             if not self.config.bases:
                 raise CommandError(
@@ -447,9 +443,7 @@ class Validator:
             dirpath = dirpath.expanduser().absolute()
 
         if not dirpath.exists():
-            raise CommandError(
-                "Charm directory was not found: {!r}".format(str(dirpath))
-            )
+            raise CommandError("Charm directory was not found: {!r}".format(str(dirpath)))
         if not dirpath.is_dir():
             raise CommandError(
                 "Charm directory is not really a directory: {!r}".format(str(dirpath))
@@ -466,19 +460,13 @@ class Validator:
             filepath = filepath.expanduser().absolute()
 
         if not filepath.exists():
-            raise CommandError(
-                "Charm entry point was not found: {!r}".format(str(filepath))
-            )
+            raise CommandError("Charm entry point was not found: {!r}".format(str(filepath)))
         if self.basedir not in filepath.parents:
             raise CommandError(
-                "Charm entry point must be inside the project: {!r}".format(
-                    str(filepath)
-                )
+                "Charm entry point must be inside the project: {!r}".format(str(filepath))
             )
         if not os.access(filepath, os.X_OK):
-            raise CommandError(
-                "Charm entry point must be executable: {!r}".format(str(filepath))
-            )
+            raise CommandError("Charm entry point must be executable: {!r}".format(str(filepath)))
         return filepath
 
     def validate_requirement(self, filepaths):
@@ -495,9 +483,7 @@ class Validator:
         filepaths = [x.expanduser().absolute() for x in filepaths]
         for fpath in filepaths:
             if not fpath.exists():
-                raise CommandError(
-                    "the requirements file was not found: {!r}".format(str(fpath))
-                )
+                raise CommandError("the requirements file was not found: {!r}".format(str(fpath)))
         return filepaths
 
     def validate_force(self, value):
@@ -540,8 +526,7 @@ class BuildCommand(BaseCommand):
             "-e",
             "--entrypoint",
             type=pathlib.Path,
-            help="The executable which is the operator entry point; "
-            "defaults to 'src/charm.py'",
+            help="The executable which is the operator entry point; " "defaults to 'src/charm.py'",
         )
         parser.add_argument(
             "-r",

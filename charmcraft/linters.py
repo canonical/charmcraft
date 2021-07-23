@@ -26,9 +26,7 @@ from typing import List, Generator, Union
 from charmcraft import config
 from charmcraft.metadata import parse_metadata_yaml
 
-CheckType = namedtuple("CheckType", "attribute lint")(
-    attribute="attribute", lint="lint"
-)
+CheckType = namedtuple("CheckType", "attribute lint")(attribute="attribute", lint="lint")
 
 # result information from each checker/linter
 CheckResult = namedtuple("CheckResult", "name result url check_type text")
@@ -180,9 +178,7 @@ class Framework:
         wheelhouse_dir = basedir / "wheelhouse"
         if not wheelhouse_dir.exists():
             return False
-        if not any(
-            f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()
-        ):
+        if not any(f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()):
             return False
 
         entrypoint = basedir / "reactive" / f"{metadata.name}.py"

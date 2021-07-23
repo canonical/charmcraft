@@ -393,17 +393,14 @@ class UploadCommand(BaseCommand):
             logger.info("Revision %s of %r created", result.revision, str(name))
             if parsed_args.release:
                 # also release!
-                store.release(
-                    name, result.revision, parsed_args.release, parsed_args.resource
-                )
+                store.release(name, result.revision, parsed_args.release, parsed_args.resource)
                 msg = "Revision released to %s"
                 args = [", ".join(parsed_args.release)]
                 if parsed_args.resource:
                     msg += " (attaching resources: %s)"
                     args.append(
                         ", ".join(
-                            "{!r} r{}".format(r.name, r.revision)
-                            for r in parsed_args.resource
+                            "{!r} r{}".format(r.name, r.revision) for r in parsed_args.resource
                         )
                     )
                 logger.info(msg, *args)

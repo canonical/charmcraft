@@ -131,9 +131,7 @@ class Framework:
     def text(self):
         """Return a text in function of the result state."""
         if self.result is None:
-            raise RuntimeError(
-                "Cannot access text before running the Framework checker."
-            )
+            return None
         return self.result_texts[self.result]
 
     def _get_imports(self, filepath: pathlib.Path) -> Generator[List[str], None, None]:
@@ -268,8 +266,8 @@ def analyze(
                     check_type=cls.check_type,
                     name=cls.name,
                     result=IGNORED,
-                    url=None,
-                    text=None,
+                    url=cls.url,
+                    text=cls.text,
                 )
             )
             continue

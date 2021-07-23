@@ -273,13 +273,14 @@ def test_only_attributes(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand("group", config).run(args)
 
     expected = [
         "Attributes:",
         "- check-attribute: check-result (url)",
     ]
     assert expected == [rec.message for rec in caplog.records]
+    assert retcode == 0
 
 
 def test_only_warnings(caplog, config, monkeypatch, tmp_path):
@@ -300,13 +301,14 @@ def test_only_warnings(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand("group", config).run(args)
 
     expected = [
         "Lint Warnings:",
         "- check-lint: text (url)",
     ]
     assert expected == [rec.message for rec in caplog.records]
+    assert retcode == 3
 
 
 def test_only_errors(caplog, config, monkeypatch, tmp_path):
@@ -327,17 +329,55 @@ def test_only_errors(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand("group", config).run(args)
 
     expected = [
         "Lint Errors:",
         "- check-lint: text (url)",
     ]
     assert expected == [rec.message for rec in caplog.records]
+    assert retcode == 2
+
+
+def test_both_errors_and_warnings(caplog, config, monkeypatch, tmp_path):
+    """Show error and warnings results."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # fake results from the analyzer
+    linting_results = [
+        linters.CheckResult(
+            name="check-lint-1",
+            check_type=linters.CheckType.lint,
+            url="url-1",
+            text="text-1",
+            result=linters.ERRORS,
+        ),
+        linters.CheckResult(
+            name="check-lint-2",
+            check_type=linters.CheckType.lint,
+            url="url-2",
+            text="text-2",
+            result=linters.WARNINGS,
+        ),
+    ]
+
+    fake_charm = create_a_valid_zip(tmp_path)
+    args = Namespace(filepath=fake_charm, force=None, format=None)
+    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
+    retcode = AnalyzeCommand("group", config).run(args)
+
+    expected = [
+        "Lint Warnings:",
+        "- check-lint-2: text-2 (url-2)",
+        "Lint Errors:",
+        "- check-lint-1: text-1 (url-1)",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+    assert retcode == 2
 
 
 def test_only_lint_ok(caplog, config, monkeypatch, tmp_path):
-    """Show only lint results that are ok(the rest may be ignored)."""
+    """Show only lint results that are ok (the rest may be ignored)."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
     # fake results from the analyzer
@@ -354,10 +394,39 @@ def test_only_lint_ok(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand("group", config).run(args)
 
     expected = [
         "Lint OK:",
         "- check-lint: no issues found (url)",
     ]
     assert expected == [rec.message for rec in caplog.records]
+    assert retcode == 0
+
+
+def test_only_fatal(caplog, config, monkeypatch, tmp_path):
+    """Show only fatal lint results (the rest may be ignored)."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    # fake results from the analyzer
+    linting_results = [
+        linters.CheckResult(
+            name="check-lint",
+            check_type=linters.CheckType.lint,
+            url="url",
+            text="text",
+            result=linters.FATAL,
+        ),
+    ]
+
+    fake_charm = create_a_valid_zip(tmp_path)
+    args = Namespace(filepath=fake_charm, force=None, format=None)
+    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
+    retcode = AnalyzeCommand("group", config).run(args)
+
+    expected = [
+        "Lint Fatal:",
+        "- check-lint (url)",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+    assert retcode == 1

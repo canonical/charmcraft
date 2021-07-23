@@ -335,18 +335,18 @@ class Dispatcher:
     def run(self):
         """Really run the command."""
         if isinstance(self.command, HelpCommand):
-            self.command.run(self.parsed_args, self.commands)
-        else:
-            if (
-                self.command.needs_config
-                and not self.command.config.project.config_provided
-            ):
-                raise CommandError(
-                    "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
-                    "the current directory or where specified with --project-dir option); see "
-                    "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
-                )
-            self.command.run(self.parsed_args)
+            return self.command.run(self.parsed_args, self.commands)
+
+        if (
+            self.command.needs_config
+            and not self.command.config.project.config_provided
+        ):
+            raise CommandError(
+                "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
+                "the current directory or where specified with --project-dir option); see "
+                "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
+            )
+        return self.command.run(self.parsed_args)
 
 
 def main(argv=None):
@@ -360,7 +360,7 @@ def main(argv=None):
     try:
         env.ensure_charmcraft_environment_is_supported()
         dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
-        dispatcher.run()
+        retcode = dispatcher.run()
     except CommandError as err:
         message_handler.ended_cmderror(err)
         retcode = err.retcode
@@ -372,7 +372,8 @@ def main(argv=None):
         retcode = 1
     else:
         message_handler.ended_ok()
-        retcode = 0
+        if retcode is None:
+            retcode = 0
 
     return retcode
 

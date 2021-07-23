@@ -67,6 +67,22 @@ def test_dispatcher_command_execution_ok():
     assert isinstance(MyCommand2._executed[0], argparse.Namespace)
 
 
+def test_dispatcher_command_return_code():
+    """Command ends indicating the return code to be used."""
+
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = "cmdname"
+
+        def run(self, parsed_args):
+            return 17
+
+    groups = [("test-group", "title", [MyCommand])]
+    dispatcher = Dispatcher(["cmdname"], groups)
+    retcode = dispatcher.run()
+    assert retcode == 17
+
+
 def test_dispatcher_command_execution_crash():
     """Command crashing doesn't pass through, we inform nicely."""
 
@@ -385,6 +401,17 @@ def test_main_controlled_error():
 
     assert retcode == 33
     mh_mock.ended_cmderror.assert_called_once_with(simulated_exception)
+
+
+def test_main_controlled_return_code():
+    """Work ended ok, and the command indicated the return code."""
+    with patch("charmcraft.main.message_handler") as mh_mock:
+        with patch("charmcraft.main.Dispatcher.run") as d_mock:
+            d_mock.return_value = 9
+            retcode = main(["charmcraft", "version"])
+
+    assert retcode == 9
+    mh_mock.ended_ok.assert_called_once_with()
 
 
 def test_main_environment_is_supported_error(

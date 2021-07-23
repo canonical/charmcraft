@@ -145,7 +145,7 @@ def validate_part(data: Dict[str, Any]) -> None:
     # copy the original data, we'll modify it
     spec = data.copy()
 
-    plugin_name = spec.get("plugin", "")
+    plugin_name = spec.get("plugin")
     if not plugin_name:
         raise ValueError("'plugin' not defined")
 

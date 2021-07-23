@@ -342,7 +342,7 @@ def main(argv=None):
     try:
         env.ensure_charmcraft_environment_is_supported()
         dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
-        dispatcher.run()
+        retcode = dispatcher.run()
     except CommandError as err:
         message_handler.ended_cmderror(err)
         retcode = err.retcode
@@ -354,7 +354,8 @@ def main(argv=None):
         retcode = 1
     else:
         message_handler.ended_ok()
-        retcode = 0
+        if retcode is None:
+            retcode = 0
 
     return retcode
 

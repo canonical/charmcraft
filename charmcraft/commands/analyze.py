@@ -92,7 +92,7 @@ class AnalyzeCommand(BaseCommand):
                 }
                 for r in linting_results
             ]
-            logger.info(json.dumps(info))
+            logger.info(json.dumps(info, indent=4))
             return
 
         # group by attributes and lint outcomes (discarding ignored ones)

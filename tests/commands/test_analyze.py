@@ -112,9 +112,7 @@ def test_integration_linters(tmp_path, caplog, config, monkeypatch):
 
 
 @pytest.mark.parametrize("indicated_format", [None, JSON_FORMAT])
-def test_complete_set_of_results(
-    caplog, config, monkeypatch, tmp_path, indicated_format
-):
+def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path, indicated_format):
     """Show a complete basic case of results."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 

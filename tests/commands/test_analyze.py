@@ -14,16 +14,36 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import json
 import logging
 import zipfile
-from argparse import Namespace
+from argparse import Namespace, ArgumentParser
 from unittest.mock import patch, ANY
 
 import pytest
 
 from charmcraft import linters
 from charmcraft.cmdbase import CommandError
-from charmcraft.commands.analyze import AnalyzeCommand
+from charmcraft.commands.analyze import AnalyzeCommand, JSON_FORMAT
+from charmcraft.utils import useful_filepath
+
+
+def test_options_filepath_type(config):
+    """The filepath parameter implies a set of validations."""
+    cmd = AnalyzeCommand("group", config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == "filepath"]
+    assert action.type is useful_filepath
+
+
+def test_options_format_possible_values(config):
+    """The format option implies a set of validations."""
+    cmd = AnalyzeCommand("group", config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == "format"]
+    assert action.choices == ["json"]
 
 
 def test_expanded_charm(config, tmp_path, monkeypatch):
@@ -51,7 +71,7 @@ def test_expanded_charm(config, tmp_path, monkeypatch):
         return []
 
     monkeypatch.setattr(linters, "analyze", fake_analyze)
-    args = Namespace(filepath=charm_file, force=None)
+    args = Namespace(filepath=charm_file, force=None, format=None)
     AnalyzeCommand("group", config).run(args)
     assert fake_analyze_called
 
@@ -61,7 +81,7 @@ def test_corrupt_charm(tmp_path, config):
     charm_file = tmp_path / "foobar.charm"
     charm_file.write_text("this is not a real zip content")
 
-    args = Namespace(filepath=charm_file, force=None)
+    args = Namespace(filepath=charm_file, force=None, format=None)
     with pytest.raises(CommandError) as cm:
         AnalyzeCommand("group", config).run(args)
     assert str(cm.value) == (
@@ -83,7 +103,7 @@ def test_integration_linters(tmp_path, caplog, config, monkeypatch):
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
     fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None)
+    args = Namespace(filepath=fake_charm, force=None, format=None)
     AnalyzeCommand("group", config).run(args)
 
     expected_titles = ["Attributes:", "Lint Errors:"]
@@ -91,7 +111,8 @@ def test_integration_linters(tmp_path, caplog, config, monkeypatch):
     assert all(x in logged for x in expected_titles)
 
 
-def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path):
+@pytest.mark.parametrize("indicated_format", [None, JSON_FORMAT])
+def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path, indicated_format):
     """Show a complete basic case of results."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
 
@@ -149,35 +170,83 @@ def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path):
     ]
 
     fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None)
+    args = Namespace(filepath=fake_charm, force=None, format=indicated_format)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
     with patch.object(linters, "analyze") as mock_analyze:
         mock_analyze.return_value = linting_results
         AnalyzeCommand("group", config).run(args)
     mock_analyze.assert_called_with(config, ANY, override_ignore_config=False)
 
-    expected = [
-        "Attributes:",
-        "- check-attribute-04: check-result-04 (url-04)",
-        "- check-attribute-05: ignored (url-05)",
-        "Lint Ignored:",
-        "- check-lint-06 (url-06)",
-        "Lint Warnings:",
-        "- check-lint-01: text-01 (url-01)",
-        "Lint Errors:",
-        "- check-lint-03: text-03 (url-03)",
-        "Lint Fatal:",
-        "- check-lint-07 (url-07)",
-        "Lint OK:",
-        "- check-lint-02: no issues found (url-02)",
-    ]
-    assert expected == [rec.message for rec in caplog.records]
+    if indicated_format is None:
+        expected = [
+            "Attributes:",
+            "- check-attribute-04: check-result-04 (url-04)",
+            "- check-attribute-05: ignored (url-05)",
+            "Lint Ignored:",
+            "- check-lint-06 (url-06)",
+            "Lint Warnings:",
+            "- check-lint-01: text-01 (url-01)",
+            "Lint Errors:",
+            "- check-lint-03: text-03 (url-03)",
+            "Lint Fatal:",
+            "- check-lint-07 (url-07)",
+            "Lint OK:",
+            "- check-lint-02: no issues found (url-02)",
+        ]
+        assert expected == [rec.message for rec in caplog.records]
+    else:
+        expected = [
+            {
+                "name": "check-lint-01",
+                "type": "lint",
+                "url": "url-01",
+                "result": "warnings",
+            },
+            {
+                "name": "check-lint-02",
+                "type": "lint",
+                "url": "url-02",
+                "result": "ok",
+            },
+            {
+                "name": "check-lint-03",
+                "type": "lint",
+                "url": "url-03",
+                "result": "errors",
+            },
+            {
+                "name": "check-attribute-04",
+                "type": "attribute",
+                "url": "url-04",
+                "result": "check-result-04",
+            },
+            {
+                "name": "check-attribute-05",
+                "type": "attribute",
+                "url": "url-05",
+                "result": "ignored",
+            },
+            {
+                "name": "check-lint-06",
+                "type": "lint",
+                "url": "url-06",
+                "result": "ignored",
+            },
+            {
+                "name": "check-lint-07",
+                "type": "lint",
+                "url": "url-07",
+                "result": "fatal",
+            },
+        ]
+        (logged_line,) = [rec.message for rec in caplog.records]
+        assert expected == json.loads(logged_line)
 
 
 def test_force_used_to_override_ignores(caplog, config, monkeypatch, tmp_path):
     """Show only attribute results (the rest may be ignored)."""
     fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=True)
+    args = Namespace(filepath=fake_charm, force=True, format=None)
     with patch.object(linters, "analyze") as mock_analyze:
         mock_analyze.return_value = []
         AnalyzeCommand("group", config).run(args)
@@ -200,7 +269,7 @@ def test_only_attributes(caplog, config, monkeypatch, tmp_path):
     ]
 
     fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None)
+    args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
     AnalyzeCommand("group", config).run(args)
 
@@ -227,7 +296,7 @@ def test_only_warnings(caplog, config, monkeypatch, tmp_path):
     ]
 
     fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None)
+    args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
     AnalyzeCommand("group", config).run(args)
 
@@ -254,7 +323,7 @@ def test_only_errors(caplog, config, monkeypatch, tmp_path):
     ]
 
     fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None)
+    args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
     AnalyzeCommand("group", config).run(args)
 
@@ -281,7 +350,7 @@ def test_only_lint_ok(caplog, config, monkeypatch, tmp_path):
     ]
 
     fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None)
+    args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
     AnalyzeCommand("group", config).run(args)
 

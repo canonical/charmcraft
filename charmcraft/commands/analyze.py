@@ -130,3 +130,15 @@ class AnalyzeCommand(BaseCommand):
                         logger.info("- %s: %s (%s)", result.name, result_info, result.url)
                     else:
                         logger.info("- %s (%s)", result.name, result.url)
+
+        # the return code depends on the presence of different issues
+        if linters.FATAL in grouped:
+            retcode = 1
+        elif linters.ERRORS in grouped:
+            retcode = 2
+        elif linters.WARNINGS in grouped:
+            retcode = 3
+        else:
+            retcode = 0
+
+        return retcode

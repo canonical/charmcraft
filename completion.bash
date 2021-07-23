@@ -80,7 +80,7 @@ _charmcraft()
     # offer the options for the given command (and global ones, always available)
     case "$cmd" in
         analyze)
-            COMPREPLY=( $(compgen -W "${globals[*]} --force" -- "$cur") )
+            COMPREPLY=( $(compgen -W "${globals[*]} --force --format" -- "$cur") )
             ;;
         build)
             case "$prev" in

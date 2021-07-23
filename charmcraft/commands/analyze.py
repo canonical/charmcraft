@@ -16,6 +16,7 @@
 
 """Infrastructure for the 'analyze' command."""
 
+import json
 import pathlib
 import tempfile
 import textwrap
@@ -27,6 +28,8 @@ from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import useful_filepath
 
 logger = logging.getLogger(__name__)
+
+JSON_FORMAT = "json"
 
 
 class AnalyzeCommand(BaseCommand):
@@ -54,6 +57,11 @@ class AnalyzeCommand(BaseCommand):
             action="store_true",
             help="Force to run all checks, even those set to ignore in the configuration",
         )
+        parser.add_argument(
+            "--format",
+            choices=[JSON_FORMAT],
+            help="Produce the result formatted as a JSON string",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -74,6 +82,20 @@ class AnalyzeCommand(BaseCommand):
             pathlib.Path(tmpdir),
             override_ignore_config=override_ignore_config,
         )
+
+        # if format is json almost no further processing is needed
+        if parsed_args.format == JSON_FORMAT:
+            info = [
+                {
+                    "name": r.name,
+                    "result": r.result,
+                    "url": r.url,
+                    "type": r.check_type,
+                }
+                for r in linting_results
+            ]
+            logger.info(json.dumps(info))
+            return
 
         # group by attributes and lint outcomes (discarding ignored ones)
         grouped = {}

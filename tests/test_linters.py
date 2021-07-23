@@ -125,9 +125,7 @@ def test_checkdispatchpython_entrypoint_no_exec(tmp_path):
 
 def test_language_python():
     """The charm is written in Python."""
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path("entrypoint")
         result = Language().run("somedir")
     assert result == Language.Result.python
@@ -136,9 +134,7 @@ def test_language_python():
 
 def test_language_no_dispatch(tmp_path):
     """The charm has no dispatch at all."""
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = None
         result = Language().run("somedir")
     assert result == Language.Result.unknown
@@ -197,9 +193,7 @@ def test_framework_operator_used_ok(tmp_path, import_line):
     opsdir.mkdir(parents=True)
 
     # check
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
         result = Framework()._check_operator(tmp_path)
     assert result is True
@@ -217,9 +211,7 @@ def test_framework_operator_language_not_python(tmp_path):
     opsdir.mkdir(parents=True)
 
     # check
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = None
         result = Framework()._check_operator(tmp_path)
     assert result is False
@@ -232,9 +224,7 @@ def test_framework_operator_venv_directory_missing(tmp_path):
     entrypoint.write_text("import ops")
 
     # check
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
         result = Framework()._check_operator(tmp_path)
     assert result is False
@@ -251,9 +241,7 @@ def test_framework_operator_no_venv_ops_directory(tmp_path):
     venvdir.mkdir()
 
     # check
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
         result = Framework()._check_operator(tmp_path)
     assert result is False
@@ -271,9 +259,7 @@ def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path):
     opsfile.touch()
 
     # check
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
         result = Framework()._check_operator(tmp_path)
     assert result is False
@@ -290,9 +276,7 @@ def test_framework_operator_corrupted_entrypoint(tmp_path):
     opsdir.mkdir(parents=True)
 
     # check
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
         result = Framework()._check_operator(tmp_path)
     assert result is False
@@ -318,9 +302,7 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     opsdir.mkdir(parents=True)
 
     # check
-    with patch(
-        "charmcraft.linters.check_dispatch_with_python_entrypoint"
-    ) as mock_check:
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
         result = Framework()._check_operator(tmp_path)
     assert result is False
@@ -582,9 +564,7 @@ def create_fake_checker(**kwargs):
     Receive generic kwargs and process them as a dict for the defaults, as we can't declare
     the name in the function definition and then use it in the class definition.
     """
-    params = dict(
-        check_type="type", name="name", url="url", text="text", result="result"
-    )
+    params = dict(check_type="type", name="name", url="url", text="text", result="result")
     params.update(kwargs)
 
     class FakeChecker:
@@ -701,12 +681,8 @@ def test_analyze_ignore_linter(config):
 
 def test_analyze_override_ignore(config):
     """Run all checkers even the ignored ones, if requested."""
-    FakeChecker1 = create_fake_checker(
-        check_type=CheckType.attribute, name="name1", result="res1"
-    )
-    FakeChecker2 = create_fake_checker(
-        check_type=CheckType.lint, name="name2", result="res2"
-    )
+    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1", result="res1")
+    FakeChecker2 = create_fake_checker(check_type=CheckType.lint, name="name2", result="res2")
 
     config.analysis.ignore.attributes.append("name1")
     config.analysis.ignore.linters.append("name2")

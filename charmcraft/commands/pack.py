@@ -107,9 +107,7 @@ class PackCommand(BaseCommand):
             "-e",
             "--entrypoint",
             type=SingleOptionEnsurer(useful_filepath),
-            help=(
-                "The executable which is the operator entry point; defaults to 'src/charm.py'"
-            ),
+            help=("The executable which is the operator entry point; defaults to 'src/charm.py'"),
         )
         parser.add_argument(
             "-r",
@@ -141,9 +139,7 @@ class PackCommand(BaseCommand):
             self._pack_charm(parsed_args)
         else:
             if parsed_args.entrypoint is not None:
-                raise CommandError(
-                    "The -e/--entry option is valid only when packing a charm"
-                )
+                raise CommandError("The -e/--entry option is valid only when packing a charm")
             if parsed_args.requirement is not None:
                 raise CommandError(
                     "The -r/--requirement option is valid only when packing a charm"
@@ -169,9 +165,7 @@ class PackCommand(BaseCommand):
         args = validator.process(build_args)
         logger.debug("Working arguments: %s", args)
         builder = build.Builder(args, self.config)
-        builder.run(
-            parsed_args.bases_index, destructive_mode=build_args.destructive_mode
-        )
+        builder.run(parsed_args.bases_index, destructive_mode=build_args.destructive_mode)
 
     def _pack_bundle(self):
         """Pack a bundle."""
@@ -180,9 +174,7 @@ class PackCommand(BaseCommand):
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
             raise CommandError(
-                "Missing or invalid main bundle file: {!r}.".format(
-                    str(bundle_filepath)
-                )
+                "Missing or invalid main bundle file: {!r}.".format(str(bundle_filepath))
             )
         bundle_name = bundle_config.get("name")
         if not bundle_name:
@@ -199,9 +191,7 @@ class PackCommand(BaseCommand):
 
         # pack everything
         project = self.config.project
-        manifest_filepath = create_manifest(
-            project.dirpath, project.started_at, None, []
-        )
+        manifest_filepath = create_manifest(project.dirpath, project.started_at, None, [])
         try:
             paths = get_paths_to_include(self.config)
             zipname = project.dirpath / (bundle_name + ".zip")

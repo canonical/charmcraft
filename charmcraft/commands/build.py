@@ -250,8 +250,10 @@ class Builder:
         """
         # add entrypoint
         if str(entrypoint) == entrypoint.name:
+            # the entry point is in the root of the project, just include it
             self._prime.append(str(entrypoint))
         else:
+            # the entry point is in a subdir, include the whole subtree
             self._prime.append(str(entrypoint.parts[0]))
 
         # add venv if there are requirements

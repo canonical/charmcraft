@@ -481,12 +481,12 @@ def test_upload_call_ok_including_release(caplog, store_mock, config, tmp_path):
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=["edge"])
+    args = Namespace(filepath=test_charm, release=["edge"], resource=[])
     UploadCommand("group", config).run(args)
 
     assert store_mock.mock_calls == [
         call.upload("mycharm", test_charm),
-        call.release("mycharm", 7, ["edge"]),
+        call.release("mycharm", 7, ["edge"], []),
     ]
     expected = [
         "Revision 7 of 'mycharm' created",
@@ -504,18 +504,52 @@ def test_upload_call_ok_including_release_multiple(caplog, store_mock, config, t
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=["edge", "stable"])
+    args = Namespace(filepath=test_charm, release=["edge", "stable"], resource=[])
     UploadCommand("group", config).run(args)
 
     assert store_mock.mock_calls == [
         call.upload("mycharm", test_charm),
-        call.release("mycharm", 7, ["edge", "stable"]),
+        call.release("mycharm", 7, ["edge", "stable"], []),
     ]
     expected = [
         "Revision 7 of 'mycharm' created",
         "Revision released to edge, stable",
     ]
     assert expected == [rec.message for rec in caplog.records]
+
+
+def test_upload_including_release_with_resources(caplog, store_mock, config, tmp_path):
+    """Releasing with resources."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
+    store_mock.upload.return_value = store_response
+
+    test_charm = tmp_path / "mystuff.charm"
+    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    r1 = ResourceOption(name="foo", revision=3)
+    r2 = ResourceOption(name="bar", revision=17)
+    args = Namespace(filepath=test_charm, release=["edge"], resource=[r1, r2])
+    UploadCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.upload("mycharm", test_charm),
+        call.release("mycharm", 7, ["edge"], [r1, r2]),
+    ]
+    expected = [
+        "Revision 7 of 'mycharm' created",
+        "Revision released to edge (attaching resources: 'foo' r3, 'bar' r17)",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_upload_options_resource(config):
+    """The --resource option implies a set of validations."""
+    cmd = UploadCommand("group", config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    (action,) = [action for action in parser._actions if action.dest == "resource"]
+    assert isinstance(action.type, ResourceOption)
 
 
 def test_upload_call_error_including_release(caplog, store_mock, config, tmp_path):

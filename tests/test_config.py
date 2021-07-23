@@ -998,8 +998,8 @@ def test_schema_analysis_ignore_linters(
     create_config, check_schema_error, tmp_path, create_checker
 ):
     """Some linters are correctly ignored."""
-    create_checker("check_ok_1", linters.CheckType.warning)
-    create_checker("check_ok_2", linters.CheckType.error)
+    create_checker("check_ok_1", linters.CheckType.lint)
+    create_checker("check_ok_2", linters.CheckType.lint)
     create_config(
         """
         type: charm  # mandatory
@@ -1018,7 +1018,7 @@ def test_schema_analysis_ignore_attribute_missing(
 ):
     """An attribute specified to ignore is missing in the system."""
     create_checker("check_ok_1", linters.CheckType.attribute)
-    create_checker("check_ok_2", linters.CheckType.warning)
+    create_checker("check_ok_2", linters.CheckType.lint)
     create_config(
         """
         type: charm  # mandatory
@@ -1042,7 +1042,7 @@ def test_schema_analysis_ignore_linter_missing(
 ):
     """A linter specified to ignore is missing in the system."""
     create_checker("check_ok_1", linters.CheckType.attribute)
-    create_checker("check_ok_2", linters.CheckType.warning)
+    create_checker("check_ok_2", linters.CheckType.lint)
     create_config(
         """
         type: charm  # mandatory
@@ -1056,6 +1056,6 @@ def test_schema_analysis_ignore_linter_missing(
         dedent(
             """\
             Bad charmcraft.yaml content:
-            - Bad linter name 'check_missing' in field 'analysis.ignore.linters[1]'"""
+            - Bad lint name 'check_missing' in field 'analysis.ignore.linters[1]'"""
         )
     )

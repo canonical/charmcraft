@@ -20,7 +20,7 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from charmcraft import __version__, config
+from charmcraft import __version__, config, linters
 from charmcraft.cmdbase import CommandError
 from charmcraft.manifest import create_manifest
 from charmcraft.utils import OSPlatform
@@ -51,10 +51,22 @@ def test_manifest_simple_ok(tmp_path):
         }
     )
 
+    linting_results = [
+        linters.CheckResult(
+            name="check-name",
+            check_type=linters.CheckType.attribute,
+            url="url",
+            text="text",
+            result="check-result",
+        ),
+    ]
+
     tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
     os_platform = OSPlatform(system="SuperUbuntu", release="40.10", machine="SomeRISC")
     with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
-        result_filepath = create_manifest(tmp_path, tstamp, bases_config=bases_config)
+        result_filepath = create_manifest(
+            tmp_path, tstamp, bases_config, linting_results
+        )
 
     assert result_filepath == tmp_path / "manifest.yaml"
     saved = yaml.safe_load(result_filepath.read_text())
@@ -73,6 +85,14 @@ def test_manifest_simple_ok(tmp_path):
                 "architectures": ["arch1", "arch2"],
             },
         ],
+        "analysis": {
+            "attributes": [
+                {
+                    "name": "check-name",
+                    "result": "check-result",
+                },
+            ],
+        },
     }
     assert saved == expected
 
@@ -82,7 +102,7 @@ def test_manifest_no_bases(tmp_path):
     tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
     os_platform = OSPlatform(system="SuperUbuntu", release="40.10", machine="SomeRISC")
     with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
-        result_filepath = create_manifest(tmp_path, tstamp, None)
+        result_filepath = create_manifest(tmp_path, tstamp, None, [])
 
     saved = yaml.safe_load(result_filepath.read_text())
 
@@ -90,6 +110,7 @@ def test_manifest_no_bases(tmp_path):
     assert saved == {
         "charmcraft-started-at": "2020-02-01T15:40:33Z",
         "charmcraft-version": __version__,
+        "analysis": {"attributes": []},
     }
 
 
@@ -113,7 +134,53 @@ def test_manifest_dont_overwrite(tmp_path):
         }
     )
     with pytest.raises(CommandError) as cm:
-        create_manifest(tmp_path, datetime.datetime.now(), bases_config)
+        create_manifest(tmp_path, datetime.datetime.now(), bases_config, [])
     assert str(cm.value) == (
         "Cannot write the manifest as there is already a 'manifest.yaml' in disk."
     )
+
+
+def test_manifest_checkers_multiple(tmp_path):
+    """Multiple checkers, attributes and a linter."""
+    linting_results = [
+        linters.CheckResult(
+            name="attrib-name-1",
+            check_type=linters.CheckType.attribute,
+            url="url",
+            text="text",
+            result="result-1",
+        ),
+        linters.CheckResult(
+            name="attrib-name-2",
+            check_type=linters.CheckType.attribute,
+            url="url",
+            text="text",
+            result="result-2",
+        ),
+        linters.CheckResult(
+            name="warning-name",
+            check_type=linters.CheckType.lint,
+            url="url",
+            text="text",
+            result="result",
+        ),
+    ]
+
+    tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
+    os_platform = OSPlatform(system="SuperUbuntu", release="40.10", machine="SomeRISC")
+    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
+        result_filepath = create_manifest(tmp_path, tstamp, None, linting_results)
+
+    assert result_filepath == tmp_path / "manifest.yaml"
+    saved = yaml.safe_load(result_filepath.read_text())
+    expected = [
+        {
+            "name": "attrib-name-1",
+            "result": "result-1",
+        },
+        {
+            "name": "attrib-name-2",
+            "result": "result-2",
+        },
+    ]
+    assert saved["analysis"]["attributes"] == expected

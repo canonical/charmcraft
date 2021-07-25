@@ -23,7 +23,7 @@ from collections import namedtuple
 
 from charmcraft import config, env, helptexts
 from charmcraft.cmdbase import BaseCommand, CommandError
-from charmcraft.commands import build, clean, init, pack, store, version
+from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.logsetup import message_handler
 from charmcraft.parts import setup_parts
 
@@ -39,9 +39,7 @@ class HelpCommand(BaseCommand):
 
     name = "help"
     help_msg = "Provide help on charmcraft usage"
-    overview = (
-        "Produce a general or a detailed charmcraft help, or a specific command one."
-    )
+    overview = "Produce a general or a detailed charmcraft help, or a specific command one."
     common = True
 
     def fill_parser(self, parser):
@@ -65,10 +63,7 @@ class HelpCommand(BaseCommand):
         to validate if the help requested is on a valid one, or even parse its data.
         """
         retcode = 0
-        if (
-            parsed_args.command_to_help is None
-            or parsed_args.command_to_help == self.name
-        ):
+        if parsed_args.command_to_help is None or parsed_args.command_to_help == self.name:
             # help on no command in particular, get general text
             help_text = get_general_help(detailed=parsed_args.all)
         elif parsed_args.command_to_help not in all_commands:
@@ -95,6 +90,7 @@ COMMAND_GROUPS = [
         "Basic",
         [
             HelpCommand,
+            analyze.AnalyzeCommand,
             build.BuildCommand,
             clean.CleanCommand,
             pack.PackCommand,
@@ -145,9 +141,7 @@ GLOBAL_ARGS = [
         "--verbose",
         "Show debug information and be more verbose",
     ),
-    _Global(
-        "quiet", "flag", "-q", "--quiet", "Only show warnings and errors, not progress"
-    ),
+    _Global("quiet", "flag", "-q", "--quiet", "Only show warnings and errors, not progress"),
     _Global(
         "project_dir",
         "option",
@@ -172,9 +166,7 @@ def _get_global_options():
     """Return the global flags ready to present as options in the help messages."""
     options = []
     for arg in GLOBAL_ARGS:
-        options.append(
-            ("{}, {}".format(arg.short_option, arg.long_option), arg.help_message)
-        )
+        options.append(("{}, {}".format(arg.short_option, arg.long_option), arg.help_message))
     return options
 
 
@@ -284,9 +276,7 @@ class Dispatcher:
                     try:
                         value = next(sysargs)
                     except StopIteration:
-                        raise CommandError(
-                            "The 'project-dir' option expects one argument."
-                        )
+                        raise CommandError("The 'project-dir' option expects one argument.")
                 global_args[arg.name] = value
             elif sysarg.startswith(options_with_equal):
                 option, value = sysarg.split("=", 1)
@@ -299,16 +289,12 @@ class Dispatcher:
 
         # control and use quiet/verbose options
         if global_args["quiet"] and global_args["verbose"]:
-            raise CommandError(
-                "The 'verbose' and 'quiet' options are mutually exclusive."
-            )
+            raise CommandError("The 'verbose' and 'quiet' options are mutually exclusive.")
         if global_args["quiet"]:
             message_handler.set_mode(message_handler.QUIET)
         elif global_args["verbose"]:
             message_handler.set_mode(message_handler.VERBOSE)
-        logger.debug(
-            "Raw pre-parsed sysargs: args=%s filtered=%s", global_args, filtered_sysargs
-        )
+        logger.debug("Raw pre-parsed sysargs: args=%s filtered=%s", global_args, filtered_sysargs)
 
         # if help requested, transform the parameters to make that explicit
         if global_args["help"]:
@@ -335,18 +321,15 @@ class Dispatcher:
     def run(self):
         """Really run the command."""
         if isinstance(self.command, HelpCommand):
-            self.command.run(self.parsed_args, self.commands)
-        else:
-            if (
-                self.command.needs_config
-                and not self.command.config.project.config_provided
-            ):
-                raise CommandError(
-                    "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
-                    "the current directory or where specified with --project-dir option); see "
-                    "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
-                )
-            self.command.run(self.parsed_args)
+            return self.command.run(self.parsed_args, self.commands)
+
+        if self.command.needs_config and not self.command.config.project.config_provided:
+            raise CommandError(
+                "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
+                "the current directory or where specified with --project-dir option); see "
+                "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
+            )
+        return self.command.run(self.parsed_args)
 
 
 def main(argv=None):
@@ -361,7 +344,7 @@ def main(argv=None):
         env.ensure_charmcraft_environment_is_supported()
         setup_parts()
         dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
-        dispatcher.run()
+        retcode = dispatcher.run()
     except CommandError as err:
         message_handler.ended_cmderror(err)
         retcode = err.retcode
@@ -373,7 +356,8 @@ def main(argv=None):
         retcode = 1
     else:
         message_handler.ended_ok()
-        retcode = 0
+        if retcode is None:
+            retcode = 0
 
     return retcode
 

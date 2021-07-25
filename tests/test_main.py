@@ -67,6 +67,22 @@ def test_dispatcher_command_execution_ok():
     assert isinstance(MyCommand2._executed[0], argparse.Namespace)
 
 
+def test_dispatcher_command_return_code():
+    """Command ends indicating the return code to be used."""
+
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = "cmdname"
+
+        def run(self, parsed_args):
+            return 17
+
+    groups = [("test-group", "title", [MyCommand])]
+    dispatcher = Dispatcher(["cmdname"], groups)
+    retcode = dispatcher.run()
+    assert retcode == 17
+
+
 def test_dispatcher_command_execution_crash():
     """Command crashing doesn't pass through, we inform nicely."""
 
@@ -272,9 +288,7 @@ def test_dispatcher_generic_setup_projectdir_without_param_confusing(options):
 
 def test_dispatcher_build_commands_ok():
     """Correct command loading."""
-    cmd0, cmd1, cmd2 = [
-        create_command("cmd-name-{}".format(n), "cmd help") for n in range(3)
-    ]
+    cmd0, cmd1, cmd2 = [create_command("cmd-name-{}".format(n), "cmd help") for n in range(3)]
     groups = [
         ("test-group-A", "whatever title", [cmd0]),
         ("test-group-B", "other title", [cmd1, cmd2]),
@@ -387,6 +401,17 @@ def test_main_controlled_error():
     mh_mock.ended_cmderror.assert_called_once_with(simulated_exception)
 
 
+def test_main_controlled_return_code():
+    """Work ended ok, and the command indicated the return code."""
+    with patch("charmcraft.main.message_handler") as mh_mock:
+        with patch("charmcraft.main.Dispatcher.run") as d_mock:
+            d_mock.return_value = 9
+            retcode = main(["charmcraft", "version"])
+
+    assert retcode == 9
+    mh_mock.ended_ok.assert_called_once_with()
+
+
 def test_main_environment_is_supported_error(
     mock_is_charmcraft_running_in_supported_environment,
 ):
@@ -430,13 +455,9 @@ def test_initmsg_default():
     """Without any option, the init msg only goes to disk."""
     cmd = create_command("somecommand")
     fake_stream = io.StringIO()
-    with patch(
-        "charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]
-    ):
+    with patch("charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]):
         with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
-            with patch.object(
-                logsetup.message_handler._stderr_handler, "stream", fake_stream
-            ):
+            with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
                 main(["charmcraft", "somecommand"])
 
     # get the logfile first line before removing it
@@ -458,13 +479,9 @@ def test_initmsg_quiet():
     """In quiet mode, the init msg only goes to disk."""
     cmd = create_command("somecommand")
     fake_stream = io.StringIO()
-    with patch(
-        "charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]
-    ):
+    with patch("charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]):
         with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
-            with patch.object(
-                logsetup.message_handler._stderr_handler, "stream", fake_stream
-            ):
+            with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
                 main(["charmcraft", "--quiet", "somecommand"])
 
     # get the logfile first line before removing it
@@ -486,13 +503,9 @@ def test_initmsg_verbose():
     """In verbose mode, the init msg goes both to disk and terminal."""
     cmd = create_command("somecommand")
     fake_stream = io.StringIO()
-    with patch(
-        "charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]
-    ):
+    with patch("charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]):
         with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
-            with patch.object(
-                logsetup.message_handler._stderr_handler, "stream", fake_stream
-            ):
+            with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
                 main(["charmcraft", "--verbose", "somecommand"])
 
     # get the logfile first line before removing it

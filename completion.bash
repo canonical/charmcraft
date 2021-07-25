@@ -20,6 +20,7 @@ _charmcraft()
 {
     local cur prev words cword cmd cmds
     cmds=(
+        analyze
         build
         clean
         create-lib 
@@ -78,6 +79,9 @@ _charmcraft()
 
     # offer the options for the given command (and global ones, always available)
     case "$cmd" in
+        analyze)
+            COMPREPLY=( $(compgen -W "${globals[*]} --force --format" -- "$cur") )
+            ;;
         build)
             case "$prev" in
                 -r|--requirement)
@@ -114,7 +118,7 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${globals[*]} --name --author --force" -- "$cur") )
             ;;
         upload)
-            COMPREPLY=( $(compgen -W "${globals[*]} --release" -- "$cur") )
+            COMPREPLY=( $(compgen -W "${globals[*]} --release --resource" -- "$cur") )
             ;;
         upload-resource)
             case "$prev" in

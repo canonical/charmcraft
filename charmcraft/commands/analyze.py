@@ -1,0 +1,144 @@
+# Copyright 2021 Canonical Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# For further info, check https://github.com/canonical/charmcraft
+
+"""Infrastructure for the 'analyze' command."""
+
+import json
+import pathlib
+import tempfile
+import textwrap
+import logging
+import zipfile
+
+from charmcraft import linters
+from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.utils import useful_filepath
+
+logger = logging.getLogger(__name__)
+
+JSON_FORMAT = "json"
+
+
+class AnalyzeCommand(BaseCommand):
+    """Analyze a charm."""
+
+    name = "analyze"
+    help_msg = "Analyze a charm"
+    overview = textwrap.dedent(
+        """
+        Analyze a charm.
+
+        Report the attributes and lint results directly in the terminal. Use
+        `--force` to run even those configured to be ignored.
+    """
+    )
+    needs_config = False  # optional until we fully support charms here
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("filepath", type=useful_filepath, help="The charm to analyze")
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Force to run all checks, even those set to ignore in the configuration",
+        )
+        parser.add_argument(
+            "--format",
+            choices=[JSON_FORMAT],
+            help="Produce the result formatted as a JSON string",
+        )
+
+    def run(self, parsed_args):
+        """Run the command."""
+        tmpdir = tempfile.mkdtemp()
+        filepath = str(parsed_args.filepath)
+        try:
+            zf = zipfile.ZipFile(filepath)
+            zf.extractall(path=tmpdir)
+        except Exception as exc:
+            raise CommandError(
+                "Cannot open the indicated charm file {!r}: {!r}.".format(filepath, exc)
+            )
+
+        # run the analyzer
+        override_ignore_config = bool(parsed_args.force)
+        linting_results = linters.analyze(
+            self.config,
+            pathlib.Path(tmpdir),
+            override_ignore_config=override_ignore_config,
+        )
+
+        # if format is json almost no further processing is needed
+        if parsed_args.format == JSON_FORMAT:
+            info = [
+                {
+                    "name": r.name,
+                    "result": r.result,
+                    "url": r.url,
+                    "type": r.check_type,
+                }
+                for r in linting_results
+            ]
+            logger.info(json.dumps(info, indent=4))
+            return
+
+        # group by attributes and lint outcomes (discarding ignored ones)
+        grouped = {}
+        for result in linting_results:
+            if result.check_type == linters.CheckType.attribute:
+                group_key = linters.CheckType.attribute
+                result_info = result.result
+            else:
+                # linters
+                group_key = result.result
+                if result.result == linters.OK:
+                    result_info = "no issues found"
+                elif result.result in (linters.FATAL, linters.IGNORED):
+                    result_info = None
+                else:
+                    result_info = result.text
+            grouped.setdefault(group_key, []).append((result, result_info))
+
+        # present the results
+        titles = [
+            ("Attributes", linters.CheckType.attribute),
+            ("Lint Ignored", linters.IGNORED),
+            ("Lint Warnings", linters.WARNINGS),
+            ("Lint Errors", linters.ERRORS),
+            ("Lint Fatal", linters.FATAL),
+            ("Lint OK", linters.OK),
+        ]
+        for title, key in titles:
+            results = grouped.get(key)
+            if results is not None:
+                logger.info("%s:", title)
+                for result, result_info in results:
+                    if result_info:
+                        logger.info("- %s: %s (%s)", result.name, result_info, result.url)
+                    else:
+                        logger.info("- %s (%s)", result.name, result.url)
+
+        # the return code depends on the presence of different issues
+        if linters.FATAL in grouped:
+            retcode = 1
+        elif linters.ERRORS in grouped:
+            retcode = 2
+        elif linters.WARNINGS in grouped:
+            retcode = 3
+        else:
+            retcode = 0
+
+        return retcode

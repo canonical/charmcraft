@@ -20,15 +20,13 @@ import ast
 import os
 import pathlib
 import shlex
-from collections import namedtuple, defaultdict
-from typing import List, Generator
+from collections import namedtuple
+from typing import List, Generator, Union
 
 from charmcraft import config
 from charmcraft.metadata import parse_metadata_yaml
 
-CheckType = namedtuple("CheckType", "attribute lint")(
-    attribute="attribute", lint="lint"
-)
+CheckType = namedtuple("CheckType", "attribute lint")(attribute="attribute", lint="lint")
 
 # result information from each checker/linter
 CheckResult = namedtuple("CheckResult", "name result url check_type text")
@@ -39,9 +37,33 @@ IGNORED = "ignored"
 WARNINGS = "warnings"
 ERRORS = "errors"
 FATAL = "fatal"
+OK = "ok"
 
-# shared state between checkers, to reuse analysis results and/or other intermediate information
-shared_state = defaultdict(dict)
+
+def check_dispatch_with_python_entrypoint(
+    basedir: pathlib.Path,
+) -> Union[pathlib.Path, None]:
+    """Verify if the charm has a dispatch file pointing to a Python entrypoint.
+
+    :returns: the entrypoint path if all succeeds, None otherwise.
+    """
+    # get the entrypoint from the last useful dispatch line
+    dispatch = basedir / "dispatch"
+    entrypoint_str = ""
+    try:
+        with dispatch.open("rt", encoding="utf8") as fh:
+            last_line = None
+            for line in fh:
+                if line.strip():
+                    last_line = line
+            if last_line:
+                entrypoint_str = shlex.split(last_line)[-1]
+    except (IOError, UnicodeDecodeError):
+        return
+
+    entrypoint = basedir / entrypoint_str
+    if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
+        return entrypoint
 
 
 class Language:
@@ -64,25 +86,8 @@ class Language:
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        # get the entrypoint from the last useful dispatch line
-        dispatch = basedir / "dispatch"
-        entrypoint_str = ""
-        try:
-            with dispatch.open("rt", encoding="utf8") as fh:
-                last_line = None
-                for line in fh:
-                    if line.strip():
-                        last_line = line
-                if last_line:
-                    entrypoint_str = shlex.split(last_line)[-1]
-        except (IOError, UnicodeDecodeError):
-            return self.Result.unknown
-
-        entrypoint = basedir / entrypoint_str
-        if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
-            shared_state[self.name]["entrypoint"] = entrypoint
-            return self.Result.python
-        return self.Result.unknown
+        python_entrypoint = check_dispatch_with_python_entrypoint(basedir)
+        return self.Result.unknown if python_entrypoint is None else self.Result.python
 
 
 class Framework:
@@ -124,9 +129,7 @@ class Framework:
     def text(self):
         """Return a text in function of the result state."""
         if self.result is None:
-            raise RuntimeError(
-                "Cannot access text before running the Framework checker."
-            )
+            return None
         return self.result_texts[self.result]
 
     def _get_imports(self, filepath: pathlib.Path) -> Generator[List[str], None, None]:
@@ -151,35 +154,34 @@ class Framework:
 
     def _check_operator(self, basedir: pathlib.Path) -> bool:
         """Detect if the Operator Framework is used."""
-        language_info = shared_state[Language.name]
-        if language_info["result"] != Language.Result.python:
+        python_entrypoint = check_dispatch_with_python_entrypoint(basedir)
+        if python_entrypoint is None:
             return False
 
         opsdir = basedir / "venv" / "ops"
         if not opsdir.exists() or not opsdir.is_dir():
             return False
 
-        entrypoint = language_info["entrypoint"]
-        for import_parts in self._get_imports(entrypoint):
+        for import_parts in self._get_imports(python_entrypoint):
             if import_parts[0] == "ops":
                 return True
         return False
 
     def _check_reactive(self, basedir: pathlib.Path) -> bool:
         """Detect if the Reactive Framework is used."""
-        entrypoint_name = shared_state[JujuMetadata.name]["name"]
-        if entrypoint_name is None:
+        try:
+            metadata = parse_metadata_yaml(basedir)
+        except Exception:
+            # file not found, corrupted, or mandatory "name" not present
             return False
 
         wheelhouse_dir = basedir / "wheelhouse"
         if not wheelhouse_dir.exists():
             return False
-        if not any(
-            f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()
-        ):
+        if not any(f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()):
             return False
 
-        entrypoint = basedir / "reactive" / f"{entrypoint_name}.py"
+        entrypoint = basedir / "reactive" / f"{metadata.name}.py"
         for import_parts in self._get_imports(entrypoint):
             if import_parts[0] == "charms" and import_parts[1] == "reactive":
                 return True
@@ -213,7 +215,7 @@ class JujuMetadata:
     text = "Problems found with metadata.yaml file."
 
     # different result constants
-    Result = namedtuple("Result", "ok errors")(ok="ok", errors=ERRORS)
+    Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
@@ -221,16 +223,13 @@ class JujuMetadata:
             metadata = parse_metadata_yaml(basedir)
         except Exception:
             # file not found, corrupted, or mandatory "name" not present
-            charm_name = None
-            result = self.Result.errors
-        else:
-            charm_name = metadata.name
-            if metadata.summary and metadata.description:
-                result = self.Result.ok
-            else:
-                result = self.Result.errors
+            return self.Result.errors
 
-        shared_state[self.name]["name"] = charm_name
+        # no need to verify "name" as it's mandatory in the metadata parsing
+        if metadata.summary and metadata.description:
+            result = self.Result.ok
+        else:
+            result = self.Result.errors
         return result
 
 
@@ -243,7 +242,12 @@ CHECKERS = [
 ]
 
 
-def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
+def analyze(
+    config: config.Config,
+    basedir: pathlib.Path,
+    *,
+    override_ignore_config: bool = False,
+) -> List[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
     for cls in CHECKERS:
@@ -252,14 +256,14 @@ def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
             ignore_list = config.analysis.ignore.attributes
         else:
             ignore_list = config.analysis.ignore.linters
-        if cls.name in ignore_list:
+        if cls.name in ignore_list and not override_ignore_config:
             all_results.append(
                 CheckResult(
                     check_type=cls.check_type,
                     name=cls.name,
                     result=IGNORED,
-                    url=None,
-                    text=None,
+                    url=cls.url,
+                    text=cls.text,
                 )
             )
             continue
@@ -269,7 +273,6 @@ def analyze(config: config.Config, basedir: pathlib.Path) -> List[CheckResult]:
             result = checker.run(basedir)
         except Exception:
             result = UNKNOWN if checker.check_type == CheckType.attribute else FATAL
-        shared_state[checker.name]["result"] = result
         all_results.append(
             CheckResult(
                 check_type=checker.check_type,

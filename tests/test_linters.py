@@ -16,6 +16,7 @@
 
 """Tests for analyze and lint code."""
 
+import pathlib
 from unittest.mock import patch
 
 import pytest
@@ -30,7 +31,7 @@ from charmcraft.linters import (
     Language,
     UNKNOWN,
     analyze,
-    shared_state,
+    check_dispatch_with_python_entrypoint,
 )
 
 
@@ -40,60 +41,60 @@ EXAMPLE_DISPATCH = """
 PYTHONPATH=lib:venv ./charm.py
 """
 
-# --- tests for Language checker
+# --- tests for helper functions
 
 
-def test_language_python(tmp_path):
+def test_checkdispatchpython_python(tmp_path):
     """The charm is written in Python."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
     entrypoint.chmod(0o700)
-    result = Language().run(tmp_path)
-    assert result == Language.Result.python
+    result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result == entrypoint
 
 
-def test_language_no_dispatch(tmp_path):
+def test_checkdispatchpython_no_dispatch(tmp_path):
     """The charm has no dispatch at all."""
-    result = Language().run(tmp_path)
-    assert result == Language.Result.unknown
+    result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result is None
 
 
-def test_language_inaccessible_dispatch(tmp_path):
+def test_checkdispatchpython_inaccessible_dispatch(tmp_path):
     """The charm has a dispatch we can't use."""
     dispatch = tmp_path / "dispatch"
     dispatch.touch()
     dispatch.chmod(0o000)
-    result = Language().run(tmp_path)
-    assert result == Language.Result.unknown
+    result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result is None
 
 
-def test_language_broken_dispatch(tmp_path):
+def test_checkdispatchpython_broken_dispatch(tmp_path):
     """The charm has a dispatch which we can't decode."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_bytes(b"\xC0\xC0")
-    result = Language().run(tmp_path)
-    assert result == Language.Result.unknown
+    result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result is None
 
 
-def test_language_empty_dispatch(tmp_path):
+def test_checkdispatchpython_empty_dispatch(tmp_path):
     """The charm dispatch is empty."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text("")
-    result = Language().run(tmp_path)
-    assert result == Language.Result.unknown
+    result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result is None
 
 
-def test_language_no_entrypoint(tmp_path):
+def test_checkdispatchpython_no_entrypoint(tmp_path):
     """Cannot find the entrypoint used in dispatch."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text(EXAMPLE_DISPATCH)
-    result = Language().run(tmp_path)
-    assert result == Language.Result.unknown
+    result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result is None
 
 
-def test_language_entrypoint_is_not_python(tmp_path):
+def test_checkdispatchpython_entrypoint_is_not_python(tmp_path):
     """The charm entrypoint has not a .py extension."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text(
@@ -105,27 +106,42 @@ def test_language_entrypoint_is_not_python(tmp_path):
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
     entrypoint.chmod(0o700)
-    result = Language().run(tmp_path)
-    assert result == Language.Result.unknown
+    result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result is None
 
 
-def test_language_entrypoint_no_exec(tmp_path):
+def test_checkdispatchpython_entrypoint_no_exec(tmp_path):
     """The charm entrypoint is not executable."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
-    result = Language().run(tmp_path)
+    result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result is None
+
+
+# --- tests for Language checker
+
+
+def test_language_python():
+    """The charm is written in Python."""
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = pathlib.Path("entrypoint")
+        result = Language().run("somedir")
+    assert result == Language.Result.python
+    mock_check.assert_called_with("somedir")
+
+
+def test_language_no_dispatch(tmp_path):
+    """The charm has no dispatch at all."""
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = None
+        result = Language().run("somedir")
     assert result == Language.Result.unknown
+    mock_check.assert_called_with("somedir")
 
 
 # --- tests for Framework checker
-
-
-def test_framework_text_before_check():
-    """The text property was accessed before running the checker."""
-    with pytest.raises(RuntimeError):
-        Framework().text
 
 
 def test_framework_run_operator():
@@ -166,7 +182,7 @@ def test_framework_run_unknown():
         "from ops.charm import CharmBase",
     ],
 )
-def test_framework_operator_used_ok(tmp_path, monkeypatch, import_line):
+def test_framework_operator_used_ok(tmp_path, import_line):
     """All conditions for 'framework' are in place."""
     # an entry point that import ops
     entrypoint = tmp_path / "charm.py"
@@ -176,17 +192,15 @@ def test_framework_operator_used_ok(tmp_path, monkeypatch, import_line):
     opsdir = tmp_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
-    # the result from previously run Language
-    monkeypatch.setitem(
-        shared_state, "language", {"result": "python", "entrypoint": entrypoint}
-    )
-
     # check
-    result = Framework()._check_operator(tmp_path)
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = pathlib.Path(entrypoint)
+        result = Framework()._check_operator(tmp_path)
     assert result is True
+    mock_check.assert_called_with(tmp_path)
 
 
-def test_framework_operator_language_not_python(tmp_path, monkeypatch):
+def test_framework_operator_language_not_python(tmp_path):
     """The language trait is not set to Python."""
     # an entry point that is not really python
     entrypoint = tmp_path / "charm.py"
@@ -196,60 +210,48 @@ def test_framework_operator_language_not_python(tmp_path, monkeypatch):
     opsdir = tmp_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
-    # the result from previously run Language
-    monkeypatch.setitem(shared_state, "language", {"result": "unknown"})
-
     # check
-    result = Framework()._check_operator(tmp_path)
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = None
+        result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
-def test_framework_operator_venv_directory_missing(tmp_path, monkeypatch):
+def test_framework_operator_venv_directory_missing(tmp_path):
     """The charm has not a specific 'venv' dir."""
     # an entry point that import ops
     entrypoint = tmp_path / "charm.py"
     entrypoint.write_text("import ops")
 
-    # the result from previously run Language
-    monkeypatch.setitem(
-        shared_state, "language", {"result": "python", "entrypoint": "whatever"}
-    )
-
     # check
-    result = Framework()._check_operator(tmp_path)
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = pathlib.Path(entrypoint)
+        result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
-def test_framework_operator_no_venv_ops_directory(tmp_path, monkeypatch):
+def test_framework_operator_no_venv_ops_directory(tmp_path):
     """The charm *has not* a specific 'venv/ops' dir."""
     # an entry point that import ops
     entrypoint = tmp_path / "charm.py"
     entrypoint.write_text("import ops")
-
-    # the result from previously run Language
-    monkeypatch.setitem(
-        shared_state, "language", {"result": "python", "entrypoint": "whatever"}
-    )
 
     # an empty venv
     venvdir = tmp_path / "venv"
     venvdir.mkdir()
 
     # check
-    result = Framework()._check_operator(tmp_path)
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = pathlib.Path(entrypoint)
+        result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
-def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path, monkeypatch):
+def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path):
     """The charm has not a specific 'venv/ops' *dir*."""
     # an entry point that import ops
     entrypoint = tmp_path / "charm.py"
     entrypoint.write_text("import ops")
-
-    # the result from previously run Language
-    monkeypatch.setitem(
-        shared_state, "language", {"result": "python", "entrypoint": "whatever"}
-    )
 
     # an ops *file* inside venv
     opsfile = tmp_path / "venv" / "ops"
@@ -257,11 +259,13 @@ def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path, monkeypatc
     opsfile.touch()
 
     # check
-    result = Framework()._check_operator(tmp_path)
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = pathlib.Path(entrypoint)
+        result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
-def test_framework_operator_corrupted_entrypoint(tmp_path, monkeypatch):
+def test_framework_operator_corrupted_entrypoint(tmp_path):
     """Cannot parse the Python file."""
     # an entry point that import ops
     entrypoint = tmp_path / "charm.py"
@@ -271,13 +275,10 @@ def test_framework_operator_corrupted_entrypoint(tmp_path, monkeypatch):
     opsdir = tmp_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
-    # the result from previously run Language
-    monkeypatch.setitem(
-        shared_state, "language", {"result": "python", "entrypoint": entrypoint}
-    )
-
     # check
-    result = Framework()._check_operator(tmp_path)
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = pathlib.Path(entrypoint)
+        result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
@@ -300,13 +301,10 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     opsdir = tmp_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
-    # the result from previously run Language
-    monkeypatch.setitem(
-        shared_state, "language", {"result": "python", "entrypoint": entrypoint}
-    )
-
     # check
-    result = Framework()._check_operator(tmp_path)
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = pathlib.Path(entrypoint)
+        result = Framework()._check_operator(tmp_path)
     assert result is False
 
 
@@ -319,26 +317,15 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
         "from charms.reactive.stuff import Stuff",
     ],
 )
-@pytest.mark.parametrize(
-    "metadata_result",
-    [
-        JujuMetadata.Result.ok,
-        JujuMetadata.Result.errors,
-    ],
-)
-def test_framework_reactive_used_ok(
-    tmp_path, monkeypatch, import_line, metadata_result
-):
+def test_framework_reactive_used_ok(tmp_path, monkeypatch, import_line):
     """The reactive framework was used.
 
     Parametrized args:
     - import_line: different ways to express the import
-    - metadata_result: the result of JujuMetadata (which is not important as it only uses the name)
     """
-    # the result from previously run JujuMetadata
-    monkeypatch.setitem(
-        shared_state, "metadata", {"result": metadata_result, "name": "foobar"}
-    )
+    # metdata file with needed name field
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
     entrypoint = tmp_path / "reactive" / "foobar.py"
@@ -357,11 +344,6 @@ def test_framework_reactive_used_ok(
 
 def test_framework_reactive_no_metadata(tmp_path, monkeypatch):
     """No useful name from metadata."""
-    # the result from previously run JujuMetadata
-    monkeypatch.setitem(
-        shared_state, "metadata", {"result": JujuMetadata.Result.errors, "name": None}
-    )
-
     # a Python file that imports charms.reactive
     entrypoint = tmp_path / "reactive" / "foobar.py"
     entrypoint.parent.mkdir()
@@ -379,10 +361,9 @@ def test_framework_reactive_no_metadata(tmp_path, monkeypatch):
 
 def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
     """Missing entrypoint file."""
-    # the result from previously run JujuMetadata
-    monkeypatch.setitem(
-        shared_state, "metadata", {"result": JujuMetadata.Result.ok, "name": "foobar"}
-    )
+    # metdata file with needed name field
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text("name: foobar")
 
     # the reactive lib is used
     reactive_lib = tmp_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
@@ -396,10 +377,9 @@ def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
 
 def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
     """Cannot read the entrypoint file."""
-    # the result from previously run JujuMetadata
-    monkeypatch.setitem(
-        shared_state, "metadata", {"result": JujuMetadata.Result.ok, "name": "foobar"}
-    )
+    # metdata file with needed name field
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
     entrypoint = tmp_path / "reactive" / "foobar.py"
@@ -419,10 +399,9 @@ def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
 
 def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
     """The entrypoint is not really a Python file."""
-    # the result from previously run JujuMetadata
-    monkeypatch.setitem(
-        shared_state, "metadata", {"result": JujuMetadata.Result.ok, "name": "foobar"}
-    )
+    # metdata file with needed name field
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
     entrypoint = tmp_path / "reactive" / "foobar.py"
@@ -441,10 +420,9 @@ def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
 
 def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
     """The wheelhouse directory does not exist."""
-    # the result from previously run JujuMetadata
-    monkeypatch.setitem(
-        shared_state, "metadata", {"result": JujuMetadata.Result.ok, "name": "foobar"}
-    )
+    # metdata file with needed name field
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
     entrypoint = tmp_path / "reactive" / "foobar.py"
@@ -458,10 +436,9 @@ def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
 
 def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
     """The wheelhouse directory has no reactive lib."""
-    # the result from previously run JujuMetadata
-    monkeypatch.setitem(
-        shared_state, "metadata", {"result": JujuMetadata.Result.ok, "name": "foobar"}
-    )
+    # metdata file with needed name field
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
     entrypoint = tmp_path / "reactive" / "foobar.py"
@@ -491,10 +468,9 @@ def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
 )
 def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_line):
     """Different imports that are NOT importing the Reactive Framework."""
-    # the result from previously run JujuMetadata
-    monkeypatch.setitem(
-        shared_state, "metadata", {"result": JujuMetadata.Result.ok, "name": "foobar"}
-    )
+    # metdata file with needed name field
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
     entrypoint = tmp_path / "reactive" / "foobar.py"
@@ -527,14 +503,12 @@ def test_jujumetadata_all_ok(tmp_path):
     )
     result = JujuMetadata().run(tmp_path)
     assert result == JujuMetadata.Result.ok
-    assert shared_state["metadata"]["name"] == "foobar"
 
 
 def test_jujumetadata_missing_file(tmp_path):
     """No metadata.yaml file at all."""
     result = JujuMetadata().run(tmp_path)
     assert result == JujuMetadata.Result.errors
-    assert shared_state["metadata"]["name"] is None
 
 
 def test_jujumetadata_file_corrupted(tmp_path):
@@ -543,7 +517,6 @@ def test_jujumetadata_file_corrupted(tmp_path):
     metadata_file.write_text(" - \n-")
     result = JujuMetadata().run(tmp_path)
     assert result == JujuMetadata.Result.errors
-    assert shared_state["metadata"]["name"] is None
 
 
 def test_jujumetadata_missing_name(tmp_path):
@@ -558,7 +531,6 @@ def test_jujumetadata_missing_name(tmp_path):
     )
     result = JujuMetadata().run(tmp_path)
     assert result == JujuMetadata.Result.errors
-    assert shared_state["metadata"]["name"] is None
 
 
 @pytest.mark.parametrize(
@@ -581,7 +553,6 @@ def test_jujumetadata_missing_field(tmp_path, fields):
     metadata_file.write_text(fields)
     result = JujuMetadata().run(tmp_path)
     assert result == JujuMetadata.Result.errors
-    assert shared_state["metadata"]["name"] == "foobar"
 
 
 # --- tests for analyze function
@@ -593,9 +564,7 @@ def create_fake_checker(**kwargs):
     Receive generic kwargs and process them as a dict for the defaults, as we can't declare
     the name in the function definition and then use it in the class definition.
     """
-    params = dict(
-        check_type="type", name="name", url="url", text="text", result="result"
-    )
+    params = dict(check_type="type", name="name", url="url", text="text", result="result")
     params.update(kwargs)
 
     class FakeChecker:
@@ -645,10 +614,18 @@ def test_analyze_run_everything(config):
 def test_analyze_ignore_attribute(config):
     """Run all checkers except the ignored attribute."""
     FakeChecker1 = create_fake_checker(
-        check_type=CheckType.attribute, name="name1", result="res1"
+        check_type=CheckType.attribute,
+        name="name1",
+        result="res1",
+        text="text1",
+        url="url1",
     )
     FakeChecker2 = create_fake_checker(
-        check_type=CheckType.lint, name="name2", result="res2"
+        check_type=CheckType.lint,
+        name="name2",
+        result="res2",
+        text="text2",
+        url="url2",
     )
 
     config.analysis.ignore.attributes.append("name1")
@@ -659,18 +636,30 @@ def test_analyze_ignore_attribute(config):
     assert res1.check_type == CheckType.attribute
     assert res1.name == "name1"
     assert res1.result == IGNORED
+    assert res1.text == "text1"
+    assert res1.url == "url1"
     assert res2.check_type == CheckType.lint
     assert res2.name == "name2"
     assert res2.result == "res2"
+    assert res2.text == "text2"
+    assert res2.url == "url2"
 
 
 def test_analyze_ignore_linter(config):
     """Run all checkers except the ignored linter."""
     FakeChecker1 = create_fake_checker(
-        check_type=CheckType.attribute, name="name1", result="res1"
+        check_type=CheckType.attribute,
+        name="name1",
+        result="res1",
+        text="text1",
+        url="url1",
     )
     FakeChecker2 = create_fake_checker(
-        check_type=CheckType.lint, name="name2", result="res2"
+        check_type=CheckType.lint,
+        name="name2",
+        result="res2",
+        text="text2",
+        url="url2",
     )
 
     config.analysis.ignore.linters.append("name2")
@@ -681,14 +670,39 @@ def test_analyze_ignore_linter(config):
     assert res1.check_type == CheckType.attribute
     assert res1.name == "name1"
     assert res1.result == "res1"
+    assert res1.text == "text1"
+    assert res1.url == "url1"
     assert res2.check_type == CheckType.lint
     assert res2.name == "name2"
     assert res2.result == IGNORED
+    assert res2.text == "text2"
+    assert res2.url == "url2"
+
+
+def test_analyze_override_ignore(config):
+    """Run all checkers even the ignored ones, if requested."""
+    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1", result="res1")
+    FakeChecker2 = create_fake_checker(check_type=CheckType.lint, name="name2", result="res2")
+
+    config.analysis.ignore.attributes.append("name1")
+    config.analysis.ignore.linters.append("name2")
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
+        result = analyze(config, "somepath", override_ignore_config=True)
+
+    res1, res2 = result
+    assert res1.check_type == CheckType.attribute
+    assert res1.name == "name1"
+    assert res1.result == "res1"
+    assert res2.check_type == CheckType.lint
+    assert res2.name == "name2"
+    assert res2.result == "res2"
 
 
 def test_analyze_crash_attribute(config):
     """The attribute checker crashes."""
-    FakeChecker = create_fake_checker(check_type=CheckType.attribute, name="name")
+    FakeChecker = create_fake_checker(
+        check_type=CheckType.attribute, name="name", text="text", url="url"
+    )
 
     def raises(*a):
         raise ValueError
@@ -702,11 +716,15 @@ def test_analyze_crash_attribute(config):
     assert res.check_type == CheckType.attribute
     assert res.name == "name"
     assert res.result == UNKNOWN
+    assert res.text == "text"
+    assert res.url == "url"
 
 
 def test_analyze_crash_lint(config):
     """The lint checker crashes."""
-    FakeChecker = create_fake_checker(check_type=CheckType.lint, name="name")
+    FakeChecker = create_fake_checker(
+        check_type=CheckType.lint, name="name", text="text", url="url"
+    )
 
     def raises(*a):
         raise ValueError
@@ -720,45 +738,17 @@ def test_analyze_crash_lint(config):
     assert res.check_type == CheckType.lint
     assert res.name == "name"
     assert res.result == FATAL
+    assert res.text == "text"
+    assert res.url == "url"
 
 
-# --- tests for sharing state between checkers
-
-
-def test_shared_state_dependency_language_framework(config, tmp_path):
-    """Verify that dependency between Language and Framework is ok in CHECKERS."""
-    # simplify the list of checkers to run, but keeping the order between the two we want
-    # to exercise
-    test_checkers = [c for c in CHECKERS if c is Language or c is Framework]
-
-    # create a fake complete project for the checkers to run
-    dispatch = tmp_path / "dispatch"
-    dispatch.write_text(EXAMPLE_DISPATCH)
-    entrypoint = tmp_path / "charm.py"
-    entrypoint.touch()
-    entrypoint.chmod(0o700)
-
-    with patch("charmcraft.linters.CHECKERS", test_checkers):
-        result = analyze(config, tmp_path)
-
-    r1, r2 = result
-    assert r1.name == Language.name
-    assert r2.name == Framework.name
-
-
-def test_shared_state_dependency_jujumetadata_framework(config, tmp_path):
-    """Verify that dependency between JujuMetadata and Framework is ok in CHECKERS."""
-    # simplify the list of checkers to run, but keeping the order between the two we want
-    # to exercise
-    test_checkers = [c for c in CHECKERS if c is JujuMetadata or c is Framework]
-
-    # create a fake metadata that even JujuMetadta ending in error, have a proper useful 'name'
-    metadata_file = tmp_path / "metadata.yaml"
-    metadata_file.write_text("name: testname")
-
-    with patch("charmcraft.linters.CHECKERS", test_checkers):
-        result = analyze(config, tmp_path)
-
-    r1, r2 = result
-    assert r1.name == JujuMetadata.name
-    assert r2.name == Framework.name
+def test_analyze_all_can_be_ignored(config):
+    """Control that all real life checkers can be ignored."""
+    config.analysis.ignore.attributes.extend(
+        c.name for c in CHECKERS if c.check_type == CheckType.attribute
+    )
+    config.analysis.ignore.linters.extend(
+        c.name for c in CHECKERS if c.check_type == CheckType.lint
+    )
+    result = analyze(config, "somepath")
+    assert all(r.result == IGNORED for r in result)

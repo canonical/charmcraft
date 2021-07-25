@@ -218,6 +218,7 @@ class Builder:
         lifecycle = PartsLifecycle(
             self._parts,
             work_dir=self.buildpath,
+            ignore_local_sources=["*.charm"],
             entrypoint=entrypoint,
             requirements=[str(p) for p in self.requirement_paths],
         )

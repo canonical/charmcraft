@@ -17,49 +17,33 @@
 """Infrastructure for the 'pack' command."""
 
 import logging
+import os
+import pathlib
 import zipfile
 from argparse import Namespace
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
+from charmcraft.parts import PartsLifecycle, Step
 from charmcraft.utils import SingleOptionEnsurer, load_yaml, useful_filepath
 
 logger = logging.getLogger(__name__)
 
 # the minimum set of files in a bundle
-MANDATORY_FILES = {"bundle.yaml", "manifest.yaml", "README.md"}
+MANDATORY_FILES = {"bundle.yaml", "README.md"}
 
 
-def build_zip(zippath, basedir, fpaths):
+def build_zip(zippath, prime_dir):
     """Build the final file."""
     zipfh = zipfile.ZipFile(zippath, "w", zipfile.ZIP_DEFLATED)
-    for fpath in fpaths:
-        zipfh.write(fpath, fpath.relative_to(basedir))
+    for dirpath, dirnames, filenames in os.walk(prime_dir, followlinks=True):
+        dirpath = pathlib.Path(dirpath)
+        for filename in filenames:
+            filepath = dirpath / filename
+            zipfh.write(str(filepath), str(filepath.relative_to(prime_dir)))
+
     zipfh.close()
-
-
-def get_paths_to_include(config):
-    """Get all file/dir paths to include."""
-    dirpath = config.project.dirpath
-    allpaths = set()
-
-    # all mandatory files
-    for fname in MANDATORY_FILES:
-        fpath = dirpath / fname
-        if not fpath.exists():
-            raise CommandError("Missing mandatory file: {!r}.".format(str(fpath)))
-        allpaths.add(fpath)
-
-    # the extra files (relative paths)
-    bundle = config.parts.get("bundle")
-    if bundle is not None:
-        for spec in bundle.get("prime", []):
-            fpaths = sorted(fpath for fpath in dirpath.glob(spec) if fpath.is_file())
-            logger.debug("Including per prime config %r: %s.", spec, fpaths)
-            allpaths.update(fpaths)
-
-    return sorted(allpaths)
 
 
 _overview = """
@@ -137,7 +121,7 @@ class PackCommand(BaseCommand):
         # decide if this will work on a charm or a bundle
         if self.config.type == "charm" or not self.config.project.config_provided:
             self._pack_charm(parsed_args)
-        else:
+        elif self.config.type == "bundle":
             if parsed_args.entrypoint is not None:
                 raise CommandError("The -e/--entry option is valid only when packing a charm")
             if parsed_args.requirement is not None:
@@ -145,6 +129,8 @@ class PackCommand(BaseCommand):
                     "The -r/--requirement option is valid only when packing a charm"
                 )
             self._pack_bundle()
+        else:
+            raise CommandError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
 
     def _pack_charm(self, parsed_args):
         """Pack a charm."""
@@ -169,8 +155,13 @@ class PackCommand(BaseCommand):
 
     def _pack_bundle(self):
         """Pack a bundle."""
+        project = self.config.project
+        config_parts = self.config.parts.copy()
+        charm_part = config_parts.setdefault("bundle", {})
+        prime = charm_part.setdefault("prime", [])
+
         # get the config files
-        bundle_filepath = self.config.project.dirpath / "bundle.yaml"
+        bundle_filepath = project.dirpath / "bundle.yaml"
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
             raise CommandError(
@@ -183,19 +174,28 @@ class PackCommand(BaseCommand):
                 "file {!r}.".format(str(bundle_filepath))
             )
 
-        # so far 'pack' works for bundles only (later this will operate also on charms)
-        if self.config.type != "bundle":
-            raise CommandError(
-                "Bad config: 'type' field in charmcraft.yaml must be 'bundle' for this command."
-            )
+        # set prime filters
+        for fname in MANDATORY_FILES:
+            fpath = project.dirpath / fname
+            if not fpath.exists():
+                raise CommandError("Missing mandatory file: {!r}.".format(str(fpath)))
+        prime.extend(MANDATORY_FILES)
+
+        # set source for buiding
+        charm_part["source"] = str(project.dirpath)
+
+        # run the parts lifecycle
+        logger.debug("Parts definition: %s", config_parts)
+        lifecycle = PartsLifecycle(
+            config_parts,
+            work_dir=project.dirpath / build.BUILD_DIRNAME,
+            ignore_local_sources=[bundle_name + ".zip"],
+        )
+        lifecycle.run(Step.PRIME)
 
         # pack everything
-        project = self.config.project
-        manifest_filepath = create_manifest(project.dirpath, project.started_at, None, [])
-        try:
-            paths = get_paths_to_include(self.config)
-            zipname = project.dirpath / (bundle_name + ".zip")
-            build_zip(zipname, project.dirpath, paths)
-        finally:
-            manifest_filepath.unlink()
+        create_manifest(lifecycle.prime_dir, project.started_at, None, [])
+        zipname = project.dirpath / (bundle_name + ".zip")
+        build_zip(zipname, lifecycle.prime_dir)
+
         logger.info("Created %r.", str(zipname))

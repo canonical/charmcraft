@@ -427,10 +427,7 @@ def test_schema_basicprime_bad_prime_type_empty(create_config, check_schema_erro
     """
     )
     check_schema_error(
-        (
-            "Bad charmcraft.yaml content:\n"
-            "- path cannot be empty in field 'parts.charm.prime[0]'"
-        )
+        ("Bad charmcraft.yaml content:\n" "- path cannot be empty in field 'parts.charm.prime[0]'")
     )
 
 

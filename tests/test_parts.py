@@ -91,9 +91,7 @@ class TestCharmPlugin:
 
     def test_invalid_properties(self):
         with pytest.raises(pydantic.ValidationError) as raised:
-            parts.CharmPlugin.properties_class.unmarshal(
-                {"source": ".", "charm-invalid": True}
-            )
+            parts.CharmPlugin.properties_class.unmarshal({"source": ".", "charm-invalid": True})
         err = raised.value.errors()
         assert len(err) == 1
         assert err[0]["loc"] == ("charm-invalid",)

@@ -203,9 +203,7 @@ class PartsLifecycle:
             # invalidate build if packing a charm and entrypoint changed
             if "charm" in self._all_parts:
                 entrypoint = os.path.normpath(self._lcm.project_info.entrypoint)
-                dis_entrypoint = os.path.normpath(
-                    _get_dispatch_entrypoint(self.prime_dir)
-                )
+                dis_entrypoint = os.path.normpath(_get_dispatch_entrypoint(self.prime_dir))
                 if entrypoint != dis_entrypoint:
                     self._lcm.clean(Step.BUILD, part_names=["charm"])
                     self._lcm.reload_state()

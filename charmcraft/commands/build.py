@@ -398,9 +398,7 @@ class Builder:
 
         return charm_name
 
-    def handle_package(
-        self, prime_dir, bases_config: Optional[BasesConfiguration] = None
-    ):
+    def handle_package(self, prime_dir, bases_config: Optional[BasesConfiguration] = None):
         """Handle the final package creation."""
         logger.debug("Creating the package itself")
         zipname = format_charm_file_name(self.metadata.name, bases_config)

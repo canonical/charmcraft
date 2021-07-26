@@ -29,7 +29,7 @@ from unittest.mock import call, patch
 import pytest
 import yaml
 
-from charmcraft import charm_builder, linters
+from charmcraft import linters
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
@@ -1173,76 +1173,6 @@ def test_build_error_no_match_with_charmcraft_yaml(
     assert "No suitable 'build-on' environment found in 'bases[2]' configuration." in records
 
 
-def test_build_invoke_charm_builder(tmp_path, config, monkeypatch):
-    """Check transferred metadata and simple entrypoint, also return proper linked entrypoint."""
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-
-    entrypoint = tmp_path / "crazycharm.py"
-    entrypoint.touch()
-
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": entrypoint,
-            "requirement": [tmp_path / "req1.txt", tmp_path / "req2.txt"],
-            "force": False,
-        },
-        config,
-    )
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    monkeypatch.setenv("PATH", "/some/path")
-    monkeypatch.setenv("SNAP", "snap_value")
-    monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
-    monkeypatch.setenv("SNAP_NAME", "snap_name_value")
-    monkeypatch.setenv("SNAP_VERSION", "snap_version_value")
-    monkeypatch.setenv("http_proxy", "http_proxy_value")
-    monkeypatch.setenv("https_proxy", "https_proxy_value")
-    monkeypatch.setenv("no_proxy", "no_proxy_value")
-    with patch("charmcraft.commands.build.polite_exec") as mock_run:
-        mock_run.side_effect = [1]
-        with patch(
-            "charmcraft.commands.build.check_if_base_matches_host",
-            return_value=(True, None),
-        ):
-            with pytest.raises(CommandError, match="problems running charm builder"):
-                builder.run()
-
-    mock_run.assert_called_with(
-        [
-            "env",
-            "-i",
-            "LANG=C.UTF-8",
-            "LC_ALL=C.UTF-8",
-            "PATH=/some/path",
-            "SNAP=snap_value",
-            "SNAP_ARCH=snap_arch_value",
-            "SNAP_NAME=snap_name_value",
-            "SNAP_VERSION=snap_version_value",
-            "http_proxy=http_proxy_value",
-            "https_proxy=https_proxy_value",
-            "no_proxy=no_proxy_value",
-            sys.executable,
-            "-I",
-            charm_builder.__file__,
-            "--charmdir",
-            str(tmp_path),
-            "--builddir",
-            str(build_dir),
-            "--entrypoint",
-            str(entrypoint),
-            "-r",
-            str(tmp_path / "req1.txt"),
-            "-r",
-            str(tmp_path / "req2.txt"),
-        ],
-    )
-
-
 def test_build_package_tree_structure(tmp_path, monkeypatch, config):
     """The zip file is properly built internally."""
     # the metadata
@@ -1299,7 +1229,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
         },
         config,
     )
-    zipname = builder.handle_package()
+    zipname = builder.handle_package(to_be_zipped_dir)
 
     # check the stuff outside is not in the zip, the stuff inside is zipped (with
     # contents!), and all relative to build dir
@@ -1335,7 +1265,7 @@ def test_build_package_name(tmp_path, monkeypatch, config):
         },
         config,
     )
-    zipname = builder.handle_package()
+    zipname = builder.handle_package(to_be_zipped_dir)
 
     assert zipname == "name-from-metadata.charm"
 
@@ -1381,7 +1311,7 @@ def test_build_using_linters_attributes(basic_project, monkeypatch, config):
                 zipnames = builder.run()
 
     # check the analyze and processing functions were called properly
-    mock_analyze.assert_called_with(config, builder.buildpath)
+    mock_analyze.assert_called_with(config, builder.buildpath / "prime")
     mock_show_lint.assert_called_with(linting_results)
 
     # the manifest should have all the results (including the ignored one)

@@ -23,6 +23,7 @@ import responses as responses_module
 
 from charmcraft import config as config_module
 from charmcraft import deprecations
+from charmcraft import parts
 
 
 @pytest.fixture()
@@ -38,6 +39,11 @@ def caplog_filter(caplog):
 @pytest.fixture(autouse=True, scope="session")
 def tmpdir_under_tmpdir(tmpdir_factory):
     tempfile.tempdir = str(tmpdir_factory.getbasetemp())
+
+
+@pytest.fixture(autouse=True, scope="session")
+def setup_parts():
+    parts.setup_parts()
 
 
 @pytest.fixture
@@ -73,10 +79,7 @@ def config(tmp_path):
         def set(self, prime=None, **kwargs):
             # prime is special, so we don't need to write all this structure in all tests
             if prime is not None:
-                self.parts.bundle.prime.clear()
-                self.parts.bundle.prime.extend(prime)
-            else:
-                self.parts = config_module.Parts()
+                self.parts["charm"] = {"prime": prime}
 
             # the rest is direct
             for k, v in kwargs.items():
@@ -87,6 +90,39 @@ def config(tmp_path):
         started_at=datetime.datetime.utcnow(),
         config_provided=True,
     )
+
+    # implicit plugin is added by the validator during unmarshal
+    parts = {
+        "charm": {
+            "plugin": "charm",
+        }
+    }
+
+    return TestConfig(type="charm", parts=parts, project=project)
+
+
+@pytest.fixture
+def bundle_config(tmp_path):
+    """Provide a config class with an extra set method for the test to change it."""
+
+    class TestConfig(config_module.Config, frozen=False):
+        """The Config, but with a method to set test values."""
+
+        def set(self, prime=None, **kwargs):
+            # prime is special, so we don't need to write all this structure in all tests
+            if prime is not None:
+                self.parts["bundle"] = {"prime": prime}
+
+            # the rest is direct
+            for k, v in kwargs.items():
+                object.__setattr__(self, k, v)
+
+    project = config_module.Project(
+        dirpath=tmp_path,
+        started_at=datetime.datetime.utcnow(),
+        config_provided=True,
+    )
+
     return TestConfig(type="bundle", project=project)
 
 

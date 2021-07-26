@@ -20,11 +20,10 @@ import logging
 import os
 import pathlib
 import subprocess
-import sys
 import zipfile
 from typing import List, Optional
 
-from charmcraft import charm_builder, linters
+from charmcraft import linters
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
@@ -37,6 +36,7 @@ from charmcraft.env import (
 from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
+from charmcraft.parts import PartsLifecycle, Step
 from charmcraft.providers import (
     capture_logs_from_instance,
     ensure_provider_is_available,
@@ -64,6 +64,23 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
 HOOKS_DIR = "hooks"
+
+CHARM_FILES = [
+    "metadata.yaml",
+    DISPATCH_FILENAME,
+    HOOKS_DIR,
+]
+
+CHARM_OPTIONAL = [
+    "config.yaml",
+    "metrics.yaml",
+    "actions.yaml",
+    "lxd-profile.yaml",
+    "templates",
+    "version",
+    "lib",
+    "mod",
+]
 
 
 def _format_run_on_base(base: Base) -> str:
@@ -135,6 +152,10 @@ class Builder:
         self.config = config
         self.metadata = parse_metadata_yaml(self.charmdir)
 
+        self._parts = self.config.parts.copy()
+        self._charm_part = self._parts.setdefault("charm", {})
+        self._prime = self._charm_part.setdefault("prime", [])
+
     def show_linting_results(self, linting_results):
         """Manage the linters results, show some in different conditions, decide if continue."""
         attribute_results = []
@@ -184,60 +205,67 @@ class Builder:
         """
         logger.debug("Building charm in %r", str(self.buildpath))
 
-        build_env = dict(LANG="C.UTF-8", LC_ALL="C.UTF-8")
-        for key in [
-            "PATH",
-            "SNAP",
-            "SNAP_ARCH",
-            "SNAP_NAME",
-            "SNAP_VERSION",
-            "http_proxy",
-            "https_proxy",
-            "no_proxy",
-        ]:
-            if key in os.environ:
-                build_env[key] = os.environ[key]
+        entrypoint = self.entrypoint.relative_to(self.charmdir)
 
-        env_flags = [f"{key}={value}" for key, value in build_env.items()]
+        # add charm files to the prime filter
+        self._set_prime_filter(entrypoint)
 
-        # invoke the charm builder
-        build_cmd = [
-            "env",
-            "-i",
-            *env_flags,
-            sys.executable,
-            "-I",
-            charm_builder.__file__,
-            "--charmdir",
-            str(self.charmdir),
-            "--builddir",
-            str(self.buildpath),
-        ]
+        # set source for buiding
+        self._charm_part["source"] = str(self.charmdir)
 
-        if self.entrypoint:
-            build_cmd.extend(["--entrypoint", str(self.entrypoint)])
-
-        for req in self.requirement_paths:
-            build_cmd.extend(["-r", str(req)])
-
-        retcode = polite_exec(build_cmd)
-        if retcode:
-            raise CommandError("problems running charm builder")
+        # run the parts lifecycle
+        logger.debug("Parts definition: %s", self._parts)
+        lifecycle = PartsLifecycle(
+            self._parts,
+            work_dir=self.buildpath,
+            entrypoint=entrypoint,
+            requirements=[str(p) for p in self.requirement_paths],
+        )
+        lifecycle.run(Step.PRIME)
 
         # run linters and show the results
-        linting_results = linters.analyze(self.config, self.buildpath)
+        linting_results = linters.analyze(self.config, lifecycle.prime_dir)
         self.show_linting_results(linting_results)
 
         create_manifest(
-            self.buildpath,
+            lifecycle.prime_dir,
             self.config.project.started_at,
             bases_config,
             linting_results,
         )
 
-        zipname = self.handle_package(bases_config)
+        zipname = self.handle_package(lifecycle.prime_dir, bases_config)
         logger.info("Created '%s'.", zipname)
         return zipname
+
+    def _set_prime_filter(self, entrypoint: pathlib.Path):
+        """Add mandatory and optional charm files to the prime filter.
+
+        The prime filter should contain:
+        - The charm entry point, or the directory containing it if it's
+          not directly in the project dir.
+        - A set of mandatory charm files, including metadata.yaml, the
+          dispatcher and the hooks directory.
+        - A set of optional charm files.
+        """
+        # add entrypoint
+        if str(entrypoint) == entrypoint.name:
+            # the entry point is in the root of the project, just include it
+            self._prime.append(str(entrypoint))
+        else:
+            # the entry point is in a subdir, include the whole subtree
+            self._prime.append(str(entrypoint.parts[0]))
+
+        # add venv if there are requirements
+        if self.requirement_paths:
+            self._prime.append(VENV_DIRNAME)
+
+        # add mandatory and optional charm files
+        self._prime.extend(CHARM_FILES)
+        for fn in CHARM_OPTIONAL:
+            path = self.charmdir / fn
+            if path.exists():
+                self._prime.append(fn)
 
     def run(
         self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
@@ -370,16 +398,16 @@ class Builder:
 
         return charm_name
 
-    def handle_package(self, bases_config: Optional[BasesConfiguration] = None):
+    def handle_package(self, prime_dir, bases_config: Optional[BasesConfiguration] = None):
         """Handle the final package creation."""
         logger.debug("Creating the package itself")
         zipname = format_charm_file_name(self.metadata.name, bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
-        for dirpath, dirnames, filenames in os.walk(self.buildpath, followlinks=True):
+        for dirpath, dirnames, filenames in os.walk(prime_dir, followlinks=True):
             dirpath = pathlib.Path(dirpath)
             for filename in filenames:
                 filepath = dirpath / filename
-                zipfh.write(str(filepath), str(filepath.relative_to(self.buildpath)))
+                zipfh.write(str(filepath), str(filepath.relative_to(prime_dir)))
 
         zipfh.close()
         return zipname

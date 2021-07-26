@@ -128,10 +128,7 @@ def test_base_configuration_setup(mock_executor, mock_inject, monkeypatch, alias
                 "apt-get",
                 "install",
                 "-y",
-                "git",
-                "python3-pip",
-                "python3-setuptools",
-                "python3-wheel",
+                "sudo",
             ],
             check=True,
             capture_output=True,
@@ -147,7 +144,7 @@ def test_base_configuration_setup(mock_executor, mock_inject, monkeypatch, alias
 
 def test_base_configuration_setup_apt_error(mock_executor):
     alias = bases.BuilddBaseAlias.FOCAL
-    apt_cmd = ["apt-get", "install", "-y", "git", "python3-pip", "python3-setuptools"]
+    apt_cmd = ["apt-get", "install", "-y", "sudo"]
     mock_executor.execute_run.side_effect = subprocess.CalledProcessError(
         -1,
         apt_cmd,

@@ -317,17 +317,14 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
         super().setup(executor=executor, retry_wait=retry_wait, timeout=timeout)
 
         try:
-            # XXX Patterson 2021-07-02: craft-parts will determine/install these
-            # deps as a matter of the plugin(s) and source(s) being used.
+            # XXX Claudio 2021-07-22: craft-parts uses sudo, install it until
+            # we adjust it to detect if changing to superuser is needed.
             executor.execute_run(
                 [
                     "apt-get",
                     "install",
                     "-y",
-                    "git",
-                    "python3-pip",
-                    "python3-setuptools",
-                    "python3-wheel",
+                    "sudo",
                 ],
                 check=True,
                 capture_output=True,

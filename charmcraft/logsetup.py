@@ -34,6 +34,7 @@ logger = logging.getLogger("charmcraft")
 enabled_loggers = [
     logger,
     logging.getLogger("craft_providers"),
+    logging.getLogger("craft_parts"),
 ]
 
 

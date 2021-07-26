@@ -73,6 +73,7 @@ from charmcraft.env import (
     get_managed_environment_project_path,
     is_charmcraft_running_in_managed_mode,
 )
+from charmcraft.parts import validate_part
 from charmcraft.utils import get_host_architecture, load_yaml
 
 
@@ -233,29 +234,6 @@ def format_pydantic_errors(errors, *, file_name: str = "charmcraft.yaml"):
     return "\n".join(combined)
 
 
-class Part(ModelConfigDefaults):
-    """Definition of part to build."""
-
-    prime: List[RelativePath] = []
-
-
-class Parts(ModelConfigDefaults):
-    """Definition of parts to build."""
-
-    bundle: Part = Part()
-
-    def get(self, part_name) -> Part:
-        """Get part by name.
-
-        :returns: Part if exists, None if not.
-
-        :raises KeyError: if part does not exist.
-        """
-        if part_name == "bundle":
-            return self.bundle
-        raise KeyError(part_name)
-
-
 # XXX Facundo 2020-05-31: for backwards compatibility, we'll support the user writing
 # these attributes using underscores; when that period is done we remove the
 # `allow_population_by_field_name` parameter here in the class definition and only
@@ -318,7 +296,7 @@ class Config(ModelConfigDefaults, validate_all=False):
 
     type: Optional[str]
     charmhub: CharmhubConfig = CharmhubConfig()
-    parts: Parts = Parts()
+    parts: Dict[str, Any] = {}
     bases: List[BasesConfiguration] = [
         BasesConfiguration(
             **{
@@ -337,6 +315,29 @@ class Config(ModelConfigDefaults, validate_all=False):
         if charm_type not in ["bundle", "charm"]:
             raise ValueError("must be either 'charm' or 'bundle'")
         return charm_type
+
+    @pydantic.validator("parts", pre=True)
+    def validate_charm_parts(cls, parts):
+        """Verify parts type (craft-parts will re-validate this)."""
+        if not isinstance(parts, dict):
+            raise TypeError("value must be a dictionary")
+        for name, part in parts.items():
+            if not isinstance(part, dict):
+                raise TypeError(f"part {name!r} must be a dictionary")
+            # implicit plugin fixup
+            if "plugin" not in part:
+                # XXX: remove special case after including the bundle plugin
+                if name == "bundle":
+                    part["plugin"] = "nil"
+                else:
+                    part["plugin"] = name
+        return parts
+
+    @pydantic.validator("parts", each_item=True)
+    def validate_charm_part(cls, item):
+        """Verify each part (craft-parts will re-validate this)."""
+        validate_part(item)
+        return item
 
     @classmethod
     def expand_short_form_bases(cls, bases: List[Dict[str, Any]]) -> None:

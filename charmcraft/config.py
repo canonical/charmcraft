@@ -326,11 +326,7 @@ class Config(ModelConfigDefaults, validate_all=False):
                 raise TypeError(f"part {name!r} must be a dictionary")
             # implicit plugin fixup
             if "plugin" not in part:
-                # XXX: remove special case after including the bundle plugin
-                if name == "bundle":
-                    part["plugin"] = "nil"
-                else:
-                    part["plugin"] = name
+                part["plugin"] = name
         return parts
 
     @pydantic.validator("parts", each_item=True)

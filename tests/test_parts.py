@@ -38,7 +38,7 @@ class TestCharmPlugin:
             "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
         plugin_properties = parts.CharmPluginProperties.unmarshal(spec)
-        part_spec = plugins.strip_plugin_properties(spec, plugin_name="charm")
+        part_spec = plugins.extract_part_properties(spec, plugin_name="charm")
         part = craft_parts.Part(
             "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
         )

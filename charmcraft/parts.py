@@ -216,8 +216,8 @@ def validate_part(data: Dict[str, Any]) -> None:
     plugin_class.properties_class.unmarshal(spec)
 
     # validate common part properties
-    spec = plugins.strip_plugin_properties(spec, plugin_name=plugin_name)
-    PartSpec(**spec)
+    part_spec = plugins.extract_part_properties(spec, plugin_name=plugin_name)
+    PartSpec(**part_spec)
 
 
 class PartsLifecycle:

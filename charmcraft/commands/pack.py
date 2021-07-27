@@ -22,10 +22,11 @@ import pathlib
 import zipfile
 from argparse import Namespace
 
+from charmcraft import parts
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
-from charmcraft.parts import PartsLifecycle, Step
+from charmcraft.parts import Step
 from charmcraft.utils import SingleOptionEnsurer, load_yaml, useful_filepath
 
 logger = logging.getLogger(__name__)
@@ -186,7 +187,7 @@ class PackCommand(BaseCommand):
 
         # run the parts lifecycle
         logger.debug("Parts definition: %s", config_parts)
-        lifecycle = PartsLifecycle(
+        lifecycle = parts.PartsLifecycle(
             config_parts,
             work_dir=project.dirpath / build.BUILD_DIRNAME,
             ignore_local_sources=[bundle_name + ".zip"],

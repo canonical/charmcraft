@@ -23,7 +23,7 @@ import subprocess
 import zipfile
 from typing import List, Optional
 
-from charmcraft import linters
+from charmcraft import linters, parts
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
@@ -36,7 +36,7 @@ from charmcraft.env import (
 from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
-from charmcraft.parts import PartsLifecycle, Step
+from charmcraft.parts import Step
 from charmcraft.providers import (
     capture_logs_from_instance,
     ensure_provider_is_available,
@@ -205,22 +205,20 @@ class Builder:
         """
         logger.debug("Building charm in %r", str(self.buildpath))
 
-        entrypoint = self.entrypoint.relative_to(self.charmdir)
+        self._handle_deprecated_cli_arguments()
 
         # add charm files to the prime filter
-        self._set_prime_filter(entrypoint)
+        self._set_prime_filter()
 
         # set source for buiding
         self._charm_part["source"] = str(self.charmdir)
 
         # run the parts lifecycle
         logger.debug("Parts definition: %s", self._parts)
-        lifecycle = PartsLifecycle(
+        lifecycle = parts.PartsLifecycle(
             self._parts,
             work_dir=self.buildpath,
             ignore_local_sources=["*.charm"],
-            entrypoint=entrypoint,
-            requirements=[str(p) for p in self.requirement_paths],
         )
         lifecycle.run(Step.PRIME)
 
@@ -239,7 +237,35 @@ class Builder:
         logger.info("Created '%s'.", zipname)
         return zipname
 
-    def _set_prime_filter(self, entrypoint: pathlib.Path):
+    def _handle_deprecated_cli_arguments(self):
+        # verify if deprecated --requirement is used and update the plugin property
+        if self._charm_part.get("charm-requirements"):
+            if self.requirement_paths:
+                raise CommandError("requirements already defined in charmcraft.yaml")
+        else:
+            if self.requirement_paths:
+                self._charm_part["charm-requirements"] = [str(p) for p in self.requirement_paths]
+                self.requirement_paths = None
+            else:
+                default_reqfile = self.charmdir / "requirements.txt"
+                if default_reqfile.is_file():
+                    self._charm_part["charm-requirements"] = ["requirements.txt"]
+                else:
+                    self._charm_part["charm-requirements"] = []
+
+        # verify if deprecated --entrypoint is used and update the plugin property
+        if self._charm_part.get("charm-entrypoint"):
+            if self.entrypoint:
+                raise CommandError("entrypoint already defined in charmcraft.yaml")
+        else:
+            if self.entrypoint:
+                rel_entrypoint = self.entrypoint.relative_to(self.charmdir)
+                self._charm_part["charm-entrypoint"] = str(rel_entrypoint)
+                self.entrypoint = None
+            else:
+                self._charm_part["charm-entrypoint"] = "src/charm.py"
+
+    def _set_prime_filter(self):
         """Add mandatory and optional charm files to the prime filter.
 
         The prime filter should contain:
@@ -250,6 +276,7 @@ class Builder:
         - A set of optional charm files.
         """
         # add entrypoint
+        entrypoint = pathlib.Path(self._charm_part["charm-entrypoint"])
         if str(entrypoint) == entrypoint.name:
             # the entry point is in the root of the project, just include it
             self._prime.append(str(entrypoint))
@@ -285,6 +312,12 @@ class Builder:
         managed_mode = is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
             ensure_provider_is_available()
+
+        if self.entrypoint:
+            notify_deprecation("dn04")
+
+        if self.requirement_paths:
+            notify_deprecation("dn05")
 
         if not (self.charmdir / "charmcraft.yaml").exists():
             notify_deprecation("dn02")
@@ -484,9 +517,9 @@ class Validator:
     def validate_entrypoint(self, filepath):
         """Validate that the entrypoint exists and is executable."""
         if filepath is None:
-            filepath = self.basedir / "src" / "charm.py"
-        else:
-            filepath = filepath.expanduser().absolute()
+            return None
+
+        filepath = filepath.expanduser().absolute()
 
         if not filepath.exists():
             raise CommandError("Charm entry point was not found: {!r}".format(str(filepath)))
@@ -504,9 +537,6 @@ class Validator:
         If not specified, default to requirements.txt if there.
         """
         if filepaths is None:
-            req = self.basedir / "requirements.txt"
-            if req.exists() and os.access(req, os.R_OK):
-                return [req]
             return []
 
         filepaths = [x.expanduser().absolute() for x in filepaths]

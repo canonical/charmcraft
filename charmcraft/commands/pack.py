@@ -157,8 +157,8 @@ class PackCommand(BaseCommand):
         """Pack a bundle."""
         project = self.config.project
         config_parts = self.config.parts.copy()
-        charm_part = config_parts.setdefault("bundle", {})
-        prime = charm_part.setdefault("prime", [])
+        bundle_part = config_parts.setdefault("bundle", {})
+        prime = bundle_part.setdefault("prime", [])
 
         # get the config files
         bundle_filepath = project.dirpath / "bundle.yaml"
@@ -182,7 +182,7 @@ class PackCommand(BaseCommand):
         prime.extend(MANDATORY_FILES)
 
         # set source for buiding
-        charm_part["source"] = str(project.dirpath)
+        bundle_part["source"] = str(project.dirpath)
 
         # run the parts lifecycle
         logger.debug("Parts definition: %s", config_parts)

@@ -37,6 +37,8 @@ _DEPRECATION_MESSAGES = {
     "dn01": "Configuration keywords are now separated using dashes.",
     "dn02": "A charmcraft.yaml configuration file is now required.",
     "dn03": "Bases configuration is now required.",
+    "dn04": "Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point.",
+    "dn05": "Use 'charm-requirements' in charmcraft.yaml parts to define requirements.",
 }
 
 # the URL to point to the deprecation entry in the documentation

@@ -21,7 +21,7 @@ import os
 import pathlib
 import shlex
 import sys
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, cast
 
 from craft_parts import LifecycleManager, Step, plugins
 from craft_parts.parts import PartSpec
@@ -38,7 +38,8 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
     """Properties used in charm building."""
 
     source: str = ""
-    # TODO: add charm plugin properties
+    charm_entrypoint: str = ""  # TODO: add default after removing --entrypoint
+    charm_requirements: List[str] = []
 
     @classmethod
     def unmarshal(cls, data: Dict[str, Any]):
@@ -87,6 +88,8 @@ class CharmPlugin(plugins.Plugin):
 
     def get_build_commands(self) -> List[str]:
         """Return a list of commands to run during the build step."""
+        options = cast(CharmPluginProperties, self._options)
+
         build_env = dict(LANG="C.UTF-8", LC_ALL="C.UTF-8")
         for key in [
             "PATH",
@@ -117,11 +120,11 @@ class CharmPlugin(plugins.Plugin):
             str(self._part_info.part_install_dir),
         ]
 
-        if self._part_info.entrypoint:
-            entrypoint = self._part_info.part_build_dir / self._part_info.entrypoint
+        if options.charm_entrypoint:
+            entrypoint = self._part_info.part_build_dir / options.charm_entrypoint
             build_cmd.extend(["--entrypoint", str(entrypoint)])
 
-        for req in self._part_info.requirements:
+        for req in options.charm_requirements:
             build_cmd.extend(["-r", req])
 
         commands = [" ".join(shlex.quote(i) for i in build_cmd)]
@@ -213,8 +216,8 @@ def validate_part(data: Dict[str, Any]) -> None:
     plugin_class.properties_class.unmarshal(spec)
 
     # validate common part properties
-    plugins.strip_plugin_properties(spec, plugin_name=plugin_name)
-    PartSpec(**spec)
+    part_spec = plugins.extract_part_properties(spec, plugin_name=plugin_name)
+    PartSpec(**part_spec)
 
 
 class PartsLifecycle:
@@ -226,9 +229,8 @@ class PartsLifecycle:
         *,
         work_dir: pathlib.Path,
         ignore_local_sources: List[str],
-        **kwargs,
     ):
-        self._all_parts = all_parts
+        self._all_parts = all_parts.copy()
 
         # set the cache dir for parts package management
         cache_dir = BaseDirectory.save_cache_path("charmcraft")
@@ -240,7 +242,6 @@ class PartsLifecycle:
                 work_dir=work_dir,
                 cache_dir=cache_dir,
                 ignore_local_sources=ignore_local_sources,
-                **kwargs,
             )
             self._lcm.refresh_packages_list()
         except PartsError as err:
@@ -259,7 +260,8 @@ class PartsLifecycle:
         try:
             # invalidate build if packing a charm and entrypoint changed
             if "charm" in self._all_parts:
-                entrypoint = os.path.normpath(self._lcm.project_info.entrypoint)
+                charm_part = self._all_parts["charm"]
+                entrypoint = os.path.normpath(charm_part["charm-entrypoint"])
                 dis_entrypoint = os.path.normpath(_get_dispatch_entrypoint(self.prime_dir))
                 if entrypoint != dis_entrypoint:
                     self._lcm.clean(Step.BUILD, part_names=["charm"])

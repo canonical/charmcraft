@@ -5,7 +5,7 @@ requirements_fixups() {
 
   # Python apt library pinned to source.
   sed -i '/^python-apt==/d' "$req_file"
-  sed -i 's!^craft-parts[= ].*!craft-parts @ https://github.com/canonical/craft-parts/archive/refs/tags/v1.0-alpha.2.tar.gz!' "$req_file"
+  sed -i 's!^craft-parts[= ].*!craft-parts @ https://github.com/canonical/craft-parts/archive/refs/tags/v1.0-alpha.3.tar.gz!' "$req_file"
 }
 
 venv_dir="$(mktemp -d)"

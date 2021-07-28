@@ -32,20 +32,27 @@ class TestCharmPlugin:
     @pytest.fixture(autouse=True)
     def setup_method_fixture(self, tmp_path):
         project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
-        part = craft_parts.Part("foo", {"plugin": "charm"}, project_dirs=project_dirs)
+        spec = {
+            "plugin": "charm",
+            "charm-entrypoint": "entrypoint",
+            "charm-requirements": ["reqs1.txt", "reqs2.txt"],
+        }
+        plugin_properties = parts.CharmPluginProperties.unmarshal(spec)
+        part_spec = plugins.extract_part_properties(spec, plugin_name="charm")
+        part = craft_parts.Part(
+            "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+        )
         project_info = craft_parts.ProjectInfo(
             application_name="test",
             project_dirs=project_dirs,
             cache_dir=tmp_path,
-            entrypoint="entrypoint",
-            requirements=["reqs1.txt", "reqs2.txt"],
         )
         part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
         self._plugin = plugins.get_plugin(
             part=part,
             part_info=part_info,
-            properties=parts.CharmPluginProperties(),
+            properties=plugin_properties,
         )
 
     def test_get_build_package(self):
@@ -119,6 +126,8 @@ class TestPartsLifecycle:
         data = {
             "plugin": "charm",
             "source": ".",
+            "charm-entrypoint": "my-entrypoint",
+            "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
 
         # create dispatcher from previous run
@@ -133,8 +142,6 @@ class TestPartsLifecycle:
             all_parts={"charm": data},
             work_dir=tmp_path,
             ignore_local_sources=["*.charm"],
-            entrypoint="my_entrypoint",
-            requirements=["reqs1.txt", "reqs2.txt"],
         )
 
         with patch("craft_parts.LifecycleManager.clean") as mock_clean:
@@ -149,6 +156,8 @@ class TestPartsLifecycle:
         data = {
             "plugin": "charm",
             "source": ".",
+            "charm-entrypoint": "src/charm.py",
+            "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
 
         # create dispatcher from previous run
@@ -163,8 +172,6 @@ class TestPartsLifecycle:
             all_parts={"charm": data},
             work_dir=tmp_path,
             ignore_local_sources=["*.charm"],
-            entrypoint="src/charm.py",
-            requirements=["reqs1.txt", "reqs2.txt"],
         )
 
         with patch("craft_parts.LifecycleManager.clean") as mock_clean:
@@ -179,14 +186,14 @@ class TestPartsLifecycle:
         data = {
             "plugin": "charm",
             "source": ".",
+            "charm-entrypoint": "my-entrypoint",
+            "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
 
         lifecycle = parts.PartsLifecycle(
             all_parts={"charm": data},
             work_dir=tmp_path,
             ignore_local_sources=["*.charm"],
-            entrypoint="my_entrypoint",
-            requirements=["reqs1.txt", "reqs2.txt"],
         )
 
         with patch("craft_parts.LifecycleManager.clean") as mock_clean:

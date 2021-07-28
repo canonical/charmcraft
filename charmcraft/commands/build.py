@@ -241,7 +241,10 @@ class Builder:
         # verify if deprecated --requirement is used and update the plugin property
         if self._charm_part.get("charm-requirements"):
             if self.requirement_paths:
-                raise CommandError("requirements already defined in charmcraft.yaml")
+                raise CommandError(
+                    "--requirement not supported when charm-requirements "
+                    "specified in charmcraft.yaml"
+                )
         else:
             if self.requirement_paths:
                 self._charm_part["charm-requirements"] = [str(p) for p in self.requirement_paths]
@@ -256,7 +259,10 @@ class Builder:
         # verify if deprecated --entrypoint is used and update the plugin property
         if self._charm_part.get("charm-entrypoint"):
             if self.entrypoint:
-                raise CommandError("entrypoint already defined in charmcraft.yaml")
+                raise CommandError(
+                    "--entrypoint not supported when charm-entrypoint "
+                    "specified in charmcraft.yaml"
+                )
         else:
             if self.entrypoint:
                 rel_entrypoint = self.entrypoint.relative_to(self.charmdir)

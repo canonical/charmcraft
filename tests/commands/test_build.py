@@ -1508,7 +1508,9 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch, caplog):
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with pytest.raises(CommandError) as raised:
         builder.run([0])
-    assert str(raised.value) == "entrypoint already defined in charmcraft.yaml"
+    assert str(raised.value) == (
+        "--entrypoint not supported when charm-entrypoint specified in charmcraft.yaml"
+    )
 
 
 def test_build_with_requirement_argment_issues_dn05(basic_project, caplog, monkeypatch):
@@ -1754,7 +1756,9 @@ def test_build_requirements_from_both(basic_project, monkeypatch, caplog):
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with pytest.raises(CommandError) as raised:
         builder.run([0])
-    assert str(raised.value) == "requirements already defined in charmcraft.yaml"
+    assert str(raised.value) == (
+        "--requirement not supported when charm-requirements specified in charmcraft.yaml"
+    )
 
 
 def test_build_using_linters_attributes(basic_project, monkeypatch, config):

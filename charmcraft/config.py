@@ -30,6 +30,11 @@ charmhub:
   registry-url = [HttpUrl] optional, defaults to "https://registry.jujucharms.com"
 
 parts:
+  charm:
+    charm-entrypoint: [string] optional, defaults to "src/charm.py"
+    charm-requirements: [list of strings] optional, defaults to ["requirements.txt"] if present
+    prime: [list of strings]
+
   bundle:
     prime: [list of strings]
 

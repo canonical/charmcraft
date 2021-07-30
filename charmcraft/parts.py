@@ -61,7 +61,16 @@ class CharmPlugin(plugins.Plugin):
     """Build the charm and prepare for packing.
 
     The craft-parts charm plugin prepares the charm payload for packing. Common
-    plugin and source keywords can be used.
+    plugin and source keywords can be used, as well as the following optional
+    plugin-specific properties:
+
+      - ``charm-entrypoint``
+        (string)
+        The path to the main charm executable, relative to the charm root.
+
+      - ``charm-requirements``
+        (list of strings)
+        List of paths to requirements files.
 
     Extra files to be included in the charm payload must be listed under
     the ``prime`` file filter.

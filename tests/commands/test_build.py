@@ -1335,7 +1335,14 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["my_entrypoint.py", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": [
+                            "my_entrypoint.py",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                        ],
                         "charm-entrypoint": "my_entrypoint.py",
                         "charm-requirements": ["reqs.txt"],
                         "source": str(basic_project),
@@ -1396,7 +1403,14 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["my_entrypoint.py", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": [
+                            "my_entrypoint.py",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                        ],
                         "charm-entrypoint": "my_entrypoint.py",
                         "charm-requirements": ["reqs.txt"],
                         "source": str(basic_project),
@@ -1453,7 +1467,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["src", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": ["src", "venv", "metadata.yaml", "dispatch", "hooks", "lib"],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
                         "source": str(basic_project),
@@ -1584,7 +1598,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["src", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": ["src", "venv", "metadata.yaml", "dispatch", "hooks", "lib"],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
                         "source": str(basic_project),
@@ -1645,7 +1659,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["src", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": ["src", "venv", "metadata.yaml", "dispatch", "hooks", "lib"],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
                         "source": str(basic_project),
@@ -1659,6 +1673,67 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
 
 
 def test_build_requirements_default(basic_project, monkeypatch, caplog):
+    """Test cases for base-index parameter."""
+    host_base = get_host_as_base()
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                    run-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+
+                parts:
+                  charm:
+                    charm-entrypoint: src/charm.py
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = Builder(
+        {
+            "from": basic_project,
+            "entrypoint": None,
+            "requirement": [],
+            "force": True,
+        },
+        config,
+    )
+
+    # create a requirements.txt file
+    pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            builder.run([0])
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "charm": {
+                        "plugin": "charm",
+                        "prime": ["src", "venv", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "charm-entrypoint": "src/charm.py",
+                        "charm-requirements": ["requirements.txt"],
+                        "source": str(basic_project),
+                    }
+                },
+                work_dir=basic_project / "build",
+                ignore_local_sources=["*.charm"],
+            )
+        ]
+    )
+
+
+def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, caplog):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"

@@ -291,7 +291,7 @@ class Builder:
             self._prime.append(str(entrypoint.parts[0]))
 
         # add venv if there are requirements
-        if self.requirement_paths:
+        if self._charm_part["charm-requirements"]:
             self._prime.append(VENV_DIRNAME)
 
         # add mandatory and optional charm files

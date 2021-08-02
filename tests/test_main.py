@@ -418,8 +418,10 @@ def test_main_environment_is_supported_error(
     mock_is_charmcraft_running_in_supported_environment.return_value = False
     with patch("charmcraft.main.message_handler") as mh_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.return_value = None
-            retcode = main(["charmcraft", "version"])
+            with patch("charmcraft.env.is_charmcraft_running_in_developer_mode") as dev_mock:
+                d_mock.return_value = None
+                dev_mock.return_value = False
+                retcode = main(["charmcraft", "version"])
 
     assert retcode == 1
     assert mh_mock.ended_cmderror.call_count == 1

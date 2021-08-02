@@ -61,23 +61,37 @@ class AnalyzeCommand(BaseCommand):
             help="Produce the result formatted as a JSON string",
         )
 
-    def run(self, parsed_args):
-        """Run the command."""
-        tmpdir = tempfile.mkdtemp()
-        filepath = str(parsed_args.filepath)
+    def _unzip_charm(self, filepath: pathlib.Path) -> pathlib.Path:
+        """Extract the charm content to a temp directory."""
+        tmpdir = pathlib.Path(tempfile.mkdtemp())
         try:
-            zf = zipfile.ZipFile(filepath)
-            zf.extractall(path=tmpdir)
+            zf = zipfile.ZipFile(str(filepath))
+            zf.extractall(path=str(tmpdir))
         except Exception as exc:
             raise CommandError(
-                "Cannot open the indicated charm file {!r}: {!r}.".format(filepath, exc)
+                "Cannot open the indicated charm file {!r}: {!r}.".format(str(filepath), exc)
             )
+
+        # fix permissions as extractall does not keep them (see bpo15795)
+        for name in zf.namelist():
+            info = zf.getinfo(name)
+            inside_zip_mode = info.external_attr >> 16
+            extracted_file = tmpdir / name
+            current_mode = extracted_file.stat().st_mode
+            if current_mode != inside_zip_mode:
+                extracted_file.chmod(inside_zip_mode)
+
+        return tmpdir
+
+    def run(self, parsed_args):
+        """Run the command."""
+        tmpdir = self._unzip_charm(parsed_args.filepath)
 
         # run the analyzer
         override_ignore_config = bool(parsed_args.force)
         linting_results = linters.analyze(
             self.config,
-            pathlib.Path(tmpdir),
+            tmpdir,
             override_ignore_config=override_ignore_config,
         )
 

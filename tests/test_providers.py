@@ -24,7 +24,7 @@ from unittest.mock import call
 import pytest
 from craft_providers import Executor, bases
 from craft_providers.actions import snap_installer
-from craft_providers.lxd import LXDInstallationError
+from craft_providers.lxd import LXDError, LXDInstallationError
 
 from charmcraft import providers
 from charmcraft.cmdbase import CommandError
@@ -40,7 +40,7 @@ def bypass_buildd_base_setup(monkeypatch):
 @pytest.fixture()
 def mock_configure_buildd_image_remote():
     with mock.patch(
-        "charmcraft.providers.configure_buildd_image_remote",
+        "charmcraft.providers.lxd.configure_buildd_image_remote",
         return_value="buildd-remote",
     ) as mock_remote:
         yield mock_remote
@@ -73,22 +73,30 @@ def mock_lxc(monkeypatch):
 
 
 @pytest.fixture
-def mock_lxd(monkeypatch):
-    with mock.patch("charmcraft.providers.lxd", autospec=True) as mock_lxd:
-        yield mock_lxd
+def mock_lxd_launch(monkeypatch):
+    with mock.patch("charmcraft.providers.lxd.launch", autospec=True) as mock_lxd_launch:
+        yield mock_lxd_launch
+
+
+@pytest.fixture(autouse=True)
+def mock_lxd_ensure_lxd_is_ready():
+    with mock.patch(
+        "charmcraft.providers.lxd.ensure_lxd_is_ready", return_value=None
+    ) as mock_is_ready:
+        yield mock_is_ready
 
 
 @pytest.fixture(autouse=True)
 def mock_lxd_is_installed():
     with mock.patch(
-        "charmcraft.providers.lxd_installer.is_installed", return_value=True
+        "charmcraft.providers.lxd.is_installed", return_value=True
     ) as mock_is_installed:
         yield mock_is_installed
 
 
 @pytest.fixture()
 def mock_lxd_install():
-    with mock.patch("charmcraft.providers.lxd_installer.install") as mock_install:
+    with mock.patch("charmcraft.providers.lxd.install") as mock_install:
         yield mock_install
 
 
@@ -354,6 +362,24 @@ def test_ensure_provider_is_available_errors_when_lxd_install_fails(
     assert exc_info.value.__cause__ == mock_lxd_install.side_effect
 
 
+def test_ensure_provider_is_available_errors_when_lxd_not_ready(
+    mock_confirm_with_user, mock_lxd_is_installed, mock_lxd_install, mock_lxd_ensure_lxd_is_ready
+):
+    mock_confirm_with_user.return_value = True
+    mock_lxd_is_installed.return_value = True
+    mock_lxd_ensure_lxd_is_ready.side_effect = LXDError(
+        brief="some error", details="some details", resolution="some resolution"
+    )
+
+    with pytest.raises(
+        CommandError,
+        match=re.escape("some error\nsome details\nsome resolution"),
+    ) as exc_info:
+        providers.ensure_provider_is_available()
+
+    assert exc_info.value.__cause__ == mock_lxd_install.side_effect
+
+
 def test_get_command_environment_minimal(monkeypatch):
     monkeypatch.setenv("IGNORE_ME", "or-im-failing")
     monkeypatch.setenv("PATH", "not-using-host-path")
@@ -453,9 +479,10 @@ def test_is_base_providable(
 
 
 @pytest.mark.parametrize("is_installed", [True, False])
-def test_is_provider_available(is_installed):
-    with mock.patch("charmcraft.providers.lxd_installer.is_installed", return_value=is_installed):
-        assert providers.is_provider_available() == is_installed
+def test_is_provider_available(is_installed, mock_lxd_is_installed):
+    mock_lxd_is_installed.return_value = is_installed
+
+    assert providers.is_provider_available() == is_installed
 
 
 @pytest.mark.parametrize(
@@ -466,7 +493,7 @@ def test_launched_environment(
     channel,
     alias,
     mock_configure_buildd_image_remote,
-    mock_lxd,
+    mock_lxd_launch,
     monkeypatch,
     tmp_path,
     mock_path,
@@ -491,8 +518,8 @@ def test_launched_environment(
         ) as instance:
             assert instance is not None
             assert mock_configure_buildd_image_remote.mock_calls == [mock.call()]
-            assert mock_lxd.mock_calls == [
-                mock.call.launch(
+            assert mock_lxd_launch.mock_calls == [
+                mock.call(
                     name="charmcraft-test-charm-445566-1-2-host-arch",
                     base_configuration=mock_base_config.return_value,
                     image_name=channel,
@@ -504,9 +531,7 @@ def test_launched_environment(
                     project="charmcraft",
                     remote="local",
                 ),
-                mock.call.launch().mount(
-                    host_source=mock_path, target=pathlib.Path("/root/project")
-                ),
+                mock.call().mount(host_source=mock_path, target=pathlib.Path("/root/project")),
             ]
             assert mock_base_config.mock_calls == [
                 call(
@@ -516,16 +541,16 @@ def test_launched_environment(
                 )
             ]
 
-            mock_lxd.reset_mock()
+            mock_lxd_launch.reset_mock()
 
-        assert mock_lxd.mock_calls == [
-            mock.call.launch().unmount_all(),
-            mock.call.launch().stop(),
+        assert mock_lxd_launch.mock_calls == [
+            mock.call().unmount_all(),
+            mock.call().stop(),
         ]
 
 
 def test_launched_environment_unmounts_and_stops_after_error(
-    mock_configure_buildd_image_remote, mock_lxd, monkeypatch, tmp_path
+    mock_configure_buildd_image_remote, mock_lxd_launch, monkeypatch, tmp_path
 ):
     monkeypatch.setattr(providers, "get_host_architecture", lambda: "host-arch")
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
@@ -541,10 +566,10 @@ def test_launched_environment_unmounts_and_stops_after_error(
                 lxd_project="charmcraft",
                 lxd_remote="local",
             ):
-                mock_lxd.reset_mock()
+                mock_lxd_launch.reset_mock()
                 raise RuntimeError("this is a test")
 
-    assert mock_lxd.mock_calls == [
-        mock.call.launch().unmount_all(),
-        mock.call.launch().stop(),
+    assert mock_lxd_launch.mock_calls == [
+        mock.call().unmount_all(),
+        mock.call().stop(),
     ]

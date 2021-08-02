@@ -321,7 +321,7 @@ def test_ensure_provider_is_available_errors_when_user_declines(
     with pytest.raises(
         CommandError,
         match=re.escape(
-            "LXD is required, but not installed. Please visit https://snapcraft.io/lxd for "
+            "LXD is required, but not installed. Visit https://snapcraft.io/lxd for "
             "instructions on how to install the LXD snap for your distribution"
         ),
     ):
@@ -346,7 +346,7 @@ def test_ensure_provider_is_available_errors_when_lxd_install_fails(
     with pytest.raises(
         CommandError,
         match=re.escape(
-            "Failed to install LXD. Please visit https://snapcraft.io/lxd for "
+            "Failed to install LXD. Visit https://snapcraft.io/lxd for "
             "instructions on how to install the LXD snap for your distribution"
         ),
     ) as exc_info:

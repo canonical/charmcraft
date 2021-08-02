@@ -116,12 +116,12 @@ def ensure_provider_is_available() -> None:
                 lxd.install()
             except lxd.LXDInstallationError as error:
                 raise CommandError(
-                    "Failed to install LXD. Please visit https://snapcraft.io/lxd for "
+                    "Failed to install LXD. Visit https://snapcraft.io/lxd for "
                     "instructions on how to install the LXD snap for your distribution"
                 ) from error
         else:
             raise CommandError(
-                "LXD is required, but not installed. Please visit https://snapcraft.io/lxd for "
+                "LXD is required, but not installed. Visit https://snapcraft.io/lxd for "
                 "instructions on how to install the LXD snap for your distribution"
             )
 

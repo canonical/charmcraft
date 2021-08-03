@@ -78,7 +78,7 @@ def test_expanded_charm_basic(config, tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("modebits", [0o777, 0o750, 0o444])
 def test_expanded_charm_permissions(config, tmp_path, monkeypatch, modebits):
-    """Check that the expanded charm keep original permissions."""
+    """Check that the expanded charm keeps original permissions."""
     # prepare a fake charm file with some specific content just to check it was used properly
     charm_file = tmp_path / "foobar.charm"
     payload_file = tmp_path / "payload.txt"
@@ -108,8 +108,7 @@ def test_corrupt_charm(tmp_path, config):
     with pytest.raises(CommandError) as cm:
         AnalyzeCommand("group", config).run(args)
     assert str(cm.value) == (
-        "Cannot open the indicated charm file '{}': "
-        "BadZipFile('File is not a zip file').".format(charm_file)
+        "Cannot open charm file '{}': BadZipFile('File is not a zip file').".format(charm_file)
     )
 
 

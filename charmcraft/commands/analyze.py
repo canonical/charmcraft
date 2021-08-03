@@ -68,9 +68,7 @@ class AnalyzeCommand(BaseCommand):
             zf = zipfile.ZipFile(str(filepath))
             zf.extractall(path=str(tmpdir))
         except Exception as exc:
-            raise CommandError(
-                "Cannot open the indicated charm file {!r}: {!r}.".format(str(filepath), exc)
-            )
+            raise CommandError(f"Cannot open charm file {str(filepath)!r}: {exc!r}.")
 
         # fix permissions as extractall does not keep them (see bpo15795)
         for name in zf.namelist():

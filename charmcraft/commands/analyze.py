@@ -70,7 +70,7 @@ class AnalyzeCommand(BaseCommand):
         except Exception as exc:
             raise CommandError(f"Cannot open charm file {str(filepath)!r}: {exc!r}.")
 
-        # fix permissions as extractall does not keep them (see bpo15795)
+        # fix permissions as extractall does not keep them (see https://bugs.python.org/issue15795)
         for name in zf.namelist():
             info = zf.getinfo(name)
             inside_zip_mode = info.external_attr >> 16

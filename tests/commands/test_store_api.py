@@ -23,7 +23,7 @@ import pytest
 from dateutil import parser
 
 from charmcraft.utils import ResourceOption
-from charmcraft.commands.store.store import Store, Library
+from charmcraft.commands.store.store import Store, Library, Base
 
 
 @pytest.fixture
@@ -386,6 +386,7 @@ def test_list_revisions_ok(client_mock, config):
     assert item.created_at == parser.parse("2020-06-29T22:11:00.123")
     assert item.status == "approved"
     assert item.errors == []
+    assert item.bases == [Base(architecture="amd64", channel="20.04", name="ubuntu")]
 
 
 def test_list_revisions_empty(client_mock, config):
@@ -473,6 +474,26 @@ def test_list_revisions_several_mixed(client_mock, config):
     assert item2.created_at == parser.parse("2020-06-29T22:11:02")
     assert item2.status == "approved"
     assert item2.errors == []
+
+
+def test_list_revisions_no_bases(client_mock, config):
+    """No bases included in the store response (happens with bundles, for example)."""
+    store = Store(config.charmhub)
+    client_mock.get.return_value = {
+        "revisions": [
+            {
+                "revision": 7,
+                "version": "v7",
+                "created-at": "2020-06-29T22:11:00.123",
+                "status": "approved",
+                "errors": None,
+                "bases": None,
+            }
+        ]
+    }
+    result = store.list_revisions("some-name")
+    (item,) = result
+    assert item.bases is None
 
 
 # -- tests for release

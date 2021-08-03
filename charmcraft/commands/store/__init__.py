@@ -612,7 +612,10 @@ class StatusCommand(BaseCommand):
         for item in channel_map:
             track = item.channel.split("/")[0]
             by_base = releases_by_track.setdefault(track, {})
-            base_str = "{0.name} {0.channel} ({0.architecture})".format(item.base)
+            if item.base is None:
+                base_str = "-"
+            else:
+                base_str = "{0.name} {0.channel} ({0.architecture})".format(item.base)
             by_channel = by_base.setdefault(base_str, {})
             by_channel[item.channel] = item
 

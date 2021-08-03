@@ -78,6 +78,9 @@ from tests import factory
 # used a lot!
 noargs = Namespace()
 
+# used to flag defaults when None is a real option
+DEFAULT = object()
+
 
 @pytest.fixture
 def store_mock():
@@ -937,11 +940,11 @@ def _build_revision(revno, version):
     )
 
 
-def _build_release(revision, channel, expires_at=None, resources=None, base=None):
+def _build_release(revision, channel, expires_at=None, resources=None, base=DEFAULT):
     """Helper to build a release."""
     if resources is None:
         resources = []
-    if base is None:
+    if base is DEFAULT:
         base = Base(architecture="amd64", channel="20.04", name="ubuntu")
     return Release(
         revision=revision,
@@ -1544,6 +1547,35 @@ def test_status_multiplebases_everything_combined(caplog, store_mock, config):
         "                               beta           ↑             ↑           ↑",
         "                               edge           2.0           80          -",
         "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40+00:00",  # NOQA
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_status_with_base_in_none(caplog, store_mock, config):
+    """Support the case of base being None."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channel_map = [
+        _build_release(revision=7, channel="latest/stable", base=None),
+        _build_release(revision=7, channel="latest/candidate", base=None),
+    ]
+    channels = _build_channels()
+    revisions = [_build_revision(revno=7, version="v7")]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm")
+    StatusCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base    Channel    Version    Revision",
+        "latest   -       stable     v7         7",
+        "                 candidate  v7         7",
+        "                 beta       ↑          ↑",
+        "                 edge       ↑          ↑",
     ]
     assert expected == [rec.message for rec in caplog.records]
 

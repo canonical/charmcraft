@@ -476,8 +476,8 @@ def test_list_revisions_several_mixed(client_mock, config):
     assert item2.errors == []
 
 
-def test_list_revisions_no_bases(client_mock, config):
-    """No bases included in the store response (happens with bundles, for example)."""
+def test_list_revisions_bases_none(client_mock, config):
+    """Bases in None answered by the store (happens with bundles, for example)."""
     store = Store(config.charmhub)
     client_mock.get.return_value = {
         "revisions": [
@@ -487,13 +487,13 @@ def test_list_revisions_no_bases(client_mock, config):
                 "created-at": "2020-06-29T22:11:00.123",
                 "status": "approved",
                 "errors": None,
-                "bases": None,
+                "bases": [None],
             }
         ]
     }
     result = store.list_revisions("some-name")
     (item,) = result
-    assert item.bases is None
+    assert item.bases == [None]
 
 
 # -- tests for release
@@ -769,6 +769,53 @@ def test_status_with_resources(client_mock, config):
     assert res2.name == "test-resource-2"
     assert res2.revision == 329
     assert res2.resource_type == "file"
+
+
+def test_status_base_in_None(client_mock, config):
+    """Support the case of base being None (may happen with bundles)."""
+    client_mock.get.return_value = {
+        "channel-map": [
+            {
+                "channel": "latest/stable",
+                "expiration-date": None,
+                "progressive": {"paused": None, "percentage": None},
+                "revision": 5,
+                "when": "2020-07-16T18:45:24Z",
+                "resources": [],
+                "base": None,
+            },
+        ],
+        "package": {
+            "channels": [
+                {
+                    "branch": None,
+                    "fallback": None,
+                    "name": "latest/stable",
+                    "risk": "stable",
+                    "track": "latest",
+                },
+            ]
+        },
+        "revisions": [
+            {
+                "revision": 5,
+                "version": "5",
+                "created-at": "2020-06-29T22:11:05",
+                "status": "approved",
+                "errors": None,
+                "bases": [None],
+            },
+        ],
+    }
+
+    store = Store(config.charmhub)
+    channel_map, channels, revisions = store.list_releases("testname")
+
+    # check response
+    (cmap,) = channel_map
+    assert cmap.base is None
+    (rev,) = revisions
+    rev.bases == [None]
 
 
 # -- tests for library related functions

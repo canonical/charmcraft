@@ -46,7 +46,7 @@ def test_options_format_possible_values(config):
     assert action.choices == ["json"]
 
 
-def test_expanded_charm(config, tmp_path, monkeypatch):
+def test_expanded_charm_basic(config, tmp_path, monkeypatch):
     """Check that the analyze runs on the temp directory with the extracted charm."""
     # prepare a fake charm file with some specific content just to check it was used properly
     charm_file = tmp_path / "foobar.charm"
@@ -76,6 +76,29 @@ def test_expanded_charm(config, tmp_path, monkeypatch):
     assert fake_analyze_called
 
 
+@pytest.mark.parametrize("modebits", [0o777, 0o750, 0o444])
+def test_expanded_charm_permissions(config, tmp_path, monkeypatch, modebits):
+    """Check that the expanded charm keeps original permissions."""
+    # prepare a fake charm file with some specific content just to check it was used properly
+    charm_file = tmp_path / "foobar.charm"
+    payload_file = tmp_path / "payload.txt"
+    payload_file.write_bytes(b"123")
+    payload_file.chmod(modebits)
+    with zipfile.ZipFile(str(charm_file), "w") as zf:
+        zf.write(str(payload_file), payload_file.name)
+
+    def fake_analyze(passed_config, passed_basedir, *, override_ignore_config):
+        """Check payload content and attributes."""
+        unzipped_payload = passed_basedir / "payload.txt"
+        assert unzipped_payload.read_bytes() == b"123"
+        assert unzipped_payload.stat().st_mode & 0o777 == modebits
+        return []
+
+    monkeypatch.setattr(linters, "analyze", fake_analyze)
+    args = Namespace(filepath=charm_file, force=None, format=None)
+    AnalyzeCommand("group", config).run(args)
+
+
 def test_corrupt_charm(tmp_path, config):
     """There was a problem opening the indicated charm."""
     charm_file = tmp_path / "foobar.charm"
@@ -85,8 +108,7 @@ def test_corrupt_charm(tmp_path, config):
     with pytest.raises(CommandError) as cm:
         AnalyzeCommand("group", config).run(args)
     assert str(cm.value) == (
-        "Cannot open the indicated charm file '{}': "
-        "BadZipFile('File is not a zip file').".format(charm_file)
+        "Cannot open charm file '{}': BadZipFile('File is not a zip file').".format(charm_file)
     )
 
 

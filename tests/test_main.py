@@ -31,12 +31,9 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def mock_is_charmcraft_running_in_supported_environment(monkeypatch):
+def mock_ensure_charmcraft_environment_is_supported(monkeypatch):
     """Bypass entry point check for running as snap."""
-    with patch(
-        "charmcraft.env.is_charmcraft_running_in_supported_environment",
-        return_value=True,
-    ) as mock_supported:
+    with patch("charmcraft.env.ensure_charmcraft_environment_is_supported") as mock_supported:
         yield mock_supported
 
 
@@ -412,10 +409,8 @@ def test_main_controlled_return_code():
     mh_mock.ended_ok.assert_called_once_with()
 
 
-def test_main_environment_is_supported_error(
-    mock_is_charmcraft_running_in_supported_environment,
-):
-    mock_is_charmcraft_running_in_supported_environment.return_value = False
+def test_main_environment_is_supported_error(mock_ensure_charmcraft_environment_is_supported):
+    mock_ensure_charmcraft_environment_is_supported.side_effect = CommandError("not supported!")
     with patch("charmcraft.main.message_handler") as mh_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.return_value = None

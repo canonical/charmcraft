@@ -94,9 +94,7 @@ try:
             "Programming Language :: Python :: 3",
         ],
         entry_points={
-            "console_scripts": [
-                "charmcraft = charmcraft.main:main",
-            ],
+            "console_scripts": ["charmcraft = charmcraft.main:main"],
         },
         python_requires=">=3",
         install_requires=install_requires,

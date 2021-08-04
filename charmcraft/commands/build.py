@@ -37,12 +37,7 @@ from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
-from charmcraft.providers import (
-    capture_logs_from_instance,
-    ensure_provider_is_available,
-    is_base_providable,
-    launched_environment,
-)
+from charmcraft.providers import capture_logs_from_instance, get_provider
 
 logger = logging.getLogger(__name__)
 
@@ -155,6 +150,7 @@ class Builder:
         self._parts = self.config.parts.copy()
         self._charm_part = self._parts.setdefault("charm", {})
         self._prime = self._charm_part.setdefault("prime", [])
+        self.provider = get_provider()
 
     def show_linting_results(self, linting_results):
         """Manage the linters results, show some in different conditions, decide if continue."""
@@ -317,7 +313,7 @@ class Builder:
 
         managed_mode = is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
-            ensure_provider_is_available()
+            self.provider.ensure_provider_is_available()
 
         if self.entrypoint:
             notify_deprecation("dn04")
@@ -340,7 +336,7 @@ class Builder:
                 if managed_mode or destructive_mode:
                     matches, reason = check_if_base_matches_host(build_on)
                 else:
-                    matches, reason = is_base_providable(build_on)
+                    matches, reason = self.provider.is_base_available(build_on)
 
                 if matches:
                     logger.debug(
@@ -406,7 +402,7 @@ class Builder:
             cmd.append("--quiet")
 
         logger.info(f"Packing charm {charm_name!r}...")
-        with launched_environment(
+        with self.provider.launched_environment(
             charm_name=self.metadata.name,
             project_path=self.charmdir,
             base=build_on,

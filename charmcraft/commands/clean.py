@@ -20,7 +20,7 @@ import logging
 
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.metadata import parse_metadata_yaml
-from charmcraft.providers import clean_project_environments
+from charmcraft.providers import get_provider
 
 logger = logging.getLogger(__name__)
 
@@ -45,5 +45,6 @@ class CleanCommand(BaseCommand):
         metadata = parse_metadata_yaml(project_path)
         logger.debug("Cleaning project %r.", metadata.name)
 
-        clean_project_environments(metadata.name, project_path)
+        provider = get_provider()
+        provider.clean_project_environments(charm_name=metadata.name, project_path=project_path)
         logger.info("Cleaned project %r.", metadata.name)

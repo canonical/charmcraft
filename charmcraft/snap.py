@@ -16,16 +16,16 @@
 
 """Logic for snap configuration."""
 
+from dataclasses import dataclass
 import logging
 from typing import Optional
 
-import attr
 import snaphelpers
 
 logger = logging.getLogger(__name__)
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class CharmcraftSnapConfiguration:
     """Charmcraft's snap configuration options."""
 

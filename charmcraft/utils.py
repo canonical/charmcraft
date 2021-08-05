@@ -16,13 +16,13 @@
 
 """Collection of utilities for charmcraft."""
 
-from dataclasses import dataclass
 import logging
 import os
 import pathlib
 import platform
 import sys
 from collections import namedtuple
+from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 
 import yaml

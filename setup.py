@@ -30,7 +30,6 @@ with open("README.md", "rt", encoding="utf8") as fh:
 
 install_requires = [
     "appdirs",
-    "attrs",
     "craft-parts @ https://github.com/canonical/craft-parts/archive/refs/tags/v1.0-alpha.3.tar.gz",
     "craft-providers",
     "humanize>=2.6.0",
@@ -43,6 +42,7 @@ install_requires = [
     "requests",
     "requests-toolbelt",
     "requests-unixsocket",
+    "snap-helpers",
     "tabulate",
 ]
 

@@ -75,6 +75,8 @@ CHARM_OPTIONAL = [
     "version",
     "lib",
     "mod",
+    "LICENSE",
+    "icon.svg",
 ]
 
 

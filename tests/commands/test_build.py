@@ -77,6 +77,14 @@ def basic_project(tmp_path):
     charm_script = src_dir / "charm.py"
     charm_script.write_bytes(b"all the magic")
 
+    # the license file
+    license = tmp_path / "LICENSE"
+    license.write_text("license content")
+
+    # other optional assets
+    icon = tmp_path / "icon.svg"
+    icon.write_text("icon content")
+
     yield tmp_path
 
 
@@ -529,6 +537,8 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     assert zf.read("hooks/start") == dispatch
     assert zf.read("hooks/upgrade-charm") == dispatch
     assert zf.read("lib/ops/stuff.txt") == b"ops stuff"
+    assert zf.read("LICENSE") == b"license content"
+    assert zf.read("icon.svg") == b"icon content"
 
     # check the manifest is present and with particular values that depend on given info
     manifest = yaml.safe_load(zf.read("manifest.yaml"))
@@ -1349,6 +1359,8 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
                             "dispatch",
                             "hooks",
                             "lib",
+                            "LICENSE",
+                            "icon.svg",
                         ],
                         "charm-entrypoint": "my_entrypoint.py",
                         "charm-requirements": ["reqs.txt"],
@@ -1417,6 +1429,8 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
                             "dispatch",
                             "hooks",
                             "lib",
+                            "LICENSE",
+                            "icon.svg",
                         ],
                         "charm-entrypoint": "my_entrypoint.py",
                         "charm-requirements": ["reqs.txt"],
@@ -1474,7 +1488,16 @@ def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["src", "venv", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": [
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                        ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
                         "source": str(basic_project),
@@ -1604,7 +1627,16 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["src", "venv", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": [
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                        ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
                         "source": str(basic_project),
@@ -1665,7 +1697,16 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["src", "venv", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": [
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                        ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
                         "source": str(basic_project),
@@ -1726,7 +1767,16 @@ def test_build_requirements_default(basic_project, monkeypatch, caplog):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["src", "venv", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": [
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                        ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["requirements.txt"],
                         "source": str(basic_project),
@@ -1784,7 +1834,15 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capl
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": ["src", "metadata.yaml", "dispatch", "hooks", "lib"],
+                        "prime": [
+                            "src",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                        ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": [],
                         "source": str(basic_project),

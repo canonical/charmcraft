@@ -132,3 +132,10 @@ jobs:
           charmcraft -v pack --destructive-mode
           test -f "destructive-mode-tests_ubuntu-$VERSION_ID-amd64.charm"
           popd
+
+          sudo snap set charmcraft provider=lxd
+          sudo snap set charmcraft provider=multipass
+          if sudo snap set charmcraft provider=invalid; then
+            echo "configure script failure"
+            exit 1
+          fi

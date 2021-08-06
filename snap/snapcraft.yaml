@@ -126,3 +126,9 @@ parts:
       usr/share/git-core/templates: git/templates
       usr/bin/git: bin/git
       lib/python3.8/site-packages: lib/
+
+hooks:
+  configure:
+    passthrough:
+      environment:
+        PATH: "$SNAP/bin"

@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+
+import sys
+
+from charmcraft import snap
+
+
+def configure_hook_main():
+    cfg = snap.get_snap_configuration()
+    try:
+        snap.validate_snap_configuration(cfg)
+    except ValueError as error:
+        reason = str(error)
+        print(f"Unsupported snap configuration: {reason}.", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    configure_hook_main()

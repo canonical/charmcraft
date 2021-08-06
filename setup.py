@@ -42,6 +42,7 @@ install_requires = [
     "requests",
     "requests-toolbelt",
     "requests-unixsocket",
+    "snap-helpers",
     "tabulate",
 ]
 

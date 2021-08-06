@@ -23,14 +23,13 @@ from charmcraft.commands.clean import CleanCommand
 
 
 @pytest.fixture(autouse=True)
-def mock_clean_project_environments():
-    with mock.patch(
-        "charmcraft.commands.clean.clean_project_environments", return_value=[]
-    ) as mock_clean_project_environments:
-        yield mock_clean_project_environments
+def mock_provider(mock_instance, fake_provider):
+    mock_provider = mock.Mock(wraps=fake_provider)
+    with mock.patch("charmcraft.commands.clean.get_provider", return_value=mock_provider):
+        yield mock_provider
 
 
-def test_clean(caplog, caplog_filter, config, mock_clean_project_environments, tmp_path):
+def test_clean(caplog, caplog_filter, config, mock_provider, tmp_path):
     logger_name = "charmcraft.commands.clean"
     caplog.set_level(logging.DEBUG, logger=logger_name)
 
@@ -45,4 +44,6 @@ def test_clean(caplog, caplog_filter, config, mock_clean_project_environments, t
         (logging.DEBUG, "Cleaning project 'foo'."),
         (logging.INFO, "Cleaned project 'foo'."),
     ]
-    assert mock_clean_project_environments.mock_calls == [mock.call("foo", tmp_path)]
+    assert mock_provider.mock_calls == [
+        mock.call.clean_project_environments(charm_name="foo", project_path=tmp_path)
+    ]

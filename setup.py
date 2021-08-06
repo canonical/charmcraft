@@ -20,10 +20,10 @@
 
 from pathlib import Path
 from textwrap import dedent
-from setuptools import setup
+
+from setuptools import find_packages, setup
 
 import charmcraft
-
 
 with open("README.md", "rt", encoding="utf8") as fh:
     long_description = fh.read()
@@ -85,7 +85,7 @@ try:
         long_description_content_type="text/markdown",
         url="https://github.com/canonical/charmcraft",
         license="Apache-2.0",
-        packages=["charmcraft", "charmcraft.commands", "charmcraft.commands.store"],
+        packages=find_packages(include=["charmcraft", "charmcraft.*"]),
         classifiers=[
             "Environment :: Console",
             "License :: OSI Approved :: Apache Software License",

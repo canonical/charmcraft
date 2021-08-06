@@ -14,16 +14,13 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import os
 import pathlib
 import re
-import subprocess
 from unittest import mock
 from unittest.mock import call
 
 import pytest
-from craft_providers import Executor, bases
-from craft_providers.actions import snap_installer
+from craft_providers import bases
 from craft_providers.lxd import LXDError, LXDInstallationError
 
 from charmcraft import providers
@@ -32,15 +29,25 @@ from charmcraft.config import Base
 
 
 @pytest.fixture(autouse=True)
-def bypass_buildd_base_setup(monkeypatch):
-    """Patch out inherited setup steps."""
-    monkeypatch.setattr(bases.BuilddBase, "setup", lambda *args, **kwargs: None)
+def mock_base_provider_get_host_architecture():
+    with mock.patch(
+        "charmcraft.providers._provider.get_host_architecture", return_value="host-arch"
+    ) as mock_arch:
+        yield mock_arch
+
+
+@pytest.fixture()
+def mock_buildd_base_configuration():
+    with mock.patch(
+        "charmcraft.providers._lxd.CharmcraftBuilddBaseConfiguration", autospec=True
+    ) as mock_base_config:
+        yield mock_base_config
 
 
 @pytest.fixture()
 def mock_configure_buildd_image_remote():
     with mock.patch(
-        "charmcraft.providers.lxd.configure_buildd_image_remote",
+        "craft_providers.lxd.configure_buildd_image_remote",
         return_value="buildd-remote",
     ) as mock_remote:
         yield mock_remote
@@ -49,181 +56,60 @@ def mock_configure_buildd_image_remote():
 @pytest.fixture
 def mock_confirm_with_user():
     with mock.patch(
-        "charmcraft.providers.confirm_with_user",
+        "charmcraft.providers._lxd.confirm_with_user",
         return_value=False,
     ) as mock_confirm:
         yield mock_confirm
 
 
 @pytest.fixture
-def mock_executor():
-    yield mock.Mock(spec=Executor)
-
-
-@pytest.fixture
-def mock_logger():
-    with mock.patch("charmcraft.providers.logger") as mock_logger:
-        yield mock_logger
-
-
-@pytest.fixture
 def mock_lxc(monkeypatch):
-    with mock.patch("charmcraft.providers.lxd.LXC", autospec=True) as mock_lxc:
-        yield mock_lxc
+    with mock.patch("craft_providers.lxd.LXC", autospec=True) as mock_lxc:
+        yield mock_lxc.return_value
 
 
-@pytest.fixture
-def mock_lxd_launch(monkeypatch):
-    with mock.patch("charmcraft.providers.lxd.launch", autospec=True) as mock_lxd_launch:
-        yield mock_lxd_launch
+@pytest.fixture(autouse=True)
+def mock_get_host_architecture():
+    with mock.patch(
+        "charmcraft.providers._lxd.get_host_architecture", return_value="host-arch"
+    ) as mock_arch:
+        yield mock_arch
 
 
 @pytest.fixture(autouse=True)
 def mock_lxd_ensure_lxd_is_ready():
-    with mock.patch(
-        "charmcraft.providers.lxd.ensure_lxd_is_ready", return_value=None
-    ) as mock_is_ready:
+    with mock.patch("craft_providers.lxd.ensure_lxd_is_ready", return_value=None) as mock_is_ready:
         yield mock_is_ready
-
-
-@pytest.fixture(autouse=True)
-def mock_lxd_is_installed():
-    with mock.patch(
-        "charmcraft.providers.lxd.is_installed", return_value=True
-    ) as mock_is_installed:
-        yield mock_is_installed
 
 
 @pytest.fixture()
 def mock_lxd_install():
-    with mock.patch("charmcraft.providers.lxd.install") as mock_install:
+    with mock.patch("craft_providers.lxd.install") as mock_install:
         yield mock_install
 
 
-@pytest.fixture()
-def mock_mkstemp():
-    with mock.patch("charmcraft.providers.tempfile.mkstemp") as mock_mkstemp:
-        yield mock_mkstemp
-
-
-@pytest.fixture
-def mock_inject():
-    with mock.patch("craft_providers.actions.snap_installer.inject_from_host") as mock_inject:
-        yield mock_inject
-
-
-@pytest.fixture
-def mock_path():
-    mock_path = mock.Mock(spec=pathlib.Path)
-    mock_path.stat.return_value.st_ino = 445566
-    yield mock_path
-
-
 @pytest.fixture(autouse=True)
-def clear_environment(monkeypatch):
-    monkeypatch.setattr(os, "environ", {})
+def mock_lxd_is_installed():
+    with mock.patch("craft_providers.lxd.is_installed", return_value=True) as mock_is_installed:
+        yield mock_is_installed
 
 
-@pytest.mark.parametrize("alias", [bases.BuilddBaseAlias.BIONIC, bases.BuilddBaseAlias.FOCAL])
-def test_base_configuration_setup(mock_executor, mock_inject, monkeypatch, alias):
-
-    config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
-    config.setup(executor=mock_executor)
-
-    assert mock_executor.mock_calls == [
-        call.execute_run(
-            [
-                "apt-get",
-                "install",
-                "-y",
-                "sudo",
-            ],
-            check=True,
-            capture_output=True,
-        ),
-    ]
-
-    assert mock_inject.mock_calls == [
-        call(executor=mock_executor, snap_name="charmcraft", classic=True)
-    ]
-
-    assert config.compatibility_tag == "charmcraft-buildd-base-v0.0"
-
-
-def test_base_configuration_setup_apt_error(mock_executor):
-    alias = bases.BuilddBaseAlias.FOCAL
-    apt_cmd = ["apt-get", "install", "-y", "sudo"]
-    mock_executor.execute_run.side_effect = subprocess.CalledProcessError(
-        -1,
-        apt_cmd,
-        "some output",
-        "some error",
-    )
-
-    config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
-
-    with pytest.raises(
-        bases.BaseConfigurationError,
-        match=r"Failed to install the required dependencies.",
-    ) as exc_info:
-        config.setup(executor=mock_executor)
-
-    assert exc_info.value.__cause__ is not None
-
-
-def test_base_configuration_setup_snap_injection_error(mock_executor, mock_inject):
-    alias = bases.BuilddBaseAlias.FOCAL
-    config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
-    mock_inject.side_effect = snap_installer.SnapInstallationError(brief="foo error")
-
-    with pytest.raises(
-        bases.BaseConfigurationError,
-        match=r"Failed to inject host Charmcraft snap into target environment.",
-    ) as exc_info:
-        config.setup(executor=mock_executor)
-
-    assert exc_info.value.__cause__ is not None
-
-
-def test_capture_logs_from_instance(mock_executor, mock_logger, mock_mkstemp, tmp_path):
-    fake_log = tmp_path / "x.log"
-    mock_mkstemp.return_value = (None, str(fake_log))
-
-    fake_log_data = "some\nlog data\nhere"
-    fake_log.write_text(fake_log_data)
-
-    providers.capture_logs_from_instance(mock_executor)
-
-    assert mock_executor.mock_calls == [
-        mock.call.pull_file(source=pathlib.Path("/tmp/charmcraft.log"), destination=fake_log),
-    ]
-    assert mock_logger.mock_calls == [
-        mock.call.debug("Logs captured from managed instance:\n%s", fake_log_data)
-    ]
-
-
-def test_capture_logs_from_instance_not_found(mock_executor, mock_logger, mock_mkstemp, tmp_path):
-    fake_log = tmp_path / "x.log"
-    mock_mkstemp.return_value = (None, str(fake_log))
-    mock_executor.pull_file.side_effect = FileNotFoundError()
-
-    providers.capture_logs_from_instance(mock_executor)
-
-    assert mock_executor.mock_calls == [
-        mock.call.pull_file(source=pathlib.Path("/tmp/charmcraft.log"), destination=fake_log),
-    ]
-    assert mock_logger.mock_calls == [mock.call.debug("No logs found in instance.")]
+@pytest.fixture
+def mock_lxd_launch():
+    with mock.patch("craft_providers.lxd.launch", autospec=True) as mock_lxd_launch:
+        yield mock_lxd_launch
 
 
 def test_clean_project_environments_without_lxd(mock_lxc, mock_lxd_is_installed, mock_path):
     mock_lxd_is_installed.return_value = False
+    provider = providers.LXDProvider(
+        lxc=mock_lxc, lxd_project="test-project", lxd_remote="test-remote"
+    )
 
     assert (
-        providers.clean_project_environments(
+        provider.clean_project_environments(
             charm_name="my-charm",
             project_path=mock_path,
-            lxd_project="test-project",
-            lxd_remote="test-remote",
         )
         == []
     )
@@ -233,7 +119,7 @@ def test_clean_project_environments_without_lxd(mock_lxc, mock_lxd_is_installed,
 
 
 def test_clean_project_environments(mock_lxc, mock_path):
-    mock_lxc.return_value.list_names.return_value = [
+    mock_lxc.list_names.return_value = [
         "do-not-delete-me-please",
         "charmcraft-testcharm-445566-b-c-d",
         "charmcraft-my-charm---",
@@ -242,26 +128,26 @@ def test_clean_project_environments(mock_lxc, mock_path):
         "charmcraft-my-charm-project-445566-999-444-arm64",
         "charmcraft_445566_a_b_c_d",
     ]
+    provider = providers.LXDProvider(
+        lxc=mock_lxc, lxd_project="test-project", lxd_remote="test-remote"
+    )
 
-    assert providers.clean_project_environments(
+    assert provider.clean_project_environments(
         charm_name="my-charm-project",
         project_path=mock_path,
-        lxd_project="test-project",
-        lxd_remote="test-remote",
     ) == [
         "charmcraft-my-charm-project-445566-0-0-amd99",
         "charmcraft-my-charm-project-445566-999-444-arm64",
     ]
     assert mock_lxc.mock_calls == [
-        mock.call(),
-        mock.call().list_names(project="test-project", remote="test-remote"),
-        mock.call().delete(
+        mock.call.list_names(project="test-project", remote="test-remote"),
+        mock.call.delete(
             instance_name="charmcraft-my-charm-project-445566-0-0-amd99",
             force=True,
             project="test-project",
             remote="test-remote",
         ),
-        mock.call().delete(
+        mock.call.delete(
             instance_name="charmcraft-my-charm-project-445566-999-444-arm64",
             force=True,
             project="test-project",
@@ -271,18 +157,15 @@ def test_clean_project_environments(mock_lxc, mock_path):
 
     mock_lxc.reset_mock()
 
-    assert providers.clean_project_environments(
+    assert provider.clean_project_environments(
         charm_name="testcharm",
         project_path=mock_path,
-        lxd_project="test-project",
-        lxd_remote="test-remote",
     ) == [
         "charmcraft-testcharm-445566-b-c-d",
     ]
     assert mock_lxc.mock_calls == [
-        mock.call(),
-        mock.call().list_names(project="test-project", remote="test-remote"),
-        mock.call().delete(
+        mock.call.list_names(project="test-project", remote="test-remote"),
+        mock.call.delete(
             instance_name="charmcraft-testcharm-445566-b-c-d",
             force=True,
             project="test-project",
@@ -293,23 +176,22 @@ def test_clean_project_environments(mock_lxc, mock_path):
     mock_lxc.reset_mock()
 
     assert (
-        providers.clean_project_environments(
+        provider.clean_project_environments(
             charm_name="unknown-charm",
             project_path=mock_path,
-            lxd_project="test-project",
-            lxd_remote="test-remote",
         )
         == []
     )
     assert mock_lxc.mock_calls == [
-        mock.call(),
-        mock.call().list_names(project="test-project", remote="test-remote"),
+        mock.call.list_names(project="test-project", remote="test-remote"),
     ]
 
 
 def test_ensure_provider_is_available_ok_when_installed(mock_lxd_is_installed):
     mock_lxd_is_installed.return_value = True
-    providers.ensure_provider_is_available()
+    provider = providers.LXDProvider()
+
+    provider.ensure_provider_is_available()
 
 
 def test_ensure_provider_is_available_errors_when_user_declines(
@@ -317,6 +199,7 @@ def test_ensure_provider_is_available_errors_when_user_declines(
 ):
     mock_confirm_with_user.return_value = False
     mock_lxd_is_installed.return_value = False
+    provider = providers.LXDProvider()
 
     with pytest.raises(
         CommandError,
@@ -325,7 +208,7 @@ def test_ensure_provider_is_available_errors_when_user_declines(
             "instructions on how to install the LXD snap for your distribution"
         ),
     ):
-        providers.ensure_provider_is_available()
+        provider.ensure_provider_is_available()
 
     assert mock_confirm_with_user.mock_calls == [
         mock.call(
@@ -342,6 +225,7 @@ def test_ensure_provider_is_available_errors_when_lxd_install_fails(
     mock_confirm_with_user.return_value = True
     mock_lxd_is_installed.return_value = False
     mock_lxd_install.side_effect = LXDInstallationError("foo")
+    provider = providers.LXDProvider()
 
     with pytest.raises(
         CommandError,
@@ -350,7 +234,7 @@ def test_ensure_provider_is_available_errors_when_lxd_install_fails(
             "instructions on how to install the LXD snap for your distribution"
         ),
     ) as exc_info:
-        providers.ensure_provider_is_available()
+        provider.ensure_provider_is_available()
 
     assert mock_confirm_with_user.mock_calls == [
         mock.call(
@@ -370,12 +254,13 @@ def test_ensure_provider_is_available_errors_when_lxd_not_ready(
     mock_lxd_ensure_lxd_is_ready.side_effect = LXDError(
         brief="some error", details="some details", resolution="some resolution"
     )
+    provider = providers.LXDProvider()
 
     with pytest.raises(
         CommandError,
         match=re.escape("some error\nsome details\nsome resolution"),
     ) as exc_info:
-        providers.ensure_provider_is_available()
+        provider.ensure_provider_is_available()
 
     assert exc_info.value.__cause__ == mock_lxd_install.side_effect
 
@@ -383,8 +268,9 @@ def test_ensure_provider_is_available_errors_when_lxd_not_ready(
 def test_get_command_environment_minimal(monkeypatch):
     monkeypatch.setenv("IGNORE_ME", "or-im-failing")
     monkeypatch.setenv("PATH", "not-using-host-path")
+    provider = providers.LXDProvider()
 
-    env = providers.get_command_environment()
+    env = provider.get_command_environment()
 
     assert env == {
         "CHARMCRAFT_MANAGED_MODE": "1",
@@ -398,8 +284,9 @@ def test_get_command_environment_all_opts(monkeypatch):
     monkeypatch.setenv("http_proxy", "test-http-proxy")
     monkeypatch.setenv("https_proxy", "test-https-proxy")
     monkeypatch.setenv("no_proxy", "test-no-proxy")
+    provider = providers.LXDProvider()
 
-    env = providers.get_command_environment()
+    env = provider.get_command_environment()
 
     assert env == {
         "CHARMCRAFT_MANAGED_MODE": "1",
@@ -426,8 +313,10 @@ def test_get_command_environment_all_opts(monkeypatch):
 def test_get_instance_name(
     bases_index, build_on_index, project_name, target_arch, expected, mock_path
 ):
+    provider = providers.LXDProvider()
+
     assert (
-        providers.get_instance_name(
+        provider.get_instance_name(
             bases_index=bases_index,
             build_on_index=build_on_index,
             project_name=project_name,
@@ -467,13 +356,13 @@ def test_get_instance_name(
         ),
     ],
 )
-def test_is_base_providable(
-    monkeypatch, name, channel, architectures, expected_valid, expected_reason
+def test_is_base_available(
+    mock_get_host_architecture, name, channel, architectures, expected_valid, expected_reason
 ):
-    monkeypatch.setattr(providers, "get_host_architecture", lambda: "host-arch")
     base = Base(name=name, channel=channel, architectures=architectures)
+    provider = providers.LXDProvider()
 
-    valid, reason = providers.is_base_providable(base)
+    valid, reason = provider.is_base_available(base)
 
     assert (valid, reason) == (expected_valid, expected_reason)
 
@@ -481,8 +370,9 @@ def test_is_base_providable(
 @pytest.mark.parametrize("is_installed", [True, False])
 def test_is_provider_available(is_installed, mock_lxd_is_installed):
     mock_lxd_is_installed.return_value = is_installed
+    provider = providers.LXDProvider()
 
-    assert providers.is_provider_available() == is_installed
+    assert provider.is_provider_available() == is_installed
 
 
 @pytest.mark.parametrize(
@@ -492,6 +382,7 @@ def test_is_provider_available(is_installed, mock_lxd_is_installed):
 def test_launched_environment(
     channel,
     alias,
+    mock_buildd_base_configuration,
     mock_configure_buildd_image_remote,
     mock_lxd_launch,
     monkeypatch,
@@ -503,71 +394,65 @@ def test_launched_environment(
         "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
     }
 
-    monkeypatch.setattr(providers, "get_host_architecture", lambda: "host-arch")
     base = Base(name="ubuntu", channel=channel, architectures=["host-arch"])
+    provider = providers.LXDProvider()
 
-    with mock.patch("charmcraft.providers.CharmcraftBuilddBaseConfiguration") as mock_base_config:
-        with providers.launched_environment(
-            charm_name="test-charm",
-            project_path=mock_path,
-            base=base,
-            bases_index=1,
-            build_on_index=2,
-            lxd_project="charmcraft",
-            lxd_remote="local",
-        ) as instance:
-            assert instance is not None
-            assert mock_configure_buildd_image_remote.mock_calls == [mock.call()]
-            assert mock_lxd_launch.mock_calls == [
-                mock.call(
-                    name="charmcraft-test-charm-445566-1-2-host-arch",
-                    base_configuration=mock_base_config.return_value,
-                    image_name=channel,
-                    image_remote="buildd-remote",
-                    auto_clean=True,
-                    auto_create_project=True,
-                    map_user_uid=True,
-                    use_snapshots=True,
-                    project="charmcraft",
-                    remote="local",
-                ),
-                mock.call().mount(host_source=mock_path, target=pathlib.Path("/root/project")),
-            ]
-            assert mock_base_config.mock_calls == [
-                call(
-                    alias=alias,
-                    environment=expected_environment,
-                    hostname="charmcraft-test-charm-445566-1-2-host-arch",
-                )
-            ]
-
-            mock_lxd_launch.reset_mock()
-
+    with provider.launched_environment(
+        charm_name="test-charm",
+        project_path=mock_path,
+        base=base,
+        bases_index=1,
+        build_on_index=2,
+    ) as instance:
+        assert instance is not None
+        assert mock_configure_buildd_image_remote.mock_calls == [mock.call()]
         assert mock_lxd_launch.mock_calls == [
-            mock.call().unmount_all(),
-            mock.call().stop(),
+            mock.call(
+                name="charmcraft-test-charm-445566-1-2-host-arch",
+                base_configuration=mock_buildd_base_configuration.return_value,
+                image_name=channel,
+                image_remote="buildd-remote",
+                auto_clean=True,
+                auto_create_project=True,
+                map_user_uid=True,
+                use_snapshots=True,
+                project="charmcraft",
+                remote="local",
+            ),
+            mock.call().mount(host_source=mock_path, target=pathlib.Path("/root/project")),
         ]
+        assert mock_buildd_base_configuration.mock_calls == [
+            call(
+                alias=alias,
+                environment=expected_environment,
+                hostname="charmcraft-test-charm-445566-1-2-host-arch",
+            )
+        ]
+
+        mock_lxd_launch.reset_mock()
+
+    assert mock_lxd_launch.mock_calls == [
+        mock.call().unmount_all(),
+        mock.call().stop(),
+    ]
 
 
 def test_launched_environment_unmounts_and_stops_after_error(
-    mock_configure_buildd_image_remote, mock_lxd_launch, monkeypatch, tmp_path
+    mock_buildd_base_configuration, mock_configure_buildd_image_remote, mock_lxd_launch, tmp_path
 ):
-    monkeypatch.setattr(providers, "get_host_architecture", lambda: "host-arch")
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.LXDProvider()
 
     with pytest.raises(RuntimeError):
-        with mock.patch("charmcraft.providers.CharmcraftBuilddBaseConfiguration"):
-            with providers.launched_environment(
-                charm_name="test-charm",
-                project_path=tmp_path,
-                base=base,
-                bases_index=1,
-                build_on_index=2,
-                lxd_project="charmcraft",
-                lxd_remote="local",
-            ):
-                mock_lxd_launch.reset_mock()
-                raise RuntimeError("this is a test")
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            mock_lxd_launch.reset_mock()
+            raise RuntimeError("this is a test")
 
     assert mock_lxd_launch.mock_calls == [
         mock.call().unmount_all(),

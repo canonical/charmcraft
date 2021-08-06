@@ -14,16 +14,21 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import contextlib
 import datetime
+import pathlib
 import tempfile
 from typing import List, Tuple
+from unittest import mock
 
 import pytest
 import responses as responses_module
+from craft_providers import Executor
 
 from charmcraft import config as config_module
-from charmcraft import deprecations
-from charmcraft import parts
+from charmcraft import deprecations, parts
+from charmcraft.config import Base
+from charmcraft.providers import Provider
 
 
 @pytest.fixture()
@@ -141,3 +146,49 @@ def responses():
     """Simple helper to use responses module as a fixture, for easier integration in tests."""
     with responses_module.RequestsMock() as rsps:
         yield rsps
+
+
+@pytest.fixture
+def mock_instance():
+    """Provide a mock instance (Executor)."""
+    yield mock.Mock(spec=Executor)
+
+
+@pytest.fixture(autouse=True)
+def fake_provider(mock_instance, monkeypatch):
+    """Provide a minimal/fake provider."""
+
+    class FakeProvider(Provider):
+        def clean_project_environments(
+            self,
+            *,
+            charm_name: str,
+            project_path: pathlib.Path,
+        ) -> List[str]:
+            return []
+
+        @classmethod
+        def ensure_provider_is_available(cls) -> None:
+            pass
+
+        @contextlib.contextmanager
+        def launched_environment(
+            self,
+            *,
+            charm_name: str,
+            project_path: pathlib.Path,
+            base: Base,
+            bases_index: int,
+            build_on_index: int,
+        ):
+            yield mock_instance
+
+        @classmethod
+        def is_provider_available(cls) -> bool:
+            """Check if provider is installed and available for use.
+
+            :returns: True if installed.
+            """
+            return True
+
+    return FakeProvider()

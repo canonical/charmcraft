@@ -24,6 +24,7 @@ import zipfile
 from collections import namedtuple
 from textwrap import dedent
 from typing import List
+from unittest import mock
 from unittest.mock import call, patch
 
 import pytest
@@ -128,9 +129,10 @@ def mock_capture_logs_from_instance():
 
 
 @pytest.fixture(autouse=True)
-def mock_ensure_provider_is_available():
-    with patch("charmcraft.commands.build.ensure_provider_is_available") as mock_ensure:
-        yield mock_ensure
+def mock_provider(mock_instance, fake_provider):
+    mock_provider = mock.Mock(wraps=fake_provider)
+    with patch("charmcraft.commands.build.get_provider", return_value=mock_provider):
+        yield mock_provider
 
 
 # --- Validator tests
@@ -599,7 +601,7 @@ def test_build_with_charmcraft_yaml_managed_mode(basic_project_builder, caplog, 
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
 
 
-def test_build_checks_provider(basic_project, mock_ensure_provider_is_available):
+def test_build_checks_provider(basic_project, mock_provider):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = Builder(
@@ -612,15 +614,14 @@ def test_build_checks_provider(basic_project, mock_ensure_provider_is_available)
         config,
     )
 
-    with patch("charmcraft.commands.build.launched_environment"):
-        builder.run()
+    builder.run()
 
-    mock_ensure_provider_is_available.assert_called_once()
+    mock_provider.ensure_provider_is_available.assert_called_once()
 
 
-def test_build_checks_provider_error(basic_project, mock_ensure_provider_is_available):
+def test_build_checks_provider_error(basic_project, mock_provider):
     """Test cases for base-index parameter."""
-    mock_ensure_provider_is_available.side_effect = RuntimeError("foo")
+    mock_provider.ensure_provider_is_available.side_effect = RuntimeError("foo")
     config = load(basic_project)
     builder = Builder(
         {
@@ -634,8 +635,6 @@ def test_build_checks_provider_error(basic_project, mock_ensure_provider_is_avai
 
     with pytest.raises(RuntimeError, match="foo"):
         builder.run()
-
-    mock_ensure_provider_is_available.assert_called_once()
 
 
 def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkeypatch):
@@ -651,8 +650,7 @@ def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkey
         config,
     )
 
-    with patch("charmcraft.commands.build.launched_environment"):
-        builder.run()
+    builder.run()
 
     assert "DEPRECATED: A charmcraft.yaml configuration file is now required." in [
         r.message for r in caplog.records
@@ -742,7 +740,8 @@ def test_build_project_is_cwd(
     basic_project,
     caplog,
     mock_capture_logs_from_instance,
-    mock_ensure_provider_is_available,
+    mock_instance,
+    mock_provider,
     monkeypatch,
 ):
     """Test cases for base-index parameter."""
@@ -774,29 +773,30 @@ def test_build_project_is_cwd(
     )
 
     monkeypatch.chdir(basic_project)
-    with patch("charmcraft.commands.build.launched_environment") as mock_launch:
-        zipnames = builder.run([0])
+    zipnames = builder.run([0])
 
     assert zipnames == [
         f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
     ]
-    assert mock_launch.mock_calls == [
-        call(
+    assert mock_provider.mock_calls == [
+        call.ensure_provider_is_available(),
+        call.is_base_available(
+            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+        ),
+        call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
             base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
             bases_index=0,
             build_on_index=0,
         ),
-        call().__enter__(),
-        call()
-        .__enter__()
-        .execute_run(
+    ]
+    assert mock_instance.mock_calls == [
+        call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"],
             check=True,
             cwd="/root/project",
         ),
-        call().__exit__(None, None, None),
     ]
 
 
@@ -804,7 +804,8 @@ def test_build_project_is_not_cwd(
     basic_project,
     caplog,
     mock_capture_logs_from_instance,
-    mock_ensure_provider_is_available,
+    mock_instance,
+    mock_provider,
     monkeypatch,
 ):
     """Test cases for base-index parameter."""
@@ -835,35 +836,34 @@ def test_build_project_is_not_cwd(
         config,
     )
 
-    with patch("charmcraft.commands.build.launched_environment") as mock_launch:
-        zipnames = builder.run([0])
+    zipnames = builder.run([0])
 
     assert zipnames == [
         f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
     ]
-    assert mock_launch.mock_calls == [
-        call(
+    assert mock_provider.mock_calls == [
+        call.ensure_provider_is_available(),
+        call.is_base_available(
+            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+        ),
+        call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
             base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
             bases_index=0,
             build_on_index=0,
         ),
-        call().__enter__(),
-        call()
-        .__enter__()
-        .execute_run(
+    ]
+    assert mock_instance.mock_calls == [
+        call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"],
             check=True,
             cwd="/root",
         ),
-        call()
-        .__enter__()
-        .pull_file(
+        call.pull_file(
             source=pathlib.Path("/root") / zipnames[0],
             destination=pathlib.Path.cwd() / zipnames[0],
         ),
-        call().__exit__(None, None, None),
     ]
 
 
@@ -881,7 +881,8 @@ def test_build_bases_index_scenarios_provider(
     basic_project,
     caplog,
     mock_capture_logs_from_instance,
-    mock_ensure_provider_is_available,
+    mock_instance,
+    mock_provider,
     monkeypatch,
 ):
     """Test cases for base-index parameter."""
@@ -918,130 +919,137 @@ def test_build_bases_index_scenarios_provider(
         config,
     )
 
-    with patch("charmcraft.commands.build.launched_environment") as mock_launch:
-        zipnames = builder.run([0])
-        assert zipnames == [
-            f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
-        ]
+    zipnames = builder.run([0])
+    assert zipnames == [
+        f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+    ]
 
-        assert mock_launch.mock_calls == [
-            call(
-                charm_name="name-from-metadata",
-                project_path=basic_project,
-                base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-                bases_index=0,
-                build_on_index=0,
-            ),
-            call().__enter__(),
-            call()
-            .__enter__()
-            .execute_run(
-                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
-                check=True,
-                cwd="/root/project",
-            ),
-            call().__exit__(None, None, None),
-        ]
-        assert f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..." in [
-            r.message for r in caplog.records
-        ]
-        mock_ensure_provider_is_available.assert_called_once()
-        mock_launch.reset_mock()
+    assert mock_provider.mock_calls == [
+        call.ensure_provider_is_available(),
+        call.is_base_available(
+            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+        ),
+        call.launched_environment(
+            charm_name="name-from-metadata",
+            project_path=basic_project,
+            base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+            bases_index=0,
+            build_on_index=0,
+        ),
+    ]
+    assert mock_instance.mock_calls == [
+        call.execute_run(
+            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            check=True,
+            cwd="/root/project",
+        ),
+    ]
+    assert f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..." in [
+        r.message for r in caplog.records
+    ]
+    mock_provider.reset_mock()
+    mock_instance.reset_mock()
 
-        zipnames = builder.run([1])
-        assert zipnames == [
-            f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
-        ]
-        assert mock_launch.mock_calls == [
-            call(
-                charm_name="name-from-metadata",
-                project_path=basic_project,
-                base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
-                bases_index=1,
-                build_on_index=0,
-            ),
-            call().__enter__(),
-            call()
-            .__enter__()
-            .execute_run(
-                ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
-                check=True,
-                cwd="/root/project",
-            ),
-            call().__exit__(None, None, None),
-        ]
-        mock_launch.reset_mock()
+    zipnames = builder.run([1])
+    assert zipnames == [
+        f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+    ]
+    assert mock_provider.mock_calls == [
+        call.ensure_provider_is_available(),
+        call.is_base_available(
+            Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+        ),
+        call.launched_environment(
+            charm_name="name-from-metadata",
+            project_path=basic_project,
+            base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+            bases_index=1,
+            build_on_index=0,
+        ),
+    ]
+    assert mock_instance.mock_calls == [
+        call.execute_run(
+            ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+            check=True,
+            cwd="/root/project",
+        ),
+    ]
+    mock_provider.reset_mock()
+    mock_instance.reset_mock()
 
-        zipnames = builder.run([0, 1])
-        assert zipnames == [
-            f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
-            f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
-        ]
-        assert mock_launch.mock_calls == [
-            call(
-                charm_name="name-from-metadata",
-                project_path=basic_project,
-                base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-                bases_index=0,
-                build_on_index=0,
-            ),
-            call().__enter__(),
-            call()
-            .__enter__()
-            .execute_run(
-                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
-                check=True,
-                cwd="/root/project",
-            ),
-            call().__exit__(None, None, None),
-            call(
-                charm_name="name-from-metadata",
-                project_path=basic_project,
-                base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
-                bases_index=1,
-                build_on_index=0,
-            ),
-            call().__enter__(),
-            call()
-            .__enter__()
-            .execute_run(
-                ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
-                check=True,
-                cwd="/root/project",
-            ),
-            call().__exit__(None, None, None),
-        ]
+    zipnames = builder.run([0, 1])
+    assert zipnames == [
+        f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+        f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+    ]
+    assert mock_provider.mock_calls == [
+        call.ensure_provider_is_available(),
+        call.is_base_available(
+            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+        ),
+        call.launched_environment(
+            charm_name="name-from-metadata",
+            project_path=basic_project,
+            base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+            bases_index=0,
+            build_on_index=0,
+        ),
+        call.is_base_available(
+            Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+        ),
+        call.launched_environment(
+            charm_name="name-from-metadata",
+            project_path=basic_project,
+            base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+            bases_index=1,
+            build_on_index=0,
+        ),
+    ]
+    assert mock_instance.mock_calls == [
+        call.execute_run(
+            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            check=True,
+            cwd="/root/project",
+        ),
+        call.execute_run(
+            ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+            check=True,
+            cwd="/root/project",
+        ),
+    ]
+    mock_provider.reset_mock()
+    mock_instance.reset_mock()
 
-        with pytest.raises(
-            CommandError,
-            match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
-        ):
-            builder.run([3])
+    with pytest.raises(
+        CommandError,
+        match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
+    ):
+        builder.run([3])
 
-        mock_launch.reset_mock()
+    mock_provider.reset_mock()
+    mock_instance.reset_mock()
 
-        expected_msg = re.escape("Failed to build charm for bases index '0'.")
-        with pytest.raises(
-            CommandError,
-            match=expected_msg,
-        ):
-            mock_instance = mock_launch.return_value.__enter__.return_value
-            mock_instance.execute_run.side_effect = subprocess.CalledProcessError(
-                -1,
-                ["charmcraft", "pack", "..."],
-                "some output",
-                "some error",
-            )
-            builder.run([0])
+    expected_msg = re.escape("Failed to build charm for bases index '0'.")
+    with pytest.raises(
+        CommandError,
+        match=expected_msg,
+    ):
+        mock_instance.execute_run.side_effect = subprocess.CalledProcessError(
+            -1,
+            ["charmcraft", "pack", "..."],
+            "some output",
+            "some error",
+        )
+        builder.run([0])
 
-        assert mock_instance.mock_calls == [
-            call.execute_run(
-                ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
-                check=True,
-                cwd="/root/project",
-            ),
-        ]
-        assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]
+    assert mock_instance.mock_calls == [
+        call.execute_run(
+            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            check=True,
+            cwd="/root/project",
+        ),
+    ]
+    assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]
 
 
 def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, caplog):
@@ -1287,8 +1295,7 @@ def test_build_with_entrypoint_argument_issues_dn04(basic_project, caplog, monke
         config,
     )
 
-    with patch("charmcraft.commands.build.launched_environment"):
-        builder.run()
+    builder.run()
 
     assert (
         "DEPRECATED: Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point."
@@ -1563,8 +1570,7 @@ def test_build_with_requirement_argment_issues_dn05(basic_project, caplog, monke
         config,
     )
 
-    with patch("charmcraft.commands.build.launched_environment"):
-        builder.run()
+    builder.run()
 
     assert (
         "DEPRECATED: Use 'charm-requirements' in charmcraft.yaml parts to define requirements."

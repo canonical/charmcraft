@@ -22,9 +22,9 @@ import pathlib
 import platform
 import sys
 from collections import namedtuple
+from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 
-import attr
 import yaml
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
@@ -111,7 +111,7 @@ class SingleOptionEnsurer:
         return self.converter(value)
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class ResourceOption:
     """Argparse helper to validate and convert a 'resource' option.
 
@@ -122,8 +122,8 @@ class ResourceOption:
         parser.add_argument('--resource',  type=ResourceOption())
     """
 
-    name = attr.ib(default=None)
-    revision = attr.ib(default=None)
+    name: str = None
+    revision: int = None
 
     def __call__(self, value):
         """Run by argparse to validate and convert the given argument."""

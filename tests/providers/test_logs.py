@@ -24,13 +24,13 @@ from charmcraft import providers
 
 @pytest.fixture
 def mock_logger():
-    with mock.patch("charmcraft.providers._helpers.logger") as mock_logger:
+    with mock.patch("charmcraft.providers._logs.logger") as mock_logger:
         yield mock_logger
 
 
 @pytest.fixture()
 def mock_mkstemp():
-    with mock.patch("charmcraft.providers._helpers.tempfile.mkstemp") as mock_mkstemp:
+    with mock.patch("charmcraft.providers._logs.tempfile.mkstemp") as mock_mkstemp:
         yield mock_mkstemp
 
 

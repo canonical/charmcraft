@@ -77,6 +77,7 @@ CHARM_OPTIONAL = [
     "mod",
     "LICENSE",
     "icon.svg",
+    "README.md",
 ]
 
 

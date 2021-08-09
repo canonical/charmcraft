@@ -16,7 +16,6 @@
 
 """Buildd-related for charmcraft."""
 
-import subprocess
 from typing import Optional
 
 from craft_providers import Executor, bases
@@ -65,24 +64,6 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
         :raises BaseConfigurationError: on other unexpected error.
         """
         super().setup(executor=executor, retry_wait=retry_wait, timeout=timeout)
-
-        try:
-            # XXX Claudio 2021-07-22: craft-parts uses sudo, install it until
-            # we adjust it to detect if changing to superuser is needed.
-            executor.execute_run(
-                [
-                    "apt-get",
-                    "install",
-                    "-y",
-                    "sudo",
-                ],
-                check=True,
-                capture_output=True,
-            )
-        except subprocess.CalledProcessError as error:
-            raise bases.BaseConfigurationError(
-                brief="Failed to install the required dependencies.",
-            ) from error
 
         try:
             snap_installer.inject_from_host(

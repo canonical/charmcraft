@@ -133,6 +133,31 @@ jobs:
           test -f "destructive-mode-tests_ubuntu-$VERSION_ID-amd64.charm"
           popd
 
+          mkdir -p build-packages-test
+          pushd build-packages-test
+          charmcraft -v init --author testuser
+          sed -i "s|20.04|$VERSION_ID|g" charmcraft.yaml
+          touch extra_file.txt
+          cat <<- EOF >> charmcraft.yaml
+          parts:
+            charm:
+              prime:
+                - extra_file.txt
+            hello:
+              plugin: nil
+              build-packages: [hello]
+              override-build: |
+                hello > "\$CHARMCRAFT_PART_INSTALL/hello.txt"
+          EOF
+          sg lxd -c "charmcraft -v pack"
+          unzip -c build-packages-test_*.charm hello.txt | grep "^Hello, world!"
+          sg lxd -c "charmcraft -v clean"
+          rm *.charm
+          sudo apt install -y hello
+          charmcraft -v pack --destructive-mode
+          unzip -c build-packages-test_*.charm hello.txt | grep "^Hello, world!"
+          popd
+
           sudo snap set charmcraft provider=lxd
           sudo snap set charmcraft provider=multipass
           if sudo snap set charmcraft provider=invalid; then

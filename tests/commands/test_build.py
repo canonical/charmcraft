@@ -116,6 +116,10 @@ def basic_project(tmp_path):
     icon = tmp_path / "icon.svg"
     icon.write_text("icon content")
 
+    # README
+    readme = tmp_path / "README.md"
+    readme.write_text("README content")
+
     yield tmp_path
 
 
@@ -554,6 +558,7 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     assert zf.read("lib/ops/stuff.txt") == b"ops stuff"
     assert zf.read("LICENSE") == b"license content"
     assert zf.read("icon.svg") == b"icon content"
+    assert zf.read("README.md") == b"README content"
 
     # check the manifest is present and with particular values that depend on given info
     manifest = yaml.safe_load(zf.read("manifest.yaml"))
@@ -1272,6 +1277,7 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
                             "lib",
                             "LICENSE",
                             "icon.svg",
+                            "README.md",
                         ],
                         "charm-entrypoint": "my_entrypoint.py",
                         "charm-requirements": ["reqs.txt"],
@@ -1334,6 +1340,7 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
                             "lib",
                             "LICENSE",
                             "icon.svg",
+                            "README.md",
                         ],
                         "charm-entrypoint": "my_entrypoint.py",
                         "charm-requirements": ["reqs.txt"],
@@ -1392,6 +1399,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
                             "lib",
                             "LICENSE",
                             "icon.svg",
+                            "README.md",
                         ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
@@ -1508,6 +1516,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
                             "lib",
                             "LICENSE",
                             "icon.svg",
+                            "README.md",
                         ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
@@ -1570,6 +1579,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
                             "lib",
                             "LICENSE",
                             "icon.svg",
+                            "README.md",
                         ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["reqs.txt"],
@@ -1632,6 +1642,7 @@ def test_build_requirements_default(basic_project, monkeypatch, caplog):
                             "lib",
                             "LICENSE",
                             "icon.svg",
+                            "README.md",
                         ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": ["requirements.txt"],
@@ -1690,6 +1701,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capl
                             "lib",
                             "LICENSE",
                             "icon.svg",
+                            "README.md",
                         ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-requirements": [],

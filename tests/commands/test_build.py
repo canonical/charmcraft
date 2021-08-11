@@ -47,6 +47,37 @@ from charmcraft.logsetup import message_handler
 from charmcraft.metadata import CHARM_METADATA
 
 
+def get_builder(
+    config,
+    *,
+    project_dir=None,
+    entrypoint="src/charm.py",
+    requirement=None,
+    force=False,
+    debug=False,
+    shell=False,
+    shell_after=False,
+):
+    if project_dir is None:
+        project_dir = config.project.dirpath
+
+    if entrypoint == "src/charm.py":
+        entrypoint = project_dir / "src" / "charm.py"
+
+    if requirement is None:
+        requirement = []
+
+    return Builder(
+        {
+            "from": project_dir,
+            "entrypoint": entrypoint,
+            "requirement": requirement,
+            "force": force,
+        },
+        config,
+    )
+
+
 @pytest.fixture
 def basic_project(tmp_path):
     """Create a basic Charmcraft project."""
@@ -109,15 +140,7 @@ def basic_project_builder(basic_project):
                     print(f"    architectures: {base.architectures!r}", file=f)
 
         config = load(basic_project)
-        return Builder(
-            {
-                "from": basic_project,
-                "entrypoint": basic_project / "src" / "charm.py",
-                "requirement": [],
-                "force": False,
-            },
-            config,
-        )
+        return get_builder(config)
 
     return _basic_project_builder
 
@@ -503,15 +526,7 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     monkeypatch.chdir(basic_project)  # so the zip file is left in the temp dir
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     # save original metadata and verify later
     metadata_file = basic_project / "metadata.yaml"
@@ -555,15 +570,7 @@ def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
     monkeypatch.chdir(basic_project)
 
     with pytest.raises(CommandError, match=r"Missing mandatory metadata.yaml."):
-        Builder(
-            {
-                "from": basic_project,
-                "entrypoint": basic_project / "src" / "charm.py",
-                "requirement": [],
-                "force": False,
-            },
-            config,
-        )
+        get_builder(config)
 
 
 def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, caplog, monkeypatch):
@@ -604,15 +611,7 @@ def test_build_with_charmcraft_yaml_managed_mode(basic_project_builder, caplog, 
 def test_build_checks_provider(basic_project, mock_provider):
     """Test cases for base-index parameter."""
     config = load(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     builder.run()
 
@@ -623,15 +622,7 @@ def test_build_checks_provider_error(basic_project, mock_provider):
     """Test cases for base-index parameter."""
     mock_provider.ensure_provider_is_available.side_effect = RuntimeError("foo")
     config = load(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     with pytest.raises(RuntimeError, match="foo"):
         builder.run()
@@ -640,15 +631,7 @@ def test_build_checks_provider_error(basic_project, mock_provider):
 def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkeypatch):
     """Test cases for base-index parameter."""
     config = load(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     builder.run()
 
@@ -762,15 +745,7 @@ def test_build_project_is_cwd(
         )
     )
     config = load(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     monkeypatch.chdir(basic_project)
     zipnames = builder.run([0])
@@ -826,15 +801,7 @@ def test_build_project_is_not_cwd(
         )
     )
     config = load(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     zipnames = builder.run([0])
 
@@ -909,15 +876,7 @@ def test_build_bases_index_scenarios_provider(
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     zipnames = builder.run([0])
     assert zipnames == [
@@ -1091,15 +1050,7 @@ def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, ca
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     zipnames = builder.run([0])
@@ -1148,15 +1099,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -1232,15 +1175,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
 
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint="whatever")
     zipname = builder.handle_package(to_be_zipped_dir)
 
     # check the stuff outside is not in the zip, the stuff inside is zipped (with
@@ -1268,15 +1203,7 @@ def test_build_package_name(tmp_path, monkeypatch, config):
 
     # zip it
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
-    builder = Builder(
-        {
-            "from": tmp_path,
-            "entrypoint": "whatever",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint="whatever")
     zipname = builder.handle_package(to_be_zipped_dir)
 
     assert zipname == "name-from-metadata.charm"
@@ -1285,15 +1212,7 @@ def test_build_package_name(tmp_path, monkeypatch, config):
 def test_build_with_entrypoint_argument_issues_dn04(basic_project, caplog, monkeypatch):
     """Test cases for base-index parameter."""
     config = load(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     builder.run()
 
@@ -1327,15 +1246,7 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": None,
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint=None)
 
     entrypoint = basic_project / "my_entrypoint.py"
     entrypoint.touch()
@@ -1397,17 +1308,9 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "my_entrypoint.py",
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
-
     entrypoint = basic_project / "my_entrypoint.py"
+    builder = get_builder(config, entrypoint=entrypoint)
+
     entrypoint.touch()
     entrypoint.chmod(0o700)
 
@@ -1467,15 +1370,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": None,
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint=None, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -1535,17 +1430,10 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch, caplog):
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "my_entrypoint.py",
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
-
     entrypoint = basic_project / "my_entrypoint.py"
+
+    builder = get_builder(config, entrypoint=entrypoint, force=True)
+
     entrypoint.touch()
     entrypoint.chmod(0o700)
 
@@ -1560,15 +1448,7 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch, caplog):
 def test_build_with_requirement_argment_issues_dn05(basic_project, caplog, monkeypatch):
     """Test cases for base-index parameter."""
     config = load(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": None,
-            "requirement": ["reqs.txt"],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint=None, requirement=["reqs.txt"])
 
     builder.run()
 
@@ -1603,15 +1483,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": None,
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint=None, force=True)
 
     reqs = basic_project / "reqs.txt"
     reqs.touch()
@@ -1673,15 +1545,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": None,
-            "requirement": ["reqs.txt"],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint=None, force=True, requirement=["reqs.txt"])
 
     reqs = basic_project / "reqs.txt"
     reqs.touch()
@@ -1743,15 +1607,7 @@ def test_build_requirements_default(basic_project, monkeypatch, caplog):
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": None,
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint=None, force=True)
 
     # create a requirements.txt file
     pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
@@ -1813,15 +1669,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capl
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": None,
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint=None, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -1879,15 +1727,7 @@ def test_build_requirements_from_both(basic_project, monkeypatch, caplog):
     )
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": None,
-            "requirement": ["reqs.txt"],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config, entrypoint=None, force=True, requirement=["reqs.txt"])
 
     reqs = basic_project / "reqs.txt"
     reqs.touch()
@@ -1902,15 +1742,7 @@ def test_build_requirements_from_both(basic_project, monkeypatch, caplog):
 
 def test_build_using_linters_attributes(basic_project, monkeypatch, config):
     """Generic use of linters, pass them ok to their proceessor and save them in the manifest."""
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     # the results from the analyzer
     linting_results = [
@@ -1959,15 +1791,7 @@ def test_build_using_linters_attributes(basic_project, monkeypatch, config):
 def test_show_linters_attributes(basic_project, caplog, config):
     """Show the linting results, only attributes, one ignored."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     # fake results from the analyzer
     linting_results = [
@@ -2001,15 +1825,7 @@ def test_show_linters_attributes(basic_project, caplog, config):
 def test_show_linters_lint_warnings(basic_project, caplog, config):
     """Show the linting results, some warnings."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     # fake result from the analyzer
     linting_results = [
@@ -2037,15 +1853,7 @@ def test_show_linters_lint_warnings(basic_project, caplog, config):
 def test_show_linters_lint_errors_normal(basic_project, caplog, config):
     """Show the linting results, have errors."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": False,
-        },
-        config,
-    )
+    builder = get_builder(config)
 
     # fake result from the analyzer
     linting_results = [
@@ -2077,15 +1885,7 @@ def test_show_linters_lint_errors_normal(basic_project, caplog, config):
 def test_show_linters_lint_errors_forced(basic_project, caplog, config):
     """Show the linting results, have errors but the packing is forced."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
-    builder = Builder(
-        {
-            "from": basic_project,
-            "entrypoint": basic_project / "src" / "charm.py",
-            "requirement": [],
-            "force": True,
-        },
-        config,
-    )
+    builder = get_builder(config, force=True)
 
     # fake result from the analyzer
     linting_results = [

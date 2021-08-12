@@ -3,7 +3,7 @@ attrs==21.2.0
 certifi==2021.5.30
 cffi==1.14.6
 charset-normalizer==2.0.4
-craft-parts @ https://github.com/canonical/craft-parts/archive/refs/tags/v1.0-alpha.3.tar.gz
+craft-parts==1.0.0
 craft-providers==1.0.2
 humanize==3.11.0
 idna==3.2

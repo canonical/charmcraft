@@ -69,10 +69,13 @@ def get_builder(
 
     return Builder(
         {
-            "from": project_dir,
+            "debug": debug,
             "entrypoint": entrypoint,
-            "requirement": requirement,
             "force": force,
+            "from": project_dir,
+            "requirement": requirement,
+            "shell": shell,
+            "shell_after": shell_after,
         },
         config,
     )
@@ -125,7 +128,7 @@ def basic_project(tmp_path):
 
 @pytest.fixture
 def basic_project_builder(basic_project):
-    def _basic_project_builder(bases_configs: List[BasesConfiguration]):
+    def _basic_project_builder(bases_configs: List[BasesConfiguration], **builder_kwargs):
         charmcraft_file = basic_project / "charmcraft.yaml"
         with charmcraft_file.open("w") as f:
             print("type: charm", file=f)
@@ -144,7 +147,7 @@ def basic_project_builder(basic_project):
                     print(f"    architectures: {base.architectures!r}", file=f)
 
         config = load(basic_project)
-        return get_builder(config)
+        return get_builder(config, **builder_kwargs)
 
     return _basic_project_builder
 
@@ -155,11 +158,30 @@ def mock_capture_logs_from_instance():
         yield mock_capture
 
 
+@pytest.fixture
+def mock_linters():
+    with patch("charmcraft.commands.build.linters") as mock_linters:
+        mock_linters.analyze.return_value = []
+        yield mock_linters
+
+
+@pytest.fixture
+def mock_parts():
+    with patch("charmcraft.commands.build.parts") as mock_parts:
+        yield mock_parts
+
+
 @pytest.fixture(autouse=True)
 def mock_provider(mock_instance, fake_provider):
     mock_provider = mock.Mock(wraps=fake_provider)
     with patch("charmcraft.commands.build.get_provider", return_value=mock_provider):
         yield mock_provider
+
+
+@pytest.fixture
+def mock_run():
+    with patch("subprocess.run") as mock_run:
+        yield mock_run
 
 
 # --- Validator tests
@@ -621,6 +643,74 @@ def test_build_checks_provider(basic_project, mock_provider):
     builder.run()
 
     mock_provider.ensure_provider_is_available.assert_called_once()
+
+
+def test_build_with_debug_no_error(
+    basic_project_builder,
+    mock_linters,
+    mock_parts,
+    mock_run,
+):
+    host_base = get_host_as_base()
+    builder = basic_project_builder(
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
+        debug=True,
+    )
+
+    charms = builder.run(destructive_mode=True)
+
+    assert len(charms) == 1
+    assert mock_run.mock_calls == []
+
+
+def test_build_with_debug_with_error(
+    basic_project_builder,
+    mock_linters,
+    mock_parts,
+    mock_run,
+):
+    mock_parts.PartsLifecycle.return_value.run.side_effect = CommandError("fail")
+    host_base = get_host_as_base()
+    builder = basic_project_builder(
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
+        debug=True,
+    )
+
+    with pytest.raises(CommandError):
+        builder.run(destructive_mode=True)
+
+    assert mock_run.mock_calls == [mock.call(["bash"])]
+
+
+def test_build_with_shell(basic_project_builder, mock_parts, mock_provider, mock_run):
+    host_base = get_host_as_base()
+    builder = basic_project_builder(
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
+        shell=True,
+    )
+
+    charms = builder.run(destructive_mode=True)
+
+    assert charms == []
+    assert mock_run.mock_calls == [mock.call(["bash"])]
+
+
+def test_build_with_shell_after(
+    basic_project_builder,
+    mock_linters,
+    mock_parts,
+    mock_run,
+):
+    host_base = get_host_as_base()
+    builder = basic_project_builder(
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
+        shell_after=True,
+    )
+
+    charms = builder.run(destructive_mode=True)
+
+    assert len(charms) == 1
+    assert mock_run.mock_calls == [mock.call(["bash"])]
 
 
 def test_build_checks_provider_error(basic_project, mock_provider):

@@ -85,9 +85,9 @@ def mock_parts():
 
 
 @pytest.fixture
-def mock_run():
-    with patch("subprocess.run") as mock_run:
-        yield mock_run
+def mock_launch_shell():
+    with patch("charmcraft.commands.pack.launch_shell") as mock_shell:
+        yield mock_shell
 
 
 # -- tests for the project type decissor
@@ -218,17 +218,21 @@ def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
     )
 
 
-def test_bundle_debug_no_error(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_run):
+def test_bundle_debug_no_error(
+    tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell
+):
     bundle_yaml(name="testbundle")
     bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
     PackCommand("group", bundle_config).run(get_namespace(debug=True))
 
-    assert mock_run.mock_calls == []
+    assert mock_launch_shell.mock_calls == []
 
 
-def test_bundle_debug_with_error(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_run):
+def test_bundle_debug_with_error(
+    tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell
+):
     mock_parts.PartsLifecycle.return_value.run.side_effect = CommandError("fail")
     bundle_yaml(name="testbundle")
     bundle_config.set(type="bundle")
@@ -237,27 +241,27 @@ def test_bundle_debug_with_error(tmp_path, bundle_yaml, bundle_config, mock_part
     with pytest.raises(CommandError):
         PackCommand("group", bundle_config).run(get_namespace(debug=True))
 
-    assert mock_run.mock_calls == [mock.call(["bash"])]
+    assert mock_launch_shell.mock_calls == [mock.call()]
 
 
-def test_bundle_shell(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_run):
+def test_bundle_shell(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell):
     bundle_yaml(name="testbundle")
     bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
     PackCommand("group", bundle_config).run(get_namespace(shell=True))
 
-    assert mock_run.mock_calls == [mock.call(["bash"])]
+    assert mock_launch_shell.mock_calls == [mock.call()]
 
 
-def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_run):
+def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell):
     bundle_yaml(name="testbundle")
     bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
     PackCommand("group", bundle_config).run(get_namespace(shell_after=True))
 
-    assert mock_run.mock_calls == [mock.call(["bash"])]
+    assert mock_launch_shell.mock_calls == [mock.call()]
 
 
 # -- tests for get paths helper

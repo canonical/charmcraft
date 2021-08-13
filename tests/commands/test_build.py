@@ -179,9 +179,9 @@ def mock_provider(mock_instance, fake_provider):
 
 
 @pytest.fixture
-def mock_run():
-    with patch("subprocess.run") as mock_run:
-        yield mock_run
+def mock_launch_shell():
+    with patch("charmcraft.commands.build.launch_shell") as mock_shell:
+        yield mock_shell
 
 
 # --- Validator tests
@@ -649,7 +649,7 @@ def test_build_with_debug_no_error(
     basic_project_builder,
     mock_linters,
     mock_parts,
-    mock_run,
+    mock_launch_shell,
 ):
     host_base = get_host_as_base()
     builder = basic_project_builder(
@@ -660,14 +660,14 @@ def test_build_with_debug_no_error(
     charms = builder.run(destructive_mode=True)
 
     assert len(charms) == 1
-    assert mock_run.mock_calls == []
+    assert mock_launch_shell.mock_calls == []
 
 
 def test_build_with_debug_with_error(
     basic_project_builder,
     mock_linters,
     mock_parts,
-    mock_run,
+    mock_launch_shell,
 ):
     mock_parts.PartsLifecycle.return_value.run.side_effect = CommandError("fail")
     host_base = get_host_as_base()
@@ -679,10 +679,10 @@ def test_build_with_debug_with_error(
     with pytest.raises(CommandError):
         builder.run(destructive_mode=True)
 
-    assert mock_run.mock_calls == [mock.call(["bash"])]
+    assert mock_launch_shell.mock_calls == [mock.call()]
 
 
-def test_build_with_shell(basic_project_builder, mock_parts, mock_provider, mock_run):
+def test_build_with_shell(basic_project_builder, mock_parts, mock_provider, mock_launch_shell):
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
@@ -692,14 +692,14 @@ def test_build_with_shell(basic_project_builder, mock_parts, mock_provider, mock
     charms = builder.run(destructive_mode=True)
 
     assert charms == []
-    assert mock_run.mock_calls == [mock.call(["bash"])]
+    assert mock_launch_shell.mock_calls == [mock.call()]
 
 
 def test_build_with_shell_after(
     basic_project_builder,
     mock_linters,
     mock_parts,
-    mock_run,
+    mock_launch_shell,
 ):
     host_base = get_host_as_base()
     builder = basic_project_builder(
@@ -710,7 +710,7 @@ def test_build_with_shell_after(
     charms = builder.run(destructive_mode=True)
 
     assert len(charms) == 1
-    assert mock_run.mock_calls == [mock.call(["bash"])]
+    assert mock_launch_shell.mock_calls == [mock.call()]
 
 
 def test_build_checks_provider_error(basic_project, mock_provider):

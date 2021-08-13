@@ -38,6 +38,7 @@ from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
 from charmcraft.providers import capture_logs_from_instance, get_provider
+from charmcraft.shell import launch_shell
 
 logger = logging.getLogger(__name__)
 
@@ -356,7 +357,7 @@ class Builder:
                     if managed_mode or destructive_mode:
                         if self.shell:
                             # Execute shell in lieu of build.
-                            subprocess.run(["bash"])
+                            launch_shell()
                             break
 
                         try:
@@ -364,11 +365,11 @@ class Builder:
                         except (CommandError, RuntimeError) as error:
                             if self.debug:
                                 logger.error(str(error))
-                                subprocess.run(["bash"])
+                                launch_shell()
                             raise
 
                         if self.shell_after:
-                            subprocess.run(["bash"])
+                            launch_shell()
                     else:
                         charm_name = self.pack_charm_in_instance(
                             bases_index=bases_index,

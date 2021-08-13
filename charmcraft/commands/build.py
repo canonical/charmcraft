@@ -446,7 +446,7 @@ class Builder:
                 instance.execute_run(
                     cmd,
                     check=True,
-                    cwd=instance_output_dir.as_posix(),
+                    cwd=instance_output_dir,
                 )
             except subprocess.CalledProcessError as error:
                 capture_logs_from_instance(instance)

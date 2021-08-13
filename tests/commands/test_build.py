@@ -865,7 +865,7 @@ def test_build_project_is_cwd(
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"],
             check=True,
-            cwd="/root/project",
+            cwd=pathlib.Path("/root/project"),
         ),
     ]
 
@@ -920,7 +920,7 @@ def test_build_project_is_not_cwd(
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"],
             check=True,
-            cwd="/root",
+            cwd=pathlib.Path("/root"),
         ),
         call.pull_file(
             source=pathlib.Path("/root") / zipnames[0],
@@ -995,7 +995,7 @@ def test_build_bases_index_scenarios_provider(
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
-            cwd="/root/project",
+            cwd=pathlib.Path("/root/project"),
         ),
     ]
     assert f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..." in [
@@ -1025,7 +1025,7 @@ def test_build_bases_index_scenarios_provider(
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
             check=True,
-            cwd="/root/project",
+            cwd=pathlib.Path("/root/project"),
         ),
     ]
     mock_provider.reset_mock()
@@ -1063,12 +1063,12 @@ def test_build_bases_index_scenarios_provider(
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
-            cwd="/root/project",
+            cwd=pathlib.Path("/root/project"),
         ),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
             check=True,
-            cwd="/root/project",
+            cwd=pathlib.Path("/root/project"),
         ),
     ]
     mock_provider.reset_mock()
@@ -1100,7 +1100,7 @@ def test_build_bases_index_scenarios_provider(
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
-            cwd="/root/project",
+            cwd=pathlib.Path("/root/project"),
         ),
     ]
     assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]

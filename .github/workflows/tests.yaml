@@ -117,8 +117,8 @@ jobs:
           sg lxd -c "charmcraft -v clean"
           popd
 
-          mkdir -p another-directory
-          pushd another-directory
+          mkdir -p another-test
+          pushd another-test
           sg lxd -c "charmcraft -v pack --project-dir ../charm-smoke-test"
           test -f *.charm
           sg lxd -c "charmcraft -v clean --project-dir ../charm-smoke-test"

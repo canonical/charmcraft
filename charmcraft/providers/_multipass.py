@@ -23,6 +23,7 @@ import re
 from typing import List
 
 from craft_providers import multipass
+from craft_providers.multipass.errors import MultipassError
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
@@ -163,22 +164,32 @@ class MultipassProvider(Provider):
         base_configuration = CharmcraftBuilddBaseConfiguration(
             alias=alias, environment=environment, hostname=instance_name
         )
-        instance = multipass.launch(
-            name=instance_name,
-            base_configuration=base_configuration,
-            image_name=base.channel,
-            cpus=2,
-            disk_gb=64,
-            mem_gb=2,
-            auto_clean=True,
-        )
 
-        # Mount project.
-        instance.mount(host_source=project_path, target=get_managed_environment_project_path())
+        try:
+            instance = multipass.launch(
+                name=instance_name,
+                base_configuration=base_configuration,
+                image_name=base.channel,
+                cpus=2,
+                disk_gb=64,
+                mem_gb=2,
+                auto_clean=True,
+            )
+        except MultipassError as error:
+            raise CommandError(str(error))
+
+        try:
+            # Mount project.
+            instance.mount(host_source=project_path, target=get_managed_environment_project_path())
+        except MultipassError as error:
+            raise CommandError(str(error))
 
         try:
             yield instance
         finally:
             # Ensure to unmount everything and stop instance upon completion.
-            instance.unmount_all()
-            instance.stop()
+            try:
+                instance.unmount_all()
+                instance.stop()
+            except MultipassError as error:
+                raise CommandError(str(error))

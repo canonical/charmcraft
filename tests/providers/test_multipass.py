@@ -462,3 +462,57 @@ def test_launched_environment_unmounts_and_stops_after_error(
         mock.call().unmount_all(),
         mock.call().stop(),
     ]
+
+
+def test_launched_environment_launch_error(
+    mock_buildd_base_configuration, mock_multipass_launch, tmp_path
+):
+    mock_multipass_launch.side_effect = MultipassError(brief="fail")
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.MultipassProvider()
+
+    with pytest.raises(CommandError, match="fail"):
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            pass
+
+
+def test_launched_environment_unmount_all_error(
+    mock_buildd_base_configuration, mock_multipass_launch, tmp_path
+):
+    mock_multipass_launch.return_value.unmount_all.side_effect = MultipassError(brief="fail")
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.MultipassProvider()
+
+    with pytest.raises(CommandError, match="fail"):
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            pass
+
+
+def test_launched_environment_stop_error(
+    mock_buildd_base_configuration, mock_multipass_launch, tmp_path
+):
+    mock_multipass_launch.return_value.stop.side_effect = MultipassError(brief="fail")
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.MultipassProvider()
+
+    with pytest.raises(CommandError, match="fail"):
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            pass

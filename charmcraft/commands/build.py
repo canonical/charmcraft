@@ -23,16 +23,12 @@ import subprocess
 import zipfile
 from typing import List, Optional
 
-from charmcraft import linters, parts
+from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.deprecations import notify_deprecation
-from charmcraft.env import (
-    get_managed_environment_home_path,
-    get_managed_environment_project_path,
-    is_charmcraft_running_in_managed_mode,
-)
+from charmcraft.env import is_charmcraft_running_in_managed_mode
 from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
@@ -207,7 +203,7 @@ class Builder:
         self._handle_deprecated_cli_arguments()
 
         if is_charmcraft_running_in_managed_mode():
-            work_dir = get_managed_environment_home_path()
+            work_dir = env.get_managed_environment_home_path()
         else:
             work_dir = self.buildpath
 
@@ -396,10 +392,10 @@ class Builder:
         # project directory and can retrieve it when complete.
         cwd = pathlib.Path.cwd()
         if cwd == self.charmdir:
-            instance_output_dir = get_managed_environment_project_path()
+            instance_output_dir = env.get_managed_environment_project_path()
             pull_charm = False
         else:
-            instance_output_dir = get_managed_environment_home_path()
+            instance_output_dir = env.get_managed_environment_home_path()
             pull_charm = True
 
         cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]

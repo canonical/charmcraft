@@ -206,6 +206,11 @@ class Builder:
 
         self._handle_deprecated_cli_arguments()
 
+        if is_charmcraft_running_in_managed_mode():
+            work_dir = get_managed_environment_home_path()
+        else:
+            work_dir = self.buildpath
+
         # add charm files to the prime filter
         self._set_prime_filter()
 
@@ -216,7 +221,7 @@ class Builder:
         logger.debug("Parts definition: %s", self._parts)
         lifecycle = parts.PartsLifecycle(
             self._parts,
-            work_dir=self.buildpath,
+            work_dir=work_dir,
             ignore_local_sources=["*.charm"],
         )
         lifecycle.run(Step.PRIME)

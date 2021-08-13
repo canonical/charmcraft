@@ -114,6 +114,7 @@ jobs:
           charmcraft -v init --author testuser
           sg lxd -c "charmcraft -v pack"
           test -f *.charm
+          test ! -d build
           sg lxd -c "charmcraft -v clean"
           popd
 
@@ -121,6 +122,8 @@ jobs:
           pushd another-test
           sg lxd -c "charmcraft -v pack --project-dir ../charm-smoke-test"
           test -f *.charm
+          test ! -d build
+          test ! -d ../charm-smoke-test/build
           sg lxd -c "charmcraft -v clean --project-dir ../charm-smoke-test"
           popd
 

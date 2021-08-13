@@ -174,6 +174,29 @@ def test_clean_project_environments(mock_multipass, mock_path):
     ]
 
 
+def test_clean_project_environments_list_failure(mock_multipass, mock_path):
+    mock_multipass.list.side_effect = MultipassError(brief="fail")
+    provider = providers.MultipassProvider(multipass=mock_multipass)
+
+    with pytest.raises(CommandError, match="fail"):
+        provider.clean_project_environments(
+            charm_name="charm",
+            project_path=mock_path,
+        )
+
+
+def test_clean_project_environments_delete_failure(mock_multipass, mock_path):
+    mock_multipass.list.return_value = ["charmcraft-testcharm-445566-b-c-d"]
+    mock_multipass.delete.side_effect = MultipassError("fail")
+    provider = providers.MultipassProvider(multipass=mock_multipass)
+
+    with pytest.raises(CommandError, match="fail"):
+        provider.clean_project_environments(
+            charm_name="testcharm",
+            project_path=mock_path,
+        )
+
+
 def test_ensure_provider_is_available_ok_when_installed(mock_multipass_is_installed):
     mock_multipass_is_installed.return_value = True
     provider = providers.MultipassProvider()

@@ -20,9 +20,9 @@ import logging
 import os
 import sys
 
-from charmcraft.snap import get_snap_configuration
 from charmcraft.cmdbase import CommandError
 from charmcraft.env import is_charmcraft_running_from_snap, is_charmcraft_running_in_developer_mode
+from charmcraft.snap import get_snap_configuration
 
 from ._lxd import LXDProvider
 from ._multipass import MultipassProvider

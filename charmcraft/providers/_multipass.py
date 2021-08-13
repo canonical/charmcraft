@@ -67,16 +67,25 @@ class MultipassProvider(Provider):
         if not self.is_provider_available():
             return deleted
 
-        inode = str(project_path.stat().st_ino)
+        inode = project_path.stat().st_ino
 
-        for name in self.multipass.list():
+        try:
+            names = self.multipass.list()
+        except multipass.MultipassError as error:
+            raise CommandError(str(error)) from error
+
+        for name in names:
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
             if re.match(match_regex, name):
                 logger.debug("Deleting Multipass VM %r.", name)
-                self.multipass.delete(
-                    instance_name=name,
-                    purge=True,
-                )
+                try:
+                    self.multipass.delete(
+                        instance_name=name,
+                        purge=True,
+                    )
+                except multipass.MultipassError as error:
+                    raise CommandError(str(error)) from error
+
                 deleted.append(name)
             else:
                 logger.debug("Not deleting Multipass VM %r.", name)

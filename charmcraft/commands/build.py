@@ -197,14 +197,14 @@ class Builder:
 
         :returns: File name of charm.
         """
-        logger.debug("Building charm in %r", str(self.buildpath))
-
         self._handle_deprecated_cli_arguments()
 
         if env.is_charmcraft_running_in_managed_mode():
             work_dir = env.get_managed_environment_home_path()
         else:
             work_dir = self.buildpath
+
+        logger.debug("Building charm in %r", str(work_dir))
 
         # add charm files to the prime filter
         self._set_prime_filter()

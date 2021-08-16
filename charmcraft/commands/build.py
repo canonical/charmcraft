@@ -28,7 +28,6 @@ from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.deprecations import notify_deprecation
-from charmcraft.env import is_charmcraft_running_in_managed_mode
 from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
@@ -202,7 +201,7 @@ class Builder:
 
         self._handle_deprecated_cli_arguments()
 
-        if is_charmcraft_running_in_managed_mode():
+        if env.is_charmcraft_running_in_managed_mode():
             work_dir = env.get_managed_environment_home_path()
         else:
             work_dir = self.buildpath
@@ -315,7 +314,7 @@ class Builder:
         """
         charms: List[str] = []
 
-        managed_mode = is_charmcraft_running_in_managed_mode()
+        managed_mode = env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
             self.provider.ensure_provider_is_available()
 

@@ -21,7 +21,7 @@ import os
 import pathlib
 import subprocess
 import zipfile
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
@@ -300,6 +300,57 @@ class Builder:
             if path.exists():
                 self._prime.append(fn)
 
+    def plan(
+        self, *, bases_indices: Optional[List[int]], destructive_mode: bool, managed_mode: bool
+    ) -> List[Tuple[BasesConfiguration, Base, int, int]]:
+        """Plan build porocess.
+
+        In managed-mode or destructive-mode, build for each bases configuration
+        which has a matching build-on to the host we are executing on.  Warn for
+        each base configuration that is incompatible.  Error if unable to
+        produce any builds for any bases configuration.
+
+        :returns: List of charm files created.
+        """
+        build_plan: List[Tuple[BasesConfiguration, Base, int, int]] = []
+
+        for bases_index, bases_config in enumerate(self.config.bases):
+            if bases_indices and bases_index not in bases_indices:
+                logger.debug(
+                    "Skipping 'bases[%d]' due to --base-index usage.",
+                    bases_index,
+                )
+                continue
+
+            for build_on_index, build_on in enumerate(bases_config.build_on):
+                if managed_mode or destructive_mode:
+                    matches, reason = check_if_base_matches_host(build_on)
+                else:
+                    matches, reason = self.provider.is_base_available(build_on)
+
+                if matches:
+                    logger.debug(
+                        "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
+                        bases_index,
+                        build_on_index,
+                    )
+                    build_plan.append((bases_config, build_on, bases_index, build_on_index))
+                    break
+                else:
+                    logger.info(
+                        "Skipping 'bases[%d].build-on[%d]': %s.",
+                        bases_index,
+                        build_on_index,
+                        reason,
+                    )
+            else:
+                logger.warning(
+                    "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
+                    bases_index,
+                )
+
+        return build_plan
+
     def run(
         self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
     ) -> List[str]:
@@ -327,54 +378,32 @@ class Builder:
         if not (self.charmdir / "charmcraft.yaml").exists():
             notify_deprecation("dn02")
 
-        for bases_index, bases_config in enumerate(self.config.bases):
-            if bases_indices and bases_index not in bases_indices:
-                logger.debug(
-                    "Skipping 'bases[%d]' due to --base-index usage.",
-                    bases_index,
-                )
-                continue
-
-            for build_on_index, build_on in enumerate(bases_config.build_on):
-                if managed_mode or destructive_mode:
-                    matches, reason = check_if_base_matches_host(build_on)
-                else:
-                    matches, reason = self.provider.is_base_available(build_on)
-
-                if matches:
-                    logger.debug(
-                        "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
-                        bases_index,
-                        build_on_index,
-                    )
-                    if managed_mode or destructive_mode:
-                        charm_name = self.build_charm(bases_config)
-                    else:
-                        charm_name = self.pack_charm_in_instance(
-                            bases_index=bases_index,
-                            build_on=build_on,
-                            build_on_index=build_on_index,
-                        )
-
-                    charms.append(charm_name)
-                    break
-                else:
-                    logger.info(
-                        "Skipping 'bases[%d].build-on[%d]': %s.",
-                        bases_index,
-                        build_on_index,
-                        reason,
-                    )
-            else:
-                logger.warning(
-                    "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
-                    bases_index,
-                )
-
-        if not charms:
+        build_plan = self.plan(
+            bases_indices=bases_indices,
+            destructive_mode=destructive_mode,
+            managed_mode=managed_mode,
+        )
+        if not build_plan:
             raise CommandError(
                 "No suitable 'build-on' environment found in any 'bases' configuration."
             )
+
+        charms = []
+        for bases_config, build_on, bases_index, build_on_index in build_plan:
+            logger.debug(
+                "Building for 'bases[%d][%d]'.",
+                bases_index,
+                build_on_index,
+            )
+            if managed_mode or destructive_mode:
+                charm_name = self.build_charm(bases_config)
+            else:
+                charm_name = self.pack_charm_in_instance(
+                    bases_index=bases_index,
+                    build_on=build_on,
+                    build_on_index=build_on_index,
+                )
+            charms.append(charm_name)
 
         return charms
 

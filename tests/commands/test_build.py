@@ -955,15 +955,15 @@ def test_build_bases_index_scenarios_provider(
         call.is_base_available(
             Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
         ),
+        call.is_base_available(
+            Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
+        ),
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
             base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
             bases_index=0,
             build_on_index=0,
-        ),
-        call.is_base_available(
-            Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
         ),
         call.launched_environment(
             charm_name="name-from-metadata",

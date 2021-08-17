@@ -524,7 +524,7 @@ def test_politeexec_crashed(caplog, tmp_path):
 # --- (real) build tests
 
 
-def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, config):
+def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, config, tmp_path):
     """Integration test: a simple structure with custom lib and normal src dir."""
     caplog.set_level(logging.WARNING, logger="charmcraft")
     host_base = get_host_as_base()
@@ -540,7 +540,7 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     with patch(
         "charmcraft.commands.build.check_if_base_matches_host",
         return_value=(True, None),
-    ):
+    ), patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         zipnames = builder.run()
 
     assert zipnames == [f"name-from-metadata_ubuntu-20.04-{host_arch}.charm"]
@@ -595,14 +595,17 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, capl
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
 
 
-def test_build_with_charmcraft_yaml_managed_mode(basic_project_builder, caplog, monkeypatch):
+def test_build_with_charmcraft_yaml_managed_mode(
+    basic_project_builder, caplog, monkeypatch, tmp_path
+):
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     )
 
-    zipnames = builder.run()
+    with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
+        zipnames = builder.run()
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
@@ -685,7 +688,7 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(
 
 
 def test_build_multiple_with_charmcraft_yaml_managed_mode(
-    basic_project_builder, monkeypatch, caplog
+    basic_project_builder, monkeypatch, caplog, tmp_path
 ):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""
     caplog.set_level(logging.DEBUG)
@@ -709,7 +712,8 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
     )
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    zipnames = builder.run()
+    with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
+        zipnames = builder.run()
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
@@ -1016,7 +1020,7 @@ def test_build_bases_index_scenarios_provider(
     assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]
 
 
-def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, caplog):
+def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, caplog, tmp_path):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
@@ -1058,7 +1062,8 @@ def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, ca
     builder = get_builder(config)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    zipnames = builder.run([0])
+    with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
+        zipnames = builder.run([0])
     assert zipnames == [
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm",
     ]
@@ -1069,7 +1074,8 @@ def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, ca
     ):
         builder.run([1])
 
-    zipnames = builder.run([2])
+    with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
+        zipnames = builder.run([2])
     assert zipnames == [
         "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
     ]
@@ -1284,7 +1290,7 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
                         "source": str(basic_project),
                     }
                 },
-                work_dir=basic_project / "build",
+                work_dir=pathlib.Path("/root"),
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1347,7 +1353,7 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
                         "source": str(basic_project),
                     }
                 },
-                work_dir=basic_project / "build",
+                work_dir=pathlib.Path("/root"),
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1406,7 +1412,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
                         "source": str(basic_project),
                     }
                 },
-                work_dir=basic_project / "build",
+                work_dir=pathlib.Path("/root"),
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1523,7 +1529,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
                         "source": str(basic_project),
                     }
                 },
-                work_dir=basic_project / "build",
+                work_dir=pathlib.Path("/root"),
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1586,7 +1592,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
                         "source": str(basic_project),
                     }
                 },
-                work_dir=basic_project / "build",
+                work_dir=pathlib.Path("/root"),
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1649,7 +1655,7 @@ def test_build_requirements_default(basic_project, monkeypatch, caplog):
                         "source": str(basic_project),
                     }
                 },
-                work_dir=basic_project / "build",
+                work_dir=pathlib.Path("/root"),
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1708,7 +1714,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capl
                         "source": str(basic_project),
                     }
                 },
-                work_dir=basic_project / "build",
+                work_dir=pathlib.Path("/root"),
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1752,7 +1758,7 @@ def test_build_requirements_from_both(basic_project, monkeypatch, caplog):
     )
 
 
-def test_build_using_linters_attributes(basic_project, monkeypatch, config):
+def test_build_using_linters_attributes(basic_project, monkeypatch, config, tmp_path):
     """Generic use of linters, pass them ok to their proceessor and save them in the manifest."""
     builder = get_builder(config)
 
@@ -1778,14 +1784,14 @@ def test_build_using_linters_attributes(basic_project, monkeypatch, config):
     with patch(
         "charmcraft.commands.build.check_if_base_matches_host",
         return_value=(True, None),
-    ):
+    ), patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         with patch("charmcraft.linters.analyze") as mock_analyze:
             with patch.object(Builder, "show_linting_results") as mock_show_lint:
                 mock_analyze.return_value = linting_results
                 zipnames = builder.run()
 
     # check the analyze and processing functions were called properly
-    mock_analyze.assert_called_with(config, builder.buildpath / "prime")
+    mock_analyze.assert_called_with(config, tmp_path / "root" / "prime")
     mock_show_lint.assert_called_with(linting_results)
 
     # the manifest should have all the results (including the ignored one)

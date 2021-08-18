@@ -389,11 +389,7 @@ class Builder:
 
         charms = []
         for bases_config, build_on, bases_index, build_on_index in build_plan:
-            logger.debug(
-                "Building for 'bases[%d][%d]'.",
-                bases_index,
-                build_on_index,
-            )
+            logger.debug("Building for 'bases[%d][%d]'.", bases_index, build_on_index)
             if managed_mode or destructive_mode:
                 charm_name = self.build_charm(bases_config)
             else:

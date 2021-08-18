@@ -303,14 +303,13 @@ class Builder:
     def plan(
         self, *, bases_indices: Optional[List[int]], destructive_mode: bool, managed_mode: bool
     ) -> List[Tuple[BasesConfiguration, Base, int, int]]:
-        """Plan build porocess.
+        """Determine the build plan based on user inputs and host environment.
 
-        In managed-mode or destructive-mode, build for each bases configuration
-        which has a matching build-on to the host we are executing on.  Warn for
-        each base configuration that is incompatible.  Error if unable to
-        produce any builds for any bases configuration.
+        Provide a list of bases that are buildable and scoped according to user
+        configuration. Provide all relevant details including the applicable
+        bases configuration and the indices of the entries to build for.
 
-        :returns: List of charm files created.
+        :returns: List of Tuples (bases_config, build_on, bases_index, build_on_index).
         """
         build_plan: List[Tuple[BasesConfiguration, Base, int, int]] = []
 

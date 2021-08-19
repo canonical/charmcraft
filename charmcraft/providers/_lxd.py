@@ -17,7 +17,6 @@
 """Build environment provider support for charmcraft."""
 
 import contextlib
-import logging
 import pathlib
 import re
 from typing import List
@@ -27,12 +26,11 @@ from craft_providers import lxd
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
 from charmcraft.env import get_managed_environment_project_path
+from charmcraft.poc_messages_lib import emit
 from charmcraft.utils import confirm_with_user, get_host_architecture
 
 from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
 from ._provider import Provider
-
-logger = logging.getLogger(__name__)
 
 
 class LXDProvider(Provider):
@@ -78,7 +76,7 @@ class LXDProvider(Provider):
         for name in self.lxc.list_names(project=self.lxd_project, remote=self.lxd_remote):
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
             if re.match(match_regex, name):
-                logger.debug("Deleting container %r.", name)
+                emit.trace(f"Deleting container {name!r}.")
                 self.lxc.delete(
                     instance_name=name,
                     force=True,
@@ -87,7 +85,7 @@ class LXDProvider(Provider):
                 )
                 deleted.append(name)
             else:
-                logger.debug("Not deleting container %r.", name)
+                emit.trace(f"Not deleting container {name!r}.")
 
         return deleted
 

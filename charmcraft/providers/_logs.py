@@ -16,15 +16,13 @@
 
 """Build environment provider support for charmcraft."""
 
-import logging
 import pathlib
 import tempfile
 
 from craft_providers import Executor
 
 from charmcraft.env import get_managed_environment_log_path
-
-logger = logging.getLogger(__name__)
+from charmcraft.poc_messages_lib import emit
 
 
 def capture_logs_from_instance(instance: Executor) -> None:
@@ -34,6 +32,7 @@ def capture_logs_from_instance(instance: Executor) -> None:
 
     :returns: String of logs.
     """
+    # FIXME: bad docstring
     _, tmp_path = tempfile.mkstemp(prefix="charmcraft-")
     local_log_path = pathlib.Path(tmp_path)
     instance_log_path = get_managed_environment_log_path()
@@ -41,10 +40,10 @@ def capture_logs_from_instance(instance: Executor) -> None:
     try:
         instance.pull_file(source=instance_log_path, destination=local_log_path)
     except FileNotFoundError:
-        logger.debug("No logs found in instance.")
+        emit.trace("No logs found in instance.")
         return
 
     logs = local_log_path.read_text()
     local_log_path.unlink()
 
-    logger.debug("Logs captured from managed instance:\n%s", logs)
+    emit.trace(f"Logs captured from managed instance:\n{logs}")  # FIXME: don't like the \n here

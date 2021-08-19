@@ -16,11 +16,10 @@
 
 """Indicate which files are ignored by Juju."""
 
-import logging
 import re
 import typing
 
-logger = logging.getLogger(__name__)
+from charmcraft.poc_messages_lib import emit
 
 KEEP = "keep"
 SKIP = "skip"
@@ -189,7 +188,7 @@ class JujuIgnore:
                 regex=regex,
             )
             self._matchers.append(m)
-            logger.debug('Translated .jujuignore %d "%s" => "%s"', line_num, orig_rule, regex)
+            emit.trace(f'Translated .jujuignore {line_num:d} "{orig_rule}" => "{regex}"')
 
     def match(self, path: str, is_dir: bool) -> bool:
         """Check if the given path should be ignored.

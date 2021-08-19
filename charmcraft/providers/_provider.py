@@ -17,7 +17,6 @@
 """Build environment provider support for charmcraft."""
 
 import contextlib
-import logging
 import os
 import pathlib
 from abc import ABC, abstractmethod
@@ -27,8 +26,6 @@ from craft_providers import bases
 
 from charmcraft.config import Base
 from charmcraft.utils import get_host_architecture
-
-logger = logging.getLogger(__name__)
 
 BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
     "18.04": bases.BuilddBaseAlias.BIONIC,

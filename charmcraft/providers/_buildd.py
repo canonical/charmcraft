@@ -73,3 +73,8 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
             raise bases.BaseConfigurationError(
                 brief="Failed to inject host Charmcraft snap into target environment.",
             ) from error
+
+        # FIXME: got this:
+        # Unexpected internal exception:
+        #     BaseConfigurationError(brief='Failed to update apt cache.', ...
+        # maybe we should capture it here and always raise a CommandError/CraftError?

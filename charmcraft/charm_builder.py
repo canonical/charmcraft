@@ -18,7 +18,6 @@
 
 import argparse
 import errno
-import logging
 import os
 import pathlib
 import shutil
@@ -27,6 +26,7 @@ from typing import List
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
+from charmcraft.poc_messages_lib import emit
 from charmcraft.utils import make_executable
 
 
@@ -48,8 +48,6 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
 HOOKS_DIR = "hooks"
-
-logger = logging.getLogger(__name__)
 
 
 def relativise(src, dst):
@@ -79,7 +77,7 @@ class CharmBuilder:
 
     def build_charm(self) -> None:
         """Build the charm."""
-        logger.debug("Building charm in %r", str(self.buildpath))
+        emit.progress(f"Building charm in {str(self.buildpath)!r}")
 
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
@@ -108,10 +106,7 @@ class CharmBuilder:
             dest_path.symlink_to(relative_link)
         else:
             rel_path = src_path.relative_to(self.charmdir)
-            logger.warning(
-                "Ignoring symlink because targets outside the project: %r",
-                str(rel_path),
-            )
+            emit.trace(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
 
     def handle_generic_paths(self):
         """Handle all files and dirs except what's ignored and what will be handled later.
@@ -122,7 +117,7 @@ class CharmBuilder:
         - symlinks: respected if are internal to the project
         - other types (blocks, mount points, etc): ignored
         """
-        logger.debug("Linking in generic paths")
+        emit.progress("Linking in generic paths")
 
         for basedir, dirnames, filenames in os.walk(str(self.charmdir), followlinks=False):
             abs_basedir = pathlib.Path(basedir)
@@ -135,7 +130,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    logger.debug("Ignoring directory because of rules: %r", str(rel_path))
+                    emit.trace(f"Ignoring directory because of rules: {str(rel_path)!r}")
                     ignored.append(pos)
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
@@ -154,7 +149,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    logger.debug("Ignoring file because of rules: %r", str(rel_path))
+                    emit.trace(f"Ignoring file because of rules: {str(rel_path)!r}")
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
                     self.create_symlink(abs_path, dest_path)
@@ -170,7 +165,7 @@ class CharmBuilder:
                             raise
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
-                    logger.debug("Ignoring file because of type: %r", str(rel_path))
+                    emit.trace(f"Ignoring file because of type: {str(rel_path)!r}")
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
@@ -182,7 +177,7 @@ class CharmBuilder:
         # dispatch mechanism, create one if wasn't provided by the project
         dispatch_path = self.buildpath / DISPATCH_FILENAME
         if not dispatch_path.exists():
-            logger.debug("Creating the dispatch mechanism")
+            emit.progress("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
                 entrypoint_relative_path=linked_entrypoint.relative_to(self.buildpath)
             )
@@ -204,15 +199,14 @@ class CharmBuilder:
             if node.resolve() == linked_entrypoint:
                 current_hooks_to_replace.append(node)
                 node.unlink()
-                logger.debug(
-                    "Replacing existing hook %r as it's a symlink to the entrypoint",
-                    node.name,
+                emit.trace(
+                    f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint"
                 )
 
         # include the mandatory ones and those we need to replace
         hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
         for hookname in hooknames:
-            logger.debug("Creating the %r hook script pointing to dispatch", hookname)
+            emit.trace(f"Creating the {hookname!r} hook script pointing to dispatch")
             dest_hook = dest_hookpath / hookname
             if not dest_hook.exists():
                 relative_link = relativise(dest_hook, dispatch_path)
@@ -220,12 +214,13 @@ class CharmBuilder:
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
-        logger.debug("Installing dependencies")
+        emit.progress("Installing dependencies")
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
             retcode = _process_run(["pip3", "--version"])
             if retcode:
+                # FIXME: we should raise the error inside _process_run
                 raise CommandError("problems using pip")
 
             venvpath = self.buildpath / VENV_DIRNAME
@@ -235,12 +230,13 @@ class CharmBuilder:
                 "--target={}".format(venvpath),  # put all the resulting files in that specific dir
             ]
             if _pip_needs_system():
-                logger.debug("adding --system to work around pip3 defaulting to --user")
+                emit.trace("adding --system to work around pip3 defaulting to --user")
                 cmd.append("--system")
             for reqspath in self.requirement_paths:
                 cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
             retcode = _process_run(cmd)
             if retcode:
+                # FIXME: we should raise the error inside _process_run
                 raise CommandError("problems installing dependencies")
 
 
@@ -259,7 +255,7 @@ def _pip_needs_system():
 
 
 def _process_run(cmd) -> int:
-    logger.debug("Running external command %s", cmd)
+    emit.trace(f"Running external command {cmd}")
     try:
         proc = subprocess.Popen(
             cmd,
@@ -268,15 +264,15 @@ def _process_run(cmd) -> int:
             universal_newlines=True,
         )
     except Exception as err:
-        logger.error("Executing %s crashed with %r", cmd, err)
+        emit.trace(f"Executing {cmd} crashed with {err!r}")
         return 1
 
     for line in proc.stdout:
-        logger.debug("   :: %s", line.rstrip())
+        emit.trace(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 
     if retcode:
-        logger.error("Executing %s failed with return code %d", cmd, retcode)
+        emit.trace(f"Executing {cmd} failed with return code {retcode:d}")
 
     return retcode
 
@@ -317,9 +313,7 @@ def main():
     """Run the command-line interface."""
     options = _parse_arguments()
 
-    logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-
-    logger.debug("Starting charm builder")
+    emit.message("Starting charm builder")
 
     builder = CharmBuilder(
         charmdir=pathlib.Path(options.charmdir),

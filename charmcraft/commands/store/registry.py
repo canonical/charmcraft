@@ -21,7 +21,6 @@ import gzip
 import hashlib
 import io
 import json
-import logging
 import os
 import tarfile
 import tempfile
@@ -32,8 +31,8 @@ import requests
 import requests_unixsocket
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.poc_messages_lib import emit
 
-logger = logging.getLogger(__name__)
 
 # some mimetypes
 CONFIG_MIMETYPE = "application/vnd.docker.container.image.v1+json"
@@ -104,7 +103,7 @@ class OCIRegistry:
         if self.auth_encoded_credentials is not None:
             headers["Authorization"] = "Basic {}".format(self.auth_encoded_credentials)
 
-        logger.debug("Authenticating! %s", auth_info)
+        emit.trace(f"Authenticating! {auth_info}")
         url = "{realm}?service={service}&scope={scope}".format_map(auth_info)
         response = requests.get(url, headers=headers)
 
@@ -132,7 +131,7 @@ class OCIRegistry:
             headers["Authorization"] = "Bearer {}".format(self.auth_token)
 
         if log:
-            logger.debug("Hitting the registry: %s %s", method, url)
+            emit.trace(f"Hitting the registry: {method} {url}")
         response = requests.request(method, url, headers=headers, **kwargs)
         if response.status_code == 401:
             # token expired or missing, let's get another one and retry
@@ -161,11 +160,9 @@ class OCIRegistry:
         else:
             # something else is going on, log what we have and return False so at least
             # we can continue with the upload
-            logger.debug(
-                "Bad response when checking for uploaded %r: %r (headers=%s)",
-                url,
-                response.status_code,
-                response.headers,
+            emit.trace(
+                f"Bad response when checking for uploaded {url!r}: "
+                f"{response.status_code!r} (headers={response.headers})",
             )
             uploaded = False
         return uploaded
@@ -175,7 +172,7 @@ class OCIRegistry:
 
         If yes, return its digest.
         """
-        logger.debug("Checking if manifest is already uploaded")
+        emit.progress("Checking if manifest is already uploaded")
         url = self._get_url("manifests/{}".format(reference))
         return self._is_item_already_uploaded(url)
 
@@ -184,7 +181,7 @@ class OCIRegistry:
 
         If yes, return its digest.
         """
-        logger.debug("Checking if the blob is already uploaded")
+        emit.progress("Checking if the blob is already uploaded")
         url = self._get_url("blobs/{}".format(reference))
         return self._is_item_already_uploaded(url)
 
@@ -194,21 +191,21 @@ class OCIRegistry:
         headers = {
             "Content-Type": MANIFEST_V2_MIMETYPE,
         }
-        logger.debug("Uploading manifest with reference %s", reference)
+        emit.progress(f"Uploading manifest with reference {reference}")
         response = self._hit("PUT", url, headers=headers, data=manifest_data.encode("utf8"))
         assert_response_ok(response, expected_status=201)
-        logger.debug("Manifest uploaded OK")
+        emit.progress("Manifest uploaded OK")
 
     def upload_blob(self, filepath, size, digest):
         """Upload the blob from a file."""
         # get the first URL to start pushing the blob
-        logger.debug("Getting URL to push the blob")
+        emit.progress("Getting URL to push the blob")
         url = self._get_url("blobs/uploads/")
         response = self._hit("POST", url)
         assert_response_ok(response, expected_status=202)
         upload_url = response.headers["Location"]
         range_from, range_to_inclusive = [int(x) for x in response.headers["Range"].split("-")]
-        logger.debug("Got upload URL ok with range %s-%s", range_from, range_to_inclusive)
+        emit.progress(f"Got upload URL ok with range {range_from}-{range_to_inclusive}")
         if range_from != 0:
             raise CommandError("Server error: bad range received")
 
@@ -226,37 +223,37 @@ class OCIRegistry:
         # start the chunked upload
         with open(filepath, "rb") as fh:
             fh.seek(from_position)
-            while True:
-                chunk = fh.read(CHUNK_SIZE)
-                if not chunk:
-                    break
+            with emit.progress_bar("Uploading...", size) as progress:
+                while True:
+                    chunk = fh.read(CHUNK_SIZE)
+                    if not chunk:
+                        break
 
-                end_position = from_position + len(chunk)
-                headers = {
-                    "Content-Length": str(len(chunk)),
-                    "Content-Range": "{}-{}".format(from_position, end_position),
-                    "Content-Type": OCTET_STREAM_MIMETYPE,
-                }
-                progress = 100 * end_position / size
-                # XXX Facundo 2021-06-14: replace this print for the proper call to show progress
-                # when we have integrated the full "messages to the user" library (GH #381)
-                print("Uploading.. {:.2f}%\r".format(progress), end="", flush=True)
-                response = self._hit("PATCH", upload_url, headers=headers, data=chunk, log=False)
-                assert_response_ok(response, expected_status=202)
+                    progress.advance(len(chunk))
+                    end_position = from_position + len(chunk)
+                    headers = {
+                        "Content-Length": str(len(chunk)),
+                        "Content-Range": "{}-{}".format(from_position, end_position),
+                        "Content-Type": OCTET_STREAM_MIMETYPE,
+                    }
+                    response = self._hit(
+                        "PATCH", upload_url, headers=headers, data=chunk, log=False
+                    )
+                    assert_response_ok(response, expected_status=202)
 
-                upload_url = response.headers["Location"]
-                from_position += len(chunk)
+                    upload_url = response.headers["Location"]
+                    from_position += len(chunk)
 
         headers = {
             "Content-Length": "0",
             "Connection": "close",
         }
-        logger.debug("Closing the upload")
+        emit.progress("Closing the upload")
         closing_url = "{}&digest={}".format(upload_url, digest)
 
         response = self._hit("PUT", closing_url, headers=headers, data="")
         assert_response_ok(response, expected_status=201)
-        logger.debug("Upload finished OK")
+        emit.progress("Upload finished OK")
         if response.headers["Docker-Content-Digest"] != digest:
             raise CommandError("Server error: the upload is corrupted")
 
@@ -301,7 +298,7 @@ class LocalDockerdInterface:
         try:
             response = self.session.get(url)
         except requests.exceptions.ConnectionError:
-            logger.debug(
+            emit.trace(
                 "Cannot connect to /var/run/docker.sock , please ensure dockerd is running.",
             )
             return
@@ -313,7 +310,7 @@ class LocalDockerdInterface:
         # 404 is the standard response to "not found", if not exactly that let's log
         # for proper debugging
         if response.status_code != 404:
-            logger.debug("Bad response when validation local image: %s", response.status_code)
+            emit.trace(f"Bad response when validation local image: {response.status_code}")
 
     def get_streamed_image_content(self, digest: str) -> requests.Response:
         """Stream the content of a specific image."""
@@ -333,7 +330,7 @@ class ImageHandler:
 
     def _extract_file(self, image_tar: str, name: str, compress: bool = False) -> (str, int, str):
         """Extract a file from the tar and return its info. Optionally, gzip the content."""
-        logger.debug("Extracting file %r from local tar (compress=%s)", name, compress)
+        emit.progress(f"Extracting file {name!r} from local tar (compress={compress})")
         src_filehandler = image_tar.extractfile(name)
         mtime = image_tar.getmember(name).mtime
 
@@ -368,7 +365,7 @@ class ImageHandler:
         """Upload the blob (if necessary)."""
         # if it's already uploaded, nothing to do
         if self.registry.is_blob_already_uploaded(digest):
-            logger.debug("Blob was already uploaded")
+            emit.progress("Blob was already uploaded")
         else:
             self.registry.upload_blob(filepath, size, digest)
 
@@ -383,22 +380,20 @@ class ImageHandler:
         dockerd = LocalDockerdInterface()
 
         # validate the image is present locally
-        logger.debug("Checking image is present locally")
+        emit.progress("Checking image is present locally")
         image_info = dockerd.get_image_info(digest)
         if image_info is None:
             return
         local_image_size = image_info["Size"]
 
-        logger.debug("Getting the image from the local repo; size=%s", local_image_size)
+        emit.progress(f"Getting the image from the local repo; size={local_image_size}")
         response = dockerd.get_streamed_image_content(digest)
 
         tmp_exported = tempfile.NamedTemporaryFile(mode="wb", delete=False)
-        extracted_total = 0
-        for chunk in response.iter_content(CHUNK_SIZE):
-            extracted_total += len(chunk)
-            progress = 100 * extracted_total / local_image_size
-            print("Extracting... {:.2f}%\r".format(progress), end="", flush=True)
-            tmp_exported.file.write(chunk)
+        with emit.progress_bar("Extracting...", local_image_size) as progress:
+            for chunk in response.iter_content(CHUNK_SIZE):
+                progress.advance(len(chunk))
+                tmp_exported.file.write(chunk)
         tmp_exported.close()
 
         # open the image tar and inspect it to get the config and layers from the only one
@@ -415,7 +410,7 @@ class ImageHandler:
 
         if config_name is not None:
             fpath, size, digest = self._extract_file(image_tar, config_name)
-            logger.debug("Uploading config blob, size=%s, digest=%s", size, digest)
+            emit.progress(f"Uploading config blob, size={size}, digest={digest}")
             self._upload_blob(fpath, size, digest)
             manifest["config"] = {
                 "digest": digest,
@@ -424,14 +419,11 @@ class ImageHandler:
             }
 
         manifest["layers"] = manifest_layers = []
+        total_layers = len(layer_names)
         for idx, layer_name in enumerate(layer_names, 1):
             fpath, size, digest = self._extract_file(image_tar, layer_name, compress=True)
-            logger.debug(
-                "Uploading layer blob %s/%s, size=%s, digest=%s",
-                idx,
-                len(layer_names),
-                size,
-                digest,
+            emit.progress(
+                f"Uploading layer blob {idx}/{total_layers}, size={size}, digest={digest}",
             )
             self._upload_blob(fpath, size, digest)
             manifest_layers.append(

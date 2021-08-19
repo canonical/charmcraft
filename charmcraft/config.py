@@ -430,6 +430,7 @@ def load(dirpath):
         else:
             dirpath = pathlib.Path.cwd()
     else:
+        # FIXME: we need to ensure that the directory exists here, otherwise pydantic explodes
         dirpath = pathlib.Path(dirpath).expanduser().resolve()
 
     now = datetime.datetime.utcnow()

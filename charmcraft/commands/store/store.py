@@ -16,15 +16,13 @@
 
 """The Store API handling."""
 
-import logging
 import time
 from collections import namedtuple
 
 from dateutil import parser
 
 from charmcraft.commands.store.client import Client
-
-logger = logging.getLogger("charmcraft.commands.store")
+from charmcraft.poc_messages_lib import emit
 
 # helpers to build responses from this layer
 User = namedtuple("User", "name username userid")
@@ -172,11 +170,11 @@ class Store:
             payload.update(extra_fields)
         response = self._client.post(endpoint, payload)
         status_url = response["status-url"]
-        logger.debug("Upload %s started, got status url %s", upload_id, status_url)
+        emit.progress(f"Upload {upload_id} started, got status url {status_url}")
 
         while True:
             response = self._client.get(status_url)
-            logger.debug("Status checked: %s", response)
+            emit.progress(f"Status checked: {response}")
 
             # as we're asking for a single upload_id, the response will always have only one item
             (revision,) = response["revisions"]

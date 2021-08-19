@@ -16,7 +16,6 @@
 
 """Craft-parts setup, lifecycle and plugins."""
 
-import logging
 import os
 import pathlib
 import shlex
@@ -30,8 +29,7 @@ from xdg import BaseDirectory  # type: ignore
 
 from charmcraft import charm_builder
 from charmcraft.cmdbase import CommandError
-
-logger = logging.getLogger(__name__)
+from charmcraft.poc_messages_lib import emit
 
 
 class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -277,7 +275,7 @@ class PartsLifecycle:
                     self._lcm.reload_state()
 
             actions = self._lcm.plan(target_step)
-            logger.debug("Parts actions: %s", actions)
+            emit.trace(f"Parts actions: {actions}")
             with self._lcm.action_executor() as aex:
                 aex.execute(actions)
         except RuntimeError as err:

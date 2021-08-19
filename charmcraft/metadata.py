@@ -16,7 +16,6 @@
 
 """Logic related to metadata.yaml."""
 
-import logging
 import pathlib
 from typing import Any, Dict
 
@@ -25,8 +24,7 @@ import yaml
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import format_pydantic_errors
-
-logger = logging.getLogger(__name__)
+from charmcraft.poc_messages_lib import emit
 
 CHARM_METADATA = "metadata.yaml"
 
@@ -60,7 +58,7 @@ def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
     :raises: CommandError if metadata does not exist.
     """
     metadata_path = charm_dir / CHARM_METADATA
-    logger.debug("Parsing %r", str(metadata_path))
+    emit.trace(f"Parsing {str(metadata_path)!r}")
 
     if not metadata_path.exists():
         raise CommandError("Missing mandatory metadata.yaml.")

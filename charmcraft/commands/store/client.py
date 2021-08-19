@@ -32,12 +32,11 @@ from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft import __version__, utils
 from charmcraft.cmdbase import CommandError
+from charmcraft.poc_messages_lib import emit
 
 # set urllib3's logger to only emit errors, not warnings. Otherwise even
 # retries are printed, and they're nasty.
 logging.getLogger(requests.packages.urllib3.__package__).setLevel(logging.ERROR)
-
-logger = logging.getLogger("charmcraft.commands.store")
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
@@ -56,10 +55,10 @@ def build_user_agent():
 
 def visit_page_with_browser(visit_url):
     """Open a browser so the user can validate its identity."""
-    logger.warning(
+    emit.progress(
         "Opening an authorization web page in your browser; if it does not open, "
-        "please open this URL: %s",
-        visit_url,
+        f"please open this URL: {visit_url}",
+        ephemeral=False,
     )
     webbrowser.open(visit_url, new=1)
 
@@ -83,17 +82,16 @@ class _AuthHolder:
         """Clear stored credentials."""
         if os.path.exists(self._cookiejar_filepath):
             os.unlink(self._cookiejar_filepath)
-            logger.debug("Credentials cleared: file %r removed", str(self._cookiejar_filepath))
+            emit.trace(f"Credentials cleared: file {str(self._cookiejar_filepath)!r} removed")
         else:
-            logger.debug(
-                "Credentials file not found to be removed: %r",
-                self._cookiejar_filepath,
+            emit.trace(
+                f"Credentials file not found to be removed: {str(self._cookiejar_filepath)!r}",
             )
 
     def _save_credentials_if_changed(self):
         """Save credentials if changed."""
         if list(self._cookiejar) != self._old_cookies:
-            logger.debug("Saving credentials to file: %r", str(self._cookiejar_filepath))
+            emit.trace(f"Saving credentials to file: {str(self._cookiejar_filepath)!r}")
             dirpath = os.path.dirname(self._cookiejar_filepath)
             os.makedirs(dirpath, exist_ok=True)
 
@@ -108,15 +106,15 @@ class _AuthHolder:
         self._client = httpbakery.Client(cookies=self._cookiejar, interaction_methods=[wbi])
 
         if os.path.exists(self._cookiejar_filepath):
-            logger.debug("Loading credentials from file: %r", str(self._cookiejar_filepath))
+            emit.trace(f"Loading credentials from file: {str(self._cookiejar_filepath)!r}")
             try:
                 self._cookiejar.load()
             except Exception as err:
                 # alert and continue processing (without having credentials, of course, the user
                 # will be asked to authenticate)
-                logger.warning("Failed to read credentials: %r", err)
+                emit.trace(f"Failed to read credentials: {err!r}")
         else:
-            logger.debug("Credentials file not found: %r", str(self._cookiejar_filepath))
+            emit.trace(f"Credentials file not found: {str(self._cookiejar_filepath)!r}")
 
         # iterates the cookiejar (which is mutable, may change later) and get the cookies
         # for comparison after hitting the endpoint
@@ -207,12 +205,12 @@ class Client:
     def _hit(self, method, urlpath, body=None, parse_json=True):
         """Issue a request to the Store."""
         url = self.api_base_url + urlpath
-        logger.debug("Hitting the store: %s %s %s", method, url, body)
+        emit.progress(f"Hitting the store: {method} {url} {body=}")
         resp = self._auth_client.request(method, url, body)
         if not resp.ok:
             raise CommandError(self._parse_store_error(resp))
 
-        logger.debug("Store ok: %s", resp.status_code)
+        emit.progress(f"Store ok: {resp.status_code}")
         if parse_json:
             # XXX Facundo 2020-06-30: we need to wrap this .json() call, and raise UnknownError
             # (after logging in debug the received raw response). This would catch weird "html"
@@ -232,22 +230,17 @@ class Client:
 
     def push(self, filepath):
         """Push the bytes from filepath to the Storage."""
-        logger.debug("Starting to push %r", str(filepath))
-
-        def _progress(monitor):
-            # XXX Facundo 2020-07-01: use a real progress bar
-            if monitor.bytes_read <= monitor.len:
-                progress = 100 * monitor.bytes_read / monitor.len
-                print("Uploading... {:.2f}%\r".format(progress), end="", flush=True)
-
+        emit.progress(f"Starting to push {str(filepath)!r}")
         with filepath.open("rb") as fh:
             encoder = MultipartEncoder(
                 fields={"binary": (filepath.name, fh, "application/octet-stream")}
             )
-
             # create a monitor (so that progress can be displayed) as call the real pusher
-            monitor = MultipartEncoderMonitor(encoder, _progress)
-            response = _storage_push(monitor, self.storage_base_url)
+            monitor = MultipartEncoderMonitor(encoder)
+
+            with emit.progress_bar("Uploading...", monitor.len) as progress:
+                monitor.callback = lambda mon: progress.absolute(mon.bytes_read)
+                response = _storage_push(monitor, self.storage_base_url)
 
         if not response.ok:
             raise CommandError(
@@ -261,5 +254,5 @@ class Client:
             raise CommandError("Server error while pushing file: {}".format(result))
 
         upload_id = result["upload_id"]
-        logger.debug("Uploading bytes ended, id %s", upload_id)
+        emit.progress(f"Uploading bytes ended, id {upload_id}")
         return upload_id

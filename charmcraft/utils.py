@@ -16,7 +16,6 @@
 
 """Collection of utilities for charmcraft."""
 
-import logging
 import os
 import pathlib
 import platform
@@ -30,8 +29,8 @@ from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.env import is_charmcraft_running_in_managed_mode
+from charmcraft.poc_messages_lib import emit
 
-logger = logging.getLogger("charmcraft.commands")
 
 OSPlatform = namedtuple("OSPlatform", "system release machine")
 
@@ -64,13 +63,13 @@ def make_executable(fh):
 def load_yaml(fpath):
     """Return the content of a YAML file."""
     if not fpath.is_file():
-        logger.debug("Couldn't find config file %r", str(fpath))
+        emit.trace(f"Couldn't find config file {str(fpath)!r}")
         return
     try:
         with fpath.open("rb") as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
-        logger.error("Failed to read/parse config file %r: %r", str(fpath), err)
+        emit.error(f"Failed to read/parse config file {str(fpath)!r}: {err!r}")
         return
     return content
 
@@ -166,7 +165,7 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
             with filepath.open("rt", encoding="utf-8") as fh:
                 lines = fh.readlines()
         except FileNotFoundError:
-            logger.debug("Unable to locate 'os-release' file, using default values")
+            emit.trace("Unable to locate 'os-release' file, using default values")
         else:
             os_release = {}
             for line in lines:

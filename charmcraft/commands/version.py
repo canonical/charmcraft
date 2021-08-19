@@ -16,12 +16,9 @@
 
 """Infrastructure for the 'version' command."""
 
-import logging
-
 from charmcraft import __version__
 from charmcraft.cmdbase import BaseCommand
-
-logger = logging.getLogger(__name__)
+from charmcraft.poc_messages_lib import emit
 
 _overview = """
 Show charmcraft version.
@@ -53,4 +50,4 @@ class VersionCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        logger.info("%s", __version__)
+        emit.message(__version__)

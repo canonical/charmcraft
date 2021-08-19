@@ -16,7 +16,6 @@
 
 """Infrastructure for the 'pack' command."""
 
-import logging
 import os
 import pathlib
 import zipfile
@@ -27,9 +26,8 @@ from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
+from charmcraft.poc_messages_lib import emit
 from charmcraft.utils import SingleOptionEnsurer, load_yaml, useful_filepath
-
-logger = logging.getLogger(__name__)
 
 # the minimum set of files in a bundle
 MANDATORY_FILES = {"bundle.yaml", "README.md"}
@@ -135,6 +133,7 @@ class PackCommand(BaseCommand):
 
     def _pack_charm(self, parsed_args):
         """Pack a charm."""
+        emit.progress("Packing the charm.")
         # adapt arguments to use the build infrastructure
         build_args = Namespace(
             **{
@@ -150,12 +149,13 @@ class PackCommand(BaseCommand):
         # mimic the "build" command
         validator = build.Validator(self.config)
         args = validator.process(build_args)
-        logger.debug("Working arguments: %s", args)
+        emit.trace(f"Working arguments: {args}")
         builder = build.Builder(args, self.config)
         builder.run(parsed_args.bases_index, destructive_mode=build_args.destructive_mode)
 
     def _pack_bundle(self):
         """Pack a bundle."""
+        emit.progress("Packing the bundle.")
         project = self.config.project
         config_parts = self.config.parts.copy()
         bundle_part = config_parts.setdefault("bundle", {})
@@ -186,7 +186,7 @@ class PackCommand(BaseCommand):
         bundle_part["source"] = str(project.dirpath)
 
         # run the parts lifecycle
-        logger.debug("Parts definition: %s", config_parts)
+        emit.trace(f"Parts definition: {config_parts}")
         lifecycle = parts.PartsLifecycle(
             config_parts,
             work_dir=project.dirpath / build.BUILD_DIRNAME,
@@ -199,4 +199,4 @@ class PackCommand(BaseCommand):
         zipname = project.dirpath / (bundle_name + ".zip")
         build_zip(zipname, lifecycle.prime_dir)
 
-        logger.info("Created %r.", str(zipname))
+        emit.message(f"Created {str(zipname)!r}.")

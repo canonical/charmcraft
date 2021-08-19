@@ -16,7 +16,6 @@
 
 """Infrastructure for the 'init' command."""
 
-import logging
 import os
 import pwd
 import re
@@ -24,8 +23,7 @@ from datetime import date
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import make_executable, get_templates_environment
-
-logger = logging.getLogger(__name__)
+from charmcraft.poc_messages_lib import emit
 
 _overview = """
 Initialize a charm operator package tree and files.
@@ -86,7 +84,7 @@ class InitCommand(BaseCommand):
         if any(self.config.project.dirpath.iterdir()) and not args.force:
             tpl = "{!r} is not empty (consider using --force to work on nonempty directories)"
             raise CommandError(tpl.format(str(self.config.project.dirpath)))
-        logger.debug("Using project directory %r", str(self.config.project.dirpath))
+        emit.trace(f"Using project directory {str(self.config.project.dirpath)!r}")
 
         if args.author is None:
             try:
@@ -96,12 +94,12 @@ class InitCommand(BaseCommand):
                 gecos = None
             if not gecos:
                 raise CommandError("Author not given, and nothing in GECOS field")
-            logger.debug("Setting author to %r from GECOS field", gecos)
+            emit.trace(f"Setting author to {gecos!r} from GECOS field")
             args.author = gecos
 
         if not args.name:
             args.name = self.config.project.dirpath.name
-            logger.debug("Set project name to '%s'", args.name)
+            emit.trace(f"Set project name to '{args.name}'")
 
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
             raise CommandError("{} is not a valid charm name".format(args.name))
@@ -123,7 +121,7 @@ class InitCommand(BaseCommand):
                 continue
             template = env.get_template(template_name)
             template_name = template_name[:-3]
-            logger.debug("Rendering %s", template_name)
+            emit.trace(f"Rendering {template_name}")
             path = self.config.project.dirpath / template_name
             if path.exists():
                 continue
@@ -135,11 +133,11 @@ class InitCommand(BaseCommand):
                     todos.append((template_name, todo))
                 if template_name in executables:
                     make_executable(fh)
-                    logger.debug("  made executable")
-        logger.info("Charm operator package file and directory tree initialized.")
+                    emit.trace("  made executable")
+        emit.message("Charm operator package file and directory tree initialized.")
         if todos:
-            logger.info("TODO:")
-            logger.info("")
-            w = max(len(i[0]) for i in todos)
+            emit.message("TODO:")
+            emit.message("")
+            width = max(len(i[0]) for i in todos) + 2
             for fn, todo in todos:
-                logger.info("%*s: %s", w + 2, fn, todo)
+                emit.message(f"{fn:>{width}s}: {todo}")

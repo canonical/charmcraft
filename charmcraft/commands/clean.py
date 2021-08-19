@@ -16,13 +16,10 @@
 
 """Infrastructure for the 'clean' command."""
 
-import logging
-
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.metadata import parse_metadata_yaml
+from charmcraft.poc_messages_lib import emit
 from charmcraft.providers import get_provider
-
-logger = logging.getLogger(__name__)
 
 _overview = """
 Purge Charmcraft project's artifacts, including:
@@ -43,8 +40,8 @@ class CleanCommand(BaseCommand):
         """Run the command."""
         project_path = self.config.project.dirpath
         metadata = parse_metadata_yaml(project_path)
-        logger.debug("Cleaning project %r.", metadata.name)
+        emit.progress(f"Cleaning project {metadata.name!r}.")
 
         provider = get_provider()
         provider.clean_project_environments(charm_name=metadata.name, project_path=project_path)
-        logger.info("Cleaned project %r.", metadata.name)
+        emit.message(f"Cleaned project {metadata.name!r}.")

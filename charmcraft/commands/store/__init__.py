@@ -1349,22 +1349,22 @@ class UploadResourceCommand(BaseCommand):
             # check if the specific image is already in Canonical's registry
             already_uploaded = ih.check_in_registry(image_digest)
             if already_uploaded:
-                emit.progress("Using OCI image from Canonical's registry.", ephemeral=False)
+                emit.message("Using OCI image from Canonical's registry.", intermediate=True)
             else:
                 # upload it from local registry
-                emit.progress(
-                    "Remote image not found, uploading from local registry.", ephemeral=False
+                emit.message(
+                    "Remote image not found, uploading from local registry.", intermediate=True
                 )
                 image_digest = ih.upload_from_local(image_digest)
                 if image_digest is None:
-                    emit.progress(
+                    emit.message(
                         f"Image with digest {parsed_args.image} is not available in "
                         "the Canonical's registry nor locally.",
-                        ephemeral=False,
+                        intermediate=True,
                     )
                     return
-                emit.progress(
-                    f"Image uploaded, new remote digest: {image_digest}.", ephemeral=False
+                emit.message(
+                    f"Image uploaded, new remote digest: {image_digest}.", intermediate=True
                 )
 
             # all is green, get the blob to upload to Charmhub

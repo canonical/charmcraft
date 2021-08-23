@@ -55,7 +55,7 @@ def notify_deprecation(deprecation_id):
         return
 
     message = _DEPRECATION_MESSAGES[deprecation_id]
-    emit.progress(f"DEPRECATED: {message}", ephemeral=False)
+    emit.message(f"DEPRECATED: {message}", intermediate_message=True)
     url = _DEPRECATION_URL_FMT.format(deprecation_id=deprecation_id)
-    emit.progress(f"See {url} for more information.", ephemeral=False)
+    emit.message(f"See {url} for more information.", intermediate_message=True)
     _ALREADY_NOTIFIED.add(deprecation_id)

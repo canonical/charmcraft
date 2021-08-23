@@ -55,10 +55,10 @@ def build_user_agent():
 
 def visit_page_with_browser(visit_url):
     """Open a browser so the user can validate its identity."""
-    emit.progress(
+    emit.message(
         "Opening an authorization web page in your browser; if it does not open, "
         f"please open this URL: {visit_url}",
-        ephemeral=False,
+        intermediate=True,
     )
     webbrowser.open(visit_url, new=1)
 
@@ -238,8 +238,8 @@ class Client:
             # create a monitor (so that progress can be displayed) as call the real pusher
             monitor = MultipartEncoderMonitor(encoder)
 
-            with emit.progress_bar("Uploading...", monitor.len) as progress:
-                monitor.callback = lambda mon: progress.absolute(mon.bytes_read)
+            with emit.progress_bar("Uploading...", monitor.len, delta=False) as progress:
+                monitor.callback = lambda mon: progress.advance(mon.bytes_read)
                 response = _storage_push(monitor, self.storage_base_url)
 
         if not response.ok:

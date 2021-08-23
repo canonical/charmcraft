@@ -360,12 +360,14 @@ def main(argv=None):
         retcode = err.retcode
     except KeyboardInterrupt as exc:  # FIXME test: now we show the exc sometimes!
         msg = "Interrupted by user"
-        error = CraftError(msg, exception=exc)
+        error = CraftError(msg)
+        error.__cause__ = exc
         emit.error(error)
         retcode = 1
     except Exception as exc:
         msg = f"Unexpected internal exception: {exc!r}"
-        error = CraftError(msg, exception=exc)
+        error = CraftError(msg)
+        error.__cause__ = exc
         emit.error(error)
         retcode = 1
     else:

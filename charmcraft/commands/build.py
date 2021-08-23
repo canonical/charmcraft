@@ -151,15 +151,15 @@ class Builder:
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
         if linters.WARNINGS in lint_results_by_outcome:
-            emit.progress("Lint Warnings:", ephemeral=False)
+            emit.message("Lint Warnings:", intermediate=True)
             for result in lint_results_by_outcome[linters.WARNINGS]:
-                emit.progress(template.format(result), ephemeral=False)
+                emit.message(template.format(result), intermediate=True)
         if linters.ERRORS in lint_results_by_outcome:
-            emit.progress("Lint Errors:", ephemeral=False)
+            emit.message("Lint Errors:", intermediate=True)
             for result in lint_results_by_outcome[linters.ERRORS]:
-                emit.progress(template.format(result), ephemeral=False)
+                emit.message(template.format(result), intermediate=True)
             if self.force_packing:
-                emit.progress("Packing anyway as requested.", ephemeral=False)
+                emit.message("Packing anyway as requested.", intermediate=True)
             else:
                 raise CommandError(
                     "Aborting due to lint errors (use --force to override).", retcode=2
@@ -330,10 +330,10 @@ class Builder:
                         f"{reason}.",
                     )
             else:
-                emit.progress(
+                emit.message(
                     "No suitable 'build-on' environment found "
                     f"in 'bases[{bases_index:d}]' configuration.",
-                    ephemeral=False,
+                    intermediate=True,
                 )
 
         if not charms:
@@ -364,7 +364,7 @@ class Builder:
 
         cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
 
-        if emit.mode == EmitterMode.VERBOSE:  # FIXME: what about "debug"?
+        if emit.mode == EmitterMode.VERBOSE:  # FIXME: what about "trace"?
             cmd.append("--verbose")
         elif emit.mode == EmitterMode.QUIET:
             cmd.append("--quiet")

@@ -48,11 +48,8 @@ class CraftError(Exception):
       only that, according to the different modes); note that in some cases the log
       location will be attached to this message.
 
-    - full_error: the full error structure received from a third party which originated
+    - details: the full error details received from a third party which originated
       the error situation
-
-    - exception: the object corresponding to the exception which originated the error
-      situation, possibly with another chained exception
 
     - resolution: an extra line indicating to the user how the erorr may be fixed or
       avoided (to be shown together with 'message')
@@ -70,16 +67,14 @@ class CraftError(Exception):
         self,
         message: str,
         *,
-        full_error: Optional[str] = None,
-        exception: Optional[str] = None,
+        details: Optional[str] = None,
         resolution: Optional[str] = None,
         docs_url: Optional[str] = None,
         reportable: bool = True,
         retcode: int = 1,
     ):
         super().__init__(message)
-        self.full_error = full_error
-        self.exception = exception
+        self.details = details
         self.resolution = resolution
         self.docs_url = docs_url
         self.reportable = reportable
@@ -270,7 +265,7 @@ class _Printer:
     ) -> None:
         msg = MessageInfo(
             stream=stream,
-            text=text,
+            text=text.rstrip(),
             ephemeral=ephemeral,
             use_timestamp=use_timestamp,
             end_line=end_line,
@@ -287,7 +282,11 @@ class _Printer:
         total: Union[int, float],
     ) -> None:
         msg = MessageInfo(
-            stream=stream, text=text, ephemeral=True, bar_progress=progress, bar_total=total
+            stream=stream,
+            text=text.rstrip(),
+            ephemeral=True,
+            bar_progress=progress,
+            bar_total=total
         )
         self._show(msg)
 
@@ -306,12 +305,18 @@ class _Printer:
 
 
 class _Progresser:
-    def __init__(self, printer: _Printer, total: Union[int, float], text: str, stream: TextIO):
+    def __init__(
+            self, printer: _Printer,
+            total: Union[int, float],
+            text: str,
+            stream: TextIO,
+            delta: bool):
         self.printer = printer
         self.total = total
         self.text = text
         self.accumulated = 0
         self.stream = stream
+        self.delta = delta
 
     def __enter__(self) -> "_Progresser":
         return self
@@ -319,12 +324,11 @@ class _Progresser:
     def __exit__(self, *exc_info) -> bool:
         return False  # do not consume any exception
 
-    def advance(self, amount: Union[int, float]) -> None:  # FIXME: "delta"?
-        self.accumulated += amount
-        self.printer.progress_bar(self.stream, self.text, self.accumulated, self.total)
-
-    def absolute(self, amount: Union[int, float]) -> None:
-        self.accumulated = amount
+    def advance(self, amount: Union[int, float]) -> None:
+        if self.delta:
+            self.accumulated += amount
+        else:
+            self.accumulated = amount
         self.printer.progress_bar(self.stream, self.text, self.accumulated, self.total)
 
 
@@ -451,7 +455,8 @@ class Emitter:
         self.printer = _Printer(self.log_filepath)
         self.printer.show(None, greeting)
         # FIXME: manage the log files
-        # - save the current one in appdirs.user_log_dir() / appname / "appname.log"
+        # - save the current one in
+        #       appdirs.user_log_dir() / appname / "appname-<timestamp with microseconds>.log"
         # - rotate them!
 
         # hook into the logging system
@@ -468,14 +473,20 @@ class Emitter:
         if self.mode == EmitterMode.VERBOSE or self.mode == EmitterMode.TRACE:
             # send the greeting to the screen before any further messages
             self.printer.show(sys.stdout, self.greeting, use_timestamp=True, avoid_logging=True)
+            # FIXME: also show here the log filepath
 
-    def message(self, text: str) -> None:
-        """Show the result of a command.
+    def message(self, text: str, intermediate: bool = False) -> None:
+        """Show an important message to the user.
 
-        This is normally used to present the output that a command will produce,
-        and which is the [sole] reason of the user running that command.
+        Normally used as the final message, to show the result of a command, but it can
+        also be used for important messages during the command's execution,
+        with intermediate=True (which will include timestamp in verbose/trace mode).
         """
-        self.printer.show(sys.stdout, text, end_line=True)
+        if intermediate and (self.mode == EmitterMode.VERBOSE or self.mode == EmitterMode.TRACE):
+            use_timestamp = True
+        else:
+            use_timestamp = False
+        self.printer.show(sys.stdout, text, end_line=True, use_timestamp=use_timestamp)
 
     def trace(self, text: str) -> None:
         """Trace/debug information.
@@ -489,22 +500,24 @@ class Emitter:
             stream = None
         self.printer.show(stream, text, use_timestamp=True)
 
-    def progress(self, text: str, ephemeral=True) -> None:
+    def progress(self, text: str) -> None:
         """Progress information for a multi-step command.
 
         This is normally to present several separated text messages.
 
-        Use ephemeral=False to present messages that will NOT be overwritten by the next
-        line in "normal" mode.
+        These messages will be truncated to the terminal's width, and overwritten by the next
+        line (unless verbose/trace mode).
         """
         if self.mode == EmitterMode.QUIET:
             # will not be shown in the screen (always logged to the file)
             stream = None
             use_timestamp = False
+            ephemeral = True
         elif self.mode == EmitterMode.NORMAL:
             # show to stderr, just the indicated message, respecting the "ephemeral" indication
             stream = sys.stderr
             use_timestamp = False
+            ephemeral = True
         else:
             # show to stderr, with timestamp, always permanent
             stream = sys.stderr
@@ -513,10 +526,14 @@ class Emitter:
 
         self.printer.show(stream, text, ephemeral=ephemeral, use_timestamp=use_timestamp)
 
-    def progress_bar(self, text: str, total: Union[int, float]):
+    def progress_bar(self, text: str, total: Union[int, float], delta: bool = True) -> _Progresser:
         """Progress information for a potentially long-running single step of a command.
 
         E.g. a download or provisioning step.
+
+        Returns a context manager with a `.advance` method to call on each progress (passing the
+        delta progress, unless delta=False here, which implies that the calls to `.advance` should
+        pass the total so far).
         """
         # don't show progress if quiet
         if self.mode == EmitterMode.QUIET:
@@ -524,7 +541,7 @@ class Emitter:
         else:
             stream = sys.stderr
         self.printer.show(stream, text, ephemeral=True)
-        return _Progresser(self.printer, total, text, stream)
+        return _Progresser(self.printer, total, text, stream, delta)
 
     def open_stream(self, text: str):
         """Open a stream context manager to get messages from subprocesses."""
@@ -559,11 +576,11 @@ class Emitter:
         self.printer.show(sys.stderr, str(error), use_timestamp=use_timestamp, end_line=True)
 
         # detailed information and/or original exception
-        if error.full_error:
-            text = f"Detailed information: {error.full_error}"
+        if error.details:
+            text = f"Detailed information: {error.details}"
             self.printer.show(full_stream, text, use_timestamp=use_timestamp, end_line=True)
-        if error.exception:
-            for line in self._get_traceback_lines(error.exception):
+        if error.__cause__:
+            for line in self._get_traceback_lines(error.__cause__):
                 self.printer.show(full_stream, line, use_timestamp=use_timestamp, end_line=True)
 
         # hints for the user to know more

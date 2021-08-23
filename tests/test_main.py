@@ -23,7 +23,7 @@ import sys
 from unittest.mock import patch
 
 from charmcraft import __version__, logsetup
-from charmcraft.main import Dispatcher, main, COMMAND_GROUPS
+from charmcraft.main import Dispatcher, main, COMMAND_GROUPS, ArgumentParsingError
 from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
 
@@ -133,7 +133,7 @@ def test_dispatcher_config_needed_problem(tmp_path):
 
     groups = [("test-group", "title", [MyCommand])]
     dispatcher = Dispatcher(["cmdname", "--project-dir", tmp_path], groups)
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(ArgumentParsingError) as err:
         dispatcher.run()
     assert str(err.value) == (
         "The specified command needs a valid 'charmcraft.yaml' configuration file (in the "
@@ -222,7 +222,7 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
     cmd = create_command("somecommand")
     groups = [("test-group", "title", [cmd])]
     # test the system exit, which is done automatically by argparse
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(ArgumentParsingError) as err:
         Dispatcher(options, groups)
     assert str(err.value) == "The 'verbose' and 'quiet' options are mutually exclusive."
 
@@ -260,7 +260,7 @@ def test_dispatcher_generic_setup_projectdir_without_param_simple(options):
     """Generic parameter handling for 'project dir' without the requested parameter."""
     cmd = create_command("somecommand")
     groups = [("test-group", "title", [cmd])]
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(ArgumentParsingError) as err:
         Dispatcher(options, groups)
     assert str(err.value) == "The 'project-dir' option expects one argument."
 
@@ -276,7 +276,7 @@ def test_dispatcher_generic_setup_projectdir_without_param_confusing(options):
     """Generic parameter handling for 'project dir' taking confusingly the command as the arg."""
     cmd = create_command("somecommand")
     groups = [("test-group", "title", [cmd])]
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(ArgumentParsingError) as err:
         Dispatcher(options, groups)
 
     # generic usage message because "no command" (as 'somecommand' was consumed by --project-dir)
@@ -379,11 +379,9 @@ def test_main_ok():
 def test_main_no_args():
     """The setup.py entry_point function needs to work with no arguments."""
     with patch("sys.argv", ["charmcraft"]):
-        with patch("charmcraft.main.message_handler") as mh_mock:
-            retcode = main()
+        retcode = main()
 
     assert retcode == 1
-    assert mh_mock.ended_cmderror.call_count == 1
 
 
 def test_main_controlled_error():

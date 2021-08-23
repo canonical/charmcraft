@@ -30,6 +30,10 @@ from charmcraft.parts import setup_parts
 logger = logging.getLogger(__name__)
 
 
+class ArgumentParsingError(Exception):
+    """Flag an argument parsing error: just show the message."""
+
+
 class HelpCommand(BaseCommand):
     """Special internal command to produce help and usage messages.
 
@@ -62,22 +66,24 @@ class HelpCommand(BaseCommand):
         Unlike other commands, this one receives an extra parameter with all commands,
         to validate if the help requested is on a valid one, or even parse its data.
         """
-        retcode = 0
         if parsed_args.command_to_help is None or parsed_args.command_to_help == self.name:
             # help on no command in particular, get general text
             help_text = get_general_help(detailed=parsed_args.all)
-        elif parsed_args.command_to_help not in all_commands:
+            logger.info(help_text)
+            return
+
+        if parsed_args.command_to_help not in all_commands:
             # asked help on a command that doesn't exist
             msg = "no such command {!r}".format(parsed_args.command_to_help)
             help_text = helptexts.get_usage_message("charmcraft", msg)
-            retcode = 1
-        else:
-            cmd_class, group = all_commands[parsed_args.command_to_help]
-            cmd = cmd_class(group, None)
-            parser = CustomArgumentParser(prog=cmd.name, add_help=False)
-            cmd.fill_parser(parser)
-            help_text = get_command_help(parser, cmd)
-        raise CommandError(help_text, argsparsing=True, retcode=retcode)
+            raise ArgumentParsingError(help_text)
+
+        cmd_class, group = all_commands[parsed_args.command_to_help]
+        cmd = cmd_class(group, None)
+        parser = CustomArgumentParser(prog=cmd.name, add_help=False)
+        cmd.fill_parser(parser)
+        help_text = get_command_help(parser, cmd)
+        logger.info(help_text)
 
 
 # Collect commands in different groups, for easier human consumption. Note that this is not
@@ -159,7 +165,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         """Show the usage, the error message, and no more."""
         fullcommand = "charmcraft " + self.prog
         full_msg = helptexts.get_usage_message(fullcommand, message)
-        raise CommandError(full_msg, argsparsing=True)
+        raise ArgumentParsingError(full_msg)
 
 
 def _get_global_options():
@@ -276,12 +282,14 @@ class Dispatcher:
                     try:
                         value = next(sysargs)
                     except StopIteration:
-                        raise CommandError("The 'project-dir' option expects one argument.")
+                        raise ArgumentParsingError(
+                            "The 'project-dir' option expects one argument."
+                        )
                 global_args[arg.name] = value
             elif sysarg.startswith(options_with_equal):
                 option, value = sysarg.split("=", 1)
                 if not value:
-                    raise CommandError("The 'project-dir' option expects one argument.")
+                    raise ArgumentParsingError("The 'project-dir' option expects one argument.")
                 arg = arg_per_option[option]
                 global_args[arg.name] = value
             else:
@@ -289,7 +297,7 @@ class Dispatcher:
 
         # control and use quiet/verbose options
         if global_args["quiet"] and global_args["verbose"]:
-            raise CommandError("The 'verbose' and 'quiet' options are mutually exclusive.")
+            raise ArgumentParsingError("The 'verbose' and 'quiet' options are mutually exclusive.")
         if global_args["quiet"]:
             message_handler.set_mode(message_handler.QUIET)
         elif global_args["verbose"]:
@@ -306,11 +314,11 @@ class Dispatcher:
             if command not in self.commands:
                 msg = "no such command {!r}".format(command)
                 help_text = helptexts.get_usage_message("charmcraft", msg)
-                raise CommandError(help_text, argsparsing=True)
+                raise ArgumentParsingError(help_text)
         else:
             # no command!
             help_text = get_general_help()
-            raise CommandError(help_text, argsparsing=True)
+            raise ArgumentParsingError(help_text)
 
         # load the system's config
         charmcraft_config = config.load(global_args["project_dir"])
@@ -324,7 +332,7 @@ class Dispatcher:
             return self.command.run(self.parsed_args, self.commands)
 
         if self.command.needs_config and not self.command.config.project.config_provided:
-            raise CommandError(
+            raise ArgumentParsingError(
                 "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
                 "the current directory or where specified with --project-dir option); see "
                 "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
@@ -345,6 +353,10 @@ def main(argv=None):
         setup_parts()
         dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
         retcode = dispatcher.run()
+    except ArgumentParsingError as err:
+        print(err)
+        message_handler.ended_ok()
+        retcode = 1
     except CommandError as err:
         message_handler.ended_cmderror(err)
         retcode = err.retcode

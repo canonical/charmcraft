@@ -187,6 +187,32 @@ def test_clean_project_environments(mock_lxc, mock_path):
     ]
 
 
+def test_clean_project_environments_list_failure(mock_lxc, mock_path):
+    mock_lxc.list_names.side_effect = LXDError(brief="fail")
+    provider = providers.LXDProvider(lxc=mock_lxc)
+
+    with pytest.raises(CommandError, match="fail"):
+        provider.clean_project_environments(
+            charm_name="charm",
+            project_path=mock_path,
+        )
+
+
+def test_clean_project_environments_delete_failure(mock_lxc, mock_path):
+    error = LXDError("fail")
+    mock_lxc.list_names.return_value = ["charmcraft-testcharm-445566-b-c-d"]
+    mock_lxc.delete.side_effect = error
+    provider = providers.LXDProvider(lxc=mock_lxc)
+
+    with pytest.raises(CommandError, match="fail") as exc_info:
+        provider.clean_project_environments(
+            charm_name="testcharm",
+            project_path=mock_path,
+        )
+
+    assert exc_info.value.__cause__ is error
+
+
 def test_ensure_provider_is_available_ok_when_installed(mock_lxd_is_installed):
     mock_lxd_is_installed.return_value = True
     provider = providers.LXDProvider()
@@ -222,9 +248,10 @@ def test_ensure_provider_is_available_errors_when_user_declines(
 def test_ensure_provider_is_available_errors_when_lxd_install_fails(
     mock_confirm_with_user, mock_lxd_is_installed, mock_lxd_install
 ):
+    error = LXDInstallationError("foo")
     mock_confirm_with_user.return_value = True
     mock_lxd_is_installed.return_value = False
-    mock_lxd_install.side_effect = LXDInstallationError("foo")
+    mock_lxd_install.side_effect = error
     provider = providers.LXDProvider()
 
     with pytest.raises(
@@ -243,17 +270,16 @@ def test_ensure_provider_is_available_errors_when_lxd_install_fails(
             default=False,
         )
     ]
-    assert exc_info.value.__cause__ == mock_lxd_install.side_effect
+    assert exc_info.value.__cause__ is error
 
 
 def test_ensure_provider_is_available_errors_when_lxd_not_ready(
     mock_confirm_with_user, mock_lxd_is_installed, mock_lxd_install, mock_lxd_ensure_lxd_is_ready
 ):
+    error = LXDError(brief="some error", details="some details", resolution="some resolution")
     mock_confirm_with_user.return_value = True
     mock_lxd_is_installed.return_value = True
-    mock_lxd_ensure_lxd_is_ready.side_effect = LXDError(
-        brief="some error", details="some details", resolution="some resolution"
-    )
+    mock_lxd_ensure_lxd_is_ready.side_effect = error
     provider = providers.LXDProvider()
 
     with pytest.raises(
@@ -262,7 +288,7 @@ def test_ensure_provider_is_available_errors_when_lxd_not_ready(
     ) as exc_info:
         provider.ensure_provider_is_available()
 
-    assert exc_info.value.__cause__ == mock_lxd_install.side_effect
+    assert exc_info.value.__cause__ is error
 
 
 def test_get_command_environment_minimal(monkeypatch):
@@ -437,6 +463,48 @@ def test_launched_environment(
     ]
 
 
+def test_launched_environment_launch_base_configuration_error(
+    mock_buildd_base_configuration, mock_configure_buildd_image_remote, mock_lxd_launch, tmp_path
+):
+    error = bases.BaseConfigurationError(brief="fail")
+    mock_lxd_launch.side_effect = error
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.LXDProvider()
+
+    with pytest.raises(CommandError, match="fail") as exc_info:
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            pass
+
+    assert exc_info.value.__cause__ is error
+
+
+def test_launched_environment_launch_lxd_error(
+    mock_buildd_base_configuration, mock_configure_buildd_image_remote, mock_lxd_launch, tmp_path
+):
+    error = LXDError(brief="fail")
+    mock_lxd_launch.side_effect = error
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.LXDProvider()
+
+    with pytest.raises(CommandError, match="fail") as exc_info:
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            pass
+
+    assert exc_info.value.__cause__ is error
+
+
 def test_launched_environment_unmounts_and_stops_after_error(
     mock_buildd_base_configuration, mock_configure_buildd_image_remote, mock_lxd_launch, tmp_path
 ):
@@ -458,3 +526,45 @@ def test_launched_environment_unmounts_and_stops_after_error(
         mock.call().unmount_all(),
         mock.call().stop(),
     ]
+
+
+def test_launched_environment_unmount_all_error(
+    mock_buildd_base_configuration, mock_configure_buildd_image_remote, mock_lxd_launch, tmp_path
+):
+    error = LXDError(brief="fail")
+    mock_lxd_launch.return_value.unmount_all.side_effect = error
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.LXDProvider()
+
+    with pytest.raises(CommandError, match="fail") as exc_info:
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            pass
+
+    assert exc_info.value.__cause__ is error
+
+
+def test_launched_environment_stop_error(
+    mock_buildd_base_configuration, mock_configure_buildd_image_remote, mock_lxd_launch, tmp_path
+):
+    error = LXDError(brief="fail")
+    mock_lxd_launch.return_value.stop.side_effect = error
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.LXDProvider()
+
+    with pytest.raises(CommandError, match="fail") as exc_info:
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            pass
+
+    assert exc_info.value.__cause__ is error

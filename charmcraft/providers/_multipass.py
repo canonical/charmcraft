@@ -22,7 +22,7 @@ import pathlib
 import re
 from typing import List
 
-from craft_providers import multipass
+from craft_providers import bases, multipass
 from craft_providers.multipass.errors import MultipassError
 
 from charmcraft.cmdbase import CommandError
@@ -121,7 +121,7 @@ class MultipassProvider(Provider):
         try:
             multipass.ensure_multipass_is_ready()
         except multipass.MultipassError as error:
-            raise CommandError(str(error))
+            raise CommandError(str(error)) from error
 
     @classmethod
     def is_provider_available(cls) -> bool:
@@ -175,14 +175,14 @@ class MultipassProvider(Provider):
                 mem_gb=2,
                 auto_clean=True,
             )
-        except MultipassError as error:
-            raise CommandError(str(error))
+        except (bases.BaseConfigurationError, MultipassError) as error:
+            raise CommandError(str(error)) from error
 
         try:
             # Mount project.
             instance.mount(host_source=project_path, target=get_managed_environment_project_path())
         except MultipassError as error:
-            raise CommandError(str(error))
+            raise CommandError(str(error)) from error
 
         try:
             yield instance
@@ -192,4 +192,4 @@ class MultipassProvider(Provider):
                 instance.unmount_all()
                 instance.stop()
             except MultipassError as error:
-                raise CommandError(str(error))
+                raise CommandError(str(error)) from error

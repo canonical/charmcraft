@@ -33,7 +33,6 @@ from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
 from charmcraft.providers import capture_logs_from_instance, get_provider
-from charmcraft.shell import launch_shell
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +102,14 @@ def format_charm_file_name(
         return charm_name + ".charm"
 
     return "_".join([charm_name, _format_bases_config(bases_config)]) + ".charm"
+
+
+def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
+    """Launch a user shell for debugging environment.
+
+    :param cwd: Working directory to start user in.
+    """
+    subprocess.run(["bash"], check=False, cwd=cwd)
 
 
 def polite_exec(cmd):

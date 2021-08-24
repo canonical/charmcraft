@@ -28,7 +28,6 @@ from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
-from charmcraft.shell import launch_shell
 from charmcraft.utils import SingleOptionEnsurer, load_yaml, useful_filepath
 
 logger = logging.getLogger(__name__)
@@ -179,7 +178,7 @@ class PackCommand(BaseCommand):
     def _pack_bundle(self, parsed_args) -> List[pathlib.Path]:
         """Pack a bundle."""
         if parsed_args.shell:
-            launch_shell()
+            build.launch_shell()
             return []
 
         project = self.config.project
@@ -223,7 +222,7 @@ class PackCommand(BaseCommand):
         except (RuntimeError, CommandError) as error:
             if parsed_args.debug:
                 logger.error(str(error))
-                launch_shell()
+                build.launch_shell()
             raise
 
         # pack everything
@@ -234,6 +233,6 @@ class PackCommand(BaseCommand):
         logger.info("Created %r.", str(zipname))
 
         if parsed_args.shell_after:
-            launch_shell()
+            build.launch_shell()
 
         return [zipname]

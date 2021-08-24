@@ -39,6 +39,7 @@ from charmcraft.commands.build import (
     Builder,
     Validator,
     format_charm_file_name,
+    launch_shell,
     polite_exec,
     relativise,
 )
@@ -159,6 +160,12 @@ def mock_capture_logs_from_instance():
 
 
 @pytest.fixture
+def mock_launch_shell():
+    with patch("charmcraft.commands.build.launch_shell") as mock_shell:
+        yield mock_shell
+
+
+@pytest.fixture
 def mock_linters():
     with patch("charmcraft.commands.build.linters") as mock_linters:
         mock_linters.analyze.return_value = []
@@ -179,9 +186,9 @@ def mock_provider(mock_instance, fake_provider):
 
 
 @pytest.fixture
-def mock_launch_shell():
-    with patch("charmcraft.commands.build.launch_shell") as mock_shell:
-        yield mock_shell
+def mock_subprocess_run():
+    with mock.patch("subprocess.run") as mock_run:
+        yield mock_run
 
 
 # --- Validator tests
@@ -2123,3 +2130,9 @@ def test_format_charm_file_name_multi_run_on():
         format_charm_file_name("charm-name", bases_config)
         == "charm-name_x1name-x1channel-x1arch_x2name-x2channel-x2arch1-x2arch2.charm"
     )
+
+
+def test_launch_shell(mock_subprocess_run):
+    launch_shell()
+
+    assert mock_subprocess_run.mock_calls == [mock.call(["bash"], check=False, cwd=None)]

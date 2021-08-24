@@ -86,7 +86,7 @@ def mock_parts():
 
 @pytest.fixture
 def mock_launch_shell():
-    with patch("charmcraft.commands.pack.launch_shell") as mock_shell:
+    with patch("charmcraft.commands.build.launch_shell") as mock_shell:
         yield mock_shell
 
 

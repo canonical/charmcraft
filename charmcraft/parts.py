@@ -24,8 +24,8 @@ import sys
 from typing import Any, Dict, List, Set, cast
 
 from craft_parts import LifecycleManager, Step, plugins
-from craft_parts.parts import PartSpec
 from craft_parts.errors import PartsError
+from craft_parts.parts import PartSpec
 from xdg import BaseDirectory  # type: ignore
 
 from charmcraft import charm_builder
@@ -265,6 +265,9 @@ class PartsLifecycle:
         """Run the parts lifecycle.
 
         :param target_step: The final step to execute.
+
+        :raises CommandError: On error during lifecycle ops.
+        :raises RuntimeError: On unexpected error.
         """
         try:
             # invalidate build if packing a charm and entrypoint changed

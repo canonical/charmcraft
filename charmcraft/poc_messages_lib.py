@@ -184,16 +184,17 @@ class _Printer:
 
         if spintext:
             # forced to overwrite the previous message to present the spinner
-            maybenewline = "\r"
+            maybe_cr = "\r"
         elif self.prv_msg is None or self.prv_msg.end_line:
             # first message, or previous message completed the line: start clean
-            maybenewline = ""
+            maybe_cr = ""
         elif self.prv_msg.ephemeral:
             # the last one was ephemeral, overwrite it
-            maybenewline = "\r"
+            maybe_cr = "\r"
         else:
             # complete the previous line, leaving that message ok
-            maybenewline = "\n"
+            maybe_cr = ""
+            print(flush=True, file=self.prv_msg.stream)
 
         # fill with spaces until the very end, on one hand to clear a possible previous message,
         # but also to always have the cursor at the very end
@@ -207,7 +208,7 @@ class _Printer:
                 text = text[-(len(text) % TERMINAL_WIDTH):]
         cleaner = " " * (usable - len(text) % TERMINAL_WIDTH)
 
-        line = maybenewline + text + spintext + cleaner
+        line = maybe_cr + text + spintext + cleaner
         print(line, end="", flush=True, file=message.stream)
         if message.end_line:
             assert not message.ephemeral
@@ -227,13 +228,14 @@ class _Printer:
         """Write a progress bar to the screen."""
         if self.prv_msg is None or self.prv_msg.end_line:
             # first message, or previous message completed the line: start clean
-            maybenewline = ""
+            maybe_cr = ""
         elif self.prv_msg.ephemeral:
             # the last one was ephemeral, overwrite it
-            maybenewline = "\r"
+            maybe_cr = "\r"
         else:
             # complete the previous line, leaving that message ok
-            maybenewline = "\n"
+            maybe_cr = ""
+            print(flush=True, file=self.prv_msg.stream)
 
         numerical_progress = f"{message.bar_progress}/{message.bar_total}"
         bar_percentage = min(message.bar_progress / message.bar_total, 1)
@@ -244,7 +246,7 @@ class _Printer:
         completed_width = math.floor(bar_width * min(bar_percentage, 100))
         completed_bar = "#" * completed_width
         empty_bar = " " * (bar_width - completed_width)
-        line = f"{maybenewline}{message.text} [{completed_bar}{empty_bar}] {numerical_progress}"
+        line = f"{maybe_cr}{message.text} [{completed_bar}{empty_bar}] {numerical_progress}"
         print(line, end="", flush=True, file=message.stream)
         self.unfinished_stream = message.stream
 
@@ -487,7 +489,8 @@ class Emitter:
 
         if self.mode == EmitterMode.VERBOSE or self.mode == EmitterMode.TRACE:
             # send the greeting to the screen before any further messages
-            self.printer.show(sys.stdout, self.greeting, use_timestamp=True, avoid_logging=True)
+            self.printer.show(
+                sys.stderr, self.greeting, use_timestamp=True, avoid_logging=True, end_line=True)
             # FIXME: also show here the log filepath
 
     def message(self, text: str, intermediate: bool = False) -> None:
@@ -501,7 +504,7 @@ class Emitter:
             use_timestamp = True
         else:
             use_timestamp = False
-        self.printer.show(sys.stdout, text, end_line=True, use_timestamp=use_timestamp)
+        self.printer.show(sys.stdout, text, use_timestamp=use_timestamp)
 
     def trace(self, text: str) -> None:
         """Trace/debug information.

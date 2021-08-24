@@ -21,18 +21,13 @@ import os
 import pathlib
 import subprocess
 import zipfile
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
-from charmcraft import linters, parts
+from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.deprecations import notify_deprecation
-from charmcraft.env import (
-    get_managed_environment_home_path,
-    get_managed_environment_project_path,
-    is_charmcraft_running_in_managed_mode,
-)
 from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
@@ -209,9 +204,14 @@ class Builder:
         :raises CommandError: on lifecycle exception.
         :raises RuntimeError: on unexpected lifecycle exception.
         """
-        logger.debug("Building charm in %r", str(self.buildpath))
-
         self._handle_deprecated_cli_arguments()
+
+        if env.is_charmcraft_running_in_managed_mode():
+            work_dir = env.get_managed_environment_home_path()
+        else:
+            work_dir = self.buildpath
+
+        logger.debug("Building charm in %r", str(work_dir))
 
         # add charm files to the prime filter
         self._set_prime_filter()
@@ -223,7 +223,7 @@ class Builder:
         logger.debug("Parts definition: %s", self._parts)
         lifecycle = parts.PartsLifecycle(
             self._parts,
-            work_dir=self.buildpath,
+            work_dir=work_dir,
             ignore_local_sources=["*.charm"],
         )
         lifecycle.run(Step.PRIME)
@@ -307,32 +307,18 @@ class Builder:
             if path.exists():
                 self._prime.append(fn)
 
-    def run(
-        self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
-    ) -> List[str]:
-        """Run build process.
+    def plan(
+        self, *, bases_indices: Optional[List[int]], destructive_mode: bool, managed_mode: bool
+    ) -> List[Tuple[BasesConfiguration, Base, int, int]]:
+        """Determine the build plan based on user inputs and host environment.
 
-        In managed-mode or destructive-mode, build for each bases configuration
-        which has a matching build-on to the host we are executing on.  Warn for
-        each base configuration that is incompatible.  Error if unable to
-        produce any builds for any bases configuration.
+        Provide a list of bases that are buildable and scoped according to user
+        configuration. Provide all relevant details including the applicable
+        bases configuration and the indices of the entries to build for.
 
-        :returns: List of charm files created.
+        :returns: List of Tuples (bases_config, build_on, bases_index, build_on_index).
         """
-        charms: List[str] = []
-
-        managed_mode = is_charmcraft_running_in_managed_mode()
-        if not managed_mode and not destructive_mode:
-            self.provider.ensure_provider_is_available()
-
-        if self.entrypoint:
-            notify_deprecation("dn04")
-
-        if self.requirement_paths:
-            notify_deprecation("dn05")
-
-        if not (self.charmdir / "charmcraft.yaml").exists():
-            notify_deprecation("dn02")
+        build_plan: List[Tuple[BasesConfiguration, Base, int, int]] = []
 
         for bases_index, bases_config in enumerate(self.config.bases):
             if bases_indices and bases_index not in bases_indices:
@@ -354,30 +340,7 @@ class Builder:
                         bases_index,
                         build_on_index,
                     )
-                    if managed_mode or destructive_mode:
-                        if self.shell:
-                            # Execute shell in lieu of build.
-                            launch_shell()
-                            break
-
-                        try:
-                            charm_name = self.build_charm(bases_config)
-                        except (CommandError, RuntimeError) as error:
-                            if self.debug:
-                                logger.error(str(error))
-                                launch_shell()
-                            raise
-
-                        if self.shell_after:
-                            launch_shell()
-                    else:
-                        charm_name = self.pack_charm_in_instance(
-                            bases_index=bases_index,
-                            build_on=build_on,
-                            build_on_index=build_on_index,
-                        )
-
-                    charms.append(charm_name)
+                    build_plan.append((bases_config, build_on, bases_index, build_on_index))
                     break
                 else:
                     logger.info(
@@ -392,10 +355,71 @@ class Builder:
                     bases_index,
                 )
 
-        if not charms and not self.shell:
+        return build_plan
+
+    def run(
+        self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
+    ) -> List[str]:
+        """Run build process.
+
+        In managed-mode or destructive-mode, build for each bases configuration
+        which has a matching build-on to the host we are executing on.  Warn for
+        each base configuration that is incompatible.  Error if unable to
+        produce any builds for any bases configuration.
+
+        :returns: List of charm files created.
+        """
+        charms: List[str] = []
+
+        managed_mode = env.is_charmcraft_running_in_managed_mode()
+        if not managed_mode and not destructive_mode:
+            self.provider.ensure_provider_is_available()
+
+        if self.entrypoint:
+            notify_deprecation("dn04")
+
+        if self.requirement_paths:
+            notify_deprecation("dn05")
+
+        if not (self.charmdir / "charmcraft.yaml").exists():
+            notify_deprecation("dn02")
+
+        build_plan = self.plan(
+            bases_indices=bases_indices,
+            destructive_mode=destructive_mode,
+            managed_mode=managed_mode,
+        )
+        if not build_plan:
             raise CommandError(
                 "No suitable 'build-on' environment found in any 'bases' configuration."
             )
+
+        charms = []
+        for bases_config, build_on, bases_index, build_on_index in build_plan:
+            logger.debug("Building for 'bases[%d][%d]'.", bases_index, build_on_index)
+            if managed_mode or destructive_mode:
+                if self.shell:
+                    # Execute shell in lieu of build.
+                    launch_shell()
+                    continue
+
+                try:
+                    charm_name = self.build_charm(bases_config)
+                except (CommandError, RuntimeError) as error:
+                    if self.debug:
+                        logger.error(str(error))
+                        launch_shell()
+                    raise
+
+                if self.shell_after:
+                    launch_shell()
+            else:
+                charm_name = self.pack_charm_in_instance(
+                    bases_index=bases_index,
+                    build_on=build_on,
+                    build_on_index=build_on_index,
+                )
+            charms.append(charm_name)
 
         return charms
 
@@ -412,10 +436,10 @@ class Builder:
         # project directory and can retrieve it when complete.
         cwd = pathlib.Path.cwd()
         if cwd == self.charmdir:
-            instance_output_dir = get_managed_environment_project_path()
+            instance_output_dir = env.get_managed_environment_project_path()
             pull_charm = False
         else:
-            instance_output_dir = get_managed_environment_home_path()
+            instance_output_dir = env.get_managed_environment_home_path()
             pull_charm = True
 
         cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]

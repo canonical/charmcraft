@@ -175,26 +175,32 @@ def test_clean_project_environments(mock_multipass, mock_path):
 
 
 def test_clean_project_environments_list_failure(mock_multipass, mock_path):
-    mock_multipass.list.side_effect = MultipassError(brief="fail")
+    error = MultipassError(brief="fail")
+    mock_multipass.list.side_effect = error
     provider = providers.MultipassProvider(multipass=mock_multipass)
 
-    with pytest.raises(CommandError, match="fail"):
+    with pytest.raises(CommandError, match="fail") as exc_info:
         provider.clean_project_environments(
             charm_name="charm",
             project_path=mock_path,
         )
 
+    assert exc_info.value.__cause__ is error
+
 
 def test_clean_project_environments_delete_failure(mock_multipass, mock_path):
+    error = MultipassError(brief="fail")
     mock_multipass.list.return_value = ["charmcraft-testcharm-445566-b-c-d"]
-    mock_multipass.delete.side_effect = MultipassError("fail")
+    mock_multipass.delete.side_effect = error
     provider = providers.MultipassProvider(multipass=mock_multipass)
 
-    with pytest.raises(CommandError, match="fail"):
+    with pytest.raises(CommandError, match="fail") as exc_info:
         provider.clean_project_environments(
             charm_name="testcharm",
             project_path=mock_path,
         )
+
+    assert exc_info.value.__cause__ is error
 
 
 def test_ensure_provider_is_available_ok_when_installed(mock_multipass_is_installed):
@@ -230,9 +236,10 @@ def test_ensure_provider_is_available_errors_when_user_declines(
 def test_ensure_provider_is_available_errors_when_multipass_install_fails(
     mock_confirm_with_user, mock_multipass_is_installed, mock_multipass_install
 ):
+    error = MultipassInstallationError("foo")
     mock_confirm_with_user.return_value = True
     mock_multipass_is_installed.return_value = False
-    mock_multipass_install.side_effect = MultipassInstallationError("foo")
+    mock_multipass_install.side_effect = error
     provider = providers.MultipassProvider()
 
     match = re.escape(
@@ -249,7 +256,7 @@ def test_ensure_provider_is_available_errors_when_multipass_install_fails(
             default=False,
         )
     ]
-    assert exc_info.value.__cause__ == mock_multipass_install.side_effect
+    assert exc_info.value.__cause__ is error
 
 
 def test_ensure_provider_is_available_errors_when_multipass_not_ready(
@@ -258,11 +265,12 @@ def test_ensure_provider_is_available_errors_when_multipass_not_ready(
     mock_multipass_install,
     mock_multipass_ensure_multipass_is_ready,
 ):
-    mock_confirm_with_user.return_value = True
-    mock_multipass_is_installed.return_value = True
-    mock_multipass_ensure_multipass_is_ready.side_effect = MultipassError(
+    error = MultipassError(
         brief="some error", details="some details", resolution="some resolution"
     )
+    mock_confirm_with_user.return_value = True
+    mock_multipass_is_installed.return_value = True
+    mock_multipass_ensure_multipass_is_ready.side_effect = error
     provider = providers.MultipassProvider()
 
     with pytest.raises(
@@ -271,7 +279,7 @@ def test_ensure_provider_is_available_errors_when_multipass_not_ready(
     ) as exc_info:
         provider.ensure_provider_is_available()
 
-    assert exc_info.value.__cause__ == mock_multipass_install.side_effect
+    assert exc_info.value.__cause__ is error
 
 
 def test_get_command_environment_minimal(monkeypatch):
@@ -464,14 +472,15 @@ def test_launched_environment_unmounts_and_stops_after_error(
     ]
 
 
-def test_launched_environment_launch_error(
+def test_launched_environment_launch_base_configuration_error(
     mock_buildd_base_configuration, mock_multipass_launch, tmp_path
 ):
-    mock_multipass_launch.side_effect = MultipassError(brief="fail")
+    error = bases.BaseConfigurationError(brief="fail")
+    mock_multipass_launch.side_effect = error
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.MultipassProvider()
 
-    with pytest.raises(CommandError, match="fail"):
+    with pytest.raises(CommandError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -480,16 +489,40 @@ def test_launched_environment_launch_error(
             build_on_index=2,
         ):
             pass
+
+    assert exc_info.value.__cause__ is error
+
+
+def test_launched_environment_launch_multipass_error(
+    mock_buildd_base_configuration, mock_multipass_launch, tmp_path
+):
+    error = MultipassError(brief="fail")
+    mock_multipass_launch.side_effect = error
+    base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
+    provider = providers.MultipassProvider()
+
+    with pytest.raises(CommandError, match="fail") as exc_info:
+        with provider.launched_environment(
+            charm_name="test-charm",
+            project_path=tmp_path,
+            base=base,
+            bases_index=1,
+            build_on_index=2,
+        ):
+            pass
+
+    assert exc_info.value.__cause__ is error
 
 
 def test_launched_environment_unmount_all_error(
     mock_buildd_base_configuration, mock_multipass_launch, tmp_path
 ):
-    mock_multipass_launch.return_value.unmount_all.side_effect = MultipassError(brief="fail")
+    error = MultipassError(brief="fail")
+    mock_multipass_launch.return_value.unmount_all.side_effect = error
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.MultipassProvider()
 
-    with pytest.raises(CommandError, match="fail"):
+    with pytest.raises(CommandError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -498,16 +531,19 @@ def test_launched_environment_unmount_all_error(
             build_on_index=2,
         ):
             pass
+
+    assert exc_info.value.__cause__ is error
 
 
 def test_launched_environment_stop_error(
     mock_buildd_base_configuration, mock_multipass_launch, tmp_path
 ):
-    mock_multipass_launch.return_value.stop.side_effect = MultipassError(brief="fail")
+    error = MultipassError(brief="fail")
+    mock_multipass_launch.return_value.stop.side_effect = error
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.MultipassProvider()
 
-    with pytest.raises(CommandError, match="fail"):
+    with pytest.raises(CommandError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -516,3 +552,5 @@ def test_launched_environment_stop_error(
             build_on_index=2,
         ):
             pass
+
+    assert exc_info.value.__cause__ is error

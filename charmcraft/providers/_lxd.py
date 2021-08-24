@@ -22,7 +22,7 @@ import pathlib
 import re
 from typing import List
 
-from craft_providers import lxd
+from craft_providers import bases, lxd
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
@@ -75,16 +75,24 @@ class LXDProvider(Provider):
 
         inode = str(project_path.stat().st_ino)
 
-        for name in self.lxc.list_names(project=self.lxd_project, remote=self.lxd_remote):
+        try:
+            names = self.lxc.list_names(project=self.lxd_project, remote=self.lxd_remote)
+        except lxd.LXDError as error:
+            raise CommandError(str(error)) from error
+
+        for name in names:
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
             if re.match(match_regex, name):
                 logger.debug("Deleting container %r.", name)
-                self.lxc.delete(
-                    instance_name=name,
-                    force=True,
-                    project=self.lxd_project,
-                    remote=self.lxd_remote,
-                )
+                try:
+                    self.lxc.delete(
+                        instance_name=name,
+                        force=True,
+                        project=self.lxd_project,
+                        remote=self.lxd_remote,
+                    )
+                except lxd.LXDError as error:
+                    raise CommandError(str(error)) from error
                 deleted.append(name)
             else:
                 logger.debug("Not deleting container %r.", name)
@@ -119,7 +127,7 @@ class LXDProvider(Provider):
         try:
             lxd.ensure_lxd_is_ready()
         except lxd.LXDError as error:
-            raise CommandError(str(error))
+            raise CommandError(str(error)) from error
 
     @classmethod
     def is_provider_available(cls) -> bool:
@@ -159,22 +167,29 @@ class LXDProvider(Provider):
         )
 
         environment = self.get_command_environment()
-        image_remote = lxd.configure_buildd_image_remote()
+        try:
+            image_remote = lxd.configure_buildd_image_remote()
+        except lxd.LXDError as error:
+            raise CommandError(str(error)) from error
+
         base_configuration = CharmcraftBuilddBaseConfiguration(
             alias=alias, environment=environment, hostname=instance_name
         )
-        instance = lxd.launch(
-            name=instance_name,
-            base_configuration=base_configuration,
-            image_name=base.channel,
-            image_remote=image_remote,
-            auto_clean=True,
-            auto_create_project=True,
-            map_user_uid=True,
-            use_snapshots=True,
-            project=self.lxd_project,
-            remote=self.lxd_remote,
-        )
+        try:
+            instance = lxd.launch(
+                name=instance_name,
+                base_configuration=base_configuration,
+                image_name=base.channel,
+                image_remote=image_remote,
+                auto_clean=True,
+                auto_create_project=True,
+                map_user_uid=True,
+                use_snapshots=True,
+                project=self.lxd_project,
+                remote=self.lxd_remote,
+            )
+        except (bases.BaseConfigurationError, lxd.LXDError) as error:
+            raise CommandError(str(error)) from error
 
         # Mount project.
         instance.mount(host_source=project_path, target=get_managed_environment_project_path())
@@ -183,5 +198,8 @@ class LXDProvider(Provider):
             yield instance
         finally:
             # Ensure to unmount everything and stop instance upon completion.
-            instance.unmount_all()
-            instance.stop()
+            try:
+                instance.unmount_all()
+                instance.stop()
+            except lxd.LXDError as error:
+                raise CommandError(str(error)) from error

@@ -21,6 +21,7 @@ import os
 import pathlib
 import zipfile
 from argparse import Namespace
+from typing import List
 
 from charmcraft import parts
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -81,6 +82,11 @@ class PackCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
+            "--debug",
+            action="store_true",
+            help="Launch shell in build environment upon failure",
+        )
+        parser.add_argument(
             "--destructive-mode",
             action="store_true",
             help=(
@@ -103,6 +109,16 @@ class PackCommand(BaseCommand):
                 "File(s) listing needed PyPI dependencies (can be used multiple "
                 "times); defaults to 'requirements.txt'"
             ),
+        )
+        parser.add_argument(
+            "--shell",
+            action="store_true",
+            help="Launch shell in build environment in lieu of packing",
+        )
+        parser.add_argument(
+            "--shell-after",
+            action="store_true",
+            help="Launch shell in build environment after packing",
         )
         parser.add_argument(
             "--bases-index",
@@ -129,19 +145,22 @@ class PackCommand(BaseCommand):
                 raise CommandError(
                     "The -r/--requirement option is valid only when packing a charm"
                 )
-            self._pack_bundle()
+            self._pack_bundle(parsed_args)
         else:
             raise CommandError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
 
-    def _pack_charm(self, parsed_args):
+    def _pack_charm(self, parsed_args) -> List[pathlib.Path]:
         """Pack a charm."""
         # adapt arguments to use the build infrastructure
         build_args = Namespace(
             **{
+                "debug": parsed_args.debug,
                 "destructive_mode": parsed_args.destructive_mode,
                 "from": self.config.project.dirpath,
                 "entrypoint": parsed_args.entrypoint,
                 "requirement": parsed_args.requirement,
+                "shell": parsed_args.shell,
+                "shell_after": parsed_args.shell_after,
                 "bases_indices": parsed_args.bases_index,
                 "force": parsed_args.force,
             }
@@ -152,10 +171,16 @@ class PackCommand(BaseCommand):
         args = validator.process(build_args)
         logger.debug("Working arguments: %s", args)
         builder = build.Builder(args, self.config)
-        builder.run(parsed_args.bases_index, destructive_mode=build_args.destructive_mode)
+        charms = builder.run(parsed_args.bases_index, destructive_mode=build_args.destructive_mode)
 
-    def _pack_bundle(self):
+        return [pathlib.Path(c).absolute() for c in charms]
+
+    def _pack_bundle(self, parsed_args) -> List[pathlib.Path]:
         """Pack a bundle."""
+        if parsed_args.shell:
+            build.launch_shell()
+            return []
+
         project = self.config.project
         config_parts = self.config.parts.copy()
         bundle_part = config_parts.setdefault("bundle", {})
@@ -192,7 +217,13 @@ class PackCommand(BaseCommand):
             work_dir=project.dirpath / build.BUILD_DIRNAME,
             ignore_local_sources=[bundle_name + ".zip"],
         )
-        lifecycle.run(Step.PRIME)
+        try:
+            lifecycle.run(Step.PRIME)
+        except (RuntimeError, CommandError) as error:
+            if parsed_args.debug:
+                logger.error(str(error))
+                build.launch_shell()
+            raise
 
         # pack everything
         create_manifest(lifecycle.prime_dir, project.started_at, None, [])
@@ -200,3 +231,8 @@ class PackCommand(BaseCommand):
         build_zip(zipname, lifecycle.prime_dir)
 
         logger.info("Created %r.", str(zipname))
+
+        if parsed_args.shell_after:
+            build.launch_shell()
+
+        return [zipname]

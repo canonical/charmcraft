@@ -19,6 +19,7 @@ import logging
 import pathlib
 import zipfile
 from argparse import ArgumentParser, Namespace
+from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -30,14 +31,35 @@ from charmcraft.commands.pack import PackCommand, build_zip
 from charmcraft.config import Project
 from charmcraft.utils import SingleOptionEnsurer, useful_filepath
 
-# empty namespace
-noargs = Namespace(
-    entrypoint=None,
-    requirement=None,
-    bases_index=[],
+
+def get_namespace(
+    *,
+    bases_index=None,
+    debug=False,
     destructive_mode=False,
+    entrypoint=None,
     force=None,
-)
+    requirement=None,
+    shell=False,
+    shell_after=False,
+):
+    if bases_index is None:
+        bases_index = []
+
+    return Namespace(
+        bases_index=bases_index,
+        debug=debug,
+        destructive_mode=destructive_mode,
+        entrypoint=entrypoint,
+        force=force,
+        requirement=requirement,
+        shell=shell,
+        shell_after=shell_after,
+    )
+
+
+# empty namespace
+noargs = get_namespace()
 
 
 @pytest.fixture
@@ -54,6 +76,18 @@ def bundle_yaml(tmp_path):
         return encoded
 
     return func
+
+
+@pytest.fixture
+def mock_parts():
+    with patch("charmcraft.commands.pack.parts") as mock_parts:
+        yield mock_parts
+
+
+@pytest.fixture
+def mock_launch_shell():
+    with patch("charmcraft.commands.build.launch_shell") as mock_shell:
+        yield mock_shell
 
 
 # -- tests for the project type decissor
@@ -76,7 +110,7 @@ def test_resolve_bundle_type(config):
 
     with patch.object(cmd, "_pack_bundle") as mock:
         cmd.run(noargs)
-    mock.assert_called_with()
+    mock.assert_called_with(noargs)
 
 
 def test_resolve_no_config_packs_charm(config, tmp_path):
@@ -182,6 +216,52 @@ def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
             tmp_path / "bundle.yaml"
         )
     )
+
+
+def test_bundle_debug_no_error(
+    tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell
+):
+    bundle_yaml(name="testbundle")
+    bundle_config.set(type="bundle")
+    (tmp_path / "README.md").write_text("test readme")
+
+    PackCommand("group", bundle_config).run(get_namespace(debug=True))
+
+    assert mock_launch_shell.mock_calls == []
+
+
+def test_bundle_debug_with_error(
+    tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell
+):
+    mock_parts.PartsLifecycle.return_value.run.side_effect = CommandError("fail")
+    bundle_yaml(name="testbundle")
+    bundle_config.set(type="bundle")
+    (tmp_path / "README.md").write_text("test readme")
+
+    with pytest.raises(CommandError):
+        PackCommand("group", bundle_config).run(get_namespace(debug=True))
+
+    assert mock_launch_shell.mock_calls == [mock.call()]
+
+
+def test_bundle_shell(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell):
+    bundle_yaml(name="testbundle")
+    bundle_config.set(type="bundle")
+    (tmp_path / "README.md").write_text("test readme")
+
+    PackCommand("group", bundle_config).run(get_namespace(shell=True))
+
+    assert mock_launch_shell.mock_calls == [mock.call()]
+
+
+def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell):
+    bundle_yaml(name="testbundle")
+    bundle_config.set(type="bundle")
+    (tmp_path / "README.md").write_text("test readme")
+
+    PackCommand("group", bundle_config).run(get_namespace(shell_after=True))
+
+    assert mock_launch_shell.mock_calls == [mock.call()]
 
 
 # -- tests for get paths helper
@@ -437,11 +517,14 @@ def test_charm_parameters_entrypoint(config):
 def test_charm_parameters_validator(config, tmp_path):
     """Check that build.Builder is properly called."""
     args = Namespace(
-        destructive_mode=True,
-        requirement="test-reqs",
-        entrypoint="test-epoint",
         bases_index=[],
+        debug=True,
+        destructive_mode=True,
+        entrypoint="test-epoint",
         force=True,
+        requirement="test-reqs",
+        shell=True,
+        shell_after=True,
     )
     config.set(
         type="charm",
@@ -454,12 +537,15 @@ def test_charm_parameters_validator(config, tmp_path):
     validator_instance_mock.process.assert_called_with(
         Namespace(
             **{
-                "destructive_mode": True,
-                "from": tmp_path,
-                "requirement": "test-reqs",
-                "entrypoint": "test-epoint",
                 "bases_indices": [],
+                "debug": True,
+                "destructive_mode": True,
+                "entrypoint": "test-epoint",
+                "from": tmp_path,
                 "force": True,
+                "requirement": "test-reqs",
+                "shell": True,
+                "shell_after": True,
             }
         )
     )

@@ -104,6 +104,14 @@ def format_charm_file_name(
     return "_".join([charm_name, _format_bases_config(bases_config)]) + ".charm"
 
 
+def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
+    """Launch a user shell for debugging environment.
+
+    :param cwd: Working directory to start user in.
+    """
+    subprocess.run(["bash"], check=False, cwd=cwd)
+
+
 def polite_exec(cmd):
     """Execute a command, only showing output if error."""
     logger.debug("Running external command %s", cmd)
@@ -140,6 +148,9 @@ class Builder:
         self.entrypoint = args["entrypoint"]
         self.requirement_paths = args["requirement"]
         self.force_packing = args["force"]
+        self.debug = args["debug"]
+        self.shell = args["shell"]
+        self.shell_after = args["shell_after"]
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.config = config
@@ -196,6 +207,9 @@ class Builder:
         :param bases_config: Bases configuration to use for build.
 
         :returns: File name of charm.
+
+        :raises CommandError: on lifecycle exception.
+        :raises RuntimeError: on unexpected lifecycle exception.
         """
         self._handle_deprecated_cli_arguments()
 
@@ -391,7 +405,21 @@ class Builder:
         for bases_config, build_on, bases_index, build_on_index in build_plan:
             logger.debug("Building for 'bases[%d][%d]'.", bases_index, build_on_index)
             if managed_mode or destructive_mode:
-                charm_name = self.build_charm(bases_config)
+                if self.shell:
+                    # Execute shell in lieu of build.
+                    launch_shell()
+                    continue
+
+                try:
+                    charm_name = self.build_charm(bases_config)
+                except (CommandError, RuntimeError) as error:
+                    if self.debug:
+                        logger.error(str(error))
+                        launch_shell()
+                    raise
+
+                if self.shell_after:
+                    launch_shell()
             else:
                 charm_name = self.pack_charm_in_instance(
                     bases_index=bases_index,
@@ -427,6 +455,15 @@ class Builder:
             cmd.append("--verbose")
         elif message_handler.mode == message_handler.QUIET:
             cmd.append("--quiet")
+
+        if self.debug:
+            cmd.append("--debug")
+
+        if self.shell:
+            cmd.append("--shell")
+
+        if self.shell_after:
+            cmd.append("--shell-after")
 
         logger.info(f"Packing charm {charm_name!r}...")
         with self.provider.launched_environment(
@@ -486,6 +523,9 @@ class Validator:
         "requirement",
         "bases_indices",
         "force",
+        "debug",
+        "shell",
+        "shell_after",
     ]
 
     def __init__(self, config: Config):
@@ -518,6 +558,10 @@ class Validator:
                 raise CommandError(
                     f"No bases configuration found for specified index '{bases_index}'."
                 )
+
+    def validate_debug(self, value):
+        """Validate the value (just convert to bool to make None explicit)."""
+        return bool(value)
 
     def validate_destructive_mode(self, destructive_mode):
         """Validate that destructive mode option is valid."""
@@ -573,6 +617,14 @@ class Validator:
             if not fpath.exists():
                 raise CommandError("the requirements file was not found: {!r}".format(str(fpath)))
         return filepaths
+
+    def validate_shell(self, value):
+        """Validate the value (just convert to bool to make None explicit)."""
+        return bool(value)
+
+    def validate_shell_after(self, value):
+        """Validate the value (just convert to bool to make None explicit)."""
+        return bool(value)
 
     def validate_force(self, value):
         """Validate the value (just convert to bool to make None explicit)."""

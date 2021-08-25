@@ -173,7 +173,7 @@ class _Printer:
         self.spinner = _Spinner(self)
         self.spinner.start()
 
-    def _write_out(self, message: MessageInfo, *, spintext: str = "") -> None:
+    def _write_line(self, message: MessageInfo, *, spintext: str = "") -> None:
         """Write a simple line message to the screen."""
         # prepare the text with (maybe) the timestamp
         if message.use_timestamp:
@@ -218,12 +218,6 @@ class _Printer:
         else:
             self.unfinished_stream = message.stream
 
-    def _write_log(self, message: MessageInfo) -> None:
-        """Write the line message to the log file."""
-        # prepare the text with (maybe) the timestamp
-        timestamp_str = message.created_at.isoformat(sep=" ", timespec="milliseconds")
-        self.log.write(f"{timestamp_str} {message.text}\n")
-
     def _write_bar(self, message: MessageInfo) -> None:
         """Write a progress bar to the screen."""
         if self.prv_msg is None or self.prv_msg.end_line:
@@ -259,7 +253,7 @@ class _Printer:
         if msg.bar_progress is None:
             # regular message, send it to the spinner and write it
             self.spinner.supervise(msg)
-            self._write_out(msg)
+            self._write_line(msg)
         else:
             # progress bar, send None to the spinner (as it's not a "spinneable" message)
             # and write it
@@ -267,8 +261,14 @@ class _Printer:
             self._write_bar(msg)
         self.prv_msg = msg
 
+    def _log(self, message: MessageInfo) -> None:
+        """Write the line message to the log file."""
+        # prepare the text with (maybe) the timestamp
+        timestamp_str = message.created_at.isoformat(sep=" ", timespec="milliseconds")
+        self.log.write(f"{timestamp_str} {message.text}\n")
+
     def spin(self, msg: MessageInfo, spintext: str) -> None:
-        self._write_out(msg, spintext=spintext)
+        self._write_line(msg, spintext=spintext)
 
     def show(
         self,
@@ -289,7 +289,7 @@ class _Printer:
         )
         self._show(msg)
         if not avoid_logging:
-            self._write_log(msg)
+            self._log(msg)
 
     def progress_bar(
         self,

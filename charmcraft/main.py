@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class ArgumentParsingError(Exception):
-    """Flag an argument parsing error: just show the message."""
+    """Exception used when an argument parsing error is found."""
 
 
 class HelpCommand(BaseCommand):
@@ -354,7 +354,7 @@ def main(argv=None):
         dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
         retcode = dispatcher.run()
     except ArgumentParsingError as err:
-        print(err)
+        print(err, file=sys.stderr)  # to stderr, as argparse normally does
         message_handler.ended_ok()
         retcode = 1
     except CommandError as err:

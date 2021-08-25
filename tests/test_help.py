@@ -362,7 +362,7 @@ def test_tool_exec_no_arguments_help():
             dispatcher.run()
     error = cm.value
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert sorted(x[0] for x in args[1]) == [
@@ -396,7 +396,7 @@ def test_tool_exec_full_help(sysargv, caplog):
         retcode = dispatcher.run()
     assert retcode is None
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert sorted(x[0] for x in args[1]) == [
@@ -456,7 +456,7 @@ def test_tool_exec_command_dash_help_simple(help_option, caplog):
         retcode = dispatcher.run()
     assert retcode is None
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
@@ -486,7 +486,7 @@ def test_tool_exec_command_dash_help_reverse(help_option, caplog):
         retcode = dispatcher.run()
     assert retcode is None
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
@@ -521,7 +521,7 @@ def test_tool_exec_command_dash_help_missing_params(help_option, caplog):
         retcode = dispatcher.run()
     assert retcode is None
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
@@ -594,7 +594,7 @@ def test_tool_exec_help_command_on_command_ok(caplog):
         retcode = dispatcher.run()
     assert retcode is None
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == VersionCommand
@@ -632,7 +632,7 @@ def test_tool_exec_help_command_on_command_complex(caplog):
         retcode = dispatcher.run()
     assert retcode is None
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert args[1].__class__ == cmd
@@ -664,7 +664,7 @@ def test_tool_exec_help_command_on_command_wrong():
             dispatcher.run()
     error = cm.value
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     assert mock.call_args[0] == ("charmcraft", "no such command 'wrongcommand'")
 
     # check the result of the full help builder is what is shown
@@ -681,7 +681,7 @@ def test_tool_exec_help_command_all(caplog):
         retcode = dispatcher.run()
     assert retcode is None
 
-    # check the given information to the builder
+    # check the given information to the help text builder
     args = mock.call_args[0]
     assert args[0] == COMMAND_GROUPS
     assert sorted(x[0] for x in args[1]) == [

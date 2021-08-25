@@ -441,6 +441,20 @@ def test_main_interrupted():
     assert mh_mock.ended_interrupt.call_count == 1
 
 
+def test_main_controlled_arguments_error(capsys):
+    """The execution failed because an argument parsing error."""
+    with patch("charmcraft.main.message_handler") as mh_mock:
+        with patch("charmcraft.main.Dispatcher.run") as d_mock:
+            d_mock.side_effect = ArgumentParsingError("test error")
+            retcode = main(["charmcraft", "version"])
+
+    assert retcode == 1
+    mh_mock.ended_ok.assert_called_once_with()
+
+    out, err = capsys.readouterr()
+    assert not out
+    assert err == "test error\n"
+
 # --- Tests for the bootstrap version message
 
 

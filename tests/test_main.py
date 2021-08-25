@@ -455,6 +455,7 @@ def test_main_controlled_arguments_error(capsys):
     assert not out
     assert err == "test error\n"
 
+
 # --- Tests for the bootstrap version message
 
 

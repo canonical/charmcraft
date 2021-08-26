@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -182,15 +182,6 @@ def test_ended_commanderror_regular(caplog, create_message_handler):
 
     # also it shown the error to the user
     assert [expected_msg] == [rec.message for rec in caplog.records]
-
-
-def test_ended_commanderror_argparsing(capsys, create_message_handler):
-    """Reports just the message to stdout."""
-    mh = create_message_handler()
-    mh.init(mh.NORMAL)
-    mh.ended_cmderror(CommandError("test controlled error", argsparsing=True))
-    captured = capsys.readouterr()
-    assert captured.out == "test controlled error\n"
 
 
 def test_ended_crash_while_normal(caplog, create_message_handler):

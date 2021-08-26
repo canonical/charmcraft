@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -117,11 +117,7 @@ class _MessageHandler:
 
     def ended_cmderror(self, err):
         """Report the (expected) problem and (maybe) logfile location."""
-        if err.argsparsing:
-            print(err)
-        else:
-            msg = "{} (full execution logs in {!r})".format(err, str(self._log_filepath))
-            logger.error(msg)
+        logger.error("%s (full execution logs in %r)", err, str(self._log_filepath))
 
     def ended_crash(self, err):
         """Report the internal error and logfile location.

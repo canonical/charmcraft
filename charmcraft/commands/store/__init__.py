@@ -26,6 +26,7 @@ import textwrap
 import zipfile
 from collections import namedtuple
 from operator import attrgetter
+from craft_store.errors import NotLoggedIn
 
 import yaml
 from humanize import naturalsize
@@ -127,8 +128,11 @@ class LogoutCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        store.logout()
-        logger.info("Charmhub token cleared.")
+        try:
+            store.logout()
+            logger.info("Charmhub token cleared.")
+        except NotLoggedIn as error:
+            logger.warning(str(error))
 
 
 class WhoamiCommand(BaseCommand):

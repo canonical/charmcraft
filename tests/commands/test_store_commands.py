@@ -24,6 +24,7 @@ import sys
 import zipfile
 from argparse import Namespace, ArgumentParser
 from unittest.mock import patch, call, MagicMock, ANY
+from craft_store.errors import NotLoggedIn
 
 import dateutil.parser
 import pytest
@@ -189,6 +190,19 @@ def test_logout(caplog, store_mock, config):
         call.logout(),
     ]
     assert ["Charmhub token cleared."] == [rec.message for rec in caplog.records]
+
+
+def test_logout_but_not_logged_in(caplog, store_mock, config):
+    """Simple logout case."""
+    caplog.set_level(logging.WARNING, logger="charmcraft.commands")
+    store_mock.logout.side_effect = NotLoggedIn("credentials not found")
+
+    LogoutCommand(config).run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.logout(),
+    ]
+    assert ["Not logged in: credentials not found."] == [rec.message for rec in caplog.records]
 
 
 def test_whoami(caplog, store_mock, config):

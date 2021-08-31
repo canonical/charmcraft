@@ -96,6 +96,15 @@ def test_load_optional_charmcraft_missing(tmp_path):
     assert not config.project.config_provided
 
 
+def test_load_optional_charmcraft_bad_directory(tmp_path):
+    """Specify a missing directory."""
+    missing_directory = tmp_path / "missing"
+    config = load(missing_directory)
+    assert config.type is None
+    assert config.project.dirpath == missing_directory
+    assert not config.project.config_provided
+
+
 def test_load_specific_directory_resolved(create_config, monkeypatch):
     """Ensure that the given directory is resolved to always show the whole path."""
     tmp_path = create_config(

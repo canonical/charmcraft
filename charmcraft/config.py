@@ -276,7 +276,10 @@ class BasesConfiguration(
 class Project(ModelConfigDefaults):
     """Internal-only project configuration."""
 
-    dirpath: pydantic.DirectoryPath
+    # do not verify that `dirpath` is a valid existing directory; it's used externally as a dir
+    # to load the config itself (so we're really do the validation there), and we want to support
+    # the case of a missing directory (and still load a default config structure)
+    dirpath: pathlib.Path
     config_provided: bool = False
 
     # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
@@ -422,7 +425,7 @@ class Config(ModelConfigDefaults, validate_all=False):
         return schema
 
 
-def load(dirpath):
+def load(dirpath: Optional[str]) -> Config:
     """Load the config from charmcraft.yaml in the indicated directory."""
     if dirpath is None:
         if is_charmcraft_running_in_managed_mode():

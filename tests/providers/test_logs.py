@@ -29,15 +29,16 @@ def mock_logger():
 
 
 @pytest.fixture()
-def mock_mkstemp():
-    with mock.patch("charmcraft.providers._logs.tempfile.mkstemp") as mock_mkstemp:
-        yield mock_mkstemp
+def mock_namedtemporaryfile(tmp_path):
+    with mock.patch(
+        "charmcraft.providers._logs.tempfile.NamedTemporaryFile"
+    ) as mock_namedtemporaryfile:
+        mock_namedtemporaryfile.return_value.name = str(tmp_path / "fake.file")
+        yield mock_namedtemporaryfile
 
 
-def test_capture_logs_from_instance(mock_instance, mock_logger, mock_mkstemp, tmp_path):
-    fake_log = tmp_path / "x.log"
-    mock_mkstemp.return_value = (None, str(fake_log))
-
+def test_capture_logs_from_instance(mock_instance, mock_logger, mock_namedtemporaryfile, tmp_path):
+    fake_log = pathlib.Path(mock_namedtemporaryfile.return_value.name)
     fake_log_data = "some\nlog data\nhere"
     fake_log.write_text(fake_log_data)
 
@@ -49,11 +50,16 @@ def test_capture_logs_from_instance(mock_instance, mock_logger, mock_mkstemp, tm
     assert mock_logger.mock_calls == [
         mock.call.debug("Logs captured from managed instance:\n%s", fake_log_data)
     ]
+    assert mock_namedtemporaryfile.mock_calls == [
+        mock.call(delete=False, prefix="charmcraft-"),
+        mock.call().close(),
+    ]
 
 
-def test_capture_logs_from_instance_not_found(mock_instance, mock_logger, mock_mkstemp, tmp_path):
-    fake_log = tmp_path / "x.log"
-    mock_mkstemp.return_value = (None, str(fake_log))
+def test_capture_logs_from_instance_not_found(
+    mock_instance, mock_logger, mock_namedtemporaryfile, tmp_path
+):
+    fake_log = pathlib.Path(mock_namedtemporaryfile.return_value.name)
     mock_instance.pull_file.side_effect = FileNotFoundError()
 
     providers.capture_logs_from_instance(mock_instance)

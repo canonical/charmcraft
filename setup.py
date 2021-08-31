@@ -62,6 +62,8 @@ extras_require = {
 
 version_path = Path("charmcraft/version.py")
 version_backup = Path("charmcraft/version.py~")
+if version_backup.exists():
+    version_backup.unlink()
 version_path.rename(version_backup)
 try:
     with version_path.open("wt", encoding="utf8") as fh:
@@ -102,4 +104,6 @@ try:
     )
 
 finally:
+    if version_path.exists():
+        version_path.unlink()
     version_backup.rename(version_path)

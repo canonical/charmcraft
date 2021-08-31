@@ -18,7 +18,6 @@
 
 import logging
 import os
-import pwd
 import re
 from datetime import date
 
@@ -90,8 +89,12 @@ class InitCommand(BaseCommand):
 
         if args.author is None:
             try:
+                # Not all platforms support pwd, so we do a late import here and handle
+                # the potential import error.
+                import pwd
+
                 gecos = pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]
-            except KeyError:
+            except (KeyError, ImportError):
                 # no info for the user
                 gecos = None
             if not gecos:

@@ -16,10 +16,17 @@
 
 """Buildd-related for charmcraft."""
 
+import sys
 from typing import Optional
 
 from craft_providers import Executor, bases
 from craft_providers.actions import snap_installer
+
+from charmcraft.env import (
+    get_managed_environment_snap_channel,
+    get_managed_environment_snap_channel_default,
+)
+
 
 BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
     "18.04": bases.BuilddBaseAlias.BIONIC,
@@ -39,6 +46,45 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
     """
 
     compatibility_tag: str = f"charmcraft-{bases.BuilddBase.compatibility_tag}.0"
+
+    def _setup_charmcraft(self, *, executor: Executor) -> None:
+        """Install Charmcraft in target environment.
+
+        On Linux, the default behavior is to inject the host snap into the target
+        environment.
+
+        On other platforms, the Charmcraft snap is installed from the Snap Store.
+
+        When installing the snap from the Store, we check if the user specifies a
+        channel, using CHARMCRAFT_INSTALL_SNAP_CHANNEL=<channel>.  If unspecified,
+        we use the default determined by get_managed_environment_snap_channel_default().
+        On Linux, the user may specify this environment variable to force Charmcraft
+        to install the snap from the Store rather than inject the host snap.
+
+        :raises BaseConfigurationError: on error.
+        """
+        snap_channel = get_managed_environment_snap_channel()
+        if snap_channel is None and sys.platform != "linux":
+            snap_channel = get_managed_environment_snap_channel_default()
+
+        if snap_channel:
+            try:
+                snap_installer.install_from_store(
+                    executor=executor, snap_name="charmcraft", channel=snap_channel, classic=True
+                )
+            except snap_installer.SnapInstallationError as error:
+                raise bases.BaseConfigurationError(
+                    brief="Failed to install Charmcraft snap from store into target environment.",
+                ) from error
+        else:
+            try:
+                snap_installer.inject_from_host(
+                    executor=executor, snap_name="charmcraft", classic=True
+                )
+            except snap_installer.SnapInstallationError as error:
+                raise bases.BaseConfigurationError(
+                    brief="Failed to inject host Charmcraft snap into target environment.",
+                ) from error
 
     def setup(
         self,
@@ -65,11 +111,4 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
         """
         super().setup(executor=executor, retry_wait=retry_wait, timeout=timeout)
 
-        try:
-            snap_installer.inject_from_host(
-                executor=executor, snap_name="charmcraft", classic=True
-            )
-        except snap_installer.SnapInstallationError as error:
-            raise bases.BaseConfigurationError(
-                brief="Failed to inject host Charmcraft snap into target environment.",
-            ) from error
+        self._setup_charmcraft(executor=executor)

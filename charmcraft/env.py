@@ -21,6 +21,7 @@ import distutils.util
 import os
 import pathlib
 import sys
+from typing import Optional
 
 from charmcraft.cmdbase import CommandError
 
@@ -38,6 +39,25 @@ def get_managed_environment_log_path():
 def get_managed_environment_project_path():
     """Path for project when running in managed environment."""
     return get_managed_environment_home_path() / "project"
+
+
+def get_managed_environment_snap_channel_default() -> str:
+    """Default channel to use when installing Charmcraft snap from Snap Store.
+
+    May someday be updated to use a track known to be compatible with the running
+    version.  For now, we default to default track's stable.
+
+    :returns: Channel string.
+    """
+    return "stable"
+
+
+def get_managed_environment_snap_channel() -> Optional[str]:
+    """User-specified channel to use when installing Charmcraft snap from Snap Store.
+
+    :returns: Channel string if specified, else None.
+    """
+    return os.getenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL")
 
 
 def is_charmcraft_running_from_snap():

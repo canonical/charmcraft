@@ -30,14 +30,41 @@ def mock_inject():
         yield mock_inject
 
 
+@pytest.fixture
+def mock_install_from_store():
+    with mock.patch("craft_providers.actions.snap_installer.install_from_store") as mock_install:
+        yield mock_install
+
+
 @pytest.mark.parametrize("alias", [bases.BuilddBaseAlias.BIONIC, bases.BuilddBaseAlias.FOCAL])
-def test_base_configuration_setup(mock_instance, mock_inject, monkeypatch, alias):
+def test_base_configuration_setup_inject_from_host(
+    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias
+):
 
     config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
     config.setup(executor=mock_instance)
 
     assert mock_inject.mock_calls == [
         call(executor=mock_instance, snap_name="charmcraft", classic=True)
+    ]
+    assert mock_install_from_store.mock_calls == []
+
+    assert config.compatibility_tag == "charmcraft-buildd-base-v0.0"
+
+
+@pytest.mark.parametrize("alias", [bases.BuilddBaseAlias.BIONIC, bases.BuilddBaseAlias.FOCAL])
+def test_base_configuration_setup_from_store(
+    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias
+):
+    channel = "test-track/test-channel"
+    monkeypatch.setenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", channel)
+
+    config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
+    config.setup(executor=mock_instance)
+
+    assert mock_inject.mock_calls == []
+    assert mock_install_from_store.mock_calls == [
+        call(executor=mock_instance, snap_name="charmcraft", channel=channel, classic=True)
     ]
 
     assert config.compatibility_tag == "charmcraft-buildd-base-v0.0"
@@ -51,6 +78,24 @@ def test_base_configuration_setup_snap_injection_error(mock_instance, mock_injec
     with pytest.raises(
         bases.BaseConfigurationError,
         match=r"Failed to inject host Charmcraft snap into target environment.",
+    ) as exc_info:
+        config.setup(executor=mock_instance)
+
+    assert exc_info.value.__cause__ is not None
+
+
+def test_base_configuration_setup_snap_install_from_store_error(
+    mock_instance, mock_install_from_store, monkeypatch
+):
+    channel = "test-track/test-channel"
+    monkeypatch.setenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", channel)
+    alias = bases.BuilddBaseAlias.FOCAL
+    config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
+    mock_install_from_store.side_effect = snap_installer.SnapInstallationError(brief="foo error")
+
+    with pytest.raises(
+        bases.BaseConfigurationError,
+        match=r"Failed to install Charmcraft snap from store into target environment.",
     ) as exc_info:
         config.setup(executor=mock_instance)
 

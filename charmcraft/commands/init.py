@@ -133,7 +133,7 @@ class InitCommand(BaseCommand):
                 fh.write(out)
                 for todo in _todo_rx.findall(out):
                     todos.append((template_name, todo))
-                if template_name in executables:
+                if template_name in executables and os.name == "posix":
                     make_executable(fh)
                     logger.debug("  made executable")
         logger.info("Charm operator package file and directory tree initialized.")

@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import os
-import pwd
 import subprocess
 import sys
 from argparse import Namespace
@@ -67,10 +66,10 @@ def test_all_the_files(tmp_path, config):
         "requirements.txt",
         "run_tests",
         "src",
-        "src/charm.py",
+        os.path.join("src", "charm.py"),
         "tests",
-        "tests/__init__.py",
-        "tests/test_charm.py",
+        os.path.join("tests", "__init__.py"),
+        os.path.join("tests", "test_charm.py"),
     ]
 
 
@@ -98,10 +97,13 @@ def test_bad_name(config):
 def test_executables(tmp_path, config):
     cmd = InitCommand("group", config)
     cmd.run(Namespace(name="my-charm", author="홍길동", series="k8s", force=False))
-    assert (tmp_path / "run_tests").stat().st_mode & S_IXALL == S_IXALL
-    assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
+
+    if os.name == "posix":
+        assert (tmp_path / "run_tests").stat().st_mode & S_IXALL == S_IXALL
+        assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_tests(tmp_path, config):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
     # virtualenv libs and bins (if any), as they need them, but we're not creating a
@@ -123,8 +125,11 @@ def test_tests(tmp_path, config):
     subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_gecos_missing_in_getpwuid_response(config):
     """No GECOS field in getpwuid response."""
+    import pwd
+
     cmd = InitCommand("group", config)
 
     with patch("pwd.getpwuid") as mock_pwd:
@@ -135,6 +140,7 @@ def test_gecos_missing_in_getpwuid_response(config):
             cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_gecos_missing_user_information(config):
     """No information at all for the requested user."""
     cmd = InitCommand("group", config)

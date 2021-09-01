@@ -130,7 +130,7 @@ def test_gecos_missing_in_getpwuid_response(config):
     with patch("pwd.getpwuid") as mock_pwd:
         # return a fack passwd struct with an empty gecos (5th parameter)
         mock_pwd.return_value = pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))
-        msg = "Author not given, and nothing in GECOS field"
+        msg = "Unable to automatically determine author's name, specify it with --author"
         with pytest.raises(CommandError, match=msg):
             cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))
 
@@ -141,6 +141,6 @@ def test_gecos_missing_user_information(config):
 
     with patch("pwd.getpwuid") as mock_pwd:
         mock_pwd.side_effect = KeyError("no user")
-        msg = "Author not given, and nothing in GECOS field"
+        msg = "Unable to automatically determine author's name, specify it with --author"
         with pytest.raises(CommandError, match=msg):
             cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))

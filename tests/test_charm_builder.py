@@ -26,7 +26,7 @@ from unittest.mock import call, patch
 import pytest
 
 from charmcraft import charm_builder
-from charmcraft.charm_builder import VENV_DIRNAME, CharmBuilder
+from charmcraft.charm_builder import VENV_DIRNAME, CharmBuilder, _process_run
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import BUILD_DIRNAME, DISPATCH_CONTENT, DISPATCH_FILENAME
 from charmcraft.metadata import CHARM_METADATA
@@ -593,7 +593,6 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
         with patch("charmcraft.charm_builder._process_run") as mock:
-            mock.return_value = 0
             builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
@@ -634,7 +633,6 @@ def test_build_dependencies_needs_system(tmp_path, config):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 0
         with patch("charmcraft.charm_builder._process_run") as mock:
-            mock.return_value = 0
             builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
@@ -669,7 +667,6 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
         with patch("charmcraft.charm_builder._process_run") as mock:
-            mock.return_value = 0
             builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
@@ -705,46 +702,6 @@ def test_build_dependencies_virtualenv_none(tmp_path):
         builder.handle_dependencies()
 
     mock_run.assert_not_called()
-
-
-def test_build_dependencies_virtualenv_error_basicpip(tmp_path):
-    """Process is properly interrupted if using pip fails."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
-        entrypoint=pathlib.Path("whatever"),
-        requirements=["something"],
-    )
-
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        mock.return_value = -7
-        with pytest.raises(CommandError, match="problems using pip"):
-            builder.handle_dependencies()
-
-
-def test_build_dependencies_virtualenv_error_installing(tmp_path):
-    """Process is properly interrupted if virtualenv creation fails."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
-        entrypoint=pathlib.Path("whatever"),
-        requirements=["something"],
-    )
-
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        mock.side_effect = [0, -7]
-        with pytest.raises(CommandError, match="problems installing dependencies"):
-            builder.handle_dependencies()
 
 
 def test_builder_without_jujuignore(tmp_path):
@@ -833,3 +790,58 @@ def test_builder_arguments_full(tmp_path):
             with pytest.raises(SystemExit) as raised:
                 charm_builder.main()
         assert raised.value.code == 42
+
+
+# --- subprocess runner tests
+
+
+def test_processrun_base(caplog):
+    """Basic execution."""
+    caplog.set_level(logging.ERROR, logger="charmcraft")
+
+    cmd = ["echo", "HELO"]
+    _process_run(cmd)
+    assert not caplog.records
+
+
+def test_processrun_stdout_logged(caplog):
+    """The standard output is logged in debug."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    cmd = ["echo", "HELO"]
+    _process_run(cmd)
+    expected = [
+        "Running external command ['echo', 'HELO']",
+        "   :: HELO",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_processrun_stderr_logged(caplog):
+    """The standard error is logged in debug."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    cmd = [sys.executable, "-c", "import sys; print('weird, huh?', file=sys.stderr)"]
+    _process_run(cmd)
+    expected = [
+        "Running external command " + str(cmd),
+        "   :: weird, huh?",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_processrun_failed():
+    """It's logged in error if cmd fails."""
+    cmd = [sys.executable, "-c", "exit(3)"]
+    with pytest.raises(CommandError) as cm:
+        _process_run(cmd)
+    assert str(cm.value) == f"Subprocess command {cmd} execution failed with retcode 3"
+
+
+def test_processrun_crashed(caplog, tmp_path):
+    """It's logged in error if cmd fails."""
+    nonexistent = tmp_path / "whatever"
+    cmd = [str(nonexistent)]
+    with pytest.raises(CommandError) as cm:
+        _process_run(cmd)
+    assert str(cm.value) == f"Subprocess execution crashed for command {cmd}"

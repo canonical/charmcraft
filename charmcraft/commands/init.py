@@ -26,6 +26,16 @@ from typing import Optional
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import make_executable, get_templates_environment
 
+try:
+    import ctypes
+except ImportError:
+    ctypes = None
+
+try:
+    import pwd
+except ImportError:
+    pwd = None
+
 logger = logging.getLogger(__name__)
 
 _overview = """
@@ -62,8 +72,6 @@ example tests with a harness to run them.
 
 def _get_users_full_name_gecos() -> Optional[str]:
     """Get user's full name from Gecos (/etc/passwd)."""
-    import pwd
-
     try:
         return pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]
     except KeyError:
@@ -72,8 +80,6 @@ def _get_users_full_name_gecos() -> Optional[str]:
 
 def _get_users_full_name_windows() -> str:
     """Get user's full name on Windows."""
-    import ctypes
-
     name_display = 3
 
     size = ctypes.pointer(ctypes.c_ulong(0))

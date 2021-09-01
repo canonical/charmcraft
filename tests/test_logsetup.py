@@ -25,7 +25,13 @@ from charmcraft.logsetup import _MessageHandler
 
 
 @pytest.fixture
-def create_message_handler(tmp_path):
+def mock_os_close():
+    with patch("charmcraft.logsetup.os.close") as mock_close:
+        yield mock_close
+
+
+@pytest.fixture
+def create_message_handler(mock_os_close, tmp_path):
     """Helper to create a message handler.
 
     Always in a temp directory, maybe with patched modes.
@@ -34,7 +40,7 @@ def create_message_handler(tmp_path):
     patchers = []
 
     def factory(modes=None):
-        p = patch("tempfile.mkstemp", lambda prefix: ("fd", str(temp_log_file)))
+        p = patch("tempfile.mkstemp", lambda prefix: (54321, str(temp_log_file)))
         p.start()
         patchers.append(p)
 

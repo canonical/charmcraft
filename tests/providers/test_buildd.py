@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import sys
 from unittest import mock
 from unittest.mock import call
 
@@ -40,6 +41,7 @@ def mock_install_from_store():
 def test_base_configuration_setup_inject_from_host(
     mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias
 ):
+    monkeypatch.setattr(sys, "platform", "linux")
 
     config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
     config.setup(executor=mock_instance)
@@ -70,7 +72,26 @@ def test_base_configuration_setup_from_store(
     assert config.compatibility_tag == "charmcraft-buildd-base-v0.0"
 
 
-def test_base_configuration_setup_snap_injection_error(mock_instance, mock_inject):
+@pytest.mark.parametrize("alias", [bases.BuilddBaseAlias.BIONIC, bases.BuilddBaseAlias.FOCAL])
+def test_base_configuration_setup_from_store_default_for_windows(
+    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias
+):
+    monkeypatch.setattr(sys, "platform", "win32")
+
+    config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
+    config.setup(executor=mock_instance)
+
+    assert mock_inject.mock_calls == []
+    assert mock_install_from_store.mock_calls == [
+        call(executor=mock_instance, snap_name="charmcraft", channel="stable", classic=True)
+    ]
+
+    assert config.compatibility_tag == "charmcraft-buildd-base-v0.0"
+
+
+def test_base_configuration_setup_snap_injection_error(mock_instance, mock_inject, monkeypatch):
+    monkeypatch.setattr(sys, "platform", "linux")
+
     alias = bases.BuilddBaseAlias.FOCAL
     config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
     mock_inject.side_effect = snap_installer.SnapInstallationError(brief="foo error")

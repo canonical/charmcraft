@@ -347,6 +347,7 @@ def test_get_os_platform_windows():
 @pytest.mark.parametrize(
     "platform_arch,deb_arch",
     [
+        ("AMD64", "amd64"),
         ("aarch64", "arm64"),
         ("armv7l", "armhf"),
         ("ppc", "powerpc"),

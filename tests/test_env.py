@@ -123,14 +123,16 @@ def test_is_charmcraft_running_in_supported_environment_linux(monkeypatch, as_sn
     assert env.is_charmcraft_running_in_supported_environment() == as_snap
 
 
-@pytest.mark.parametrize(
-    "platform",
-    ["windows", "darwin"],
-)
-def test_is_charmcraft_running_in_supported_environment_non_linux(monkeypatch, platform):
-    monkeypatch.setattr(sys, "platform", platform)
+def test_is_charmcraft_running_in_supported_environment_osx(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "darwin")
 
     assert env.is_charmcraft_running_in_supported_environment() is False
+
+
+def test_is_charmcraft_running_in_supported_environment_windows(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+
+    assert env.is_charmcraft_running_in_supported_environment() is True
 
 
 @pytest.mark.parametrize(

@@ -48,6 +48,7 @@ ARCH_TRANSLATIONS = {
     "ppc": "powerpc",
     "ppc64le": "ppc64el",
     "x86_64": "amd64",
+    "AMD64": "amd64",  # Windows support
 }
 
 

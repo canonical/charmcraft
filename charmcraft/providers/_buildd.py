@@ -54,7 +54,8 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
 
         When installing the snap from the Store, we check if the user specifies a
         channel, using CHARMCRAFT_INSTALL_SNAP_CHANNEL=<channel>.  If unspecified,
-        we use the default determined by get_managed_environment_snap_channel_default().
+        we use the "stable" channel on the default track.
+
         On Linux, the user may specify this environment variable to force Charmcraft
         to install the snap from the Store rather than inject the host snap.
 

@@ -79,7 +79,12 @@ def is_charmcraft_running_in_managed_mode():
 
 def is_charmcraft_running_in_supported_environment():
     """Check if Charmcraft is running in a supported environment."""
-    return sys.platform == "linux" and is_charmcraft_running_from_snap()
+    if sys.platform == "linux":
+        return is_charmcraft_running_from_snap()
+    elif sys.platform == "win32":
+        return True
+
+    return False
 
 
 def ensure_charmcraft_environment_is_supported():

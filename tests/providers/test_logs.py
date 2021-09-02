@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import logging
 import pathlib
 from unittest import mock
 
@@ -22,22 +23,18 @@ import pytest
 from charmcraft import providers
 
 
-@pytest.fixture
-def mock_logger():
-    with mock.patch("charmcraft.providers._logs.logger") as mock_logger:
-        yield mock_logger
-
-
 @pytest.fixture()
-def mock_mkstemp():
-    with mock.patch("charmcraft.providers._logs.tempfile.mkstemp") as mock_mkstemp:
-        yield mock_mkstemp
+def mock_namedtemporaryfile(tmp_path):
+    with mock.patch(
+        "charmcraft.providers._logs.tempfile.NamedTemporaryFile"
+    ) as mock_namedtemporaryfile:
+        mock_namedtemporaryfile.return_value.name = str(tmp_path / "fake.file")
+        yield mock_namedtemporaryfile
 
 
-def test_capture_logs_from_instance(mock_instance, mock_logger, mock_mkstemp, tmp_path):
-    fake_log = tmp_path / "x.log"
-    mock_mkstemp.return_value = (None, str(fake_log))
-
+def test_capture_logs_from_instance(caplog, mock_instance, mock_namedtemporaryfile, tmp_path):
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    fake_log = pathlib.Path(mock_namedtemporaryfile.return_value.name)
     fake_log_data = "some\nlog data\nhere"
     fake_log.write_text(fake_log_data)
 
@@ -46,14 +43,24 @@ def test_capture_logs_from_instance(mock_instance, mock_logger, mock_mkstemp, tm
     assert mock_instance.mock_calls == [
         mock.call.pull_file(source=pathlib.Path("/tmp/charmcraft.log"), destination=fake_log),
     ]
-    assert mock_logger.mock_calls == [
-        mock.call.debug("Logs captured from managed instance:\n%s", fake_log_data)
+    expected = [
+        "Logs captured from managed instance:",
+        ":: some",
+        ":: log data",
+        ":: here",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+    assert mock_namedtemporaryfile.mock_calls == [
+        mock.call(delete=False, prefix="charmcraft-"),
+        mock.call().close(),
     ]
 
 
-def test_capture_logs_from_instance_not_found(mock_instance, mock_logger, mock_mkstemp, tmp_path):
-    fake_log = tmp_path / "x.log"
-    mock_mkstemp.return_value = (None, str(fake_log))
+def test_capture_logs_from_instance_not_found(
+    caplog, mock_instance, mock_namedtemporaryfile, tmp_path
+):
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    fake_log = pathlib.Path(mock_namedtemporaryfile.return_value.name)
     mock_instance.pull_file.side_effect = FileNotFoundError()
 
     providers.capture_logs_from_instance(mock_instance)
@@ -61,4 +68,4 @@ def test_capture_logs_from_instance_not_found(mock_instance, mock_logger, mock_m
     assert mock_instance.mock_calls == [
         mock.call.pull_file(source=pathlib.Path("/tmp/charmcraft.log"), destination=fake_log),
     ]
-    assert mock_logger.mock_calls == [mock.call.debug("No logs found in instance.")]
+    assert ["No logs found in instance."] == [rec.message for rec in caplog.records]

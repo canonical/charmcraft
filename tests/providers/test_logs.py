@@ -32,9 +32,7 @@ def mock_namedtemporaryfile(tmp_path):
         yield mock_namedtemporaryfile
 
 
-def test_capture_logs_from_instance(
-    caplog, mock_instance, mock_namedtemporaryfile, tmp_path
-):
+def test_capture_logs_from_instance(caplog, mock_instance, mock_namedtemporaryfile, tmp_path):
     caplog.set_level(logging.DEBUG, logger="charmcraft")
     fake_log = pathlib.Path(mock_namedtemporaryfile.return_value.name)
     fake_log_data = "some\nlog data\nhere"

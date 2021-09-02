@@ -16,6 +16,7 @@
 
 """Infrastructure for the 'init' command."""
 
+import ctypes
 import logging
 import os
 import re
@@ -25,11 +26,6 @@ from typing import Optional
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import make_executable, get_templates_environment
-
-try:
-    import ctypes
-except ImportError:
-    ctypes = None
 
 try:
     import pwd

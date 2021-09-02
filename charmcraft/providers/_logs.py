@@ -44,7 +44,8 @@ def capture_logs_from_instance(instance: Executor) -> None:
         logger.debug("No logs found in instance.")
         return
 
-    logs = local_log_path.read_text()
+    logger.debug("Logs captured from managed instance:")
+    with open(local_log_path, "rt", encoding="utf8") as fh:
+        for line in fh:
+            logger.debug(":: %s", line.rstrip())
     local_log_path.unlink()
-
-    logger.debug("Logs captured from managed instance:\n%s", logs)

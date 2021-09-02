@@ -86,7 +86,9 @@ class _MessageHandler:
         if managed_mode:
             self._log_filepath = str(get_managed_environment_log_path())
         else:
-            _, self._log_filepath = tempfile.mkstemp(prefix="charmcraft-log-")
+            fd, self._log_filepath = tempfile.mkstemp(prefix="charmcraft-log-")
+            # Logger will re-open as needed.
+            os.close(fd)
 
         file_handler = logging.FileHandler(self._log_filepath, mode="w")
 
@@ -105,6 +107,7 @@ class _MessageHandler:
 
     def ended_ok(self):
         """Cleanup after successful execution."""
+        logging.shutdown()
         os.unlink(self._log_filepath)
 
     def ended_interrupt(self):
@@ -113,6 +116,7 @@ class _MessageHandler:
             logger.exception("Interrupted.")
         else:
             logger.error("Interrupted.")
+        logging.shutdown()
         os.unlink(self._log_filepath)
 
     def ended_cmderror(self, err):

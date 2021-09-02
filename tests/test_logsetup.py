@@ -16,7 +16,6 @@
 
 import logging
 import os
-from unittest.mock import patch
 
 import pytest
 
@@ -25,26 +24,16 @@ from charmcraft.logsetup import _MessageHandler
 
 
 @pytest.fixture
-def create_message_handler(tmp_path):
+def create_message_handler():
     """Helper to create a message handler.
 
     Always in a temp directory, maybe with patched modes.
     """
-    temp_log_file = tmp_path / "test.log"
-    patchers = []
 
     def factory(modes=None):
-        p = patch("tempfile.mkstemp", lambda prefix: ("fd", str(temp_log_file)))
-        p.start()
-        patchers.append(p)
-
         return _MessageHandler()
 
     yield factory
-
-    # cleanup
-    for p in patchers:
-        p.stop()
 
 
 # --- Tests for the MessageHandler

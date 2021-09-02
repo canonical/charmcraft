@@ -79,6 +79,8 @@ def _get_author_from_user() -> str:
     """
     if pwd is not None:
         author = _get_users_full_name_gecos()
+    else:
+        author = None
 
     if not author:
         raise CommandError(

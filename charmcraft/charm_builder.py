@@ -224,9 +224,7 @@ class CharmBuilder:
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
-            retcode = _process_run(["pip3", "--version"])
-            if retcode:
-                raise CommandError("problems using pip")
+            _process_run(["pip3", "--version"])
 
             venvpath = self.buildpath / VENV_DIRNAME
             cmd = [
@@ -239,9 +237,7 @@ class CharmBuilder:
                 cmd.append("--system")
             for reqspath in self.requirement_paths:
                 cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
-            retcode = _process_run(cmd)
-            if retcode:
-                raise CommandError("problems installing dependencies")
+            _process_run(cmd)
 
 
 def _pip_needs_system():
@@ -258,7 +254,11 @@ def _pip_needs_system():
     return proc.returncode == 0
 
 
-def _process_run(cmd) -> int:
+def _process_run(cmd: List[str]) -> None:
+    """Run an external command logging its output.
+
+    :raises CommandError: if execution crashes or ends with return code not zero.
+    """
     logger.debug("Running external command %s", cmd)
     try:
         proc = subprocess.Popen(
@@ -268,17 +268,14 @@ def _process_run(cmd) -> int:
             universal_newlines=True,
         )
     except Exception as err:
-        logger.error("Executing %s crashed with %r", cmd, err)
-        return 1
+        raise CommandError(f"Subprocess execution crashed for command {cmd}") from err
 
     for line in proc.stdout:
         logger.debug("   :: %s", line.rstrip())
     retcode = proc.wait()
 
     if retcode:
-        logger.error("Executing %s failed with return code %d", cmd, retcode)
-
-    return retcode
+        raise CommandError(f"Subprocess command {cmd} execution failed with retcode {retcode}")
 
 
 def _parse_arguments() -> argparse.Namespace:

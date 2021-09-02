@@ -19,7 +19,6 @@ import os
 import pathlib
 import re
 import subprocess
-import sys
 import zipfile
 from collections import namedtuple
 from textwrap import dedent
@@ -40,7 +39,6 @@ from charmcraft.commands.build import (
     Validator,
     format_charm_file_name,
     launch_shell,
-    polite_exec,
     relativise,
 )
 from charmcraft.config import Base, BasesConfiguration, load
@@ -486,68 +484,6 @@ def test_validator_force(config, inp_value, out_value):
     validator = Validator(config)
     result = validator.validate_force(inp_value)
     assert result == out_value
-
-
-# --- Polite Executor tests
-
-
-def test_politeexec_base(caplog):
-    """Basic execution."""
-    caplog.set_level(logging.ERROR, logger="charmcraft")
-
-    cmd = ["echo", "HELO"]
-    retcode = polite_exec(cmd)
-    assert retcode == 0
-    assert not caplog.records
-
-
-def test_politeexec_stdout_logged(caplog):
-    """The standard output is logged in debug."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-
-    cmd = ["echo", "HELO"]
-    polite_exec(cmd)
-    expected = [
-        "Running external command ['echo', 'HELO']",
-        ":: HELO",
-    ]
-    assert expected == [rec.message for rec in caplog.records]
-
-
-def test_politeexec_stderr_logged(caplog):
-    """The standard error is logged in debug."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-
-    cmd = [sys.executable, "-c", "import sys; print('weird, huh?', file=sys.stderr)"]
-    polite_exec(cmd)
-    expected = [
-        "Running external command " + str(cmd),
-        ":: weird, huh?",
-    ]
-    assert expected == [rec.message for rec in caplog.records]
-
-
-def test_politeexec_failed(caplog):
-    """It's logged in error if cmd fails."""
-    caplog.set_level(logging.ERROR, logger="charmcraft")
-
-    cmd = [sys.executable, "-c", "exit(3)"]
-    retcode = polite_exec(cmd)
-    assert retcode == 3
-    expected_msg = "Executing {} failed with return code 3".format(cmd)
-    assert any(expected_msg in rec.message for rec in caplog.records)
-
-
-def test_politeexec_crashed(caplog, tmp_path):
-    """It's logged in error if cmd fails."""
-    caplog.set_level(logging.ERROR, logger="charmcraft")
-    nonexistent = tmp_path / "whatever"
-
-    cmd = [str(nonexistent)]
-    retcode = polite_exec(cmd)
-    assert retcode == 1
-    expected_msg = "Executing {} crashed with FileNotFoundError".format(cmd)
-    assert any(expected_msg in rec.message for rec in caplog.records)
 
 
 # --- (real) build tests

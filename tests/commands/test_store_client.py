@@ -19,6 +19,7 @@
 import json
 import logging
 import os
+import sys
 from http.cookiejar import MozillaCookieJar, Cookie
 from unittest.mock import patch
 
@@ -248,6 +249,7 @@ def test_authholder_credentials_save_reallysave(auth_holder):
     assert mock.call_count == 1
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_authholder_credentials_save_createsdir(auth_holder, tmp_path):
     """Save creates the directory if not there."""
     weird_filepath = tmp_path / "not_created_dir" / "deep" / "credentials"

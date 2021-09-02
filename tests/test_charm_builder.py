@@ -63,6 +63,7 @@ def test_build_generics_simple_files(tmp_path):
     assert linked_entrypoint == built_entrypoint
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_simple_dir(tmp_path):
     """Check transferred any directory, with proper permissions."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -238,11 +239,13 @@ def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
             assert p1.stat().st_mtime == pytest.approx(p2.stat().st_mtime)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree(tmp_path, caplog):
     """Manages ok a deep tree, including internal ignores."""
     _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=True)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree_vagrant(tmp_path, caplog):
     """Manages ok a deep tree, including internal ignores, when hardlinks aren't allowed."""
     with patch("os.link") as mock_link:
@@ -250,6 +253,7 @@ def test_build_generics_tree_vagrant(tmp_path, caplog):
         _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree_xdev(tmp_path, caplog):
     """Manages ok a deep tree, including internal ignores, when hardlinks can't be done."""
     with patch("os.link") as mock_link:
@@ -257,6 +261,7 @@ def test_build_generics_tree_xdev(tmp_path, caplog):
         _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_file(tmp_path):
     """Respects a symlinked file."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -283,6 +288,7 @@ def test_build_generics_symlink_file(tmp_path):
     assert real_link == "crazycharm.py"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_dir(tmp_path):
     """Respects a symlinked dir."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -316,6 +322,7 @@ def test_build_generics_symlink_dir(tmp_path):
     assert (build_dir / "thelink" / "sanity check").exists()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_deep(tmp_path):
     """Correctly re-links a symlink across deep dirs."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -349,6 +356,7 @@ def test_build_generics_symlink_deep(tmp_path):
     assert real_link == "../dir1/file.real"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_file_outside(tmp_path, caplog):
     """Ignores (with warning) a symlink pointing a file outside projects dir."""
     caplog.set_level(logging.WARNING)
@@ -380,6 +388,7 @@ def test_build_generics_symlink_file_outside(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_directory_outside(tmp_path, caplog):
     """Ignores (with warning) a symlink pointing a dir outside projects dir."""
     caplog.set_level(logging.WARNING)
@@ -411,6 +420,7 @@ def test_build_generics_symlink_directory_outside(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
     """Ignores whatever is not a regular file, symlink or dir."""
     caplog.set_level(logging.DEBUG)
@@ -442,6 +452,7 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
     assert expected in [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
     """The dispatcher script is properly built."""
     metadata = tmp_path / CHARM_METADATA
@@ -464,6 +475,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path="somestuff.py")
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_respected(tmp_path):
     """The already included dispatcher script is left untouched."""
     metadata = tmp_path / CHARM_METADATA
@@ -486,6 +498,7 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path):
         assert fh.read() == b"abc"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     """The mandatory classic hooks are implemented ok if not present."""
     metadata = tmp_path / CHARM_METADATA
@@ -511,6 +524,7 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     assert real_link == os.path.join("..", DISPATCH_FILENAME)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
     """The already included mandatory classic hooks are left untouched."""
     metadata = tmp_path / CHARM_METADATA
@@ -538,6 +552,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
         assert fh.read() == b"abc"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog):
     """Hooks that are just a symlink to the entrypoint are replaced."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
@@ -795,6 +810,7 @@ def test_builder_arguments_full(tmp_path):
 # --- subprocess runner tests
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_processrun_base(caplog):
     """Basic execution."""
     caplog.set_level(logging.ERROR, logger="charmcraft")
@@ -804,6 +820,7 @@ def test_processrun_base(caplog):
     assert not caplog.records
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_processrun_stdout_logged(caplog):
     """The standard output is logged in debug."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")

@@ -18,6 +18,7 @@ import datetime
 import logging
 import os
 import pathlib
+import sys
 from textwrap import dedent
 from unittest.mock import patch
 
@@ -122,6 +123,7 @@ def test_load_specific_directory_resolved(create_config, monkeypatch):
     assert config.project.dirpath == tmp_path
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_load_specific_directory_expanded(create_config, monkeypatch):
     """Ensure that the given directory is user-expanded."""
     tmp_path = create_config(

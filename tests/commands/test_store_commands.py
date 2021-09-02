@@ -20,6 +20,7 @@ import datetime
 import hashlib
 import logging
 import pathlib
+import sys
 import zipfile
 from argparse import Namespace, ArgumentParser
 from unittest.mock import patch, call, MagicMock, ANY
@@ -341,6 +342,7 @@ def _build_zip_with_yaml(zippath, filename, *, content=None, raw_yaml=None):
         zf.writestr(filename, raw_yaml)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_get_name_bad_zip(tmp_path):
     """Get the name from a bad zip file."""
     bad_zip = tmp_path / "badstuff.zip"
@@ -361,6 +363,7 @@ def test_get_name_charm_ok(tmp_path):
     assert name == test_name
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
     "yaml_content",
     [
@@ -391,6 +394,7 @@ def test_get_name_bundle_ok(tmp_path):
     assert name == test_name
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
     "yaml_content",
     [
@@ -411,6 +415,7 @@ def test_get_name_bundle_bad_data(tmp_path, yaml_content):
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_get_name_nor_charm_nor_bundle(tmp_path):
     """Get the name from a zip that has no metadata.yaml nor bundle.yaml."""
     bad_zip = tmp_path / "badstuff.zip"
@@ -1583,6 +1588,7 @@ def test_status_with_base_in_none(caplog, store_mock, config):
 # -- tests for create library command
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch, config):
     """Happy path with result from the Store."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
@@ -1624,6 +1630,7 @@ def test_createlib_name_from_metadata_problem(store_mock, config):
         )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_createlib_name_contains_dash(caplog, store_mock, tmp_path, monkeypatch, config):
     """'-' is valid in charm names but can't be imported"""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
@@ -1674,6 +1681,7 @@ def test_createlib_invalid_name(lib_name, config):
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_createlib_path_already_there(tmp_path, monkeypatch, config):
     """The intended-to-be-created library is already there."""
     monkeypatch.chdir(tmp_path)
@@ -1690,6 +1698,7 @@ def test_createlib_path_already_there(tmp_path, monkeypatch, config):
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cleanup, config):
     """Disk error when trying to write the new lib (bad permissions, name too long, whatever)."""
     lib_dir = tmp_path / "lib" / "charms" / "test_charm_name" / "v0"
@@ -1765,6 +1774,7 @@ def test_publishlib_contains_dash(caplog, store_mock, tmp_path, monkeypatch, con
     assert [expected] == [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_publishlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
     """Publish all the libraries found in disk."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
@@ -1814,6 +1824,7 @@ def test_publishlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
     assert all(e in records for e in expected)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_publishlib_not_found(caplog, store_mock, tmp_path, monkeypatch, config):
     """The indicated library is not found."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
@@ -2123,6 +2134,7 @@ def test_getlibinfo_success_simple(tmp_path, monkeypatch):
     assert lib_data.charm_name == "testcharm"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_getlibinfo_success_content(tmp_path, monkeypatch):
     """Check that content and its hash are ok."""
     monkeypatch.chdir(tmp_path)
@@ -2157,6 +2169,7 @@ def test_getlibinfo_bad_name(name):
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
     "path",
     [
@@ -2227,6 +2240,7 @@ def test_getlibinfo_missing_library_from_path():
     assert lib_data.charm_name == "testcharm"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_getlibinfo_malformed_metadata_field(tmp_path, monkeypatch):
     """Some metadata field is not really valid."""
     monkeypatch.chdir(tmp_path)
@@ -2534,6 +2548,7 @@ def test_fetchlib_simple_updated(caplog, store_mock, tmp_path, monkeypatch, conf
     assert saved_file.read_text() == new_lib_content
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_fetchlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
     """Update all the libraries found in disk."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
@@ -3001,6 +3016,7 @@ def test_uploadresource_filepath_call_ok(caplog, store_mock, config, tmp_path):
     assert test_resource.exists()  # provided by the user, don't touch it
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_uploadresource_image_call_already_uploaded(caplog, store_mock, config):
     """Upload an oci-image resource, the image itself already being in the registry."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
@@ -3085,6 +3101,7 @@ def test_uploadresource_image_call_already_uploaded(caplog, store_mock, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_uploadresource_image_call_upload_from_local(caplog, store_mock, config):
     """Upload an oci-image resource, the image is upload from local to Canonical's registry."""
     caplog.set_level(logging.DEBUG, logger="charmcraft.commands")

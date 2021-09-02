@@ -93,7 +93,7 @@ def _get_author_from_user() -> str:
     """
     if sys.platform == "win32":
         author = _get_users_full_name_windows()
-    else:
+    elif pwd is not None:
         author = _get_users_full_name_gecos()
 
     if not author:

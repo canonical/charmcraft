@@ -21,6 +21,7 @@ import gzip
 import hashlib
 import io
 import json
+import sys
 import tarfile
 import logging
 from unittest.mock import patch
@@ -999,6 +1000,7 @@ def test_imagehandler_uploadblob_duplicated(caplog, tmp_path):
     assert expected == [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_imagehandler_uploadfromlocal_complete(caplog, tmp_path, responses, monkeypatch):
     """Complete process of uploading a local image."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
@@ -1128,6 +1130,7 @@ def test_imagehandler_uploadfromlocal_not_found_locally(caplog, monkeypatch):
     assert expected == [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_imagehandler_uploadfromlocal_no_config(caplog, tmp_path, monkeypatch):
     """Particular case of a manifest without config."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")

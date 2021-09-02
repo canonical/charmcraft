@@ -41,12 +41,6 @@ def test_get_managed_environment_project_path():
     assert dirpath == pathlib.Path("/root/project")
 
 
-def test_get_managed_environment_snap_channel_default():
-    channel = env.get_managed_environment_snap_channel_default()
-
-    assert channel == "stable"
-
-
 def test_get_managed_environment_snap_channel_none(monkeypatch):
     monkeypatch.delenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", raising=False)
 

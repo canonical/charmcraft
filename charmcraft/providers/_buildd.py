@@ -22,10 +22,7 @@ from typing import Optional
 from craft_providers import Executor, bases
 from craft_providers.actions import snap_installer
 
-from charmcraft.env import (
-    get_managed_environment_snap_channel,
-    get_managed_environment_snap_channel_default,
-)
+from charmcraft.env import get_managed_environment_snap_channel
 
 
 BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
@@ -65,7 +62,7 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
         """
         snap_channel = get_managed_environment_snap_channel()
         if snap_channel is None and sys.platform != "linux":
-            snap_channel = get_managed_environment_snap_channel_default()
+            snap_channel = "stable"
 
         if snap_channel:
             try:

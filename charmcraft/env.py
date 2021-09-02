@@ -41,17 +41,6 @@ def get_managed_environment_project_path():
     return get_managed_environment_home_path() / "project"
 
 
-def get_managed_environment_snap_channel_default() -> str:
-    """Channel to use when installing Charmcraft snap from Snap Store.
-
-    May someday be updated to use a track known to be compatible with the running
-    version.  For now, we default to default track's stable.
-
-    :returns: Channel string.
-    """
-    return "stable"
-
-
 def get_managed_environment_snap_channel() -> Optional[str]:
     """User-specified channel to use when installing Charmcraft snap from Snap Store.
 

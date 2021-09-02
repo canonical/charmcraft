@@ -188,8 +188,7 @@ class CharmBuilder:
             )
             with dispatch_path.open("wt", encoding="utf8") as fh:
                 fh.write(dispatch_content)
-                if os.name == "posix":
-                    make_executable(fh)
+                make_executable(fh)
 
         # bunch of symlinks, to support old juju: verify that any of the already included hooks
         # in the directory is not linking directly to the entrypoint, and also check all the

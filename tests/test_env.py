@@ -41,6 +41,18 @@ def test_get_managed_environment_project_path():
     assert dirpath == pathlib.Path("/root/project")
 
 
+def test_get_managed_environment_snap_channel_none(monkeypatch):
+    monkeypatch.delenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", raising=False)
+
+    assert env.get_managed_environment_snap_channel() is None
+
+
+def test_get_managed_environment_snap_channel(monkeypatch):
+    monkeypatch.setenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", "latest/edge")
+
+    assert env.get_managed_environment_snap_channel() == "latest/edge"
+
+
 @pytest.mark.parametrize(
     "snap_name,snap,result",
     [

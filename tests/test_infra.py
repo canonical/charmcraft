@@ -19,6 +19,7 @@ import itertools
 import os
 import re
 import subprocess
+import sys
 from unittest.mock import patch
 
 import black
@@ -108,6 +109,7 @@ def test_ensure_copyright():
         pytest.fail(msg, pytrace=False)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_setup_version():
     """Verify that setup.py is picking up the version correctly."""
     cmd = [os.path.abspath("setup.py"), "--version"]

@@ -17,6 +17,7 @@
 import logging
 import os
 import pathlib
+import sys
 from textwrap import dedent
 from unittest.mock import call, patch
 
@@ -55,6 +56,7 @@ def mock_is_charmcraft_running_in_managed_mode():
         yield mock_managed
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_make_executable_read_bits(tmp_path):
     pth = tmp_path / "test"
     pth.touch(mode=0o640)
@@ -117,6 +119,7 @@ def test_load_yaml_corrupted_format(tmp_path, caplog):
     assert "ParserError" in logged
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_load_yaml_file_problem(tmp_path, caplog):
     caplog.set_level(logging.ERROR, logger="charmcraft.commands")
 
@@ -197,6 +200,7 @@ def test_usefulfilepath_pathlib(tmp_path):
     assert isinstance(path, pathlib.Path)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_usefulfilepath_home_expanded(tmp_path, monkeypatch):
     """Home-expand the indicated path."""
     fake_home = tmp_path / "homedir"
@@ -216,6 +220,7 @@ def test_usefulfilepath_missing():
     assert str(cm.value) == "Cannot access 'not_really_there.txt'."
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_usefulfilepath_inaccessible(tmp_path):
     """The indicated path is not readable."""
     test_file = tmp_path / "testfile.bin"

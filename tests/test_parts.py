@@ -26,6 +26,9 @@ from craft_parts import Step, plugins
 from charmcraft import charm_builder, parts
 
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+
+
 class TestCharmPlugin:
     """Ensure plugin methods return expected data."""
 

@@ -29,13 +29,6 @@ from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
 
 
 @pytest.fixture
-def mock_ctypes():
-    with patch("charmcraft.commands.init.ctypes") as mock_ctypes:
-        mock_ctypes.create_unicode_buffer.return_value.value = "Test Windows Author Name"
-        yield mock_ctypes
-
-
-@pytest.fixture
 def mock_pwd():
     with patch("charmcraft.commands.init.pwd", autospec=True) as mock_pwd:
         mock_pwd.getpwuid.return_value.pw_gecos = "Test Gecos Author Name,,,"
@@ -115,15 +108,6 @@ def test_no_author_gecos(tmp_path, config, mock_pwd):
 
     text = (tmp_path / "src" / "charm.py").read_text()
     assert "Test Gecos Author Name" in text
-
-
-@pytest.mark.skipif(sys.platform != "win32", reason="mocking for windows only")
-def test_no_author_windows(tmp_path, config, mock_ctypes):
-    cmd = InitCommand("group", config)
-    cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))
-
-    text = (tmp_path / "src" / "charm.py").read_text()
-    assert "Test Windows Author Name" in text
 
 
 def test_executables(tmp_path, config):

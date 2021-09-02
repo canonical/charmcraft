@@ -16,11 +16,9 @@
 
 """Infrastructure for the 'init' command."""
 
-import ctypes
 import logging
 import os
 import re
-import sys
 from datetime import date
 from typing import Optional
 
@@ -74,31 +72,17 @@ def _get_users_full_name_gecos() -> Optional[str]:
         return None
 
 
-def _get_users_full_name_windows() -> str:
-    """Get user's full name on Windows."""
-    name_display = 3
-
-    size = ctypes.pointer(ctypes.c_ulong(0))
-    ctypes.windll.secur32.GetUserNameExW(name_display, None, size)
-
-    name_buffer = ctypes.create_unicode_buffer(size.contents.value)
-    ctypes.windll.secur32.GetUserNameExW(name_display, name_buffer, size)
-    return name_buffer.value
-
-
 def _get_author_from_user() -> str:
     """Get the author's name by querying system's user information.
 
     :raises CommandError: If unable to determine author.
     """
-    if sys.platform == "win32":
-        author = _get_users_full_name_windows()
-    elif pwd is not None:
+    if pwd is not None:
         author = _get_users_full_name_gecos()
 
     if not author:
         raise CommandError(
-            "Unable to automatically determine author's name, " "specify it with --author"
+            "Unable to automatically determine author's name, specify it with --author"
         )
 
     return author

@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import os
-import pwd
 import subprocess
 import sys
 from argparse import Namespace
@@ -27,6 +26,13 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
 from charmcraft.utils import S_IXALL
 from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
+
+
+@pytest.fixture
+def mock_pwd():
+    with patch("charmcraft.commands.init.pwd", autospec=True) as mock_pwd:
+        mock_pwd.getpwuid.return_value.pw_gecos = "Test Gecos Author Name,,,"
+        yield mock_pwd
 
 
 def test_init_pep257(tmp_path, config):
@@ -67,10 +73,10 @@ def test_all_the_files(tmp_path, config):
         "requirements.txt",
         "run_tests",
         "src",
-        "src/charm.py",
+        os.path.join("src", "charm.py"),
         "tests",
-        "tests/__init__.py",
-        "tests/test_charm.py",
+        os.path.join("tests", "__init__.py"),
+        os.path.join("tests", "test_charm.py"),
     ]
 
 
@@ -95,13 +101,25 @@ def test_bad_name(config):
         cmd.run(Namespace(name="1234", author="שראלה ישראל", series="k8s", force=False))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="mocking for pwd/gecos only")
+def test_no_author_gecos(tmp_path, config, mock_pwd):
+    cmd = InitCommand("group", config)
+    cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))
+
+    text = (tmp_path / "src" / "charm.py").read_text()
+    assert "Test Gecos Author Name" in text
+
+
 def test_executables(tmp_path, config):
     cmd = InitCommand("group", config)
     cmd.run(Namespace(name="my-charm", author="홍길동", series="k8s", force=False))
-    assert (tmp_path / "run_tests").stat().st_mode & S_IXALL == S_IXALL
-    assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
+
+    if os.name == "posix":
+        assert (tmp_path / "run_tests").stat().st_mode & S_IXALL == S_IXALL
+        assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_tests(tmp_path, config):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
     # virtualenv libs and bins (if any), as they need them, but we're not creating a
@@ -123,24 +141,28 @@ def test_tests(tmp_path, config):
     subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_gecos_missing_in_getpwuid_response(config):
     """No GECOS field in getpwuid response."""
+    import pwd
+
     cmd = InitCommand("group", config)
 
     with patch("pwd.getpwuid") as mock_pwd:
         # return a fack passwd struct with an empty gecos (5th parameter)
         mock_pwd.return_value = pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))
-        msg = "Author not given, and nothing in GECOS field"
+        msg = "Unable to automatically determine author's name, specify it with --author"
         with pytest.raises(CommandError, match=msg):
             cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_gecos_missing_user_information(config):
     """No information at all for the requested user."""
     cmd = InitCommand("group", config)
 
     with patch("pwd.getpwuid") as mock_pwd:
         mock_pwd.side_effect = KeyError("no user")
-        msg = "Author not given, and nothing in GECOS field"
+        msg = "Unable to automatically determine author's name, specify it with --author"
         with pytest.raises(CommandError, match=msg):
             cmd.run(Namespace(name="my-charm", author=None, series="k8s", force=False))

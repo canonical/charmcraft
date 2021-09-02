@@ -18,12 +18,17 @@
 
 import logging
 import os
-import pwd
 import re
 from datetime import date
+from typing import Optional
 
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import make_executable, get_templates_environment
+
+try:
+    import pwd
+except ImportError:
+    pwd = None
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +64,14 @@ example tests with a harness to run them.
 """
 
 
+def _get_users_full_name_gecos() -> Optional[str]:
+    """Get user's full name from Gecos (/etc/passwd)."""
+    try:
+        return pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]
+    except KeyError:
+        return None
+
+
 class InitCommand(BaseCommand):
     """Initialize a directory to be a charm project."""
 
@@ -88,16 +101,13 @@ class InitCommand(BaseCommand):
             raise CommandError(tpl.format(str(self.config.project.dirpath)))
         logger.debug("Using project directory %r", str(self.config.project.dirpath))
 
-        if args.author is None:
-            try:
-                gecos = pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]
-            except KeyError:
-                # no info for the user
-                gecos = None
-            if not gecos:
-                raise CommandError("Author not given, and nothing in GECOS field")
-            logger.debug("Setting author to %r from GECOS field", gecos)
-            args.author = gecos
+        if args.author is None and pwd is not None:
+            args.author = _get_users_full_name_gecos()
+
+        if not args.author:
+            raise CommandError(
+                "Unable to automatically determine author's name, specify it with --author"
+            )
 
         if not args.name:
             args.name = self.config.project.dirpath.name

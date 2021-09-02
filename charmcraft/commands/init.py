@@ -72,24 +72,6 @@ def _get_users_full_name_gecos() -> Optional[str]:
         return None
 
 
-def _get_author_from_user() -> str:
-    """Get the author's name by querying system's user information.
-
-    :raises CommandError: If unable to determine author.
-    """
-    if pwd is not None:
-        author = _get_users_full_name_gecos()
-    else:
-        author = None
-
-    if not author:
-        raise CommandError(
-            "Unable to automatically determine author's name, specify it with --author"
-        )
-
-    return author
-
-
 class InitCommand(BaseCommand):
     """Initialize a directory to be a charm project."""
 
@@ -119,8 +101,13 @@ class InitCommand(BaseCommand):
             raise CommandError(tpl.format(str(self.config.project.dirpath)))
         logger.debug("Using project directory %r", str(self.config.project.dirpath))
 
-        if args.author is None:
-            args.author = _get_author_from_user()
+        if args.author is None and pwd is not None:
+            args.author = _get_users_full_name_gecos()
+
+        if not args.author:
+            raise CommandError(
+                "Unable to automatically determine author's name, specify it with --author"
+            )
 
         if not args.name:
             args.name = self.config.project.dirpath.name

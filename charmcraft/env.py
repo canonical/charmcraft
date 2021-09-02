@@ -42,7 +42,7 @@ def get_managed_environment_project_path():
 
 
 def get_managed_environment_snap_channel_default() -> str:
-    """Default channel to use when installing Charmcraft snap from Snap Store.
+    """Channel to use when installing Charmcraft snap from Snap Store.
 
     May someday be updated to use a track known to be compatible with the running
     version.  For now, we default to default track's stable.

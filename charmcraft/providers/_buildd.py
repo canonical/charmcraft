@@ -74,7 +74,8 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
                 )
             except snap_installer.SnapInstallationError as error:
                 raise bases.BaseConfigurationError(
-                    brief="Failed to install Charmcraft snap from store into target environment.",
+                    brief="Failed to install Charmcraft snap from store channel "
+                    f"{snap_channel!r} into target environment.",
                 ) from error
         else:
             try:

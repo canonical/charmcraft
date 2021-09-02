@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import re
 import sys
 from unittest import mock
 from unittest.mock import call
@@ -113,10 +114,14 @@ def test_base_configuration_setup_snap_install_from_store_error(
     alias = bases.BuilddBaseAlias.FOCAL
     config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
     mock_install_from_store.side_effect = snap_installer.SnapInstallationError(brief="foo error")
+    match = re.escape(
+        "Failed to install Charmcraft snap from store channel "
+        "'test-track/test-channel' into target environment."
+    )
 
     with pytest.raises(
         bases.BaseConfigurationError,
-        match=r"Failed to install Charmcraft snap from store into target environment.",
+        match=match,
     ) as exc_info:
         config.setup(executor=mock_instance)
 

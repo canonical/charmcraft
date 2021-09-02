@@ -34,8 +34,11 @@ def capture_logs_from_instance(instance: Executor) -> None:
 
     :returns: String of logs.
     """
-    _, tmp_path = tempfile.mkstemp(prefix="charmcraft-")
-    local_log_path = pathlib.Path(tmp_path)
+    # Get a temporary file path.
+    tmp_file = tempfile.NamedTemporaryFile(delete=False, prefix="charmcraft-")
+    tmp_file.close()
+
+    local_log_path = pathlib.Path(tmp_file.name)
     instance_log_path = get_managed_environment_log_path()
 
     try:
@@ -44,7 +47,8 @@ def capture_logs_from_instance(instance: Executor) -> None:
         logger.debug("No logs found in instance.")
         return
 
-    logs = local_log_path.read_text()
+    logger.debug("Logs captured from managed instance:")
+    with open(local_log_path, "rt", encoding="utf8") as fh:
+        for line in fh:
+            logger.debug(":: %s", line.rstrip())
     local_log_path.unlink()
-
-    logger.debug("Logs captured from managed instance:\n%s", logs)

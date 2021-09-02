@@ -1324,6 +1324,7 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1387,6 +1388,7 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1446,6 +1448,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1563,6 +1566,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1626,6 +1630,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1689,6 +1694,7 @@ def test_build_requirements_default(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1748,6 +1754,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capl
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]

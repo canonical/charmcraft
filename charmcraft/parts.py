@@ -237,9 +237,11 @@ class PartsLifecycle:
         all_parts: Dict[str, Any],
         *,
         work_dir: pathlib.Path,
+        project_dir: pathlib.Path,
         ignore_local_sources: List[str],
     ):
         self._all_parts = all_parts.copy()
+        self._project_dir = project_dir
 
         # set the cache dir for parts package management
         cache_dir = BaseDirectory.save_cache_path("charmcraft")
@@ -269,7 +271,10 @@ class PartsLifecycle:
         :raises CommandError: On error during lifecycle ops.
         :raises RuntimeError: On unexpected error.
         """
+        previous_dir = os.getcwd()
         try:
+            os.chdir(self._project_dir)
+
             # invalidate build if packing a charm and entrypoint changed
             if "charm" in self._all_parts:
                 charm_part = self._all_parts["charm"]
@@ -279,6 +284,7 @@ class PartsLifecycle:
                     self._lcm.clean(Step.BUILD, part_names=["charm"])
                     self._lcm.reload_state()
 
+            logger.debug("Executing parts lifecycle in %s", self._project_dir)
             actions = self._lcm.plan(target_step)
             logger.debug("Parts actions: %s", actions)
             with self._lcm.action_executor() as aex:
@@ -292,6 +298,8 @@ class PartsLifecycle:
             raise CommandError(f"Parts processing error: {msg}") from err
         except Exception as err:
             raise CommandError(f"Parts processing error: {err}") from err
+        finally:
+            os.chdir(previous_dir)
 
 
 def _get_dispatch_entrypoint(dirname: pathlib.Path) -> str:

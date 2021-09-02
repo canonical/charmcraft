@@ -21,6 +21,7 @@ import distutils.util
 import os
 import pathlib
 import sys
+from typing import Optional
 
 from charmcraft.cmdbase import CommandError
 
@@ -38,6 +39,14 @@ def get_managed_environment_log_path():
 def get_managed_environment_project_path():
     """Path for project when running in managed environment."""
     return get_managed_environment_home_path() / "project"
+
+
+def get_managed_environment_snap_channel() -> Optional[str]:
+    """User-specified channel to use when installing Charmcraft snap from Snap Store.
+
+    :returns: Channel string if specified, else None.
+    """
+    return os.getenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL")
 
 
 def is_charmcraft_running_from_snap():
@@ -59,7 +68,12 @@ def is_charmcraft_running_in_managed_mode():
 
 def is_charmcraft_running_in_supported_environment():
     """Check if Charmcraft is running in a supported environment."""
-    return sys.platform == "linux" and is_charmcraft_running_from_snap()
+    if sys.platform == "linux":
+        return is_charmcraft_running_from_snap()
+    elif sys.platform == "win32":
+        return True
+
+    return False
 
 
 def ensure_charmcraft_environment_is_supported():

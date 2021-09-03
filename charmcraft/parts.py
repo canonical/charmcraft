@@ -230,7 +230,13 @@ def validate_part(data: Dict[str, Any]) -> None:
 
 
 class PartsLifecycle:
-    """Create and manage the parts lifecycle."""
+    """Create and manage the parts lifecycle.
+
+    :param all_parts: A dictionary containing the parts defined in the project.
+    :param work_dir: The working directory for parts processing.
+    :param project_dir: The directory containing the charm project.
+    :param ignore_local_sources: A list of local source patterns to be ignored.
+    """
 
     def __init__(
         self,

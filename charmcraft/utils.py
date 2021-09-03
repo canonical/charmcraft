@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 
 import yaml
-from jinja2 import Environment, PackageLoader, StrictUndefined
+from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.env import is_charmcraft_running_in_managed_mode
@@ -78,8 +78,19 @@ def load_yaml(fpath):
 
 def get_templates_environment(templates_dir):
     """Create and return a Jinja environment to deal with the templates."""
+    templates_dir = os.path.join("templates", templates_dir)
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        # Running as PyInstaller bundle. For more information:
+        # https://pyinstaller.readthedocs.io/en/stable/runtime-information.html
+        # In this scenario we need to load from the data location that is unpacked
+        # into the temprary directory at runtime (sys._MEIPASS).
+        logger.debug("Bundle directory: %s", sys._MEIPASS)
+        loader = FileSystemLoader(os.path.join(sys._MEIPASS, templates_dir))
+    else:
+        loader = PackageLoader("charmcraft", templates_dir)
+
     env = Environment(
-        loader=PackageLoader("charmcraft", "templates/{}".format(templates_dir)),
+        loader=loader,
         autoescape=False,  # no need to escape things here :-)
         keep_trailing_newline=True,  # they're not text files if they don't end in newline!
         optimized=False,  # optimization doesn't make sense for one-offs

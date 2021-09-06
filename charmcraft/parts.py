@@ -290,7 +290,7 @@ class PartsLifecycle:
                     self._lcm.clean(Step.BUILD, part_names=["charm"])
                     self._lcm.reload_state()
 
-            logger.debug("Executing parts lifecycle in %s", self._project_dir)
+            logger.debug("Executing parts lifecycle in %r", str(self._project_dir))
             actions = self._lcm.plan(target_step)
             logger.debug("Parts actions: %s", actions)
             with self._lcm.action_executor() as aex:

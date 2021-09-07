@@ -1211,6 +1211,20 @@ class ListLibCommand(BaseCommand):
 
         For each library, it will show the name and the api and patch versions
         for its tip.
+
+        For example:
+
+        $ charmcraft list-lib my-charm
+        Library name    API    Patch
+        my_great_lib    0      3
+        my_great_lib    1      0
+        other_lib       0      5
+
+        To fetch one of the shown libraries you can use the fetch-lib command, indicating
+        the library and which API version to get:
+
+        $ charmcraft fetch-lib charms.my-charm.v0.my_great_lib
+        Library charms.my-charm.v0.my_great_lib version 1.0 downloaded.
     """
     )
 

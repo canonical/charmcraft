@@ -215,6 +215,7 @@ class PackCommand(BaseCommand):
         lifecycle = parts.PartsLifecycle(
             config_parts,
             work_dir=project.dirpath / build.BUILD_DIRNAME,
+            project_dir=project.dirpath,
             ignore_local_sources=[bundle_name + ".zip"],
         )
         try:

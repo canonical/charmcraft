@@ -507,7 +507,7 @@ class ReleaseCommand(BaseCommand):
             charmcraft release mycharm --revision=14 \\
                 --channel=beta --resource=thedb:4
 
-        Listing revisions will take you through login if needed.
+        Releasing a revision will take you through login if needed.
     """
     )
     common = True
@@ -558,6 +558,43 @@ class ReleaseCommand(BaseCommand):
                 ", ".join("{!r} r{}".format(r.name, r.revision) for r in parsed_args.resource)
             )
         logger.info(msg, *args)
+
+
+class CloseCommand(BaseCommand):
+    """Close a channel for a charm or bundle."""
+
+    name = "close"
+    help_msg = "Close a channel for a charm or bundle"
+    overview = textwrap.dedent(
+        """
+        Close the specified channel for a charm or bundle.
+
+        The channel is made up of `track/risk/branch` with both the track and
+        the branch as optional items, so formally:
+
+          [track/]risk[/branch]
+
+        Channel risk must be one of stable, candidate, beta or edge. The
+        track defaults to `latest` and branch has no default.
+
+        Closing a channel will take you through login if needed.
+    """
+    )
+    common = True
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("name", help="The name of charm or bundle")
+        parser.add_argument("channel", help="The channel to close")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub)
+        revision = None  # revision in None will actually close the channel
+        channels = [parsed_args.channel]  # the API accepts multiple channels, we have only one
+        resources = []  # no really used when closing channels
+        store.release(parsed_args.name, revision, channels, resources)
+        logger.info("Closed %r channel for %r.", parsed_args.channel, parsed_args.name)
 
 
 class StatusCommand(BaseCommand):

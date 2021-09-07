@@ -31,6 +31,7 @@ import yaml
 from charmcraft.config import CharmhubConfig
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
+    CloseCommand,
     CreateLibCommand,
     EntityType,
     FetchLibCommand,
@@ -912,6 +913,24 @@ def test_release_parameters_bad(config, sysargs):
     cmd.fill_parser(parser)
     with pytest.raises(SystemExit):
         parser.parse_args(sysargs)
+
+
+# -- tests for the close command
+
+
+def test_close_simple_ok(caplog, store_mock, config):
+    """Simple case of closing a channel."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    args = Namespace(name="testcharm", channel="somechannel")
+    CloseCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.release("testcharm", None, ["somechannel"], []),
+    ]
+
+    expected = "Closed 'somechannel' channel for 'testcharm'."
+    assert [expected] == [rec.message for rec in caplog.records]
 
 
 # -- tests for the status command

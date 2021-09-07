@@ -23,6 +23,7 @@ _charmcraft()
         analyze
         build
         clean
+        close
         create-lib 
         fetch-lib 
         help init 

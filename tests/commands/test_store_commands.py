@@ -1585,6 +1585,42 @@ def test_status_with_base_in_none(caplog, store_mock, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
+def test_status_ureleased_track(caplog, store_mock, config):
+    """The package has a track, but nothing is released to it."""
+    caplog.set_level(logging.INFO, logger="charmcraft.commands")
+
+    channel_map = [
+        _build_release(revision=5, channel="latest/stable"),
+    ]
+    channels_latest = _build_channels()
+    channels_track = _build_channels(track="2.0")
+    channels = channels_latest + channels_track
+    revisions = [
+        _build_revision(revno=5, version="7.5.3"),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm")
+    StatusCommand("group", config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base                  Channel    Version    Revision",
+        "latest   ubuntu 20.04 (amd64)  stable     7.5.3      5",
+        "                               candidate  ↑          ↑",
+        "                               beta       ↑          ↑",
+        "                               edge       ↑          ↑",
+        "2.0      -                     stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       -          -",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
 # -- tests for create library command
 
 

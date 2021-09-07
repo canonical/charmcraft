@@ -26,6 +26,9 @@ from craft_parts import Step, plugins
 from charmcraft import charm_builder, parts
 
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+
+
 class TestCharmPlugin:
     """Ensure plugin methods return expected data."""
 
@@ -118,6 +121,7 @@ class TestPartsLifecycle:
             lifecycle = parts.PartsLifecycle(
                 all_parts={"charm": data},
                 work_dir="/some/workdir",
+                project_dir=tmp_path,
                 ignore_local_sources=["*.charm"],
             )
         assert lifecycle.prime_dir == pathlib.Path("/some/workdir/prime")
@@ -141,6 +145,7 @@ class TestPartsLifecycle:
         lifecycle = parts.PartsLifecycle(
             all_parts={"charm": data},
             work_dir=tmp_path,
+            project_dir=tmp_path,
             ignore_local_sources=["*.charm"],
         )
 
@@ -171,6 +176,7 @@ class TestPartsLifecycle:
         lifecycle = parts.PartsLifecycle(
             all_parts={"charm": data},
             work_dir=tmp_path,
+            project_dir=tmp_path,
             ignore_local_sources=["*.charm"],
         )
 
@@ -193,6 +199,7 @@ class TestPartsLifecycle:
         lifecycle = parts.PartsLifecycle(
             all_parts={"charm": data},
             work_dir=tmp_path,
+            project_dir=tmp_path,
             ignore_local_sources=["*.charm"],
         )
 

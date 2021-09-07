@@ -26,7 +26,7 @@ from unittest.mock import call, patch
 import pytest
 
 from charmcraft import charm_builder
-from charmcraft.charm_builder import VENV_DIRNAME, CharmBuilder
+from charmcraft.charm_builder import VENV_DIRNAME, CharmBuilder, _process_run
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import BUILD_DIRNAME, DISPATCH_CONTENT, DISPATCH_FILENAME
 from charmcraft.metadata import CHARM_METADATA
@@ -63,6 +63,7 @@ def test_build_generics_simple_files(tmp_path):
     assert linked_entrypoint == built_entrypoint
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_simple_dir(tmp_path):
     """Check transferred any directory, with proper permissions."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -238,11 +239,13 @@ def _test_build_generics_tree(tmp_path, caplog, *, expect_hardlinks):
             assert p1.stat().st_mtime == pytest.approx(p2.stat().st_mtime)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree(tmp_path, caplog):
     """Manages ok a deep tree, including internal ignores."""
     _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=True)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree_vagrant(tmp_path, caplog):
     """Manages ok a deep tree, including internal ignores, when hardlinks aren't allowed."""
     with patch("os.link") as mock_link:
@@ -250,6 +253,7 @@ def test_build_generics_tree_vagrant(tmp_path, caplog):
         _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree_xdev(tmp_path, caplog):
     """Manages ok a deep tree, including internal ignores, when hardlinks can't be done."""
     with patch("os.link") as mock_link:
@@ -257,6 +261,7 @@ def test_build_generics_tree_xdev(tmp_path, caplog):
         _test_build_generics_tree(tmp_path, caplog, expect_hardlinks=False)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_file(tmp_path):
     """Respects a symlinked file."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -283,6 +288,7 @@ def test_build_generics_symlink_file(tmp_path):
     assert real_link == "crazycharm.py"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_dir(tmp_path):
     """Respects a symlinked dir."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -316,6 +322,7 @@ def test_build_generics_symlink_dir(tmp_path):
     assert (build_dir / "thelink" / "sanity check").exists()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_deep(tmp_path):
     """Correctly re-links a symlink across deep dirs."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -349,6 +356,7 @@ def test_build_generics_symlink_deep(tmp_path):
     assert real_link == "../dir1/file.real"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_file_outside(tmp_path, caplog):
     """Ignores (with warning) a symlink pointing a file outside projects dir."""
     caplog.set_level(logging.WARNING)
@@ -380,6 +388,7 @@ def test_build_generics_symlink_file_outside(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_directory_outside(tmp_path, caplog):
     """Ignores (with warning) a symlink pointing a dir outside projects dir."""
     caplog.set_level(logging.WARNING)
@@ -411,6 +420,7 @@ def test_build_generics_symlink_directory_outside(tmp_path, caplog):
     assert expected in [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
     """Ignores whatever is not a regular file, symlink or dir."""
     caplog.set_level(logging.DEBUG)
@@ -442,6 +452,7 @@ def test_build_generics_different_filetype(tmp_path, caplog, monkeypatch):
     assert expected in [rec.message for rec in caplog.records]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
     """The dispatcher script is properly built."""
     metadata = tmp_path / CHARM_METADATA
@@ -464,6 +475,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path="somestuff.py")
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_respected(tmp_path):
     """The already included dispatcher script is left untouched."""
     metadata = tmp_path / CHARM_METADATA
@@ -486,6 +498,7 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path):
         assert fh.read() == b"abc"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     """The mandatory classic hooks are implemented ok if not present."""
     metadata = tmp_path / CHARM_METADATA
@@ -511,6 +524,7 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     assert real_link == os.path.join("..", DISPATCH_FILENAME)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
     """The already included mandatory classic hooks are left untouched."""
     metadata = tmp_path / CHARM_METADATA
@@ -538,6 +552,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
         assert fh.read() == b"abc"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, caplog):
     """Hooks that are just a symlink to the entrypoint are replaced."""
     caplog.set_level(logging.DEBUG, logger="charmcraft")
@@ -593,7 +608,6 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
         with patch("charmcraft.charm_builder._process_run") as mock:
-            mock.return_value = 0
             builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
@@ -634,7 +648,6 @@ def test_build_dependencies_needs_system(tmp_path, config):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 0
         with patch("charmcraft.charm_builder._process_run") as mock:
-            mock.return_value = 0
             builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
@@ -669,7 +682,6 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
         with patch("charmcraft.charm_builder._process_run") as mock:
-            mock.return_value = 0
             builder.handle_dependencies()
 
     envpath = build_dir / VENV_DIRNAME
@@ -705,46 +717,6 @@ def test_build_dependencies_virtualenv_none(tmp_path):
         builder.handle_dependencies()
 
     mock_run.assert_not_called()
-
-
-def test_build_dependencies_virtualenv_error_basicpip(tmp_path):
-    """Process is properly interrupted if using pip fails."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
-        entrypoint=pathlib.Path("whatever"),
-        requirements=["something"],
-    )
-
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        mock.return_value = -7
-        with pytest.raises(CommandError, match="problems using pip"):
-            builder.handle_dependencies()
-
-
-def test_build_dependencies_virtualenv_error_installing(tmp_path):
-    """Process is properly interrupted if virtualenv creation fails."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
-        entrypoint=pathlib.Path("whatever"),
-        requirements=["something"],
-    )
-
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        mock.side_effect = [0, -7]
-        with pytest.raises(CommandError, match="problems installing dependencies"):
-            builder.handle_dependencies()
 
 
 def test_builder_without_jujuignore(tmp_path):
@@ -833,3 +805,60 @@ def test_builder_arguments_full(tmp_path):
             with pytest.raises(SystemExit) as raised:
                 charm_builder.main()
         assert raised.value.code == 42
+
+
+# --- subprocess runner tests
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_processrun_base(caplog):
+    """Basic execution."""
+    caplog.set_level(logging.ERROR, logger="charmcraft")
+
+    cmd = ["echo", "HELO"]
+    _process_run(cmd)
+    assert not caplog.records
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_processrun_stdout_logged(caplog):
+    """The standard output is logged in debug."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    cmd = ["echo", "HELO"]
+    _process_run(cmd)
+    expected = [
+        "Running external command ['echo', 'HELO']",
+        "   :: HELO",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_processrun_stderr_logged(caplog):
+    """The standard error is logged in debug."""
+    caplog.set_level(logging.DEBUG, logger="charmcraft")
+
+    cmd = [sys.executable, "-c", "import sys; print('weird, huh?', file=sys.stderr)"]
+    _process_run(cmd)
+    expected = [
+        "Running external command " + str(cmd),
+        "   :: weird, huh?",
+    ]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_processrun_failed():
+    """It's logged in error if cmd fails."""
+    cmd = [sys.executable, "-c", "exit(3)"]
+    with pytest.raises(CommandError) as cm:
+        _process_run(cmd)
+    assert str(cm.value) == f"Subprocess command {cmd} execution failed with retcode 3"
+
+
+def test_processrun_crashed(caplog, tmp_path):
+    """It's logged in error if cmd fails."""
+    nonexistent = tmp_path / "whatever"
+    cmd = [str(nonexistent)]
+    with pytest.raises(CommandError) as cm:
+        _process_run(cmd)
+    assert str(cm.value) == f"Subprocess execution crashed for command {cmd}"

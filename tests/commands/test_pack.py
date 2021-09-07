@@ -17,6 +17,7 @@
 import datetime
 import logging
 import pathlib
+import sys
 import zipfile
 from argparse import ArgumentParser, Namespace
 from unittest import mock
@@ -152,6 +153,7 @@ def test_resolve_bundle_with_entrypoint(config):
 # -- tests for main bundle building process
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_bundle_simple_succesful_build(tmp_path, caplog, bundle_yaml, bundle_config):
     """A simple happy story."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
@@ -182,6 +184,7 @@ def test_bundle_simple_succesful_build(tmp_path, caplog, bundle_yaml, bundle_con
     assert not (tmp_path / "manifest.yaml").exists()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_bundle_missing_bundle_file(tmp_path, bundle_config):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
@@ -203,6 +206,7 @@ def test_bundle_missing_other_mandatory_file(tmp_path, bundle_config, bundle_yam
     assert str(cm.value) == "Missing mandatory file: {!r}.".format(str(tmp_path / "README.md"))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
     """Can not build a bundle without name."""
     bundle_config.set(type="bundle")
@@ -267,6 +271,7 @@ def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mo
 # -- tests for get paths helper
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_mandatory_ok(tmp_path, bundle_yaml, bundle_config):
     """Simple succesful case getting all mandatory files."""
     bundle_yaml(name="testbundle")
@@ -285,6 +290,7 @@ def test_prime_mandatory_ok(tmp_path, bundle_yaml, bundle_config):
     assert "bar.bin" in zipped_files
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_extra_ok(tmp_path, bundle_yaml, bundle_config):
     """Extra files were indicated ok."""
     bundle_yaml(name="testbundle")
@@ -303,6 +309,7 @@ def test_prime_extra_ok(tmp_path, bundle_yaml, bundle_config):
     assert "f2.txt" in zipped_files
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config):
     """Extra files were indicated but not found."""
     bundle_yaml(name="testbundle")
@@ -319,6 +326,7 @@ def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config):
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_extra_long_path(tmp_path, bundle_yaml, bundle_config):
     """An extra file can be deep in directories."""
     bundle_yaml(name="testbundle")
@@ -335,6 +343,7 @@ def test_prime_extra_long_path(tmp_path, bundle_yaml, bundle_config):
     assert "foo/bar/baz/extra.txt" in zipped_files
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_extra_wildcards_ok(tmp_path, bundle_yaml, bundle_config):
     """Use wildcards to specify several files ok."""
     bundle_yaml(name="testbundle")
@@ -356,6 +365,7 @@ def test_prime_extra_wildcards_ok(tmp_path, bundle_yaml, bundle_config):
     assert "f3.txt" in zipped_files
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_extra_wildcards_not_found(tmp_path, bundle_yaml, bundle_config):
     """Use wildcards to specify several files but nothing found."""
     bundle_yaml(name="testbundle")
@@ -370,6 +380,7 @@ def test_prime_extra_wildcards_not_found(tmp_path, bundle_yaml, bundle_config):
     assert zipped_files == ["manifest.yaml"]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config):
     """Double star means whatever directories are in the path."""
     bundle_yaml(name="testbundle")
@@ -397,6 +408,7 @@ def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config):
         assert (srcpath in zipped_files) == expected
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_config):
     """Combination of both mechanisms."""
     bundle_yaml(name="testbundle")
@@ -452,6 +464,7 @@ def test_zipbuild_simple(tmp_path):
     assert zf.read("bar/baz.txt") == b"mo\xc3\xb1o"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_zipbuild_symlink_simple(tmp_path):
     """Symlinks are supported."""
     build_dir = tmp_path / "somedir"
@@ -471,6 +484,7 @@ def test_zipbuild_symlink_simple(tmp_path):
     assert zf.read("link.txt") == b"123\x00456"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_zipbuild_symlink_outside(tmp_path):
     """No matter where the symlink points to."""
     # outside the build dir

@@ -40,7 +40,6 @@ from charmcraft.commands.build import (
     Validator,
     format_charm_file_name,
     launch_shell,
-    polite_exec,
     relativise,
 )
 from charmcraft.config import Base, BasesConfiguration, load
@@ -266,6 +265,7 @@ def test_validator_from_expanded(config):
     assert resp == pathlib.Path.home()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_validator_from_exist(config):
     """'from' param: checks that the directory exists."""
     validator = Validator(config)
@@ -274,6 +274,7 @@ def test_validator_from_exist(config):
         validator.validate_from(pathlib.Path("/not_really_there"))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_validator_from_isdir(tmp_path, config):
     """'from' param: checks that the directory is really that."""
     testfile = tmp_path / "testfile"
@@ -339,6 +340,7 @@ def test_validator_entrypoint_absolutized(tmp_path, monkeypatch, config):
     assert resp == testfile
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_validator_entrypoint_expanded(tmp_path, config):
     """'entrypoint' param: expands the user-home prefix."""
     fake_home = tmp_path / "homedir"
@@ -355,6 +357,7 @@ def test_validator_entrypoint_expanded(tmp_path, config):
     assert resp == testfile
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_validator_entrypoint_exist(config):
     """'entrypoint' param: checks that the file exists."""
     validator = Validator(config)
@@ -363,6 +366,7 @@ def test_validator_entrypoint_exist(config):
         validator.validate_entrypoint(pathlib.Path("/not_really_there.py"))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_validator_entrypoint_inside_project(tmp_path, config):
     """'entrypoint' param: checks that it's part of the project."""
     project_dir = tmp_path / "test-project"
@@ -377,6 +381,7 @@ def test_validator_entrypoint_inside_project(tmp_path, config):
         validator.validate_entrypoint(testfile)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_validator_entrypoint_exec(tmp_path, config):
     """'entrypoint' param: checks that the file is executable."""
     testfile = tmp_path / "testfile"
@@ -450,6 +455,7 @@ def test_validator_requirement_absolutized(tmp_path, monkeypatch, config):
     assert resp == [testfile]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_validator_requirement_expanded(tmp_path, config):
     """'requirement' param: expands the user-home prefix."""
     fake_home = tmp_path / "homedir"
@@ -465,6 +471,7 @@ def test_validator_requirement_expanded(tmp_path, config):
     assert resp == [requirement]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_validator_requirement_exist(config):
     """'requirement' param: checks that the file exists."""
     validator = Validator(config)
@@ -488,71 +495,10 @@ def test_validator_force(config, inp_value, out_value):
     assert result == out_value
 
 
-# --- Polite Executor tests
-
-
-def test_politeexec_base(caplog):
-    """Basic execution."""
-    caplog.set_level(logging.ERROR, logger="charmcraft")
-
-    cmd = ["echo", "HELO"]
-    retcode = polite_exec(cmd)
-    assert retcode == 0
-    assert not caplog.records
-
-
-def test_politeexec_stdout_logged(caplog):
-    """The standard output is logged in debug."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-
-    cmd = ["echo", "HELO"]
-    polite_exec(cmd)
-    expected = [
-        "Running external command ['echo', 'HELO']",
-        ":: HELO",
-    ]
-    assert expected == [rec.message for rec in caplog.records]
-
-
-def test_politeexec_stderr_logged(caplog):
-    """The standard error is logged in debug."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
-
-    cmd = [sys.executable, "-c", "import sys; print('weird, huh?', file=sys.stderr)"]
-    polite_exec(cmd)
-    expected = [
-        "Running external command " + str(cmd),
-        ":: weird, huh?",
-    ]
-    assert expected == [rec.message for rec in caplog.records]
-
-
-def test_politeexec_failed(caplog):
-    """It's logged in error if cmd fails."""
-    caplog.set_level(logging.ERROR, logger="charmcraft")
-
-    cmd = [sys.executable, "-c", "exit(3)"]
-    retcode = polite_exec(cmd)
-    assert retcode == 3
-    expected_msg = "Executing {} failed with return code 3".format(cmd)
-    assert any(expected_msg in rec.message for rec in caplog.records)
-
-
-def test_politeexec_crashed(caplog, tmp_path):
-    """It's logged in error if cmd fails."""
-    caplog.set_level(logging.ERROR, logger="charmcraft")
-    nonexistent = tmp_path / "whatever"
-
-    cmd = [str(nonexistent)]
-    retcode = polite_exec(cmd)
-    assert retcode == 1
-    expected_msg = "Executing {} crashed with FileNotFoundError".format(cmd)
-    assert any(expected_msg in rec.message for rec in caplog.records)
-
-
 # --- (real) build tests
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, config, tmp_path):
     """Integration test: a simple structure with custom lib and normal src dir."""
     caplog.set_level(logging.WARNING, logger="charmcraft")
@@ -607,6 +553,7 @@ def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
         get_builder(config)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, caplog, monkeypatch):
     host_base = get_host_as_base()
     builder = basic_project_builder(
@@ -624,6 +571,7 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, capl
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_with_charmcraft_yaml_managed_mode(
     basic_project_builder, caplog, monkeypatch, tmp_path
 ):
@@ -745,6 +693,7 @@ def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkey
     ]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_multiple_with_charmcraft_yaml_destructive_mode(
     basic_project_builder, monkeypatch, caplog
 ):
@@ -784,6 +733,7 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(
     assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_multiple_with_charmcraft_yaml_managed_mode(
     basic_project_builder, monkeypatch, caplog, tmp_path
 ):
@@ -940,6 +890,7 @@ def test_build_project_is_not_cwd(
     ]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
     "mode,cmd_flags",
     [
@@ -1117,6 +1068,7 @@ def test_build_bases_index_scenarios_provider(
     assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, caplog, tmp_path):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
@@ -1236,6 +1188,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     assert "No suitable 'build-on' environment found in 'bases[2]' configuration." in records
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_package_tree_structure(tmp_path, monkeypatch, config):
     """The zip file is properly built internally."""
     # the metadata
@@ -1388,6 +1341,7 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1451,6 +1405,7 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1510,6 +1465,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1627,6 +1583,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1690,6 +1647,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1753,6 +1711,7 @@ def test_build_requirements_default(basic_project, monkeypatch, caplog):
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1812,6 +1771,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capl
                     }
                 },
                 work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1855,6 +1815,7 @@ def test_build_requirements_from_both(basic_project, monkeypatch, caplog):
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_using_linters_attributes(basic_project, monkeypatch, config, tmp_path):
     """Generic use of linters, pass them ok to their proceessor and save them in the manifest."""
     builder = get_builder(config)

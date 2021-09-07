@@ -13,7 +13,7 @@ jobs:
   run-tests:
     strategy:
       matrix:
-        os: [macos-10.15, ubuntu-18.04, ubuntu-20.04]
+        os: [macos-10.15, ubuntu-18.04, ubuntu-20.04, windows-2019]
         python-version: [3.8, 3.9]
 
     runs-on: ${{ matrix.os }}
@@ -26,32 +26,30 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install/update pip, wheel, and setuptools
+        run: |
+          pip install -U pip wheel setuptools
+      - name: Install Ubuntu-specific dependencies
+        if: ${{ matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-20.04' }}
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
+      - name: Install Ubuntu 18.04-specific dependencies
+        if: ${{ matrix.os == 'ubuntu-18.04' }}
+        run: |
+          # pip 20.2 breaks python3-apt, so pin the version before building
+          pip install -U pip==20.1
+          pip install -U -r requirements-bionic.txt
+      - name: Install Ubuntu 20.04-specific dependencies
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        run: |
+          pip install -U -r requirements-focal.txt
       - name: Install charmcraft and dependencies
         run: |
-          case "${{ matrix.os }}" in
-            ubuntu-*)
-              sudo apt update
-              sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
-              ;;
-          esac
-          python3 -m venv ${HOME}/.venv
-          source ${HOME}/.venv/bin/activate
-          pip install -U pip wheel setuptools
-          case "${{ matrix.os }}" in
-            ubuntu-18.04)
-              # pip 20.2 breaks python3-apt, so pin the version before building
-              pip install pip==20.1
-              pip install -U -r requirements-bionic.txt
-              ;;
-            ubuntu-20.04)
-              pip install -U -r requirements-focal.txt
-              ;;
-          esac
           pip install -U -r requirements-dev.txt
           pip install -e .
       - name: Run tests
         run: |
-          source ${HOME}/.venv/bin/activate
           pytest -ra tests
 
   snap-build:
@@ -167,3 +165,33 @@ jobs:
             echo "configure script failure"
             exit 1
           fi
+
+  windows-build:
+    runs-on: windows-2019
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          pip install -U pyinstaller -r requirements.txt
+      - name: Build
+        run: |
+          pyinstaller charmcraft.spec
+      - name: Upload unsigned exe
+        uses: actions/upload-artifact@v2
+        with:
+          name: snap
+          path: dist\\charmcraft.exe
+      - name: Smoke test executable
+        run: |
+          mkdir my-charm
+          cd my-charm
+          ..\\dist\\charmcraft.exe version
+          ..\\dist\\charmcraft.exe init --author "Charmcraft Team"
+          ..\\dist\\charmcraft.exe clean

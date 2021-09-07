@@ -41,6 +41,18 @@ def test_get_managed_environment_project_path():
     assert dirpath == pathlib.Path("/root/project")
 
 
+def test_get_managed_environment_snap_channel_none(monkeypatch):
+    monkeypatch.delenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", raising=False)
+
+    assert env.get_managed_environment_snap_channel() is None
+
+
+def test_get_managed_environment_snap_channel(monkeypatch):
+    monkeypatch.setenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", "latest/edge")
+
+    assert env.get_managed_environment_snap_channel() == "latest/edge"
+
+
 @pytest.mark.parametrize(
     "snap_name,snap,result",
     [
@@ -123,14 +135,16 @@ def test_is_charmcraft_running_in_supported_environment_linux(monkeypatch, as_sn
     assert env.is_charmcraft_running_in_supported_environment() == as_snap
 
 
-@pytest.mark.parametrize(
-    "platform",
-    ["windows", "darwin"],
-)
-def test_is_charmcraft_running_in_supported_environment_non_linux(monkeypatch, platform):
-    monkeypatch.setattr(sys, "platform", platform)
+def test_is_charmcraft_running_in_supported_environment_osx(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "darwin")
 
     assert env.is_charmcraft_running_in_supported_environment() is False
+
+
+def test_is_charmcraft_running_in_supported_environment_windows(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+
+    assert env.is_charmcraft_running_in_supported_environment() is True
 
 
 @pytest.mark.parametrize(

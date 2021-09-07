@@ -16,6 +16,7 @@
 
 """Tests for analyze and lint code."""
 
+import sys
 import pathlib
 from unittest.mock import patch
 
@@ -110,6 +111,7 @@ def test_checkdispatchpython_entrypoint_is_not_python(tmp_path):
     assert result is None
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_checkdispatchpython_entrypoint_no_exec(tmp_path):
     """The charm entrypoint is not executable."""
     dispatch = tmp_path / "dispatch"
@@ -375,6 +377,7 @@ def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
     assert result is False
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
     """Cannot read the entrypoint file."""
     # metdata file with needed name field

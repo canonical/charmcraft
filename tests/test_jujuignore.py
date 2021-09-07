@@ -17,8 +17,11 @@
 import io
 import pathlib
 import subprocess
+import sys
 import textwrap
 import tempfile
+
+import pytest
 
 from charmcraft import jujuignore
 
@@ -344,6 +347,7 @@ def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_star_vs_star_start():
     assertMatchedAndNonMatched(
         ["/*.py", "**/foo"],
@@ -355,6 +359,7 @@ def test_star_vs_star_start():
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_questionmark():
     assertMatchedAndNonMatched(
         ["foo?.py"],
@@ -363,6 +368,7 @@ def test_questionmark():
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_brackets():
     assertMatchedAndNonMatched(
         ["*.py[cod]"],
@@ -371,6 +377,7 @@ def test_brackets():
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_bracket_ranges():
     assertMatchedAndNonMatched(
         ["foo[1-9].py"],
@@ -379,6 +386,7 @@ def test_bracket_ranges():
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_bracket_inverted():
     assertMatchedAndNonMatched(
         ["foo[!1-9].py", "bar[!a].py"],
@@ -398,6 +406,7 @@ def test_slashes_in_brackets():
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_special_chars_in_brackets():
     assertMatchedAndNonMatched(
         [r"foo[a|b].py"],

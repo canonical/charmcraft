@@ -1105,6 +1105,17 @@ class FetchLibCommand(BaseCommand):
 
         The first time a library is downloaded the command will create the needed
         directories to place it, subsequent fetches will just update the local copy.
+
+        You can specify the library to update/download building its fully qualified
+        name with the charm and library names, and the desired API version. For
+        example, to fetch the API version 3 of library 'somelib' from charm
+        `specialcharm`, do:
+
+        $ charmcraft fetch-lib charms.specialcharm.v3.somelib
+        Library charms.specialcharm.v3.somelib version 3.7 downloaded.
+
+        If the command is executed without parameters, it will update all the currently
+        downloaded libraries.
     """
     )
 
@@ -1220,11 +1231,7 @@ class ListLibCommand(BaseCommand):
         my_great_lib    1      0
         other_lib       0      5
 
-        To fetch one of the shown libraries you can use the fetch-lib command, indicating
-        the library and which API version to get:
-
-        $ charmcraft fetch-lib charms.my-charm.v0.my_great_lib
-        Library charms.my-charm.v0.my_great_lib version 1.0 downloaded.
+        To fetch one of the shown libraries you can use the fetch-lib command.
     """
     )
 

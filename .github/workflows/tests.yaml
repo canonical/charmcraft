@@ -187,11 +187,42 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: snap
-          path: dist\\charmcraft.exe
+          path: dist\charmcraft.exe
       - name: Smoke test executable
         run: |
           mkdir my-charm
           cd my-charm
-          ..\\dist\\charmcraft.exe version
-          ..\\dist\\charmcraft.exe init --author "Charmcraft Team"
-          ..\\dist\\charmcraft.exe clean
+          ..\dist\charmcraft.exe version
+          ..\dist\charmcraft.exe init --author "Charmcraft Team"
+          ..\dist\charmcraft.exe clean
+      - name: Build installer(s)
+        env:
+          INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe
+          MAKEAPPX: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe
+          SIGNTOOL: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe
+          TIMESTAMP_SERVICE: http://timestamp.digicert.com
+        run: |
+          windows\generate-self-signed-cert.ps1
+
+          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft.exe
+          & $Env:INNOCC windows\charmcraft.iss
+          copy dist\charmcraft-installer.exe dist\charmcraft-installer-self-signed.exe
+          echo "Test signing charmcraft inno installer..."
+          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer-self-signed.exe
+
+          echo "Building charmcraft msix installer..."
+          mkdir dist\msix
+          copy dist\charmcraft.exe dist\msix\
+          copy windows\charmcraft.png dist\msix\
+          copy windows\AppxManifest.xml dist\msix\
+          & $Env:MAKEAPPX pack /h SHA256 /d dist\msix /p dist\charmcraft-installer.msix
+
+          echo "Test signing charmcraft msix installer..."
+          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
+      - name: Upload installer(s)
+        uses: actions/upload-artifact@v2
+        with:
+          name: installers
+          path: |
+            dist\charmcraft-installer-self-signed.exe
+            dist\charmcraft-installer.msix

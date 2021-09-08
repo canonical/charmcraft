@@ -649,8 +649,9 @@ class StatusCommand(BaseCommand):
         # show everything, grouped by tracks and bases, with regular channels at first and
         # branches (if any) after those
         data = []
+        unreleased_track = {"-": {}}  # show a dash in "base" and no releases at all
         for track, (channels, branches) in per_track.items():
-            releases_by_base = releases_by_track[track]
+            releases_by_base = releases_by_track.get(track, unreleased_track)
             shown_track = track
 
             # bases are shown alphabetically ordered

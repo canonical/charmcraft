@@ -590,9 +590,9 @@ class CloseCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        revision = None  # revision in None will actually close the channel
+        revision = None  # revision None will actually close the channel
         channels = [parsed_args.channel]  # the API accepts multiple channels, we have only one
-        resources = []  # no really used when closing channels
+        resources = []  # not really used when closing channels
         store.release(parsed_args.name, revision, channels, resources)
         logger.info("Closed %r channel for %r.", parsed_args.channel, parsed_args.name)
 

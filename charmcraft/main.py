@@ -122,6 +122,7 @@ COMMAND_GROUPS = [
             # release process, and show status
             store.ReleaseCommand,
             store.StatusCommand,
+            store.CloseCommand,
             # libraries support
             store.CreateLibCommand,
             store.PublishLibCommand,

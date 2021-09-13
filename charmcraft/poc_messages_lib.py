@@ -21,6 +21,7 @@ import itertools
 import logging
 import math
 import os
+import pathlib
 import queue
 import select
 import shutil
@@ -31,7 +32,10 @@ import threading
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Union, Optional, TextIO
+from typing import Optional, TextIO, Union
+
+import appdirs
+
 
 # seconds before putting the spinner to work
 SPINNER_THRESHOLD = 2
@@ -44,7 +48,9 @@ TERMINAL_WIDTH = shutil.get_terminal_size().columns
 
 
 @dataclass
-class MessageInfo:
+class _MessageInfo:
+    """Comprehensive information for a message that may go to screen and log."""
+
     stream: Union[TextIO, None]
     text: str
     ephemeral: bool
@@ -57,6 +63,46 @@ class MessageInfo:
 
 # the different modes the Emitter can be set
 EmitterMode = enum.Enum("EmitterMode", "QUIET NORMAL VERBOSE TRACE")
+
+# the limit to how many log files to have
+_MAX_LOG_FILES = 5
+
+
+def _get_terminal_width() -> int:
+    """Return the number of columns of the terminal."""
+    return shutil.get_terminal_size().columns
+
+
+def _get_log_filepath(appname: str) -> pathlib.Path:
+    """Provide a unique filepath for logging.
+
+    The app name is used for both the directory where the logs are located and each log name.
+
+    Rules:
+    - use an appdirs provided directory
+    - base filename is <appname>.<timestamp with microseconds>.log
+    - it rotates until it gets to reaches :data:`._MAX_LOG_FILES`
+    - after limit is achieved, remove the exceeding files
+    - ignore other non-log files in the directory
+
+    Existing files are not renamed (no need, as each name is unique) nor gzipped (they may
+    be currently in use by another process).
+    """
+    basedir = pathlib.Path(appdirs.user_log_dir()) / appname
+    filename = f"{appname}-{datetime.now():%Y%m%d-%H%M%S.%f}.log"
+
+    # ensure the basedir is there
+    basedir.mkdir(exist_ok=True)
+
+    # check if we have too many logs in the dir, and remove the exceeding ones (note
+    # that the defined limit includes the about-to-be-created file, that's why the "-1")
+    present_files = list(basedir.glob(f"{appname}-*.log"))
+    limit = _MAX_LOG_FILES - 1
+    if len(present_files) > limit:
+        for fpath in sorted(present_files)[:-limit]:
+            fpath.unlink()
+
+    return basedir / filename
 
 
 class CraftError(Exception):
@@ -159,21 +205,23 @@ class _Spinner(threading.Thread):
 
 
 class _Printer:
-    def __init__(self, log_filepath: str):
+    """Handle writing the different messages to the different outputs (out, err and log)."""
+
+    def __init__(self, log_filepath: pathlib.Path) -> None:
         # holder of the previous message
-        self.prv_msg = None
+        self.prv_msg: Optional[_MessageInfo] = None
 
         # the open log file (will be closed explicitly when the thread ends)
-        self.log = open(log_filepath, "wt", encoding="utf8")
+        self.log = open(log_filepath, "wt", encoding="utf8")  # pylint: disable=consider-using-with
 
         # keep account of output streams with unfinished lines
-        self.unfinished_stream = None
+        self.unfinished_stream: Optional[TextIO] = None
 
         # run the spinner supervisor
         self.spinner = _Spinner(self)
         self.spinner.start()
 
-    def _write_line(self, message: MessageInfo, *, spintext: str = "") -> None:
+    def _write_line(self, message: _MessageInfo, *, spintext: str = "") -> None:
         """Write a simple line message to the screen."""
         # prepare the text with (maybe) the timestamp
         if message.use_timestamp:
@@ -198,15 +246,16 @@ class _Printer:
 
         # fill with spaces until the very end, on one hand to clear a possible previous message,
         # but also to always have the cursor at the very end
-        usable = TERMINAL_WIDTH - len(spintext) - 1  # the 1 is the cursor itself
+        width = _get_terminal_width()
+        usable = width - len(spintext) - 1  # the 1 is the cursor itself
         if len(text) > usable:
             if message.ephemeral:
                 text = text[: usable - 1] + "…"
             elif spintext:
                 # we need to rewrite the message with the spintext, use only the last line for
                 # multiline messages
-                text = text[-(len(text) % TERMINAL_WIDTH):]
-        cleaner = " " * (usable - len(text) % TERMINAL_WIDTH)
+                text = text[-(len(text) % width):]
+        cleaner = " " * (usable - len(text) % width)
 
         line = maybe_cr + text + spintext + cleaner
         print(line, end="", flush=True, file=message.stream)
@@ -236,7 +285,7 @@ class _Printer:
 
         # terminal size minus the text and numerical progress, and 5 (the cursor at the end,
         # two spaces before and after the bar, and two surrounding brackets)
-        bar_width = TERMINAL_WIDTH - len(message.text) - len(numerical_progress) - 5
+        bar_width = _get_terminal_width() - len(message.text) - len(numerical_progress) - 5
         completed_width = math.floor(bar_width * min(bar_percentage, 100))
         completed_bar = "#" * completed_width
         empty_bar = " " * (bar_width - completed_width)
@@ -244,7 +293,7 @@ class _Printer:
         print(line, end="", flush=True, file=message.stream)
         self.unfinished_stream = message.stream
 
-    def _show(self, msg: MessageInfo) -> None:
+    def _show(self, msg: _MessageInfo) -> None:
         """Show the composed message."""
         # show the message in one way or the other only if there is a stream
         if msg.stream is None:
@@ -280,7 +329,8 @@ class _Printer:
         end_line: bool = False,
         avoid_logging: bool = False,
     ) -> None:
-        msg = MessageInfo(
+        """Show a text to the given stream."""
+        msg = _MessageInfo(
             stream=stream,
             text=text.rstrip(),
             ephemeral=ephemeral,
@@ -456,43 +506,71 @@ class _Handler(logging.Handler):
         self.printer.show(stream, record.getMessage(), use_timestamp=use_timestamp)
 
 
+def _init_guard(wrapped_func):
+    """Decorate Emitter methods to be called *after* init."""
+
+    def func(self, *args, **kwargs):
+        if not self.initiated:
+            raise RuntimeError("Emitter needs to be initiated first")
+        return wrapped_func(self, *args, **kwargs)
+
+    return func
+
+
 class Emitter:
     """Main interface to all the messages emitting functionality.
 
-    This handling everything that goes to screen and to the log file, even interfacing
+    This handles everything that goes to screen and to the log file, even interfacing
     with the formal logging infrastructure to get messages from it.
+
+    This class is not meant to be instantiated by the application, just use `emit` from
+    this module.
     """
 
-    def init(self, mode: EmitterMode, greeting: str):
+    def __init__(self):
+        # these attributes will be set at "real init time", with the `init` method below
+        self.greeting = None
+        self.printer = None
+        self.mode = None
+        self.initiated = False
+        self.log_filepath = None
+
+    def init(self, mode: EmitterMode, appname: str, greeting: str):
+        """Initialize the emitter; this must be called once and before emitting any messages."""
         self.greeting = greeting
 
         # create a log file, bootstrap the printer, and before anything else send the greeting
         # to the file
-        _, self.log_filepath = tempfile.mkstemp(prefix="charmcraft-log-")
+        self.log_filepath = _get_log_filepath(appname)
         self.printer = _Printer(self.log_filepath)
         self.printer.show(None, greeting)
-        # FIXME: manage the log files
-        # - save the current one in
-        #       appdirs.user_log_dir() / appname / "appname-<timestamp with microseconds>.log"
-        # - rotate them!
 
         # hook into the logging system
         logger = logging.getLogger("")
         self._log_handler = _Handler(self.printer)
         logger.addHandler(self._log_handler)
 
+        self.initiated = True
         self.set_mode(mode)
 
+    @_init_guard
     def set_mode(self, mode: EmitterMode) -> None:
+        """Set the mode of the emitter."""
         self.mode = mode
         self._log_handler.mode = mode
 
         if self.mode == EmitterMode.VERBOSE or self.mode == EmitterMode.TRACE:
             # send the greeting to the screen before any further messages
-            self.printer.show(
-                sys.stderr, self.greeting, use_timestamp=True, avoid_logging=True, end_line=True)
-            # FIXME: also show here the log filepath
+            msgs = [
+                self.greeting,
+                f"Logging execution to {str(self.log_filepath)!r}",
+            ]
+            for msg in msgs:
+                self.printer.show(  # type: ignore
+                    sys.stderr, msg, use_timestamp=True, avoid_logging=True, end_line=True
+                )
 
+    @_init_guard
     def message(self, text: str, intermediate: bool = False) -> None:
         """Show an important message to the user.
 
@@ -500,11 +578,10 @@ class Emitter:
         also be used for important messages during the command's execution,
         with intermediate=True (which will include timestamp in verbose/trace mode).
         """
-        if intermediate and (self.mode == EmitterMode.VERBOSE or self.mode == EmitterMode.TRACE):
-            use_timestamp = True
-        else:
-            use_timestamp = False
-        self.printer.show(sys.stdout, text, use_timestamp=use_timestamp)
+        use_timestamp = bool(
+            intermediate and (self.mode == EmitterMode.VERBOSE or self.mode == EmitterMode.TRACE)
+        )
+        self.printer.show(sys.stdout, text, use_timestamp=use_timestamp)  # type: ignore
 
     def trace(self, text: str) -> None:
         """Trace/debug information.
@@ -570,9 +647,10 @@ class Emitter:
             stream = sys.stderr
         return _StreamContextManager(self.printer, text, stream)
 
+    @_init_guard
     def ended_ok(self) -> None:
         """Finish the messaging system gracefully."""
-        self.printer.stop()
+        self.printer.stop()  # type: ignore
 
     def _get_traceback_lines(self, exc: Exception):
         """Get the traceback lines (if any) from an exception."""

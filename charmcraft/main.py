@@ -21,13 +21,24 @@ import logging
 import sys
 from collections import namedtuple
 
-from charmcraft import config, env, helptexts
+from charmcraft import config, env
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
+from charmcraft.helptexts import helper
 from charmcraft.logsetup import message_handler
 from charmcraft.parts import setup_parts
 
 logger = logging.getLogger(__name__)
+
+# the summary of the whole program
+GENERAL_SUMMARY = """
+Charmcraft helps build, package and publish operators on Charmhub.
+
+Together with the Python Operator Framework, charmcraft simplifies
+operator development and collaboration.
+
+See https://charmhub.io/publishing for more information.
+"""
 
 
 class ArgumentParsingError(Exception):
@@ -75,7 +86,7 @@ class HelpCommand(BaseCommand):
         if parsed_args.command_to_help not in all_commands:
             # asked help on a command that doesn't exist
             msg = "no such command {!r}".format(parsed_args.command_to_help)
-            help_text = helptexts.get_usage_message("charmcraft", msg)
+            help_text = helper.get_usage_message("charmcraft", msg)
             raise ArgumentParsingError(help_text)
 
         cmd_class, group = all_commands[parsed_args.command_to_help]
@@ -165,7 +176,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         """Show the usage, the error message, and no more."""
         fullcommand = "charmcraft " + self.prog
-        full_msg = helptexts.get_usage_message(fullcommand, message)
+        full_msg = helper.get_usage_message(fullcommand, message)
         raise ArgumentParsingError(full_msg)
 
 
@@ -189,7 +200,7 @@ def get_command_help(parser, command):
             dest = action.dest if action.metavar is None else action.metavar
             options.append((dest, action.help))
 
-    help_text = helptexts.get_command_help(COMMAND_GROUPS, command, options)
+    help_text = helper.get_command_help(command, options)
     return help_text
 
 
@@ -197,9 +208,9 @@ def get_general_help(detailed=False):
     """Produce the "general charmcraft" help."""
     options = _get_global_options()
     if detailed:
-        help_text = helptexts.get_detailed_help(COMMAND_GROUPS, options)
+        help_text = helper.get_detailed_help(options)
     else:
-        help_text = helptexts.get_full_help(COMMAND_GROUPS, options)
+        help_text = helper.get_full_help(options)
     return help_text
 
 
@@ -314,7 +325,7 @@ class Dispatcher:
             cmd_args = filtered_sysargs[1:]
             if command not in self.commands:
                 msg = "no such command {!r}".format(command)
-                help_text = helptexts.get_usage_message("charmcraft", msg)
+                help_text = helper.get_usage_message("charmcraft", msg)
                 raise ArgumentParsingError(help_text)
         else:
             # no command!
@@ -343,6 +354,7 @@ class Dispatcher:
 
 def main(argv=None):
     """Provide the main entry point."""
+    helper.init("charmcraft", GENERAL_SUMMARY, COMMAND_GROUPS)
     message_handler.init(message_handler.NORMAL)
 
     if argv is None:

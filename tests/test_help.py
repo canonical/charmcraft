@@ -20,20 +20,22 @@ from unittest.mock import patch
 
 import pytest
 
+from charmcraft import helptexts, main
 from charmcraft.main import COMMAND_GROUPS, Dispatcher, ArgumentParsingError
 from charmcraft.commands.version import VersionCommand
-from charmcraft.helptexts import (
-    get_command_help,
-    get_detailed_help,
-    get_usage_message,
-    get_full_help,
-)
 from tests.factory import create_command
 
 
 # -- verifications on different short help texts
 
 all_commands = list.__add__(*[commands for _, _, commands in COMMAND_GROUPS])
+
+
+@pytest.fixture
+def helper():
+    """Provide a clean and fresh helper instance, ensuring the module also has it."""
+    helper = helptexts.helper = main.helper = helptexts.Helper()
+    return helper
 
 
 @pytest.mark.parametrize("command", all_commands)
@@ -63,13 +65,14 @@ def test_aesthetic_args_options_msg(command, config):
     command("group", config).fill_parser(FakeParser())
 
 
-def test_get_usage_message():
+def test_get_usage_message(helper):
     """Check the general "usage" text."""
-    text = get_usage_message("charmcraft build", "bad parameter for the build")
+    helper.init("testapp", "general summary", [])
+    text = helper.get_usage_message("testapp build", "bad parameter for the build")
     expected = textwrap.dedent(
         """\
-        Usage: charmcraft [options] command [args]...
-        Try 'charmcraft build -h' for help.
+        Usage: testapp [options] command [args]...
+        Try 'testapp build -h' for help.
 
         Error: bad parameter for the build
     """
@@ -80,7 +83,7 @@ def test_get_usage_message():
 # -- bulding of the big help text outputs
 
 
-def test_default_help_text():
+def test_default_help_text(helper):
     """All different parts for the default help."""
     cmd1 = create_command("cmd1", "Cmd help which is very long but whatever.", common_=True)
     cmd2 = create_command("command-2", "Cmd help.", common_=True)
@@ -95,27 +98,24 @@ def test_default_help_text():
         ("group3", "help text for g3", [cmd7]),
         ("group2", "help text for g2", [cmd3, cmd4, cmd5, cmd1]),
     ]
-    fake_summary = textwrap.indent(
-        textwrap.dedent(
-            """
+    fake_summary = textwrap.dedent(
+        """
         This is the summary for
         the whole program.
     """
-        ),
-        "    ",
     )
     global_options = [
         ("-h, --help", "Show this help message and exit."),
         ("-q, --quiet", "Only show warnings and errors, not progress."),
     ]
 
-    with patch("charmcraft.helptexts.GENERAL_SUMMARY", fake_summary):
-        text = get_full_help(command_groups, global_options)
+    helper.init("testapp", fake_summary, command_groups)
+    text = helper.get_full_help(global_options)
 
     expected = textwrap.dedent(
         """\
         Usage:
-            charmcraft [help] <command>
+            testapp [help] <command>
 
         Summary:
             This is the summary for
@@ -145,7 +145,7 @@ def test_default_help_text():
     assert text == expected
 
 
-def test_detailed_help_text():
+def test_detailed_help_text(helper):
     """All different parts for the detailed help, showing all commands."""
     cmd1 = create_command("cmd1", "Cmd help which is very long but whatever.", common_=True)
     cmd2 = create_command("command-2", "Cmd help.", common_=True)
@@ -160,27 +160,24 @@ def test_detailed_help_text():
         ("group3", "Group 3 help text", [cmd7]),
         ("group2", "Group 2 stuff", [cmd3, cmd4, cmd5, cmd1]),
     ]
-    fake_summary = textwrap.indent(
-        textwrap.dedent(
-            """
+    fake_summary = textwrap.dedent(
+        """
         This is the summary for
         the whole program.
     """
-        ),
-        "    ",
     )
     global_options = [
         ("-h, --help", "Show this help message and exit."),
         ("-q, --quiet", "Only show warnings and errors, not progress."),
     ]
 
-    with patch("charmcraft.helptexts.GENERAL_SUMMARY", fake_summary):
-        text = get_detailed_help(command_groups, global_options)
+    helper.init("testapp", fake_summary, command_groups)
+    text = helper.get_detailed_help(global_options)
 
     expected = textwrap.dedent(
         """\
         Usage:
-            charmcraft [help] <command>
+            testapp [help] <command>
 
         Summary:
             This is the summary for
@@ -213,7 +210,7 @@ def test_detailed_help_text():
     assert text == expected
 
 
-def test_command_help_text_no_parameters(config):
+def test_command_help_text_no_parameters(config, helper):
     """All different parts for a specific command help that doesn't have parameters."""
     overview = textwrap.dedent(
         """
@@ -238,7 +235,8 @@ def test_command_help_text_no_parameters(config):
         ("--revision", "The revision to release (defaults to latest)."),
     ]
 
-    text = get_command_help(command_groups, cmd1("group1", config), options)
+    helper.init("testapp", "general summary", command_groups)
+    text = helper.get_command_help(cmd1("group1", config), options)
 
     expected = textwrap.dedent(
         """\
@@ -266,7 +264,7 @@ def test_command_help_text_no_parameters(config):
     assert text == expected
 
 
-def test_command_help_text_with_parameters(config):
+def test_command_help_text_with_parameters(config, helper):
     """All different parts for a specific command help that has parameters."""
     overview = textwrap.dedent(
         """
@@ -287,7 +285,8 @@ def test_command_help_text_with_parameters(config):
         ("--other-option", "Other option."),
     ]
 
-    text = get_command_help(command_groups, cmd1("group1", config), options)
+    helper.init("testapp", "general summary", command_groups)
+    text = helper.get_command_help(cmd1("group1", config), options)
 
     expected = textwrap.dedent(
         """\
@@ -311,7 +310,7 @@ def test_command_help_text_with_parameters(config):
     assert text == expected
 
 
-def test_command_help_text_loneranger(config):
+def test_command_help_text_loneranger(config, helper):
     """All different parts for a specific command that's the only one in its group."""
     overview = textwrap.dedent(
         """
@@ -330,7 +329,8 @@ def test_command_help_text_loneranger(config):
         ("-q, --quiet", "Only show warnings and errors, not progress."),
     ]
 
-    text = get_command_help(command_groups, cmd1("group1", config), options)
+    helper.init("testapp", "general summary", command_groups)
+    text = helper.get_command_help(cmd1("group1", config), options)
 
     expected = textwrap.dedent(
         """\
@@ -355,7 +355,7 @@ def test_command_help_text_loneranger(config):
 
 def test_tool_exec_no_arguments_help():
     """Execute charmcraft without any option at all."""
-    with patch("charmcraft.helptexts.get_full_help") as mock:
+    with patch("charmcraft.helptexts.Helper.get_full_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ArgumentParsingError) as cm:
             dispatcher = Dispatcher([], COMMAND_GROUPS)
@@ -364,8 +364,7 @@ def test_tool_exec_no_arguments_help():
 
     # check the given information to the help text builder
     args = mock.call_args[0]
-    assert args[0] == COMMAND_GROUPS
-    assert sorted(x[0] for x in args[1]) == [
+    assert sorted(x[0] for x in args[0]) == [
         "-h, --help",
         "-p, --project-dir",
         "-q, --quiet",
@@ -390,7 +389,7 @@ def test_tool_exec_full_help(sysargv, caplog):
     """Execute charmcraft explicitly asking for help."""
     caplog.set_level(logging.INFO, logger="charmcraft")
 
-    with patch("charmcraft.helptexts.get_full_help") as mock:
+    with patch("charmcraft.helptexts.Helper.get_full_help") as mock:
         mock.return_value = "test help"
         dispatcher = Dispatcher(sysargv, COMMAND_GROUPS)
         retcode = dispatcher.run()
@@ -398,8 +397,7 @@ def test_tool_exec_full_help(sysargv, caplog):
 
     # check the given information to the help text builder
     args = mock.call_args[0]
-    assert args[0] == COMMAND_GROUPS
-    assert sorted(x[0] for x in args[1]) == [
+    assert sorted(x[0] for x in args[0]) == [
         "-h, --help",
         "-p, --project-dir",
         "-q, --quiet",
@@ -422,9 +420,10 @@ def test_tool_exec_full_help(sysargv, caplog):
         ["-h", "wrongcommand", "--help"],
     ],
 )
-def test_tool_exec_command_incorrect(sysargv):
+def test_tool_exec_command_incorrect(sysargv, helper):
     """Execute a command that doesn't exist."""
     command_groups = COMMAND_GROUPS + [("group", "help text", [])]
+    helper.init("charmcraft", "general summary", command_groups)
     with pytest.raises(ArgumentParsingError) as cm:
         dispatcher = Dispatcher(sysargv, command_groups)
         dispatcher.run()
@@ -451,16 +450,15 @@ def test_tool_exec_command_dash_help_simple(help_option, caplog):
 
     dispatcher = Dispatcher(["somecommand", help_option], command_groups)
 
-    with patch("charmcraft.helptexts.get_command_help") as mock:
+    with patch("charmcraft.helptexts.Helper.get_command_help") as mock:
         mock.return_value = "test help"
         retcode = dispatcher.run()
     assert retcode is None
 
     # check the given information to the help text builder
     args = mock.call_args[0]
-    assert args[0] == COMMAND_GROUPS
-    assert args[1].__class__ == cmd
-    assert sorted(x[0] for x in args[2]) == [
+    assert args[0].__class__ == cmd
+    assert sorted(x[0] for x in args[1]) == [
         "-h, --help",
         "-p, --project-dir",
         "-q, --quiet",
@@ -481,16 +479,15 @@ def test_tool_exec_command_dash_help_reverse(help_option, caplog):
 
     dispatcher = Dispatcher([help_option, "somecommand"], command_groups)
 
-    with patch("charmcraft.helptexts.get_command_help") as mock:
+    with patch("charmcraft.helptexts.Helper.get_command_help") as mock:
         mock.return_value = "test help"
         retcode = dispatcher.run()
     assert retcode is None
 
     # check the given information to the help text builder
     args = mock.call_args[0]
-    assert args[0] == COMMAND_GROUPS
-    assert args[1].__class__ == cmd
-    assert sorted(x[0] for x in args[2]) == [
+    assert args[0].__class__ == cmd
+    assert sorted(x[0] for x in args[1]) == [
         "-h, --help",
         "-p, --project-dir",
         "-q, --quiet",
@@ -516,16 +513,15 @@ def test_tool_exec_command_dash_help_missing_params(help_option, caplog):
 
     dispatcher = Dispatcher(["somecommand", help_option], command_groups)
 
-    with patch("charmcraft.helptexts.get_command_help") as mock:
+    with patch("charmcraft.helptexts.Helper.get_command_help") as mock:
         mock.return_value = "test help"
         retcode = dispatcher.run()
     assert retcode is None
 
     # check the given information to the help text builder
     args = mock.call_args[0]
-    assert args[0] == COMMAND_GROUPS
-    assert args[1].__class__ == cmd
-    assert sorted(x[0] for x in args[2]) == [
+    assert args[0].__class__ == cmd
+    assert sorted(x[0] for x in args[1]) == [
         "-h, --help",
         "-p, --project-dir",
         "-q, --quiet",
@@ -538,10 +534,11 @@ def test_tool_exec_command_dash_help_missing_params(help_option, caplog):
     assert [expected] == [rec.message for rec in caplog.records]
 
 
-def test_tool_exec_command_wrong_option():
+def test_tool_exec_command_wrong_option(helper):
     """Execute a correct command but with a wrong option."""
     cmd = create_command("somecommand", "This command does that.")
     command_groups = [("group", "help text", [cmd])]
+    helper.init("charmcraft", "general summary", command_groups)
     with pytest.raises(ArgumentParsingError) as cm:
         Dispatcher(["somecommand", "--whatever"], command_groups)
 
@@ -558,7 +555,7 @@ def test_tool_exec_command_wrong_option():
     assert str(error) == expected
 
 
-def test_tool_exec_command_bad_option_type():
+def test_tool_exec_command_bad_option_type(helper):
     """Execute a correct command but giving the valid option a bad value."""
 
     def fill_parser(self, parser):
@@ -568,6 +565,7 @@ def test_tool_exec_command_bad_option_type():
     cmd.fill_parser = fill_parser
 
     command_groups = [("group", "help text", [cmd])]
+    helper.init("charmcraft", "general summary", command_groups)
     with pytest.raises(ArgumentParsingError) as cm:
         Dispatcher(["somecommand", "--number=foo"], command_groups)
 
@@ -589,16 +587,15 @@ def test_tool_exec_help_command_on_command_ok(caplog):
     caplog.set_level(logging.INFO, logger="charmcraft")
     dispatcher = Dispatcher(["help", "version"], COMMAND_GROUPS)
 
-    with patch("charmcraft.helptexts.get_command_help") as mock:
+    with patch("charmcraft.helptexts.Helper.get_command_help") as mock:
         mock.return_value = "test help"
         retcode = dispatcher.run()
     assert retcode is None
 
     # check the given information to the help text builder
     args = mock.call_args[0]
-    assert args[0] == COMMAND_GROUPS
-    assert args[1].__class__ == VersionCommand
-    assert sorted(x[0] for x in args[2]) == [
+    assert args[0].__class__ == VersionCommand
+    assert sorted(x[0] for x in args[1]) == [
         "-h, --help",
         "-p, --project-dir",
         "-q, --quiet",
@@ -627,15 +624,14 @@ def test_tool_exec_help_command_on_command_complex(caplog):
 
     dispatcher = Dispatcher(["help", "somecommand"], command_groups)
 
-    with patch("charmcraft.helptexts.get_command_help") as mock:
+    with patch("charmcraft.helptexts.Helper.get_command_help") as mock:
         mock.return_value = "test help"
         retcode = dispatcher.run()
     assert retcode is None
 
     # check the given information to the help text builder
     args = mock.call_args[0]
-    assert args[0] == COMMAND_GROUPS
-    assert args[1].__class__ == cmd
+    assert args[0].__class__ == cmd
     expected_options = [
         "--option1",
         "-h, --help",
@@ -647,7 +643,7 @@ def test_tool_exec_help_command_on_command_complex(caplog):
         "param2",
         "transformed3",
     ]
-    assert sorted(x[0] for x in args[2]) == expected_options
+    assert sorted(x[0] for x in args[1]) == expected_options
 
     # check the result of the full help builder is what is shown
     expected = "test help"
@@ -658,7 +654,7 @@ def test_tool_exec_help_command_on_command_wrong():
     """Execute charmcraft asking for help on a command which does not exist."""
     dispatcher = Dispatcher(["help", "wrongcommand"], COMMAND_GROUPS)
 
-    with patch("charmcraft.helptexts.get_usage_message") as mock:
+    with patch("charmcraft.helptexts.Helper.get_usage_message") as mock:
         mock.return_value = "test help"
         with pytest.raises(ArgumentParsingError) as cm:
             dispatcher.run()
@@ -676,15 +672,14 @@ def test_tool_exec_help_command_all(caplog):
     caplog.set_level(logging.INFO, logger="charmcraft")
     dispatcher = Dispatcher(["help", "--all"], COMMAND_GROUPS)
 
-    with patch("charmcraft.helptexts.get_detailed_help") as mock:
+    with patch("charmcraft.helptexts.Helper.get_detailed_help") as mock:
         mock.return_value = "test help"
         retcode = dispatcher.run()
     assert retcode is None
 
     # check the given information to the help text builder
     args = mock.call_args[0]
-    assert args[0] == COMMAND_GROUPS
-    assert sorted(x[0] for x in args[1]) == [
+    assert sorted(x[0] for x in args[0]) == [
         "-h, --help",
         "-p, --project-dir",
         "-q, --quiet",

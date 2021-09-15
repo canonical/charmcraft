@@ -59,8 +59,8 @@ def _build_item(title, text, title_space):
     return result
 
 
-class Helper:
-    """Produce the different helping texts."""
+class HelpBuilder:
+    """Produce the different help texts."""
 
     def __init__(self):
         self.appname = None
@@ -278,4 +278,4 @@ class Helper:
         return text
 
 
-helper = Helper()
+help_builder = HelpBuilder()

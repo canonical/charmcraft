@@ -276,7 +276,7 @@ def test_dispatcher_generic_setup_projectdir_without_param_confusing(options):
     """Generic parameter handling for 'project dir' taking confusingly the command as the arg."""
     cmd = create_command("somecommand")
     groups = [("test-group", "title", [cmd])]
-    with patch("charmcraft.helptexts.Helper.get_full_help") as mock_helper:
+    with patch("charmcraft.helptexts.HelpBuilder.get_full_help") as mock_helper:
         mock_helper.return_value = "help text"
         with pytest.raises(ArgumentParsingError) as err:
             Dispatcher(options, groups)

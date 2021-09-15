@@ -24,7 +24,7 @@ from collections import namedtuple
 from charmcraft import config, env
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
-from charmcraft.helptexts import helper
+from charmcraft.helptexts import help_builder
 from charmcraft.logsetup import message_handler
 from charmcraft.parts import setup_parts
 
@@ -86,7 +86,7 @@ class HelpCommand(BaseCommand):
         if parsed_args.command_to_help not in all_commands:
             # asked help on a command that doesn't exist
             msg = "no such command {!r}".format(parsed_args.command_to_help)
-            help_text = helper.get_usage_message("charmcraft", msg)
+            help_text = help_builder.get_usage_message("charmcraft", msg)
             raise ArgumentParsingError(help_text)
 
         cmd_class, group = all_commands[parsed_args.command_to_help]
@@ -176,7 +176,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         """Show the usage, the error message, and no more."""
         fullcommand = "charmcraft " + self.prog
-        full_msg = helper.get_usage_message(fullcommand, message)
+        full_msg = help_builder.get_usage_message(fullcommand, message)
         raise ArgumentParsingError(full_msg)
 
 
@@ -200,7 +200,7 @@ def get_command_help(parser, command):
             dest = action.dest if action.metavar is None else action.metavar
             options.append((dest, action.help))
 
-    help_text = helper.get_command_help(command, options)
+    help_text = help_builder.get_command_help(command, options)
     return help_text
 
 
@@ -208,9 +208,9 @@ def get_general_help(detailed=False):
     """Produce the "general charmcraft" help."""
     options = _get_global_options()
     if detailed:
-        help_text = helper.get_detailed_help(options)
+        help_text = help_builder.get_detailed_help(options)
     else:
-        help_text = helper.get_full_help(options)
+        help_text = help_builder.get_full_help(options)
     return help_text
 
 
@@ -325,7 +325,7 @@ class Dispatcher:
             cmd_args = filtered_sysargs[1:]
             if command not in self.commands:
                 msg = "no such command {!r}".format(command)
-                help_text = helper.get_usage_message("charmcraft", msg)
+                help_text = help_builder.get_usage_message("charmcraft", msg)
                 raise ArgumentParsingError(help_text)
         else:
             # no command!
@@ -354,7 +354,7 @@ class Dispatcher:
 
 def main(argv=None):
     """Provide the main entry point."""
-    helper.init("charmcraft", GENERAL_SUMMARY, COMMAND_GROUPS)
+    help_builder.init("charmcraft", GENERAL_SUMMARY, COMMAND_GROUPS)
     message_handler.init(message_handler.NORMAL)
 
     if argv is None:

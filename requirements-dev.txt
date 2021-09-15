@@ -6,7 +6,7 @@ cffi==1.14.6
 charset-normalizer==2.0.4
 click==8.0.1
 coverage==5.5
-craft-parts==1.0.0
+craft-parts==1.0.1
 craft-providers==1.0.3
 flake8==3.9.2
 humanize==3.11.0

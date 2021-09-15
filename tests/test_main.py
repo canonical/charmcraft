@@ -276,11 +276,13 @@ def test_dispatcher_generic_setup_projectdir_without_param_confusing(options):
     """Generic parameter handling for 'project dir' taking confusingly the command as the arg."""
     cmd = create_command("somecommand")
     groups = [("test-group", "title", [cmd])]
-    with pytest.raises(ArgumentParsingError) as err:
-        Dispatcher(options, groups)
+    with patch("charmcraft.helptexts.HelpBuilder.get_full_help") as mock_helper:
+        mock_helper.return_value = "help text"
+        with pytest.raises(ArgumentParsingError) as err:
+            Dispatcher(options, groups)
 
     # generic usage message because "no command" (as 'somecommand' was consumed by --project-dir)
-    assert "Usage" in str(err.value)
+    assert str(err.value) == "help text"
 
 
 def test_dispatcher_build_commands_ok():

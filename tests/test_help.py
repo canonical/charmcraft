@@ -16,7 +16,7 @@
 
 import logging
 import textwrap
-from unittest.mock import patch, call
+from unittest.mock import patch
 
 import pytest
 
@@ -32,26 +32,26 @@ def help_builder():
     return help_builder
 
 
-# -- bulding of the "usage" help
+# -- bulding "usage" help
 
 
 def test_get_usage_message_with_command(help_builder):
     """Check the general "usage" text passing a command."""
     help_builder.init("testapp", "general summary", [])
-    text = help_builder.get_usage_message("bad parameter for the build", "build")
+    text = help_builder.get_usage_message("bad parameter for build", "build")
     expected = textwrap.dedent(
         """\
         Usage: testapp [options] command [args]...
         Try 'testapp build -h' for help.
 
-        Error: bad parameter for the build
+        Error: bad parameter for build
     """
     )
     assert text == expected
 
 
 def test_get_usage_message_no_command(help_builder):
-    """Check the general "usage" text not passing a command."""
+    """Check the general "usage" text when not passing a command."""
     help_builder.init("testapp", "general summary", [])
     text = help_builder.get_usage_message("missing a mandatory command")
     expected = textwrap.dedent(

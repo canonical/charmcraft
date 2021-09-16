@@ -22,7 +22,9 @@ import logging
 import os
 import pathlib
 import shutil
+import site
 import subprocess
+import venv
 from typing import List
 
 from charmcraft.cmdbase import CommandError
@@ -33,6 +35,7 @@ from charmcraft.utils import make_executable
 # Some constants that are used through the code.
 WORK_DIRNAME = "work_dir"
 VENV_DIRNAME = "venv"
+STAGING_VENV_DIRNAME = "staging-venv"
 
 # The file name and template for the dispatch script
 DISPATCH_FILENAME = "dispatch"
@@ -134,7 +137,10 @@ class CharmBuilder:
                 rel_path = rel_basedir / name
                 abs_path = abs_basedir / name
 
-                if self.ignore_rules.match(str(rel_path), is_dir=True):
+                if name == STAGING_VENV_DIRNAME:
+                    logger.debug("Ignoring staging venv directory: %r", STAGING_VENV_DIRNAME)
+                    ignored.append(pos)
+                elif self.ignore_rules.match(str(rel_path), is_dir=True):
                     logger.debug("Ignoring directory because of rules: %r", str(rel_path))
                     ignored.append(pos)
                 elif abs_path.is_symlink():
@@ -224,20 +230,23 @@ class CharmBuilder:
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
-            _process_run(["pip3", "--version"])
+            staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
+            envbuilder = venv.EnvBuilder(symlinks=True, with_pip=True)
+            envbuilder.create(staging_venv_dir)
+            pip_cmd = str(staging_venv_dir / "bin" / "pip3")
 
-            venvpath = self.buildpath / VENV_DIRNAME
-            cmd = [
-                "pip3",
-                "install",  # base command
-                "--target={}".format(venvpath),  # put all the resulting files in that specific dir
-            ]
+            _process_run([pip_cmd, "--version"])
+
+            cmd = [pip_cmd, "install", "--no-binary", ":all:"]  # base command
             if _pip_needs_system():
                 logger.debug("adding --system to work around pip3 defaulting to --user")
                 cmd.append("--system")
             for reqspath in self.requirement_paths:
                 cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
             _process_run(cmd)
+
+            # The charm builder is executed with PYTHONUSERBASE set to the staging venv dir
+            shutil.copytree(site.USER_SITE, self.buildpath / VENV_DIRNAME)
 
 
 def _pip_needs_system():

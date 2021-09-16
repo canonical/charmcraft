@@ -19,6 +19,7 @@ import filecmp
 import logging
 import os
 import pathlib
+import site
 import socket
 import sys
 from unittest.mock import call, patch
@@ -26,7 +27,7 @@ from unittest.mock import call, patch
 import pytest
 
 from charmcraft import charm_builder
-from charmcraft.charm_builder import VENV_DIRNAME, CharmBuilder, _process_run
+from charmcraft.charm_builder import STAGING_VENV_DIRNAME, VENV_DIRNAME, CharmBuilder, _process_run
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import BUILD_DIRNAME, DISPATCH_CONTENT, DISPATCH_FILENAME
 from charmcraft.metadata import CHARM_METADATA
@@ -608,14 +609,29 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
         with patch("charmcraft.charm_builder._process_run") as mock:
-            builder.handle_dependencies()
+            with patch("shutil.copytree") as mock_copytree:
+                builder.handle_dependencies()
 
-    envpath = build_dir / VENV_DIRNAME
+    pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
     assert mock.mock_calls == [
-        call(["pip3", "--version"]),
-        call(["pip3", "install", "--target={}".format(envpath), "--requirement=reqs.txt"]),
+        call([pip_cmd, "--version"]),
+        call([pip_cmd, "install", "--no-binary", ":all:", "--requirement=reqs.txt"]),
     ]
     assert mock_run.mock_calls == [
+        call(
+            [
+                str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "python"),
+                "-Im",
+                "ensurepip",
+                "--upgrade",
+                "--default-pip",
+            ],
+            stdout=-1,
+            timeout=None,
+            check=True,
+            stderr=-2,
+            universal_newlines=True,
+        ),
         call(
             [
                 "python3",
@@ -629,6 +645,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
             stderr=-3,
         ),
     ]
+    assert mock_copytree.mock_calls == [call(site.USER_SITE, build_dir / VENV_DIRNAME)]
 
 
 def test_build_dependencies_needs_system(tmp_path, config):
@@ -648,21 +665,24 @@ def test_build_dependencies_needs_system(tmp_path, config):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 0
         with patch("charmcraft.charm_builder._process_run") as mock:
-            builder.handle_dependencies()
+            with patch("shutil.copytree") as mock_copytree:
+                builder.handle_dependencies()
 
-    envpath = build_dir / VENV_DIRNAME
+    pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
     assert mock.mock_calls == [
-        call(["pip3", "--version"]),
+        call([pip_cmd, "--version"]),
         call(
             [
-                "pip3",
+                pip_cmd,
                 "install",
-                "--target={}".format(envpath),
+                "--no-binary",
+                ":all:",
                 "--system",
                 "--requirement=reqs",
             ]
         ),
     ]
+    assert mock_copytree.mock_calls == [call(site.USER_SITE, build_dir / VENV_DIRNAME)]
 
 
 def test_build_dependencies_virtualenv_multiple(tmp_path):
@@ -682,21 +702,24 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
     with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
         mock_run.return_value.returncode = 1
         with patch("charmcraft.charm_builder._process_run") as mock:
-            builder.handle_dependencies()
+            with patch("shutil.copytree") as mock_copytree:
+                builder.handle_dependencies()
 
-    envpath = build_dir / VENV_DIRNAME
+    pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
     assert mock.mock_calls == [
-        call(["pip3", "--version"]),
+        call([pip_cmd, "--version"]),
         call(
             [
-                "pip3",
+                pip_cmd,
                 "install",
-                "--target={}".format(envpath),
+                "--no-binary",
+                ":all:",
                 "--requirement=reqs1.txt",
                 "--requirement=reqs2.txt",
             ]
         ),
     ]
+    assert mock_copytree.mock_calls == [call(site.USER_SITE, build_dir / VENV_DIRNAME)]
 
 
 def test_build_dependencies_virtualenv_none(tmp_path):

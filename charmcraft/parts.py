@@ -260,7 +260,6 @@ class PartsLifecycle:
                 cache_dir=cache_dir,
                 ignore_local_sources=ignore_local_sources,
             )
-            self._lcm.refresh_packages_list()
         except PartsError as err:
             raise CommandError(err)
 

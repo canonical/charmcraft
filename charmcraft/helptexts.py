@@ -30,7 +30,7 @@ Usage:
 
 USAGE = """\
 Usage: {appname} [options] command [args]...
-Try '{fullcommand} -h' for help.
+Try '{full_command} -h' for help.
 
 Error: {error_message}
 """
@@ -73,23 +73,23 @@ class HelpBuilder:
         self.general_summary = general_summary
         self.command_groups = command_groups
 
-    def get_usage_message(self, extra_command, error_message):
+    def get_usage_message(self, error_message, command=""):
         """Build a usage and error message.
 
-        The extra_command is the extra string used after the application name to build the
+        The command is the extra string used after the application name to build the
         full command that will be shown in the usage message; for example, having an
         application name of "someapp":
-        - if extra_command is "" it will be shown "Try 'appname -h' for help".
-        - if extra_command is "version" it will be shown "Try 'appname version -h' for help"
+        - if command is "" it will be shown "Try 'appname -h' for help".
+        - if command is "version" it will be shown "Try 'appname version -h' for help"
 
         The error message is the specific problem in the given parameters.
         """
-        if extra_command:
-            fullcommand = f"{self.appname} {extra_command}"
+        if command:
+            full_command = f"{self.appname} {command}"
         else:
-            fullcommand = self.appname
+            full_command = self.appname
         return USAGE.format(
-            appname=self.appname, fullcommand=fullcommand, error_message=error_message
+            appname=self.appname, full_command=full_command, error_message=error_message
         )
 
     def get_full_help(self, global_options):

@@ -86,7 +86,7 @@ class HelpCommand(BaseCommand):
         if parsed_args.command_to_help not in all_commands:
             # asked help on a command that doesn't exist
             msg = "no such command {!r}".format(parsed_args.command_to_help)
-            help_text = help_builder.get_usage_message(extra_command="", error_message=msg)
+            help_text = help_builder.get_usage_message(msg)
             raise ArgumentParsingError(help_text)
 
         cmd_class, group = all_commands[parsed_args.command_to_help]
@@ -175,7 +175,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
 
     def error(self, message):
         """Show the usage, the error message, and no more."""
-        full_msg = help_builder.get_usage_message(extra_command=self.prog, error_message=message)
+        full_msg = help_builder.get_usage_message(message, command=self.prog)
         raise ArgumentParsingError(full_msg)
 
 
@@ -324,7 +324,7 @@ class Dispatcher:
             cmd_args = filtered_sysargs[1:]
             if command not in self.commands:
                 msg = "no such command {!r}".format(command)
-                help_text = help_builder.get_usage_message(extra_command="", error_message=msg)
+                help_text = help_builder.get_usage_message(msg)
                 raise ArgumentParsingError(help_text)
         else:
             # no command!

@@ -38,7 +38,7 @@ def help_builder():
 def test_get_usage_message_with_command(help_builder):
     """Check the general "usage" text passing a command."""
     help_builder.init("testapp", "general summary", [])
-    text = help_builder.get_usage_message("build", "bad parameter for the build")
+    text = help_builder.get_usage_message("bad parameter for the build", "build")
     expected = textwrap.dedent(
         """\
         Usage: testapp [options] command [args]...
@@ -53,7 +53,7 @@ def test_get_usage_message_with_command(help_builder):
 def test_get_usage_message_no_command(help_builder):
     """Check the general "usage" text not passing a command."""
     help_builder.init("testapp", "general summary", [])
-    text = help_builder.get_usage_message("", "missing a mandatory command")
+    text = help_builder.get_usage_message("missing a mandatory command")
     expected = textwrap.dedent(
         """\
         Usage: testapp [options] command [args]...
@@ -651,8 +651,7 @@ def test_tool_exec_help_command_on_command_wrong():
     error = cm.value
 
     # check the given information to the help text builder
-    expected_call = call(extra_command="", error_message="no such command 'wrongcommand'")
-    assert mock.mock_calls == [expected_call]
+    assert mock.call_args[0] == ("no such command 'wrongcommand'",)
 
     # check the result of the full help builder is what is shown
     assert str(error) == "test help"

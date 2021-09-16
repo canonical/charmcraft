@@ -73,12 +73,21 @@ class HelpBuilder:
         self.general_summary = general_summary
         self.command_groups = command_groups
 
-    def get_usage_message(self, fullcommand, error_message):
+    def get_usage_message(self, extra_command, error_message):
         """Build a usage and error message.
 
-        The fullcommand is the command used by the user (`charmcraft`, `charmcraft build`, etc),
-        and the error message is the specific problem in the given parameters.
+        The extra_command is the extra string used after the application name to build the
+        full command that will be shown in the usage message; for example, having an
+        application name of "someapp":
+        - if extra_command is "" it will be shown "Try 'appname -h' for help".
+        - if extra_command is "version" it will be shown "Try 'appname version -h' for help"
+
+        The error message is the specific problem in the given parameters.
         """
+        if extra_command:
+            fullcommand = f"{self.appname} {extra_command}"
+        else:
+            fullcommand = self.appname
         return USAGE.format(
             appname=self.appname, fullcommand=fullcommand, error_message=error_message
         )

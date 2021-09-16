@@ -87,3 +87,33 @@ def test_basecommand_run_mandatory():
     tc = TestClass("group", "config")
     with pytest.raises(NotImplementedError):
         tc.run([])
+
+
+# -- tests for strings in commands
+
+
+@pytest.mark.parametrize("command", all_commands)
+def test_aesthetic_help_msg(command):
+    """All the real commands help msg start with uppercase and doesn't end with a dot."""
+    msg = command.help_msg
+    assert msg[0].isupper() and msg[-1] != "."
+
+
+@pytest.mark.parametrize("command", all_commands)
+def test_aesthetic_args_options_msg(command, config):
+    """All the real commands args help messages start with uppercase and dont' end with a dot."""
+
+    class FakeParser:
+        """A fake to get the arguments added."""
+
+        def add_mutually_exclusive_group(self, *args, **kwargs):
+            """Return self, as it is used to add arguments too."""
+            return self
+
+        def add_argument(self, *args, **kwargs):
+            """Verify that all commands have a correctly formatted help."""
+            help_msg = kwargs.get("help")
+            assert help_msg, "The help message must be present in each option"
+            assert help_msg[0].isupper() and help_msg[-1] != "."
+
+    command("group", config).fill_parser(FakeParser())

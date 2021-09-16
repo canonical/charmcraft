@@ -66,11 +66,11 @@ def is_charmcraft_running_in_managed_mode():
     return distutils.util.strtobool(managed_flag) == 1
 
 
-def is_charmcraft_running_in_supported_environment():
+def is_charmcraft_running_in_supported_environment() -> bool:
     """Check if Charmcraft is running in a supported environment."""
     if sys.platform == "linux":
         return is_charmcraft_running_from_snap()
-    elif sys.platform == "win32":
+    elif sys.platform in ("darwin", "win32"):
         return True
 
     return False

@@ -613,25 +613,13 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
                 builder.handle_dependencies()
 
     pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
+
     assert mock.mock_calls == [
+        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
         call([pip_cmd, "install", "--no-binary", ":all:", "--requirement=reqs.txt"]),
     ]
     assert mock_run.mock_calls == [
-        call(
-            [
-                str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "python"),
-                "-Im",
-                "ensurepip",
-                "--upgrade",
-                "--default-pip",
-            ],
-            stdout=-1,
-            timeout=None,
-            check=True,
-            stderr=-2,
-            universal_newlines=True,
-        ),
         call(
             [
                 "python3",
@@ -670,6 +658,7 @@ def test_build_dependencies_needs_system(tmp_path, config):
 
     pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
     assert mock.mock_calls == [
+        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
         call(
             [
@@ -707,6 +696,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
 
     pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
     assert mock.mock_calls == [
+        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
         call(
             [

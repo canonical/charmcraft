@@ -24,7 +24,6 @@ import pathlib
 import shutil
 import site
 import subprocess
-import venv
 from typing import List
 
 from charmcraft.cmdbase import CommandError
@@ -231,8 +230,7 @@ class CharmBuilder:
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
             staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
-            envbuilder = venv.EnvBuilder(symlinks=True, with_pip=True)
-            envbuilder.create(staging_venv_dir)
+            _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
             pip_cmd = str(staging_venv_dir / "bin" / "pip3")
 
             _process_run([pip_cmd, "--version"])

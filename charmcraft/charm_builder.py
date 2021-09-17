@@ -235,9 +235,6 @@ class CharmBuilder:
             _process_run([pip_cmd, "--version"])
 
             cmd = [pip_cmd, "install", "--no-binary", ":all:"]  # base command
-            if _pip_needs_system():
-                logger.debug("adding --system to work around pip3 defaulting to --user")
-                cmd.append("--system")
             for reqspath in self.requirement_paths:
                 cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
             _process_run(cmd)
@@ -252,20 +249,6 @@ def _find_venv_bin(basedir, exec_base):
         return basedir / "Scripts" / f"{exec_base}.exe"
 
     return basedir / "bin" / exec_base
-
-
-def _pip_needs_system():
-    """Determine whether pip3 defaults to --user, needing --system to turn it off."""
-    cmd = [
-        "python3",
-        "-c",
-        (
-            "from pip.commands.install import InstallCommand; "
-            'assert InstallCommand().cmd_opts.get_option("--system") is not None'
-        ),
-    ]
-    proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return proc.returncode == 0
 
 
 def _process_run(cmd: List[str]) -> None:

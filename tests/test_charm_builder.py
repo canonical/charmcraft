@@ -606,11 +606,9 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
         requirements=["reqs.txt"],
     )
 
-    with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 1
-        with patch("charmcraft.charm_builder._process_run") as mock:
-            with patch("shutil.copytree") as mock_copytree:
-                builder.handle_dependencies()
+    with patch("charmcraft.charm_builder._process_run") as mock:
+        with patch("shutil.copytree") as mock_copytree:
+            builder.handle_dependencies()
 
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
 
@@ -618,58 +616,6 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
         call([pip_cmd, "install", "--no-binary", ":all:", "--requirement=reqs.txt"]),
-    ]
-    assert mock_run.mock_calls == [
-        call(
-            [
-                "python3",
-                "-c",
-                (
-                    "from pip.commands.install import InstallCommand; "
-                    'assert InstallCommand().cmd_opts.get_option("--system") is not None'
-                ),
-            ],
-            stdout=-3,
-            stderr=-3,
-        ),
-    ]
-    assert mock_copytree.mock_calls == [call(site.USER_SITE, build_dir / VENV_DIRNAME)]
-
-
-def test_build_dependencies_needs_system(tmp_path, config):
-    """pip3 is called with --system when pip3 needs it."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
-        entrypoint=pathlib.Path("whatever"),
-        requirements=["reqs"],
-    )
-
-    with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 0
-        with patch("charmcraft.charm_builder._process_run") as mock:
-            with patch("shutil.copytree") as mock_copytree:
-                builder.handle_dependencies()
-
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
-    assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "--version"]),
-        call(
-            [
-                pip_cmd,
-                "install",
-                "--no-binary",
-                ":all:",
-                "--system",
-                "--requirement=reqs",
-            ]
-        ),
     ]
     assert mock_copytree.mock_calls == [call(site.USER_SITE, build_dir / VENV_DIRNAME)]
 
@@ -688,11 +634,9 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
         requirements=["reqs1.txt", "reqs2.txt"],
     )
 
-    with patch("charmcraft.charm_builder.subprocess.run") as mock_run:
-        mock_run.return_value.returncode = 1
-        with patch("charmcraft.charm_builder._process_run") as mock:
-            with patch("shutil.copytree") as mock_copytree:
-                builder.handle_dependencies()
+    with patch("charmcraft.charm_builder._process_run") as mock:
+        with patch("shutil.copytree") as mock_copytree:
+            builder.handle_dependencies()
 
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
     assert mock.mock_calls == [

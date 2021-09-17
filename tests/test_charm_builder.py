@@ -612,7 +612,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
@@ -656,7 +656,7 @@ def test_build_dependencies_needs_system(tmp_path, config):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
@@ -694,7 +694,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(tmp_path / STAGING_VENV_DIRNAME / "bin" / "pip3")
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),

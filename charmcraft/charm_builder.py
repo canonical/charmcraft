@@ -23,6 +23,7 @@ import os
 import pathlib
 import shutil
 import site
+import sys
 import subprocess
 from typing import List
 
@@ -229,7 +230,7 @@ class CharmBuilder:
         if self.requirement_paths:
             staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
             _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
-            pip_cmd = str(staging_venv_dir / "bin" / "pip3")
+            pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
 
             _process_run([pip_cmd, "--version"])
 
@@ -243,6 +244,14 @@ class CharmBuilder:
 
             # The charm builder is executed with PYTHONUSERBASE set to the staging venv dir
             shutil.copytree(site.USER_SITE, self.buildpath / VENV_DIRNAME)
+
+
+def _find_venv_bin(basedir, exec_base):
+    """Determine the venv executable in different platforms."""
+    if sys.platform == "win32":
+        return basedir / "Scripts" / f"{exec_base}.exe"
+
+    return basedir / "bin" / exec_base
 
 
 def _pip_needs_system():

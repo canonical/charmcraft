@@ -240,6 +240,9 @@ class CharmBuilder:
             _process_run(cmd)
 
             # The charm builder is executed with PYTHONUSERBASE set to the staging venv dir
+            # so that site.USER_SITE points to the inner directory inside STAGING_VENV_DIRNAME
+            # where the packages are actually installed. This is the directory that dispatch
+            # expects as /venv.
             shutil.copytree(site.USER_SITE, self.buildpath / VENV_DIRNAME)
 
 

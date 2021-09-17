@@ -78,6 +78,7 @@ class CharmBuilder:
         self.python_packages = python_packages
         self.requirement_paths = requirements
         self.ignore_rules = self._load_juju_ignore()
+        self.ignore_rules.extend_patterns([f"/{STAGING_VENV_DIRNAME}"])
 
     def build_charm(self) -> None:
         """Build the charm."""
@@ -136,10 +137,7 @@ class CharmBuilder:
                 rel_path = rel_basedir / name
                 abs_path = abs_basedir / name
 
-                if name == STAGING_VENV_DIRNAME:
-                    logger.debug("Ignoring staging venv directory: %r", STAGING_VENV_DIRNAME)
-                    ignored.append(pos)
-                elif self.ignore_rules.match(str(rel_path), is_dir=True):
+                if self.ignore_rules.match(str(rel_path), is_dir=True):
                     logger.debug("Ignoring directory because of rules: %r", str(rel_path))
                     ignored.append(pos)
                 elif abs_path.is_symlink():

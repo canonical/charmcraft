@@ -63,6 +63,8 @@ class TestCharmPlugin:
             "python3-pip",
             "python3-setuptools",
             "python3-wheel",
+            "python3-venv",
+            "python3-dev",
         }
 
     def test_get_build_snaps(self):

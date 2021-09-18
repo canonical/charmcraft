@@ -22,7 +22,6 @@ import logging
 import os
 import pathlib
 import shutil
-import site
 import sys
 import subprocess
 from typing import List
@@ -229,7 +228,7 @@ class CharmBuilder:
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
             staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
-            _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
+            _process_run([sys.executable, "-m", "venv", str(staging_venv_dir)])
             pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
 
             _process_run([pip_cmd, "--version"])
@@ -239,11 +238,10 @@ class CharmBuilder:
                 cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
             _process_run(cmd)
 
-            # The charm builder is executed with PYTHONUSERBASE set to the staging venv dir
-            # so that site.USER_SITE points to the inner directory inside STAGING_VENV_DIRNAME
-            # where the packages are actually installed. This is the directory that dispatch
-            # expects as /venv.
-            shutil.copytree(site.USER_SITE, self.buildpath / VENV_DIRNAME)
+            # copy the virtualvenv site-packages directory to /venv in charm
+            basedir = pathlib.Path(STAGING_VENV_DIRNAME)
+            site_packages_dir = _find_venv_site_packages(basedir)
+            shutil.copytree(site_packages_dir, self.buildpath / VENV_DIRNAME)
 
 
 def _find_venv_bin(basedir, exec_base):
@@ -252,6 +250,15 @@ def _find_venv_bin(basedir, exec_base):
         return basedir / "Scripts" / f"{exec_base}.exe"
 
     return basedir / "bin" / exec_base
+
+
+def _find_venv_site_packages(basedir):
+    """Determine the venv site-packages directory in different platforms."""
+    version = sys.version_info
+    if sys.platform == "win32":
+        return basedir / f"Python{version.major}{version.minor}" / "site-packages"
+
+    return basedir / "lib" / f"python{version.major}.{version.minor}" / "site-packages"
 
 
 def _process_run(cmd: List[str]) -> None:

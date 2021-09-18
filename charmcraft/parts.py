@@ -101,11 +101,7 @@ class CharmPlugin(plugins.Plugin):
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
 
-        build_env = dict(
-            LANG="C.UTF-8",
-            LC_ALL="C.UTF-8",
-            PYTHONUSERBASE=self._part_info.part_build_dir / charm_builder.STAGING_VENV_DIRNAME,
-        )
+        build_env = dict(LANG="C.UTF-8", LC_ALL="C.UTF-8")
         for key in [
             "PATH",
             "SNAP",

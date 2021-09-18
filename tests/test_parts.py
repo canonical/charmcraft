@@ -84,9 +84,7 @@ class TestCharmPlugin:
         monkeypatch.setenv("no_proxy", "no_proxy_value")
 
         assert self._plugin.get_build_commands() == [
-            "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 "
-            "PYTHONUSERBASE={work_dir}/parts/foo/build/staging-venv "
-            "PATH=/some/path SNAP=snap_value "
+            "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
             "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
             "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
             "https_proxy=https_proxy_value no_proxy=no_proxy_value "

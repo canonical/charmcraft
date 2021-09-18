@@ -14,12 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import collections
 import errno
 import filecmp
 import logging
 import os
 import pathlib
-import site
 import socket
 import sys
 from unittest.mock import call, patch
@@ -613,11 +613,13 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
 
     assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call([sys.executable, "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
         call([pip_cmd, "install", "--no-binary", ":all:", "--requirement=reqs.txt"]),
     ]
-    assert mock_copytree.mock_calls == [call(site.USER_SITE, build_dir / VENV_DIRNAME)]
+
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
 
 def test_build_dependencies_virtualenv_multiple(tmp_path):
@@ -640,7 +642,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
 
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
     assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call([sys.executable, "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
         call(
             [
@@ -653,7 +655,9 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
             ]
         ),
     ]
-    assert mock_copytree.mock_calls == [call(site.USER_SITE, build_dir / VENV_DIRNAME)]
+
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
 
 def test_build_dependencies_virtualenv_none(tmp_path):
@@ -819,3 +823,40 @@ def test_processrun_crashed(caplog, tmp_path):
     with pytest.raises(CommandError) as cm:
         _process_run(cmd)
     assert str(cm.value) == f"Subprocess execution crashed for command {cmd}"
+
+
+# --- helper tests
+
+
+@pytest.mark.parametrize(
+    "platform,result",
+    [
+        ("win32", "/basedir/Scripts/cmd.exe"),
+        ("linux", "/basedir/bin/cmd"),
+        ("darwin", "/basedir/bin/cmd"),
+    ],
+)
+def test_find_venv_bin(monkeypatch, platform, result):
+    monkeypatch.setattr(sys, "platform", platform)
+    basedir = pathlib.Path("/basedir")
+    venv_bin = charm_builder._find_venv_bin(basedir, "cmd")
+    assert venv_bin.as_posix() == result
+
+
+@pytest.mark.parametrize(
+    "platform,result",
+    [
+        ("win32", "/basedir/PythonXY/site-packages"),
+        ("linux", "/basedir/lib/pythonX.Y/site-packages"),
+        ("darwin", "/basedir/lib/pythonX.Y/site-packages"),
+    ],
+)
+def test_find_venv_site_packages(monkeypatch, platform, result):
+    VersionInfo = collections.namedtuple(
+        "VersionInfo", ["major", "minor", "micro", "releaselevel", "serial"]
+    )
+    monkeypatch.setattr(sys, "platform", platform)
+    monkeypatch.setattr(sys, "version_info", VersionInfo("X", "Y", "Z", "W", "T"))
+    basedir = pathlib.Path("/basedir")
+    site_packages_dir = charm_builder._find_venv_site_packages(basedir)
+    assert site_packages_dir.as_posix() == result

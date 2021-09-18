@@ -615,7 +615,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     assert mock.mock_calls == [
         call([sys.executable, "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
-        call([pip_cmd, "install", "--no-binary", ":all:", "--requirement=reqs.txt"]),
+        call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "--requirement=reqs.txt"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
@@ -648,6 +648,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
             [
                 pip_cmd,
                 "install",
+                "--upgrade",
                 "--no-binary",
                 ":all:",
                 "--requirement=reqs1.txt",

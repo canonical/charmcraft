@@ -233,7 +233,7 @@ class CharmBuilder:
 
             _process_run([pip_cmd, "--version"])
 
-            cmd = [pip_cmd, "install", "--no-binary", ":all:"]  # base command
+            cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
             for reqspath in self.requirement_paths:
                 cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
             _process_run(cmd)

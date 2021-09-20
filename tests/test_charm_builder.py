@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import collections
 import errno
 import filecmp
 import logging
@@ -613,7 +612,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
 
     assert mock.mock_calls == [
-        call([sys.executable, "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
         call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "--requirement=reqs.txt"]),
     ]
@@ -642,7 +641,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
 
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
     assert mock.mock_calls == [
-        call([sys.executable, "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
         call(
             [
@@ -853,11 +852,14 @@ def test_find_venv_bin(monkeypatch, platform, result):
     ],
 )
 def test_find_venv_site_packages(monkeypatch, platform, result):
-    VersionInfo = collections.namedtuple(
-        "VersionInfo", ["major", "minor", "micro", "releaselevel", "serial"]
-    )
     monkeypatch.setattr(sys, "platform", platform)
-    monkeypatch.setattr(sys, "version_info", VersionInfo("X", "Y", "Z", "W", "T"))
     basedir = pathlib.Path("/basedir")
-    site_packages_dir = charm_builder._find_venv_site_packages(basedir)
+    with patch("subprocess.check_output", return_value="X Y") as mock_run:
+        site_packages_dir = charm_builder._find_venv_site_packages(basedir)
+    assert mock_run.mock_calls == [
+        call(
+            ["python3", "-c", "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')"],
+            text=True,
+        )
+    ]
     assert site_packages_dir.as_posix() == result

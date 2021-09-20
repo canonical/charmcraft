@@ -228,7 +228,9 @@ class CharmBuilder:
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
             staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
-            _process_run([sys.executable, "-m", "venv", str(staging_venv_dir)])
+
+            # use the host environment python
+            _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
             pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
 
             _process_run([pip_cmd, "--version"])
@@ -254,11 +256,16 @@ def _find_venv_bin(basedir, exec_base):
 
 def _find_venv_site_packages(basedir):
     """Determine the venv site-packages directory in different platforms."""
-    version = sys.version_info
-    if sys.platform == "win32":
-        return basedir / f"Python{version.major}{version.minor}" / "site-packages"
+    output = subprocess.check_output(
+        ["python3", "-c", "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')"],
+        text=True,
+    )
+    major, minor = output.strip().split(" ")
 
-    return basedir / "lib" / f"python{version.major}.{version.minor}" / "site-packages"
+    if sys.platform == "win32":
+        return basedir / f"Python{major}{minor}" / "site-packages"
+
+    return basedir / "lib" / f"python{major}.{minor}" / "site-packages"
 
 
 def _process_run(cmd: List[str]) -> None:

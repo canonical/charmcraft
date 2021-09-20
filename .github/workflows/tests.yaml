@@ -123,7 +123,7 @@ jobs:
           test -f *.charm
           test ! -d build
           test ! -d ../charm-smoke-test/build
-          unzip -l another-test_*.charm | grep "venv/ops/charm.py"
+          unzip -l charm-smoke-test_*.charm | grep "venv/ops/charm.py"
           sg lxd -c "charmcraft -v clean --project-dir ../charm-smoke-test"
           popd
 

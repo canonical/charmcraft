@@ -88,7 +88,7 @@ jobs:
       - name: Install test dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip python3-setuptools python3-wheel
+          sudo apt install -y python3-pip python3-setuptools python3-wheel python3-distutils
       - name: Install LXD dependency on 18.04
         if: ${{ matrix.os == 'ubuntu-18.04' }}
         run: |
@@ -113,6 +113,7 @@ jobs:
           sg lxd -c "charmcraft -v pack"
           test -f *.charm
           test ! -d build
+          unzip -l charm-smoke-test_*.charm | grep "venv/ops/charm.py"
           sg lxd -c "charmcraft -v clean"
           popd
 
@@ -122,6 +123,7 @@ jobs:
           test -f *.charm
           test ! -d build
           test ! -d ../charm-smoke-test/build
+          unzip -l charm-smoke-test_*.charm | grep "venv/ops/charm.py"
           sg lxd -c "charmcraft -v clean --project-dir ../charm-smoke-test"
           popd
 
@@ -157,6 +159,7 @@ jobs:
           sudo apt install -y hello
           charmcraft -v pack --destructive-mode
           unzip -c build-packages-test_*.charm hello.txt | grep "^Hello, world!"
+          unzip -l build-packages-test_*.charm | grep "venv/ops/charm.py"
           popd
 
           sudo snap set charmcraft provider=lxd

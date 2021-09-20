@@ -97,7 +97,7 @@ jobs:
       - name: Refresh LXD dependency on 20.04
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: |
-          sudo snap refresh lxd
+          sudo snap refresh lxd || echo "Cannot refresh LXD dependency, using $(lxd --version)"
       - name: Configured LXD
         run: |
           sudo groupadd --force --system lxd

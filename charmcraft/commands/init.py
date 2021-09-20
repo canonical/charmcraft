@@ -96,10 +96,13 @@ class InitCommand(BaseCommand):
 
     def run(self, args):
         """Execute command's actual functionality."""
-        if any(self.config.project.dirpath.iterdir()) and not args.force:
+        init_dirpath = self.config.project.dirpath
+        if not init_dirpath.exists():
+            init_dirpath.mkdir(parents=True)
+        elif any(init_dirpath.iterdir()) and not args.force:
             tpl = "{!r} is not empty (consider using --force to work on nonempty directories)"
-            raise CommandError(tpl.format(str(self.config.project.dirpath)))
-        logger.debug("Using project directory %r", str(self.config.project.dirpath))
+            raise CommandError(tpl.format(str(init_dirpath)))
+        logger.debug("Using project directory %r", str(init_dirpath))
 
         if args.author is None and pwd is not None:
             args.author = _get_users_full_name_gecos()
@@ -110,7 +113,7 @@ class InitCommand(BaseCommand):
             )
 
         if not args.name:
-            args.name = self.config.project.dirpath.name
+            args.name = init_dirpath.name
             logger.debug("Set project name to '%s'", args.name)
 
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
@@ -134,7 +137,7 @@ class InitCommand(BaseCommand):
             template = env.get_template(template_name)
             template_name = template_name[:-3]
             logger.debug("Rendering %s", template_name)
-            path = self.config.project.dirpath / template_name
+            path = init_dirpath / template_name
             if path.exists():
                 continue
             path.parent.mkdir(parents=True, exist_ok=True)

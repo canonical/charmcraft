@@ -343,6 +343,17 @@ class Config(ModelConfigDefaults, validate_all=False):
         validate_part(item)
         return item
 
+    @pydantic.validator("bases", pre=True)
+    def validate_bases_presence(cls, bases, values):
+        """Forbid 'bases' in bundles.
+
+        This is to avoid a posible confusion of expecting the bundle
+        to be built in a specific environment
+        """
+        if values.get("type") == "bundle":
+            raise ValueError("Field not allowed when type=bundle")
+        return bases
+
     @classmethod
     def expand_short_form_bases(cls, bases: List[Dict[str, Any]]) -> None:
         """Expand short-form base configuration into long-form in-place."""
@@ -390,7 +401,8 @@ class Config(ModelConfigDefaults, validate_all=False):
             # type will simplify user facing errors.
             bases = obj.get("bases")
             if bases is None:
-                notify_deprecation("dn03")
+                if obj["type"] in (None, "charm"):
+                    notify_deprecation("dn03")
                 # Set default bases to Ubuntu 20.04 to match strict snap's
                 # effective behavior.
                 bases = [

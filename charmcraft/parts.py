@@ -89,6 +89,8 @@ class CharmPlugin(plugins.Plugin):
             "python3-pip",
             "python3-setuptools",
             "python3-wheel",
+            "python3-venv",
+            "python3-dev",
         }
 
     def get_build_environment(self) -> Dict[str, str]:

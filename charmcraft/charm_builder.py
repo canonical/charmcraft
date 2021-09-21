@@ -22,6 +22,7 @@ import logging
 import os
 import pathlib
 import shutil
+import sys
 import subprocess
 from typing import List
 
@@ -33,6 +34,7 @@ from charmcraft.utils import make_executable
 # Some constants that are used through the code.
 WORK_DIRNAME = "work_dir"
 VENV_DIRNAME = "venv"
+STAGING_VENV_DIRNAME = "staging-venv"
 
 # The file name and template for the dispatch script
 DISPATCH_FILENAME = "dispatch"
@@ -76,6 +78,7 @@ class CharmBuilder:
         self.python_packages = python_packages
         self.requirement_paths = requirements
         self.ignore_rules = self._load_juju_ignore()
+        self.ignore_rules.extend_patterns([f"/{STAGING_VENV_DIRNAME}"])
 
     def build_charm(self) -> None:
         """Build the charm."""
@@ -224,34 +227,45 @@ class CharmBuilder:
 
         # virtualenv with other dependencies (if any)
         if self.requirement_paths:
-            _process_run(["pip3", "--version"])
+            staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
 
-            venvpath = self.buildpath / VENV_DIRNAME
-            cmd = [
-                "pip3",
-                "install",  # base command
-                "--target={}".format(venvpath),  # put all the resulting files in that specific dir
-            ]
-            if _pip_needs_system():
-                logger.debug("adding --system to work around pip3 defaulting to --user")
-                cmd.append("--system")
+            # use the host environment python
+            _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
+            pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
+
+            _process_run([pip_cmd, "--version"])
+
+            cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
             for reqspath in self.requirement_paths:
                 cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
             _process_run(cmd)
 
+            # copy the virtualvenv site-packages directory to /venv in charm
+            basedir = pathlib.Path(STAGING_VENV_DIRNAME)
+            site_packages_dir = _find_venv_site_packages(basedir)
+            shutil.copytree(site_packages_dir, self.buildpath / VENV_DIRNAME)
 
-def _pip_needs_system():
-    """Determine whether pip3 defaults to --user, needing --system to turn it off."""
-    cmd = [
-        "python3",
-        "-c",
-        (
-            "from pip.commands.install import InstallCommand; "
-            'assert InstallCommand().cmd_opts.get_option("--system") is not None'
-        ),
-    ]
-    proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return proc.returncode == 0
+
+def _find_venv_bin(basedir, exec_base):
+    """Determine the venv executable in different platforms."""
+    if sys.platform == "win32":
+        return basedir / "Scripts" / f"{exec_base}.exe"
+
+    return basedir / "bin" / exec_base
+
+
+def _find_venv_site_packages(basedir):
+    """Determine the venv site-packages directory in different platforms."""
+    output = subprocess.check_output(
+        ["python3", "-c", "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')"],
+        text=True,
+    )
+    major, minor = output.strip().split(" ")
+
+    if sys.platform == "win32":
+        return basedir / f"Python{major}{minor}" / "site-packages"
+
+    return basedir / "lib" / f"python{major}.{minor}" / "site-packages"
 
 
 def _process_run(cmd: List[str]) -> None:

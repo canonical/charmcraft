@@ -537,6 +537,40 @@ def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(caplog, create_config, tmp_
     ]
 
 
+def test_no_bases_is_ok_for_bundles(caplog, create_config, tmp_path):
+    """Do not send a deprecation message if it is a bundle."""
+    caplog.set_level(logging.WARNING, logger="charmcraft")
+    create_config(
+        """
+        type: bundle
+    """
+    )
+
+    load(tmp_path)
+    assert not caplog.records
+
+
+def test_bases_forbidden_for_bundles(create_config, check_schema_error):
+    """Do not allow a bases configuration for bundles."""
+    create_config(
+        """
+        type: bundle
+        bases:
+          - build-on:
+              - name: test-build-name
+                channel: test-build-channel
+    """
+    )
+
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - Field not allowed when type=bundle in field 'bases'"""
+        )
+    )
+
+
 def test_bases_minimal_long_form(create_config):
     tmp_path = create_config(
         """

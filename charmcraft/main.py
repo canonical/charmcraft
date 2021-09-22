@@ -318,7 +318,7 @@ class Dispatcher:
                 help_text = help_builder.get_usage_message(msg)
                 raise ArgumentParsingError(help_text)
         else:
-            # no command indicated!
+            # no command passed!
             help_text = get_general_help()
             raise ArgumentParsingError(help_text)
 

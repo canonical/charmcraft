@@ -45,6 +45,10 @@ class ArgumentParsingError(Exception):
     """Exception used when an argument parsing error is found."""
 
 
+class ProvideHelpException(Exception):
+    """Exception used to provide help to the user."""
+
+
 # Collect commands in different groups, for easier human consumption. Note that this is not
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files. Also note that order here is
@@ -203,23 +207,31 @@ class Dispatcher:
 
     def _get_requested_help(self, parameters):
         """Produce the requested help depending on the rest of the command line params."""
-        # no parameter: general help; too many parameters: indicate it; else just get the parameter
         if len(parameters) == 0:
+            # provide a general text when help was requested without parameters
             return get_general_help(detailed=False)
         if len(parameters) > 1:
-            return help_builder.get_usage_message("too many params")  # FIXME: ver como queda esto "hoy"
-        (param,) = parameters
+            # too many parameters: provide a specific guiding error
+            msg = (
+                "Too many parameters when requesting help; "
+                "pass a command, '--all', or leave it empty"
+            )
+            text = help_builder.get_usage_message(msg)
+            raise ArgumentParsingError(text)
 
         # special parameter to get detailed help
+        (param,) = parameters
         if param == "--all":
+            # provide a detailed general help when this specific option was included
             return get_general_help(detailed=True)
 
         # at this point the parameter should be a command
         try:
             cmd_class, group = self.commands[param]
         except KeyError:
-            msg = "no such command to provide help for {!r}".format(param)
-            return help_builder.get_usage_message(msg)
+            msg = "command {!r} not found to provide help for".format(param)
+            text = help_builder.get_usage_message(msg)
+            raise ArgumentParsingError(text)
 
         cmd = cmd_class(group, None)
         parser = CustomArgumentParser(prog=cmd.name, add_help=False)
@@ -290,7 +302,7 @@ class Dispatcher:
         # handle requested help through -h/--help options
         if global_args["help"]:
             help_text = self._get_requested_help(filtered_sysargs)
-            raise ArgumentParsingError(help_text)
+            raise ProvideHelpException(help_text)
 
         if filtered_sysargs:
             command = filtered_sysargs[0]
@@ -299,7 +311,7 @@ class Dispatcher:
             # handle requested help through implicit "help" command
             if command == "help":
                 help_text = self._get_requested_help(cmd_args)
-                raise ArgumentParsingError(help_text)
+                raise ProvideHelpException(help_text)
 
             if command not in self.commands:
                 msg = "no such command {!r}".format(command)
@@ -345,6 +357,10 @@ def main(argv=None):
         print(err, file=sys.stderr)  # to stderr, as argparse normally does
         message_handler.ended_ok()
         retcode = 1
+    except ProvideHelpException as err:
+        print(err, file=sys.stderr)  # to stderr, as argparse normally does
+        message_handler.ended_ok()
+        retcode = 0
     except CommandError as err:
         message_handler.ended_cmderror(err)
         retcode = err.retcode

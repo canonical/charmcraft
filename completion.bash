@@ -26,7 +26,7 @@ _charmcraft()
         close
         create-lib 
         fetch-lib 
-        help init 
+        init 
         list-lib 
         login 
         logout 

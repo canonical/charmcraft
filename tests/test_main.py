@@ -23,7 +23,13 @@ import sys
 from unittest.mock import patch
 
 from charmcraft import __version__, logsetup
-from charmcraft.main import Dispatcher, main, COMMAND_GROUPS, ArgumentParsingError
+from charmcraft.main import (
+    Dispatcher,
+    main,
+    COMMAND_GROUPS,
+    ArgumentParsingError,
+    ProvideHelpException,
+)
 from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
 
@@ -456,6 +462,21 @@ def test_main_controlled_arguments_error(capsys):
     out, err = capsys.readouterr()
     assert not out
     assert err == "test error\n"
+
+
+def test_main_providing_help(capsys):
+    """The execution ended up providing a help message."""
+    with patch("charmcraft.main.message_handler") as mh_mock:
+        with patch("charmcraft.main.Dispatcher.run") as d_mock:
+            d_mock.side_effect = ProvideHelpException("nice and shiny help message")
+            retcode = main(["charmcraft", "version"])
+
+    assert retcode == 0
+    mh_mock.ended_ok.assert_called_once_with()
+
+    out, err = capsys.readouterr()
+    assert not out
+    assert err == "nice and shiny help message\n"
 
 
 # --- Tests for the bootstrap version message

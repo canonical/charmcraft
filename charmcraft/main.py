@@ -22,7 +22,7 @@ import sys
 from collections import namedtuple
 
 from charmcraft import config, env
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import CommandError
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.helptexts import help_builder
 from charmcraft.logsetup import message_handler
@@ -45,56 +45,8 @@ class ArgumentParsingError(Exception):
     """Exception used when an argument parsing error is found."""
 
 
-class HelpCommand(BaseCommand):
-    """Special internal command to produce help and usage messages.
-
-    It bends the rules for parameters (we have an optional parameter without dashes), the
-    idea is to lower the barrier as much as possible for the user getting help.
-    """
-
-    name = "help"
-    help_msg = "Provide help on charmcraft usage"
-    overview = "Produce a general or a detailed charmcraft help, or a specific command one."
-    common = True
-
-    def fill_parser(self, parser):
-        """Add own parameters to the general parser."""
-        parser.add_argument(
-            "--all",
-            action="store_true",
-            help="Produce an extensive help of all commands",
-        )
-        parser.add_argument(
-            "command_to_help",
-            nargs="?",
-            metavar="command",
-            help="Produce a detailed help of the specified command",
-        )
-
-    def run(self, parsed_args, all_commands):
-        """Present different help messages to the user.
-
-        Unlike other commands, this one receives an extra parameter with all commands,
-        to validate if the help requested is on a valid one, or even parse its data.
-        """
-        if parsed_args.command_to_help is None or parsed_args.command_to_help == self.name:
-            # help on no command in particular, get general text
-            help_text = get_general_help(detailed=parsed_args.all)
-            logger.info(help_text)
-            return
-
-        if parsed_args.command_to_help not in all_commands:
-            # asked help on a command that doesn't exist
-            msg = "no such command {!r}".format(parsed_args.command_to_help)
-            help_text = help_builder.get_usage_message(msg)
-            raise ArgumentParsingError(help_text)
-
-        cmd_class, group = all_commands[parsed_args.command_to_help]
-        cmd = cmd_class(group, None)
-        parser = CustomArgumentParser(prog=cmd.name, add_help=False)
-        cmd.fill_parser(parser)
-        help_text = get_command_help(parser, cmd)
-        logger.info(help_text)
+class ProvideHelpException(Exception):
+    """Exception used to provide help to the user."""
 
 
 # Collect commands in different groups, for easier human consumption. Note that this is not
@@ -106,7 +58,6 @@ COMMAND_GROUPS = [
         "basic",
         "Basic",
         [
-            HelpCommand,
             analyze.AnalyzeCommand,
             build.BuildCommand,
             clean.CleanCommand,
@@ -254,6 +205,39 @@ class Dispatcher:
 
         return cmd, parsed_args
 
+    def _get_requested_help(self, parameters):
+        """Produce the requested help depending on the rest of the command line params."""
+        if len(parameters) == 0:
+            # provide a general text when help was requested without parameters
+            return get_general_help(detailed=False)
+        if len(parameters) > 1:
+            # too many parameters: provide a specific guiding error
+            msg = (
+                "Too many parameters when requesting help; "
+                "pass a command, '--all', or leave it empty"
+            )
+            text = help_builder.get_usage_message(msg)
+            raise ArgumentParsingError(text)
+
+        # special parameter to get detailed help
+        (param,) = parameters
+        if param == "--all":
+            # provide a detailed general help when this specific option was included
+            return get_general_help(detailed=True)
+
+        # at this point the parameter should be a command
+        try:
+            cmd_class, group = self.commands[param]
+        except KeyError:
+            msg = "command {!r} not found to provide help for".format(param)
+            text = help_builder.get_usage_message(msg)
+            raise ArgumentParsingError(text)
+
+        cmd = cmd_class(group, None)
+        parser = CustomArgumentParser(prog=cmd.name, add_help=False)
+        cmd.fill_parser(parser)
+        return get_command_help(parser, cmd)
+
     def _pre_parse_args(self, sysargs):
         """Pre-parse sys args.
 
@@ -315,19 +299,26 @@ class Dispatcher:
             message_handler.set_mode(message_handler.VERBOSE)
         logger.debug("Raw pre-parsed sysargs: args=%s filtered=%s", global_args, filtered_sysargs)
 
-        # if help requested, transform the parameters to make that explicit
+        # handle requested help through -h/--help options
         if global_args["help"]:
-            command = HelpCommand.name
-            cmd_args = filtered_sysargs
-        elif filtered_sysargs:
+            help_text = self._get_requested_help(filtered_sysargs)
+            raise ProvideHelpException(help_text)
+
+        if filtered_sysargs:
             command = filtered_sysargs[0]
             cmd_args = filtered_sysargs[1:]
+
+            # handle requested help through implicit "help" command
+            if command == "help":
+                help_text = self._get_requested_help(cmd_args)
+                raise ProvideHelpException(help_text)
+
             if command not in self.commands:
                 msg = "no such command {!r}".format(command)
                 help_text = help_builder.get_usage_message(msg)
                 raise ArgumentParsingError(help_text)
         else:
-            # no command!
+            # no command passed!
             help_text = get_general_help()
             raise ArgumentParsingError(help_text)
 
@@ -339,9 +330,6 @@ class Dispatcher:
 
     def run(self):
         """Really run the command."""
-        if isinstance(self.command, HelpCommand):
-            return self.command.run(self.parsed_args, self.commands)
-
         if self.command.needs_config and not self.command.config.project.config_provided:
             raise ArgumentParsingError(
                 "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
@@ -369,6 +357,10 @@ def main(argv=None):
         print(err, file=sys.stderr)  # to stderr, as argparse normally does
         message_handler.ended_ok()
         retcode = 1
+    except ProvideHelpException as err:
+        print(err, file=sys.stderr)  # to stderr, as argparse normally does
+        message_handler.ended_ok()
+        retcode = 0
     except CommandError as err:
         message_handler.ended_cmderror(err)
         retcode = err.retcode

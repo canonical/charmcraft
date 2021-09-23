@@ -14,14 +14,13 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import logging
 import textwrap
 from unittest.mock import patch
 
 import pytest
 
 from charmcraft import helptexts, main
-from charmcraft.main import Dispatcher, ArgumentParsingError, HelpCommand
+from charmcraft.main import Dispatcher, ArgumentParsingError, ProvideHelpException
 from tests.factory import create_command
 
 
@@ -366,20 +365,17 @@ def test_tool_exec_no_arguments_help():
         ["-h"],
         ["--help"],
         ["help"],
-        ["--help", "help"],
-        ["help", "-h"],
     ],
 )
-def test_tool_exec_full_help(sysargv, caplog):
+def test_tool_exec_full_help(sysargv):
     """Execute charmcraft explicitly asking for help."""
-    caplog.set_level(logging.INFO, logger="charmcraft")
-
-    command_groups = [("group", "help", [HelpCommand])]  # the only command we need
     with patch("charmcraft.helptexts.HelpBuilder.get_full_help") as mock:
         mock.return_value = "test help"
-        dispatcher = Dispatcher(sysargv, command_groups)
-        retcode = dispatcher.run()
-    assert retcode is None
+        with pytest.raises(ProvideHelpException) as cm:
+            Dispatcher(sysargv, [])
+
+    # check the result of the full help builder is what is transmitted
+    assert str(cm.value) == "test help"
 
     # check the given information to the help text builder
     args = mock.call_args[0]
@@ -390,29 +386,12 @@ def test_tool_exec_full_help(sysargv, caplog):
         "-v, --verbose",
     ]
 
-    # check the result of the full help builder is what is shown
-    expected = "test help"
-    assert [expected] == [rec.message for rec in caplog.records]
 
-
-@pytest.mark.parametrize(
-    "sysargv",
-    [
-        ["wrongcommand"],
-        ["-h", "wrongcommand"],
-        ["wrongcommand", "-h"],
-        ["--help", "wrongcommand"],
-        ["wrongcommand", "--help"],
-        ["-h", "wrongcommand", "--help"],
-    ],
-)
-def test_tool_exec_command_incorrect(sysargv, help_builder):
+def test_tool_exec_command_incorrect(help_builder):
     """Execute a command that doesn't exist."""
-    command_groups = [("group", "help", [HelpCommand])]  # the only command we need
-    help_builder.init("testapp", "general summary", command_groups)
+    help_builder.init("testapp", "general summary", [])
     with pytest.raises(ArgumentParsingError) as cm:
-        dispatcher = Dispatcher(sysargv, command_groups)
-        dispatcher.run()
+        Dispatcher(["wrongcommand"], [])
 
     expected = textwrap.dedent(
         """\
@@ -427,19 +406,79 @@ def test_tool_exec_command_incorrect(sysargv, help_builder):
     assert str(error) == expected
 
 
-@pytest.mark.parametrize("help_option", ["-h", "--help"])
-def test_tool_exec_command_dash_help_simple(help_option, caplog):
-    """Execute a command (that needs no params) asking for help."""
-    caplog.set_level(logging.INFO, logger="charmcraft")
-    cmd = create_command("somecommand", "This command does that.")
-    command_groups = [("group", "help text", [HelpCommand, cmd])]
+@pytest.mark.parametrize(
+    "sysargv",
+    [
+        ["-h", "wrongcommand"],
+        ["wrongcommand", "-h"],
+        ["--help", "wrongcommand"],
+        ["wrongcommand", "--help"],
+        ["-h", "wrongcommand", "--help"],
+    ],
+)
+def test_tool_exec_help_on_command_incorrect(sysargv, help_builder):
+    """Execute a command that doesn't exist."""
+    help_builder.init("testapp", "general summary", [])
+    with pytest.raises(ArgumentParsingError) as cm:
+        Dispatcher(sysargv, [])
 
-    dispatcher = Dispatcher(["somecommand", help_option], command_groups)
+    expected = textwrap.dedent(
+        """\
+        Usage: testapp [options] command [args]...
+        Try 'testapp -h' for help.
+
+        Error: command 'wrongcommand' not found to provide help for
+        """
+    )
+
+    error = cm.value
+    assert str(error) == expected
+
+
+@pytest.mark.parametrize(
+    "sysargv",
+    [
+        ["-h", "foo", "bar"],
+        ["foo", "-h", "bar"],
+        ["foo", "bar", "-h"],
+        ["--help", "foo", "bar"],
+        ["foo", "--help", "bar"],
+        ["foo", "bar", "--help"],
+        ["help", "foo", "bar"],
+    ],
+)
+def test_tool_exec_help_on_too_many_things(sysargv, help_builder):
+    """Trying to get help on too many items."""
+    help_builder.init("testapp", "general summary", [])
+    with pytest.raises(ArgumentParsingError) as cm:
+        Dispatcher(sysargv, [])
+
+    expected = textwrap.dedent(
+        """\
+        Usage: testapp [options] command [args]...
+        Try 'testapp -h' for help.
+
+        Error: Too many parameters when requesting help; pass a command, '--all', or leave it empty
+        """
+    )
+
+    error = cm.value
+    assert str(error) == expected
+
+
+@pytest.mark.parametrize("help_option", ["-h", "--help"])
+def test_tool_exec_command_dash_help_simple(help_option):
+    """Execute a command (that needs no params) asking for help."""
+    cmd = create_command("somecommand", "This command does that.")
+    command_groups = [("group", "help text", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
-        retcode = dispatcher.run()
-    assert retcode is None
+        with pytest.raises(ProvideHelpException) as cm:
+            Dispatcher(["somecommand", help_option], command_groups)
+
+    # check the result of the full help builder is what is transmitted
+    assert str(cm.value) == "test help"
 
     # check the given information to the help text builder
     args = mock.call_args[0]
@@ -451,24 +490,20 @@ def test_tool_exec_command_dash_help_simple(help_option, caplog):
         "-v, --verbose",
     ]
 
-    # check the result of the full help builder is what is shown
-    expected = "test help"
-    assert [expected] == [rec.message for rec in caplog.records]
-
 
 @pytest.mark.parametrize("help_option", ["-h", "--help"])
-def test_tool_exec_command_dash_help_reverse(help_option, caplog):
+def test_tool_exec_command_dash_help_reverse(help_option):
     """Execute a command (that needs no params) asking for help."""
-    caplog.set_level(logging.INFO, logger="charmcraft")
     cmd = create_command("somecommand", "This command does that.")
-    command_groups = [("group", "help text", [HelpCommand, cmd])]
-
-    dispatcher = Dispatcher([help_option, "somecommand"], command_groups)
+    command_groups = [("group", "help text", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
-        retcode = dispatcher.run()
-    assert retcode is None
+        with pytest.raises(ProvideHelpException) as cm:
+            Dispatcher([help_option, "somecommand"], command_groups)
+
+    # check the result of the full help builder is what is transmitted
+    assert str(cm.value) == "test help"
 
     # check the given information to the help text builder
     args = mock.call_args[0]
@@ -480,29 +515,25 @@ def test_tool_exec_command_dash_help_reverse(help_option, caplog):
         "-v, --verbose",
     ]
 
-    # check the result of the full help builder is what is shown
-    expected = "test help"
-    assert [expected] == [rec.message for rec in caplog.records]
-
 
 @pytest.mark.parametrize("help_option", ["-h", "--help"])
-def test_tool_exec_command_dash_help_missing_params(help_option, caplog):
+def test_tool_exec_command_dash_help_missing_params(help_option):
     """Execute a command (which needs params) asking for help."""
-    caplog.set_level(logging.INFO, logger="charmcraft")
 
     def fill_parser(self, parser):
         parser.add_argument("mandatory")
 
     cmd = create_command("somecommand", "This command does that.")
     cmd.fill_parser = fill_parser
-    command_groups = [("group", "help text", [HelpCommand, cmd])]
-
-    dispatcher = Dispatcher(["somecommand", help_option], command_groups)
+    command_groups = [("group", "help text", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
-        retcode = dispatcher.run()
-    assert retcode is None
+        with pytest.raises(ProvideHelpException) as cm:
+            Dispatcher(["somecommand", help_option], command_groups)
+
+    # check the result of the full help builder is what is transmitted
+    assert str(cm.value) == "test help"
 
     # check the given information to the help text builder
     args = mock.call_args[0]
@@ -514,10 +545,6 @@ def test_tool_exec_command_dash_help_missing_params(help_option, caplog):
         "-v, --verbose",
         "mandatory",
     ]
-
-    # check the result of the full help builder is what is shown
-    expected = "test help"
-    assert [expected] == [rec.message for rec in caplog.records]
 
 
 def test_tool_exec_command_wrong_option(help_builder):
@@ -568,18 +595,18 @@ def test_tool_exec_command_bad_option_type(help_builder):
     assert str(error) == expected
 
 
-def test_tool_exec_help_command_on_command_ok(caplog):
+def test_tool_exec_help_command_on_command_ok():
     """Execute charmcraft asking for help on a command ok."""
-    caplog.set_level(logging.INFO, logger="charmcraft")
-
     cmd = create_command("somecommand", "This command does that.")
-    command_groups = [("group", "help text", [HelpCommand, cmd])]
-    dispatcher = Dispatcher(["help", "somecommand"], command_groups)
+    command_groups = [("group", "help text", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
-        retcode = dispatcher.run()
-    assert retcode is None
+        with pytest.raises(ProvideHelpException) as cm:
+            Dispatcher(["help", "somecommand"], command_groups)
+
+    # check the result of the help builder is what is transmitted
+    assert str(cm.value) == "test help"
 
     # check the given information to the help text builder
     args = mock.call_args[0]
@@ -591,14 +618,9 @@ def test_tool_exec_help_command_on_command_ok(caplog):
         "-v, --verbose",
     ]
 
-    # check the result of the full help builder is what is shown
-    expected = "test help"
-    assert [expected] == [rec.message for rec in caplog.records]
 
-
-def test_tool_exec_help_command_on_command_complex(caplog):
+def test_tool_exec_help_command_on_command_complex():
     """Execute charmcraft asking for help on a command with parameters and options."""
-    caplog.set_level(logging.INFO, logger="charmcraft")
 
     def fill_parser(self, parser):
         parser.add_argument("param1", help="help on param1")
@@ -609,14 +631,15 @@ def test_tool_exec_help_command_on_command_complex(caplog):
 
     cmd = create_command("somecommand", "This command does that.")
     cmd.fill_parser = fill_parser
-    command_groups = [("group", "help text", [HelpCommand, cmd])]
-
-    dispatcher = Dispatcher(["help", "somecommand"], command_groups)
+    command_groups = [("group", "help text", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
-        retcode = dispatcher.run()
-    assert retcode is None
+        with pytest.raises(ProvideHelpException) as cm:
+            Dispatcher(["help", "somecommand"], command_groups)
+
+    # check the result of the help builder is what is transmitted
+    assert str(cm.value) == "test help"
 
     # check the given information to the help text builder
     args = mock.call_args[0]
@@ -634,39 +657,35 @@ def test_tool_exec_help_command_on_command_complex(caplog):
     ]
     assert sorted(x[0] for x in args[1]) == expected_options
 
-    # check the result of the full help builder is what is shown
-    expected = "test help"
-    assert [expected] == [rec.message for rec in caplog.records]
-
 
 def test_tool_exec_help_command_on_command_wrong():
     """Execute charmcraft asking for help on a command which does not exist."""
-    command_groups = [("group", "help", [HelpCommand])]  # the only command we need
-    dispatcher = Dispatcher(["help", "wrongcommand"], command_groups)
+    command_groups = [("group", "help", [])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_usage_message") as mock:
         mock.return_value = "test help"
         with pytest.raises(ArgumentParsingError) as cm:
-            dispatcher.run()
+            Dispatcher(["help", "wrongcommand"], command_groups)
     error = cm.value
 
     # check the given information to the help text builder
-    assert mock.call_args[0] == ("no such command 'wrongcommand'",)
+    assert mock.call_args[0] == ("command 'wrongcommand' not found to provide help for",)
 
-    # check the result of the full help builder is what is shown
+    # check the result of the help builder is what is shown
     assert str(error) == "test help"
 
 
-def test_tool_exec_help_command_all(caplog):
+def test_tool_exec_help_command_all():
     """Execute charmcraft asking for detailed help."""
-    caplog.set_level(logging.INFO, logger="charmcraft")
-    command_groups = [("group", "help", [HelpCommand])]  # the only command we need
-    dispatcher = Dispatcher(["help", "--all"], command_groups)
+    command_groups = [("group", "help", [])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_detailed_help") as mock:
         mock.return_value = "test help"
-        retcode = dispatcher.run()
-    assert retcode is None
+        with pytest.raises(ProvideHelpException) as cm:
+            Dispatcher(["help", "--all"], command_groups)
+
+    # check the result of the help builder is what is transmitted
+    assert str(cm.value) == "test help"
 
     # check the given information to the help text builder
     args = mock.call_args[0]
@@ -676,7 +695,3 @@ def test_tool_exec_help_command_all(caplog):
         "-q, --quiet",
         "-v, --verbose",
     ]
-
-    # check the result of the full help builder is what is shown
-    expected = "test help"
-    assert [expected] == [rec.message for rec in caplog.records]

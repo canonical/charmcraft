@@ -38,6 +38,7 @@ class TestCharmPlugin:
         spec = {
             "plugin": "charm",
             "charm-entrypoint": "entrypoint",
+            "charm-python-packages": ["pkg1", "pkg2"],
             "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
         plugin_properties = parts.CharmPluginProperties.unmarshal(spec)
@@ -93,6 +94,8 @@ class TestCharmPlugin:
             "--charmdir {work_dir}/parts/foo/build "
             "--builddir {work_dir}/parts/foo/install "
             "--entrypoint {work_dir}/parts/foo/build/entrypoint "
+            "-p pkg1 "
+            "-p pkg2 "
             "-r reqs1.txt "
             "-r reqs2.txt".format(
                 python=sys.executable,
@@ -133,6 +136,7 @@ class TestPartsLifecycle:
             "plugin": "charm",
             "source": ".",
             "charm-entrypoint": "my-entrypoint",
+            "charm-python-packages": ["pkg1", "pkg2"],
             "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
 
@@ -164,6 +168,7 @@ class TestPartsLifecycle:
             "plugin": "charm",
             "source": ".",
             "charm-entrypoint": "src/charm.py",
+            "charm-python-packages": ["pkg1", "pkg2"],
             "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
 
@@ -195,6 +200,7 @@ class TestPartsLifecycle:
             "plugin": "charm",
             "source": ".",
             "charm-entrypoint": "my-entrypoint",
+            "charm-python-packages": ["pkg1", "pkg2"],
             "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
 

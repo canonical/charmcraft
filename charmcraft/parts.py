@@ -39,6 +39,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
 
     source: str = ""
     charm_entrypoint: str = ""  # TODO: add default after removing --entrypoint
+    charm_python_packages: List[str] = []
     charm_requirements: List[str] = []
 
     @classmethod
@@ -67,6 +68,10 @@ class CharmPlugin(plugins.Plugin):
       - ``charm-entrypoint``
         (string)
         The path to the main charm executable, relative to the charm root.
+
+      - ``charm-python-packages``
+        (list of strings)
+        A list of python packages to install from PyPI before installing requirements.
 
       - ``charm-requirements``
         (list of strings)
@@ -134,6 +139,9 @@ class CharmPlugin(plugins.Plugin):
         if options.charm_entrypoint:
             entrypoint = self._part_info.part_build_dir / options.charm_entrypoint
             build_cmd.extend(["--entrypoint", str(entrypoint)])
+
+        for pkg in options.charm_python_packages:
+            build_cmd.extend(["-p", pkg])
 
         for req in options.charm_requirements:
             build_cmd.extend(["-r", req])

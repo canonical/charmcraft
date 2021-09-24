@@ -225,20 +225,27 @@ class CharmBuilder:
         """Handle from-directory and virtualenv dependencies."""
         logger.debug("Installing dependencies")
 
-        # virtualenv with other dependencies (if any)
-        if self.requirement_paths:
+        if self.requirement_paths or self.python_packages:
+            # create virtualenv using the host environment python
             staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
-
-            # use the host environment python
             _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
             pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
 
             _process_run([pip_cmd, "--version"])
 
-            cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-            for reqspath in self.requirement_paths:
-                cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
-            _process_run(cmd)
+            if self.python_packages:
+                # install python packages
+                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                for pkg in self.python_packages:
+                    cmd.append(pkg)  # the python package to install
+                _process_run(cmd)
+
+            if self.requirement_paths:
+                # install dependencies from requirement files
+                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                for reqspath in self.requirement_paths:
+                    cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
+                _process_run(cmd)
 
             # copy the virtualvenv site-packages directory to /venv in charm
             basedir = pathlib.Path(STAGING_VENV_DIRNAME)
@@ -313,12 +320,20 @@ def _parse_arguments() -> argparse.Namespace:
         help="The build destination directory",
     )
     parser.add_argument(
+        "-p",
+        "--package",
+        metavar="pkg",
+        action="append",
+        default=None,
+        help="Python package to install before requirements.",
+    )
+    parser.add_argument(
         "-r",
         "--requirement",
         metavar="reqfile",
         action="append",
         default=None,
-        help="Comma-separated list of requirements files.",
+        help="Requirements file to install dependencies from.",
     )
 
     return parser.parse_args()
@@ -336,6 +351,7 @@ def main():
         charmdir=pathlib.Path(options.charmdir),
         builddir=pathlib.Path(options.builddir),
         entrypoint=pathlib.Path(options.entrypoint),
+        python_packages=options.package,
         requirements=options.requirement,
     )
     builder.build_charm()

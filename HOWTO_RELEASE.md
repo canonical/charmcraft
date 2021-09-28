@@ -17,13 +17,39 @@ paste, but do please pay attention to details!
     ./run_tests
     deactivate
 
+### if it's a minor release (Z == 0)
+
+- tag `master` with only the minor version:
+
+    git tag X.Y
+    git push --tags upstream
+
 - create a new release branch
 
-    git checkout -b release-X.Y.Z
+    git checkout -b release-X.Y
 
 - create release notes after all main changes from last tag
 
     git log --first-parent master --decorate > release-X.Y.Z.txt
+
+- tag the release (using those release notes)
+
+    git tag -s X.Y.Z
+
+### if it's a micro release (Z != 0)
+
+- go to the release branch
+
+    git checkout release-X.Y
+
+- cherry pick the needed commits from master:
+
+   git cherry-pick -m 1 COMMIT-HASH
+   ...
+
+- create release notes from the selected commits
+
+    git log
 
 - tag the release (using those release notes)
 

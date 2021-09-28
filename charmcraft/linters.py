@@ -240,7 +240,7 @@ class JujuActions:
 
     check_type = CheckType.lint
     name = "juju-actions"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-actions"  # FIXME
+    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-actions"
     text = "The actions.yaml file is not a valid YAML file."
 
     # different result constants
@@ -274,7 +274,7 @@ class JujuConfig:
 
     check_type = CheckType.lint
     name = "juju-config"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-config"  # FIXME
+    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-config"
 
     # different result constants
     Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
@@ -341,7 +341,7 @@ def analyze(
                     name=cls.name,
                     result=IGNORED,
                     url=cls.url,
-                    text=cls.text,
+                    text="",
                 )
             )
             continue

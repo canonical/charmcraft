@@ -641,7 +641,7 @@ def test_analyze_ignore_attribute(config):
     assert res1.check_type == CheckType.attribute
     assert res1.name == "name1"
     assert res1.result == IGNORED
-    assert res1.text == "text1"
+    assert res1.text == ""
     assert res1.url == "url1"
     assert res2.check_type == CheckType.lint
     assert res2.name == "name2"
@@ -680,7 +680,7 @@ def test_analyze_ignore_linter(config):
     assert res2.check_type == CheckType.lint
     assert res2.name == "name2"
     assert res2.result == IGNORED
-    assert res2.text == "text2"
+    assert res2.text == ""
     assert res2.url == "url2"
 
 

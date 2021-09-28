@@ -28,6 +28,8 @@ from charmcraft.linters import (
     FATAL,
     Framework,
     IGNORED,
+    JujuActions,
+    JujuConfig,
     JujuMetadata,
     Language,
     UNKNOWN,
@@ -755,3 +757,121 @@ def test_analyze_all_can_be_ignored(config):
     )
     result = analyze(config, "somepath")
     assert all(r.result == IGNORED for r in result)
+
+
+# --- tests for JujuActions checker
+
+
+def test_jujuactions_ok(tmp_path):
+    """The actions.yaml file is valid."""
+    actions_file = tmp_path / "actions.yaml"
+    actions_file.write_text("stuff: foobar")
+    result = JujuActions().run(tmp_path)
+    assert result == JujuActions.Result.ok
+
+
+def test_jujuactions_missing_file(tmp_path):
+    """No actions.yaml file at all."""
+    result = JujuActions().run(tmp_path)
+    assert result == JujuActions.Result.ok
+
+
+def test_jujuactions_file_corrupted(tmp_path):
+    """The actions.yaml file is not valid YAML."""
+    actions_file = tmp_path / "actions.yaml"
+    actions_file.write_text(" - \n-")
+    result = JujuActions().run(tmp_path)
+    assert result == JujuActions.Result.errors
+
+
+# --- tests for JujuConfig checker
+
+
+def test_jujuconfig_ok(tmp_path):
+    """The config.yaml file is valid."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+        options:
+            foo:
+                type: buzz
+    """
+    )
+    result = JujuConfig().run(tmp_path)
+    assert result == JujuConfig.Result.ok
+
+
+def test_jujuconfig_missing_file(tmp_path):
+    """No config.yaml file at all."""
+    result = JujuConfig().run(tmp_path)
+    assert result == JujuConfig.Result.ok
+
+
+def test_jujuconfig_file_corrupted(tmp_path):
+    """The config.yaml file is not valid YAML."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(" - \n-")
+    linter = JujuConfig()
+    result = linter.run(tmp_path)
+    assert result == JujuConfig.Result.errors
+    assert linter.text == "The config.yaml file is not a valid YAML file."
+
+
+def test_jujuconfig_no_options(tmp_path):
+    """The config.yaml file does not have an options key."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+        summary: Small text.
+    """
+    )
+    linter = JujuConfig()
+    result = linter.run(tmp_path)
+    assert result == JujuConfig.Result.errors
+    assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
+
+
+def test_jujuconfig_empty_options(tmp_path):
+    """The config.yaml file has an empty options key."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+        options:
+    """
+    )
+    linter = JujuConfig()
+    result = linter.run(tmp_path)
+    assert result == JujuConfig.Result.errors
+    assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
+
+
+def test_jujuconfig_options_not_dict(tmp_path):
+    """The config.yaml file has an options key that is not a dict."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+        options:
+          - foo
+          - bar
+    """
+    )
+    linter = JujuConfig()
+    result = linter.run(tmp_path)
+    assert result == JujuConfig.Result.errors
+    assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
+
+
+def test_jujuconfig_no_type_in_options_items(tmp_path):
+    """The items under 'options' must have a 'type' key."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+        options:
+          foo:
+            description: something missing
+    """
+    )
+    linter = JujuConfig()
+    result = linter.run(tmp_path)
+    assert result == JujuConfig.Result.errors
+    assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."

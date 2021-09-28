@@ -549,9 +549,13 @@ def test_initmsg_verbose():
     assert expected in terminal_first_line
 
 
-def test_commands():
-    cmds = [cmd.name for _, _, cmds in COMMAND_GROUPS for cmd in cmds]
+@pytest.mark.parametrize("cmd_name", [cmd.name for _, _, cmds in COMMAND_GROUPS for cmd in cmds])
+def test_commands(cmd_name):
+    """Sanity validation of a command.
 
+    This is done through asking help for it *in real life*, which would mean that the
+    command is usable by the tool: that can be imported, instantiated, parse arguments, etc.
+    """
     env = os.environ.copy()
 
     # Bypass unsupported environment error.
@@ -564,10 +568,5 @@ def test_commands():
         else:
             env["PYTHONPATH"] = ":".join(env_paths)
 
-    for cmd in cmds:
-        subprocess.run(
-            [sys.executable, "-m", "charmcraft", cmd, "-h"],
-            check=True,
-            env=env,
-            stdout=subprocess.DEVNULL,
-        )
+    external_command = [sys.executable, "-m", "charmcraft", cmd_name, "-h"]
+    subprocess.run(external_command, check=True, env=env, stdout=subprocess.DEVNULL)

@@ -58,8 +58,7 @@ class BaseCommand:
     common = False
     needs_config = False
 
-    def __init__(self, group, config):
-        self.group = group
+    def __init__(self, config):
         self.config = config
 
     def fill_parser(self, parser):

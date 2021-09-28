@@ -300,14 +300,9 @@ def test_dispatcher_build_commands_ok():
     ]
     dispatcher = Dispatcher([cmd0.name], groups)
     assert len(dispatcher.commands) == 3
-    for cmd, group in [
-        (cmd0, "test-group-A"),
-        (cmd1, "test-group-B"),
-        (cmd2, "test-group-B"),
-    ]:
-        expected_class, expected_group = dispatcher.commands[cmd.name]
+    for cmd in [cmd0, cmd1, cmd2]:
+        expected_class = dispatcher.commands[cmd.name]
         assert expected_class == cmd
-        assert expected_group == group
 
 
 def test_dispatcher_build_commands_repeated():

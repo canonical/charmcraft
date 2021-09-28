@@ -265,7 +265,7 @@ class HelpBuilder:
 
         # recommend other commands of the same group
         for group_name, _, command_classes in self.command_groups:
-            if group_name == command.group:
+            if any(isinstance(command, command_class) for command_class in command_classes):
                 break
         else:
             raise RuntimeError("Internal inconsistency in commands groups")

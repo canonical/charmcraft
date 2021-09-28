@@ -170,7 +170,7 @@ def test_login(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
     store_mock.whoami.return_value = User(name="John Doe", username="jdoe", userid="-1")
 
-    LoginCommand("group", config).run(noargs)
+    LoginCommand(config).run(noargs)
 
     assert store_mock.mock_calls == [
         call.login(),
@@ -183,7 +183,7 @@ def test_logout(caplog, store_mock, config):
     """Simple logout case."""
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
-    LogoutCommand("group", config).run(noargs)
+    LogoutCommand(config).run(noargs)
 
     assert store_mock.mock_calls == [
         call.logout(),
@@ -198,7 +198,7 @@ def test_whoami(caplog, store_mock, config):
     store_response = User(name="John Doe", username="jdoe", userid="-1")
     store_mock.whoami.return_value = store_response
 
-    WhoamiCommand("group", config).run(noargs)
+    WhoamiCommand(config).run(noargs)
 
     assert store_mock.mock_calls == [
         call.whoami(),
@@ -219,7 +219,7 @@ def test_register_charm_name(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     args = Namespace(name="testname")
-    RegisterCharmNameCommand("group", config).run(args)
+    RegisterCharmNameCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.register_name("testname", EntityType.charm),
@@ -233,7 +233,7 @@ def test_register_bundle_name(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     args = Namespace(name="testname")
-    RegisterBundleNameCommand("group", config).run(args)
+    RegisterBundleNameCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.register_name("testname", EntityType.bundle),
@@ -249,7 +249,7 @@ def test_list_registered_empty(caplog, store_mock, config):
     store_response = []
     store_mock.list_registered_names.return_value = store_response
 
-    ListNamesCommand("group", config).run(noargs)
+    ListNamesCommand(config).run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -267,7 +267,7 @@ def test_list_registered_one_private(caplog, store_mock, config):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListNamesCommand("group", config).run(noargs)
+    ListNamesCommand(config).run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -288,7 +288,7 @@ def test_list_registered_one_public(caplog, store_mock, config):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListNamesCommand("group", config).run(noargs)
+    ListNamesCommand(config).run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -317,7 +317,7 @@ def test_list_registered_several(caplog, store_mock, config):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListNamesCommand("group", config).run(noargs)
+    ListNamesCommand(config).run(noargs)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -432,7 +432,7 @@ def test_get_name_nor_charm_nor_bundle(tmp_path):
 
 def test_upload_parameters_filepath_type(config):
     """The filepath parameter implies a set of validations."""
-    cmd = UploadCommand("group", config)
+    cmd = UploadCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "filepath"]
@@ -449,7 +449,7 @@ def test_upload_call_ok(caplog, store_mock, config, tmp_path):
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[])
-    UploadCommand("group", config).run(args)
+    UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [call.upload("mycharm", test_charm)]
     expected = "Revision 7 of 'mycharm' created"
@@ -470,7 +470,7 @@ def test_upload_call_error(caplog, store_mock, config, tmp_path):
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[])
-    UploadCommand("group", config).run(args)
+    UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [call.upload("mycharm", test_charm)]
     expected = [
@@ -491,7 +491,7 @@ def test_upload_call_ok_including_release(caplog, store_mock, config, tmp_path):
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=["edge"], resource=[])
-    UploadCommand("group", config).run(args)
+    UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.upload("mycharm", test_charm),
@@ -514,7 +514,7 @@ def test_upload_call_ok_including_release_multiple(caplog, store_mock, config, t
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=["edge", "stable"], resource=[])
-    UploadCommand("group", config).run(args)
+    UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.upload("mycharm", test_charm),
@@ -539,7 +539,7 @@ def test_upload_including_release_with_resources(caplog, store_mock, config, tmp
     r1 = ResourceOption(name="foo", revision=3)
     r2 = ResourceOption(name="bar", revision=17)
     args = Namespace(filepath=test_charm, release=["edge"], resource=[r1, r2])
-    UploadCommand("group", config).run(args)
+    UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.upload("mycharm", test_charm),
@@ -554,7 +554,7 @@ def test_upload_including_release_with_resources(caplog, store_mock, config, tmp
 
 def test_upload_options_resource(config):
     """The --resource option implies a set of validations."""
-    cmd = UploadCommand("group", config)
+    cmd = UploadCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "resource"]
@@ -572,7 +572,7 @@ def test_upload_call_error_including_release(caplog, store_mock, config, tmp_pat
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=["edge"])
-    UploadCommand("group", config).run(args)
+    UploadCommand(config).run(args)
 
     # check the upload was attempted, but not the release!
     assert store_mock.mock_calls == [call.upload("mycharm", test_charm)]
@@ -596,7 +596,7 @@ def test_upload_charm_with_init_template_todo_token(tmp_path, config):
         "command: somefile.cfg, othertainted.txt"
     )
     with pytest.raises(CommandError, match=expected_msg):
-        UploadCommand("group", config).run(args)
+        UploadCommand(config).run(args)
 
 
 # -- tests for list revisions command
@@ -620,7 +620,7 @@ def test_revisions_simple(caplog, store_mock, config):
     store_mock.list_revisions.return_value = store_response
 
     args = Namespace(name="testcharm")
-    ListRevisionsCommand("group", config).run(args)
+    ListRevisionsCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_revisions("testcharm"),
@@ -640,7 +640,7 @@ def test_revisions_empty(caplog, store_mock, config):
     store_mock.list_revisions.return_value = store_response
 
     args = Namespace(name="testcharm")
-    ListRevisionsCommand("group", config).run(args)
+    ListRevisionsCommand(config).run(args)
 
     expected = [
         "No revisions found.",
@@ -685,7 +685,7 @@ def test_revisions_ordered_by_revision(caplog, store_mock, config):
     store_mock.list_revisions.return_value = store_response
 
     args = Namespace(name="testcharm")
-    ListRevisionsCommand("group", config).run(args)
+    ListRevisionsCommand(config).run(args)
 
     expected = [
         "Revision    Version    Created at    Status",
@@ -714,7 +714,7 @@ def test_revisions_version_null(caplog, store_mock, config):
     store_mock.list_revisions.return_value = store_response
 
     args = Namespace(name="testcharm")
-    ListRevisionsCommand("group", config).run(args)
+    ListRevisionsCommand(config).run(args)
 
     expected = [
         "Revision    Version    Created at    Status",
@@ -741,7 +741,7 @@ def test_revisions_errors_simple(caplog, store_mock, config):
     store_mock.list_revisions.return_value = store_response
 
     args = Namespace(name="testcharm")
-    ListRevisionsCommand("group", config).run(args)
+    ListRevisionsCommand(config).run(args)
 
     expected = [
         "Revision    Version    Created at    Status",
@@ -771,7 +771,7 @@ def test_revisions_errors_multiple(caplog, store_mock, config):
     store_mock.list_revisions.return_value = store_response
 
     args = Namespace(name="testcharm")
-    ListRevisionsCommand("group", config).run(args)
+    ListRevisionsCommand(config).run(args)
 
     expected = [
         "Revision    Version    Created at    Status",
@@ -789,7 +789,7 @@ def test_release_simple_ok(caplog, store_mock, config):
 
     channels = ["somechannel"]
     args = Namespace(name="testcharm", revision=7, channel=channels, resource=[])
-    ReleaseCommand("group", config).run(args)
+    ReleaseCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.release("testcharm", 7, channels, []),
@@ -809,7 +809,7 @@ def test_release_simple_multiple_channels(caplog, store_mock, config):
         channel=["channel1", "channel2", "channel3"],
         resource=[],
     )
-    ReleaseCommand("group", config).run(args)
+    ReleaseCommand(config).run(args)
 
     expected = "Revision 7 of charm 'testcharm' released to channel1, channel2, channel3"
     assert [expected] == [rec.message for rec in caplog.records]
@@ -822,7 +822,7 @@ def test_release_including_resources(caplog, store_mock, config):
     r1 = ResourceOption(name="foo", revision=3)
     r2 = ResourceOption(name="bar", revision=17)
     args = Namespace(name="testcharm", revision=7, channel=["testchannel"], resource=[r1, r2])
-    ReleaseCommand("group", config).run(args)
+    ReleaseCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.release("testcharm", 7, ["testchannel"], [r1, r2]),
@@ -837,7 +837,7 @@ def test_release_including_resources(caplog, store_mock, config):
 
 def test_release_options_resource(config):
     """The --resource-file option implies a set of validations."""
-    cmd = ReleaseCommand("group", config)
+    cmd = ReleaseCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "resource"]
@@ -884,7 +884,7 @@ def test_release_options_resource(config):
 )
 def test_release_parameters_ok(config, sysargs, expected_parsed):
     """Control of different combination of sane parameters."""
-    cmd = ReleaseCommand("group", config)
+    cmd = ReleaseCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     try:
@@ -913,7 +913,7 @@ def test_release_parameters_ok(config, sysargs, expected_parsed):
 )
 def test_release_parameters_bad(config, sysargs):
     """Control of different option/parameters combinations that are not valid."""
-    cmd = ReleaseCommand("group", config)
+    cmd = ReleaseCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     with pytest.raises(SystemExit):
@@ -928,7 +928,7 @@ def test_close_simple_ok(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     args = Namespace(name="testcharm", channel="somechannel")
-    CloseCommand("group", config).run(args)
+    CloseCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.release("testcharm", None, ["somechannel"], []),
@@ -998,7 +998,7 @@ def test_status_simple_ok(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1020,7 +1020,7 @@ def test_status_empty(caplog, store_mock, config):
 
     store_mock.list_releases.return_value = [], [], []
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     expected = "Nothing has been released yet."
     assert [expected] == [rec.message for rec in caplog.records]
@@ -1042,7 +1042,7 @@ def test_status_channels_not_released_with_fallback(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1074,7 +1074,7 @@ def test_status_channels_not_released_without_fallback(caplog, store_mock, confi
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1108,7 +1108,7 @@ def test_status_multiple_tracks(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1152,7 +1152,7 @@ def test_status_tracks_order(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1210,7 +1210,7 @@ def test_status_with_one_branch(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1264,7 +1264,7 @@ def test_status_with_multiple_branches(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1299,7 +1299,7 @@ def test_status_with_resources(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     expected = [
         "Track    Base                  Channel    Version    Revision    Resources",
@@ -1328,7 +1328,7 @@ def test_status_with_resources_missing_after_closed_channel(caplog, store_mock, 
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     expected = [
         "Track    Base                  Channel    Version    Revision    Resources",
@@ -1373,7 +1373,7 @@ def test_status_with_resources_and_branches(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     expected = [
         "Track    Base                  Channel        Version    Revision    Resources      Expires at",  # NOQA
@@ -1406,7 +1406,7 @@ def test_status_multiplebases_single_track(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1451,7 +1451,7 @@ def test_status_multiplebases_multiple_tracks(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1544,7 +1544,7 @@ def test_status_multiplebases_everything_combined(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1588,7 +1588,7 @@ def test_status_with_base_in_none(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1620,7 +1620,7 @@ def test_status_ureleased_track(caplog, store_mock, config):
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
     args = Namespace(name="testcharm")
-    StatusCommand("group", config).run(args)
+    StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
@@ -1655,7 +1655,7 @@ def test_createlib_simple(caplog, store_mock, tmp_path, monkeypatch, config):
     args = Namespace(name="testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        CreateLibCommand("group", config).run(args)
+        CreateLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.create_library_id("testcharm", "testlib"),
@@ -1678,7 +1678,7 @@ def test_createlib_name_from_metadata_problem(store_mock, config):
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = None
         with pytest.raises(CommandError) as cm:
-            CreateLibCommand("group", config).run(args)
+            CreateLibCommand(config).run(args)
         assert str(cm.value) == (
             "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
             "directory with metadata.yaml."
@@ -1697,7 +1697,7 @@ def test_createlib_name_contains_dash(caplog, store_mock, tmp_path, monkeypatch,
     args = Namespace(name="testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
-        CreateLibCommand("group", config).run(args)
+        CreateLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.create_library_id("test-charm", "testlib"),
@@ -1729,7 +1729,7 @@ def test_createlib_invalid_name(lib_name, config):
     """Verify that it can not be used with an invalid name."""
     args = Namespace(name=lib_name)
     with pytest.raises(CommandError) as err:
-        CreateLibCommand("group", config).run(args)
+        CreateLibCommand(config).run(args)
     assert str(err.value) == (
         "Invalid library name. Must only use lowercase alphanumeric "
         "characters and underscore, starting with alpha."
@@ -1746,7 +1746,7 @@ def test_createlib_path_already_there(tmp_path, monkeypatch, config):
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "test-charm-name"
         with pytest.raises(CommandError) as err:
-            CreateLibCommand("group", config).run(args)
+            CreateLibCommand(config).run(args)
 
     assert str(err.value) == (
         "This library already exists: 'lib/charms/test_charm_name/v0/testlib.py'."
@@ -1768,7 +1768,7 @@ def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cle
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "test-charm-name"
         with pytest.raises(CommandError, match=expected_error):
-            CreateLibCommand("group", config).run(args)
+            CreateLibCommand(config).run(args)
 
 
 def test_createlib_library_template_is_python(caplog, store_mock, tmp_path, monkeypatch):
@@ -1795,7 +1795,7 @@ def test_publishlib_simple(caplog, store_mock, tmp_path, monkeypatch, config):
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -1819,7 +1819,7 @@ def test_publishlib_contains_dash(caplog, store_mock, tmp_path, monkeypatch, con
     args = Namespace(library="charms.test_charm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -1850,7 +1850,7 @@ def test_publishlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
     args = Namespace(library=None)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm-1"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips(
@@ -1889,7 +1889,7 @@ def test_publishlib_not_found(caplog, store_mock, tmp_path, monkeypatch, config)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
         with pytest.raises(CommandError) as cm:
-            PublishLibCommand("group", config).run(args)
+            PublishLibCommand(config).run(args)
 
         assert str(cm.value) == (
             "The specified library was not found at path 'lib/charms/testcharm/v0/testlib.py'."
@@ -1906,7 +1906,7 @@ def test_publishlib_not_from_current_charm(caplog, store_mock, tmp_path, monkeyp
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "charm2"
         with pytest.raises(CommandError) as cm:
-            PublishLibCommand("group", config).run(args)
+            PublishLibCommand(config).run(args)
 
         assert str(cm.value) == (
             "The library charms.testcharm.v0.testlib does not belong to this charm 'charm2'."
@@ -1919,7 +1919,7 @@ def test_publishlib_name_from_metadata_problem(store_mock, config):
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = None
         with pytest.raises(CommandError) as cm:
-            PublishLibCommand("group", config).run(args)
+            PublishLibCommand(config).run(args)
 
         assert str(cm.value) == (
             "Can't access name in 'metadata.yaml' file. The 'publish-lib' command needs to "
@@ -1949,7 +1949,7 @@ def test_publishlib_store_is_advanced(caplog, store_mock, tmp_path, monkeypatch,
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -1985,7 +1985,7 @@ def test_publishlib_store_is_exactly_behind_ok(caplog, store_mock, tmp_path, mon
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2021,7 +2021,7 @@ def test_publishlib_store_is_exactly_behind_same_hash(
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2055,7 +2055,7 @@ def test_publishlib_store_is_too_behind(caplog, store_mock, tmp_path, monkeypatc
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2093,7 +2093,7 @@ def test_publishlib_store_has_same_revision_same_hash(
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2126,7 +2126,7 @@ def test_publishlib_store_has_same_revision_other_hash(
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        PublishLibCommand("group", config).run(args)
+        PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2468,7 +2468,7 @@ def test_fetchlib_simple_downloaded(caplog, store_mock, tmp_path, monkeypatch, c
         charm_name="testcharm",
     )
 
-    FetchLibCommand("group", config).run(Namespace(library="charms.testcharm.v0.testlib"))
+    FetchLibCommand(config).run(Namespace(library="charms.testcharm.v0.testlib"))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]),
@@ -2508,7 +2508,7 @@ def test_fetchlib_simple_dash_in_name(caplog, store_mock, tmp_path, monkeypatch,
         charm_name="test-charm",
     )
 
-    FetchLibCommand("group", config).run(Namespace(library="charms.test_charm.v0.testlib"))
+    FetchLibCommand(config).run(Namespace(library="charms.test_charm.v0.testlib"))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"charm_name": "test-charm", "lib_name": "testlib", "api": 0}]),
@@ -2549,7 +2549,7 @@ def test_fetchlib_simple_dash_in_name_on_disk(caplog, store_mock, tmp_path, monk
     )
     factory.create_lib_filepath("test-charm", "testlib", api=0, patch=1, lib_id=lib_id)
 
-    FetchLibCommand("group", config).run(Namespace(library=None))
+    FetchLibCommand(config).run(Namespace(library=None))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": "test-example-lib-id", "api": 0}]),
@@ -2591,7 +2591,7 @@ def test_fetchlib_simple_updated(caplog, store_mock, tmp_path, monkeypatch, conf
         charm_name="testcharm",
     )
 
-    FetchLibCommand("group", config).run(Namespace(library="charms.testcharm.v0.testlib"))
+    FetchLibCommand(config).run(Namespace(library="charms.testcharm.v0.testlib"))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2658,7 +2658,7 @@ def test_fetchlib_all(caplog, store_mock, tmp_path, monkeypatch, config):
     ]
     store_mock.get_library.side_effect = lambda *a: _store_libs_info.pop(0)
 
-    FetchLibCommand("group", config).run(Namespace(library=None))
+    FetchLibCommand(config).run(Namespace(library=None))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips(
@@ -2693,7 +2693,7 @@ def test_fetchlib_store_not_found(caplog, store_mock, config):
     caplog.set_level(logging.INFO, logger="charmcraft.commands")
 
     store_mock.get_libraries_tips.return_value = {}
-    FetchLibCommand("group", config).run(Namespace(library="charms.testcharm.v0.testlib"))
+    FetchLibCommand(config).run(Namespace(library="charms.testcharm.v0.testlib"))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]),
@@ -2721,7 +2721,7 @@ def test_fetchlib_store_is_old(caplog, store_mock, tmp_path, monkeypatch, config
             charm_name="testcharm",
         ),
     }
-    FetchLibCommand("group", config).run(Namespace(library="charms.testcharm.v0.testlib"))
+    FetchLibCommand(config).run(Namespace(library="charms.testcharm.v0.testlib"))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2749,7 +2749,7 @@ def test_fetchlib_store_same_versions_same_hash(caplog, store_mock, tmp_path, mo
             charm_name="testcharm",
         ),
     }
-    FetchLibCommand("group", config).run(Namespace(library="charms.testcharm.v0.testlib"))
+    FetchLibCommand(config).run(Namespace(library="charms.testcharm.v0.testlib"))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2779,7 +2779,7 @@ def test_fetchlib_store_same_versions_different_hash(
             charm_name="testcharm",
         ),
     }
-    FetchLibCommand("group", config).run(Namespace(library="charms.testcharm.v0.testlib"))
+    FetchLibCommand(config).run(Namespace(library="charms.testcharm.v0.testlib"))
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
@@ -2807,7 +2807,7 @@ def test_listlib_simple(caplog, store_mock, config):
         ),
     }
     args = Namespace(name="testcharm")
-    ListLibCommand("group", config).run(args)
+    ListLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"charm_name": "testcharm"}]),
@@ -2827,7 +2827,7 @@ def test_listlib_charm_from_metadata(caplog, store_mock, config):
     args = Namespace(name=None)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        ListLibCommand("group", config).run(args)
+        ListLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"charm_name": "testcharm"}]),
@@ -2840,7 +2840,7 @@ def test_listlib_name_from_metadata_problem(store_mock, config):
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = None
         with pytest.raises(CommandError) as cm:
-            ListLibCommand("group", config).run(args)
+            ListLibCommand(config).run(args)
 
         assert str(cm.value) == (
             "Can't access name in 'metadata.yaml' file. The 'list-lib' command must either be "
@@ -2855,7 +2855,7 @@ def test_listlib_empty(caplog, store_mock, config):
 
     store_mock.get_libraries_tips.return_value = {}
     args = Namespace(name="testcharm")
-    ListLibCommand("group", config).run(args)
+    ListLibCommand(config).run(args)
 
     expected = "No libraries found for charm testcharm."
     assert [expected] == [rec.message for rec in caplog.records]
@@ -2895,7 +2895,7 @@ def test_listlib_properly_sorted(caplog, store_mock, config):
         ),
     }
     args = Namespace(name="testcharm")
-    ListLibCommand("group", config).run(args)
+    ListLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"charm_name": "testcharm"}]),
@@ -2922,7 +2922,7 @@ def test_resources_simple(caplog, store_mock, config):
     store_mock.list_resources.return_value = store_response
 
     args = Namespace(charm_name="testcharm")
-    ListResourcesCommand("group", config).run(args)
+    ListResourcesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_resources("testcharm"),
@@ -2942,7 +2942,7 @@ def test_resources_empty(caplog, store_mock, config):
     store_mock.list_resources.return_value = store_response
 
     args = Namespace(charm_name="testcharm")
-    ListResourcesCommand("group", config).run(args)
+    ListResourcesCommand(config).run(args)
 
     expected = [
         "No resources associated to testcharm.",
@@ -2964,7 +2964,7 @@ def test_resources_ordered_and_grouped(caplog, store_mock, config):
     store_mock.list_resources.return_value = store_response
 
     args = Namespace(charm_name="testcharm")
-    ListResourcesCommand("group", config).run(args)
+    ListResourcesCommand(config).run(args)
 
     expected = [
         "Charm Rev    Resource      Type    Optional",
@@ -2982,7 +2982,7 @@ def test_resources_ordered_and_grouped(caplog, store_mock, config):
 
 def test_uploadresource_options_filepath_type(config):
     """The --filepath option implies a set of validations."""
-    cmd = UploadResourceCommand("group", config)
+    cmd = UploadResourceCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "filepath"]
@@ -2992,7 +2992,7 @@ def test_uploadresource_options_filepath_type(config):
 
 def test_uploadresource_options_image_type(config):
     """The --image option implies a set of validations."""
-    cmd = UploadResourceCommand("group", config)
+    cmd = UploadResourceCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "image"]
@@ -3013,7 +3013,7 @@ def test_uploadresource_options_good_combinations(tmp_path, config, sysargs, mon
     (tmp_path / "fpath").touch()
     monkeypatch.chdir(tmp_path)
 
-    cmd = UploadResourceCommand("group", config)
+    cmd = UploadResourceCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     try:
@@ -3035,7 +3035,7 @@ def test_uploadresource_options_bad_combinations(config, sysargs, tmp_path, monk
     (tmp_path / "fpath").touch()
     monkeypatch.chdir(tmp_path)
 
-    cmd = UploadResourceCommand("group", config)
+    cmd = UploadResourceCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     with pytest.raises(SystemExit):
@@ -3058,7 +3058,7 @@ def test_uploadresource_filepath_call_ok(caplog, store_mock, config, tmp_path):
         filepath=test_resource,
         image=None,
     )
-    UploadResourceCommand("group", config).run(args)
+    UploadResourceCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.upload_resource("mycharm", "myresource", "file", test_resource)
@@ -3117,7 +3117,7 @@ def test_uploadresource_image_call_already_uploaded(caplog, store_mock, config):
             reg_class_mock.return_value = reg_mock = MagicMock()
             im_class_mock.return_value = im_mock = MagicMock()
             im_mock.check_in_registry.return_value = True
-            UploadResourceCommand("group", config).run(args)
+            UploadResourceCommand(config).run(args)
 
     # validate how OCIRegistry was instantiated
     assert reg_class_mock.mock_calls == [
@@ -3191,7 +3191,7 @@ def test_uploadresource_image_call_upload_from_local(caplog, store_mock, config)
             new_image_digest = "new-digest-after-upload"
             im_mock.upload_from_local.return_value = new_image_digest
 
-            UploadResourceCommand("group", config).run(args)
+            UploadResourceCommand(config).run(args)
 
     # validate how ImageHandler was used
     assert im_class_mock.mock_calls == [
@@ -3246,7 +3246,7 @@ def test_uploadresource_image_call_missing_everywhere(caplog, store_mock, config
             im_mock.check_in_registry.return_value = False
             im_mock.upload_from_local.return_value = None
 
-            UploadResourceCommand("group", config).run(args)
+            UploadResourceCommand(config).run(args)
 
     # validate how ImageHandler was used
     assert im_class_mock.mock_calls == [
@@ -3287,7 +3287,7 @@ def test_uploadresource_call_error(caplog, store_mock, config, tmp_path):
     test_resource = tmp_path / "mystuff.bin"
     test_resource.write_text("sample stuff")
     args = Namespace(charm_name="mycharm", resource_name="myresource", filepath=test_resource)
-    UploadResourceCommand("group", config).run(args)
+    UploadResourceCommand(config).run(args)
 
     expected = [
         "Upload failed with status 400:",
@@ -3311,7 +3311,7 @@ def test_resourcerevisions_simple(caplog, store_mock, config):
     store_mock.list_resource_revisions.return_value = store_response
 
     args = Namespace(charm_name="testcharm", resource_name="testresource")
-    ListResourceRevisionsCommand("group", config).run(args)
+    ListResourceRevisionsCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_resource_revisions("testcharm", "testresource"),
@@ -3331,7 +3331,7 @@ def test_resourcerevisions_empty(caplog, store_mock, config):
     store_mock.list_resource_revisions.return_value = store_response
 
     args = Namespace(charm_name="testcharm", resource_name="testresource")
-    ListResourceRevisionsCommand("group", config).run(args)
+    ListResourceRevisionsCommand(config).run(args)
 
     expected = [
         "No revisions found.",
@@ -3355,7 +3355,7 @@ def test_resourcerevisions_ordered_by_revision(caplog, store_mock, config):
     store_mock.list_resource_revisions.return_value = store_response
 
     args = Namespace(charm_name="testcharm", resource_name="testresource")
-    ListResourceRevisionsCommand("group", config).run(args)
+    ListResourceRevisionsCommand(config).run(args)
 
     expected = [
         "Revision    Created at    Size",

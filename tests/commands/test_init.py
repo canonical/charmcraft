@@ -38,14 +38,14 @@ def mock_pwd():
 
 
 def test_init_pep257(tmp_path, config):
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     cmd.run(Namespace(name="my-charm", author="J Doe", force=False))
     paths = get_python_filepaths(roots=[str(tmp_path / "src")], python_paths=[])
     pep257_test(paths)
 
 
 def test_init_pep8(tmp_path, config, *, author="J Doe"):
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     cmd.run(Namespace(name="my-charm", author=author, force=False))
     paths = get_python_filepaths(
         roots=[str(tmp_path / "src"), str(tmp_path / "tests")], python_paths=[]
@@ -58,7 +58,7 @@ def test_init_non_ascii_author(tmp_path, config):
 
 
 def test_all_the_files(tmp_path, config):
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     cmd.run(Namespace(name="my-charm", author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", force=False))
     assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
         ".flake8",
@@ -83,7 +83,7 @@ def test_all_the_files(tmp_path, config):
 
 
 def test_force(tmp_path, config):
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     tmp_file = tmp_path / "README.md"
     with tmp_file.open("w") as f:
         f.write("This is a nonsense readme")
@@ -98,14 +98,14 @@ def test_force(tmp_path, config):
 
 
 def test_bad_name(config):
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     with pytest.raises(CommandError):
         cmd.run(Namespace(name="1234", author="שראלה ישראל", force=False))
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="mocking for pwd/gecos only")
 def test_no_author_gecos(tmp_path, config, mock_pwd):
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     cmd.run(Namespace(name="my-charm", author=None, force=False))
 
     text = (tmp_path / "src" / "charm.py").read_text()
@@ -113,7 +113,7 @@ def test_no_author_gecos(tmp_path, config, mock_pwd):
 
 
 def test_executables(tmp_path, config):
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     cmd.run(Namespace(name="my-charm", author="홍길동", force=False))
 
     if os.name == "posix":
@@ -137,7 +137,7 @@ def test_tests(tmp_path, config):
             bin_path = path[: path.index("env/lib/python")] + "env/bin"
             env["PATH"] = bin_path + ":" + env["PATH"]
 
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     cmd.run(Namespace(name="my-charm", author="だれだれ", force=False))
 
     subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)
@@ -148,7 +148,7 @@ def test_gecos_missing_in_getpwuid_response(config):
     """No GECOS field in getpwuid response."""
     import pwd
 
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
 
     with patch("pwd.getpwuid") as mock_pwd:
         # return a fack passwd struct with an empty gecos (5th parameter)
@@ -161,7 +161,7 @@ def test_gecos_missing_in_getpwuid_response(config):
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_gecos_missing_user_information(config):
     """No information at all for the requested user."""
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
 
     with patch("pwd.getpwuid") as mock_pwd:
         mock_pwd.side_effect = KeyError("no user")
@@ -181,7 +181,7 @@ def test_missing_directory(tmp_path, config):
         )
     )
 
-    cmd = InitCommand("group", config)
+    cmd = InitCommand(config)
     cmd.run(Namespace(name="my-charm", author="testauthor"))
 
     # check it run ok

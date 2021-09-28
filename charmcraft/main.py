@@ -183,19 +183,19 @@ class Dispatcher:
         for _cmd_group, _, _cmd_classes in commands_groups:
             for _cmd_class in _cmd_classes:
                 if _cmd_class.name in commands:
-                    _stored_class, _ = commands[_cmd_class.name]
+                    _stored_class = commands[_cmd_class.name]
                     raise RuntimeError(
                         "Multiple commands with same name: {} and {}".format(
                             _cmd_class.__name__, _stored_class.__name__
                         )
                     )
-                commands[_cmd_class.name] = (_cmd_class, _cmd_group)
+                commands[_cmd_class.name] = _cmd_class
         return commands
 
     def _load_command(self, command_name, cmd_args, charmcraft_config):
         """Load a command."""
-        cmd_class, group = self.commands[command_name]
-        cmd = cmd_class(group, charmcraft_config)
+        cmd_class = self.commands[command_name]
+        cmd = cmd_class(charmcraft_config)
 
         # load and parse the command specific options/params
         parser = CustomArgumentParser(prog=cmd.name)
@@ -227,13 +227,13 @@ class Dispatcher:
 
         # at this point the parameter should be a command
         try:
-            cmd_class, group = self.commands[param]
+            cmd_class = self.commands[param]
         except KeyError:
             msg = "command {!r} not found to provide help for".format(param)
             text = help_builder.get_usage_message(msg)
             raise ArgumentParsingError(text)
 
-        cmd = cmd_class(group, None)
+        cmd = cmd_class(None)
         parser = CustomArgumentParser(prog=cmd.name, add_help=False)
         cmd.fill_parser(parser)
         return get_command_help(parser, cmd)

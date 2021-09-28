@@ -31,7 +31,7 @@ from charmcraft.utils import useful_filepath
 
 def test_options_filepath_type(config):
     """The filepath parameter implies a set of validations."""
-    cmd = AnalyzeCommand("group", config)
+    cmd = AnalyzeCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "filepath"]
@@ -40,7 +40,7 @@ def test_options_filepath_type(config):
 
 def test_options_format_possible_values(config):
     """The format option implies a set of validations."""
-    cmd = AnalyzeCommand("group", config)
+    cmd = AnalyzeCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "format"]
@@ -73,7 +73,7 @@ def test_expanded_charm_basic(config, tmp_path, monkeypatch):
 
     monkeypatch.setattr(linters, "analyze", fake_analyze)
     args = Namespace(filepath=charm_file, force=None, format=None)
-    AnalyzeCommand("group", config).run(args)
+    AnalyzeCommand(config).run(args)
     assert fake_analyze_called
 
 
@@ -98,7 +98,7 @@ def test_expanded_charm_permissions(config, tmp_path, monkeypatch, modebits):
 
     monkeypatch.setattr(linters, "analyze", fake_analyze)
     args = Namespace(filepath=charm_file, force=None, format=None)
-    AnalyzeCommand("group", config).run(args)
+    AnalyzeCommand(config).run(args)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -109,7 +109,7 @@ def test_corrupt_charm(tmp_path, config):
 
     args = Namespace(filepath=charm_file, force=None, format=None)
     with pytest.raises(CommandError) as cm:
-        AnalyzeCommand("group", config).run(args)
+        AnalyzeCommand(config).run(args)
     assert str(cm.value) == (
         "Cannot open charm file '{}': BadZipFile('File is not a zip file').".format(charm_file)
     )
@@ -129,7 +129,7 @@ def test_integration_linters(tmp_path, caplog, config, monkeypatch):
 
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
-    AnalyzeCommand("group", config).run(args)
+    AnalyzeCommand(config).run(args)
 
     expected_titles = ["Attributes:", "Lint Errors:"]
     logged = [rec.message for rec in caplog.records]
@@ -199,7 +199,7 @@ def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path, indicate
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
     with patch.object(linters, "analyze") as mock_analyze:
         mock_analyze.return_value = linting_results
-        AnalyzeCommand("group", config).run(args)
+        AnalyzeCommand(config).run(args)
     mock_analyze.assert_called_with(config, ANY, override_ignore_config=False)
 
     if indicated_format is None:
@@ -274,7 +274,7 @@ def test_force_used_to_override_ignores(caplog, config, monkeypatch, tmp_path):
     args = Namespace(filepath=fake_charm, force=True, format=None)
     with patch.object(linters, "analyze") as mock_analyze:
         mock_analyze.return_value = []
-        AnalyzeCommand("group", config).run(args)
+        AnalyzeCommand(config).run(args)
     mock_analyze.assert_called_with(config, ANY, override_ignore_config=True)
 
 
@@ -296,7 +296,7 @@ def test_only_attributes(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand(config).run(args)
 
     expected = [
         "Attributes:",
@@ -324,7 +324,7 @@ def test_only_warnings(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand(config).run(args)
 
     expected = [
         "Lint Warnings:",
@@ -352,7 +352,7 @@ def test_only_errors(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand(config).run(args)
 
     expected = [
         "Lint Errors:",
@@ -387,7 +387,7 @@ def test_both_errors_and_warnings(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand(config).run(args)
 
     expected = [
         "Lint Warnings:",
@@ -417,7 +417,7 @@ def test_only_lint_ok(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand(config).run(args)
 
     expected = [
         "Lint OK:",
@@ -445,7 +445,7 @@ def test_only_fatal(caplog, config, monkeypatch, tmp_path):
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand("group", config).run(args)
+    retcode = AnalyzeCommand(config).run(args)
 
     expected = [
         "Lint Fatal:",

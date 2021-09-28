@@ -36,7 +36,7 @@ def test_clean(caplog, caplog_filter, config, mock_provider, tmp_path):
     metadata_yaml = tmp_path / "metadata.yaml"
     metadata_yaml.write_text("name: foo")
 
-    cmd = CleanCommand("group", "config")
+    cmd = CleanCommand("config")
     cmd.config = config
     cmd.run([])
 

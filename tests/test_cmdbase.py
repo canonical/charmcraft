@@ -51,10 +51,8 @@ def test_basecommand_holds_the_indicated_info():
         help_msg = "help message"
         name = "test"
 
-    group = "test group"
     config = "test config"
-    tc = TestClass(group, config)
-    assert tc.group == group
+    tc = TestClass(config)
     assert tc.config == config
 
 
@@ -65,14 +63,14 @@ def test_basecommand_fill_parser_optional():
         help_msg = "help message"
         name = "test"
 
-        def __init__(self, group, config):
+        def __init__(self, config):
             self.done = False
-            super().__init__(group, config)
+            super().__init__(config)
 
         def run(self, parsed_args):
             self.done = True
 
-    tc = TestClass("group", "config")
+    tc = TestClass("config")
     tc.run([])
     assert tc.done
 
@@ -84,7 +82,7 @@ def test_basecommand_run_mandatory():
         help_msg = "help message"
         name = "test"
 
-    tc = TestClass("group", "config")
+    tc = TestClass("config")
     with pytest.raises(NotImplementedError):
         tc.run([])
 
@@ -116,4 +114,4 @@ def test_aesthetic_args_options_msg(command, config):
             assert help_msg, "The help message must be present in each option"
             assert help_msg[0].isupper() and help_msg[-1] != "."
 
-    command("group", config).fill_parser(FakeParser())
+    command(config).fill_parser(FakeParser())

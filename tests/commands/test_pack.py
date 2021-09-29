@@ -97,7 +97,7 @@ def mock_launch_shell():
 def test_resolve_charm_type(config):
     """The config indicates the project is a charm."""
     config.set(type="charm")
-    cmd = PackCommand("group", config)
+    cmd = PackCommand(config)
 
     with patch.object(cmd, "_pack_charm") as mock:
         cmd.run(noargs)
@@ -107,7 +107,7 @@ def test_resolve_charm_type(config):
 def test_resolve_bundle_type(config):
     """The config indicates the project is a bundle."""
     config.set(type="bundle")
-    cmd = PackCommand("group", config)
+    cmd = PackCommand(config)
 
     with patch.object(cmd, "_pack_bundle") as mock:
         cmd.run(noargs)
@@ -123,7 +123,7 @@ def test_resolve_no_config_packs_charm(config, tmp_path):
             started_at=datetime.datetime.utcnow(),
         )
     )
-    cmd = PackCommand("group", config)
+    cmd = PackCommand(config)
 
     with patch.object(cmd, "_pack_charm") as mock:
         cmd.run(noargs)
@@ -136,7 +136,7 @@ def test_resolve_bundle_with_requirement(config):
     args = Namespace(requirement="reqs.txt", entrypoint=None)
 
     with pytest.raises(CommandError) as cm:
-        PackCommand("group", config).run(args)
+        PackCommand(config).run(args)
     assert str(cm.value) == "The -r/--requirement option is valid only when packing a charm"
 
 
@@ -146,7 +146,7 @@ def test_resolve_bundle_with_entrypoint(config):
     args = Namespace(requirement=None, entrypoint="mycharm.py")
 
     with pytest.raises(CommandError) as cm:
-        PackCommand("group", config).run(args)
+        PackCommand(config).run(args)
     assert str(cm.value) == "The -e/--entry option is valid only when packing a charm"
 
 
@@ -164,7 +164,7 @@ def test_bundle_simple_succesful_build(tmp_path, caplog, bundle_yaml, bundle_con
     (tmp_path / "README.md").write_text("test readme")
 
     # build!
-    PackCommand("group", bundle_config).run(noargs)
+    PackCommand(bundle_config).run(noargs)
 
     # check
     zipname = tmp_path / "testbundle.zip"
@@ -189,7 +189,7 @@ def test_bundle_missing_bundle_file(tmp_path, bundle_config):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
     with pytest.raises(CommandError) as cm:
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
     assert str(cm.value) == (
         "Missing or invalid main bundle file: '{}'.".format(tmp_path / "bundle.yaml")
     )
@@ -202,7 +202,7 @@ def test_bundle_missing_other_mandatory_file(tmp_path, bundle_config, bundle_yam
 
     # build without a README!
     with pytest.raises(CommandError) as cm:
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
     assert str(cm.value) == "Missing mandatory file: {!r}.".format(str(tmp_path / "README.md"))
 
 
@@ -213,7 +213,7 @@ def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
 
     # build!
     with pytest.raises(CommandError) as cm:
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
     assert str(cm.value) == (
         "Invalid bundle config; "
         "missing a 'name' field indicating the bundle's name in file '{}'.".format(
@@ -229,7 +229,7 @@ def test_bundle_debug_no_error(
     bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    PackCommand("group", bundle_config).run(get_namespace(debug=True))
+    PackCommand(bundle_config).run(get_namespace(debug=True))
 
     assert mock_launch_shell.mock_calls == []
 
@@ -243,7 +243,7 @@ def test_bundle_debug_with_error(
     (tmp_path / "README.md").write_text("test readme")
 
     with pytest.raises(CommandError):
-        PackCommand("group", bundle_config).run(get_namespace(debug=True))
+        PackCommand(bundle_config).run(get_namespace(debug=True))
 
     assert mock_launch_shell.mock_calls == [mock.call()]
 
@@ -253,7 +253,7 @@ def test_bundle_shell(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_lau
     bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    PackCommand("group", bundle_config).run(get_namespace(shell=True))
+    PackCommand(bundle_config).run(get_namespace(shell=True))
 
     assert mock_launch_shell.mock_calls == [mock.call()]
 
@@ -263,7 +263,7 @@ def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mo
     bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    PackCommand("group", bundle_config).run(get_namespace(shell_after=True))
+    PackCommand(bundle_config).run(get_namespace(shell_after=True))
 
     assert mock_launch_shell.mock_calls == [mock.call()]
 
@@ -282,7 +282,7 @@ def test_prime_mandatory_ok(tmp_path, bundle_yaml, bundle_config):
     test_file2.touch()
 
     with patch.object(pack, "MANDATORY_FILES", test_mandatory):
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -301,7 +301,7 @@ def test_prime_extra_ok(tmp_path, bundle_yaml, bundle_config):
     testfile2.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -319,7 +319,7 @@ def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config):
 
     with patch.object(pack, "MANDATORY_FILES", []):
         with pytest.raises(CommandError) as err:
-            PackCommand("group", bundle_config).run(noargs)
+            PackCommand(bundle_config).run(noargs)
     assert str(err.value) == (
         "Parts processing error: Failed to copy '{}/build/stage/f2.txt': "
         "no such file or directory.".format(tmp_path)
@@ -336,7 +336,7 @@ def test_prime_extra_long_path(tmp_path, bundle_yaml, bundle_config):
     testfile.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -356,7 +356,7 @@ def test_prime_extra_wildcards_ok(tmp_path, bundle_yaml, bundle_config):
     testfile3.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -373,7 +373,7 @@ def test_prime_extra_wildcards_not_found(tmp_path, bundle_yaml, bundle_config):
 
     # non-existent files are not included if using a wildcard
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -400,7 +400,7 @@ def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config):
         testfile.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -432,7 +432,7 @@ def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_confi
         testfile.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand("group", bundle_config).run(noargs)
+        PackCommand(bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -511,7 +511,7 @@ def test_zipbuild_symlink_outside(tmp_path):
 
 def test_charm_parameters_requirement(config):
     """The --requirement option implies a set of validations."""
-    cmd = PackCommand("group", config)
+    cmd = PackCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "requirement"]
@@ -520,7 +520,7 @@ def test_charm_parameters_requirement(config):
 
 def test_charm_parameters_entrypoint(config):
     """The --entrypoint option implies a set of validations."""
-    cmd = PackCommand("group", config)
+    cmd = PackCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = [action for action in parser._actions if action.dest == "entrypoint"]
@@ -547,7 +547,7 @@ def test_charm_parameters_validator(config, tmp_path):
     with patch("charmcraft.commands.build.Validator", autospec=True) as validator_class_mock:
         validator_class_mock.return_value = validator_instance_mock = MagicMock()
         with patch("charmcraft.commands.build.Builder"):
-            PackCommand("group", config).run(args)
+            PackCommand(config).run(args)
     validator_instance_mock.process.assert_called_with(
         Namespace(
             **{
@@ -572,6 +572,6 @@ def test_charm_builder_infrastructure_called(config):
         validator_mock(config).process.return_value = "processed args"
         with patch("charmcraft.commands.build.Builder") as builder_class_mock:
             builder_class_mock.return_value = builder_instance_mock = MagicMock()
-            PackCommand("group", config).run(noargs)
+            PackCommand(config).run(noargs)
     builder_class_mock.assert_called_with("processed args", config)
     builder_instance_mock.run.assert_called_with([], destructive_mode=False)

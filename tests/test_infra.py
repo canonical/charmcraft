@@ -132,8 +132,8 @@ def test_bashcompletion_all_commands():
         pytest.fail("Failed to find commands in the bash completion file")
 
     real_command_names = set()
-    for _, _, cmds in main.COMMAND_GROUPS:
-        real_command_names.update(cmd.name for cmd in cmds)
+    for cgroup in main.COMMAND_GROUPS:
+        real_command_names.update(cmd.name for cmd in cgroup.commands)
 
     assert completed_commands == real_command_names
 

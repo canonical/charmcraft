@@ -119,9 +119,9 @@ class HelpBuilder:
 
         # collect common commands
         common_commands = []
-        for group, _, commands in self.command_groups:
-            max_title_len = max(len(group), max_title_len)
-            for cmd in commands:
+        for command_group in self.command_groups:
+            max_title_len = max(len(command_group.name), max_title_len)
+            for cmd in command_group.commands:
                 if cmd.common:
                     common_commands.append(cmd)
                     max_title_len = max(len(cmd.name), max_title_len)
@@ -140,9 +140,9 @@ class HelpBuilder:
         textblocks.append("\n".join(common_lines))
 
         grouped_lines = ["Commands can be classified as follows:"]
-        for group, _, commands in sorted(self.command_groups):
-            command_names = ", ".join(sorted(cmd.name for cmd in commands))
-            grouped_lines.extend(_build_item(group, command_names, max_title_len))
+        for command_group in sorted(self.command_groups, key=attrgetter("name")):
+            command_names = ", ".join(sorted(cmd.name for cmd in command_group.commands))
+            grouped_lines.extend(_build_item(command_group.name, command_names, max_title_len))
         textblocks.append("\n".join(grouped_lines))
 
         textblocks.append(
@@ -182,8 +182,8 @@ class HelpBuilder:
 
         # column alignment is dictated by longest common commands names and groups names
         max_title_len = 0
-        for _, _, commands in self.command_groups:
-            for cmd in commands:
+        for command_group in self.command_groups:
+            for cmd in command_group.commands:
                 max_title_len = max(len(cmd.name), max_title_len)
         for title, _ in global_options:
             max_title_len = max(len(title), max_title_len)
@@ -195,9 +195,9 @@ class HelpBuilder:
 
         textblocks.append("Commands can be classified as follows:")
 
-        for _, group_description, commands in self.command_groups:
-            group_lines = ["{}:".format(group_description)]
-            for cmd in commands:
+        for command_group in self.command_groups:
+            group_lines = ["{}:".format(command_group.name)]
+            for cmd in command_group.commands:
                 group_lines.extend(_build_item(cmd.name, cmd.help_msg, max_title_len))
             textblocks.append("\n".join(group_lines))
 
@@ -264,12 +264,14 @@ class HelpBuilder:
         textblocks.append("\n".join(option_lines))
 
         # recommend other commands of the same group
-        for group_name, _, command_classes in self.command_groups:
-            if any(isinstance(command, command_class) for command_class in command_classes):
+        for command_group in self.command_groups:
+            if any(isinstance(command, command_class) for command_class in command_group.commands):
                 break
         else:
             raise RuntimeError("Internal inconsistency in commands groups")
-        other_command_names = [c.name for c in command_classes if not isinstance(command, c)]
+        other_command_names = [
+            c.name for c in command_group.commands if not isinstance(command, c)
+        ]
         if other_command_names:
             see_also_block = ["See also:"]
             see_also_block.extend(("    " + name) for name in sorted(other_command_names))

@@ -27,6 +27,7 @@ from charmcraft.main import (
     Dispatcher,
     main,
     COMMAND_GROUPS,
+    CommandGroup,
     ArgumentParsingError,
     ProvideHelpException,
 )
@@ -63,7 +64,7 @@ def test_dispatcher_command_execution_ok():
         name = "name2"
         _executed = []
 
-    groups = [("test-group", "title", [MyCommand1, MyCommand2])]
+    groups = [CommandGroup("title", [MyCommand1, MyCommand2])]
     dispatcher = Dispatcher(["name2"], groups)
     dispatcher.run()
     assert MyCommand1._executed == []
@@ -80,7 +81,7 @@ def test_dispatcher_command_return_code():
         def run(self, parsed_args):
             return 17
 
-    groups = [("test-group", "title", [MyCommand])]
+    groups = [CommandGroup("title", [MyCommand])]
     dispatcher = Dispatcher(["cmdname"], groups)
     retcode = dispatcher.run()
     assert retcode == 17
@@ -96,7 +97,7 @@ def test_dispatcher_command_execution_crash():
         def run(self, parsed_args):
             raise ValueError()
 
-    groups = [("test-group", "title", [MyCommand])]
+    groups = [CommandGroup("title", [MyCommand])]
     dispatcher = Dispatcher(["cmdname"], groups)
     with pytest.raises(ValueError):
         dispatcher.run()
@@ -121,7 +122,7 @@ def test_dispatcher_config_needed_ok(tmp_path):
     """
     )
 
-    groups = [("test-group", "title", [MyCommand])]
+    groups = [CommandGroup("title", [MyCommand])]
     dispatcher = Dispatcher(["cmdname", "--project-dir", tmp_path], groups)
     dispatcher.run()
 
@@ -137,7 +138,7 @@ def test_dispatcher_config_needed_problem(tmp_path):
         def run(self, parsed_args):
             pass
 
-    groups = [("test-group", "title", [MyCommand])]
+    groups = [CommandGroup("title", [MyCommand])]
     dispatcher = Dispatcher(["cmdname", "--project-dir", tmp_path], groups)
     with pytest.raises(ArgumentParsingError) as err:
         dispatcher.run()
@@ -158,7 +159,7 @@ def test_dispatcher_config_not_needed():
         def run(self, parsed_args):
             pass
 
-    groups = [("test-group", "title", [MyCommand])]
+    groups = [CommandGroup("title", [MyCommand])]
     dispatcher = Dispatcher(["cmdname"], groups)
     dispatcher.run()
 
@@ -166,7 +167,7 @@ def test_dispatcher_config_not_needed():
 def test_dispatcher_generic_setup_default():
     """Generic parameter handling for default values."""
     cmd = create_command("somecommand")
-    groups = [("test-group", "title", [cmd])]
+    groups = [CommandGroup("title", [cmd])]
     logsetup.message_handler.mode = None
     with patch("charmcraft.config.load") as config_mock:
         Dispatcher(["somecommand"], groups)
@@ -187,7 +188,7 @@ def test_dispatcher_generic_setup_default():
 def test_dispatcher_generic_setup_verbose(options):
     """Generic parameter handling for verbose log setup, directly or after the command."""
     cmd = create_command("somecommand")
-    groups = [("test-group", "title", [cmd])]
+    groups = [CommandGroup("title", [cmd])]
     logsetup.message_handler.mode = None
     Dispatcher(options, groups)
     assert logsetup.message_handler.mode == logsetup.message_handler.VERBOSE
@@ -206,7 +207,7 @@ def test_dispatcher_generic_setup_verbose(options):
 def test_dispatcher_generic_setup_quiet(options):
     """Generic parameter handling for quiet log setup, directly or after the command."""
     cmd = create_command("somecommand")
-    groups = [("test-group", "title", [cmd])]
+    groups = [CommandGroup("title", [cmd])]
     logsetup.message_handler.mode = None
     Dispatcher(options, groups)
     assert logsetup.message_handler.mode == logsetup.message_handler.QUIET
@@ -226,7 +227,7 @@ def test_dispatcher_generic_setup_quiet(options):
 def test_dispatcher_generic_setup_mutually_exclusive(options):
     """Disallow mutually exclusive generic options."""
     cmd = create_command("somecommand")
-    groups = [("test-group", "title", [cmd])]
+    groups = [CommandGroup("title", [cmd])]
     # test the system exit, which is done automatically by argparse
     with pytest.raises(ArgumentParsingError) as err:
         Dispatcher(options, groups)
@@ -247,7 +248,7 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
 def test_dispatcher_generic_setup_projectdir_with_param(options):
     """Generic parameter handling for 'project dir' with the param, directly or after the cmd."""
     cmd = create_command("somecommand")
-    groups = [("test-group", "title", [cmd])]
+    groups = [CommandGroup("title", [cmd])]
     with patch("charmcraft.config.load") as config_mock:
         Dispatcher(options, groups)
     config_mock.assert_called_once_with("foobar")
@@ -265,7 +266,7 @@ def test_dispatcher_generic_setup_projectdir_with_param(options):
 def test_dispatcher_generic_setup_projectdir_without_param_simple(options):
     """Generic parameter handling for 'project dir' without the requested parameter."""
     cmd = create_command("somecommand")
-    groups = [("test-group", "title", [cmd])]
+    groups = [CommandGroup("title", [cmd])]
     with pytest.raises(ArgumentParsingError) as err:
         Dispatcher(options, groups)
     assert str(err.value) == "The 'project-dir' option expects one argument."
@@ -281,7 +282,7 @@ def test_dispatcher_generic_setup_projectdir_without_param_simple(options):
 def test_dispatcher_generic_setup_projectdir_without_param_confusing(options):
     """Generic parameter handling for 'project dir' taking confusingly the command as the arg."""
     cmd = create_command("somecommand")
-    groups = [("test-group", "title", [cmd])]
+    groups = [CommandGroup("title", [cmd])]
     with patch("charmcraft.helptexts.HelpBuilder.get_full_help") as mock_helper:
         mock_helper.return_value = "help text"
         with pytest.raises(ArgumentParsingError) as err:
@@ -295,8 +296,8 @@ def test_dispatcher_build_commands_ok():
     """Correct command loading."""
     cmd0, cmd1, cmd2 = [create_command("cmd-name-{}".format(n), "cmd help") for n in range(3)]
     groups = [
-        ("test-group-A", "whatever title", [cmd0]),
-        ("test-group-B", "other title", [cmd1, cmd2]),
+        CommandGroup("whatever title", [cmd0]),
+        CommandGroup("other title", [cmd1, cmd2]),
     ]
     dispatcher = Dispatcher([cmd0.name], groups)
     assert len(dispatcher.commands) == 3
@@ -321,8 +322,8 @@ def test_dispatcher_build_commands_repeated():
         name = "repeated"
 
     groups = [
-        ("test-group-1", "whatever title", [Foo, Bar]),
-        ("test-group-2", "other title", [Baz]),
+        CommandGroup("whatever title", [Foo, Bar]),
+        CommandGroup("other title", [Baz]),
     ]
     expected_msg = "Multiple commands with same name: (Foo|Baz) and (Baz|Foo)"
     with pytest.raises(RuntimeError, match=expected_msg):
@@ -355,7 +356,7 @@ def test_dispatcher_commands_are_not_loaded_if_not_needed():
         def run(self, parsed_args):
             raise AssertionError
 
-    groups = [("test-group", "title", [MyCommand1, MyCommand2])]
+    groups = [CommandGroup("title", [MyCommand1, MyCommand2])]
     dispatcher = Dispatcher(["command1"], groups)
     dispatcher.run()
     assert isinstance(MyCommand1._executed[0], argparse.Namespace)
@@ -481,7 +482,7 @@ def test_initmsg_default():
     """Without any option, the init msg only goes to disk."""
     cmd = create_command("somecommand")
     fake_stream = io.StringIO()
-    with patch("charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]):
+    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("whatever title", [cmd])]):
         with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
             with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
                 main(["charmcraft", "somecommand"])
@@ -505,7 +506,7 @@ def test_initmsg_quiet():
     """In quiet mode, the init msg only goes to disk."""
     cmd = create_command("somecommand")
     fake_stream = io.StringIO()
-    with patch("charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]):
+    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("whatever title", [cmd])]):
         with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
             with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
                 main(["charmcraft", "--quiet", "somecommand"])
@@ -529,7 +530,7 @@ def test_initmsg_verbose():
     """In verbose mode, the init msg goes both to disk and terminal."""
     cmd = create_command("somecommand")
     fake_stream = io.StringIO()
-    with patch("charmcraft.main.COMMAND_GROUPS", [("test-group", "whatever title", [cmd])]):
+    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("whatever title", [cmd])]):
         with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
             with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
                 main(["charmcraft", "--verbose", "somecommand"])
@@ -549,7 +550,9 @@ def test_initmsg_verbose():
     assert expected in terminal_first_line
 
 
-@pytest.mark.parametrize("cmd_name", [cmd.name for _, _, cmds in COMMAND_GROUPS for cmd in cmds])
+@pytest.mark.parametrize(
+    "cmd_name", [cmd.name for cgroup in COMMAND_GROUPS for cmd in cgroup.commands]
+)
 def test_commands(cmd_name):
     """Sanity validation of a command.
 

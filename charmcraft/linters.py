@@ -23,6 +23,8 @@ import shlex
 from collections import namedtuple
 from typing import List, Generator, Union
 
+import yaml
+
 from charmcraft import config
 from charmcraft.metadata import parse_metadata_yaml
 
@@ -233,10 +235,86 @@ class JujuMetadata:
         return result
 
 
+class JujuActions:
+    """Check that the actions.yaml file is valid YAML if it exists."""
+
+    check_type = CheckType.lint
+    name = "juju-actions"
+    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-actions"
+    text = "The actions.yaml file is not a valid YAML file."
+
+    # different result constants
+    Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        filepath = basedir / "actions.yaml"
+        if not filepath.exists():
+            # it's optional
+            return self.Result.ok
+
+        try:
+            with filepath.open("rt", encoding="utf8") as fh:
+                yaml.safe_load(fh)
+        except Exception:
+            return self.Result.errors
+
+        return self.Result.ok
+
+
+class JujuConfig:
+    """Check that the config.yaml file (if it exists) is valid.
+
+    The file is considered valid if the following checks are true:
+
+    - has an 'options' key
+    - it is a dictionary
+    - each item inside has the mandatory 'type' key
+    """
+
+    check_type = CheckType.lint
+    name = "juju-config"
+    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-config"
+
+    # different result constants
+    Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
+
+    def __init__(self):
+        self.text = None
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        filepath = basedir / "config.yaml"
+        if not filepath.exists():
+            # it's optional
+            return self.Result.ok
+
+        try:
+            with filepath.open("rt", encoding="utf8") as fh:
+                content = yaml.safe_load(fh)
+        except Exception:
+            self.text = "The config.yaml file is not a valid YAML file."
+            return self.Result.errors
+
+        options = content.get("options")
+        if not isinstance(options, dict):
+            self.text = "Error in config.yaml: must have an 'options' dictionary."
+            return self.Result.errors
+
+        for value in options.values():
+            if "type" not in value:
+                self.text = "Error in config.yaml: items under 'options' must have a 'type' key."
+                return self.Result.errors
+
+        return self.Result.ok
+
+
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
 CHECKERS = [
     Language,
+    JujuActions,
+    JujuConfig,
     JujuMetadata,
     Framework,
 ]
@@ -263,7 +341,7 @@ def analyze(
                     name=cls.name,
                     result=IGNORED,
                     url=cls.url,
-                    text=cls.text,
+                    text="",
                 )
             )
             continue

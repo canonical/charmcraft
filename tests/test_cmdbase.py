@@ -34,7 +34,7 @@ def test_commanderror_retcode_given():
     assert err.retcode == 4
 
 
-all_commands = list.__add__(*[commands for _, _, commands in COMMAND_GROUPS])
+all_commands = list.__add__(*[cgroup.commands for cgroup in COMMAND_GROUPS])
 
 
 @pytest.mark.parametrize("command", all_commands)

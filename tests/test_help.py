@@ -20,7 +20,7 @@ from unittest.mock import patch
 import pytest
 
 from charmcraft import helptexts, main
-from charmcraft.main import Dispatcher, ArgumentParsingError, ProvideHelpException
+from charmcraft.main import Dispatcher, ArgumentParsingError, ProvideHelpException, CommandGroup
 from tests.factory import create_command
 
 
@@ -78,9 +78,9 @@ def test_default_help_text(help_builder):
     cmd7 = create_command("cmd7", "More help.")
 
     command_groups = [
-        ("group1", "help text for g1", [cmd6, cmd2]),
-        ("group3", "help text for g3", [cmd7]),
-        ("group2", "help text for g2", [cmd3, cmd4, cmd5, cmd1]),
+        CommandGroup("group1", [cmd6, cmd2]),
+        CommandGroup("group3", [cmd7]),
+        CommandGroup("group2", [cmd3, cmd4, cmd5, cmd1]),
     ]
     fake_summary = textwrap.dedent(
         """
@@ -140,9 +140,9 @@ def test_detailed_help_text(help_builder):
     cmd7 = create_command("cmd7", "More help.")
 
     command_groups = [
-        ("group1", "Group 1 description", [cmd6, cmd2]),
-        ("group3", "Group 3 help text", [cmd7]),
-        ("group2", "Group 2 stuff", [cmd3, cmd4, cmd5, cmd1]),
+        CommandGroup("Group 1 description", [cmd6, cmd2]),
+        CommandGroup("Group 3 help text", [cmd7]),
+        CommandGroup("Group 2 stuff", [cmd3, cmd4, cmd5, cmd1]),
     ]
     fake_summary = textwrap.dedent(
         """
@@ -208,8 +208,8 @@ def test_command_help_text_no_parameters(config, help_builder):
     cmd3 = create_command("other-cmd-3", "Some help.")
     cmd4 = create_command("other-cmd-4", "Some help.")
     command_groups = [
-        ("group1", "help text for g1", [cmd1, cmd2, cmd4]),
-        ("group2", "help text for g2", [cmd3]),
+        CommandGroup("group1", [cmd1, cmd2, cmd4]),
+        CommandGroup("group2", [cmd3]),
     ]
 
     options = [
@@ -258,7 +258,7 @@ def test_command_help_text_with_parameters(config, help_builder):
     cmd1 = create_command("somecommand", "Command one line help.", overview_=overview)
     cmd2 = create_command("other-cmd-2", "Some help.")
     command_groups = [
-        ("group1", "help text for g1", [cmd1, cmd2]),
+        CommandGroup("group1", [cmd1, cmd2]),
     ]
 
     options = [
@@ -304,8 +304,8 @@ def test_command_help_text_loneranger(config, help_builder):
     cmd1 = create_command("somecommand", "Command one line help.", overview_=overview)
     cmd2 = create_command("other-cmd-2", "Some help.")
     command_groups = [
-        ("group1", "help text for g1", [cmd1]),
-        ("group2", "help text for g2", [cmd2]),
+        CommandGroup("group1", [cmd1]),
+        CommandGroup("group2", [cmd2]),
     ]
 
     options = [
@@ -470,7 +470,7 @@ def test_tool_exec_help_on_too_many_things(sysargv, help_builder):
 def test_tool_exec_command_dash_help_simple(help_option):
     """Execute a command (that needs no params) asking for help."""
     cmd = create_command("somecommand", "This command does that.")
-    command_groups = [("group", "help text", [cmd])]
+    command_groups = [CommandGroup("group", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
@@ -495,7 +495,7 @@ def test_tool_exec_command_dash_help_simple(help_option):
 def test_tool_exec_command_dash_help_reverse(help_option):
     """Execute a command (that needs no params) asking for help."""
     cmd = create_command("somecommand", "This command does that.")
-    command_groups = [("group", "help text", [cmd])]
+    command_groups = [CommandGroup("group", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
@@ -525,7 +525,7 @@ def test_tool_exec_command_dash_help_missing_params(help_option):
 
     cmd = create_command("somecommand", "This command does that.")
     cmd.fill_parser = fill_parser
-    command_groups = [("group", "help text", [cmd])]
+    command_groups = [CommandGroup("group", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
@@ -550,7 +550,7 @@ def test_tool_exec_command_dash_help_missing_params(help_option):
 def test_tool_exec_command_wrong_option(help_builder):
     """Execute a correct command but with a wrong option."""
     cmd = create_command("somecommand", "This command does that.")
-    command_groups = [("group", "help text", [cmd])]
+    command_groups = [CommandGroup("group", [cmd])]
     help_builder.init("testapp", "general summary", command_groups)
     with pytest.raises(ArgumentParsingError) as cm:
         Dispatcher(["somecommand", "--whatever"], command_groups)
@@ -577,7 +577,7 @@ def test_tool_exec_command_bad_option_type(help_builder):
     cmd = create_command("somecommand", "This command does that.")
     cmd.fill_parser = fill_parser
 
-    command_groups = [("group", "help text", [cmd])]
+    command_groups = [CommandGroup("group", [cmd])]
     help_builder.init("testapp", "general summary", command_groups)
     with pytest.raises(ArgumentParsingError) as cm:
         Dispatcher(["somecommand", "--number=foo"], command_groups)
@@ -598,7 +598,7 @@ def test_tool_exec_command_bad_option_type(help_builder):
 def test_tool_exec_help_command_on_command_ok():
     """Execute charmcraft asking for help on a command ok."""
     cmd = create_command("somecommand", "This command does that.")
-    command_groups = [("group", "help text", [cmd])]
+    command_groups = [CommandGroup("group", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
@@ -631,7 +631,7 @@ def test_tool_exec_help_command_on_command_complex():
 
     cmd = create_command("somecommand", "This command does that.")
     cmd.fill_parser = fill_parser
-    command_groups = [("group", "help text", [cmd])]
+    command_groups = [CommandGroup("group", [cmd])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
@@ -660,7 +660,7 @@ def test_tool_exec_help_command_on_command_complex():
 
 def test_tool_exec_help_command_on_command_wrong():
     """Execute charmcraft asking for help on a command which does not exist."""
-    command_groups = [("group", "help", [])]
+    command_groups = [CommandGroup("group", [])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_usage_message") as mock:
         mock.return_value = "test help"
@@ -677,7 +677,7 @@ def test_tool_exec_help_command_on_command_wrong():
 
 def test_tool_exec_help_command_all():
     """Execute charmcraft asking for detailed help."""
-    command_groups = [("group", "help", [])]
+    command_groups = [CommandGroup("group", [])]
 
     with patch("charmcraft.helptexts.HelpBuilder.get_detailed_help") as mock:
         mock.return_value = "test help"

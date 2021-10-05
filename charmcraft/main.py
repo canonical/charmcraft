@@ -53,49 +53,44 @@ class ProvideHelpException(Exception):
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files. Also note that order here is
 # important when listing commands and showing help.
+_basic_commands = [
+    analyze.AnalyzeCommand,
+    build.BuildCommand,
+    clean.CleanCommand,
+    pack.PackCommand,
+    init.InitCommand,
+    version.VersionCommand,
+]
+_charmhub_commands = [
+    # auth
+    store.LoginCommand,
+    store.LogoutCommand,
+    store.WhoamiCommand,
+    # name handling
+    store.RegisterCharmNameCommand,
+    store.RegisterBundleNameCommand,
+    store.ListNamesCommand,
+    # pushing files and checking revisions
+    store.UploadCommand,
+    store.ListRevisionsCommand,
+    # release process, and show status
+    store.ReleaseCommand,
+    store.StatusCommand,
+    store.CloseCommand,
+    # libraries support
+    store.CreateLibCommand,
+    store.PublishLibCommand,
+    store.ListLibCommand,
+    store.FetchLibCommand,
+    # resources support
+    store.ListResourcesCommand,
+    store.UploadResourceCommand,
+    store.ListResourceRevisionsCommand,
+]
+CommandGroup = namedtuple("CommandGroup", "name commands")
 COMMAND_GROUPS = [
-    (
-        "basic",
-        "Basic",
-        [
-            analyze.AnalyzeCommand,
-            build.BuildCommand,
-            clean.CleanCommand,
-            pack.PackCommand,
-            init.InitCommand,
-            version.VersionCommand,
-        ],
-    ),
-    (
-        "store",
-        "Charmhub",
-        [
-            # auth
-            store.LoginCommand,
-            store.LogoutCommand,
-            store.WhoamiCommand,
-            # name handling
-            store.RegisterCharmNameCommand,
-            store.RegisterBundleNameCommand,
-            store.ListNamesCommand,
-            # pushing files and checking revisions
-            store.UploadCommand,
-            store.ListRevisionsCommand,
-            # release process, and show status
-            store.ReleaseCommand,
-            store.StatusCommand,
-            store.CloseCommand,
-            # libraries support
-            store.CreateLibCommand,
-            store.PublishLibCommand,
-            store.ListLibCommand,
-            store.FetchLibCommand,
-            # resources support
-            store.ListResourcesCommand,
-            store.UploadResourceCommand,
-            store.ListResourceRevisionsCommand,
-        ],
-    ),
+    CommandGroup("Basic", _basic_commands),
+    CommandGroup("Charmhub", _charmhub_commands),
 ]
 
 
@@ -180,8 +175,8 @@ class Dispatcher:
     def _get_commands_info(self, commands_groups):
         """Process the commands groups structure for easier programmable access."""
         commands = {}
-        for _cmd_group, _, _cmd_classes in commands_groups:
-            for _cmd_class in _cmd_classes:
+        for command_group in commands_groups:
+            for _cmd_class in command_group.commands:
                 if _cmd_class.name in commands:
                     _stored_class = commands[_cmd_class.name]
                     raise RuntimeError(

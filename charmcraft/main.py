@@ -95,18 +95,30 @@ COMMAND_GROUPS = [
 
 
 # global options: the name used internally, its type, short and long parameters, and help text
-_Global = namedtuple("Global", "name type short_option long_option help_message")
-GLOBAL_ARGS = [
-    _Global("help", "flag", "-h", "--help", "Show this help message and exit"),
-    _Global(
+GlobalArgument = namedtuple("GlobalArgument", "name type short_option long_option help_message")
+_DEFAULT_GLOBAL_ARGS = [
+    GlobalArgument(
+        "help",
+        "flag",
+        "-h",
+        "--help",
+        "Show this help message and exit",
+    ),
+    GlobalArgument(
         "verbose",
         "flag",
         "-v",
         "--verbose",
         "Show debug information and be more verbose",
     ),
-    _Global("quiet", "flag", "-q", "--quiet", "Only show warnings and errors, not progress"),
-    _Global(
+    GlobalArgument(
+        "quiet",
+        "flag",
+        "-q",
+        "--quiet",
+        "Only show warnings and errors, not progress",
+    ),
+    GlobalArgument(
         "project_dir",
         "option",
         "-p",
@@ -125,47 +137,17 @@ class CustomArgumentParser(argparse.ArgumentParser):
         raise ArgumentParsingError(full_msg)
 
 
-def _get_global_options():
-    """Return the global flags ready to present as options in the help messages."""
-    options = []
-    for arg in GLOBAL_ARGS:
-        options.append(("{}, {}".format(arg.short_option, arg.long_option), arg.help_message))
-    return options
-
-
-def get_command_help(parser, command):
-    """Produce the complete help message for a command."""
-    options = _get_global_options()
-
-    for action in parser._actions:
-        # store the different options if present, otherwise it's just the dest
-        if action.option_strings:
-            options.append((", ".join(action.option_strings), action.help))
-        else:
-            dest = action.dest if action.metavar is None else action.metavar
-            options.append((dest, action.help))
-
-    help_text = help_builder.get_command_help(command, options)
-    return help_text
-
-
-def get_general_help(detailed=False):
-    """Produce the "general charmcraft" help."""
-    options = _get_global_options()
-    if detailed:
-        help_text = help_builder.get_detailed_help(options)
-    else:
-        help_text = help_builder.get_full_help(options)
-    return help_text
-
-
 class Dispatcher:
     """Set up infrastructure and let the needed command run.
 
     ♪♫"Leeeeeet, the command ruuun"♪♫ https://www.youtube.com/watch?v=cv-0mmVnxPA
     """
 
-    def __init__(self, sysargs, commands_groups):
+    def __init__(self, sysargs, commands_groups, extra_global_args=None):
+        self.global_arguments = _DEFAULT_GLOBAL_ARGS[:]
+        if extra_global_args is not None:
+            self.global_arguments.extend(extra_global_args)
+
         self.commands = self._get_commands_info(commands_groups)
         command_name, cmd_args, charmcraft_config = self._pre_parse_args(sysargs)
         self.command, self.parsed_args = self._load_command(
@@ -200,11 +182,27 @@ class Dispatcher:
 
         return cmd, parsed_args
 
+    def _get_global_options(self):
+        """Return the global flags ready to present in the help messages as options."""
+        options = []
+        for arg in self.global_arguments:
+            options.append(("{}, {}".format(arg.short_option, arg.long_option), arg.help_message))
+        return options
+
+    def _get_general_help(self, *, detailed):
+        """Produce the general application help."""
+        options = self._get_global_options()
+        if detailed:
+            help_text = help_builder.get_detailed_help(options)
+        else:
+            help_text = help_builder.get_full_help(options)
+        return help_text
+
     def _get_requested_help(self, parameters):
         """Produce the requested help depending on the rest of the command line params."""
         if len(parameters) == 0:
             # provide a general text when help was requested without parameters
-            return get_general_help(detailed=False)
+            return self._get_general_help(detailed=False)
         if len(parameters) > 1:
             # too many parameters: provide a specific guiding error
             msg = (
@@ -218,7 +216,7 @@ class Dispatcher:
         (param,) = parameters
         if param == "--all":
             # provide a detailed general help when this specific option was included
-            return get_general_help(detailed=True)
+            return self._get_general_help(detailed=True)
 
         # at this point the parameter should be a command
         try:
@@ -228,10 +226,23 @@ class Dispatcher:
             text = help_builder.get_usage_message(msg)
             raise ArgumentParsingError(text)
 
-        cmd = cmd_class(None)
-        parser = CustomArgumentParser(prog=cmd.name, add_help=False)
-        cmd.fill_parser(parser)
-        return get_command_help(parser, cmd)
+        # instantiate the command and fill its arguments
+        command = cmd_class(None)
+        parser = CustomArgumentParser(prog=command.name, add_help=False)
+        command.fill_parser(parser)
+
+        # produce the complete help message for the command
+        options = self._get_global_options()
+        for action in parser._actions:
+            # store the different options if present, otherwise it's just the dest
+            if action.option_strings:
+                options.append((", ".join(action.option_strings), action.help))
+            else:
+                dest = action.dest if action.metavar is None else action.metavar
+                options.append((dest, action.help))
+
+        help_text = help_builder.get_command_help(command, options)
+        return help_text
 
     def _pre_parse_args(self, sysargs):
         """Pre-parse sys args.
@@ -248,7 +259,7 @@ class Dispatcher:
         global_args = {}
         arg_per_option = {}
         options_with_equal = []
-        for arg in GLOBAL_ARGS:
+        for arg in self.global_arguments:
             arg_per_option[arg.short_option] = arg
             arg_per_option[arg.long_option] = arg
             if arg.type == "flag":
@@ -257,7 +268,7 @@ class Dispatcher:
                 default = None
                 options_with_equal.append(arg.long_option + "=")
             else:
-                raise ValueError("Bad GLOBAL_ARGS structure.")
+                raise ValueError("Bad global args structure.")
             global_args[arg.name] = default
 
         filtered_sysargs = []
@@ -314,7 +325,7 @@ class Dispatcher:
                 raise ArgumentParsingError(help_text)
         else:
             # no command passed!
-            help_text = get_general_help()
+            help_text = self._get_general_help(detailed=False)
             raise ArgumentParsingError(help_text)
 
         # load the system's config

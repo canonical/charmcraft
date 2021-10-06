@@ -24,12 +24,14 @@ from unittest.mock import patch
 
 from charmcraft import __version__, logsetup
 from charmcraft.main import (
-    Dispatcher,
-    main,
+    _DEFAULT_GLOBAL_ARGS,
+    ArgumentParsingError,
     COMMAND_GROUPS,
     CommandGroup,
-    ArgumentParsingError,
+    Dispatcher,
+    GlobalArgument,
     ProvideHelpException,
+    main,
 )
 from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
@@ -360,6 +362,25 @@ def test_dispatcher_commands_are_not_loaded_if_not_needed():
     dispatcher = Dispatcher(["command1"], groups)
     dispatcher.run()
     assert isinstance(MyCommand1._executed[0], argparse.Namespace)
+
+
+def test_dispatcher_global_arguments_default():
+    """The dispatcher uses the default global arguments."""
+    cmd = create_command("somecommand")
+    groups = [CommandGroup("title", [cmd])]
+
+    dispatcher = Dispatcher(["somecommand"], groups)
+    assert dispatcher.global_arguments == _DEFAULT_GLOBAL_ARGS
+
+
+def test_dispatcher_global_arguments_extra_arguments():
+    """The dispatcher uses the default global arguments."""
+    cmd = create_command("somecommand")
+    groups = [CommandGroup("title", [cmd])]
+
+    extra_arg = GlobalArgument("other", "flag", "-o", "--other", "Other stuff")
+    dispatcher = Dispatcher(["somecommand"], groups, extra_global_args=[extra_arg])
+    assert dispatcher.global_arguments == _DEFAULT_GLOBAL_ARGS + [extra_arg]
 
 
 # --- Tests for the main entry point

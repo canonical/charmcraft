@@ -110,6 +110,7 @@ def _build_resource(item):
 
 
 def _get_hostname() -> str:
+    """Return the computer's network name or UNNKOWN if it cannot be determined."""
     hostname = platform.node()
     if not hostname:
         hostname = "UNKNOWN"

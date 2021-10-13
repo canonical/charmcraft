@@ -26,9 +26,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install/update pip, wheel, and setuptools
+      - name: Install/update pip, wheel, and setuptools on non Windows
+        if: ${{ matrix.os != 'windows-2019' }}
         run: |
           pip install -U pip wheel setuptools
+      - name: Install/update pip, wheel, and setuptools on Windows
+        if: ${{ matrix.os == 'windows-2019' }}
+        run: |
+          pip install -U wheel setuptools
       - name: Install Ubuntu-specific dependencies
         if: ${{ matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-20.04' }}
         run: |

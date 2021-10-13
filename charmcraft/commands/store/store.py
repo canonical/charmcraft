@@ -20,6 +20,7 @@ import logging
 import platform
 import time
 from collections import namedtuple
+from functools import wraps
 
 from craft_store import attenuations
 import craft_store
@@ -118,7 +119,11 @@ def _get_hostname() -> str:
 
 
 def _store_client_wrapper(method):
+    """Decorate method to handle store error and login scenarios."""
+
+    @wraps(method)
     def error_decorator(self, *args, **kwargs):
+        """Handle craft-store error situations and login scenarios."""
         try_login = False
         try:
             return method(self, *args, **kwargs)

@@ -17,19 +17,25 @@
 """Tests for the Store API layer (code in store/store.py)."""
 
 import logging
+import platform
 from unittest.mock import patch, call, MagicMock
 
 import pytest
 from dateutil import parser
+from craft_store.errors import NetworkError, NotLoggedIn, StoreServerError
 
+from charmcraft.cmdbase import CommandError
+from charmcraft.commands.store.client import Client
 from charmcraft.utils import ResourceOption
-from charmcraft.commands.store.store import Store, Library, Base
+from charmcraft.commands.store.store import Store, Library, Base, _store_client_wrapper
+from tests.commands.test_store_client import FakeResponse
 
 
 @pytest.fixture
-def client_mock():
+def client_mock(monkeypatch):
     """Fixture to provide a mocked client."""
-    client_mock = MagicMock()
+    monkeypatch.setattr(platform, "node", lambda: "fake-host")
+    client_mock = MagicMock(spec=Client)
     with patch("charmcraft.commands.store.store.Client", lambda api, storage: client_mock):
         yield client_mock
 
@@ -46,6 +52,75 @@ def test_client_init(config):
     ]
 
 
+# -- tests for store_client_wrapper
+
+
+class _FakeAPI:
+    def __init__(self, exceptions):
+        self.login_called = False
+        self.exceptions = exceptions
+
+    def login(self):
+        self.login_called = True
+
+    @_store_client_wrapper
+    def method(self):
+        exception = self.exceptions.pop(0)
+        if exception is not None:
+            raise exception
+
+
+def test_relogin_on_401(caplog):
+    caplog.set_level(logging.WARNING, logger="charmcraft.commands")
+
+    api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
+
+    api.method()
+
+    assert api.login_called is True
+    # check logs
+    expected = ["Existing credentials no longer valid. Trying to log in..."]
+    assert expected == [rec.message for rec in caplog.records]
+
+
+def test_non_401_raises():
+    api = _FakeAPI([StoreServerError(FakeResponse("where are you?", 404))])
+
+    with pytest.raises(CommandError) as error:
+        api.method()
+
+    assert (
+        str(error.value)
+        == "Issue encountered while processing your request: [404] where are you?."
+    )
+
+    assert api.login_called is False
+
+
+def test_craft_store_error_raises_command_error():
+    api = _FakeAPI([NetworkError(ValueError("network issue"))])
+
+    with pytest.raises(CommandError) as error:
+        api.method()
+
+    assert str(error.value) == "Server error while communicating to the Store: network issue"
+
+    assert api.login_called is False
+
+
+def test_not_logged_in_warns(caplog):
+    caplog.set_level(logging.WARNING, logger="charmcraft.commands")
+
+    api = _FakeAPI([NotLoggedIn("credentials not in keyring"), None])
+
+    api.method()
+
+    assert api.login_called is True
+    # check logs
+    expected = ["Credentials not found. Trying to log in..."]
+    assert expected == [rec.message for rec in caplog.records]
+
+
 # -- tests for auth
 
 
@@ -54,8 +129,16 @@ def test_login(client_mock, config):
     store = Store(config.charmhub)
     result = store.login()
     assert client_mock.mock_calls == [
-        call.clear_credentials(),
-        call.get("/v1/whoami"),
+        call.login(
+            ttl=108000,
+            description="charmcraft@fake-host",
+            permissions=[
+                "account-register-package",
+                "account-view-packages",
+                "package-manage",
+                "package-view",
+            ],
+        )
     ]
     assert result is None
 
@@ -65,7 +148,7 @@ def test_logout(client_mock, config):
     store = Store(config.charmhub)
     result = store.logout()
     assert client_mock.mock_calls == [
-        call.clear_credentials(),
+        call.logout(),
     ]
     assert result is None
 
@@ -74,12 +157,12 @@ def test_whoami(client_mock, config):
     """Simple whoami case."""
     store = Store(config.charmhub)
     auth_response = {"display-name": "John Doe", "username": "jdoe", "id": "-1"}
-    client_mock.get.return_value = auth_response
+    client_mock.whoami.return_value = auth_response
 
     result = store.whoami()
 
     assert client_mock.mock_calls == [
-        call.get("/v1/whoami"),
+        call.whoami(),
     ]
     assert result.name == "John Doe"
     assert result.username == "jdoe"
@@ -95,9 +178,34 @@ def test_register_name(client_mock, config):
     result = store.register_name("testname", "stuff")
 
     assert client_mock.mock_calls == [
-        call.post("/v1/charm", {"name": "testname", "type": "stuff"}),
+        call.request_urlpath_json("POST", "/v1/charm", json={"name": "testname", "type": "stuff"}),
     ]
     assert result is None
+
+
+def test_register_name_unauthorized_logs_in(client_mock, config):
+    client_mock.request_urlpath_json.side_effect = [
+        StoreServerError(FakeResponse("auth", 401)),
+        None,
+    ]
+
+    store = Store(config.charmhub)
+    store.register_name("testname", "stuff")
+
+    assert client_mock.mock_calls == [
+        call.request_urlpath_json("POST", "/v1/charm", json={"name": "testname", "type": "stuff"}),
+        call.login(
+            ttl=108000,
+            description="charmcraft@fake-host",
+            permissions=[
+                "account-register-package",
+                "account-view-packages",
+                "package-manage",
+                "package-view",
+            ],
+        ),
+        call.request_urlpath_json("POST", "/v1/charm", json={"name": "testname", "type": "stuff"}),
+    ]
 
 
 def test_list_registered_names_empty(client_mock, config):
@@ -105,11 +213,11 @@ def test_list_registered_names_empty(client_mock, config):
     store = Store(config.charmhub)
 
     auth_response = {"results": []}
-    client_mock.get.return_value = auth_response
+    client_mock.request_urlpath_json.return_value = auth_response
 
     result = store.list_registered_names()
 
-    assert client_mock.mock_calls == [call.get("/v1/charm")]
+    assert client_mock.mock_calls == [call.request_urlpath_json("GET", "/v1/charm")]
     assert result == []
 
 
@@ -123,11 +231,11 @@ def test_list_registered_names_multiple(client_mock, config):
             {"name": "name2", "type": "bundle", "private": True, "status": "status2"},
         ]
     }
-    client_mock.get.return_value = auth_response
+    client_mock.request_urlpath_json.return_value = auth_response
 
     result = store.list_registered_names()
 
-    assert client_mock.mock_calls == [call.get("/v1/charm")]
+    assert client_mock.mock_calls == [call.request_urlpath_json("GET", "/v1/charm")]
     item1, item2 = result
     assert item1.name == "name1"
     assert item1.entity_type == "charm"
@@ -149,11 +257,10 @@ def test_upload_straightforward(client_mock, caplog, config):
 
     # the first response, for when pushing bytes
     test_upload_id = "test-upload-id"
-    client_mock.push.return_value = test_upload_id
+    client_mock.push_file.return_value = test_upload_id
 
     # the second response, for telling the store it was pushed
     test_status_url = "https://store.c.c/status"
-    client_mock.post.return_value = {"status-url": test_status_url}
 
     # the third response, status ok (note the patched UPLOAD_ENDING_STATUSES below)
     test_revision = 123
@@ -161,7 +268,11 @@ def test_upload_straightforward(client_mock, caplog, config):
     status_response = {
         "revisions": [{"status": test_status_ok, "revision": test_revision, "errors": None}]
     }
-    client_mock.get.return_value = status_response
+
+    client_mock.request_urlpath_json.side_effect = [
+        {"status-url": test_status_url},
+        status_response,
+    ]
 
     test_status_resolution = "test-ok-or-not"
     fake_statuses = {test_status_ok: test_status_resolution}
@@ -172,9 +283,9 @@ def test_upload_straightforward(client_mock, caplog, config):
 
     # check all client calls
     assert client_mock.mock_calls == [
-        call.push(test_filepath),
-        call.post(test_endpoint, {"upload-id": test_upload_id}),
-        call.get(test_status_url),
+        call.push_file(test_filepath),
+        call.request_urlpath_json("POST", test_endpoint, json={"upload-id": test_upload_id}),
+        call.request_urlpath_json("GET", test_status_url),
     ]
 
     # check result (build after patched ending struct)
@@ -197,9 +308,8 @@ def test_upload_polls_status(client_mock, caplog, config):
 
     # first and second response, for pushing bytes and let the store know about it
     test_upload_id = "test-upload-id"
-    client_mock.push.return_value = test_upload_id
+    client_mock.push_file.return_value = test_upload_id
     test_status_url = "https://store.c.c/status"
-    client_mock.post.return_value = {"status-url": test_status_url}
 
     # the status checking response, will answer something not done yet twice, then ok
     test_revision = 123
@@ -213,7 +323,8 @@ def test_upload_polls_status(client_mock, caplog, config):
     status_response_3 = {
         "revisions": [{"status": test_status_ok, "revision": test_revision, "errors": None}]
     }
-    client_mock.get.side_effect = [
+    client_mock.request_urlpath_json.side_effect = [
+        {"status-url": test_status_url},
         status_response_1,
         status_response_2,
         status_response_3,
@@ -227,9 +338,9 @@ def test_upload_polls_status(client_mock, caplog, config):
 
     # check the status-checking client calls (kept going until third one)
     assert client_mock.mock_calls[2:] == [
-        call.get(test_status_url),
-        call.get(test_status_url),
-        call.get(test_status_url),
+        call.request_urlpath_json("GET", test_status_url),
+        call.request_urlpath_json("GET", test_status_url),
+        call.request_urlpath_json("GET", test_status_url),
     ]
 
     # check result which must have values from final result
@@ -253,11 +364,10 @@ def test_upload_error(client_mock, config):
 
     # the first response, for when pushing bytes
     test_upload_id = "test-upload-id"
-    client_mock.push.return_value = test_upload_id
+    client_mock.push_file.return_value = test_upload_id
 
     # the second response, for telling the store it was pushed
     test_status_url = "https://store.c.c/status"
-    client_mock.post.return_value = {"status-url": test_status_url}
 
     # the third response, status in error (note the patched UPLOAD_ENDING_STATUSES below)
     test_revision = 123
@@ -274,7 +384,11 @@ def test_upload_error(client_mock, config):
             }
         ]
     }
-    client_mock.get.return_value = status_response
+
+    client_mock.request_urlpath_json.side_effect = [
+        {"status-url": test_status_url},
+        status_response,
+    ]
 
     test_status_resolution = "test-ok-or-not"
     fake_statuses = {test_status_bad: test_status_resolution}
@@ -327,11 +441,10 @@ def test_upload_including_extra_parameters(client_mock, caplog, config):
 
     # the first response, for when pushing bytes
     test_upload_id = "test-upload-id"
-    client_mock.push.return_value = test_upload_id
+    client_mock.push_file.return_value = test_upload_id
 
     # the second response, for telling the store it was pushed
     test_status_url = "https://store.c.c/status"
-    client_mock.post.return_value = {"status-url": test_status_url}
 
     # the third response, status ok (note the patched UPLOAD_ENDING_STATUSES below)
     test_revision = 123
@@ -339,7 +452,11 @@ def test_upload_including_extra_parameters(client_mock, caplog, config):
     status_response = {
         "revisions": [{"status": test_status_ok, "revision": test_revision, "errors": None}]
     }
-    client_mock.get.return_value = status_response
+
+    client_mock.request_urlpath_json.side_effect = [
+        {"status-url": test_status_url},
+        status_response,
+    ]
 
     test_status_resolution = "test-ok-or-not"
     fake_statuses = {test_status_ok: test_status_resolution}
@@ -351,9 +468,13 @@ def test_upload_including_extra_parameters(client_mock, caplog, config):
 
     # check all client calls
     assert client_mock.mock_calls == [
-        call.push(test_filepath),
-        call.post(test_endpoint, {"upload-id": test_upload_id, "extra-key": "1", "more": "2"}),
-        call.get(test_status_url),
+        call.push_file(test_filepath),
+        call.request_urlpath_json(
+            "POST",
+            test_endpoint,
+            json={"upload-id": test_upload_id, "extra-key": "1", "more": "2"},
+        ),
+        call.request_urlpath_json("GET", test_status_url),
     ]
 
 
@@ -363,7 +484,7 @@ def test_upload_including_extra_parameters(client_mock, caplog, config):
 def test_list_revisions_ok(client_mock, config):
     """One revision ok."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "revisions": [
             {
                 "revision": 7,
@@ -378,7 +499,9 @@ def test_list_revisions_ok(client_mock, config):
 
     result = store.list_revisions("some-name")
 
-    assert client_mock.mock_calls == [call.get("/v1/charm/some-name/revisions")]
+    assert client_mock.mock_calls == [
+        call.request_urlpath_json("GET", "/v1/charm/some-name/revisions")
+    ]
 
     (item,) = result
     assert item.revision == 7
@@ -392,18 +515,20 @@ def test_list_revisions_ok(client_mock, config):
 def test_list_revisions_empty(client_mock, config):
     """No revisions listed."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {"revisions": []}
+    client_mock.request_urlpath_json.return_value = {"revisions": []}
 
     result = store.list_revisions("some-name")
 
-    assert client_mock.mock_calls == [call.get("/v1/charm/some-name/revisions")]
+    assert client_mock.mock_calls == [
+        call.request_urlpath_json("GET", "/v1/charm/some-name/revisions")
+    ]
     assert result == []
 
 
 def test_list_revisions_errors(client_mock, config):
     """One revision with errors."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "revisions": [
             {
                 "revision": 7,
@@ -421,7 +546,9 @@ def test_list_revisions_errors(client_mock, config):
 
     result = store.list_revisions("some-name")
 
-    assert client_mock.mock_calls == [call.get("/v1/charm/some-name/revisions")]
+    assert client_mock.mock_calls == [
+        call.request_urlpath_json("GET", "/v1/charm/some-name/revisions")
+    ]
 
     (item,) = result
     error1, error2 = item.errors
@@ -433,7 +560,7 @@ def test_list_revisions_errors(client_mock, config):
 
 def test_list_revisions_several_mixed(client_mock, config):
     """All cases mixed."""
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "revisions": [
             {
                 "revision": 1,
@@ -479,7 +606,7 @@ def test_list_revisions_several_mixed(client_mock, config):
 def test_list_revisions_bases_none(client_mock, config):
     """Bases in None answered by the store (happens with bundles, for example)."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "revisions": [
             {
                 "revision": 7,
@@ -506,7 +633,7 @@ def test_release_simple(client_mock, config):
 
     expected_body = [{"revision": 123, "channel": "somechannel", "resources": []}]
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/testname/releases", expected_body),
+        call.request_urlpath_json("POST", "/v1/charm/testname/releases", json=expected_body),
     ]
 
 
@@ -521,7 +648,7 @@ def test_release_multiple_channels(client_mock, config):
         {"revision": 123, "channel": "channel3", "resources": []},
     ]
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/testname/releases", expected_body),
+        call.request_urlpath_json("POST", "/v1/charm/testname/releases", json=expected_body),
     ]
 
 
@@ -551,7 +678,7 @@ def test_release_with_resources(client_mock, config):
         },
     ]
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/testname/releases", expected_body),
+        call.request_urlpath_json("POST", "/v1/charm/testname/releases", json=expected_body),
     ]
 
 
@@ -560,7 +687,7 @@ def test_release_with_resources(client_mock, config):
 
 def test_status_ok(client_mock, config):
     """Get all the release information."""
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "channel-map": [
             {
                 "channel": "latest/beta",
@@ -624,7 +751,7 @@ def test_status_ok(client_mock, config):
 
     # check how the client is used
     assert client_mock.mock_calls == [
-        call.get("/v1/charm/testname/releases"),
+        call.request_urlpath_json("GET", "/v1/charm/testname/releases"),
     ]
 
     # check response
@@ -677,7 +804,7 @@ def test_status_ok(client_mock, config):
 
 def test_status_with_resources(client_mock, config):
     """Get all the release information."""
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "channel-map": [
             {
                 "channel": "latest/stable",
@@ -773,7 +900,7 @@ def test_status_with_resources(client_mock, config):
 
 def test_status_base_in_None(client_mock, config):
     """Support the case of base being None (may happen with bundles)."""
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "channel-map": [
             {
                 "channel": "latest/stable",
@@ -809,7 +936,7 @@ def test_status_base_in_None(client_mock, config):
     }
 
     store = Store(config.charmhub)
-    channel_map, channels, revisions = store.list_releases("testname")
+    channel_map, _, revisions = store.list_releases("testname")
 
     # check response
     (cmap,) = channel_map
@@ -824,12 +951,16 @@ def test_status_base_in_None(client_mock, config):
 def test_create_library_id(client_mock, config):
     """Create a new library in the store."""
     store = Store(config.charmhub)
-    client_mock.post.return_value = {"library-id": "test-lib-id"}
+    client_mock.request_urlpath_json.return_value = {"library-id": "test-lib-id"}
 
     result = store.create_library_id("test-charm-name", "test-lib-name")
 
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/libraries/test-charm-name", {"library-name": "test-lib-name"}),
+        call.request_urlpath_json(
+            "POST",
+            "/v1/charm/libraries/test-charm-name",
+            {"library-name": "test-lib-name"},
+        ),
     ]
     assert result == "test-lib-id"
 
@@ -845,7 +976,7 @@ def test_create_library_revision(client_mock, config):
     test_hash = "1234"
 
     store = Store(config.charmhub)
-    client_mock.post.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "api": test_api,
         "content": test_content,
         "hash": test_hash,
@@ -866,7 +997,9 @@ def test_create_library_revision(client_mock, config):
         "hash": test_hash,
     }
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/libraries/test-charm-name/" + test_lib_id, payload),
+        call.request_urlpath_json(
+            "POST", "/v1/charm/libraries/test-charm-name/" + test_lib_id, json=payload
+        ),
     ]
     assert result_lib.api == test_api
     assert result_lib.content == test_content
@@ -888,7 +1021,7 @@ def test_get_library(client_mock, config):
     test_hash = "1234"
 
     store = Store(config.charmhub)
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "api": test_api,
         "content": test_content,
         "hash": test_hash,
@@ -901,7 +1034,9 @@ def test_get_library(client_mock, config):
     result_lib = store.get_library(test_charm_name, test_lib_id, test_api)
 
     assert client_mock.mock_calls == [
-        call.get("/v1/charm/libraries/test-charm-name/{}?api={}".format(test_lib_id, test_api)),
+        call.request_urlpath_json(
+            "GET", "/v1/charm/libraries/test-charm-name/{}?api={}".format(test_lib_id, test_api)
+        ),
     ]
     assert result_lib.api == test_api
     assert result_lib.content == test_content
@@ -923,7 +1058,7 @@ def test_get_tips_simple(client_mock, config):
     test_hash = "1234"
 
     store = Store(config.charmhub)
-    client_mock.post.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "libraries": [
             {
                 "api": test_api,
@@ -946,7 +1081,7 @@ def test_get_tips_simple(client_mock, config):
         {"library-id": test_lib_id},
     ]
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/libraries/bulk", payload),
+        call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
     ]
     expected = {
         (test_lib_id, test_api): Library(
@@ -978,7 +1113,9 @@ def test_get_tips_empty(client_mock, config):
         {"library-id": test_lib_id},
     ]
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/libraries/bulk", payload),
+        call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
+        call.request_urlpath_json().__getitem__("libraries"),
+        call.request_urlpath_json().__getitem__().__iter__(),
     ]
     assert result == {}
 
@@ -1002,7 +1139,7 @@ def test_get_tips_several(client_mock, config):
     test_hash_2 = "5678"
 
     store = Store(config.charmhub)
-    client_mock.post.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "libraries": [
             {
                 "api": test_api_1,
@@ -1036,7 +1173,7 @@ def test_get_tips_several(client_mock, config):
         {"library-id": test_lib_id_2},
     ]
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/libraries/bulk", payload),
+        call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
     ]
     expected = {
         (test_lib_id_1, test_api_1): Library(
@@ -1089,7 +1226,9 @@ def test_get_tips_query_combinations(client_mock, config):
         },
     ]
     assert client_mock.mock_calls == [
-        call.post("/v1/charm/libraries/bulk", payload),
+        call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
+        call.request_urlpath_json().__getitem__("libraries"),
+        call.request_urlpath_json().__getitem__().__iter__(),
     ]
 
 
@@ -1099,7 +1238,7 @@ def test_get_tips_query_combinations(client_mock, config):
 def test_list_resources_ok(client_mock, config):
     """One resource ok."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "resources": [
             {
                 "name": "testresource",
@@ -1112,7 +1251,9 @@ def test_list_resources_ok(client_mock, config):
 
     result = store.list_resources("some-name")
 
-    assert client_mock.mock_calls == [call.get("/v1/charm/some-name/resources")]
+    assert client_mock.mock_calls == [
+        call.request_urlpath_json("GET", "/v1/charm/some-name/resources")
+    ]
 
     (item,) = result
     assert item.name == "testresource"
@@ -1124,17 +1265,19 @@ def test_list_resources_ok(client_mock, config):
 def test_list_resources_empty(client_mock, config):
     """No resources listed."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {"resources": []}
+    client_mock.request_urlpath_json.return_value = {"resources": []}
 
     result = store.list_resources("some-name")
 
-    assert client_mock.mock_calls == [call.get("/v1/charm/some-name/resources")]
+    assert client_mock.mock_calls == [
+        call.request_urlpath_json("GET", "/v1/charm/some-name/resources")
+    ]
     assert result == []
 
 
 def test_list_resources_several(client_mock, config):
     """Several items returned."""
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "resources": [
             {
                 "name": "testresource1",
@@ -1173,7 +1316,7 @@ def test_list_resources_several(client_mock, config):
 def test_list_resource_revisions_ok(client_mock, config):
     """One resource revision ok."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "revisions": [
             {
                 "created-at": "2021-02-11T13:43:22.396606",
@@ -1193,7 +1336,7 @@ def test_list_resource_revisions_ok(client_mock, config):
     result = store.list_resource_revisions("charm-name", "resource-name")
 
     assert client_mock.mock_calls == [
-        call.get("/v1/charm/charm-name/resources/resource-name/revisions")
+        call.request_urlpath_json("GET", "/v1/charm/charm-name/resources/resource-name/revisions")
     ]
 
     (item,) = result
@@ -1205,19 +1348,19 @@ def test_list_resource_revisions_ok(client_mock, config):
 def test_list_resource_revisions_empty(client_mock, config):
     """No resource revisions listed."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {"revisions": []}
+    client_mock.request_urlpath_json.return_value = {"revisions": []}
 
     result = store.list_resource_revisions("charm-name", "resource-name")
 
     assert client_mock.mock_calls == [
-        call.get("/v1/charm/charm-name/resources/resource-name/revisions")
+        call.request_urlpath_json("GET", "/v1/charm/charm-name/resources/resource-name/revisions")
     ]
     assert result == []
 
 
 def test_list_resource_revisions_several(client_mock, config):
     """Several items returned."""
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "revisions": [
             {
                 "created-at": "2021-02-11T13:43:22.396606",
@@ -1266,7 +1409,7 @@ def test_list_resource_revisions_several(client_mock, config):
 def test_get_oci_registry_credentials(client_mock, config):
     """Get the credentials to hit the OCI Registry."""
     store = Store(config.charmhub)
-    client_mock.get.return_value = {
+    client_mock.request_urlpath_json.return_value = {
         "image-name": "test-image-name",
         "username": "jane-doe",
         "password": "oh boy this is so secret!",
@@ -1274,7 +1417,9 @@ def test_get_oci_registry_credentials(client_mock, config):
     result = store.get_oci_registry_credentials("charm-name", "resource-name")
 
     assert client_mock.mock_calls == [
-        call.get("/v1/charm/charm-name/resources/resource-name/oci-image/upload-credentials")
+        call.request_urlpath_json(
+            "GET", "/v1/charm/charm-name/resources/resource-name/oci-image/upload-credentials"
+        )
     ]
     assert result.image_name == "test-image-name"
     assert result.username == "jane-doe"
@@ -1284,14 +1429,14 @@ def test_get_oci_registry_credentials(client_mock, config):
 def test_get_oci_image_blob(client_mock, config):
     """Get the blob generated by Charmhub to refer to the OCI image."""
     store = Store(config.charmhub)
-    client_mock.post.return_value = "some opaque stuff"
+    client_mock.request_urlpath_text.return_value = "some opaque stuff"
     result = store.get_oci_image_blob("charm-name", "resource-name", "a-very-specific-digest")
 
     assert client_mock.mock_calls == [
-        call.post(
+        call.request_urlpath_text(
+            "GET",
             "/v1/charm/charm-name/resources/resource-name/oci-image/blob",
-            {"image-digest": "a-very-specific-digest"},
-            parse_json=False,
+            json={"image-digest": "a-very-specific-digest"},
         )
     ]
     assert result == "some opaque stuff"

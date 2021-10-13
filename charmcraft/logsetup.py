@@ -35,6 +35,7 @@ enabled_loggers = [
     logger,
     logging.getLogger("craft_providers"),
     logging.getLogger("craft_parts"),
+    logging.getLogger("craft_store"),
 ]
 
 

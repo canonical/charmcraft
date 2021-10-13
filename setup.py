@@ -29,13 +29,12 @@ with open("README.md", "rt", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [
-    "appdirs",
     "craft-parts",
     "craft-providers",
+    "craft-store",
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
-    "macaroonbakery",
     "pydantic",
     "python-dateutil",
     "pyyaml",

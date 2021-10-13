@@ -165,6 +165,7 @@ class Store:
             self._client.login(
                 # 3600 * 30
                 ttl=108000,
+                # Used to identify the login on Ubuntu SSO to ease future revokations.
                 description=f"charmcraft@{hostname}",
                 permissions=[
                     attenuations.ACCOUNT_REGISTER_PACKAGE,

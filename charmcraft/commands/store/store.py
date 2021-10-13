@@ -124,15 +124,12 @@ def _store_client_wrapper(method):
     @wraps(method)
     def error_decorator(self, *args, **kwargs):
         """Handle craft-store error situations and login scenarios."""
-        try_login = False
         try:
             return method(self, *args, **kwargs)
         except craft_store.errors.NotLoggedIn:
-            try_login = True
             logger.warning("Credentials not found. Trying to log in...")
         except craft_store.errors.StoreServerError as error:
             if error.response.status_code == 401:
-                try_login = True
                 logger.warning("Existing credentials no longer valid. Trying to log in...")
             else:
                 raise CommandError(str(error)) from error
@@ -141,8 +138,7 @@ def _store_client_wrapper(method):
                 f"Server error while communicating to the Store: {error!s}"
             ) from error
 
-        if try_login:
-            self.login()
+        self.login()
 
         return method(self, *args, **kwargs)
 

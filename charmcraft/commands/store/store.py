@@ -118,26 +118,27 @@ def _get_hostname() -> str:
 
 def _store_client_wrapper(method):
     def error_decorator(self, *args, **kwargs):
+        try_login = False
         try:
             return method(self, *args, **kwargs)
-        except craft_store.errors.NotLoggedIn as error:
-            logger.warning(str(error))
+        except craft_store.errors.NotLoggedIn:
+            try_login = True
+            logger.warning("Credentials not found. Trying to log in...")
         except craft_store.errors.StoreServerError as error:
             if error.response.status_code == 401:
-                # Try to login on 401 error.
-                # Evaluate what other errors can be wrapped here.
-                logger.warning(
-                    f"Store replied [{error.response.status_code}] {error.response.reason}. "
-                    "Retrying login."
-                )
-                self.login()
-                return method(self, *args, **kwargs)
+                try_login = True
+                logger.warning("Existing credentials no longer valid. Trying to log in...")
             else:
                 raise CommandError(str(error)) from error
         except craft_store.errors.CraftStoreError as error:
             raise CommandError(
                 f"Server error while communicating to the Store: {error!s}"
             ) from error
+
+        if try_login:
+            self.login()
+
+        return method(self, *args, **kwargs)
 
     return error_decorator
 
@@ -181,7 +182,6 @@ class Store:
         """
         self._client.logout()
 
-    @_store_client_wrapper
     def whoami(self):
         """Return authenticated user details."""
         response = self._client.whoami()

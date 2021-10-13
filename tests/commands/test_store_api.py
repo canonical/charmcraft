@@ -79,7 +79,7 @@ def test_relogin_on_401(caplog):
 
     assert api.login_called is True
     # check logs
-    expected = ["Store replied [401] auth. Retrying login."]
+    expected = ["Existing credentials no longer valid. Trying to log in..."]
     assert expected == [rec.message for rec in caplog.records]
 
 
@@ -111,13 +111,13 @@ def test_craft_store_error_raises_command_error():
 def test_not_logged_in_warns(caplog):
     caplog.set_level(logging.WARNING, logger="charmcraft.commands")
 
-    api = _FakeAPI([NotLoggedIn("credentials not in keyring")])
+    api = _FakeAPI([NotLoggedIn("credentials not in keyring"), None])
 
     api.method()
 
-    assert api.login_called is False
+    assert api.login_called is True
     # check logs
-    expected = ["Not logged in: credentials not in keyring."]
+    expected = ["Credentials not found. Trying to log in..."]
     assert expected == [rec.message for rec in caplog.records]
 
 

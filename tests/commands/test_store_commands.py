@@ -202,7 +202,7 @@ def test_logout_but_not_logged_in(caplog, store_mock, config):
     assert store_mock.mock_calls == [
         call.logout(),
     ]
-    assert ["Not logged in: credentials not found."] == [rec.message for rec in caplog.records]
+    assert ["You are not logged in to Charmhub."] == [rec.message for rec in caplog.records]
 
 
 def test_whoami(caplog, store_mock, config):

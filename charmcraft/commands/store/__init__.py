@@ -131,8 +131,8 @@ class LogoutCommand(BaseCommand):
         try:
             store.logout()
             logger.info("Charmhub token cleared.")
-        except NotLoggedIn as error:
-            logger.warning(str(error))
+        except NotLoggedIn:
+            logger.warning("You are not logged in to Charmhub.")
 
 
 class WhoamiCommand(BaseCommand):

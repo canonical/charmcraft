@@ -192,3 +192,15 @@ def fake_provider(mock_instance, monkeypatch):
             return True
 
     return FakeProvider()
+
+
+@pytest.fixture
+def create_config(tmp_path):
+    """Helper to create a config file in disk."""
+
+    def create_config(text):
+        test_file = tmp_path / "charmcraft.yaml"
+        test_file.write_text(text)
+        return tmp_path
+
+    return create_config

@@ -23,7 +23,7 @@ from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands.store import _get_lib_info, create_importable_name
 
 
-def create_command(name_, help_msg_=None, common_=False, overview_=None):
+def create_command(name_, help_msg_=None, common_=False, overview_=None, needs_config_=False):
     """Helper to create commands."""
     if help_msg_ is None:
         help_msg_ = "Automatic help generated in the factory for the tests."
@@ -35,6 +35,7 @@ def create_command(name_, help_msg_=None, common_=False, overview_=None):
         help_msg = help_msg_
         common = common_
         overview = overview_
+        needs_config = needs_config_
 
         def run(self, parsed_args):
             pass

@@ -118,13 +118,6 @@ _DEFAULT_GLOBAL_ARGS = [
         "--quiet",
         "Only show warnings and errors, not progress",
     ),
-    GlobalArgument(
-        "project_dir",
-        "option",
-        "-p",
-        "--project-dir",
-        "Specify the project's directory (defaults to current)",
-    ),
 ]
 
 
@@ -143,16 +136,16 @@ class Dispatcher:
     ♪♫"Leeeeeet, the command ruuun"♪♫ https://www.youtube.com/watch?v=cv-0mmVnxPA
     """
 
-    def __init__(self, sysargs, commands_groups, extra_global_args=None):
+    def __init__(self, commands_groups, extra_global_args=None):
         self.global_arguments = _DEFAULT_GLOBAL_ARGS[:]
         if extra_global_args is not None:
             self.global_arguments.extend(extra_global_args)
 
         self.commands = self._get_commands_info(commands_groups)
-        command_name, cmd_args, charmcraft_config = self._pre_parse_args(sysargs)
-        self.command, self.parsed_args = self._load_command(
-            command_name, cmd_args, charmcraft_config
-        )
+        self.command_class = None
+        self.command_args = None
+        self.loaded_command = None
+        self.parsed_command_args = None
 
     def _get_commands_info(self, commands_groups):
         """Process the commands groups structure for easier programmable access."""
@@ -169,18 +162,16 @@ class Dispatcher:
                 commands[_cmd_class.name] = _cmd_class
         return commands
 
-    def _load_command(self, command_name, cmd_args, charmcraft_config):
+    def load_command(self, app_config):
         """Load a command."""
-        cmd_class = self.commands[command_name]
-        cmd = cmd_class(charmcraft_config)
+        self.loaded_command = self.command_class(app_config)
 
         # load and parse the command specific options/params
-        parser = CustomArgumentParser(prog=cmd.name)
-        cmd.fill_parser(parser)
-        parsed_args = parser.parse_args(cmd_args)
-        logger.debug("Command parsed sysargs: %s", parsed_args)
-
-        return cmd, parsed_args
+        parser = CustomArgumentParser(prog=self.loaded_command.name)
+        self.loaded_command.fill_parser(parser)
+        self.parsed_command_args = parser.parse_args(self.command_args)
+        logger.debug("Command parsed sysargs: %s", self.parsed_command_args)
+        return self.loaded_command
 
     def _get_global_options(self):
         """Return the global flags ready to present in the help messages as options."""
@@ -244,7 +235,7 @@ class Dispatcher:
         help_text = help_builder.get_command_help(command, options)
         return help_text
 
-    def _pre_parse_args(self, sysargs):
+    def pre_parse_args(self, sysargs):
         """Pre-parse sys args.
 
         Several steps:
@@ -284,13 +275,13 @@ class Dispatcher:
                         value = next(sysargs)
                     except StopIteration:
                         raise ArgumentParsingError(
-                            "The 'project-dir' option expects one argument."
+                            f"The {arg.name!r} option expects one argument."
                         )
                 global_args[arg.name] = value
             elif sysarg.startswith(options_with_equal):
                 option, value = sysarg.split("=", 1)
                 if not value:
-                    raise ArgumentParsingError("The 'project-dir' option expects one argument.")
+                    raise ArgumentParsingError(f"The {arg.name!r} option expects one argument.")
                 arg = arg_per_option[option]
                 global_args[arg.name] = value
             else:
@@ -319,7 +310,10 @@ class Dispatcher:
                 help_text = self._get_requested_help(cmd_args)
                 raise ProvideHelpException(help_text)
 
-            if command not in self.commands:
+            self.command_args = cmd_args
+            try:
+                self.command_class = self.commands[command]
+            except KeyError:
                 msg = "no such command {!r}".format(command)
                 help_text = help_builder.get_usage_message(msg)
                 raise ArgumentParsingError(help_text)
@@ -328,21 +322,12 @@ class Dispatcher:
             help_text = self._get_general_help(detailed=False)
             raise ArgumentParsingError(help_text)
 
-        # load the system's config
-        charmcraft_config = config.load(global_args["project_dir"])
-
         logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
-        return command, cmd_args, charmcraft_config
+        return global_args
 
     def run(self):
         """Really run the command."""
-        if self.command.needs_config and not self.command.config.project.config_provided:
-            raise ArgumentParsingError(
-                "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
-                "the current directory or where specified with --project-dir option); see "
-                "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
-            )
-        return self.command.run(self.parsed_args)
+        return self.loaded_command.run(self.parsed_command_args)
 
 
 def main(argv=None):
@@ -353,12 +338,34 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
+    extra_global_options = [
+        GlobalArgument(
+            "project_dir",
+            "option",
+            "-p",
+            "--project-dir",
+            "Specify the project's directory (defaults to current)",
+        ),
+    ]
+
     # process
     try:
         env.ensure_charmcraft_environment_is_supported()
         setup_parts()
-        dispatcher = Dispatcher(argv[1:], COMMAND_GROUPS)
+
+        # load the dispatcher and put everything in motion
+        dispatcher = Dispatcher(COMMAND_GROUPS, extra_global_options)
+        global_args = dispatcher.pre_parse_args(argv[1:])
+        loaded_config = config.load(global_args["project_dir"])
+        command = dispatcher.load_command(loaded_config)
+        if command.needs_config and not loaded_config.project.config_provided:
+            raise ArgumentParsingError(
+                "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
+                "the current directory or where specified with --project-dir option); see "
+                "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
+            )
         retcode = dispatcher.run()
+
     except ArgumentParsingError as err:
         print(err, file=sys.stderr)  # to stderr, as argparse normally does
         message_handler.ended_ok()

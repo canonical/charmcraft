@@ -225,6 +225,19 @@ def test_whoami(caplog, store_mock, config):
     assert expected == [rec.message for rec in caplog.records]
 
 
+def test_whoami_but_not_logged_in(caplog, store_mock, config):
+    """Simple logout case."""
+    caplog.set_level(logging.WARNING, logger="charmcraft.commands")
+    store_mock.whoami.side_effect = NotLoggedIn("credentials not found")
+
+    WhoamiCommand(config).run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.whoami(),
+    ]
+    assert ["You are not logged in to Charmhub."] == [rec.message for rec in caplog.records]
+
+
 # -- tests for name-related commands
 
 

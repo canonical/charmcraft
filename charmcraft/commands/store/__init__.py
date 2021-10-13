@@ -151,16 +151,21 @@ class WhoamiCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        result = store.whoami()
 
-        data = [
-            ("name:", result.name),
-            ("username:", result.username),
-            ("id:", result.userid),
-        ]
-        table = tabulate(data, tablefmt="plain")
-        for line in table.splitlines():
-            logger.info(line)
+        try:
+            result = store.whoami()
+
+            data = [
+                ("name:", result.name),
+                ("username:", result.username),
+                ("id:", result.userid),
+            ]
+            table = tabulate(data, tablefmt="plain")
+            for line in table.splitlines():
+                logger.info(line)
+
+        except NotLoggedIn:
+            logger.warning("You are not logged in to Charmhub.")
 
 
 class RegisterCharmNameCommand(BaseCommand):

@@ -16,12 +16,13 @@
 
 """Infrastructure for the 'pack' command."""
 
-import logging
 import os
 import pathlib
 import zipfile
 from argparse import Namespace
 from typing import List
+
+from craft_cli import emit
 
 from charmcraft import parts
 from charmcraft.cmdbase import BaseCommand, CommandError
@@ -29,8 +30,6 @@ from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
 from charmcraft.utils import SingleOptionEnsurer, load_yaml, useful_filepath
-
-logger = logging.getLogger(__name__)
 
 # the minimum set of files in a bundle
 MANDATORY_FILES = {"bundle.yaml", "README.md"}
@@ -151,6 +150,7 @@ class PackCommand(BaseCommand):
 
     def _pack_charm(self, parsed_args) -> List[pathlib.Path]:
         """Pack a charm."""
+        emit.progress("Packing the charm.")
         # adapt arguments to use the build infrastructure
         build_args = Namespace(
             **{
@@ -169,7 +169,7 @@ class PackCommand(BaseCommand):
         # mimic the "build" command
         validator = build.Validator(self.config)
         args = validator.process(build_args)
-        logger.debug("Working arguments: %s", args)
+        emit.trace(f"Working arguments: {args}")
         builder = build.Builder(args, self.config)
         charms = builder.run(parsed_args.bases_index, destructive_mode=build_args.destructive_mode)
 
@@ -177,6 +177,7 @@ class PackCommand(BaseCommand):
 
     def _pack_bundle(self, parsed_args) -> List[pathlib.Path]:
         """Pack a bundle."""
+        emit.progress("Packing the bundle.")
         if parsed_args.shell:
             build.launch_shell()
             return []
@@ -211,7 +212,7 @@ class PackCommand(BaseCommand):
         bundle_part["source"] = str(project.dirpath)
 
         # run the parts lifecycle
-        logger.debug("Parts definition: %s", config_parts)
+        emit.trace(f"Parts definition: {config_parts}")
         lifecycle = parts.PartsLifecycle(
             config_parts,
             work_dir=project.dirpath / build.BUILD_DIRNAME,
@@ -222,7 +223,7 @@ class PackCommand(BaseCommand):
             lifecycle.run(Step.PRIME)
         except (RuntimeError, CommandError) as error:
             if parsed_args.debug:
-                logger.error(str(error))
+                emit.trace(f"Error when running PRIME step: {error}")
                 build.launch_shell()
             raise
 
@@ -231,7 +232,7 @@ class PackCommand(BaseCommand):
         zipname = project.dirpath / (bundle_name + ".zip")
         build_zip(zipname, lifecycle.prime_dir)
 
-        logger.info("Created %r.", str(zipname))
+        emit.message(f"Created {str(zipname)!r}.")
 
         if parsed_args.shell_after:
             build.launch_shell()

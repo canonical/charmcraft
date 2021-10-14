@@ -140,4 +140,4 @@ class _MessageHandler:
             self._file_logger.exception("")
 
 
-message_handler = _MessageHandler()
+#message_handler = _MessageHandler()

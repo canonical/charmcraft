@@ -17,11 +17,11 @@
 """Build environment provider support for charmcraft."""
 
 import contextlib
-import logging
 import pathlib
 import re
 from typing import List
 
+from craft_cli import emit
 from craft_providers import bases, multipass
 from craft_providers.multipass.errors import MultipassError
 
@@ -32,8 +32,6 @@ from charmcraft.utils import confirm_with_user, get_host_architecture
 
 from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
 from ._provider import Provider
-
-logger = logging.getLogger(__name__)
 
 
 class MultipassProvider(Provider):
@@ -78,7 +76,7 @@ class MultipassProvider(Provider):
         for name in names:
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
             if re.match(match_regex, name):
-                logger.debug("Deleting Multipass VM %r.", name)
+                emit.trace(f"Deleting Multipass VM {name!r}.")
                 try:
                     self.multipass.delete(
                         instance_name=name,
@@ -89,7 +87,7 @@ class MultipassProvider(Provider):
 
                 deleted.append(name)
             else:
-                logger.debug("Not deleting Multipass VM %r.", name)
+                emit.trace(f"Not deleting Multipass VM {name!r}.")
 
         return deleted
 

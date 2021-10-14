@@ -18,7 +18,6 @@
 
 import ast
 import hashlib
-import logging
 import pathlib
 import string
 import tempfile
@@ -31,6 +30,8 @@ import yaml
 from humanize import naturalsize
 from tabulate import tabulate
 
+from craft_cli import emit
+
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import (
     ResourceOption,
@@ -41,8 +42,6 @@ from charmcraft.utils import (
 
 from .store import Store
 from .registry import ImageHandler, OCIRegistry
-
-logger = logging.getLogger("charmcraft.commands.store")
 
 # some types
 EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
@@ -103,7 +102,7 @@ class LoginCommand(BaseCommand):
         """Run the command."""
         store = Store(self.config.charmhub)
         store.login()
-        logger.info("Logged in as '%s'.", store.whoami().username)
+        emit.message(f"Logged in as '{store.whoami().username}'.")
 
 
 class LogoutCommand(BaseCommand):
@@ -128,7 +127,7 @@ class LogoutCommand(BaseCommand):
         """Run the command."""
         store = Store(self.config.charmhub)
         store.logout()
-        logger.info("Charmhub token cleared.")
+       emit.message("Charmhub token cleared.")
 
 
 class WhoamiCommand(BaseCommand):
@@ -156,7 +155,7 @@ class WhoamiCommand(BaseCommand):
         ]
         table = tabulate(data, tablefmt="plain")
         for line in table.splitlines():
-            logger.info(line)
+            emit.message(line)
 
 
 class RegisterCharmNameCommand(BaseCommand):
@@ -196,7 +195,7 @@ class RegisterCharmNameCommand(BaseCommand):
         """Run the command."""
         store = Store(self.config.charmhub)
         store.register_name(parsed_args.name, EntityType.charm)
-        logger.info("You are now the publisher of charm %r in Charmhub.", parsed_args.name)
+        emit.message(f"You are now the publisher of charm {parsed_args.name!r} in Charmhub.")
 
 
 class RegisterBundleNameCommand(BaseCommand):
@@ -235,7 +234,7 @@ class RegisterBundleNameCommand(BaseCommand):
         """Run the command."""
         store = Store(self.config.charmhub)
         store.register_name(parsed_args.name, EntityType.bundle)
-        logger.info("You are now the publisher of bundle %r in Charmhub.", parsed_args.name)
+        emit.message(f"You are now the publisher of bundle {parsed_args.name!r} in Charmhub.")
 
 
 class ListNamesCommand(BaseCommand):
@@ -265,7 +264,7 @@ class ListNamesCommand(BaseCommand):
         store = Store(self.config.charmhub)
         result = store.list_registered_names()
         if not result:
-            logger.info("No charms or bundles registered.")
+            emit.message("No charms or bundles registered.")
             return
 
         headers = ["Name", "Type", "Visibility", "Status"]
@@ -283,7 +282,7 @@ class ListNamesCommand(BaseCommand):
 
         table = tabulate(data, headers=headers, tablefmt="plain")
         for line in table.splitlines():
-            logger.info(line)
+            emit.message(line)
 
 
 def get_name_from_zip(filepath):
@@ -390,24 +389,22 @@ class UploadCommand(BaseCommand):
         store = Store(self.config.charmhub)
         result = store.upload(name, parsed_args.filepath)
         if result.ok:
-            logger.info("Revision %s of %r created", result.revision, str(name))
+            emit.message(f"Revision {result.revision} of {str(name)!r} created")
             if parsed_args.release:
                 # also release!
                 store.release(name, result.revision, parsed_args.release, parsed_args.resource)
-                msg = "Revision released to %s"
+                msg = "Revision released to {}"
                 args = [", ".join(parsed_args.release)]
                 if parsed_args.resource:
-                    msg += " (attaching resources: %s)"
+                    msg += " (attaching resources: {})"
                     args.append(
-                        ", ".join(
-                            "{!r} r{}".format(r.name, r.revision) for r in parsed_args.resource
-                        )
+                        ", ".join(f"{r.name!r} r{r.revision}" for r in parsed_args.resource)
                     )
-                logger.info(msg, *args)
+                emit.message(msg.format(*args))
         else:
-            logger.info("Upload failed with status %r:", result.status)
+            emit.message(f"Upload failed with status {result.status!r}:")
             for error in result.errors:
-                logger.info("- %s: %s", error.code, error.message)
+                emit.message(f"- {error.code}: {error.message}")
 
 
 class ListRevisionsCommand(BaseCommand):
@@ -439,7 +436,7 @@ class ListRevisionsCommand(BaseCommand):
         store = Store(self.config.charmhub)
         result = store.list_revisions(parsed_args.name)
         if not result:
-            logger.info("No revisions found.")
+            emit.message("No revisions found.")
             return
 
         headers = ["Revision", "Version", "Created at", "Status"]
@@ -463,7 +460,7 @@ class ListRevisionsCommand(BaseCommand):
 
         table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
-            logger.info(line)
+            emit.message(line)
 
 
 class ReleaseCommand(BaseCommand):
@@ -550,14 +547,12 @@ class ReleaseCommand(BaseCommand):
             parsed_args.resource,
         )
 
-        msg = "Revision %d of charm %r released to %s"
+        msg = "Revision {:d} of charm {!r} released to {}"
         args = [parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel)]
         if parsed_args.resource:
-            msg += " (attaching resources: %s)"
-            args.append(
-                ", ".join("{!r} r{}".format(r.name, r.revision) for r in parsed_args.resource)
-            )
-        logger.info(msg, *args)
+            msg += " (attaching resources: {})"
+            args.append(", ".join(f"{r.name!r} r{r.revision}" for r in parsed_args.resource))
+        emit.message(msg.format(*args))
 
 
 class CloseCommand(BaseCommand):
@@ -594,7 +589,7 @@ class CloseCommand(BaseCommand):
         channels = [parsed_args.channel]  # the API accepts multiple channels, we have only one
         resources = []  # not really used when closing channels
         store.release(parsed_args.name, revision, channels, resources)
-        logger.info("Closed %r channel for %r.", parsed_args.channel, parsed_args.name)
+        emit.message(f"Closed {parsed_args.channel!r} channel for {parsed_args.name!r}.")
 
 
 class StatusCommand(BaseCommand):
@@ -641,7 +636,7 @@ class StatusCommand(BaseCommand):
         store = Store(self.config.charmhub)
         channel_map, channels, revisions = store.list_releases(parsed_args.name)
         if not channel_map:
-            logger.info("Nothing has been released yet.")
+            emit.message("Nothing has been released yet.")
             return
 
         # group released revision by track and base
@@ -739,7 +734,7 @@ class StatusCommand(BaseCommand):
 
         table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
-            logger.info(line)
+            emit.message(line)
 
 
 class _BadLibraryPathError(CommandError):
@@ -923,7 +918,7 @@ def _get_libs_from_tree(charm_name=None):
                     local_libs_data.append(_get_lib_info(lib_path=libfile))
 
     found_libs = [lib_data.full_name for lib_data in local_libs_data]
-    logger.debug("Libraries found under %r: %s", str(base_dir), found_libs)
+    emit.trace(f"Libraries found under {str(base_dir)!r}: {found_libs}")
     return local_libs_data
 
 
@@ -1003,8 +998,8 @@ class CreateLibCommand(BaseCommand):
                 "Error writing the library in {!r}: {!r}.".format(str(lib_path), exc)
             )
 
-        logger.info("Library %s created with id %s.", full_name, lib_id)
-        logger.info("Consider 'git add %s'.", lib_path)
+        emit.message(f"Library {full_name} created with id {lib_id}.")
+        emit.message(f"Consider 'git add {lib_path}'.")
 
 
 class PublishLibCommand(BaseCommand):
@@ -1063,9 +1058,9 @@ class PublishLibCommand(BaseCommand):
         libs_tips = store.get_libraries_tips(to_query)
         to_publish = []
         for lib_data in local_libs_data:
-            logger.debug("Verifying local lib %s", lib_data)
+            emit.trace(f"Verifying local lib {lib_data}")
             tip = libs_tips.get((lib_data.lib_id, lib_data.api))
-            logger.debug("Store tip: %s", tip)
+            emit.trace(f"Store tip: {tip}")
             if tip is None:
                 # needs to first publish
                 to_publish.append(lib_data)
@@ -1073,46 +1068,36 @@ class PublishLibCommand(BaseCommand):
 
             if tip.patch > lib_data.patch:
                 # the store is more advanced than local
-                logger.info(
-                    "Library %s is out-of-date locally, Charmhub has version %d.%d, please "
+                emit.message(
+                    f"Library {lib_data.full_name} is out-of-date locally, Charmhub has "
+                    f"version {tip.api:d}.{tip.patch:d}, please "
                     "fetch the updates before publishing.",
-                    lib_data.full_name,
-                    tip.api,
-                    tip.patch,
                 )
             elif tip.patch == lib_data.patch:
                 # the store has same version numbers than local
                 if tip.content_hash == lib_data.content_hash:
-                    logger.info("Library %s is already updated in Charmhub.", lib_data.full_name)
+                    emit.message(f"Library {lib_data.full_name} is already updated in Charmhub.")
                 else:
                     # but shouldn't as hash is different!
-                    logger.info(
-                        "Library %s version %d.%d is the same than in Charmhub but content is "
-                        "different",
-                        lib_data.full_name,
-                        tip.api,
-                        tip.patch,
-                    )
+                    emit.message(
+                        f"Library {lib_data.full_name} version {tip.api:d}.{tip.patch:d} "
+                        "is the same than in Charmhub but content is different",
+                     )
             elif tip.patch + 1 == lib_data.patch:
                 # local is correctly incremented
                 if tip.content_hash == lib_data.content_hash:
                     # but shouldn't as hash is the same!
-                    logger.info(
-                        "Library %s LIBPATCH number was incorrectly incremented, Charmhub has the "
-                        "same content in version %d.%d.",
-                        lib_data.full_name,
-                        tip.api,
-                        tip.patch,
+                    emit.message(
+                        f"Library {lib_data.full_name} LIBPATCH number was incorrectly "
+                        "incremented, Charmhub has the "
+                        f"same content in version {tip.api:d}.{tip.patch:d}.",
                     )
                 else:
                     to_publish.append(lib_data)
             else:
-                logger.info(
-                    "Library %s has a wrong LIBPATCH number, it's too high, Charmhub "
-                    "highest version is %d.%d.",
-                    lib_data.full_name,
-                    tip.api,
-                    tip.patch,
+                emit.message(
+                    f"Library {lib_data.full_name} has a wrong LIBPATCH number, it's too high, "
+                    f"Charmhub highest version is {tip.api:d}.{tip.patch:d}.",
                 )
 
         for lib_data in to_publish:
@@ -1124,12 +1109,10 @@ class PublishLibCommand(BaseCommand):
                 lib_data.content,
                 lib_data.content_hash,
             )
-            logger.info(
-                "Library %s sent to the store with version %d.%d",
-                lib_data.full_name,
-                lib_data.api,
-                lib_data.patch,
-            )
+            emit.message(
+                f"Library {lib_data.full_name} sent to the store with "
+                f"version {lib_data.api:d}.{lib_data.patch:d}",
+             )
 
 
 class FetchLibCommand(BaseCommand):
@@ -1187,7 +1170,7 @@ class FetchLibCommand(BaseCommand):
         # check if something needs to be done
         to_fetch = []
         for lib_data in local_libs_data:
-            logger.debug("Verifying local lib %s", lib_data)
+            emit.trace(f"Verifying local lib {lib_data}")
             # fix any missing lib id using the Store info
             if lib_data.lib_id is None:
                 for tip in libs_tips.values():
@@ -1196,9 +1179,9 @@ class FetchLibCommand(BaseCommand):
                         break
 
             tip = libs_tips.get((lib_data.lib_id, lib_data.api))
-            logger.debug("Store tip: %s", tip)
+            emit.trace(f"Store tip: {tip}")
             if tip is None:
-                logger.info("Library %s not found in Charmhub.", lib_data.full_name)
+                emit.message(f"Library {lib_data.full_name} not found in Charmhub.")
                 continue
 
             if tip.patch > lib_data.patch:
@@ -1206,23 +1189,19 @@ class FetchLibCommand(BaseCommand):
                 to_fetch.append(lib_data)
             elif tip.patch < lib_data.patch:
                 # the store has a lower version numbers than local
-                logger.info(
-                    "Library %s has local changes, can not be updated.",
-                    lib_data.full_name,
+                emit.message(
+                    f"Library {lib_data.full_name} has local changes, can not be updated.",
                 )
             else:
                 # same versions locally and in the store
                 if tip.content_hash == lib_data.content_hash:
-                    logger.info(
-                        "Library %s was already up to date in version %d.%d.",
-                        lib_data.full_name,
-                        tip.api,
-                        tip.patch,
+                    emit.message(
+                        f"Library {lib_data.full_name} was already up to date in "
+                        f"version {tip.api:d}.{tip.patch:d}.",
                     )
                 else:
-                    logger.info(
-                        "Library %s has local changes, can not be updated.",
-                        lib_data.full_name,
+                    emit.message(
+                        f"Library {lib_data.full_name} has local changes, can not be updated.",
                     )
 
         for lib_data in to_fetch:
@@ -1231,21 +1210,17 @@ class FetchLibCommand(BaseCommand):
                 # locally new
                 lib_data.path.parent.mkdir(parents=True, exist_ok=True)
                 lib_data.path.write_text(downloaded.content)
-                logger.info(
-                    "Library %s version %d.%d downloaded.",
-                    lib_data.full_name,
-                    downloaded.api,
-                    downloaded.patch,
+                emit.message(
+                    f"Library {lib_data.full_name} version "
+                    f"{downloaded.api:d}.{downloaded.patch:d} downloaded.",
                 )
             else:
                 # XXX Facundo 2020-12-17: manage the case where the library was renamed
                 # (related GH issue: #214)
                 lib_data.path.write_text(downloaded.content)
-                logger.info(
-                    "Library %s updated to version %d.%d.",
-                    lib_data.full_name,
-                    downloaded.api,
-                    downloaded.patch,
+                emit.message(
+                    f"Library {lib_data.full_name} updated to version "
+                    f"{downloaded.api:d}.{downloaded.patch:d}.",
                 )
 
 
@@ -1303,7 +1278,7 @@ class ListLibCommand(BaseCommand):
         libs_tips = store.get_libraries_tips(to_query)
 
         if not libs_tips:
-            logger.info("No libraries found for charm %s.", charm_name)
+            emit.message(f"No libraries found for charm {charm_name}.")
             return
 
         headers = ["Library name", "API", "Patch"]
@@ -1311,7 +1286,7 @@ class ListLibCommand(BaseCommand):
 
         table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
-            logger.info(line)
+            emit.message(line)
 
 
 class ListResourcesCommand(BaseCommand):
@@ -1337,7 +1312,7 @@ class ListResourcesCommand(BaseCommand):
         store = Store(self.config.charmhub)
         result = store.list_resources(parsed_args.charm_name)
         if not result:
-            logger.info("No resources associated to %s.", parsed_args.charm_name)
+            emit.message(f"No resources associated to {parsed_args.charm_name}.")
             return
 
         headers = ["Charm Rev", "Resource", "Type", "Optional"]
@@ -1352,7 +1327,7 @@ class ListResourcesCommand(BaseCommand):
 
         table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
-            logger.info(line)
+            emit.message(line)
 
 
 class UploadResourceCommand(BaseCommand):
@@ -1407,7 +1382,7 @@ class UploadResourceCommand(BaseCommand):
             resource_filepath = parsed_args.filepath
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
-            logger.debug("Uploading resource directly from file %r.", str(resource_filepath))
+            emit.progress(f"Uploading resource directly from file {str(resource_filepath)!r}.")
         elif parsed_args.image:
             image_digest = parsed_args.image
             credentials = store.get_oci_registry_credentials(
@@ -1418,7 +1393,7 @@ class UploadResourceCommand(BaseCommand):
             # 'registry.jujucharms.com/charm/45kk8smbiyn2e/redis-image') to the image
             # name that we use internally (just remove the initial "server host" part)
             image_name = credentials.image_name.split("/", 1)[1]
-            logger.debug("Uploading resource from image %s @ %s.", image_name, image_digest)
+            emit.progress(f"Uploading resource from image {image_name} @ {image_digest}.")
 
             # build the image handler
             registry = OCIRegistry(
@@ -1432,19 +1407,23 @@ class UploadResourceCommand(BaseCommand):
             # check if the specific image is already in Canonical's registry
             already_uploaded = ih.check_in_registry(image_digest)
             if already_uploaded:
-                logger.info("Using OCI image from Canonical's registry.")
+                emit.message("Using OCI image from Canonical's registry.", intermediate=True)
             else:
                 # upload it from local registry
-                logger.info("Remote image not found, uploading from local registry.")
+                emit.message(
+                    "Remote image not found, uploading from local registry.", intermediate=True
+                )
                 image_digest = ih.upload_from_local(image_digest)
                 if image_digest is None:
-                    logger.info(
-                        "Image with digest %s is not available in the Canonical's registry "
-                        "nor locally.",
-                        parsed_args.image,
+                    emit.message(
+                        f"Image with digest {parsed_args.image} is not available in "
+                        "the Canonical's registry nor locally.",
+                        intermediate=True,
                     )
                     return
-                logger.info("Image uploaded, new remote digest: %s.", image_digest)
+                emit.message(
+                    f"Image uploaded, new remote digest: {image_digest}.", intermediate=True
+                )
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(
@@ -1468,16 +1447,14 @@ class UploadResourceCommand(BaseCommand):
             resource_filepath.unlink()
 
         if result.ok:
-            logger.info(
-                "Revision %s created of resource %r for charm %r.",
-                result.revision,
-                parsed_args.resource_name,
-                parsed_args.charm_name,
+            emit.message(
+                f"Revision {result.revision} created of "
+                f"resource {parsed_args.resource_name!r} for charm {parsed_args.charm_name!r}.",
             )
         else:
-            logger.info("Upload failed with status %r:", result.status)
+            emit.message(f"Upload failed with status {result.status!r}:")
             for error in result.errors:
-                logger.info("- %s: %s", error.code, error.message)
+                emit.message(f"- {error.code}: {error.message}")
 
 
 class ListResourceRevisionsCommand(BaseCommand):
@@ -1513,7 +1490,7 @@ class ListResourceRevisionsCommand(BaseCommand):
         store = Store(self.config.charmhub)
         result = store.list_resource_revisions(parsed_args.charm_name, parsed_args.resource_name)
         if not result:
-            logger.info("No revisions found.")
+            emit.message("No revisions found.")
             return
 
         headers = ["Revision", "Created at", "Size"]
@@ -1530,4 +1507,4 @@ class ListResourceRevisionsCommand(BaseCommand):
 
         table = tabulate(data, headers=headers, tablefmt="plain", colalign=custom_alignment)
         for line in table.splitlines():
-            logger.info(line)
+            emit.message(line)

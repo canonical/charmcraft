@@ -16,15 +16,13 @@
 
 """Build environment provider support for charmcraft."""
 
-import logging
 import pathlib
 import tempfile
 
+from craft_cli import emit
 from craft_providers import Executor
 
 from charmcraft.env import get_managed_environment_log_path
-
-logger = logging.getLogger(__name__)
 
 
 def capture_logs_from_instance(instance: Executor) -> None:
@@ -44,11 +42,11 @@ def capture_logs_from_instance(instance: Executor) -> None:
     try:
         instance.pull_file(source=instance_log_path, destination=local_log_path)
     except FileNotFoundError:
-        logger.debug("No logs found in instance.")
+        emit.trace("No logs found in instance.")
         return
 
-    logger.debug("Logs captured from managed instance:")
+    emit.trace("Logs captured from managed instance:")
     with open(local_log_path, "rt", encoding="utf8") as fh:
         for line in fh:
-            logger.debug(":: %s", line.rstrip())
+            emit.trace(f":: {line.rstrip()}")
     local_log_path.unlink()

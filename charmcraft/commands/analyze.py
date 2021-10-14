@@ -20,14 +20,14 @@ import json
 import pathlib
 import tempfile
 import textwrap
-import logging
 import zipfile
+
+from craft_cli import emit
 
 from charmcraft import linters
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.utils import useful_filepath
 
-logger = logging.getLogger(__name__)
 
 JSON_FORMAT = "json"
 
@@ -104,7 +104,7 @@ class AnalyzeCommand(BaseCommand):
                 }
                 for r in linting_results
             ]
-            logger.info(json.dumps(info, indent=4))
+            emit.message(json.dumps(info, indent=4))
             return
 
         # group by attributes and lint outcomes (discarding ignored ones)
@@ -136,12 +136,12 @@ class AnalyzeCommand(BaseCommand):
         for title, key in titles:
             results = grouped.get(key)
             if results is not None:
-                logger.info("%s:", title)
+                emit.message(f"{title}:")
                 for result, result_info in results:
                     if result_info:
-                        logger.info("- %s: %s (%s)", result.name, result_info, result.url)
+                        emit.message(f"- {result.name}: { result_info} ({result.url})")
                     else:
-                        logger.info("- %s (%s)", result.name, result.url)
+                        emit.message(f"- {result.name} ({result.url})")
 
         # the return code depends on the presence of different issues
         if linters.FATAL in grouped:

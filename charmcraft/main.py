@@ -17,18 +17,17 @@
 """Main entry point module for all the tool functionality."""
 
 import argparse
-import logging
 import sys
 from collections import namedtuple
 
-from charmcraft import config, env
+from craft_cli import emit, EmitterMode, CraftError
+
+from charmcraft import config, env, __version__
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.helptexts import help_builder
 from charmcraft.logsetup import message_handler
 from charmcraft.parts import setup_parts
-
-logger = logging.getLogger(__name__)
 
 # the summary of the whole program
 GENERAL_SUMMARY = """
@@ -178,7 +177,7 @@ class Dispatcher:
         parser = CustomArgumentParser(prog=cmd.name)
         cmd.fill_parser(parser)
         parsed_args = parser.parse_args(cmd_args)
-        logger.debug("Command parsed sysargs: %s", parsed_args)
+        emit.trace(f"Command parsed sysargs: {parsed_args}")
 
         return cmd, parsed_args
 
@@ -303,7 +302,7 @@ class Dispatcher:
             message_handler.set_mode(message_handler.QUIET)
         elif global_args["verbose"]:
             message_handler.set_mode(message_handler.VERBOSE)
-        logger.debug("Raw pre-parsed sysargs: args=%s filtered=%s", global_args, filtered_sysargs)
+        emit.trace(f"Raw pre-parsed sysargs: args={global_args} filtered={filtered_sysargs}")
 
         # handle requested help through -h/--help options
         if global_args["help"]:
@@ -331,7 +330,7 @@ class Dispatcher:
         # load the system's config
         charmcraft_config = config.load(global_args["project_dir"])
 
-        logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
+        emit.trace(f"General parsed sysargs: command={command!r} args={cmd_args}")
         return command, cmd_args, charmcraft_config
 
     def run(self):
@@ -348,7 +347,7 @@ class Dispatcher:
 def main(argv=None):
     """Provide the main entry point."""
     help_builder.init("charmcraft", GENERAL_SUMMARY, COMMAND_GROUPS)
-    message_handler.init(message_handler.NORMAL)
+    emit.init(EmitterMode.NORMAL, "charmcraft", f"Starting charmcraft version {__version__}")
 
     if argv is None:
         argv = sys.argv
@@ -361,23 +360,27 @@ def main(argv=None):
         retcode = dispatcher.run()
     except ArgumentParsingError as err:
         print(err, file=sys.stderr)  # to stderr, as argparse normally does
-        message_handler.ended_ok()
+        emit.ended_ok()
         retcode = 1
     except ProvideHelpException as err:
         print(err, file=sys.stderr)  # to stderr, as argparse normally does
-        message_handler.ended_ok()
+        emit.ended_ok()
         retcode = 0
     except CommandError as err:
-        message_handler.ended_cmderror(err)
+        emit.error(err)
         retcode = err.retcode
-    except KeyboardInterrupt:
-        message_handler.ended_interrupt()
+    except KeyboardInterrupt as exc:
+        error = CraftError("Interrupted.")
+        error.__cause__ = exc
+        emit.error(error)
         retcode = 1
     except Exception as err:
-        message_handler.ended_crash(err)
+        error = CraftError(f"charmcraft internal error: {err!r}")
+        error.__cause__ = err
+        emit.error(error)
         retcode = 1
     else:
-        message_handler.ended_ok()
+        emit.ended_ok()
         if retcode is None:
             retcode = 0
 

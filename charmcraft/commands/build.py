@@ -16,12 +16,13 @@
 
 """Infrastructure for the 'build' command."""
 
-import logging
 import os
 import pathlib
 import subprocess
 import zipfile
 from typing import List, Optional, Tuple
+
+from craft_cli import emit
 
 from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
@@ -33,8 +34,6 @@ from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
 from charmcraft.providers import capture_logs_from_instance, get_provider
-
-logger = logging.getLogger(__name__)
 
 # Some constants that are used through the code.
 BUILD_DIRNAME = "build"
@@ -152,27 +151,22 @@ class Builder:
 
         # show attribute results
         for result in attribute_results:
-            logger.debug(
-                "Check result: %s [%s] %s (%s; see more at %s).",
-                result.name,
-                result.check_type,
-                result.result,
-                result.text,
-                result.url,
-            )
+            emit.trace(
+                f"Check result: {result.name} [{result.check_type}] {result.result} "
+                f"({result.text}; see more at {result.url}).",
 
         # show warnings (if any), then errors (if any)
-        template = "- %s: %s (%s)"
+        template = "- {0.name}: {0.text} ({0.url})"
         if linters.WARNINGS in lint_results_by_outcome:
-            logger.info("Lint Warnings:")
+            emit.message("Lint Warnings:", intermediate=True)
             for result in lint_results_by_outcome[linters.WARNINGS]:
-                logger.info(template, result.name, result.text, result.url)
+                emit.message(template.format(result), intermediate=True)
         if linters.ERRORS in lint_results_by_outcome:
-            logger.info("Lint Errors:")
+            emit.message("Lint Errors:", intermediate=True)
             for result in lint_results_by_outcome[linters.ERRORS]:
-                logger.info(template, result.name, result.text, result.url)
+                emit.message(template.format(result), intermediate=True)
             if self.force_packing:
-                logger.info("Packing anyway as requested.")
+                emit.message("Packing anyway as requested.", intermediate=True)
             else:
                 raise CommandError(
                     "Aborting due to lint errors (use --force to override).", retcode=2
@@ -195,7 +189,7 @@ class Builder:
         else:
             work_dir = self.buildpath
 
-        logger.debug("Building charm in %r", str(work_dir))
+        emit.progress(f"Building charm in {str(work_dir)!r}")
 
         # add charm files to the prime filter
         self._set_prime_filter()
@@ -204,7 +198,7 @@ class Builder:
         self._charm_part["source"] = str(self.charmdir)
 
         # run the parts lifecycle
-        logger.debug("Parts definition: %s", self._parts)
+        emit.trace(f"Parts definition: {self._parts}")
         lifecycle = parts.PartsLifecycle(
             self._parts,
             work_dir=work_dir,
@@ -225,7 +219,7 @@ class Builder:
         )
 
         zipname = self.handle_package(lifecycle.prime_dir, bases_config)
-        logger.info("Created '%s'.", zipname)
+        emit.message(f"Created '{zipname}'.")
         return zipname
 
     def _handle_deprecated_cli_arguments(self):
@@ -307,10 +301,7 @@ class Builder:
 
         for bases_index, bases_config in enumerate(self.config.bases):
             if bases_indices and bases_index not in bases_indices:
-                logger.debug(
-                    "Skipping 'bases[%d]' due to --base-index usage.",
-                    bases_index,
-                )
+                emit.trace(f"Skipping 'bases[{bases_index:d}]' due to --base-index usage.")
                 continue
 
             for build_on_index, build_on in enumerate(bases_config.build_on):
@@ -320,24 +311,22 @@ class Builder:
                     matches, reason = self.provider.is_base_available(build_on)
 
                 if matches:
-                    logger.debug(
-                        "Building for 'bases[%d]' as host matches 'build-on[%d]'.",
-                        bases_index,
-                        build_on_index,
-                    )
+                    emit.trace(
+                        f"Building for 'bases[{bases_index:d}]' "
+                        f"as host matches 'build-on[{build_on_index:d}]'.",
+                     )
                     build_plan.append((bases_config, build_on, bases_index, build_on_index))
                     break
                 else:
-                    logger.info(
-                        "Skipping 'bases[%d].build-on[%d]': %s.",
-                        bases_index,
-                        build_on_index,
-                        reason,
-                    )
+                    emit.progress(
+                        f"Skipping 'bases[{bases_index:d}].build-on[{build_on_index:d}]': "
+                        f"{reason}.",
+                     )
             else:
-                logger.warning(
-                    "No suitable 'build-on' environment found in 'bases[%d]' configuration.",
-                    bases_index,
+                emit.message(
+                    "No suitable 'build-on' environment found "
+                    f"in 'bases[{bases_index:d}]' configuration.",
+                    intermediate=True,
                 )
 
         return build_plan
@@ -429,9 +418,9 @@ class Builder:
 
         cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
 
-        if message_handler.mode == message_handler.VERBOSE:
+        if emit.mode == EmitterMode.VERBOSE:
             cmd.append("--verbose")
-        elif message_handler.mode == message_handler.QUIET:
+        elif emit.mode == EmitterMode.QUIET:
             cmd.append("--quiet")
 
         if self.debug:
@@ -443,7 +432,7 @@ class Builder:
         if self.shell_after:
             cmd.append("--shell-after")
 
-        logger.info(f"Packing charm {charm_name!r}...")
+        emit.progress(f"Packing charm {charm_name!r}...")
         with self.provider.launched_environment(
             charm_name=self.metadata.name,
             project_path=self.charmdir,
@@ -478,7 +467,7 @@ class Builder:
 
     def handle_package(self, prime_dir, bases_config: Optional[BasesConfiguration] = None):
         """Handle the final package creation."""
-        logger.debug("Creating the package itself")
+        emit.progress("Creating the package itself")
         zipname = format_charm_file_name(self.metadata.name, bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(prime_dir, followlinks=True):
@@ -659,6 +648,6 @@ class BuildCommand(BaseCommand):
         """Run the command."""
         validator = Validator(self.config)
         args = validator.process(parsed_args)
-        logger.debug("working arguments: %s", args)
+        emit.trace(f"Working arguments: {args}")
         builder = Builder(args, self.config)
         builder.run(destructive_mode=args["destructive_mode"])

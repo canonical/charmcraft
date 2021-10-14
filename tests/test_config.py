@@ -30,18 +30,6 @@ from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, load
 from charmcraft.utils import get_host_architecture
 
 
-@pytest.fixture
-def create_config(tmp_path):
-    """Helper to create the config."""
-
-    def create_config(text):
-        test_file = tmp_path / "charmcraft.yaml"
-        test_file.write_text(text)
-        return tmp_path
-
-    return create_config
-
-
 # -- tests for the config loading
 
 

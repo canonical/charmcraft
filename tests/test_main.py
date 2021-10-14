@@ -49,6 +49,25 @@ def mock_ensure_charmcraft_environment_is_supported(monkeypatch):
 # --- Tests for the Dispatcher
 
 
+def test_dispatcher_pre_parsing():
+    """Parses and return global arguments."""
+    groups = [CommandGroup("title", [create_command("somecommand")])]
+    dispatcher = Dispatcher(groups)
+    global_args = dispatcher.pre_parse_args(["-q", "somecommand"])
+    assert global_args == {"help": False, "verbose": False, "quiet": True}
+
+
+def test_dispatcher_command_loading():
+    """Parses and return global arguments."""
+    cmd = create_command("somecommand")
+    groups = [CommandGroup("title", [cmd])]
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(["somecommand"])
+    command = dispatcher.load_command("test-config")
+    assert isinstance(command, cmd)
+    assert command.config == "test-config"
+
+
 def test_dispatcher_command_execution_ok():
     """Command execution depends of the indicated name in command line, return code ok."""
 
@@ -67,7 +86,9 @@ def test_dispatcher_command_execution_ok():
         _executed = []
 
     groups = [CommandGroup("title", [MyCommand1, MyCommand2])]
-    dispatcher = Dispatcher(["name2"], groups)
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(["name2"])
+    dispatcher.load_command("config")
     dispatcher.run()
     assert MyCommand1._executed == []
     assert isinstance(MyCommand2._executed[0], argparse.Namespace)
@@ -84,7 +105,9 @@ def test_dispatcher_command_return_code():
             return 17
 
     groups = [CommandGroup("title", [MyCommand])]
-    dispatcher = Dispatcher(["cmdname"], groups)
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(["cmdname"])
+    dispatcher.load_command("config")
     retcode = dispatcher.run()
     assert retcode == 17
 
@@ -100,70 +123,11 @@ def test_dispatcher_command_execution_crash():
             raise ValueError()
 
     groups = [CommandGroup("title", [MyCommand])]
-    dispatcher = Dispatcher(["cmdname"], groups)
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(["cmdname"])
+    dispatcher.load_command("config")
     with pytest.raises(ValueError):
         dispatcher.run()
-
-
-def test_dispatcher_config_needed_ok(tmp_path):
-    """Command needs a config, which is provided ok."""
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = "cmdname"
-        needs_config = True
-
-        def run(self, parsed_args):
-            pass
-
-    # put the config in place
-    test_file = tmp_path / "charmcraft.yaml"
-    test_file.write_text(
-        """
-        type: charm
-    """
-    )
-
-    groups = [CommandGroup("title", [MyCommand])]
-    dispatcher = Dispatcher(["cmdname", "--project-dir", tmp_path], groups)
-    dispatcher.run()
-
-
-def test_dispatcher_config_needed_problem(tmp_path):
-    """Command needs a config, which is not there."""
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = "cmdname"
-        needs_config = True
-
-        def run(self, parsed_args):
-            pass
-
-    groups = [CommandGroup("title", [MyCommand])]
-    dispatcher = Dispatcher(["cmdname", "--project-dir", tmp_path], groups)
-    with pytest.raises(ArgumentParsingError) as err:
-        dispatcher.run()
-    assert str(err.value) == (
-        "The specified command needs a valid 'charmcraft.yaml' configuration file (in the "
-        "current directory or where specified with --project-dir option); see the reference: "
-        "https://discourse.charmhub.io/t/charmcraft-configuration/4138"
-    )
-
-
-def test_dispatcher_config_not_needed():
-    """Command does not needs a config."""
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = "cmdname"
-
-        def run(self, parsed_args):
-            pass
-
-    groups = [CommandGroup("title", [MyCommand])]
-    dispatcher = Dispatcher(["cmdname"], groups)
-    dispatcher.run()
 
 
 def test_dispatcher_generic_setup_default():
@@ -171,10 +135,9 @@ def test_dispatcher_generic_setup_default():
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     logsetup.message_handler.mode = None
-    with patch("charmcraft.config.load") as config_mock:
-        Dispatcher(["somecommand"], groups)
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(["somecommand"])
     assert logsetup.message_handler.mode is None
-    config_mock.assert_called_once_with(None)
 
 
 @pytest.mark.parametrize(
@@ -192,7 +155,8 @@ def test_dispatcher_generic_setup_verbose(options):
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     logsetup.message_handler.mode = None
-    Dispatcher(options, groups)
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(options)
     assert logsetup.message_handler.mode == logsetup.message_handler.VERBOSE
 
 
@@ -211,7 +175,8 @@ def test_dispatcher_generic_setup_quiet(options):
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     logsetup.message_handler.mode = None
-    Dispatcher(options, groups)
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(options)
     assert logsetup.message_handler.mode == logsetup.message_handler.QUIET
 
 
@@ -230,67 +195,72 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
     """Disallow mutually exclusive generic options."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
-    # test the system exit, which is done automatically by argparse
+    dispatcher = Dispatcher(groups)
     with pytest.raises(ArgumentParsingError) as err:
-        Dispatcher(options, groups)
+        dispatcher.pre_parse_args(options)
     assert str(err.value) == "The 'verbose' and 'quiet' options are mutually exclusive."
 
 
 @pytest.mark.parametrize(
     "options",
     [
-        ["somecommand", "--project-dir", "foobar"],
-        ["somecommand", "--project-dir=foobar"],
-        ["somecommand", "-p", "foobar"],
-        ["-p", "foobar", "somecommand"],
-        ["--project-dir", "foobar", "somecommand"],
-        ["--project-dir=foobar", "somecommand"],
+        ["somecommand", "--globalparam", "foobar"],
+        ["somecommand", "--globalparam=foobar"],
+        ["somecommand", "-g", "foobar"],
+        ["-g", "foobar", "somecommand"],
+        ["--globalparam", "foobar", "somecommand"],
+        ["--globalparam=foobar", "somecommand"],
     ],
 )
-def test_dispatcher_generic_setup_projectdir_with_param(options):
-    """Generic parameter handling for 'project dir' with the param, directly or after the cmd."""
+def test_dispatcher_generic_setup_paramglobal_with_param(options):
+    """Generic parameter handling for a param type global arg, directly or after the cmd."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
-    with patch("charmcraft.config.load") as config_mock:
-        Dispatcher(options, groups)
-    config_mock.assert_called_once_with("foobar")
+    extra = GlobalArgument("globalparam", "option", "-g", "--globalparam", "Test global param.")
+    dispatcher = Dispatcher(groups, [extra])
+    global_args = dispatcher.pre_parse_args(options)
+    assert global_args["globalparam"] == "foobar"
 
 
 @pytest.mark.parametrize(
     "options",
     [
-        ["somecommand", "--project-dir"],
-        ["somecommand", "--project-dir="],
-        ["somecommand", "-p"],
-        ["--project-dir=", "somecommand"],
+        ["somecommand", "--globalparam"],
+        ["somecommand", "--globalparam="],
+        ["somecommand", "-g"],
+        ["--globalparam=", "somecommand"],
     ],
 )
-def test_dispatcher_generic_setup_projectdir_without_param_simple(options):
-    """Generic parameter handling for 'project dir' without the requested parameter."""
+def test_dispatcher_generic_setup_paramglobal_without_param_simple(options):
+    """Generic parameter handling for a param type global arg without the requested parameter."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
+    extra = GlobalArgument("globalparam", "option", "-g", "--globalparam", "Test global param.")
+    dispatcher = Dispatcher(groups, [extra])
     with pytest.raises(ArgumentParsingError) as err:
-        Dispatcher(options, groups)
-    assert str(err.value) == "The 'project-dir' option expects one argument."
+        dispatcher.pre_parse_args(options)
+    assert str(err.value) == "The 'globalparam' option expects one argument."
 
 
 @pytest.mark.parametrize(
     "options",
     [
-        ["-p", "somecommand"],
-        ["--project-dir", "somecommand"],
+        ["-g", "somecommand"],
+        ["--globalparam", "somecommand"],
     ],
 )
-def test_dispatcher_generic_setup_projectdir_without_param_confusing(options):
-    """Generic parameter handling for 'project dir' taking confusingly the command as the arg."""
+def test_dispatcher_generic_setup_paramglobal_without_param_confusing(options):
+    """Generic parameter handling for a param type global arg confusing the command as the arg."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
+    extra = GlobalArgument("globalparam", "option", "-g", "--globalparam", "Test global param.")
+    dispatcher = Dispatcher(groups, [extra])
     with patch("charmcraft.helptexts.HelpBuilder.get_full_help") as mock_helper:
         mock_helper.return_value = "help text"
         with pytest.raises(ArgumentParsingError) as err:
-            Dispatcher(options, groups)
+            dispatcher.pre_parse_args(options)
 
-    # generic usage message because "no command" (as 'somecommand' was consumed by --project-dir)
+    # generic usage message because "no command" (as 'somecommand' was consumed by --globalparam)
     assert str(err.value) == "help text"
 
 
@@ -301,7 +271,7 @@ def test_dispatcher_build_commands_ok():
         CommandGroup("whatever title", [cmd0]),
         CommandGroup("other title", [cmd1, cmd2]),
     ]
-    dispatcher = Dispatcher([cmd0.name], groups)
+    dispatcher = Dispatcher(groups)
     assert len(dispatcher.commands) == 3
     for cmd in [cmd0, cmd1, cmd2]:
         expected_class = dispatcher.commands[cmd.name]
@@ -329,7 +299,7 @@ def test_dispatcher_build_commands_repeated():
     ]
     expected_msg = "Multiple commands with same name: (Foo|Baz) and (Baz|Foo)"
     with pytest.raises(RuntimeError, match=expected_msg):
-        Dispatcher([], groups)
+        Dispatcher(groups)
 
 
 def test_dispatcher_commands_are_not_loaded_if_not_needed():
@@ -359,7 +329,9 @@ def test_dispatcher_commands_are_not_loaded_if_not_needed():
             raise AssertionError
 
     groups = [CommandGroup("title", [MyCommand1, MyCommand2])]
-    dispatcher = Dispatcher(["command1"], groups)
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(["command1"])
+    dispatcher.load_command("config")
     dispatcher.run()
     assert isinstance(MyCommand1._executed[0], argparse.Namespace)
 
@@ -369,7 +341,7 @@ def test_dispatcher_global_arguments_default():
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
 
-    dispatcher = Dispatcher(["somecommand"], groups)
+    dispatcher = Dispatcher(groups)
     assert dispatcher.global_arguments == _DEFAULT_GLOBAL_ARGS
 
 
@@ -379,7 +351,7 @@ def test_dispatcher_global_arguments_extra_arguments():
     groups = [CommandGroup("title", [cmd])]
 
     extra_arg = GlobalArgument("other", "flag", "-o", "--other", "Other stuff")
-    dispatcher = Dispatcher(["somecommand"], groups, extra_global_args=[extra_arg])
+    dispatcher = Dispatcher(groups, extra_global_args=[extra_arg])
     assert dispatcher.global_arguments == _DEFAULT_GLOBAL_ARGS + [extra_arg]
 
 
@@ -399,6 +371,58 @@ def test_main_ok():
 
     assert retcode == 0
     mh_mock.ended_ok.assert_called_once_with()
+
+
+def test_main_load_config_ok(create_config):
+    """Command is properly executed, after loading and receiving the config."""
+    tmp_path = create_config(
+        """
+        type: charm
+    """
+    )
+
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = "cmdname"
+
+        def run(self, parsed_args):
+            assert self.config.type == "charm"
+
+    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
+        retcode = main(["charmcraft", "cmdname", f"--project-dir={tmp_path}"])
+    assert retcode == 0
+
+
+def test_main_load_config_not_present_ok():
+    """Command ends indicating the return code to be used."""
+
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = "cmdname"
+
+        def run(self, parsed_args):
+            assert self.config.type is None
+            assert not self.config.project.config_provided
+
+    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
+        retcode = main(["charmcraft", "cmdname", "--project-dir=/whatever"])
+    assert retcode == 0
+
+
+def test_main_load_config_not_present_but_needed(capsys):
+    """Command ends indicating the return code to be used."""
+    cmd = create_command("cmdname", needs_config_=True)
+    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [cmd])]):
+        retcode = main(["charmcraft", "cmdname", "--project-dir=/whatever"])
+    assert retcode == 1
+
+    out, err = capsys.readouterr()
+    assert not out
+    assert err == (
+        "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
+        "the current directory or where specified with --project-dir option); see "
+        "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138\n"
+    )
 
 
 def test_main_no_args():

@@ -22,14 +22,13 @@ import subprocess
 import zipfile
 from typing import List, Optional, Tuple
 
-from craft_cli import emit
+from craft_cli import emit, EmitterMode
 
 from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.deprecations import notify_deprecation
-from charmcraft.logsetup import message_handler
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
@@ -154,6 +153,7 @@ class Builder:
             emit.trace(
                 f"Check result: {result.name} [{result.check_type}] {result.result} "
                 f"({result.text}; see more at {result.url}).",
+            )
 
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
@@ -370,7 +370,7 @@ class Builder:
 
         charms = []
         for bases_config, build_on, bases_index, build_on_index in build_plan:
-            logger.debug("Building for 'bases[%d][%d]'.", bases_index, build_on_index)
+            emit.trace(f"Building for 'bases[{ bases_index:d}][{build_on_index:d}]'.")
             if managed_mode or destructive_mode:
                 if self.shell:
                     # Execute shell in lieu of build.
@@ -381,7 +381,7 @@ class Builder:
                     charm_name = self.build_charm(bases_config)
                 except (CommandError, RuntimeError) as error:
                     if self.debug:
-                        logger.error(str(error))
+                        emit.trace(f"Launching shell as charm building ended in error: {error}")
                         launch_shell()
                     raise
 

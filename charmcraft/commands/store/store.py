@@ -16,20 +16,18 @@
 
 """The Store API handling."""
 
-import logging
 import platform
 import time
 from collections import namedtuple
 from functools import wraps
 
-from craft_store import attenuations
 import craft_store
+from craft_cli import emit
+from craft_store import attenuations
 from dateutil import parser
+
 from charmcraft.cmdbase import CommandError
-
 from charmcraft.commands.store.client import Client
-
-logger = logging.getLogger("charmcraft.commands.store")
 
 # helpers to build responses from this layer
 User = namedtuple("User", "name username userid")
@@ -127,10 +125,10 @@ def _store_client_wrapper(method):
         try:
             return method(self, *args, **kwargs)
         except craft_store.errors.NotLoggedIn:
-            logger.warning("Credentials not found. Trying to log in...")
+            emit.progress("Credentials not found. Trying to log in...")
         except craft_store.errors.StoreServerError as error:
             if error.response.status_code == 401:
-                logger.warning("Existing credentials no longer valid. Trying to log in...")
+                emit.progress("Existing credentials no longer valid. Trying to log in...")
             else:
                 raise CommandError(str(error)) from error
         except craft_store.errors.CraftStoreError as error:
@@ -227,11 +225,11 @@ class Store:
             payload.update(extra_fields)
         response = self._client.request_urlpath_json("POST", endpoint, json=payload)
         status_url = response["status-url"]
-        logger.debug("Upload %s started, got status url %s", upload_id, status_url)
+        emit.progress(f"Upload {upload_id} started, got status url {status_url}")
 
         while True:
             response = self._client.request_urlpath_json("GET", status_url)
-            logger.debug("Status checked: %s", response)
+            emit.progress(f"Status checked: {response}")
 
             # as we're asking for a single upload_id, the response will always have only one item
             (revision,) = response["revisions"]

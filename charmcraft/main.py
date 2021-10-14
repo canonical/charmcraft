@@ -17,18 +17,16 @@
 """Main entry point module for all the tool functionality."""
 
 import argparse
-import logging
 import sys
 from collections import namedtuple
 
-from charmcraft import config, env
+from craft_cli import emit, EmitterMode, CraftError
+
+from charmcraft import config, env, __version__
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.helptexts import help_builder
-from charmcraft.logsetup import message_handler
 from charmcraft.parts import setup_parts
-
-logger = logging.getLogger(__name__)
 
 # the summary of the whole program
 GENERAL_SUMMARY = """
@@ -170,7 +168,7 @@ class Dispatcher:
         parser = CustomArgumentParser(prog=self.loaded_command.name)
         self.loaded_command.fill_parser(parser)
         self.parsed_command_args = parser.parse_args(self.command_args)
-        logger.debug("Command parsed sysargs: %s", self.parsed_command_args)
+        emit.trace(f"Command parsed sysargs: {self.parsed_command_args}")
         return self.loaded_command
 
     def _get_global_options(self):
@@ -291,10 +289,10 @@ class Dispatcher:
         if global_args["quiet"] and global_args["verbose"]:
             raise ArgumentParsingError("The 'verbose' and 'quiet' options are mutually exclusive.")
         if global_args["quiet"]:
-            message_handler.set_mode(message_handler.QUIET)
+            emit.set_mode(EmitterMode.QUIET)
         elif global_args["verbose"]:
-            message_handler.set_mode(message_handler.VERBOSE)
-        logger.debug("Raw pre-parsed sysargs: args=%s filtered=%s", global_args, filtered_sysargs)
+            emit.set_mode(EmitterMode.VERBOSE)
+        emit.trace(f"Raw pre-parsed sysargs: args={ global_args} filtered={filtered_sysargs}")
 
         # handle requested help through -h/--help options
         if global_args["help"]:
@@ -322,7 +320,7 @@ class Dispatcher:
             help_text = self._get_general_help(detailed=False)
             raise ArgumentParsingError(help_text)
 
-        logger.debug("General parsed sysargs: command=%r args=%s", command, cmd_args)
+        emit.trace(f"General parsed sysargs: command={ command!r} args={cmd_args}")
         return global_args
 
     def run(self):

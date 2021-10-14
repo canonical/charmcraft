@@ -16,23 +16,21 @@
 
 """A client to hit the Store."""
 
-import logging
 import os
 import platform
 from json.decoder import JSONDecodeError
 from typing import Any, Dict
 
 import craft_store
-from craft_store.http_client import HTTPClient
 import requests
+from craft_cli import emit
 from craft_store import endpoints
+from craft_store.http_client import HTTPClient
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft import __version__, utils
 from charmcraft.cmdbase import CommandError
 
-
-logger = logging.getLogger("charmcraft.commands.store")
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
@@ -79,7 +77,7 @@ class Client(craft_store.StoreClient):
 
     def push_file(self, filepath) -> str:
         """Push the bytes from filepath to the Storage."""
-        logger.debug("Starting to push %r", str(filepath))
+        emit.progress(f"Starting to push {str(filepath)!r}")
 
         def _progress(monitor):
             # XXX Facundo 2020-07-01: use a real progress bar
@@ -101,7 +99,7 @@ class Client(craft_store.StoreClient):
             raise CommandError("Server error while pushing file: {}".format(result))
 
         upload_id = result["upload_id"]
-        logger.debug("Uploading bytes ended, id %s", upload_id)
+        emit.progress(f"Uploading bytes ended, id {upload_id}")
         return upload_id
 
     def _storage_push(self, monitor) -> requests.Response:

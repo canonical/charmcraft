@@ -161,7 +161,7 @@ class WhoamiCommand(BaseCommand):
             ]
             table = tabulate(data, tablefmt="plain")
             for line in table.splitlines():
-                emit.messageinfo(line)
+                emit.message(line)
 
         except NotLoggedIn:
             emit.message("You are not logged in to Charmhub.")

@@ -418,9 +418,9 @@ class Builder:
 
         cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
 
-        if emit.mode == EmitterMode.VERBOSE:
+        if emit.get_mode() == EmitterMode.VERBOSE:
             cmd.append("--verbose")
-        elif emit.mode == EmitterMode.QUIET:
+        elif emit.get_mode() == EmitterMode.QUIET:
             cmd.append("--quiet")
 
         if self.debug:
@@ -432,7 +432,7 @@ class Builder:
         if self.shell_after:
             cmd.append("--shell-after")
 
-        emit.progress(f"Packing charm {charm_name!r}...")
+        emit.progress(f"Launching environment to pack in base {build_on}")
         with self.provider.launched_environment(
             charm_name=self.metadata.name,
             project_path=self.charmdir,
@@ -440,12 +440,16 @@ class Builder:
             bases_index=bases_index,
             build_on_index=build_on_index,
         ) as instance:
+            emit.progress("Packing the charm")
             try:
-                instance.execute_run(
-                    cmd,
-                    check=True,
-                    cwd=instance_output_dir,
-                )
+                with emit.open_stream(f"Running {cmd}") as stream:
+                    instance.execute_run(
+                        cmd,
+                        check=True,
+                        cwd=instance_output_dir,
+                        stdout=stream,
+                        stderr=stream,
+                    )
             except subprocess.CalledProcessError as error:
                 capture_logs_from_instance(instance)
                 raise CommandError(
@@ -463,6 +467,7 @@ class Builder:
                         "Unexpected error retrieving charm from instance."
                     ) from error
 
+        emit.progress("Charm packed ok")
         return charm_name
 
     def handle_package(self, prime_dir, bases_config: Optional[BasesConfiguration] = None):

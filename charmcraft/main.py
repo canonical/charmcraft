@@ -28,6 +28,18 @@ from charmcraft.commands import build, clean, init, pack, store, version, analyz
 from charmcraft.helptexts import help_builder
 from charmcraft.parts import setup_parts
 
+
+# XXX who should really do this?
+import logging
+_lib_loggers = [
+    logging.getLogger("craft_providers"),
+    logging.getLogger("craft_parts"),
+    logging.getLogger("craft_store"),
+]
+for logger in _lib_loggers:
+    logger.setLevel(logging.DEBUG)
+
+
 # the summary of the whole program
 GENERAL_SUMMARY = """
 Charmcraft helps build, package and publish operators on Charmhub.

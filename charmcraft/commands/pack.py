@@ -172,8 +172,9 @@ class PackCommand(BaseCommand):
         emit.trace(f"Working arguments: {args}")
         builder = build.Builder(args, self.config)
         charms = builder.run(parsed_args.bases_index, destructive_mode=build_args.destructive_mode)
-
-        return [pathlib.Path(c).absolute() for c in charms]
+        emit.message("Charms packed:")
+        for charm in charms:
+            emit.message(f"    {charm}")
 
     def _pack_bundle(self, parsed_args) -> List[pathlib.Path]:
         """Pack a bundle."""

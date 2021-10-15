@@ -247,7 +247,7 @@ def test_storage_push_succesful(client_class):
     )
 
     client = client_class("http://api.test", "http://test.url:0000")
-    with patch("craft_store.HTTPClient.post") as http_post_mock:
+    with patch.object(client, "request") as http_request_mock:
         client._storage_push(test_monitor)
 
     # check request was properly called
@@ -256,4 +256,4 @@ def test_storage_push_succesful(client_class):
         "Content-Type": test_monitor.content_type,
         "Accept": "application/json",
     }
-    assert http_post_mock.mock_calls == [call(url, headers=headers, data=test_monitor)]
+    assert http_request_mock.mock_calls == [call("POST", url, headers=headers, data=test_monitor)]

@@ -18,27 +18,19 @@ import contextlib
 import datetime
 import pathlib
 import tempfile
-from typing import List, Tuple
+from collections import namedtuple
+from typing import List
 from unittest import mock
 
 import pytest
 import responses as responses_module
+from craft_cli import messages
 from craft_providers import Executor
 
 from charmcraft import config as config_module
 from charmcraft import deprecations, parts
 from charmcraft.config import Base
 from charmcraft.providers import Provider
-
-
-@pytest.fixture()
-def caplog_filter(caplog):
-    """Simplify log checking by filtering for desired module and return list of (lvl,msg)."""
-
-    def filter(logger_name) -> List[Tuple[int, str]]:
-        return [(r.levelno, r.message) for r in caplog.records if r.name == logger_name]
-
-    return filter
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -204,3 +196,92 @@ def create_config(tmp_path):
         return tmp_path
 
     return create_config
+
+
+Record = namedtuple("Record", "message")
+
+
+class CaplogRecorder:
+    """Record messages to be tested mimicing the `caplog` API."""
+
+    def __init__(self):
+        self.records = []
+
+    def record(self, text, **k):
+        """Record the given text."""
+        self.records.append(Record(text))
+
+    def set_level(self, *args, **kwargs):
+        """Mimic caplog configuration API, but it's a noop here."""
+
+
+@pytest.fixture
+def capemit(monkeypatch):
+    """Helper to test everything that was shown using craft-cli Emitter, mimicing `caplog`."""
+    # XXX Facundo 2021-10-18: this does a lot of work to mimic "caplog" way of testing content,
+    # just to minimize the changes in this PR; in the next PRs all tests will be removed and
+    # all tests will start using the `emitter` fixture below
+    re = CaplogRecorder()
+
+    messages.emit.init(messages.EmitterMode.QUIET, "test-emitter", "Hello world")
+    monkeypatch.setattr(messages.emit, "message", re.record)
+    monkeypatch.setattr(messages.emit, "progress", re.record)
+    monkeypatch.setattr(messages.emit, "trace", re.record)
+    return re
+
+
+class RecordingEmitter:
+    """Record what is shown using the emitter and provide a nice API for tests."""
+
+    def __init__(self):
+        self.progress = []
+        self.message = []
+        self.trace = []
+        self.emitted = []
+        self.raw = []
+
+    def record(self, level, text):
+        """Record the text for the specific level and in the general storages."""
+        getattr(self, level).append(text)
+        self.emitted.append(text)
+        self.raw.append((level, text))
+
+    def _check(self, expected, storage):
+        """Really verify messages."""
+        for pos, recorded_msg in enumerate(storage):
+            if recorded_msg == expected[0]:
+                break
+        else:
+            raise AssertionError(f"Initial test message not found in {self.raw}")
+
+        recorded = storage[pos:pos + len(expected)]
+        assert recorded == expected
+
+    def assert_recorded(self, expected):
+        """Verify that the given messages were recorded consecutively."""
+        self._check(expected, self.emitted)
+
+    def assert_recorded_raw(self, expected):
+        """Verify that the given messages (with specific level) were recorded consecutively."""
+        self._check(expected, self.raw)
+
+
+@pytest.fixture(autouse=True)
+def init_emitter():
+    """Ensure emit is always clean, and initted (in test mode).
+
+    Note that the `init` is done in the current instance that all modules already
+    acquired.
+    """
+    messages.TESTMODE = True
+    messages.emit.init(messages.EmitterMode.QUIET, "test-emitter", "Hello world")
+
+
+@pytest.fixture
+def emitter(monkeypatch):
+    """Helper to test everything that was shown using craft-cli Emitter."""
+    re = RecordingEmitter()
+    monkeypatch.setattr(messages.emit, "message", lambda text, **k: re.record("message", text))
+    monkeypatch.setattr(messages.emit, "progress", lambda text: re.record("progress", text))
+    monkeypatch.setattr(messages.emit, "trace", lambda text: re.record("trace", text))
+    return re

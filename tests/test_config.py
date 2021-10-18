@@ -478,9 +478,9 @@ def test_charmhub_frozen():
         config.api_url = "broken"
 
 
-def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, caplog):
+def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, capemit):
     """Support underscore in these attributes for a while."""
-    caplog.set_level(logging.WARNING, logger="charmcraft")
+    capemit.set_level(logging.WARNING, logger="charmcraft")
 
     create_config(
         """
@@ -496,14 +496,14 @@ def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, ca
     assert cfg.charmhub.api_url == "https://server2.com"
     assert cfg.charmhub.registry_url == "https://server3.com"
     deprecation_msg = "DEPRECATED: Configuration keywords are now separated using dashes."
-    assert deprecation_msg in [rec.message for rec in caplog.records]
+    assert deprecation_msg in [rec.message for rec in capemit.records]
 
 
 # -- tests for bases
 
 
-def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(caplog, create_config, tmp_path):
-    caplog.set_level(logging.WARNING, logger="charmcraft")
+def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(capemit, create_config, tmp_path):
+    capemit.set_level(logging.WARNING, logger="charmcraft")
     create_config(
         """
         type: charm
@@ -521,13 +521,13 @@ def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(caplog, create_config, tmp_
         )
     ]
     assert "DEPRECATED: Bases configuration is now required." in [
-        rec.message for rec in caplog.records
+        rec.message for rec in capemit.records
     ]
 
 
-def test_no_bases_is_ok_for_bundles(caplog, create_config, tmp_path):
+def test_no_bases_is_ok_for_bundles(capemit, create_config, tmp_path):
     """Do not send a deprecation message if it is a bundle."""
-    caplog.set_level(logging.WARNING, logger="charmcraft")
+    capemit.set_level(logging.WARNING, logger="charmcraft")
     create_config(
         """
         type: bundle
@@ -535,7 +535,7 @@ def test_no_bases_is_ok_for_bundles(caplog, create_config, tmp_path):
     )
 
     load(tmp_path)
-    assert not caplog.records
+    assert not capemit.records
 
 
 def test_bases_forbidden_for_bundles(create_config, check_schema_error):

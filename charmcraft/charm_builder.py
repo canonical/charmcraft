@@ -25,7 +25,7 @@ import sys
 import subprocess
 from typing import List
 
-from craft_cli import emit
+from craft_cli import emit, EmitterMode
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
@@ -273,7 +273,7 @@ def _process_run(cmd: List[str]) -> None:
 
     :raises CommandError: if execution crashes or ends with return code not zero.
     """
-    emit.progress("Running external command %s", cmd)
+    emit.progress(f"Running external command {cmd}")
     try:
         proc = subprocess.Popen(
             cmd,
@@ -336,7 +336,7 @@ def main():
     """Run the command-line interface."""
     options = _parse_arguments()
 
-    emit.message("Starting charm builder")
+    emit.init(EmitterMode.TRACE, "charm-builder", "Starting charm builder")
 
     builder = CharmBuilder(
         charmdir=pathlib.Path(options.charmdir),

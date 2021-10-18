@@ -79,19 +79,19 @@ def test_load_yaml_success(tmp_path):
     assert content == {"foo": 33}
 
 
-def test_load_yaml_no_file(tmp_path, caplog):
-    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+def test_load_yaml_no_file(tmp_path, capemit):
+    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
 
     test_file = tmp_path / "testfile.yaml"
     content = load_yaml(test_file)
     assert content is None
 
     expected = "Couldn't find config file {!r}".format(str(test_file))
-    assert [expected] == [rec.message for rec in caplog.records]
+    assert [expected] == [rec.message for rec in capemit.records]
 
 
-def test_load_yaml_directory(tmp_path, caplog):
-    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+def test_load_yaml_directory(tmp_path, capemit):
+    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
 
     test_file = tmp_path / "testfile.yaml"
     test_file.mkdir()
@@ -99,11 +99,11 @@ def test_load_yaml_directory(tmp_path, caplog):
     assert content is None
 
     expected = "Couldn't find config file {!r}".format(str(test_file))
-    assert [expected] == [rec.message for rec in caplog.records]
+    assert [expected] == [rec.message for rec in capemit.records]
 
 
-def test_load_yaml_corrupted_format(tmp_path, caplog):
-    caplog.set_level(logging.ERROR, logger="charmcraft.commands")
+def test_load_yaml_corrupted_format(tmp_path, capemit):
+    capemit.set_level(logging.ERROR, logger="charmcraft.commands")
 
     test_file = tmp_path / "testfile.yaml"
     test_file.write_text(
@@ -114,14 +114,14 @@ def test_load_yaml_corrupted_format(tmp_path, caplog):
     content = load_yaml(test_file)
     assert content is None
 
-    (logged,) = [rec.message for rec in caplog.records]
+    (logged,) = [rec.message for rec in capemit.records]
     assert "Failed to read/parse config file {!r}".format(str(test_file)) in logged
     assert "ParserError" in logged
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_load_yaml_file_problem(tmp_path, caplog):
-    caplog.set_level(logging.ERROR, logger="charmcraft.commands")
+def test_load_yaml_file_problem(tmp_path, capemit):
+    capemit.set_level(logging.ERROR, logger="charmcraft.commands")
 
     test_file = tmp_path / "testfile.yaml"
     test_file.write_text(
@@ -133,7 +133,7 @@ def test_load_yaml_file_problem(tmp_path, caplog):
     content = load_yaml(test_file)
     assert content is None
 
-    (logged,) = [rec.message for rec in caplog.records]
+    (logged,) = [rec.message for rec in capemit.records]
     assert "Failed to read/parse config file {!r}".format(str(test_file)) in logged
     assert "PermissionError" in logged
 

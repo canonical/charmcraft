@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import logging
 from unittest import mock
 
 import pytest
@@ -29,10 +28,7 @@ def mock_provider(mock_instance, fake_provider):
         yield mock_provider
 
 
-def test_clean(caplog, caplog_filter, config, mock_provider, tmp_path):
-    logger_name = "charmcraft.commands.clean"
-    caplog.set_level(logging.DEBUG, logger=logger_name)
-
+def test_clean(emitter, config, mock_provider, tmp_path):
     metadata_yaml = tmp_path / "metadata.yaml"
     metadata_yaml.write_text("name: foo")
 
@@ -40,10 +36,10 @@ def test_clean(caplog, caplog_filter, config, mock_provider, tmp_path):
     cmd.config = config
     cmd.run([])
 
-    assert caplog_filter(logger_name) == [
-        (logging.DEBUG, "Cleaning project 'foo'."),
-        (logging.INFO, "Cleaned project 'foo'."),
-    ]
+    emitter.assert_recorded_raw([
+        ("progress", "Cleaning project 'foo'."),
+        ("message", "Cleaned project 'foo'."),
+    ])
     assert mock_provider.mock_calls == [
         mock.call.clean_project_environments(charm_name="foo", project_path=tmp_path)
     ]

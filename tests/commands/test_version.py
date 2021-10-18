@@ -20,10 +20,10 @@ from charmcraft import __version__
 from charmcraft.commands.version import VersionCommand
 
 
-def test_version_result(caplog):
+def test_version_result(capemit):
     """Check it produces the right version."""
-    caplog.set_level(logging.INFO, logger="charmcraft.commands.version")
+    capemit.set_level(logging.INFO, logger="charmcraft.commands.version")
     cmd = VersionCommand("config")
     cmd.run([])
     expected = __version__
-    assert [expected] == [rec.message for rec in caplog.records]
+    assert [expected] == [rec.message for rec in capemit.records]

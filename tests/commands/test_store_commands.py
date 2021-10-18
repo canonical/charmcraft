@@ -195,7 +195,7 @@ def test_logout(caplog, store_mock, config):
 def test_logout_but_not_logged_in(caplog, store_mock, config):
     """Simple logout case."""
     caplog.set_level(logging.WARNING, logger="charmcraft.commands")
-    store_mock.logout.side_effect = NotLoggedIn("credentials not found")
+    store_mock.logout.side_effect = NotLoggedIn()
 
     LogoutCommand(config).run(noargs)
 
@@ -228,7 +228,7 @@ def test_whoami(caplog, store_mock, config):
 def test_whoami_but_not_logged_in(caplog, store_mock, config):
     """Simple logout case."""
     caplog.set_level(logging.WARNING, logger="charmcraft.commands")
-    store_mock.whoami.side_effect = NotLoggedIn("credentials not found")
+    store_mock.whoami.side_effect = NotLoggedIn()
 
     WhoamiCommand(config).run(noargs)
 

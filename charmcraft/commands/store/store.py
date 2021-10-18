@@ -407,6 +407,6 @@ class Store:
         """Get the blob that points to the OCI image in the Canonical's OCI Registry."""
         payload = {"image-digest": digest}
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/oci-image/blob"
-        content = self._client.request_urlpath_text("GET", endpoint, json=payload)
+        content = self._client.request_urlpath_text("POST", endpoint, json=payload)
         # the response here is returned as is, because it's opaque to charmcraft
         return content

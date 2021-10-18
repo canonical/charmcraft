@@ -39,13 +39,6 @@ from tests.factory import create_command
 import pytest
 
 
-@pytest.fixture(autouse=True)
-def mock_ensure_charmcraft_environment_is_supported(monkeypatch):
-    """Bypass entry point check for running as snap."""
-    with patch("charmcraft.env.ensure_charmcraft_environment_is_supported") as mock_supported:
-        yield mock_supported
-
-
 # --- Tests for the Dispatcher
 
 
@@ -454,17 +447,6 @@ def test_main_controlled_return_code():
 
     assert retcode == 9
     mh_mock.ended_ok.assert_called_once_with()
-
-
-def test_main_environment_is_supported_error(mock_ensure_charmcraft_environment_is_supported):
-    mock_ensure_charmcraft_environment_is_supported.side_effect = CommandError("not supported!")
-    with patch("charmcraft.main.message_handler") as mh_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.return_value = None
-            retcode = main(["charmcraft", "version"])
-
-    assert retcode == 1
-    assert mh_mock.ended_cmderror.call_count == 1
 
 
 def test_main_crash():

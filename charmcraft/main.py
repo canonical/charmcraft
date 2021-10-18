@@ -21,7 +21,7 @@ import logging
 import sys
 from collections import namedtuple
 
-from charmcraft import config, env
+from charmcraft import config
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.helptexts import help_builder
@@ -350,7 +350,6 @@ def main(argv=None):
 
     # process
     try:
-        env.ensure_charmcraft_environment_is_supported()
         setup_parts()
 
         # load the dispatcher and put everything in motion

@@ -15,12 +15,10 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import pathlib
-import sys
 
 import pytest
 
 from charmcraft import env
-from charmcraft.cmdbase import CommandError
 
 
 def test_get_managed_environment_home_path():
@@ -122,61 +120,3 @@ def test_is_charmcraft_running_in_managed_mode(monkeypatch, managed, result):
         monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", managed)
 
     assert env.is_charmcraft_running_in_managed_mode() == result
-
-
-@pytest.mark.parametrize(
-    "as_snap",
-    [False, True],
-)
-def test_is_charmcraft_running_in_supported_environment_linux(monkeypatch, as_snap):
-    monkeypatch.setattr(env, "is_charmcraft_running_from_snap", lambda: as_snap)
-    monkeypatch.setattr(sys, "platform", "linux")
-
-    assert env.is_charmcraft_running_in_supported_environment() == as_snap
-
-
-def test_is_charmcraft_running_in_supported_environment_osx(monkeypatch):
-    monkeypatch.setattr(sys, "platform", "darwin")
-
-    assert env.is_charmcraft_running_in_supported_environment() is True
-
-
-def test_is_charmcraft_running_in_supported_environment_windows(monkeypatch):
-    monkeypatch.setattr(sys, "platform", "win32")
-
-    assert env.is_charmcraft_running_in_supported_environment() is True
-
-
-@pytest.mark.parametrize(
-    "developer_mode,supported_environment",
-    [
-        (False, True),
-        (True, False),
-        (True, True),
-    ],
-)
-def test_ensure_environment_is_supported(monkeypatch, developer_mode, supported_environment):
-    monkeypatch.setattr(env, "is_charmcraft_running_in_developer_mode", lambda: developer_mode)
-    monkeypatch.setattr(
-        env,
-        "is_charmcraft_running_in_supported_environment",
-        lambda: supported_environment,
-    )
-    monkeypatch.setattr(sys, "platform", "linux")
-
-    env.ensure_charmcraft_environment_is_supported()
-
-
-def test_ensure_environment_is_supported_error(monkeypatch):
-    monkeypatch.setattr(env, "is_charmcraft_running_in_developer_mode", lambda: False)
-    monkeypatch.setattr(env, "is_charmcraft_running_in_supported_environment", lambda: False)
-    monkeypatch.setattr(sys, "platform", "linux")
-
-    with pytest.raises(
-        CommandError,
-        match=(
-            "For a supported user experience, please use the Charmcraft snap. "
-            "For more information, please see https://juju.is/docs/sdk/setting-up-charmcraft"
-        ),
-    ):
-        env.ensure_charmcraft_environment_is_supported()

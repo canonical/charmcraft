@@ -23,7 +23,6 @@ from json.decoder import JSONDecodeError
 from typing import Any, Dict
 
 import craft_store
-from craft_store.http_client import HTTPClient
 import requests
 from craft_store import endpoints
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
@@ -106,7 +105,7 @@ class Client(craft_store.StoreClient):
 
     def _storage_push(self, monitor) -> requests.Response:
         """Push bytes to the storage."""
-        return HTTPClient.post(
+        return super().post(
             self.storage_base_url + "/unscanned-upload/",
             headers={"Content-Type": monitor.content_type, "Accept": "application/json"},
             data=monitor,

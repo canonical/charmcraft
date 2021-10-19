@@ -70,8 +70,8 @@ class _FakeAPI:
             raise exception
 
 
-def test_relogin_on_401(caplog):
-    caplog.set_level(logging.WARNING, logger="charmcraft.commands")
+def test_relogin_on_401(capemit):
+    capemit.set_level(logging.WARNING, logger="charmcraft.commands")
 
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
@@ -80,7 +80,7 @@ def test_relogin_on_401(caplog):
     assert api.login_called is True
     # check logs
     expected = ["Existing credentials no longer valid. Trying to log in..."]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
 
 
 def test_non_401_raises():
@@ -108,8 +108,8 @@ def test_craft_store_error_raises_command_error():
     assert api.login_called is False
 
 
-def test_not_logged_in_warns(caplog):
-    caplog.set_level(logging.WARNING, logger="charmcraft.commands")
+def test_not_logged_in_warns(capemit):
+    capemit.set_level(logging.WARNING, logger="charmcraft.commands")
 
     api = _FakeAPI([NotLoggedIn(), None])
 
@@ -118,7 +118,7 @@ def test_not_logged_in_warns(caplog):
     assert api.login_called is True
     # check logs
     expected = ["Credentials not found. Trying to log in..."]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
 
 
 # -- tests for auth
@@ -250,9 +250,9 @@ def test_list_registered_names_multiple(client_mock, config):
 # -- tests for the upload functionality (both for charm/bundles and resources)
 
 
-def test_upload_straightforward(client_mock, caplog, config):
+def test_upload_straightforward(client_mock, capemit, config):
     """The full and successful upload case."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
     store = Store(config.charmhub)
 
     # the first response, for when pushing bytes
@@ -298,12 +298,12 @@ def test_upload_straightforward(client_mock, caplog, config):
         "Upload test-upload-id started, got status url https://store.c.c/status",
         "Status checked: " + str(status_response),
     ]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
 
 
-def test_upload_polls_status(client_mock, caplog, config):
+def test_upload_polls_status(client_mock, capemit, config):
     """Upload polls status url until the end is indicated."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
     store = Store(config.charmhub)
 
     # first and second response, for pushing bytes and let the store know about it
@@ -355,7 +355,7 @@ def test_upload_polls_status(client_mock, caplog, config):
         "Status checked: " + str(status_response_2),
         "Status checked: " + str(status_response_3),
     ]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
 
 
 def test_upload_error(client_mock, config):
@@ -434,9 +434,9 @@ def test_upload_resources_endpoint(config):
     assert result == test_results
 
 
-def test_upload_including_extra_parameters(client_mock, caplog, config):
+def test_upload_including_extra_parameters(client_mock, capemit, config):
     """Verify that the upload includes extra parameters if given."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft.commands")
+    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
     store = Store(config.charmhub)
 
     # the first response, for when pushing bytes
@@ -959,7 +959,7 @@ def test_create_library_id(client_mock, config):
         call.request_urlpath_json(
             "POST",
             "/v1/charm/libraries/test-charm-name",
-            {"library-name": "test-lib-name"},
+            json={"library-name": "test-lib-name"},
         ),
     ]
     assert result == "test-lib-id"
@@ -1434,7 +1434,7 @@ def test_get_oci_image_blob(client_mock, config):
 
     assert client_mock.mock_calls == [
         call.request_urlpath_text(
-            "GET",
+            "POST",
             "/v1/charm/charm-name/resources/resource-name/oci-image/blob",
             json={"image-digest": "a-very-specific-digest"},
         )

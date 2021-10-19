@@ -17,11 +17,13 @@
 import contextlib
 import datetime
 import pathlib
+import shutil
 import tempfile
 from collections import namedtuple
 from typing import List
 from unittest import mock
 
+import appdirs
 import pytest
 import responses as responses_module
 from craft_cli import messages
@@ -252,9 +254,9 @@ class RecordingEmitter:
             if recorded_msg == expected[0]:
                 break
         else:
-            raise AssertionError(f"Initial test message not found in {self.raw}")
+            raise AssertionError(f"Initial test message not found in {storage}")
 
-        recorded = storage[pos:pos + len(expected)]
+        recorded = storage[pos : pos + len(expected)]
         assert recorded == expected
 
     def assert_recorded(self, expected):
@@ -267,14 +269,20 @@ class RecordingEmitter:
 
 
 @pytest.fixture(autouse=True)
-def init_emitter():
+def init_emitter(monkeypatch):
     """Ensure emit is always clean, and initted (in test mode).
 
     Note that the `init` is done in the current instance that all modules already
     acquired.
     """
+    tmpdir = tempfile.mkdtemp(prefix="emitter-logs")
+    monkeypatch.setattr(appdirs, "user_log_dir", lambda: tmpdir)
     messages.TESTMODE = True
     messages.emit.init(messages.EmitterMode.QUIET, "test-emitter", "Hello world")
+    yield
+    if messages.emit._initiated:
+        messages.emit.ended_ok()
+    shutil.rmtree(tmpdir)
 
 
 @pytest.fixture

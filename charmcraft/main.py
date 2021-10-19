@@ -31,6 +31,7 @@ from charmcraft.parts import setup_parts
 
 # XXX who should really do this?
 import logging
+
 _lib_loggers = [
     logging.getLogger("craft_providers"),
     logging.getLogger("craft_parts"),

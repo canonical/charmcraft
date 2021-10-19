@@ -314,14 +314,14 @@ class Builder:
                     emit.trace(
                         f"Building for 'bases[{bases_index:d}]' "
                         f"as host matches 'build-on[{build_on_index:d}]'.",
-                     )
+                    )
                     build_plan.append((bases_config, build_on, bases_index, build_on_index))
                     break
                 else:
                     emit.progress(
                         f"Skipping 'bases[{bases_index:d}].build-on[{build_on_index:d}]': "
                         f"{reason}.",
-                     )
+                    )
             else:
                 emit.message(
                     "No suitable 'build-on' environment found "

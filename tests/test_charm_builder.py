@@ -852,9 +852,11 @@ def test_processrun_base(emitter):
     """Basic execution."""
     cmd = ["echo", "HELO"]
     _process_run(cmd)
-    emitter.assert_recorded_raw([
-        ("progress", "Running external command ['echo', 'HELO']"),
-    ])
+    emitter.assert_recorded_raw(
+        [
+            ("progress", "Running external command ['echo', 'HELO']"),
+        ]
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -862,10 +864,12 @@ def test_processrun_stdout_logged(emitter):
     """The standard output is logged in debug."""
     cmd = ["echo", "HELO"]
     _process_run(cmd)
-    emitter.assert_recorded_raw([
-        ("progress", "Running external command ['echo', 'HELO']"),
-        ("trace", "   :: HELO"),
-    ])
+    emitter.assert_recorded_raw(
+        [
+            ("progress", "Running external command ['echo', 'HELO']"),
+            ("trace", "   :: HELO"),
+        ]
+    )
 
 
 def test_processrun_stderr_logged(capemit):

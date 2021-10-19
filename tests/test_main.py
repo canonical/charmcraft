@@ -373,7 +373,8 @@ def test_main_ok():
 
     # check how Emitter was initted
     emit_mock.init.assert_called_once_with(
-        EmitterMode.NORMAL, "charmcraft", f"Starting charmcraft version {__version__}")
+        EmitterMode.NORMAL, "charmcraft", f"Starting charmcraft version {__version__}"
+    )
 
 
 def test_main_load_config_ok(create_config):

@@ -149,8 +149,6 @@ class WhoamiCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        result = store.whoami()
-
         try:
             result = store.whoami()
 
@@ -992,6 +990,7 @@ class CreateLibCommand(BaseCommand):
         if lib_path.exists():
             raise CommandError("This library already exists: {!r}.".format(str(lib_path)))
 
+        emit.progress(f"Creating library {lib_name}.")
         store = Store(self.config.charmhub)
         lib_id = store.create_library_id(charm_name, lib_name)
 
@@ -1091,7 +1090,7 @@ class PublishLibCommand(BaseCommand):
                     emit.message(
                         f"Library {lib_data.full_name} version {tip.api:d}.{tip.patch:d} "
                         "is the same than in Charmhub but content is different",
-                     )
+                    )
             elif tip.patch + 1 == lib_data.patch:
                 # local is correctly incremented
                 if tip.content_hash == lib_data.content_hash:
@@ -1121,7 +1120,7 @@ class PublishLibCommand(BaseCommand):
             emit.message(
                 f"Library {lib_data.full_name} sent to the store with "
                 f"version {lib_data.api:d}.{lib_data.patch:d}",
-             )
+            )
 
 
 class FetchLibCommand(BaseCommand):

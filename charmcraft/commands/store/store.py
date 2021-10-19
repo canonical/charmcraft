@@ -320,7 +320,8 @@ class Store:
     def create_library_id(self, charm_name, lib_name):
         """Create a new library id."""
         endpoint = f"/v1/charm/libraries/{charm_name}"
-        response = self._client.request_urlpath_json("POST", endpoint, {"library-name": lib_name})
+        payload = {"library-name": lib_name}
+        response = self._client.request_urlpath_json("POST", endpoint, json=payload)
         lib_id = response["library-id"]
         return lib_id
 

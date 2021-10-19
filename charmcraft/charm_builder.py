@@ -203,7 +203,9 @@ class CharmBuilder:
             if node.resolve() == linked_entrypoint:
                 current_hooks_to_replace.append(node)
                 node.unlink()
-                emit.trace(f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint")
+                emit.trace(
+                    f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint"
+                )
 
         # include the mandatory ones and those we need to replace
         hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}

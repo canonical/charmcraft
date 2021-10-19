@@ -111,7 +111,7 @@ def test_craft_store_error_raises_command_error():
 def test_not_logged_in_warns(caplog):
     caplog.set_level(logging.WARNING, logger="charmcraft.commands")
 
-    api = _FakeAPI([NotLoggedIn("credentials not in keyring"), None])
+    api = _FakeAPI([NotLoggedIn(), None])
 
     api.method()
 

@@ -1434,7 +1434,7 @@ def test_get_oci_image_blob(client_mock, config):
 
     assert client_mock.mock_calls == [
         call.request_urlpath_text(
-            "GET",
+            "POST",
             "/v1/charm/charm-name/resources/resource-name/oci-image/blob",
             json={"image-digest": "a-very-specific-digest"},
         )

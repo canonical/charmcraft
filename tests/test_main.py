@@ -38,13 +38,6 @@ from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
 
 
-@pytest.fixture(autouse=True)
-def mock_ensure_charmcraft_environment_is_supported(monkeypatch):
-    """Bypass entry point check for running as snap."""
-    with patch("charmcraft.env.ensure_charmcraft_environment_is_supported") as mock_supported:
-        yield mock_supported
-
-
 # --- Tests for the Dispatcher
 
 

@@ -460,18 +460,6 @@ def test_main_controlled_return_code():
     emit_mock.ended_ok.assert_called_once_with()
 
 
-def test_main_environment_is_supported_error(mock_ensure_charmcraft_environment_is_supported):
-    simulated_exception = CommandError("not supported!")
-    mock_ensure_charmcraft_environment_is_supported.side_effect = simulated_exception
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.return_value = None
-            retcode = main(["charmcraft", "version"])
-
-    assert retcode == 1
-    emit_mock.error.assert_called_once_with(simulated_exception)
-
-
 def test_main_crash():
     """Work crashed: message handler notified properly, return code in 1."""
     simulated_exception = ValueError("boom")

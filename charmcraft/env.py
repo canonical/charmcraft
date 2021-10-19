@@ -20,10 +20,7 @@
 import distutils.util
 import os
 import pathlib
-import sys
 from typing import Optional
-
-from charmcraft.cmdbase import CommandError
 
 
 def get_managed_environment_home_path():
@@ -64,28 +61,3 @@ def is_charmcraft_running_in_managed_mode():
     """Check if charmcraft is running in a managed environment."""
     managed_flag = os.getenv("CHARMCRAFT_MANAGED_MODE", "n")
     return distutils.util.strtobool(managed_flag) == 1
-
-
-def is_charmcraft_running_in_supported_environment() -> bool:
-    """Check if Charmcraft is running in a supported environment."""
-    if sys.platform == "linux":
-        return is_charmcraft_running_from_snap()
-    elif sys.platform in ("darwin", "win32"):
-        return True
-
-    return False
-
-
-def ensure_charmcraft_environment_is_supported():
-    """Assert that environment is supported.
-
-    :raises CommandError: if unsupported environment.
-    """
-    if (
-        not is_charmcraft_running_in_supported_environment()
-        and not is_charmcraft_running_in_developer_mode()
-    ):
-        raise CommandError(
-            "For a supported user experience, please use the Charmcraft snap. "
-            "For more information, please see https://juju.is/docs/sdk/setting-up-charmcraft"
-        )

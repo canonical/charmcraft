@@ -20,9 +20,7 @@ import argparse
 import sys
 from collections import namedtuple
 
-from craft_cli import emit, EmitterMode, CraftError
-
-from charmcraft import config, env, __version__
+from charmcraft import config
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.helptexts import help_builder

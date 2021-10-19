@@ -432,7 +432,7 @@ class Builder:
         if self.shell_after:
             cmd.append("--shell-after")
 
-        emit.progress(f"Launching environment to pack in base {build_on}")
+        emit.progress(f"Launching environment to pack for base {build_on}")
         with self.provider.launched_environment(
             charm_name=self.metadata.name,
             project_path=self.charmdir,

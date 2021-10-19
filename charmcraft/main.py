@@ -17,6 +17,7 @@
 """Main entry point module for all the tool functionality."""
 
 import argparse
+import logging
 import sys
 from collections import namedtuple
 
@@ -28,16 +29,9 @@ from charmcraft.commands import build, clean, init, pack, store, version, analyz
 from charmcraft.helptexts import help_builder
 from charmcraft.parts import setup_parts
 
-
-# XXX who should really do this?
-import logging
-
-_lib_loggers = [
-    logging.getLogger("craft_providers"),
-    logging.getLogger("craft_parts"),
-    logging.getLogger("craft_store"),
-]
-for logger in _lib_loggers:
+# set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
+for lib_name in ("craft_providers", "craft_parts", "craft_store"):
+    logger = logging.getLogger(lib_name)
     logger.setLevel(logging.DEBUG)
 
 

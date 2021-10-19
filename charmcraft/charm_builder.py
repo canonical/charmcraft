@@ -210,7 +210,7 @@ class CharmBuilder:
         # include the mandatory ones and those we need to replace
         hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
         for hookname in hooknames:
-            emit.trace("Creating the {hookname!r} hook script pointing to dispatch")
+            emit.trace(f"Creating the {hookname!r} hook script pointing to dispatch")
             dest_hook = dest_hookpath / hookname
             if not dest_hook.exists():
                 relative_link = relativise(dest_hook, dispatch_path)

@@ -959,7 +959,7 @@ def test_create_library_id(client_mock, config):
         call.request_urlpath_json(
             "POST",
             "/v1/charm/libraries/test-charm-name",
-            {"library-name": "test-lib-name"},
+            json={"library-name": "test-lib-name"},
         ),
     ]
     assert result == "test-lib-id"

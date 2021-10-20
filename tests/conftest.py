@@ -275,13 +275,16 @@ def init_emitter(monkeypatch):
     Note that the `init` is done in the current instance that all modules already
     acquired.
     """
+    # patch appdirs so user directories are not involved here; note that we're not using
+    # pytest's standard tmp_path as Emitter would write logs there, and in effect we would
+    # be polluting that temporary directory (potentially messing with tests, that may need
+    # that empty), so we use another one.
     tmpdir = tempfile.mkdtemp(prefix="emitter-logs")
-    monkeypatch.setattr(appdirs, "user_log_dir", lambda: tmpdir)
+    monkeypatch.setattr(appdirs, "user_log_dir", lambda app: tmpdir)
+
     messages.TESTMODE = True
     messages.emit.init(messages.EmitterMode.QUIET, "test-emitter", "Hello world")
     yield
-    if messages.emit._initiated:
-        messages.emit.ended_ok()
     shutil.rmtree(tmpdir)
 
 

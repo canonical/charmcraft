@@ -23,12 +23,12 @@ popd
 
 pip install -e .
 pip freeze --exclude-editable > requirements.txt
-echo "git+git://github.com/canonical/craft-cli.git@838e759d47ebc6f7537224f429569d650d5609e7" >> requirements.txt
+echo "git+git://github.com/canonical/craft-cli.git@6149a889b16281f9c6453405e140fe2cb46edab0" >> requirements.txt
 requirements_fixups "requirements.txt"
 
 pip install -e .[dev]
 pip freeze --exclude-editable > requirements-dev.txt
-echo "git+git://github.com/canonical/craft-cli.git@838e759d47ebc6f7537224f429569d650d5609e7" >> requirements-dev.txt
+echo "git+git://github.com/canonical/craft-cli.git@6149a889b16281f9c6453405e140fe2cb46edab0" >> requirements-dev.txt
 requirements_fixups "requirements-dev.txt"
 
 rm -rf "$venv_dir"

@@ -28,6 +28,7 @@ from typing import List
 from craft_cli import emit, EmitterMode
 
 from charmcraft.cmdbase import CommandError
+from charmcraft.env import get_managed_environment_log_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
 
@@ -338,7 +339,8 @@ def main():
     """Run the command-line interface."""
     options = _parse_arguments()
 
-    emit.init(EmitterMode.TRACE, "charm-builder", "Starting charm builder")
+    logpath = get_managed_environment_log_path()
+    emit.init(EmitterMode.TRACE, "charm-builder", "Starting charm builder", log_filepath=logpath)
 
     builder = CharmBuilder(
         charmdir=pathlib.Path(options.charmdir),

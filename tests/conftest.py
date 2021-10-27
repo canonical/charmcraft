@@ -16,14 +16,13 @@
 
 import contextlib
 import datetime
+import os
 import pathlib
-import shutil
 import tempfile
 from collections import namedtuple
 from typing import List
 from unittest import mock
 
-import appdirs
 import pytest
 import responses as responses_module
 from craft_cli import messages
@@ -269,23 +268,28 @@ class RecordingEmitter:
 
 
 @pytest.fixture(autouse=True)
-def init_emitter(monkeypatch):
+def init_emitter():
     """Ensure emit is always clean, and initted (in test mode).
 
     Note that the `init` is done in the current instance that all modules already
     acquired.
     """
-    # patch appdirs so user directories are not involved here; note that we're not using
-    # pytest's standard tmp_path as Emitter would write logs there, and in effect we would
-    # be polluting that temporary directory (potentially messing with tests, that may need
-    # that empty), so we use another one.
-    tmpdir = tempfile.mkdtemp(prefix="emitter-logs")
-    monkeypatch.setattr(appdirs, "user_log_dir", lambda app: tmpdir)
+    # init with a custom log filepath so user directories are not involved here; note that
+    # we're not using pytest's standard tmp_path as Emitter would write logs there, and in
+    # effect we would be polluting that temporary directory (potentially messing with
+    # tests, that may need that empty), so we use another one.
+    temp_fd, temp_logfile = tempfile.mkstemp(prefix="emitter-logs")
+    os.close(temp_fd)
+    temp_logfile = pathlib.Path(temp_logfile)
 
     messages.TESTMODE = True
-    messages.emit.init(messages.EmitterMode.QUIET, "test-emitter", "Hello world")
+    messages.emit.init(
+        messages.EmitterMode.QUIET, "test-emitter", "Hello world", log_filepath=temp_logfile
+    )
     yield
-    shutil.rmtree(tmpdir)
+    # end machinery (just in case it was not ended before; note it's ok to "double end")
+    messages.emit.ended_ok()
+    temp_logfile.unlink()
 
 
 @pytest.fixture

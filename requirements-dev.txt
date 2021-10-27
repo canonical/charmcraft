@@ -37,7 +37,7 @@ pydocstyle==6.1.1
 pyflakes==2.4.0
 pymacaroons==0.13.0
 PyNaCl==1.4.0
-pyparsing==3.0.1
+pyparsing==3.0.2
 pyRFC3339==1.1
 pyrsistent==0.18.0
 pytest==6.2.5
@@ -61,4 +61,4 @@ tomli==1.2.2
 typing-extensions==3.10.0.2
 urllib3==1.26.7
 zipp==3.6.0
-git+git://github.com/canonical/craft-cli.git@838e759d47ebc6f7537224f429569d650d5609e7
+git+git://github.com/canonical/craft-cli.git@6149a889b16281f9c6453405e140fe2cb46edab0

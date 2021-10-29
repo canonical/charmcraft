@@ -224,7 +224,6 @@ def capemit(monkeypatch):
     # all tests will start using the `emitter` fixture below
     re = CaplogRecorder()
 
-    messages.emit.init(messages.EmitterMode.QUIET, "test-emitter", "Hello world")
     monkeypatch.setattr(messages.emit, "message", re.record)
     monkeypatch.setattr(messages.emit, "progress", re.record)
     monkeypatch.setattr(messages.emit, "trace", re.record)

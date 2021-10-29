@@ -809,8 +809,9 @@ def test_builder_arguments_defaults(tmp_path):
 
     with patch.object(sys, "argv", ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
-            with pytest.raises(SystemExit) as raised:
-                charm_builder.main()
+            with patch("charmcraft.charm_builder.emit.init"):
+                with pytest.raises(SystemExit) as raised:
+                    charm_builder.main()
         assert raised.value.code == 42
 
 
@@ -824,23 +825,13 @@ def test_builder_arguments_full(tmp_path):
         assert self.requirement_paths == ["reqs1.txt", "reqs2.txt"]
         sys.exit(42)
 
-    with patch.object(
-        sys,
-        "argv",
-        [
-            "cmd",
-            "--charmdir",
-            "charmdir",
-            "--builddir",
-            "builddir",
-            "-r" "reqs1.txt",
-            "--requirement",
-            "reqs2.txt",
-        ],
-    ):
+    fake_argv = ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]
+    fake_argv += ["-r" "reqs1.txt", "--requirement", "reqs2.txt"]
+    with patch.object(sys, "argv", fake_argv):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
-            with pytest.raises(SystemExit) as raised:
-                charm_builder.main()
+            with patch("charmcraft.charm_builder.emit.init"):
+                with pytest.raises(SystemExit) as raised:
+                    charm_builder.main()
         assert raised.value.code == 42
 
 

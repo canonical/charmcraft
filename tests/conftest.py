@@ -18,10 +18,10 @@ import contextlib
 import datetime
 import os
 import pathlib
+import re
 import tempfile
-from collections import namedtuple
 from typing import List
-from unittest import mock
+from unittest.mock import Mock, call
 
 import pytest
 import responses as responses_module
@@ -144,7 +144,7 @@ def responses():
 @pytest.fixture
 def mock_instance():
     """Provide a mock instance (Executor)."""
-    yield mock.Mock(spec=Executor)
+    yield Mock(spec=Executor)
 
 
 @pytest.fixture(autouse=True)
@@ -199,71 +199,73 @@ def create_config(tmp_path):
     return create_config
 
 
-Record = namedtuple("Record", "message")
+class RegexComparingText(str):
+    """A string that compares for equality using regex.match."""
 
+    def __eq__(self, other):
+        return bool(re.match(self, other, re.DOTALL))
 
-class CaplogRecorder:
-    """Record messages to be tested mimicing the `caplog` API."""
-
-    def __init__(self):
-        self.records = []
-
-    def record(self, text, **k):
-        """Record the given text."""
-        self.records.append(Record(text))
-
-    def set_level(self, *args, **kwargs):
-        """Mimic caplog configuration API, but it's a noop here."""
-
-
-@pytest.fixture
-def capemit(monkeypatch):
-    """Helper to test everything that was shown using craft-cli Emitter, mimicing `caplog`."""
-    # XXX Facundo 2021-10-18: this does a lot of work to mimic "caplog" way of testing content,
-    # just to minimize the changes in this PR; in the next PRs all tests will be removed and
-    # all tests will start using the `emitter` fixture below
-    re = CaplogRecorder()
-
-    monkeypatch.setattr(messages.emit, "message", re.record)
-    monkeypatch.setattr(messages.emit, "progress", re.record)
-    monkeypatch.setattr(messages.emit, "trace", re.record)
-    return re
+    def __hash__(self):
+        return str.__hash__(self)
 
 
 class RecordingEmitter:
     """Record what is shown using the emitter and provide a nice API for tests."""
 
     def __init__(self):
-        self.progress = []
-        self.message = []
-        self.trace = []
-        self.emitted = []
-        self.raw = []
+        self.interactions = []
 
-    def record(self, level, text):
-        """Record the text for the specific level and in the general storages."""
-        getattr(self, level).append(text)
-        self.emitted.append(text)
-        self.raw.append((level, text))
+    def record(self, method_name, args, kwargs):
+        """Record the method call and its specific parameters."""
+        self.interactions.append(call(method_name, *args, **kwargs))
 
-    def _check(self, expected, storage):
+    def _check(self, expected_text, method_name, regex, **kwargs):
         """Really verify messages."""
-        for pos, recorded_msg in enumerate(storage):
-            if recorded_msg == expected[0]:
+        if regex:
+            expected_text = RegexComparingText(expected_text)
+        expected_call = call(method_name, expected_text, **kwargs)
+        for stored_call in self.interactions:
+            if stored_call == expected_call:
+                return stored_call.args[1]
+        raise AssertionError(f"Expected call {expected_call} not found in {self.interactions}")
+
+    def assert_message(self, expected_text, intermediate=None, regex=False):
+        """Check the 'message' method was properly used."""
+        if intermediate is None:
+            return self._check(expected_text, "message", regex)
+        else:
+            return self._check(expected_text, "message", regex, intermediate=intermediate)
+
+    def assert_progress(self, expected_text, regex=False):
+        """Check the 'progress' method was properly used."""
+        return self._check(expected_text, "progress", regex)
+
+    def assert_trace(self, expected_text, regex=False):
+        """Check the 'trace' method was properly used."""
+        return self._check(expected_text, "trace", regex)
+
+    def assert_messages(self, texts):
+        """Check the list of messages (this is helper for a common case of commands results)."""
+        self.assert_interactions([call("message", text) for text in texts])
+
+    def assert_interactions(self, expected_call_list):
+        """Check that the expected call list happen at some point between all stored calls.
+
+        If None is passed, asserts that no message was emitted.
+        """
+        if expected_call_list is None:
+            if self.interactions:
+                raise AssertionError(f"Expected no call but really got {self.interactions}")
+            return
+
+        for pos, stored_call in enumerate(self.interactions):
+            if stored_call == expected_call_list[0]:
                 break
         else:
-            raise AssertionError(f"Initial test message not found in {storage}")
+            raise AssertionError(f"Initial expected call not found in {self.interactions}")
 
-        recorded = storage[pos : pos + len(expected)]
-        assert recorded == expected
-
-    def assert_recorded(self, expected):
-        """Verify that the given messages were recorded consecutively."""
-        self._check(expected, self.emitted)
-
-    def assert_recorded_raw(self, expected):
-        """Verify that the given messages (with specific level) were recorded consecutively."""
-        self._check(expected, self.raw)
+        stored = self.interactions[pos : pos + len(expected_call_list)]
+        assert stored == expected_call_list
 
 
 @pytest.fixture(autouse=True)
@@ -295,7 +297,10 @@ def init_emitter():
 def emitter(monkeypatch):
     """Helper to test everything that was shown using craft-cli Emitter."""
     re = RecordingEmitter()
-    monkeypatch.setattr(messages.emit, "message", lambda text, **k: re.record("message", text))
-    monkeypatch.setattr(messages.emit, "progress", lambda text: re.record("progress", text))
-    monkeypatch.setattr(messages.emit, "trace", lambda text: re.record("trace", text))
+    for method_name in ("message", "progress", "trace"):
+        monkeypatch.setattr(
+            messages.emit,
+            method_name,
+            lambda *a, method_name=method_name, **k: re.record(method_name, a, k),
+        )
     return re

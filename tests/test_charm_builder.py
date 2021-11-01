@@ -16,7 +16,6 @@
 
 import errno
 import filecmp
-import logging
 import os
 import pathlib
 import socket
@@ -88,9 +87,8 @@ def test_build_generics_simple_dir(tmp_path):
     assert built_dir.stat().st_mode & 0xFFF == 0o700
 
 
-def test_build_generics_ignored_file(tmp_path, capemit):
+def test_build_generics_ignored_file(tmp_path, emitter):
     """Don't include ignored filed."""
-    capemit.set_level(logging.DEBUG)
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
     metadata = tmp_path / CHARM_METADATA
@@ -118,12 +116,11 @@ def test_build_generics_ignored_file(tmp_path, capemit):
     assert not (build_dir / "file2.txt").exists()
 
     expected = "Ignoring file because of rules: 'file2.txt'"
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
-def test_build_generics_ignored_dir(tmp_path, capemit):
+def test_build_generics_ignored_dir(tmp_path, emitter):
     """Don't include ignored dir."""
-    capemit.set_level(logging.DEBUG)
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
     metadata = tmp_path / CHARM_METADATA
@@ -151,12 +148,10 @@ def test_build_generics_ignored_dir(tmp_path, capemit):
     assert not (build_dir / "dir2").exists()
 
     expected = "Ignoring directory because of rules: 'dir2'"
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
-def _test_build_generics_tree(tmp_path, capemit, *, expect_hardlinks):
-    capemit.set_level(logging.DEBUG)
-
+def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -240,25 +235,25 @@ def _test_build_generics_tree(tmp_path, capemit, *, expect_hardlinks):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_tree(tmp_path, capemit):
+def test_build_generics_tree(tmp_path):
     """Manages ok a deep tree, including internal ignores."""
-    _test_build_generics_tree(tmp_path, capemit, expect_hardlinks=True)
+    _test_build_generics_tree(tmp_path, expect_hardlinks=True)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_tree_vagrant(tmp_path, capemit):
+def test_build_generics_tree_vagrant(tmp_path):
     """Manages ok a deep tree, including internal ignores, when hardlinks aren't allowed."""
     with patch("os.link") as mock_link:
         mock_link.side_effect = PermissionError("No you don't.")
-        _test_build_generics_tree(tmp_path, capemit, expect_hardlinks=False)
+        _test_build_generics_tree(tmp_path, expect_hardlinks=False)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_tree_xdev(tmp_path, capemit):
+def test_build_generics_tree_xdev(tmp_path):
     """Manages ok a deep tree, including internal ignores, when hardlinks can't be done."""
     with patch("os.link") as mock_link:
         mock_link.side_effect = OSError(errno.EXDEV, os.strerror(errno.EXDEV))
-        _test_build_generics_tree(tmp_path, capemit, expect_hardlinks=False)
+        _test_build_generics_tree(tmp_path, expect_hardlinks=False)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -357,10 +352,8 @@ def test_build_generics_symlink_deep(tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_symlink_file_outside(tmp_path, capemit):
+def test_build_generics_symlink_file_outside(tmp_path, emitter):
     """Ignores (with warning) a symlink pointing a file outside projects dir."""
-    capemit.set_level(logging.WARNING)
-
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
@@ -385,14 +378,12 @@ def test_build_generics_symlink_file_outside(tmp_path, capemit):
 
     assert not (build_dir / "external-file").exists()
     expected = "Ignoring symlink because targets outside the project: 'external-file'"
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_symlink_directory_outside(tmp_path, capemit):
+def test_build_generics_symlink_directory_outside(tmp_path, emitter):
     """Ignores (with warning) a symlink pointing a dir outside projects dir."""
-    capemit.set_level(logging.WARNING)
-
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
@@ -417,14 +408,12 @@ def test_build_generics_symlink_directory_outside(tmp_path, capemit):
 
     assert not (build_dir / "external-dir").exists()
     expected = "Ignoring symlink because targets outside the project: 'external-dir'"
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_different_filetype(tmp_path, capemit, monkeypatch):
+def test_build_generics_different_filetype(tmp_path, emitter, monkeypatch):
     """Ignores whatever is not a regular file, symlink or dir."""
-    capemit.set_level(logging.DEBUG)
-
     # change into the tmp path and do everything locally, because otherwise the socket path
     # will be too long for mac os
     monkeypatch.chdir(tmp_path)
@@ -449,7 +438,7 @@ def test_build_generics_different_filetype(tmp_path, capemit, monkeypatch):
 
     assert not (build_dir / "test-socket").exists()
     expected = "Ignoring file because of type: 'test-socket'"
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -553,10 +542,8 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, capemit):
+def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, emitter):
     """Hooks that are just a symlink to the entrypoint are replaced."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     metadata = tmp_path / CHARM_METADATA
     metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
@@ -588,7 +575,7 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, capemit
     assert test_hook.is_symlink()
     assert test_hook.resolve() == included_dispatcher
     expected = "Replacing existing hook 'somehook' as it's a symlink to the entrypoint"
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
 def test_build_dependencies_virtualenv_simple(tmp_path):
@@ -843,9 +830,9 @@ def test_processrun_base(emitter):
     """Basic execution."""
     cmd = ["echo", "HELO"]
     _process_run(cmd)
-    emitter.assert_recorded_raw(
+    emitter.assert_interactions(
         [
-            ("progress", "Running external command ['echo', 'HELO']"),
+            call("progress", "Running external command ['echo', 'HELO']"),
         ]
     )
 
@@ -855,25 +842,24 @@ def test_processrun_stdout_logged(emitter):
     """The standard output is logged in debug."""
     cmd = ["echo", "HELO"]
     _process_run(cmd)
-    emitter.assert_recorded_raw(
+    emitter.assert_interactions(
         [
-            ("progress", "Running external command ['echo', 'HELO']"),
-            ("trace", "   :: HELO"),
+            call("progress", "Running external command ['echo', 'HELO']"),
+            call("trace", "   :: HELO"),
         ]
     )
 
 
-def test_processrun_stderr_logged(capemit):
+def test_processrun_stderr_logged(emitter):
     """The standard error is logged in debug."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     cmd = [sys.executable, "-c", "import sys; print('weird, huh?', file=sys.stderr)"]
     _process_run(cmd)
-    expected = [
-        "Running external command " + str(cmd),
-        "   :: weird, huh?",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call("progress", "Running external command " + str(cmd)),
+            call("trace", "   :: weird, huh?"),
+        ]
+    )
 
 
 def test_processrun_failed():
@@ -884,7 +870,7 @@ def test_processrun_failed():
     assert str(cm.value) == f"Subprocess command {cmd} execution failed with retcode 3"
 
 
-def test_processrun_crashed(capemit, tmp_path):
+def test_processrun_crashed(tmp_path):
     """It's logged in error if cmd fails."""
     nonexistent = tmp_path / "whatever"
     cmd = [str(nonexistent)]

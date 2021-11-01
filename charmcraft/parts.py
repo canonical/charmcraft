@@ -16,13 +16,13 @@
 
 """Craft-parts setup, lifecycle and plugins."""
 
-import logging
 import os
 import pathlib
 import shlex
 import sys
 from typing import Any, Dict, List, Set, cast
 
+from craft_cli import emit
 from craft_parts import LifecycleManager, Step, plugins
 from craft_parts.errors import PartsError
 from craft_parts.parts import PartSpec
@@ -30,8 +30,6 @@ from xdg import BaseDirectory  # type: ignore
 
 from charmcraft import charm_builder
 from charmcraft.cmdbase import CommandError
-
-logger = logging.getLogger(__name__)
 
 
 class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -299,9 +297,9 @@ class PartsLifecycle:
                     self._lcm.clean(Step.BUILD, part_names=["charm"])
                     self._lcm.reload_state()
 
-            logger.debug("Executing parts lifecycle in %r", str(self._project_dir))
+            emit.trace(f"Executing parts lifecycle in {str(self._project_dir)!r}")
             actions = self._lcm.plan(target_step)
-            logger.debug("Parts actions: %s", actions)
+            emit.trace(f"Parts actions: {actions}")
             with self._lcm.action_executor() as aex:
                 aex.execute(actions)
         except RuntimeError as err:

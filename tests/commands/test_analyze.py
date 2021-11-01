@@ -123,23 +123,23 @@ def create_a_valid_zip(tmp_path):
     return zip_file
 
 
-def test_integration_linters(tmp_path, caplog, config, monkeypatch):
+def test_integration_linters(tmp_path, capemit, config, monkeypatch):
     """Integration test with the real linters.analyze function (as other tests fake it)."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    capemit.set_level(logging.DEBUG, logger="charmcraft")
 
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=None, format=None)
     AnalyzeCommand(config).run(args)
 
     expected_titles = ["Attributes:", "Lint Errors:"]
-    logged = [rec.message for rec in caplog.records]
+    logged = [rec.message for rec in capemit.records]
     assert all(x in logged for x in expected_titles)
 
 
 @pytest.mark.parametrize("indicated_format", [None, JSON_FORMAT])
-def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path, indicated_format):
+def test_complete_set_of_results(capemit, config, monkeypatch, tmp_path, indicated_format):
     """Show a complete basic case of results."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    capemit.set_level(logging.DEBUG, logger="charmcraft")
 
     # fake results from the analyzer
     linting_results = [
@@ -218,7 +218,7 @@ def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path, indicate
             "Lint OK:",
             "- check-lint-02: no issues found (url-02)",
         ]
-        assert expected == [rec.message for rec in caplog.records]
+        assert expected == [rec.message for rec in capemit.records]
     else:
         expected = [
             {
@@ -264,11 +264,11 @@ def test_complete_set_of_results(caplog, config, monkeypatch, tmp_path, indicate
                 "result": "fatal",
             },
         ]
-        (logged_line,) = [rec.message for rec in caplog.records]
+        (logged_line,) = [rec.message for rec in capemit.records]
         assert expected == json.loads(logged_line)
 
 
-def test_force_used_to_override_ignores(caplog, config, monkeypatch, tmp_path):
+def test_force_used_to_override_ignores(capemit, config, monkeypatch, tmp_path):
     """Show only attribute results (the rest may be ignored)."""
     fake_charm = create_a_valid_zip(tmp_path)
     args = Namespace(filepath=fake_charm, force=True, format=None)
@@ -278,9 +278,9 @@ def test_force_used_to_override_ignores(caplog, config, monkeypatch, tmp_path):
     mock_analyze.assert_called_with(config, ANY, override_ignore_config=True)
 
 
-def test_only_attributes(caplog, config, monkeypatch, tmp_path):
+def test_only_attributes(capemit, config, monkeypatch, tmp_path):
     """Show only attribute results (the rest may be ignored)."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    capemit.set_level(logging.DEBUG, logger="charmcraft")
 
     # fake results from the analyzer
     linting_results = [
@@ -302,13 +302,13 @@ def test_only_attributes(caplog, config, monkeypatch, tmp_path):
         "Attributes:",
         "- check-attribute: check-result (url)",
     ]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
     assert retcode == 0
 
 
-def test_only_warnings(caplog, config, monkeypatch, tmp_path):
+def test_only_warnings(capemit, config, monkeypatch, tmp_path):
     """Show only warning results (the rest may be ignored)."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    capemit.set_level(logging.DEBUG, logger="charmcraft")
 
     # fake results from the analyzer
     linting_results = [
@@ -330,13 +330,13 @@ def test_only_warnings(caplog, config, monkeypatch, tmp_path):
         "Lint Warnings:",
         "- check-lint: text (url)",
     ]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
     assert retcode == 3
 
 
-def test_only_errors(caplog, config, monkeypatch, tmp_path):
+def test_only_errors(capemit, config, monkeypatch, tmp_path):
     """Show only error results (the rest may be ignored)."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    capemit.set_level(logging.DEBUG, logger="charmcraft")
 
     # fake results from the analyzer
     linting_results = [
@@ -358,13 +358,13 @@ def test_only_errors(caplog, config, monkeypatch, tmp_path):
         "Lint Errors:",
         "- check-lint: text (url)",
     ]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
     assert retcode == 2
 
 
-def test_both_errors_and_warnings(caplog, config, monkeypatch, tmp_path):
+def test_both_errors_and_warnings(capemit, config, monkeypatch, tmp_path):
     """Show error and warnings results."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    capemit.set_level(logging.DEBUG, logger="charmcraft")
 
     # fake results from the analyzer
     linting_results = [
@@ -395,13 +395,13 @@ def test_both_errors_and_warnings(caplog, config, monkeypatch, tmp_path):
         "Lint Errors:",
         "- check-lint-1: text-1 (url-1)",
     ]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
     assert retcode == 2
 
 
-def test_only_lint_ok(caplog, config, monkeypatch, tmp_path):
+def test_only_lint_ok(capemit, config, monkeypatch, tmp_path):
     """Show only lint results that are ok (the rest may be ignored)."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    capemit.set_level(logging.DEBUG, logger="charmcraft")
 
     # fake results from the analyzer
     linting_results = [
@@ -423,13 +423,13 @@ def test_only_lint_ok(caplog, config, monkeypatch, tmp_path):
         "Lint OK:",
         "- check-lint: no issues found (url)",
     ]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
     assert retcode == 0
 
 
-def test_only_fatal(caplog, config, monkeypatch, tmp_path):
+def test_only_fatal(capemit, config, monkeypatch, tmp_path):
     """Show only fatal lint results (the rest may be ignored)."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
+    capemit.set_level(logging.DEBUG, logger="charmcraft")
 
     # fake results from the analyzer
     linting_results = [
@@ -451,5 +451,5 @@ def test_only_fatal(caplog, config, monkeypatch, tmp_path):
         "Lint Fatal:",
         "- check-lint (url)",
     ]
-    assert expected == [rec.message for rec in caplog.records]
+    assert expected == [rec.message for rec in capemit.records]
     assert retcode == 1

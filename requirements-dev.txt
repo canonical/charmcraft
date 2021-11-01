@@ -27,7 +27,7 @@ packaging==21.0
 pathspec==0.9.0
 platformdirs==2.4.0
 pluggy==1.0.0
-protobuf==3.19.0
+protobuf==3.19.1
 py==1.10.0
 pycodestyle==2.8.0
 pycparser==2.20
@@ -37,7 +37,7 @@ pydocstyle==6.1.1
 pyflakes==2.4.0
 pymacaroons==0.13.0
 PyNaCl==1.4.0
-pyparsing==2.4.7
+pyparsing==3.0.3
 pyRFC3339==1.1
 pyrsistent==0.18.0
 pytest==6.2.5
@@ -45,11 +45,11 @@ python-dateutil==2.8.2
 pytz==2021.3
 pyxdg==0.27
 PyYAML==6.0
-regex==2021.10.21
+regex==2021.10.23
 requests==2.26.0
 requests-toolbelt==0.9.1
 requests-unixsocket==0.2.0
-responses==0.14.0
+responses==0.15.0
 SecretStorage==3.3.1
 semver==2.13.0
 six==1.16.0
@@ -57,7 +57,8 @@ snap-helpers==0.2.0
 snowballstemmer==2.1.0
 tabulate==0.8.9
 toml==0.10.2
-tomli==1.2.1
+tomli==1.2.2
 typing-extensions==3.10.0.2
 urllib3==1.26.7
 zipp==3.6.0
+git+git://github.com/canonical/craft-cli.git@ab5ceee34f8171ecedb6fda970b9bfeb275feba7

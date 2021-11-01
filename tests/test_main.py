@@ -15,14 +15,15 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import argparse
-import io
 import os
-import pathlib
 import subprocess
 import sys
 from unittest.mock import patch
 
-from charmcraft import __version__, logsetup
+import pytest
+from craft_cli import emit, EmitterMode, CraftError
+
+from charmcraft import __version__
 from charmcraft.main import (
     _DEFAULT_GLOBAL_ARGS,
     ArgumentParsingError,
@@ -35,8 +36,6 @@ from charmcraft.main import (
 )
 from charmcraft.cmdbase import BaseCommand, CommandError
 from tests.factory import create_command
-
-import pytest
 
 
 # --- Tests for the Dispatcher
@@ -127,10 +126,10 @@ def test_dispatcher_generic_setup_default():
     """Generic parameter handling for default values."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
-    logsetup.message_handler.mode = None
+    emit.set_mode(EmitterMode.NORMAL)  # this is how `main` will init the Emitter
     dispatcher = Dispatcher(groups)
     dispatcher.pre_parse_args(["somecommand"])
-    assert logsetup.message_handler.mode is None
+    assert emit.get_mode() == EmitterMode.NORMAL
 
 
 @pytest.mark.parametrize(
@@ -147,10 +146,10 @@ def test_dispatcher_generic_setup_verbose(options):
     """Generic parameter handling for verbose log setup, directly or after the command."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
-    logsetup.message_handler.mode = None
+    emit.set_mode(EmitterMode.NORMAL)  # this is how `main` will init the Emitter
     dispatcher = Dispatcher(groups)
     dispatcher.pre_parse_args(options)
-    assert logsetup.message_handler.mode == logsetup.message_handler.VERBOSE
+    assert emit.get_mode() == EmitterMode.VERBOSE
 
 
 @pytest.mark.parametrize(
@@ -167,10 +166,10 @@ def test_dispatcher_generic_setup_quiet(options):
     """Generic parameter handling for quiet log setup, directly or after the command."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
-    logsetup.message_handler.mode = None
+    emit.set_mode(EmitterMode.NORMAL)  # this is how `main` will init the Emitter
     dispatcher = Dispatcher(groups)
     dispatcher.pre_parse_args(options)
-    assert logsetup.message_handler.mode == logsetup.message_handler.QUIET
+    assert emit.get_mode() == EmitterMode.QUIET
 
 
 @pytest.mark.parametrize(
@@ -357,13 +356,18 @@ def test_dispatcher_global_arguments_extra_arguments():
 
 def test_main_ok():
     """Work ended ok: message handler notified properly, return code in 0."""
-    with patch("charmcraft.main.message_handler") as mh_mock:
+    with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.return_value = None
             retcode = main(["charmcraft", "version"])
 
     assert retcode == 0
-    mh_mock.ended_ok.assert_called_once_with()
+    emit_mock.ended_ok.assert_called_once_with()
+
+    # check how Emitter was initted
+    emit_mock.init.assert_called_once_with(
+        EmitterMode.NORMAL, "charmcraft", f"Starting charmcraft version {__version__}"
+    )
 
 
 def test_main_load_config_ok(create_config):
@@ -429,58 +433,67 @@ def test_main_no_args():
 def test_main_controlled_error():
     """Work raised CommandError: message handler notified properly, use indicated return code."""
     simulated_exception = CommandError("boom", retcode=33)
-    with patch("charmcraft.main.message_handler") as mh_mock:
+    with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.side_effect = simulated_exception
             retcode = main(["charmcraft", "version"])
 
     assert retcode == 33
-    mh_mock.ended_cmderror.assert_called_once_with(simulated_exception)
+    emit_mock.error.assert_called_once_with(simulated_exception)
 
 
 def test_main_controlled_return_code():
     """Work ended ok, and the command indicated the return code."""
-    with patch("charmcraft.main.message_handler") as mh_mock:
+    with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.return_value = 9
             retcode = main(["charmcraft", "version"])
 
     assert retcode == 9
-    mh_mock.ended_ok.assert_called_once_with()
+    emit_mock.ended_ok.assert_called_once_with()
 
 
 def test_main_crash():
     """Work crashed: message handler notified properly, return code in 1."""
     simulated_exception = ValueError("boom")
-    with patch("charmcraft.main.message_handler") as mh_mock:
+    with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.side_effect = simulated_exception
             retcode = main(["charmcraft", "version"])
 
     assert retcode == 1
-    mh_mock.ended_crash.assert_called_once_with(simulated_exception)
+    (call,) = emit_mock.error.mock_calls
+    (exc,) = call.args
+    assert isinstance(exc, CraftError)
+    assert str(exc) == "charmcraft internal error: ValueError('boom')"
+    assert exc.__cause__ == simulated_exception
 
 
 def test_main_interrupted():
     """Work interrupted: message handler notified properly, return code in 1."""
-    with patch("charmcraft.main.message_handler") as mh_mock:
+    simulated_exception = KeyboardInterrupt()
+    with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.side_effect = KeyboardInterrupt
+            d_mock.side_effect = simulated_exception
             retcode = main(["charmcraft", "version"])
 
     assert retcode == 1
-    assert mh_mock.ended_interrupt.call_count == 1
+    (call,) = emit_mock.error.mock_calls
+    (exc,) = call.args
+    assert isinstance(exc, CraftError)
+    assert str(exc) == "Interrupted."
+    assert exc.__cause__ == simulated_exception
 
 
 def test_main_controlled_arguments_error(capsys):
     """The execution failed because an argument parsing error."""
-    with patch("charmcraft.main.message_handler") as mh_mock:
+    with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.side_effect = ArgumentParsingError("test error")
             retcode = main(["charmcraft", "version"])
 
     assert retcode == 1
-    mh_mock.ended_ok.assert_called_once_with()
+    emit_mock.ended_ok.assert_called_once_with()
 
     out, err = capsys.readouterr()
     assert not out
@@ -489,92 +502,17 @@ def test_main_controlled_arguments_error(capsys):
 
 def test_main_providing_help(capsys):
     """The execution ended up providing a help message."""
-    with patch("charmcraft.main.message_handler") as mh_mock:
+    with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.side_effect = ProvideHelpException("nice and shiny help message")
             retcode = main(["charmcraft", "version"])
 
     assert retcode == 0
-    mh_mock.ended_ok.assert_called_once_with()
+    emit_mock.ended_ok.assert_called_once_with()
 
     out, err = capsys.readouterr()
     assert not out
     assert err == "nice and shiny help message\n"
-
-
-# --- Tests for the bootstrap version message
-
-
-def test_initmsg_default():
-    """Without any option, the init msg only goes to disk."""
-    cmd = create_command("somecommand")
-    fake_stream = io.StringIO()
-    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("whatever title", [cmd])]):
-        with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
-            with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
-                main(["charmcraft", "somecommand"])
-
-    # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once_with()
-    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
-    file_first_line = logged_to_file.split("\n")[0]
-    logsetup.message_handler.ended_ok()
-
-    # get the terminal first line
-    captured = fake_stream.getvalue()
-    terminal_first_line = captured.split("\n")[0]
-
-    expected = "Starting charmcraft version " + __version__
-    assert expected in file_first_line
-    assert expected not in terminal_first_line
-
-
-def test_initmsg_quiet():
-    """In quiet mode, the init msg only goes to disk."""
-    cmd = create_command("somecommand")
-    fake_stream = io.StringIO()
-    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("whatever title", [cmd])]):
-        with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
-            with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
-                main(["charmcraft", "--quiet", "somecommand"])
-
-    # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once_with()
-    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
-    file_first_line = logged_to_file.split("\n")[0]
-    logsetup.message_handler.ended_ok()
-
-    # get the terminal first line
-    captured = fake_stream.getvalue()
-    terminal_first_line = captured.split("\n")[0]
-
-    expected = "Starting charmcraft version " + __version__
-    assert expected in file_first_line
-    assert expected not in terminal_first_line
-
-
-def test_initmsg_verbose():
-    """In verbose mode, the init msg goes both to disk and terminal."""
-    cmd = create_command("somecommand")
-    fake_stream = io.StringIO()
-    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("whatever title", [cmd])]):
-        with patch.object(logsetup.message_handler, "ended_ok") as ended_ok_mock:
-            with patch.object(logsetup.message_handler._stderr_handler, "stream", fake_stream):
-                main(["charmcraft", "--verbose", "somecommand"])
-
-    # get the logfile first line before removing it
-    ended_ok_mock.assert_called_once_with()
-    logged_to_file = pathlib.Path(logsetup.message_handler._log_filepath).read_text()
-    file_first_line = logged_to_file.split("\n")[0]
-    logsetup.message_handler.ended_ok()
-
-    # get the terminal first line
-    captured = fake_stream.getvalue()
-    terminal_first_line = captured.split("\n")[0]
-
-    expected = "Starting charmcraft version " + __version__
-    assert expected in file_first_line
-    assert expected in terminal_first_line
 
 
 @pytest.mark.parametrize(

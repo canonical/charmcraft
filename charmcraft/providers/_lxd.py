@@ -17,11 +17,11 @@
 """Build environment provider support for charmcraft."""
 
 import contextlib
-import logging
 import pathlib
 import re
 from typing import List
 
+from craft_cli import emit
 from craft_providers import bases, lxd
 
 from charmcraft.cmdbase import CommandError
@@ -31,8 +31,6 @@ from charmcraft.utils import confirm_with_user, get_host_architecture
 
 from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
 from ._provider import Provider
-
-logger = logging.getLogger(__name__)
 
 
 class LXDProvider(Provider):
@@ -83,7 +81,7 @@ class LXDProvider(Provider):
         for name in names:
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
             if re.match(match_regex, name):
-                logger.debug("Deleting container %r.", name)
+                emit.trace(f"Deleting container {name!r}.")
                 try:
                     self.lxc.delete(
                         instance_name=name,
@@ -95,7 +93,7 @@ class LXDProvider(Provider):
                     raise CommandError(str(error)) from error
                 deleted.append(name)
             else:
-                logger.debug("Not deleting container %r.", name)
+                emit.trace(f"Not deleting container {name!r}.")
 
         return deleted
 

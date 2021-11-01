@@ -16,7 +16,6 @@
 
 """Collection of utilities for charmcraft."""
 
-import logging
 import os
 import pathlib
 import platform
@@ -26,12 +25,11 @@ from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 
 import yaml
+from craft_cli import emit
 from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.env import is_charmcraft_running_in_managed_mode
-
-logger = logging.getLogger("charmcraft.commands")
 
 OSPlatform = namedtuple("OSPlatform", "system release machine")
 
@@ -65,13 +63,13 @@ def make_executable(fh):
 def load_yaml(fpath):
     """Return the content of a YAML file."""
     if not fpath.is_file():
-        logger.debug("Couldn't find config file %r", str(fpath))
+        emit.trace(f"Couldn't find config file {str(fpath)!r}")
         return
     try:
         with fpath.open("rb") as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
-        logger.error("Failed to read/parse config file %r: %r", str(fpath), err)
+        emit.trace(f"Failed to read/parse config file {str(fpath)!r}: {err!r}")
         return
     return content
 
@@ -84,7 +82,7 @@ def get_templates_environment(templates_dir):
         # https://pyinstaller.readthedocs.io/en/stable/runtime-information.html
         # In this scenario we need to load from the data location that is unpacked
         # into the temprary directory at runtime (sys._MEIPASS).
-        logger.debug("Bundle directory: %s", sys._MEIPASS)
+        emit.trace(f"Bundle directory: {sys._MEIPASS}")
         loader = FileSystemLoader(os.path.join(sys._MEIPASS, templates_dir))
     else:
         loader = PackageLoader("charmcraft", templates_dir)
@@ -178,7 +176,7 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
             with filepath.open("rt", encoding="utf-8") as fh:
                 lines = fh.readlines()
         except FileNotFoundError:
-            logger.debug("Unable to locate 'os-release' file, using default values")
+            emit.trace("Unable to locate 'os-release' file, using default values")
         else:
             os_release = {}
             for line in lines:

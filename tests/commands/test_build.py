@@ -25,10 +25,11 @@ from collections import namedtuple
 from textwrap import dedent
 from typing import List
 from unittest import mock
-from unittest.mock import call, patch
+from unittest.mock import call, patch, ANY
 
 import pytest
 import yaml
+from craft_cli import EmitterMode, emit
 
 from charmcraft import linters
 from charmcraft.bases import get_host_as_base
@@ -43,7 +44,6 @@ from charmcraft.commands.build import (
     relativise,
 )
 from charmcraft.config import Base, BasesConfiguration, load
-from charmcraft.logsetup import message_handler
 from charmcraft.metadata import CHARM_METADATA
 
 
@@ -554,7 +554,7 @@ def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, caplog, monkeypatch):
+def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, capemit, monkeypatch):
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
@@ -567,13 +567,13 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, capl
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
 
-    records = [r.message for r in caplog.records]
+    records = [r.message for r in capemit.records]
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_with_charmcraft_yaml_managed_mode(
-    basic_project_builder, caplog, monkeypatch, tmp_path
+    basic_project_builder, capemit, monkeypatch, tmp_path
 ):
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     host_base = get_host_as_base()
@@ -589,7 +589,7 @@ def test_build_with_charmcraft_yaml_managed_mode(
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
 
-    records = [r.message for r in caplog.records]
+    records = [r.message for r in capemit.records]
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
 
 
@@ -681,7 +681,7 @@ def test_build_checks_provider_error(basic_project, mock_provider):
         builder.run()
 
 
-def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkeypatch):
+def test_build_without_charmcraft_yaml_issues_dn02(basic_project, capemit):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config)
@@ -689,16 +689,14 @@ def test_build_without_charmcraft_yaml_issues_dn02(basic_project, caplog, monkey
     builder.run()
 
     assert "DEPRECATED: A charmcraft.yaml configuration file is now required." in [
-        r.message for r in caplog.records
+        r.message for r in capemit.records
     ]
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_multiple_with_charmcraft_yaml_destructive_mode(
-    basic_project_builder, monkeypatch, caplog
-):
+def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_builder, capemit):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""
-    caplog.set_level(logging.DEBUG)
+    capemit.set_level(logging.DEBUG)
     host_base = get_host_as_base()
     unmatched_base = Base(
         name="unmatched-name",
@@ -726,7 +724,7 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(
         "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
     ]
 
-    records = [r.message for r in caplog.records]
+    records = [r.message for r in capemit.records]
 
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
     assert "No suitable 'build-on' environment found in 'bases[1]' configuration." in records
@@ -735,10 +733,10 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_multiple_with_charmcraft_yaml_managed_mode(
-    basic_project_builder, monkeypatch, caplog, tmp_path
+    basic_project_builder, monkeypatch, capemit, tmp_path
 ):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""
-    caplog.set_level(logging.DEBUG)
+    capemit.set_level(logging.DEBUG)
     host_base = get_host_as_base()
     unmatched_base = Base(
         name="unmatched-name",
@@ -768,7 +766,7 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
         "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
     ]
 
-    records = [r.message for r in caplog.records]
+    records = [r.message for r in capemit.records]
 
     assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
     assert "No suitable 'build-on' environment found in 'bases[1]' configuration." in records
@@ -777,15 +775,14 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
 
 def test_build_project_is_cwd(
     basic_project,
-    caplog,
+    capemit,
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
     monkeypatch,
 ):
     """Test cases for base-index parameter."""
-    mode = message_handler.NORMAL
-    monkeypatch.setattr(message_handler, "mode", mode)
+    emit.set_mode(EmitterMode.NORMAL)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -827,21 +824,21 @@ def test_build_project_is_cwd(
             ["charmcraft", "pack", "--bases-index", "0"],
             check=True,
             cwd=pathlib.Path("/root/project"),
+            stdout=ANY,
+            stderr=ANY,
         ),
     ]
 
 
 def test_build_project_is_not_cwd(
     basic_project,
-    caplog,
+    capemit,
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
-    monkeypatch,
 ):
     """Test cases for base-index parameter."""
-    mode = message_handler.NORMAL
-    monkeypatch.setattr(message_handler, "mode", mode)
+    emit.set_mode(EmitterMode.NORMAL)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -882,6 +879,8 @@ def test_build_project_is_not_cwd(
             ["charmcraft", "pack", "--bases-index", "0"],
             check=True,
             cwd=pathlib.Path("/root"),
+            stdout=ANY,
+            stderr=ANY,
         ),
         call.pull_file(
             source=pathlib.Path("/root") / zipnames[0],
@@ -894,23 +893,23 @@ def test_build_project_is_not_cwd(
 @pytest.mark.parametrize(
     "mode,cmd_flags",
     [
-        (message_handler.VERBOSE, ["--verbose"]),
-        (message_handler.QUIET, ["--quiet"]),
-        (message_handler.NORMAL, []),
+        (EmitterMode.VERBOSE, ["--verbose"]),
+        (EmitterMode.QUIET, ["--quiet"]),
+        (EmitterMode.NORMAL, []),
     ],
 )
 def test_build_bases_index_scenarios_provider(
     mode,
     cmd_flags,
     basic_project,
-    caplog,
+    capemit,
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
     monkeypatch,
 ):
     """Test cases for base-index parameter."""
-    monkeypatch.setattr(message_handler, "mode", mode)
+    emit.set_mode(mode)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -958,11 +957,11 @@ def test_build_bases_index_scenarios_provider(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
+            stdout=ANY,
+            stderr=ANY,
         ),
     ]
-    assert f"Packing charm 'name-from-metadata_ubuntu-18.04-{host_arch}.charm'..." in [
-        r.message for r in caplog.records
-    ]
+    assert "Packing the charm" in [r.message for r in capemit.records]
     mock_provider.reset_mock()
     mock_instance.reset_mock()
 
@@ -988,6 +987,8 @@ def test_build_bases_index_scenarios_provider(
             ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
+            stdout=ANY,
+            stderr=ANY,
         ),
     ]
     mock_provider.reset_mock()
@@ -1026,11 +1027,15 @@ def test_build_bases_index_scenarios_provider(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
+            stdout=ANY,
+            stderr=ANY,
         ),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
+            stdout=ANY,
+            stderr=ANY,
         ),
     ]
     mock_provider.reset_mock()
@@ -1063,13 +1068,15 @@ def test_build_bases_index_scenarios_provider(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
+            stdout=ANY,
+            stderr=ANY,
         ),
     ]
     assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, caplog, tmp_path):
+def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, capemit, tmp_path):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
@@ -1135,10 +1142,10 @@ def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, ca
     return_value=Base(name="xname", channel="xchannel", architectures=["xarch"]),
 )
 def test_build_error_no_match_with_charmcraft_yaml(
-    mock_host_base, basic_project, monkeypatch, caplog
+    mock_host_base, basic_project, monkeypatch, capemit
 ):
     """Error when no charms are buildable with host base, verifying each mismatched reason."""
-    caplog.set_level(logging.DEBUG)
+    capemit.set_level(logging.DEBUG)
     charmcraft_file = basic_project / "charmcraft.yaml"
     charmcraft_file.write_text(
         dedent(
@@ -1169,7 +1176,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     ):
         builder.run()
 
-    records = [r.message for r in caplog.records]
+    records = [r.message for r in capemit.records]
 
     assert (
         "Skipping 'bases[0].build-on[0]': " "name 'unmatched-name' does not match host 'xname'."
@@ -1270,7 +1277,7 @@ def test_build_package_name(tmp_path, monkeypatch, config):
     assert zipname == "name-from-metadata.charm"
 
 
-def test_build_with_entrypoint_argument_issues_dn04(basic_project, caplog, monkeypatch):
+def test_build_with_entrypoint_argument_issues_dn04(basic_project, capemit, monkeypatch):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config)
@@ -1279,11 +1286,11 @@ def test_build_with_entrypoint_argument_issues_dn04(basic_project, caplog, monke
 
     assert (
         "DEPRECATED: Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point."
-        in [r.message for r in caplog.records]
+        in [r.message for r in capemit.records]
     )
 
 
-def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
+def test_build_entrypoint_from_parts(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1348,7 +1355,7 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, caplog):
     )
 
 
-def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
+def test_build_entrypoint_from_commandline(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1412,7 +1419,7 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, caplog):
     )
 
 
-def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
+def test_build_entrypoint_default(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1472,7 +1479,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch, caplog):
     )
 
 
-def test_build_entrypoint_from_both(basic_project, monkeypatch, caplog):
+def test_build_entrypoint_from_both(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1512,7 +1519,7 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch, caplog):
     )
 
 
-def test_build_with_requirement_argment_issues_dn05(basic_project, caplog, monkeypatch):
+def test_build_with_requirement_argment_issues_dn05(basic_project, capemit, monkeypatch):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config, entrypoint=None, requirement=["reqs.txt"])
@@ -1521,11 +1528,11 @@ def test_build_with_requirement_argment_issues_dn05(basic_project, caplog, monke
 
     assert (
         "DEPRECATED: Use 'charm-requirements' in charmcraft.yaml parts to define requirements."
-        in [r.message for r in caplog.records]
+        in [r.message for r in capemit.records]
     )
 
 
-def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
+def test_build_requirements_from_parts(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1590,7 +1597,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, caplog):
     )
 
 
-def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog):
+def test_build_requirements_from_commandline(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1654,7 +1661,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, caplog)
     )
 
 
-def test_build_requirements_default(basic_project, monkeypatch, caplog):
+def test_build_requirements_default(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1718,7 +1725,7 @@ def test_build_requirements_default(basic_project, monkeypatch, caplog):
     )
 
 
-def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, caplog):
+def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1778,7 +1785,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capl
     )
 
 
-def test_build_requirements_from_both(basic_project, monkeypatch, caplog):
+def test_build_requirements_from_both(basic_project, monkeypatch, capemit):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1864,9 +1871,8 @@ def test_build_using_linters_attributes(basic_project, monkeypatch, config, tmp_
     assert manifest["analysis"] == expected
 
 
-def test_show_linters_attributes(basic_project, caplog, config):
+def test_show_linters_attributes(basic_project, emitter, config):
     """Show the linting results, only attributes, one ignored."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
     builder = get_builder(config)
 
     # fake results from the analyzer
@@ -1893,14 +1899,12 @@ def test_show_linters_attributes(basic_project, caplog, config):
     expected = [
         "Check result: check-name-1 [attribute] check-result-1 (text; see more at url).",
     ]
-    logged = [rec.message for rec in caplog.records if rec.levelno == logging.DEBUG]
-    assert all(e in logged for e in expected)
-    assert not any(rec for rec in caplog.records if rec.levelno == logging.INFO)
+    emitter.assert_recorded(expected)
+    assert not emitter.message
 
 
-def test_show_linters_lint_warnings(basic_project, caplog, config):
+def test_show_linters_lint_warnings(basic_project, emitter, config):
     """Show the linting results, some warnings."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
     builder = get_builder(config)
 
     # fake result from the analyzer
@@ -1914,7 +1918,7 @@ def test_show_linters_lint_warnings(basic_project, caplog, config):
         ),
     ]
 
-    caplog.records.clear()
+    emitter.trace.clear()
     builder.show_linting_results(linting_results)
 
     # log the warning (with the title!); nothing on DEBUG
@@ -1922,13 +1926,12 @@ def test_show_linters_lint_warnings(basic_project, caplog, config):
         "Lint Warnings:",
         "- check-name: Some text (check-url)",
     ]
-    assert expected == [rec.message for rec in caplog.records if rec.levelno == logging.INFO]
-    assert not any(rec for rec in caplog.records if rec.levelno == logging.DEBUG)
+    emitter.assert_recorded(expected)
+    assert not emitter.trace
 
 
-def test_show_linters_lint_errors_normal(basic_project, caplog, config):
+def test_show_linters_lint_errors_normal(basic_project, emitter, config):
     """Show the linting results, have errors."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
     builder = get_builder(config)
 
     # fake result from the analyzer
@@ -1942,7 +1945,7 @@ def test_show_linters_lint_errors_normal(basic_project, caplog, config):
         ),
     ]
 
-    caplog.records.clear()
+    emitter.trace.clear()
     with pytest.raises(CommandError) as cm:
         builder.show_linting_results(linting_results)
     exc = cm.value
@@ -1954,13 +1957,12 @@ def test_show_linters_lint_errors_normal(basic_project, caplog, config):
         "Lint Errors:",
         "- check-name: Some text (check-url)",
     ]
-    assert expected == [rec.message for rec in caplog.records if rec.levelno == logging.INFO]
-    assert not any(rec for rec in caplog.records if rec.levelno == logging.DEBUG)
+    emitter.assert_recorded(expected)
+    assert not emitter.trace
 
 
-def test_show_linters_lint_errors_forced(basic_project, caplog, config):
+def test_show_linters_lint_errors_forced(basic_project, emitter, config):
     """Show the linting results, have errors but the packing is forced."""
-    caplog.set_level(logging.DEBUG, logger="charmcraft")
     builder = get_builder(config, force=True)
 
     # fake result from the analyzer
@@ -1974,7 +1976,7 @@ def test_show_linters_lint_errors_forced(basic_project, caplog, config):
         ),
     ]
 
-    caplog.records.clear()
+    emitter.trace.clear()
     builder.show_linting_results(linting_results)
 
     # log the error (with the title!), and the "pack anyway" message; nothing on DEBUG
@@ -1983,8 +1985,8 @@ def test_show_linters_lint_errors_forced(basic_project, caplog, config):
         "- check-name: Some text (check-url)",
         "Packing anyway as requested.",
     ]
-    assert expected == [rec.message for rec in caplog.records if rec.levelno == logging.INFO]
-    assert not any(rec for rec in caplog.records if rec.levelno == logging.DEBUG)
+    emitter.assert_recorded(expected)
+    assert not emitter.trace
 
 
 # --- tests for relativise helper

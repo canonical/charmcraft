@@ -16,13 +16,10 @@
 
 """Logic dealing with bases."""
 
-import logging
 from typing import Tuple, Union
 
 from charmcraft.config import Base
 from charmcraft.utils import get_host_architecture, get_os_platform
-
-logger = logging.getLogger(__name__)
 
 
 def get_host_as_base() -> Base:

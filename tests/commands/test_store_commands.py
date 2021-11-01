@@ -18,7 +18,6 @@
 
 import datetime
 import hashlib
-import logging
 import pathlib
 import sys
 import zipfile
@@ -166,9 +165,8 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 # -- tests for auth commands
 
 
-def test_login(capemit, store_mock, config):
+def test_login(emitter, store_mock, config):
     """Simple login case."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
     store_mock.whoami.return_value = User(name="John Doe", username="jdoe", userid="-1")
 
     LoginCommand(config).run(noargs)
@@ -177,24 +175,21 @@ def test_login(capemit, store_mock, config):
         call.login(),
         call.whoami(),
     ]
-    assert ["Logged in as 'jdoe'."] == [rec.message for rec in capemit.records]
+    emitter.assert_message("Logged in as 'jdoe'.")
 
 
-def test_logout(capemit, store_mock, config):
+def test_logout(emitter, store_mock, config):
     """Simple logout case."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     LogoutCommand(config).run(noargs)
 
     assert store_mock.mock_calls == [
         call.logout(),
     ]
-    assert ["Charmhub token cleared."] == [rec.message for rec in capemit.records]
+    emitter.assert_message("Charmhub token cleared.")
 
 
-def test_logout_but_not_logged_in(capemit, store_mock, config):
+def test_logout_but_not_logged_in(emitter, store_mock, config):
     """Simple logout case."""
-    capemit.set_level(logging.WARNING, logger="charmcraft.commands")
     store_mock.logout.side_effect = NotLoggedIn()
 
     LogoutCommand(config).run(noargs)
@@ -202,13 +197,11 @@ def test_logout_but_not_logged_in(capemit, store_mock, config):
     assert store_mock.mock_calls == [
         call.logout(),
     ]
-    assert ["You are not logged in to Charmhub."] == [rec.message for rec in capemit.records]
+    emitter.assert_message("You are not logged in to Charmhub.")
 
 
-def test_whoami(capemit, store_mock, config):
+def test_whoami(emitter, store_mock, config):
     """Simple whoami case."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = User(name="John Doe", username="jdoe", userid="-1")
     store_mock.whoami.return_value = store_response
 
@@ -222,12 +215,11 @@ def test_whoami(capemit, store_mock, config):
         "username:  jdoe",
         "id:        -1",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_whoami_but_not_logged_in(capemit, store_mock, config):
+def test_whoami_but_not_logged_in(emitter, store_mock, config):
     """Simple logout case."""
-    capemit.set_level(logging.WARNING, logger="charmcraft.commands")
     store_mock.whoami.side_effect = NotLoggedIn()
 
     WhoamiCommand(config).run(noargs)
@@ -235,16 +227,14 @@ def test_whoami_but_not_logged_in(capemit, store_mock, config):
     assert store_mock.mock_calls == [
         call.whoami(),
     ]
-    assert ["You are not logged in to Charmhub."] == [rec.message for rec in capemit.records]
+    emitter.assert_message("You are not logged in to Charmhub.")
 
 
 # -- tests for name-related commands
 
 
-def test_register_charm_name(capemit, store_mock, config):
+def test_register_charm_name(emitter, store_mock, config):
     """Simple register_name case for a charm."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     args = Namespace(name="testname")
     RegisterCharmNameCommand(config).run(args)
 
@@ -252,13 +242,11 @@ def test_register_charm_name(capemit, store_mock, config):
         call.register_name("testname", EntityType.charm),
     ]
     expected = "You are now the publisher of charm 'testname' in Charmhub."
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
-def test_register_bundle_name(capemit, store_mock, config):
+def test_register_bundle_name(emitter, store_mock, config):
     """Simple register_name case for a bundl."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     args = Namespace(name="testname")
     RegisterBundleNameCommand(config).run(args)
 
@@ -266,13 +254,11 @@ def test_register_bundle_name(capemit, store_mock, config):
         call.register_name("testname", EntityType.bundle),
     ]
     expected = "You are now the publisher of bundle 'testname' in Charmhub."
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
-def test_list_registered_empty(capemit, store_mock, config):
+def test_list_registered_empty(emitter, store_mock, config):
     """List registered with empty response."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = []
     store_mock.list_registered_names.return_value = store_response
 
@@ -282,13 +268,11 @@ def test_list_registered_empty(capemit, store_mock, config):
         call.list_registered_names(),
     ]
     expected = "No charms or bundles registered."
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
-def test_list_registered_one_private(capemit, store_mock, config):
+def test_list_registered_one_private(emitter, store_mock, config):
     """List registered with one private item in the response."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = [
         Entity(entity_type="charm", name="charm", private=True, status="status"),
     ]
@@ -303,13 +287,11 @@ def test_list_registered_one_private(capemit, store_mock, config):
         "Name    Type    Visibility    Status",
         "charm   charm   private       status",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_list_registered_one_public(capemit, store_mock, config):
+def test_list_registered_one_public(emitter, store_mock, config):
     """List registered with one public item in the response."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = [
         Entity(entity_type="charm", name="charm", private=False, status="status"),
     ]
@@ -324,13 +306,11 @@ def test_list_registered_one_public(capemit, store_mock, config):
         "Name    Type    Visibility    Status",
         "charm   charm   public        status",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_list_registered_several(capemit, store_mock, config):
+def test_list_registered_several(emitter, store_mock, config):
     """List registered with several itemsssssssss in the response."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = [
         Entity(entity_type="charm", name="charm1", private=True, status="simple status"),
         Entity(entity_type="charm", name="charm2-long-name", private=False, status="other"),
@@ -356,7 +336,7 @@ def test_list_registered_several(capemit, store_mock, config):
         "charm3            charm   private       super long status",
         "somebundle        bundle  public        bundle status",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
 # -- tests for upload command
@@ -466,10 +446,8 @@ def test_upload_parameters_filepath_type(config):
     assert action.type is useful_filepath
 
 
-def test_upload_call_ok(capemit, store_mock, config, tmp_path):
+def test_upload_call_ok(emitter, store_mock, config, tmp_path):
     """Simple upload, success result."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
 
@@ -480,13 +458,11 @@ def test_upload_call_ok(capemit, store_mock, config, tmp_path):
 
     assert store_mock.mock_calls == [call.upload("mycharm", test_charm)]
     expected = "Revision 7 of 'mycharm' created"
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
-def test_upload_call_error(capemit, store_mock, config, tmp_path):
+def test_upload_call_error(emitter, store_mock, config, tmp_path):
     """Simple upload but with a response indicating an error."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     errors = [
         Error(message="text 1", code="missing-stuff"),
         Error(message="other long error text", code="broken"),
@@ -505,13 +481,11 @@ def test_upload_call_error(capemit, store_mock, config, tmp_path):
         "- missing-stuff: text 1",
         "- broken: other long error text",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_upload_call_ok_including_release(capemit, store_mock, config, tmp_path):
+def test_upload_call_ok_including_release(emitter, store_mock, config, tmp_path):
     """Upload with a release included, success result."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
 
@@ -528,13 +502,11 @@ def test_upload_call_ok_including_release(capemit, store_mock, config, tmp_path)
         "Revision 7 of 'mycharm' created",
         "Revision released to edge",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_upload_call_ok_including_release_multiple(capemit, store_mock, config, tmp_path):
+def test_upload_call_ok_including_release_multiple(emitter, store_mock, config, tmp_path):
     """Upload with release to two channels included, success result."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
 
@@ -551,13 +523,11 @@ def test_upload_call_ok_including_release_multiple(capemit, store_mock, config, 
         "Revision 7 of 'mycharm' created",
         "Revision released to edge, stable",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_upload_including_release_with_resources(capemit, store_mock, config, tmp_path):
+def test_upload_including_release_with_resources(emitter, store_mock, config, tmp_path):
     """Releasing with resources."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
 
@@ -576,7 +546,7 @@ def test_upload_including_release_with_resources(capemit, store_mock, config, tm
         "Revision 7 of 'mycharm' created",
         "Revision released to edge (attaching resources: 'foo' r3, 'bar' r17)",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
 def test_upload_options_resource(config):
@@ -588,10 +558,8 @@ def test_upload_options_resource(config):
     assert isinstance(action.type, ResourceOption)
 
 
-def test_upload_call_error_including_release(capemit, store_mock, config, tmp_path):
+def test_upload_call_error_including_release(emitter, store_mock, config, tmp_path):
     """Upload with a realsea but the upload went wrong, so no release."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     errors = [Error(message="text", code="problem")]
     store_response = Uploaded(ok=False, status=400, revision=None, errors=errors)
     store_mock.upload.return_value = store_response
@@ -629,10 +597,8 @@ def test_upload_charm_with_init_template_todo_token(tmp_path, config):
 # -- tests for list revisions command
 
 
-def test_revisions_simple(capemit, store_mock, config):
+def test_revisions_simple(emitter, store_mock, config):
     """Happy path of one result from the Store."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
@@ -656,13 +622,11 @@ def test_revisions_simple(capemit, store_mock, config):
         "Revision    Version    Created at    Status",
         "1           v1         2020-07-03    accepted",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_revisions_empty(capemit, store_mock, config):
+def test_revisions_empty(emitter, store_mock, config):
     """No results from the store."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = []
     store_mock.list_revisions.return_value = store_response
 
@@ -672,13 +636,11 @@ def test_revisions_empty(capemit, store_mock, config):
     expected = [
         "No revisions found.",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_revisions_ordered_by_revision(capemit, store_mock, config):
+def test_revisions_ordered_by_revision(emitter, store_mock, config):
     """Results are presented ordered by revision in the table."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
     tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
@@ -720,13 +682,11 @@ def test_revisions_ordered_by_revision(capemit, store_mock, config):
         "2           v1         2020-07-03    accepted",
         "1           v1         2020-07-03    accepted",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_revisions_version_null(capemit, store_mock, config):
+def test_revisions_version_null(emitter, store_mock, config):
     """Support the case of version being None."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
@@ -747,13 +707,11 @@ def test_revisions_version_null(capemit, store_mock, config):
         "Revision    Version    Created at    Status",
         "1                      2020-07-03    accepted",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_revisions_errors_simple(capemit, store_mock, config):
+def test_revisions_errors_simple(emitter, store_mock, config):
     """Support having one case with a simple error."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
@@ -774,13 +732,11 @@ def test_revisions_errors_simple(capemit, store_mock, config):
         "Revision    Version    Created at    Status",
         "1                      2020-07-03    rejected: error text [broken]",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_revisions_errors_multiple(capemit, store_mock, config):
+def test_revisions_errors_multiple(emitter, store_mock, config):
     """Support having one case with multiple errors."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
         Revision(
@@ -804,16 +760,14 @@ def test_revisions_errors_multiple(capemit, store_mock, config):
         "Revision    Version    Created at    Status",
         "1                      2020-07-03    rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
 # -- tests for the release command
 
 
-def test_release_simple_ok(capemit, store_mock, config):
+def test_release_simple_ok(emitter, store_mock, config):
     """Simple case of releasing a revision ok."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     channels = ["somechannel"]
     args = Namespace(name="testcharm", revision=7, channel=channels, resource=[])
     ReleaseCommand(config).run(args)
@@ -823,13 +777,11 @@ def test_release_simple_ok(capemit, store_mock, config):
     ]
 
     expected = "Revision 7 of charm 'testcharm' released to somechannel"
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
-def test_release_simple_multiple_channels(capemit, store_mock, config):
+def test_release_simple_multiple_channels(emitter, store_mock, config):
     """Releasing to multiple channels."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     args = Namespace(
         name="testcharm",
         revision=7,
@@ -839,13 +791,11 @@ def test_release_simple_multiple_channels(capemit, store_mock, config):
     ReleaseCommand(config).run(args)
 
     expected = "Revision 7 of charm 'testcharm' released to channel1, channel2, channel3"
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
-def test_release_including_resources(capemit, store_mock, config):
+def test_release_including_resources(emitter, store_mock, config):
     """Releasing with resources."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     r1 = ResourceOption(name="foo", revision=3)
     r2 = ResourceOption(name="bar", revision=17)
     args = Namespace(name="testcharm", revision=7, channel=["testchannel"], resource=[r1, r2])
@@ -859,7 +809,7 @@ def test_release_including_resources(capemit, store_mock, config):
         "Revision 7 of charm 'testcharm' released to testchannel "
         "(attaching resources: 'foo' r3, 'bar' r17)"
     )
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
 def test_release_options_resource(config):
@@ -950,10 +900,8 @@ def test_release_parameters_bad(config, sysargs):
 # -- tests for the close command
 
 
-def test_close_simple_ok(capemit, store_mock, config):
+def test_close_simple_ok(emitter, store_mock, config):
     """Simple case of closing a channel."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     args = Namespace(name="testcharm", channel="somechannel")
     CloseCommand(config).run(args)
 
@@ -962,7 +910,7 @@ def test_close_simple_ok(capemit, store_mock, config):
     ]
 
     expected = "Closed 'somechannel' channel for 'testcharm'."
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
 # -- tests for the status command
@@ -1006,10 +954,8 @@ def _build_release(revision, channel, expires_at=None, resources=None, base=DEFA
     )
 
 
-def test_status_simple_ok(capemit, store_mock, config):
+def test_status_simple_ok(emitter, store_mock, config):
     """Simple happy case of getting a status."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     channel_map = [
         _build_release(revision=7, channel="latest/stable"),
         _build_release(revision=7, channel="latest/candidate"),
@@ -1038,25 +984,21 @@ def test_status_simple_ok(capemit, store_mock, config):
         "                               beta       2.0           80",
         "                               edge       git-0db35ea1  156",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_empty(capemit, store_mock, config):
+def test_status_empty(emitter, store_mock, config):
     """Empty response from the store."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_mock.list_releases.return_value = [], [], []
     args = Namespace(name="testcharm")
     StatusCommand(config).run(args)
 
     expected = "Nothing has been released yet."
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
-def test_status_channels_not_released_with_fallback(capemit, store_mock, config):
+def test_status_channels_not_released_with_fallback(emitter, store_mock, config):
     """Support gaps in channel releases, having fallbacks."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     channel_map = [
         _build_release(revision=7, channel="latest/stable"),
         _build_release(revision=80, channel="latest/edge"),
@@ -1082,13 +1024,11 @@ def test_status_channels_not_released_with_fallback(capemit, store_mock, config)
         "                               beta       ↑          ↑",
         "                               edge       2.0        80",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_channels_not_released_without_fallback(capemit, store_mock, config):
+def test_status_channels_not_released_without_fallback(emitter, store_mock, config):
     """Support gaps in channel releases, nothing released in more stable ones."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     channel_map = [
         _build_release(revision=5, channel="latest/beta"),
         _build_release(revision=12, channel="latest/edge"),
@@ -1114,13 +1054,11 @@ def test_status_channels_not_released_without_fallback(capemit, store_mock, conf
         "                               beta       5.1          5",
         "                               edge       almostready  12",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_multiple_tracks(capemit, store_mock, config):
+def test_status_multiple_tracks(emitter, store_mock, config):
     """Support multiple tracks."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     channel_map = [
         _build_release(revision=503, channel="latest/stable"),
         _build_release(revision=1, channel="2.0/edge"),
@@ -1152,13 +1090,11 @@ def test_status_multiple_tracks(capemit, store_mock, config):
         "                               beta       -          -",
         "                               edge       1          1",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_tracks_order(capemit, store_mock, config):
+def test_status_tracks_order(emitter, store_mock, config):
     """Respect the track ordering from the store."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     channel_map = [
         _build_release(revision=1, channel="latest/edge"),
         _build_release(revision=2, channel="aaa/edge"),
@@ -1204,13 +1140,11 @@ def test_status_tracks_order(capemit, store_mock, config):
         "                               beta       -          -",
         "                               edge       v2         2",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_with_one_branch(capemit, store_mock, config):
+def test_status_with_one_branch(emitter, store_mock, config):
     """Support having one branch."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     tstamp_with_timezone = dateutil.parser.parse("2020-07-03T20:30:40Z")
     channel_map = [
         _build_release(revision=5, channel="latest/beta"),
@@ -1251,13 +1185,11 @@ def test_status_with_one_branch(capemit, store_mock, config):
         "                               edge           ↑          ↑",
         "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40+00:00",  # NOQA
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_with_multiple_branches(capemit, store_mock, config):
+def test_status_with_multiple_branches(emitter, store_mock, config):
     """Support having multiple branches."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
     channel_map = [
         _build_release(revision=5, channel="latest/beta"),
@@ -1306,13 +1238,11 @@ def test_status_with_multiple_branches(capemit, store_mock, config):
         "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",  # NOQA
         "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",  # NOQA
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_with_resources(capemit, store_mock, config):
+def test_status_with_resources(emitter, store_mock, config):
     """Support having multiple branches."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     res1 = Resource(name="resource1", optional=True, revision=1, resource_type="file")
     res2 = Resource(name="resource2", optional=True, revision=54, resource_type="file")
     channel_map = [
@@ -1335,13 +1265,11 @@ def test_status_with_resources(capemit, store_mock, config):
         "                               beta       5.1        5           resource1 (r1)",
         "                               edge       ↑          ↑           ↑",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_with_resources_missing_after_closed_channel(capemit, store_mock, config):
+def test_status_with_resources_missing_after_closed_channel(emitter, store_mock, config):
     """Specific glitch for a channel without resources after a closed one."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     resource = Resource(name="resource", optional=True, revision=1, resource_type="file")
     channel_map = [
         _build_release(revision=5, channel="latest/stable", resources=[resource]),
@@ -1364,13 +1292,11 @@ def test_status_with_resources_missing_after_closed_channel(capemit, store_mock,
         "                               beta       5.1        5           -",
         "                               edge       5.1        5           resource (r1)",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_with_resources_and_branches(capemit, store_mock, config):
+def test_status_with_resources_and_branches(emitter, store_mock, config):
     """Support having multiple branches."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
     res1 = Resource(name="testres", optional=True, revision=1, resource_type="file")
     res2 = Resource(name="testres", optional=True, revision=14, resource_type="file")
@@ -1410,13 +1336,11 @@ def test_status_with_resources_and_branches(capemit, store_mock, config):
         "                               edge           ↑          ↑           ↑",
         "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40+00:00",  # NOQA
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_multiplebases_single_track(capemit, store_mock, config):
+def test_status_multiplebases_single_track(emitter, store_mock, config):
     """Multiple bases with one track."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     other_base = Base(architecture="16b", channel="1", name="xz")
     channel_map = [
         _build_release(revision=7, channel="latest/stable", base=other_base),
@@ -1450,13 +1374,11 @@ def test_status_multiplebases_single_track(capemit, store_mock, config):
         "                               beta       2.0           80",
         "                               edge       ↑             ↑",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_multiplebases_multiple_tracks(capemit, store_mock, config):
+def test_status_multiplebases_multiple_tracks(emitter, store_mock, config):
     """Multiple bases with several tracks."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     other_base = Base(architecture="16b", channel="1", name="xz")
     channel_map = [
         _build_release(revision=7, channel="latest/stable", base=other_base),
@@ -1507,13 +1429,11 @@ def test_status_multiplebases_multiple_tracks(capemit, store_mock, config):
         "                               beta       -             -",
         "                               edge       git-0db35ea1  156",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_multiplebases_everything_combined(capemit, store_mock, config):
+def test_status_multiplebases_everything_combined(emitter, store_mock, config):
     """Multiple bases with several other modifiers, just a sanity check."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     other_base = Base(architecture="16b", channel="1", name="xz")
     tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
     resource = Resource(name="testres", optional=True, revision=1, resource_type="file")
@@ -1599,13 +1519,11 @@ def test_status_multiplebases_everything_combined(capemit, store_mock, config):
         "                               edge           2.0           80          -",
         "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40+00:00",  # NOQA
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_with_base_in_none(capemit, store_mock, config):
+def test_status_with_base_in_none(emitter, store_mock, config):
     """Support the case of base being None."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     channel_map = [
         _build_release(revision=7, channel="latest/stable", base=None),
         _build_release(revision=7, channel="latest/candidate", base=None),
@@ -1628,13 +1546,11 @@ def test_status_with_base_in_none(capemit, store_mock, config):
         "                 beta       ↑          ↑",
         "                 edge       ↑          ↑",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_status_ureleased_track(capemit, store_mock, config):
+def test_status_ureleased_track(emitter, store_mock, config):
     """The package has a track, but nothing is released to it."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     channel_map = [
         _build_release(revision=5, channel="latest/stable"),
     ]
@@ -1664,7 +1580,7 @@ def test_status_ureleased_track(capemit, store_mock, config):
         "                               beta       -          -",
         "                               edge       -          -",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
 # -- tests for create library command
@@ -1690,7 +1606,7 @@ def test_createlib_simple(emitter, store_mock, tmp_path, monkeypatch, config):
         "Library charms.testcharm.v0.testlib created with id test-example-lib-id.",
         "Consider 'git add lib/charms/testcharm/v0/testlib.py'.",
     ]
-    emitter.assert_recorded(expected)
+    emitter.assert_messages(expected)
     created_lib_file = tmp_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
 
     env = get_templates_environment("charmlibs")
@@ -1731,7 +1647,7 @@ def test_createlib_name_contains_dash(emitter, store_mock, tmp_path, monkeypatch
         "Library charms.test_charm.v0.testlib created with id test-example-lib-id.",
         "Consider 'git add lib/charms/test_charm/v0/testlib.py'.",
     ]
-    emitter.assert_recorded(expected)
+    emitter.assert_messages(expected)
     created_lib_file = tmp_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
 
     env = get_templates_environment("charmlibs")
@@ -1796,7 +1712,7 @@ def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cle
             CreateLibCommand(config).run(args)
 
 
-def test_createlib_library_template_is_python(capemit, store_mock, tmp_path, monkeypatch):
+def test_createlib_library_template_is_python(emitter, store_mock, tmp_path, monkeypatch):
     """Verify that the template used to create a library is valid Python code."""
     env = get_templates_environment("charmlibs")
     newlib_content = env.get_template("new_library.py.j2").render(lib_id="test-lib-id")
@@ -1826,7 +1742,7 @@ def test_publishlib_simple(emitter, store_mock, tmp_path, monkeypatch, config):
         call.create_library_revision("testcharm", lib_id, 0, 1, content, content_hash),
     ]
     expected = "Library charms.testcharm.v0.testlib sent to the store with version 0.1"
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
 
 def test_publishlib_contains_dash(emitter, store_mock, tmp_path, monkeypatch, config):
@@ -1849,13 +1765,12 @@ def test_publishlib_contains_dash(emitter, store_mock, tmp_path, monkeypatch, co
         call.create_library_revision("test-charm", lib_id, 0, 1, content, content_hash),
     ]
     expected = "Library charms.test_charm.v0.testlib sent to the store with version 0.1"
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_publishlib_all(capemit, store_mock, tmp_path, monkeypatch, config):
+def test_publishlib_all(emitter, store_mock, tmp_path, monkeypatch, config):
     """Publish all the libraries found in disk."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
     c1, h1 = factory.create_lib_filepath(
@@ -1892,20 +1807,19 @@ def test_publishlib_all(capemit, store_mock, tmp_path, monkeypatch, config):
         "charms.testcharm_1.v0.testlib-b",
         "charms.testcharm_1.v1.testlib-b",
     ]
-    expected = [
-        "Libraries found under 'lib/charms/testcharm_1': " + str(names),
-        "Library charms.testcharm_1.v0.testlib-a sent to the store with version 0.1",
-        "Library charms.testcharm_1.v0.testlib-b sent to the store with version 0.1",
-        "Library charms.testcharm_1.v1.testlib-b sent to the store with version 1.3",
-    ]
-    records = [rec.message for rec in capemit.records]
-    assert all(e in records for e in expected)
+    emitter.assert_trace("Libraries found under 'lib/charms/testcharm_1': " + str(names))
+    emitter.assert_messages(
+        [
+            "Library charms.testcharm_1.v0.testlib-a sent to the store with version 0.1",
+            "Library charms.testcharm_1.v0.testlib-b sent to the store with version 0.1",
+            "Library charms.testcharm_1.v1.testlib-b sent to the store with version 1.3",
+        ]
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_publishlib_not_found(capemit, store_mock, tmp_path, monkeypatch, config):
+def test_publishlib_not_found(emitter, store_mock, tmp_path, monkeypatch, config):
     """The indicated library is not found."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
     args = Namespace(library="charms.testcharm.v0.testlib")
@@ -1919,9 +1833,8 @@ def test_publishlib_not_found(capemit, store_mock, tmp_path, monkeypatch, config
         )
 
 
-def test_publishlib_not_from_current_charm(capemit, store_mock, tmp_path, monkeypatch, config):
+def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkeypatch, config):
     """The indicated library to publish does not belong to this charm."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
     factory.create_lib_filepath("testcharm", "testlib", api=0)
 
@@ -1980,7 +1893,7 @@ def test_publishlib_store_is_advanced(emitter, store_mock, tmp_path, monkeypatch
         "Library charms.testcharm.v0.testlib is out-of-date locally, Charmhub has version 0.2, "
         "please fetch the updates before publishing."
     )
-    emitter.assert_recorded([expected])
+    emitter.assert_messages([expected])
 
 
 def test_publishlib_store_is_exactly_behind_ok(emitter, store_mock, tmp_path, monkeypatch, config):
@@ -2013,7 +1926,7 @@ def test_publishlib_store_is_exactly_behind_ok(emitter, store_mock, tmp_path, mo
         call.create_library_revision("testcharm", lib_id, 0, 7, content, content_hash),
     ]
     expected = "Library charms.testcharm.v0.testlib sent to the store with version 0.7"
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
 
 def test_publishlib_store_is_exactly_behind_same_hash(
@@ -2050,7 +1963,7 @@ def test_publishlib_store_is_exactly_behind_same_hash(
         "Library charms.testcharm.v0.testlib LIBPATCH number was incorrectly incremented, "
         "Charmhub has the same content in version 0.6."
     )
-    emitter.assert_recorded([expected])
+    emitter.assert_messages([expected])
 
 
 def test_publishlib_store_is_too_behind(emitter, store_mock, tmp_path, monkeypatch, config):
@@ -2083,7 +1996,7 @@ def test_publishlib_store_is_too_behind(emitter, store_mock, tmp_path, monkeypat
         "Library charms.testcharm.v0.testlib has a wrong LIBPATCH number, it's too high, Charmhub "
         "highest version is 0.2."
     )
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
 
 def test_publishlib_store_has_same_revision_same_hash(
@@ -2117,7 +2030,7 @@ def test_publishlib_store_has_same_revision_same_hash(
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     expected = "Library charms.testcharm.v0.testlib is already updated in Charmhub."
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
 
 def test_publishlib_store_has_same_revision_other_hash(
@@ -2152,7 +2065,7 @@ def test_publishlib_store_has_same_revision_other_hash(
         "Library charms.testcharm.v0.testlib version 0.7 is the same than in Charmhub but "
         "content is different"
     )
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
 
 # -- tests for _get_lib_info helper
@@ -2491,7 +2404,7 @@ def test_fetchlib_simple_downloaded(emitter, store_mock, tmp_path, monkeypatch, 
         call.get_library("testcharm", lib_id, 0),
     ]
     expected = "Library charms.testcharm.v0.testlib version 0.7 downloaded."
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
     saved_file = tmp_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
     assert saved_file.read_text() == lib_content
 
@@ -2530,7 +2443,7 @@ def test_fetchlib_simple_dash_in_name(emitter, store_mock, tmp_path, monkeypatch
         call.get_library("test-charm", lib_id, 0),
     ]
     expected = "Library charms.test_charm.v0.testlib version 0.7 downloaded."
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
     saved_file = tmp_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
     assert saved_file.read_text() == lib_content
 
@@ -2570,7 +2483,7 @@ def test_fetchlib_simple_dash_in_name_on_disk(emitter, store_mock, tmp_path, mon
         call.get_library("test-charm", lib_id, 0),
     ]
     expected = "Library charms.test_charm.v0.testlib updated to version 0.7."
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
 
 def test_fetchlib_simple_updated(emitter, store_mock, tmp_path, monkeypatch, config):
@@ -2611,15 +2524,14 @@ def test_fetchlib_simple_updated(emitter, store_mock, tmp_path, monkeypatch, con
         call.get_library("testcharm", lib_id, 0),
     ]
     expected = "Library charms.testcharm.v0.testlib updated to version 0.2."
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
     saved_file = tmp_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
     assert saved_file.read_text() == new_lib_content
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_fetchlib_all(capemit, store_mock, tmp_path, monkeypatch, config):
+def test_fetchlib_all(emitter, store_mock, tmp_path, monkeypatch, config):
     """Update all the libraries found in disk."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
     c1, h1 = factory.create_lib_filepath(
@@ -2687,14 +2599,14 @@ def test_fetchlib_all(capemit, store_mock, tmp_path, monkeypatch, config):
         "charms.testcharm1.v0.testlib1",
         "charms.testcharm2.v3.testlib2",
     ]
-    expected = [
-        "Libraries found under 'lib/charms': " + str(names),
-        "Library charms.testcharm1.v0.testlib1 updated to version 0.2.",
-        "Library charms.testcharm2.v3.testlib2 updated to version 3.14.",
-    ]
+    emitter.assert_trace("Libraries found under 'lib/charms': " + str(names))
+    emitter.assert_messages(
+        [
+            "Library charms.testcharm1.v0.testlib1 updated to version 0.2.",
+            "Library charms.testcharm2.v3.testlib2 updated to version 3.14.",
+        ]
+    )
 
-    records = [rec.message for rec in capemit.records]
-    assert all(e in records for e in expected)
     saved_file = tmp_path / "lib" / "charms" / "testcharm1" / "v0" / "testlib1.py"
     assert saved_file.read_text() == "new lib content 1"
     saved_file = tmp_path / "lib" / "charms" / "testcharm2" / "v3" / "testlib2.py"
@@ -2710,12 +2622,11 @@ def test_fetchlib_store_not_found(emitter, store_mock, config):
         call.get_libraries_tips([{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]),
     ]
     expected = "Library charms.testcharm.v0.testlib not found in Charmhub."
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
 
-def test_fetchlib_store_is_old(capemit, store_mock, tmp_path, monkeypatch, config):
+def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, config):
     """The store has an older version that what is found locally."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
@@ -2738,14 +2649,13 @@ def test_fetchlib_store_is_old(capemit, store_mock, tmp_path, monkeypatch, confi
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     expected = "Library charms.testcharm.v0.testlib has local changes, can not be updated."
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
 def test_fetchlib_store_same_versions_same_hash(
-    capemit, store_mock, tmp_path, monkeypatch, config
+    emitter, store_mock, tmp_path, monkeypatch, config
 ):
     """The store situation is the same than locally."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
@@ -2768,14 +2678,13 @@ def test_fetchlib_store_same_versions_same_hash(
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     expected = "Library charms.testcharm.v0.testlib was already up to date in version 0.7."
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
 def test_fetchlib_store_same_versions_different_hash(
-    capemit, store_mock, tmp_path, monkeypatch, config
+    emitter, store_mock, tmp_path, monkeypatch, config
 ):
     """The store has the lib in the same version, but with different content."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
     monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
@@ -2798,16 +2707,14 @@ def test_fetchlib_store_same_versions_different_hash(
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     expected = "Library charms.testcharm.v0.testlib has local changes, can not be updated."
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
 # -- tests for list libraries command
 
 
-def test_listlib_simple(capemit, store_mock, config):
+def test_listlib_simple(emitter, store_mock, config):
     """Happy path listing simple case."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_mock.get_libraries_tips.return_value = {
         ("some-lib-id", 3): Library(
             lib_id="some-lib-id",
@@ -2829,13 +2736,11 @@ def test_listlib_simple(capemit, store_mock, config):
         "Library name    API    Patch",
         "testlib         3      7",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_listlib_charm_from_metadata(capemit, store_mock, config):
+def test_listlib_charm_from_metadata(emitter, store_mock, config):
     """Happy path listing simple case."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_mock.get_libraries_tips.return_value = {}
     args = Namespace(name=None)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
@@ -2862,22 +2767,18 @@ def test_listlib_name_from_metadata_problem(store_mock, config):
         )
 
 
-def test_listlib_empty(capemit, store_mock, config):
+def test_listlib_empty(emitter, store_mock, config):
     """Nothing found in the store for the specified charm."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_mock.get_libraries_tips.return_value = {}
     args = Namespace(name="testcharm")
     ListLibCommand(config).run(args)
 
     expected = "No libraries found for charm testcharm."
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_message(expected)
 
 
-def test_listlib_properly_sorted(capemit, store_mock, config):
+def test_listlib_properly_sorted(emitter, store_mock, config):
     """Check the sorting of the list."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_mock.get_libraries_tips.return_value = {
         ("lib-id-2", 3): Library(
             lib_id="lib-id-1",
@@ -2919,16 +2820,14 @@ def test_listlib_properly_sorted(capemit, store_mock, config):
         "testlib-2       2      8",
         "testlib-2       3      7",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
 # -- tests for list resources command
 
 
-def test_resources_simple(capemit, store_mock, config):
+def test_resources_simple(emitter, store_mock, config):
     """Happy path of one result from the Store."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = [
         Resource(name="testresource", optional=True, revision=1, resource_type="file"),
     ]
@@ -2944,29 +2843,22 @@ def test_resources_simple(capemit, store_mock, config):
         "Charm Rev    Resource      Type    Optional",
         "1            testresource  file    True",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_resources_empty(capemit, store_mock, config):
+def test_resources_empty(emitter, store_mock, config):
     """No results from the store."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = []
     store_mock.list_resources.return_value = store_response
 
     args = Namespace(charm_name="testcharm")
     ListResourcesCommand(config).run(args)
 
-    expected = [
-        "No resources associated to testcharm.",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_message("No resources associated to testcharm.")
 
 
-def test_resources_ordered_and_grouped(capemit, store_mock, config):
+def test_resources_ordered_and_grouped(emitter, store_mock, config):
     """Results are presented ordered by name in the table."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = [
         Resource(name="bbb-resource", optional=True, revision=2, resource_type="file"),
         Resource(name="ccc-resource", optional=True, revision=1, resource_type="file"),
@@ -2987,7 +2879,7 @@ def test_resources_ordered_and_grouped(capemit, store_mock, config):
         "             bbb-resource  file    True",
         "1            ccc-resource  file    True",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
 # -- tests for upload resources command
@@ -3056,10 +2948,8 @@ def test_uploadresource_options_bad_combinations(config, sysargs, tmp_path, monk
         cmd.parsed_args_post_verification(parser, parsed_args)
 
 
-def test_uploadresource_filepath_call_ok(capemit, store_mock, config, tmp_path):
+def test_uploadresource_filepath_call_ok(emitter, store_mock, config, tmp_path):
     """Simple upload, success result."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
-
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload_resource.return_value = store_response
 
@@ -3076,19 +2966,18 @@ def test_uploadresource_filepath_call_ok(capemit, store_mock, config, tmp_path):
     assert store_mock.mock_calls == [
         call.upload_resource("mycharm", "myresource", "file", test_resource)
     ]
-    expected = [
-        "Uploading resource directly from file {!r}.".format(str(test_resource)),
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call("progress", f"Uploading resource directly from file {str(test_resource)!r}."),
+            call("message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."),
+        ]
+    )
     assert test_resource.exists()  # provided by the user, don't touch it
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_uploadresource_image_call_already_uploaded(capemit, store_mock, config):
+def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config):
     """Upload an oci-image resource, the image itself already being in the registry."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
-
     # fake credentials for the charm/resource, and the final json content
     store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
         username="testusername",
@@ -3158,22 +3047,22 @@ def test_uploadresource_image_call_already_uploaded(capemit, store_mock, config)
         call.upload_resource("mycharm", "myresource", "oci-image", uploaded_resource_filepath),
     ]
 
-    expected = [
-        (
-            "Uploading resource from image "
-            "charm/charm-id/test-image-name @ test-digest-given-by-user."
-        ),
-        "Using OCI image from Canonical's registry.",
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call(
+                "progress",
+                "Uploading resource from image "
+                "charm/charm-id/test-image-name @ test-digest-given-by-user.",
+            ),
+            call("message", "Using OCI image from Canonical's registry.", intermediate=True),
+            call("message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."),
+        ]
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_uploadresource_image_call_upload_from_local(capemit, store_mock, config):
+def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config):
     """Upload an oci-image resource, the image is upload from local to Canonical's registry."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
-
     # fake credentials for the charm/resource, the final json content, and the upload result
     store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
         username="testusername",
@@ -3219,22 +3108,30 @@ def test_uploadresource_image_call_upload_from_local(capemit, store_mock, config
         call.upload_resource("mycharm", "myresource", "oci-image", ANY),
     ]
 
-    expected = [
-        (
-            "Uploading resource from image "
-            "charm/charm-id/test-image-name @ test-digest-given-by-user."
-        ),
-        "Remote image not found, uploading from local registry.",
-        "Image uploaded, new remote digest: new-digest-after-upload.",
-        "Revision 7 created of resource 'myresource' for charm 'mycharm'.",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call(
+                "progress",
+                "Uploading resource from image "
+                "charm/charm-id/test-image-name @ test-digest-given-by-user.",
+            ),
+            call(
+                "message",
+                "Remote image not found, uploading from local registry.",
+                intermediate=True,
+            ),
+            call(
+                "message",
+                "Image uploaded, new remote digest: new-digest-after-upload.",
+                intermediate=True,
+            ),
+            call("message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."),
+        ]
+    )
 
 
-def test_uploadresource_image_call_missing_everywhere(capemit, store_mock, config):
+def test_uploadresource_image_call_missing_everywhere(emitter, store_mock, config):
     """Upload an oci-image resource, but the image is not found remote nor locally."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft.commands")
-
     # fake credentials for the charm/resource, the final json content, and the upload result
     store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
         username="testusername",
@@ -3272,18 +3169,26 @@ def test_uploadresource_image_call_missing_everywhere(capemit, store_mock, confi
         call.get_oci_registry_credentials("mycharm", "myresource"),
     ]
 
-    expected = [
-        (
-            "Uploading resource from "
-            "image charm/charm-id/test-image-name @ test-digest-given-by-user."
-        ),
-        "Remote image not found, uploading from local registry.",
-        (
-            "Image with digest test-digest-given-by-user is not available in "
-            "the Canonical's registry nor locally."
-        ),
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call(
+                "progress",
+                "Uploading resource from "
+                "image charm/charm-id/test-image-name @ test-digest-given-by-user.",
+            ),
+            call(
+                "message",
+                "Remote image not found, uploading from local registry.",
+                intermediate=True,
+            ),
+            call(
+                "message",
+                "Image with digest test-digest-given-by-user is not available in "
+                "the Canonical's registry nor locally.",
+                intermediate=True,
+            ),
+        ]
+    )
 
 
 def test_uploadresource_call_error(emitter, store_mock, config, tmp_path):
@@ -3300,7 +3205,7 @@ def test_uploadresource_call_error(emitter, store_mock, config, tmp_path):
     args = Namespace(charm_name="mycharm", resource_name="myresource", filepath=test_resource)
     UploadResourceCommand(config).run(args)
 
-    emitter.assert_recorded(
+    emitter.assert_messages(
         [
             "Upload failed with status 400:",
             "- missing-stuff: text 1",
@@ -3312,11 +3217,8 @@ def test_uploadresource_call_error(emitter, store_mock, config, tmp_path):
 # -- tests for list resource revisions command
 
 
-def test_resourcerevisions_simple(capemit, store_mock, config):
+def test_resourcerevisions_simple(emitter, store_mock, config):
     """Happy path of one result from the Store."""
-
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = [
         ResourceRevision(revision=1, size=50, created_at=datetime.datetime(2020, 7, 3, 2, 30, 40)),
     ]
@@ -3332,29 +3234,22 @@ def test_resourcerevisions_simple(capemit, store_mock, config):
         "Revision    Created at    Size",
         "1           2020-07-03     50B",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)
 
 
-def test_resourcerevisions_empty(capemit, store_mock, config):
+def test_resourcerevisions_empty(emitter, store_mock, config):
     """No results from the store."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     store_response = []
     store_mock.list_resource_revisions.return_value = store_response
 
     args = Namespace(charm_name="testcharm", resource_name="testresource")
     ListResourceRevisionsCommand(config).run(args)
 
-    expected = [
-        "No revisions found.",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_message("No revisions found.")
 
 
-def test_resourcerevisions_ordered_by_revision(capemit, store_mock, config):
+def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config):
     """Results are presented ordered by revision in the table."""
-    capemit.set_level(logging.INFO, logger="charmcraft.commands")
-
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
     tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
@@ -3376,4 +3271,4 @@ def test_resourcerevisions_ordered_by_revision(capemit, store_mock, config):
         "2           2020-07-03     50B",
         "1           2020-07-03    4.9K",
     ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_messages(expected)

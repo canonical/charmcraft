@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
-import logging
 import os
 import pathlib
 import sys
@@ -478,10 +477,8 @@ def test_charmhub_frozen():
         config.api_url = "broken"
 
 
-def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, capemit):
+def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, emitter):
     """Support underscore in these attributes for a while."""
-    capemit.set_level(logging.WARNING, logger="charmcraft")
-
     create_config(
         """
         type: charm  # mandatory
@@ -496,14 +493,13 @@ def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, ca
     assert cfg.charmhub.api_url == "https://server2.com"
     assert cfg.charmhub.registry_url == "https://server3.com"
     deprecation_msg = "DEPRECATED: Configuration keywords are now separated using dashes."
-    assert deprecation_msg in [rec.message for rec in capemit.records]
+    emitter.assert_message(deprecation_msg, intermediate=True)
 
 
 # -- tests for bases
 
 
-def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(capemit, create_config, tmp_path):
-    capemit.set_level(logging.WARNING, logger="charmcraft")
+def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(emitter, create_config, tmp_path):
     create_config(
         """
         type: charm
@@ -520,14 +516,11 @@ def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(capemit, create_config, tmp
             }
         )
     ]
-    assert "DEPRECATED: Bases configuration is now required." in [
-        rec.message for rec in capemit.records
-    ]
+    emitter.assert_message("DEPRECATED: Bases configuration is now required.", intermediate=True)
 
 
-def test_no_bases_is_ok_for_bundles(capemit, create_config, tmp_path):
+def test_no_bases_is_ok_for_bundles(emitter, create_config, tmp_path):
     """Do not send a deprecation message if it is a bundle."""
-    capemit.set_level(logging.WARNING, logger="charmcraft")
     create_config(
         """
         type: bundle
@@ -535,7 +528,7 @@ def test_no_bases_is_ok_for_bundles(capemit, create_config, tmp_path):
     )
 
     load(tmp_path)
-    assert not capemit.records
+    assert not emitter.interactions
 
 
 def test_bases_forbidden_for_bundles(create_config, check_schema_error):

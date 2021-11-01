@@ -171,7 +171,7 @@ def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_co
     assert zf.read("README.md") == b"test readme"
 
     expected = "Created '{}'.".format(zipname)
-    emitter.assert_recorded([expected])
+    emitter.assert_message(expected)
 
     # check the manifest is present and with particular values that depend on given info
     manifest = yaml.safe_load(zf.read("manifest.yaml"))

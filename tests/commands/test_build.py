@@ -554,7 +554,7 @@ def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, capemit, monkeypatch):
+def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, emitter, monkeypatch):
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
@@ -567,13 +567,12 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, cape
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
 
-    records = [r.message for r in capemit.records]
-    assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
+    emitter.assert_trace("Building for 'bases[0]' as host matches 'build-on[0]'.")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_with_charmcraft_yaml_managed_mode(
-    basic_project_builder, capemit, monkeypatch, tmp_path
+    basic_project_builder, emitter, monkeypatch, tmp_path
 ):
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     host_base = get_host_as_base()
@@ -589,8 +588,7 @@ def test_build_with_charmcraft_yaml_managed_mode(
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
 
-    records = [r.message for r in capemit.records]
-    assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
+    emitter.assert_trace("Building for 'bases[0]' as host matches 'build-on[0]'.")
 
 
 def test_build_checks_provider(basic_project, mock_provider):
@@ -681,22 +679,21 @@ def test_build_checks_provider_error(basic_project, mock_provider):
         builder.run()
 
 
-def test_build_without_charmcraft_yaml_issues_dn02(basic_project, capemit):
+def test_build_without_charmcraft_yaml_issues_dn02(basic_project, emitter):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config)
 
     builder.run()
 
-    assert "DEPRECATED: A charmcraft.yaml configuration file is now required." in [
-        r.message for r in capemit.records
-    ]
+    emitter.assert_message(
+        "DEPRECATED: A charmcraft.yaml configuration file is now required.", intermediate=True
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_builder, capemit):
+def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_builder, emitter):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""
-    capemit.set_level(logging.DEBUG)
     host_base = get_host_as_base()
     unmatched_base = Base(
         name="unmatched-name",
@@ -724,19 +721,29 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_buil
         "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
     ]
 
-    records = [r.message for r in capemit.records]
-
-    assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
-    assert "No suitable 'build-on' environment found in 'bases[1]' configuration." in records
-    assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
+    emitter.assert_interactions(
+        [
+            call("trace", "Building for 'bases[0]' as host matches 'build-on[0]'."),
+            call(
+                "progress",
+                "Skipping 'bases[1].build-on[0]': "
+                "name 'unmatched-name' does not match host 'ubuntu'.",
+            ),
+            call(
+                "message",
+                "No suitable 'build-on' environment found in 'bases[1]' configuration.",
+                intermediate=True,
+            ),
+            call("trace", "Building for 'bases[2]' as host matches 'build-on[0]'."),
+        ]
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_multiple_with_charmcraft_yaml_managed_mode(
-    basic_project_builder, monkeypatch, capemit, tmp_path
+    basic_project_builder, monkeypatch, emitter, tmp_path
 ):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""
-    capemit.set_level(logging.DEBUG)
     host_base = get_host_as_base()
     unmatched_base = Base(
         name="unmatched-name",
@@ -766,16 +773,27 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
         "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
     ]
 
-    records = [r.message for r in capemit.records]
-
-    assert "Building for 'bases[0]' as host matches 'build-on[0]'." in records
-    assert "No suitable 'build-on' environment found in 'bases[1]' configuration." in records
-    assert "Building for 'bases[2]' as host matches 'build-on[0]'." in records
+    emitter.assert_interactions(
+        [
+            call("trace", "Building for 'bases[0]' as host matches 'build-on[0]'."),
+            call(
+                "progress",
+                "Skipping 'bases[1].build-on[0]': "
+                "name 'unmatched-name' does not match host 'ubuntu'.",
+            ),
+            call(
+                "message",
+                "No suitable 'build-on' environment found in 'bases[1]' configuration.",
+                intermediate=True,
+            ),
+            call("trace", "Building for 'bases[2]' as host matches 'build-on[0]'."),
+        ]
+    )
 
 
 def test_build_project_is_cwd(
     basic_project,
-    capemit,
+    emitter,
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
@@ -832,7 +850,6 @@ def test_build_project_is_cwd(
 
 def test_build_project_is_not_cwd(
     basic_project,
-    capemit,
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
@@ -902,7 +919,7 @@ def test_build_bases_index_scenarios_provider(
     mode,
     cmd_flags,
     basic_project,
-    capemit,
+    emitter,
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
@@ -961,7 +978,7 @@ def test_build_bases_index_scenarios_provider(
             stderr=ANY,
         ),
     ]
-    assert "Packing the charm" in [r.message for r in capemit.records]
+    emitter.assert_progress("Packing the charm")
     mock_provider.reset_mock()
     mock_instance.reset_mock()
 
@@ -1076,7 +1093,7 @@ def test_build_bases_index_scenarios_provider(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, capemit, tmp_path):
+def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, tmp_path):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
@@ -1142,10 +1159,9 @@ def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, ca
     return_value=Base(name="xname", channel="xchannel", architectures=["xarch"]),
 )
 def test_build_error_no_match_with_charmcraft_yaml(
-    mock_host_base, basic_project, monkeypatch, capemit
+    mock_host_base, basic_project, monkeypatch, emitter
 ):
     """Error when no charms are buildable with host base, verifying each mismatched reason."""
-    capemit.set_level(logging.DEBUG)
     charmcraft_file = basic_project / "charmcraft.yaml"
     charmcraft_file.write_text(
         dedent(
@@ -1176,23 +1192,41 @@ def test_build_error_no_match_with_charmcraft_yaml(
     ):
         builder.run()
 
-    records = [r.message for r in capemit.records]
-
-    assert (
-        "Skipping 'bases[0].build-on[0]': " "name 'unmatched-name' does not match host 'xname'."
-    ) in records
-    assert "No suitable 'build-on' environment found in 'bases[0]' configuration." in records
-    assert (
-        "Skipping 'bases[1].build-on[0]': "
-        "channel 'unmatched-channel' does not match host 'xchannel'."
-    ) in records
-    assert "No suitable 'build-on' environment found in 'bases[1]' configuration." in records
-    assert (
-        "Skipping 'bases[2].build-on[0]': "
-        "host architecture 'xarch' not in base architectures "
-        "['unmatched-arch1', 'unmatched-arch2']."
-    ) in records
-    assert "No suitable 'build-on' environment found in 'bases[2]' configuration." in records
+    emitter.assert_interactions(
+        [
+            call(
+                "progress",
+                "Skipping 'bases[0].build-on[0]': "
+                "name 'unmatched-name' does not match host 'xname'.",
+            ),
+            call(
+                "message",
+                "No suitable 'build-on' environment found in 'bases[0]' configuration.",
+                intermediate=True,
+            ),
+            call(
+                "progress",
+                "Skipping 'bases[1].build-on[0]': "
+                "channel 'unmatched-channel' does not match host 'xchannel'.",
+            ),
+            call(
+                "message",
+                "No suitable 'build-on' environment found in 'bases[1]' configuration.",
+                intermediate=True,
+            ),
+            call(
+                "progress",
+                "Skipping 'bases[2].build-on[0]': "
+                "host architecture 'xarch' not in base architectures "
+                "['unmatched-arch1', 'unmatched-arch2'].",
+            ),
+            call(
+                "message",
+                "No suitable 'build-on' environment found in 'bases[2]' configuration.",
+                intermediate=True,
+            ),
+        ]
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -1277,20 +1311,20 @@ def test_build_package_name(tmp_path, monkeypatch, config):
     assert zipname == "name-from-metadata.charm"
 
 
-def test_build_with_entrypoint_argument_issues_dn04(basic_project, capemit, monkeypatch):
+def test_build_with_entrypoint_argument_issues_dn04(basic_project, emitter, monkeypatch):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config)
 
     builder.run()
 
-    assert (
-        "DEPRECATED: Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point."
-        in [r.message for r in capemit.records]
+    emitter.assert_message(
+        "DEPRECATED: Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point.",
+        intermediate=True,
     )
 
 
-def test_build_entrypoint_from_parts(basic_project, monkeypatch, capemit):
+def test_build_entrypoint_from_parts(basic_project, monkeypatch):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1355,7 +1389,7 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch, capemit):
     )
 
 
-def test_build_entrypoint_from_commandline(basic_project, monkeypatch, capemit):
+def test_build_entrypoint_from_commandline(basic_project, monkeypatch):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1419,7 +1453,7 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch, capemit):
     )
 
 
-def test_build_entrypoint_default(basic_project, monkeypatch, capemit):
+def test_build_entrypoint_default(basic_project, monkeypatch):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1479,7 +1513,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch, capemit):
     )
 
 
-def test_build_entrypoint_from_both(basic_project, monkeypatch, capemit):
+def test_build_entrypoint_from_both(basic_project, monkeypatch):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1519,20 +1553,20 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch, capemit):
     )
 
 
-def test_build_with_requirement_argment_issues_dn05(basic_project, capemit, monkeypatch):
+def test_build_with_requirement_argment_issues_dn05(basic_project, emitter, monkeypatch):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config, entrypoint=None, requirement=["reqs.txt"])
 
     builder.run()
 
-    assert (
-        "DEPRECATED: Use 'charm-requirements' in charmcraft.yaml parts to define requirements."
-        in [r.message for r in capemit.records]
+    emitter.assert_message(
+        "DEPRECATED: Use 'charm-requirements' in charmcraft.yaml parts to define requirements.",
+        intermediate=True,
     )
 
 
-def test_build_requirements_from_parts(basic_project, monkeypatch, capemit):
+def test_build_requirements_from_parts(basic_project, monkeypatch):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1597,7 +1631,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch, capemit):
     )
 
 
-def test_build_requirements_from_commandline(basic_project, monkeypatch, capemit):
+def test_build_requirements_from_commandline(basic_project, monkeypatch, emitter):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1661,7 +1695,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, capemit
     )
 
 
-def test_build_requirements_default(basic_project, monkeypatch, capemit):
+def test_build_requirements_default(basic_project, monkeypatch, emitter):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1725,7 +1759,7 @@ def test_build_requirements_default(basic_project, monkeypatch, capemit):
     )
 
 
-def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, capemit):
+def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, emitter):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1785,7 +1819,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, cape
     )
 
 
-def test_build_requirements_from_both(basic_project, monkeypatch, capemit):
+def test_build_requirements_from_both(basic_project, monkeypatch, emitter):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1895,12 +1929,8 @@ def test_show_linters_attributes(basic_project, emitter, config):
 
     builder.show_linting_results(linting_results)
 
-    # logs; do NOT see the ignored check, and nothing in INFO
-    expected = [
-        "Check result: check-name-1 [attribute] check-result-1 (text; see more at url).",
-    ]
-    emitter.assert_recorded(expected)
-    assert not emitter.message
+    expected = "Check result: check-name-1 [attribute] check-result-1 (text; see more at url)."
+    emitter.assert_trace(expected)
 
 
 def test_show_linters_lint_warnings(basic_project, emitter, config):
@@ -1918,16 +1948,14 @@ def test_show_linters_lint_warnings(basic_project, emitter, config):
         ),
     ]
 
-    emitter.trace.clear()
     builder.show_linting_results(linting_results)
 
-    # log the warning (with the title!); nothing on DEBUG
-    expected = [
-        "Lint Warnings:",
-        "- check-name: Some text (check-url)",
-    ]
-    emitter.assert_recorded(expected)
-    assert not emitter.trace
+    emitter.assert_interactions(
+        [
+            call("message", "Lint Warnings:", intermediate=True),
+            call("message", "- check-name: Some text (check-url)", intermediate=True),
+        ]
+    )
 
 
 def test_show_linters_lint_errors_normal(basic_project, emitter, config):
@@ -1945,20 +1973,18 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
         ),
     ]
 
-    emitter.trace.clear()
     with pytest.raises(CommandError) as cm:
         builder.show_linting_results(linting_results)
     exc = cm.value
     assert str(exc) == "Aborting due to lint errors (use --force to override)."
     assert exc.retcode == 2
 
-    # log the error (with the title!); nothing on DEBUG
-    expected = [
-        "Lint Errors:",
-        "- check-name: Some text (check-url)",
-    ]
-    emitter.assert_recorded(expected)
-    assert not emitter.trace
+    emitter.assert_interactions(
+        [
+            call("message", "Lint Errors:", intermediate=True),
+            call("message", "- check-name: Some text (check-url)", intermediate=True),
+        ]
+    )
 
 
 def test_show_linters_lint_errors_forced(basic_project, emitter, config):
@@ -1976,17 +2002,15 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
         ),
     ]
 
-    emitter.trace.clear()
     builder.show_linting_results(linting_results)
 
-    # log the error (with the title!), and the "pack anyway" message; nothing on DEBUG
-    expected = [
-        "Lint Errors:",
-        "- check-name: Some text (check-url)",
-        "Packing anyway as requested.",
-    ]
-    emitter.assert_recorded(expected)
-    assert not emitter.trace
+    emitter.assert_interactions(
+        [
+            call("message", "Lint Errors:", intermediate=True),
+            call("message", "- check-name: Some text (check-url)", intermediate=True),
+            call("message", "Packing anyway as requested.", intermediate=True),
+        ]
+    )
 
 
 # --- tests for relativise helper

@@ -14,9 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import logging
 import re
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 import pytest
 
@@ -24,25 +23,22 @@ from charmcraft import deprecations
 from charmcraft.deprecations import _DEPRECATION_MESSAGES, notify_deprecation
 
 
-def test_notice_ok(monkeypatch, capemit):
+def test_notice_ok(monkeypatch, emitter):
     """Present proper messages to the user."""
-    capemit.set_level(logging.WARNING, logger="charmcraft")
-
     monkeypatch.setitem(_DEPRECATION_MESSAGES, "dn666", "Test message for the user.")
     monkeypatch.setattr(deprecations, "_DEPRECATION_URL_FMT", "http://docs.com/#{deprecation_id}")
 
     notify_deprecation("dn666")
-    expected = [
-        "DEPRECATED: Test message for the user.",
-        "See http://docs.com/#dn666 for more information.",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call("message", "DEPRECATED: Test message for the user.", intermediate=True),
+            call("message", "See http://docs.com/#dn666 for more information.", intermediate=True),
+        ]
+    )
 
 
-def test_notice_skipped_in_managed_mode(monkeypatch, capemit):
+def test_notice_skipped_in_managed_mode(monkeypatch, emitter):
     """Present proper messages to the user."""
-    capemit.set_level(logging.WARNING, logger="charmcraft")
-
     monkeypatch.setitem(_DEPRECATION_MESSAGES, "dn666", "Test message for the user.")
     monkeypatch.setattr(deprecations, "_DEPRECATION_URL_FMT", "http://docs.com/#{deprecation_id}")
 
@@ -52,7 +48,7 @@ def test_notice_skipped_in_managed_mode(monkeypatch, capemit):
     ):
         notify_deprecation("dn666")
 
-    assert [rec.message for rec in capemit.records] == []
+    emitter.assert_interactions(None)
 
 
 @pytest.mark.parametrize("deprecation_id", _DEPRECATION_MESSAGES.keys())
@@ -68,18 +64,17 @@ def test_check_real_deprecation_messages(message):
     assert message[-1] == "."
 
 
-def test_log_deprecation_only_once(monkeypatch, capemit):
+def test_log_deprecation_only_once(monkeypatch, emitter):
     """Show the message only once even if it was called several times."""
-    capemit.set_level(logging.WARNING, logger="charmcraft")
-
     monkeypatch.setitem(_DEPRECATION_MESSAGES, "dn666", "Test message for the user.")
     monkeypatch.setattr(deprecations, "_DEPRECATION_URL_FMT", "http://docs.com/#{deprecation_id}")
 
     # call twice, log once
     notify_deprecation("dn666")
     notify_deprecation("dn666")
-    expected = [
-        "DEPRECATED: Test message for the user.",
-        "See http://docs.com/#dn666 for more information.",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call("message", "DEPRECATED: Test message for the user.", intermediate=True),
+            call("message", "See http://docs.com/#dn666 for more information.", intermediate=True),
+        ]
+    )

@@ -23,8 +23,7 @@ import io
 import json
 import sys
 import tarfile
-import logging
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 import pytest
 import requests
@@ -158,10 +157,8 @@ def test_auth_simple(responses):
     assert sent_auth_header is None
 
 
-def test_auth_with_credentials(capemit, responses):
+def test_auth_with_credentials(emitter, responses):
     """Authenticate passing credentials."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     responses.add(
         responses.GET,
         "https://auth.fakereg.com?service=test-service&scope=test-scope",
@@ -183,10 +180,10 @@ def test_auth_with_credentials(capemit, responses):
 
     # generic auth indication is logged but NOT the credentials
     expected = "Authenticating! {}".format(auth_info)
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
-def test_auth_with_just_username(capemit, responses):
+def test_auth_with_just_username(responses):
     """Authenticate passing credentials."""
     responses.add(
         responses.GET,
@@ -203,10 +200,8 @@ def test_auth_with_just_username(capemit, responses):
     assert sent_auth_header == "Basic " + expected_encoded.decode("ascii")
 
 
-def test_hit_simple_initial_auth_ok(capemit, responses):
+def test_hit_simple_initial_auth_ok(emitter, responses):
     """Simple GET with auth working at once."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # set the Registry with an initial token
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
     ocireg.auth_token = "some auth token"
@@ -224,7 +219,7 @@ def test_hit_simple_initial_auth_ok(capemit, responses):
 
     # logged what it did
     expected = "Hitting the registry: GET https://fakereg.com/api/stuff"
-    assert [expected] == [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
 def test_hit_simple_re_auth_ok(responses):
@@ -328,10 +323,8 @@ def test_hit_extra_parameters(responses):
     assert responses.calls[0].request.body == b"test-payload"
 
 
-def test_hit_no_log(capemit, responses):
+def test_hit_no_log(emitter, responses):
     """Simple request but avoiding log."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # set the Registry with an initial token
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
     ocireg.auth_token = "some auth token"
@@ -342,8 +335,8 @@ def test_hit_no_log(capemit, responses):
     # try it
     ocireg._hit("PUT", "https://fakereg.com/api/stuff", log=False)
 
-    # no logs!
-    assert not capemit.records
+    # nothing shown!
+    emitter.assert_interactions(None)
 
 
 # -- tests for other OCIRegistry helpers: checkers if stuff uploaded
@@ -407,10 +400,8 @@ def test_ociregistry_is_item_uploaded_redirect(responses, redir_status):
     assert result is True
 
 
-def test_ociregistry_is_item_uploaded_strange_response(responses, capemit):
+def test_ociregistry_is_item_uploaded_strange_response(responses, emitter):
     """Unexpected response."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     ocireg = OCIRegistry("http://fakereg.com/", "test-image")
     url = "http://fakereg.com/v2/test-image/stuff/some-reference"
     responses.add(responses.HEAD, url, status=400, headers={"foo": "bar"})
@@ -423,15 +414,14 @@ def test_ociregistry_is_item_uploaded_strange_response(responses, capemit):
         "'http://fakereg.com/v2/test-image/stuff/some-reference': 400 "
         "(headers={'Content-Type': 'text/plain', 'foo': 'bar'})"
     )
-    assert expected in [rec.message for rec in capemit.records]
+    emitter.assert_trace(expected)
 
 
 # -- test for the OCIRegistry manifest upload
 
 
-def test_ociregistry_upload_manifest_v2(responses, capemit):
+def test_ociregistry_upload_manifest_v2(responses, emitter):
     """Upload a V2 manifest."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
 
     url = "https://fakereg.com/v2/test-image/manifests/test-reference"
@@ -442,9 +432,8 @@ def test_ociregistry_upload_manifest_v2(responses, capemit):
     ocireg.upload_manifest(raw_manifest_data, "test-reference")
 
     # check logs
-    log_lines = [rec.message for rec in capemit.records]
-    assert "Uploading manifest with reference test-reference" in log_lines
-    assert "Manifest uploaded OK" in log_lines
+    emitter.assert_progress("Uploading manifest with reference test-reference")
+    emitter.assert_progress("Manifest uploaded OK")
 
     # check header and data sent
     assert responses.calls[0].request.headers["Content-Type"] == MANIFEST_V2_MIMETYPE
@@ -454,9 +443,8 @@ def test_ociregistry_upload_manifest_v2(responses, capemit):
 # -- tests for the OCIRegistry blob upload
 
 
-def test_ociregistry_upload_blob_complete(tmp_path, capemit, responses, monkeypatch):
+def test_ociregistry_upload_blob_complete(tmp_path, emitter, responses, monkeypatch):
     """Complete upload of a binary to the registry."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
     base_url = "https://fakereg.com/v2/test-image/"
 
@@ -518,15 +506,25 @@ def test_ociregistry_upload_blob_complete(tmp_path, capemit, responses, monkeypa
         for key, value in expected_headers.items():
             assert sent_headers.get(key) == value
 
-    expected = [
-        "Getting URL to push the blob",
-        "Hitting the registry: POST https://fakereg.com/v2/test-image/blobs/uploads/",
-        "Got upload URL ok with range 0-0",
-        "Closing the upload",
-        "Hitting the registry: PUT https://fakereg.com/v2/test-image/fakeurl-4&digest=test-digest",
-        "Upload finished OK",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call("progress", "Getting URL to push the blob"),
+            call(
+                "trace",
+                "Hitting the registry: POST https://fakereg.com/v2/test-image/blobs/uploads/",
+            ),
+            call("progress", "Got upload URL ok with range 0-0"),
+            call("progress", "Closing the upload"),
+            call(
+                "trace",
+                (
+                    "Hitting the registry: PUT "
+                    "https://fakereg.com/v2/test-image/fakeurl-4&digest=test-digest"
+                ),
+            ),
+            call("progress", "Upload finished OK"),
+        ]
+    )
 
 
 def test_ociregistry_upload_blob_bad_initial_response(responses):
@@ -562,9 +560,8 @@ def test_ociregistry_upload_blob_bad_upload_range(responses):
         ocireg.upload_blob("test-filepath", 8, "test-digest")
 
 
-def test_ociregistry_upload_blob_resumed(tmp_path, capemit, responses):
+def test_ociregistry_upload_blob_resumed(tmp_path, emitter, responses):
     """The upload is resumed after server indication to do so."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
     base_url = "https://fakereg.com/v2/test-image/"
 
@@ -611,15 +608,25 @@ def test_ociregistry_upload_blob_resumed(tmp_path, capemit, responses):
         for key, value in expected_headers.items():
             assert sent_headers.get(key) == value
 
-    expected = [
-        "Getting URL to push the blob",
-        "Hitting the registry: POST https://fakereg.com/v2/test-image/blobs/uploads/",
-        "Got upload URL ok with range 0-4",
-        "Closing the upload",
-        "Hitting the registry: PUT https://fakereg.com/v2/test-image/fakeurl-2&digest=test-digest",
-        "Upload finished OK",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call("progress", "Getting URL to push the blob"),
+            call(
+                "trace",
+                "Hitting the registry: POST https://fakereg.com/v2/test-image/blobs/uploads/",
+            ),
+            call("progress", "Got upload URL ok with range 0-4"),
+            call("progress", "Closing the upload"),
+            call(
+                "trace",
+                (
+                    "Hitting the registry: PUT "
+                    "https://fakereg.com/v2/test-image/fakeurl-2&digest=test-digest"
+                ),
+            ),
+            call("progress", "Upload finished OK"),
+        ]
+    )
 
 
 def test_ociregistry_upload_blob_bad_response_middle(tmp_path, responses, monkeypatch):
@@ -722,10 +729,8 @@ def test_ociregistry_upload_blob_bad_final_digest(tmp_path, responses):
 # -- tests for the ImageHandler helpers and functionalities
 
 
-def test_localdockerinterface_get_info_ok(responses, capemit):
+def test_localdockerinterface_get_info_ok(responses, emitter):
     """Get image info ok."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     test_image_info = {"some": "stuff"}
     responses.add(
         responses.GET,
@@ -736,13 +741,11 @@ def test_localdockerinterface_get_info_ok(responses, capemit):
     resp = ldi.get_image_info("test-digest")
     assert resp == test_image_info
 
-    assert not capemit.records
+    emitter.assert_interactions(None)
 
 
-def test_localdockerinterface_get_info_not_found(responses, capemit):
+def test_localdockerinterface_get_info_not_found(responses, emitter):
     """Get image info for something that is not there."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # return 404, which means that the image was not found
     responses.add(
         responses.GET,
@@ -753,13 +756,11 @@ def test_localdockerinterface_get_info_not_found(responses, capemit):
     resp = ldi.get_image_info("test-digest")
     assert resp is None
 
-    assert not capemit.records
+    emitter.assert_interactions(None)
 
 
-def test_localdockerinterface_get_info_bad_response(responses, capemit):
+def test_localdockerinterface_get_info_bad_response(responses, emitter):
     """Docker answered badly when checking for the image."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # weird dockerd behaviour
     responses.add(
         responses.GET,
@@ -770,24 +771,18 @@ def test_localdockerinterface_get_info_bad_response(responses, capemit):
     resp = ldi.get_image_info("test-digest")
     assert resp is None
 
-    expected = [
-        "Bad response when validation local image: 500",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_trace("Bad response when validation local image: 500")
 
 
-def test_localdockerinterface_get_info_disconnected(capemit, responses):
+def test_localdockerinterface_get_info_disconnected(emitter, responses):
     """No daemon to talk to (see responses used as fixture but no listening)."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     ldi = LocalDockerdInterface()
     resp = ldi.get_image_info("test-digest")
     assert resp is None
 
-    expected = [
-        "Cannot connect to /var/run/docker.sock , please ensure dockerd is running.",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_trace(
+        "Cannot connect to /var/run/docker.sock , please ensure dockerd is running."
+    )
 
 
 def test_localdockerinterface_get_streamed_content(responses):
@@ -884,10 +879,8 @@ def test_imagehandler_check_in_registry_no():
     assert result is False
 
 
-def test_imagehandler_extract_file_simple(tmp_path, capemit):
+def test_imagehandler_extract_file_simple(tmp_path, emitter):
     """Extract a file from the tarfile and gets its info."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # create a tar file with one file inside
     test_content = b"test content for the sample file"
     sample_file = tmp_path / "testfile.txt"
@@ -904,16 +897,11 @@ def test_imagehandler_extract_file_simple(tmp_path, capemit):
     assert digest == "sha256:" + hashlib.sha256(test_content).hexdigest()
     assert open(tmp_filepath, "rb").read() == test_content
 
-    expected = [
-        "Extracting file 'testfile.txt' from local tar (compress=False)",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_progress("Extracting file 'testfile.txt' from local tar (compress=False)")
 
 
-def test_imagehandler_extract_file_compressed_ok(tmp_path, capemit):
+def test_imagehandler_extract_file_compressed_ok(tmp_path, emitter):
     """Extract a file from the tarfile and gets its info after compressed."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # create a tar file with one file inside
     test_content = b"test content for the sample file"
     sample_file = tmp_path / "testfile.txt"
@@ -931,13 +919,10 @@ def test_imagehandler_extract_file_compressed_ok(tmp_path, capemit):
     assert digest == "sha256:" + hashlib.sha256(compressed_content).hexdigest()
     assert gzip.decompress(compressed_content) == test_content
 
-    expected = [
-        "Extracting file 'testfile.txt' from local tar (compress=True)",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_progress("Extracting file 'testfile.txt' from local tar (compress=True)")
 
 
-def test_imagehandler_extract_file_compressed_deterministic(tmp_path, capemit):
+def test_imagehandler_extract_file_compressed_deterministic(tmp_path, emitter):
     """Different compressions for the same file give the exact same data."""
     # create a tar file with one file inside
     test_content = b"test content for the sample file"
@@ -955,9 +940,8 @@ def test_imagehandler_extract_file_compressed_deterministic(tmp_path, capemit):
     assert digest1 == digest2
 
 
-def test_imagehandler_uploadblob_first_time(capemit, tmp_path):
+def test_imagehandler_uploadblob_first_time(emitter, tmp_path):
     """Upload a blob for the first time."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
     tmp_file = tmp_path / "somebinary.dat"
     tmp_file.write_text("testcontent")
 
@@ -972,12 +956,11 @@ def test_imagehandler_uploadblob_first_time(capemit, tmp_path):
     # verify the file is cleaned
     assert not tmp_file.exists()
 
-    assert len(capemit.records) == 0
+    emitter.assert_interactions(None)
 
 
-def test_imagehandler_uploadblob_duplicated(capemit, tmp_path):
+def test_imagehandler_uploadblob_duplicated(emitter, tmp_path):
     """Upload a blob that was already there."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
     tmp_file = tmp_path / "somebinary.dat"
     tmp_file.write_text("testcontent")
 
@@ -994,17 +977,12 @@ def test_imagehandler_uploadblob_duplicated(capemit, tmp_path):
     # verify the file is cleaned
     assert not tmp_file.exists()
 
-    expected = [
-        "Blob was already uploaded",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_progress("Blob was already uploaded")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_imagehandler_uploadfromlocal_complete(capemit, tmp_path, responses, monkeypatch):
+def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, monkeypatch):
     """Complete process of uploading a local image."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # fake an image in disk (a tar file with config, layers, and a manifest)."""
     test_tar_image = tmp_path / "test-image.tar"
     test_tar_config_content = b"fake config for the image"
@@ -1099,23 +1077,35 @@ def test_imagehandler_uploadfromlocal_complete(capemit, tmp_path, responses, mon
     ]
 
     # check the output logs
-    expected = [
-        "Checking image is present locally",
-        "Getting the image from the local repo; size={}".format(image_size),
-        "Extracting file 'config.yaml' from local tar (compress=False)",
-        "Uploading config blob, size={}, digest={}".format(u_config_size, u_config_digest),
-        "Extracting file 'layer1.bin' from local tar (compress=True)",
-        "Uploading layer blob 1/2, size={}, digest={}".format(u_layer1_size, u_layer1_digest),
-        "Extracting file 'layer2.bin' from local tar (compress=True)",
-        "Uploading layer blob 2/2, size={}, digest={}".format(u_layer2_size, u_layer2_digest),
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call("progress", "Checking image is present locally"),
+            call("progress", "Getting the image from the local repo; size={}".format(image_size)),
+            call("progress", "Extracting file 'config.yaml' from local tar (compress=False)"),
+            call(
+                "progress",
+                "Uploading config blob, size={}, digest={}".format(u_config_size, u_config_digest),
+            ),
+            call("progress", "Extracting file 'layer1.bin' from local tar (compress=True)"),
+            call(
+                "progress",
+                "Uploading layer blob 1/2, size={}, digest={}".format(
+                    u_layer1_size, u_layer1_digest
+                ),
+            ),
+            call("progress", "Extracting file 'layer2.bin' from local tar (compress=True)"),
+            call(
+                "progress",
+                "Uploading layer blob 2/2, size={}, digest={}".format(
+                    u_layer2_size, u_layer2_digest
+                ),
+            ),
+        ]
+    )
 
 
-def test_imagehandler_uploadfromlocal_not_found_locally(capemit, monkeypatch):
+def test_imagehandler_uploadfromlocal_not_found_locally(emitter, monkeypatch):
     """The requested image is not presented locally."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # will not find the image
     fakedockerd = FakeDockerd({}, b"")
     monkeypatch.setattr(registry, "LocalDockerdInterface", lambda: fakedockerd)
@@ -1124,17 +1114,12 @@ def test_imagehandler_uploadfromlocal_not_found_locally(capemit, monkeypatch):
     result = im.upload_from_local("test-digest")
     assert result is None
 
-    expected = [
-        "Checking image is present locally",
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_progress("Checking image is present locally")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_imagehandler_uploadfromlocal_no_config(capemit, tmp_path, monkeypatch):
+def test_imagehandler_uploadfromlocal_no_config(emitter, tmp_path, monkeypatch):
     """Particular case of a manifest without config."""
-    capemit.set_level(logging.DEBUG, logger="charmcraft")
-
     # fake an image in disk (a tar file with NO config, a layer, and a manifest)."""
     test_tar_image = tmp_path / "test-image.tar"
     test_tar_layer_content = b"fake layer content for the image"
@@ -1200,10 +1185,16 @@ def test_imagehandler_uploadfromlocal_no_config(capemit, tmp_path, monkeypatch):
     ]
 
     # check the output logs
-    expected = [
-        "Checking image is present locally",
-        "Getting the image from the local repo; size={}".format(image_size),
-        "Extracting file 'layer.bin' from local tar (compress=True)",
-        "Uploading layer blob 1/1, size={}, digest={}".format(u_layer_size, u_layer_digest),
-    ]
-    assert expected == [rec.message for rec in capemit.records]
+    emitter.assert_interactions(
+        [
+            call("progress", "Checking image is present locally"),
+            call("progress", "Getting the image from the local repo; size={}".format(image_size)),
+            call("progress", "Extracting file 'layer.bin' from local tar (compress=True)"),
+            call(
+                "progress",
+                "Uploading layer blob 1/1, size={}, digest={}".format(
+                    u_layer_size, u_layer_digest
+                ),
+            ),
+        ]
+    )

@@ -36,10 +36,10 @@ def test_clean(emitter, config, mock_provider, tmp_path):
     cmd.config = config
     cmd.run([])
 
-    emitter.assert_recorded_raw(
+    emitter.assert_interactions(
         [
-            ("progress", "Cleaning project 'foo'."),
-            ("message", "Cleaned project 'foo'."),
+            mock.call("progress", "Cleaning project 'foo'."),
+            mock.call("message", "Cleaned project 'foo'."),
         ]
     )
     assert mock_provider.mock_calls == [

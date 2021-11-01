@@ -107,7 +107,7 @@ def test_load_yaml_corrupted_format(tmp_path, emitter):
     content = load_yaml(test_file)
     assert content is None
 
-    expected = f"Failed to read/parse config file {str(test_file)!r}.*ParserError.*"
+    expected = "Failed to read/parse config file.*testfile.yaml.*ParserError.*"
     emitter.assert_trace(expected, regex=True)
 
 

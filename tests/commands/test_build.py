@@ -721,14 +721,11 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_buil
         "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
     ]
 
+    reason = f"name 'unmatched-name' does not match host {host_base.name!r}."
     emitter.assert_interactions(
         [
             call("trace", "Building for 'bases[0]' as host matches 'build-on[0]'."),
-            call(
-                "progress",
-                "Skipping 'bases[1].build-on[0]': "
-                "name 'unmatched-name' does not match host 'ubuntu'.",
-            ),
+            call("progress", f"Skipping 'bases[1].build-on[0]': {reason}"),
             call(
                 "message",
                 "No suitable 'build-on' environment found in 'bases[1]' configuration.",
@@ -773,14 +770,11 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
         "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
     ]
 
+    reason = f"name 'unmatched-name' does not match host {host_base.name!r}."
     emitter.assert_interactions(
         [
             call("trace", "Building for 'bases[0]' as host matches 'build-on[0]'."),
-            call(
-                "progress",
-                "Skipping 'bases[1].build-on[0]': "
-                "name 'unmatched-name' does not match host 'ubuntu'.",
-            ),
+            call("progress", f"Skipping 'bases[1].build-on[0]': {reason}"),
             call(
                 "message",
                 "No suitable 'build-on' environment found in 'bases[1]' configuration.",

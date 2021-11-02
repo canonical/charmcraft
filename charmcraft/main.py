@@ -128,7 +128,7 @@ _DEFAULT_GLOBAL_ARGS = [
         "flag",
         "-t",
         "--trace",
-        "Show all information needed to trace any internal behaviour",
+        "Show all information needed to trace internal behaviour",
     ),
 ]
 

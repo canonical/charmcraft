@@ -589,6 +589,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
         charmdir=tmp_path,
         builddir=build_dir,
         entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
         python_packages=[],
         requirements=["reqs.txt"],
     )
@@ -620,6 +621,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
         charmdir=tmp_path,
         builddir=build_dir,
         entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
         python_packages=[],
         requirements=["reqs1.txt", "reqs2.txt"],
     )
@@ -660,6 +662,7 @@ def test_build_dependencies_virtualenv_none(tmp_path):
         charmdir=tmp_path,
         builddir=build_dir,
         entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
         python_packages=[],
         requirements=[],
     )
@@ -681,6 +684,7 @@ def test_build_dependencies_virtualenv_packages(tmp_path):
         charmdir=tmp_path,
         builddir=build_dir,
         entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
         python_packages=["pkg1", "pkg2"],
         requirements=[],
     )
@@ -701,7 +705,7 @@ def test_build_dependencies_virtualenv_packages(tmp_path):
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
 
-def test_build_dependencies_virtualenv_both(tmp_path):
+def test_build_dependencies_virtualenv_binary_packages(tmp_path):
     """A virtualenv is created with the specified packages."""
     metadata = tmp_path / CHARM_METADATA
     metadata.write_text("name: crazycharm")
@@ -712,7 +716,40 @@ def test_build_dependencies_virtualenv_both(tmp_path):
         charmdir=tmp_path,
         builddir=build_dir,
         entrypoint=pathlib.Path("whatever"),
-        python_packages=["pkg1", "pkg2"],
+        binary_python_packages=["pkg1", "pkg2"],
+        python_packages=[],
+        requirements=[],
+    )
+
+    with patch("charmcraft.charm_builder._process_run") as mock:
+        with patch("shutil.copytree") as mock_copytree:
+            builder.handle_dependencies()
+
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
+
+    assert mock.mock_calls == [
+        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call([pip_cmd, "--version"]),
+        call([pip_cmd, "install", "--upgrade", "--prefer-binary", "pkg1", "pkg2"]),
+    ]
+
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+
+def test_build_dependencies_virtualenv_all(tmp_path):
+    """A virtualenv is created with the specified packages."""
+    metadata = tmp_path / CHARM_METADATA
+    metadata.write_text("name: crazycharm")
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = CharmBuilder(
+        charmdir=tmp_path,
+        builddir=build_dir,
+        entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=["pkg1", "pkg2"],
+        python_packages=["pkg3", "pkg4"],
         requirements=["reqs1.txt", "reqs2.txt"],
     )
 
@@ -725,7 +762,8 @@ def test_build_dependencies_virtualenv_both(tmp_path):
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
-        call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", "--upgrade", "--prefer-binary", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg3", "pkg4"]),
         call(
             [
                 pip_cmd,

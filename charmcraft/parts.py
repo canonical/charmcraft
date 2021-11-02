@@ -37,6 +37,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
 
     source: str = ""
     charm_entrypoint: str = ""  # TODO: add default after removing --entrypoint
+    charm_binary_python_packages: List[str] = []
     charm_python_packages: List[str] = []
     charm_requirements: List[str] = []
 
@@ -67,9 +68,17 @@ class CharmPlugin(plugins.Plugin):
         (string)
         The path to the main charm executable, relative to the charm root.
 
+      - ``charm-binary-python-packages``
+        (list of strings)
+        A list of python packages to install from PyPI before installing
+        requirements. Binary packages are preferred, but they may also be
+        installed from sources if a package is only available in source format.
+
       - ``charm-python-packages``
         (list of strings)
-        A list of python packages to install from PyPI before installing requirements.
+        A list of python packages to install from PyPI before installing
+        requirements. These packages will be installed from sources and built
+        locally at packing time.
 
       - ``charm-requirements``
         (list of strings)
@@ -137,6 +146,9 @@ class CharmPlugin(plugins.Plugin):
         if options.charm_entrypoint:
             entrypoint = self._part_info.part_build_dir / options.charm_entrypoint
             build_cmd.extend(["--entrypoint", str(entrypoint)])
+
+        for pkg in options.charm_binary_python_packages:
+            build_cmd.extend(["-b", pkg])
 
         for pkg in options.charm_python_packages:
             build_cmd.extend(["-p", pkg])

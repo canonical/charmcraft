@@ -906,6 +906,7 @@ def test_build_project_is_not_cwd(
     [
         (EmitterMode.VERBOSE, ["--verbose"]),
         (EmitterMode.QUIET, ["--quiet"]),
+        (EmitterMode.TRACE, ["--trace"]),
         (EmitterMode.NORMAL, []),
     ],
 )

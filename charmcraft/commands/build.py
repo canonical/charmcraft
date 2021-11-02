@@ -422,6 +422,8 @@ class Builder:
             cmd.append("--verbose")
         elif emit.get_mode() == EmitterMode.QUIET:
             cmd.append("--quiet")
+        elif emit.get_mode() == EmitterMode.TRACE:
+            cmd.append("--trace")
 
         if self.debug:
             cmd.append("--debug")

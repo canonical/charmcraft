@@ -180,6 +180,19 @@ jobs:
           unzip -l python-packages-test_*.charm | grep "venv/bumpversion/__init__.py"
           popd
 
+          mkdir -p binary-python-packages-test
+          pushd binary-python-packages-test
+          charmcraft -v init --author testuser
+          sed -i "s|20.04|$VERSION_ID|g" charmcraft.yaml
+          cat <<- EOF >> charmcraft.yaml
+          parts:
+            charm:
+              charm-binary-python-packages: [bump2version]
+          EOF
+          sg lxd -c "charmcraft -v pack"
+          unzip -l binary-python-packages-test_*.charm | grep "venv/bumpversion/__init__.py"
+          popd
+
           sudo snap set charmcraft provider=lxd
           sudo snap set charmcraft provider=multipass
           if sudo snap set charmcraft provider=invalid; then

@@ -40,4 +40,4 @@ tabulate==0.8.9
 typing-extensions==3.10.0.2
 urllib3==1.26.7
 zipp==3.6.0
-git+git://github.com/canonical/craft-cli.git@4af19f9c0da733321dc754be1180aea28f3feeb1
+git+https://github.com/canonical/craft-cli.git@4af19f9c0da733321dc754be1180aea28f3feeb1

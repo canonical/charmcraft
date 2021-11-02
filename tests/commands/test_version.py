@@ -14,16 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import logging
-
 from charmcraft import __version__
 from charmcraft.commands.version import VersionCommand
 
 
-def test_version_result(caplog):
+def test_version_result(emitter):
     """Check it produces the right version."""
-    caplog.set_level(logging.INFO, logger="charmcraft.commands.version")
     cmd = VersionCommand("config")
     cmd.run([])
-    expected = __version__
-    assert [expected] == [rec.message for rec in caplog.records]
+    emitter.assert_message(__version__)

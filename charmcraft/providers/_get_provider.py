@@ -16,7 +16,6 @@
 
 """Build environment provider support for charmcraft."""
 
-import logging
 import os
 import sys
 
@@ -26,8 +25,6 @@ from charmcraft.snap import get_snap_configuration
 
 from ._lxd import LXDProvider
 from ._multipass import MultipassProvider
-
-logger = logging.getLogger(__name__)
 
 
 def _get_platform_default_provider() -> str:

@@ -18,7 +18,6 @@
 
 import argparse
 import errno
-import logging
 import os
 import pathlib
 import shutil
@@ -26,7 +25,10 @@ import sys
 import subprocess
 from typing import List
 
+from craft_cli import emit, EmitterMode
+
 from charmcraft.cmdbase import CommandError
+from charmcraft.env import get_managed_environment_log_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
 
@@ -50,8 +52,6 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoi
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
 HOOKS_DIR = "hooks"
-
-logger = logging.getLogger(__name__)
 
 
 def relativise(src, dst):
@@ -82,7 +82,7 @@ class CharmBuilder:
 
     def build_charm(self) -> None:
         """Build the charm."""
-        logger.debug("Building charm in %r", str(self.buildpath))
+        emit.progress(f"Building charm in {str(self.buildpath)!r}")
 
         if self.buildpath.exists():
             shutil.rmtree(str(self.buildpath))
@@ -111,10 +111,7 @@ class CharmBuilder:
             dest_path.symlink_to(relative_link)
         else:
             rel_path = src_path.relative_to(self.charmdir)
-            logger.warning(
-                "Ignoring symlink because targets outside the project: %r",
-                str(rel_path),
-            )
+            emit.trace(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
 
     def handle_generic_paths(self):
         """Handle all files and dirs except what's ignored and what will be handled later.
@@ -125,7 +122,7 @@ class CharmBuilder:
         - symlinks: respected if are internal to the project
         - other types (blocks, mount points, etc): ignored
         """
-        logger.debug("Linking in generic paths")
+        emit.progress("Linking in generic paths")
 
         for basedir, dirnames, filenames in os.walk(str(self.charmdir), followlinks=False):
             abs_basedir = pathlib.Path(basedir)
@@ -138,7 +135,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    logger.debug("Ignoring directory because of rules: %r", str(rel_path))
+                    emit.trace(f"Ignoring directory because of rules: {str(rel_path)!r}")
                     ignored.append(pos)
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
@@ -157,7 +154,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    logger.debug("Ignoring file because of rules: %r", str(rel_path))
+                    emit.trace(f"Ignoring file because of rules: {str(rel_path)!r}")
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
                     self.create_symlink(abs_path, dest_path)
@@ -173,7 +170,7 @@ class CharmBuilder:
                             raise
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
-                    logger.debug("Ignoring file because of type: %r", str(rel_path))
+                    emit.trace(f"Ignoring file because of type: {str(rel_path)!r}")
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
@@ -185,7 +182,7 @@ class CharmBuilder:
         # dispatch mechanism, create one if wasn't provided by the project
         dispatch_path = self.buildpath / DISPATCH_FILENAME
         if not dispatch_path.exists():
-            logger.debug("Creating the dispatch mechanism")
+            emit.progress("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
                 entrypoint_relative_path=linked_entrypoint.relative_to(self.buildpath)
             )
@@ -207,15 +204,14 @@ class CharmBuilder:
             if node.resolve() == linked_entrypoint:
                 current_hooks_to_replace.append(node)
                 node.unlink()
-                logger.debug(
-                    "Replacing existing hook %r as it's a symlink to the entrypoint",
-                    node.name,
+                emit.trace(
+                    f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint"
                 )
 
         # include the mandatory ones and those we need to replace
         hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
         for hookname in hooknames:
-            logger.debug("Creating the %r hook script pointing to dispatch", hookname)
+            emit.trace(f"Creating the {hookname!r} hook script pointing to dispatch")
             dest_hook = dest_hookpath / hookname
             if not dest_hook.exists():
                 relative_link = relativise(dest_hook, dispatch_path)
@@ -223,7 +219,7 @@ class CharmBuilder:
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
-        logger.debug("Installing dependencies")
+        emit.progress("Installing dependencies")
 
         if self.requirement_paths or self.python_packages:
             # create virtualenv using the host environment python
@@ -280,7 +276,7 @@ def _process_run(cmd: List[str]) -> None:
 
     :raises CommandError: if execution crashes or ends with return code not zero.
     """
-    logger.debug("Running external command %s", cmd)
+    emit.progress(f"Running external command {cmd}")
     try:
         proc = subprocess.Popen(
             cmd,
@@ -292,7 +288,7 @@ def _process_run(cmd: List[str]) -> None:
         raise CommandError(f"Subprocess execution crashed for command {cmd}") from err
 
     for line in proc.stdout:
-        logger.debug("   :: %s", line.rstrip())
+        emit.trace(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 
     if retcode:
@@ -343,9 +339,8 @@ def main():
     """Run the command-line interface."""
     options = _parse_arguments()
 
-    logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-
-    logger.debug("Starting charm builder")
+    logpath = get_managed_environment_log_path()
+    emit.init(EmitterMode.TRACE, "charm-builder", "Starting charm builder", log_filepath=logpath)
 
     builder = CharmBuilder(
         charmdir=pathlib.Path(options.charmdir),

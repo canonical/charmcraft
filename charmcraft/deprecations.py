@@ -24,11 +24,9 @@ When a new deprecation has occurred, write a Deprecation Notice for it here
 Then add that ID along with the deprecation title in the list below.
 """
 
-import logging
+from craft_cli import emit
 
 from charmcraft.env import is_charmcraft_running_in_managed_mode
-
-logger = logging.getLogger(__name__)
 
 
 # the message to show for each deprecation ID (this needs to be in sync with the
@@ -59,7 +57,7 @@ def notify_deprecation(deprecation_id):
         return
 
     message = _DEPRECATION_MESSAGES[deprecation_id]
-    logger.warning("DEPRECATED: %s", message)
+    emit.message(f"DEPRECATED: {message}", intermediate=True)
     url = _DEPRECATION_URL_FMT.format(deprecation_id=deprecation_id)
-    logger.warning("See %s for more information.", url)
+    emit.message(f"See {url} for more information.", intermediate=True)
     _ALREADY_NOTIFIED.add(deprecation_id)

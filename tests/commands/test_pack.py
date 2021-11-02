@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
-import logging
 import pathlib
 import sys
 import zipfile
@@ -154,10 +153,8 @@ def test_resolve_bundle_with_entrypoint(config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_bundle_simple_succesful_build(tmp_path, caplog, bundle_yaml, bundle_config):
+def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_config):
     """A simple happy story."""
-    caplog.set_level(logging.INFO, logger="charmcraft.commands")
-
     # mandatory files (other thant the automatically provided manifest)
     content = bundle_yaml(name="testbundle")
     bundle_config.set(type="bundle")
@@ -174,7 +171,7 @@ def test_bundle_simple_succesful_build(tmp_path, caplog, bundle_yaml, bundle_con
     assert zf.read("README.md") == b"test readme"
 
     expected = "Created '{}'.".format(zipname)
-    assert [expected] == [rec.message for rec in caplog.records]
+    emitter.assert_message(expected)
 
     # check the manifest is present and with particular values that depend on given info
     manifest = yaml.safe_load(zf.read("manifest.yaml"))

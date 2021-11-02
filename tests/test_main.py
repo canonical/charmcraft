@@ -46,7 +46,7 @@ def test_dispatcher_pre_parsing():
     groups = [CommandGroup("title", [create_command("somecommand")])]
     dispatcher = Dispatcher(groups)
     global_args = dispatcher.pre_parse_args(["-q", "somecommand"])
-    assert global_args == {"help": False, "verbose": False, "quiet": True}
+    assert global_args == {"help": False, "verbose": False, "quiet": True, "trace": False}
 
 
 def test_dispatcher_command_loading():
@@ -175,12 +175,44 @@ def test_dispatcher_generic_setup_quiet(options):
 @pytest.mark.parametrize(
     "options",
     [
+        ["somecommand", "--trace"],
+        ["somecommand", "-t"],
+        ["-t", "somecommand"],
+        ["--trace", "somecommand"],
+        ["--trace", "somecommand", "-t"],
+    ],
+)
+def test_dispatcher_generic_setup_trace(options):
+    """Generic parameter handling for trace log setup, directly or after the command."""
+    cmd = create_command("somecommand")
+    groups = [CommandGroup("title", [cmd])]
+    emit.set_mode(EmitterMode.NORMAL)  # this is how `main` will init the Emitter
+    dispatcher = Dispatcher(groups)
+    dispatcher.pre_parse_args(options)
+    assert emit.get_mode() == EmitterMode.TRACE
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
         ["--quiet", "--verbose", "somecommand"],
         ["-v", "-q", "somecommand"],
         ["somecommand", "--quiet", "--verbose"],
         ["somecommand", "-v", "-q"],
         ["--verbose", "somecommand", "--quiet"],
         ["-q", "somecommand", "-v"],
+        ["--trace", "--verbose", "somecommand"],
+        ["-v", "-t", "somecommand"],
+        ["somecommand", "--trace", "--verbose"],
+        ["somecommand", "-v", "-t"],
+        ["--verbose", "somecommand", "--trace"],
+        ["-t", "somecommand", "-v"],
+        ["--quiet", "--trace", "somecommand"],
+        ["-t", "-q", "somecommand"],
+        ["somecommand", "--quiet", "--trace"],
+        ["somecommand", "-t", "-q"],
+        ["--trace", "somecommand", "--quiet"],
+        ["-q", "somecommand", "-t"],
     ],
 )
 def test_dispatcher_generic_setup_mutually_exclusive(options):
@@ -190,7 +222,7 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
     dispatcher = Dispatcher(groups)
     with pytest.raises(ArgumentParsingError) as err:
         dispatcher.pre_parse_args(options)
-    assert str(err.value) == "The 'verbose' and 'quiet' options are mutually exclusive."
+    assert str(err.value) == "The 'verbose', 'trace' and 'quiet' options are mutually exclusive."
 
 
 @pytest.mark.parametrize(

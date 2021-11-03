@@ -232,8 +232,8 @@ class CharmBuilder:
             _process_run([pip_cmd, "--version"])
 
             if self.binary_python_packages:
-                # install binary python packages
-                cmd = [pip_cmd, "install", "--upgrade", "--prefer-binary"]  # base command
+                # install python packages, allowing binary packages
+                cmd = [pip_cmd, "install", "--upgrade"]  # base command
                 for pkg in self.binary_python_packages:
                     cmd.append(pkg)  # the python package to install
                 _process_run(cmd)

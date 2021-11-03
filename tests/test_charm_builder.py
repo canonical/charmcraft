@@ -730,7 +730,7 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path):
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
-        call([pip_cmd, "install", "--upgrade", "--prefer-binary", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", "--upgrade", "pkg1", "pkg2"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
@@ -762,7 +762,7 @@ def test_build_dependencies_virtualenv_all(tmp_path):
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
-        call([pip_cmd, "install", "--upgrade", "--prefer-binary", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", "--upgrade", "pkg1", "pkg2"]),
         call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg3", "pkg4"]),
         call(
             [

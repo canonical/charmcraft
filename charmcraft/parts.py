@@ -71,8 +71,8 @@ class CharmPlugin(plugins.Plugin):
       - ``charm-binary-python-packages``
         (list of strings)
         A list of python packages to install from PyPI before installing
-        requirements. Binary packages are preferred, but they may also be
-        installed from sources if a package is only available in source format.
+        requirements. Binary packages are allowed, but they may also be
+        installed from sources if a package is only available in source form.
 
       - ``charm-python-packages``
         (list of strings)

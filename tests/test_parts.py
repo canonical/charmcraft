@@ -39,6 +39,7 @@ class TestCharmPlugin:
         project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
         spec = {
             "plugin": "charm",
+            "source": str(tmp_path),
             "charm-entrypoint": "entrypoint",
             "charm-binary-python-packages": ["pkg1", "pkg2"],
             "charm-python-packages": ["pkg3", "pkg4"],
@@ -115,6 +116,58 @@ class TestCharmPlugin:
         err = raised.value.errors()
         assert len(err) == 1
         assert err[0]["loc"] == ("charm-invalid",)
+        assert err[0]["type"] == "value_error.extra"
+
+
+class TestBundlePlugin:
+    """Ensure plugin methods return expected data."""
+
+    @pytest.fixture(autouse=True)
+    def setup_method_fixture(self, tmp_path):
+        project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+        spec = {
+            "plugin": "bundle",
+            "source": str(tmp_path),
+        }
+        plugin_properties = parts.BundlePluginProperties.unmarshal(spec)
+        part_spec = plugins.extract_part_properties(spec, plugin_name="bundle")
+        part = craft_parts.Part(
+            "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+        )
+        project_info = craft_parts.ProjectInfo(
+            application_name="test",
+            project_dirs=project_dirs,
+            cache_dir=tmp_path,
+        )
+        part_info = craft_parts.PartInfo(project_info=project_info, part=part)
+
+        self._plugin = plugins.get_plugin(
+            part=part,
+            part_info=part_info,
+            properties=plugin_properties,
+        )
+
+    def test_get_build_package(self):
+        assert self._plugin.get_build_packages() == set()
+
+    def test_get_build_snaps(self):
+        assert self._plugin.get_build_snaps() == set()
+
+    def test_get_build_environment(self):
+        assert self._plugin.get_build_environment() == {}
+
+    def test_get_build_commands(self, tmp_path):
+        assert self._plugin.get_build_commands() == [
+            f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
+            f'cp --archive --link --no-dereference * "{str(tmp_path)}/parts/foo/install"',
+        ]
+
+    def test_invalid_properties(self):
+        with pytest.raises(pydantic.ValidationError) as raised:
+            parts.BundlePlugin.properties_class.unmarshal({"source": ".", "bundle-invalid": True})
+        err = raised.value.errors()
+        assert len(err) == 1
+        assert err[0]["loc"] == ("bundle-invalid",)
         assert err[0]["type"] == "value_error.extra"
 
 

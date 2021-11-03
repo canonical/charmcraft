@@ -72,7 +72,6 @@ parts:
     plugin: nil
     build-packages:
       - python3-dev
-      - git
     stage-packages:
       - libpython3-stdlib
       - libpython3.8-minimal

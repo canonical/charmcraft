@@ -203,7 +203,7 @@ class Builder:
             self._parts,
             work_dir=work_dir,
             project_dir=self.charmdir,
-            ignore_local_sources=["*.charm", "venv"],
+            ignore_local_sources=["*.charm"],
         )
         lifecycle.run(Step.PRIME)
 

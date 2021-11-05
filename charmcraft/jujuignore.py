@@ -227,6 +227,7 @@ default_juju_ignore = """
 
 /build/
 /revision
+/venv
 
 .jujuignore
 """.split(

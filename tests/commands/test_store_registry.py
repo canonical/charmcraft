@@ -27,6 +27,7 @@ from unittest.mock import patch, call
 
 import pytest
 import requests
+from craft_cli import CraftError
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import registry
@@ -103,12 +104,11 @@ def test_assert_response_bad_status_code_with_json_errors():
     errors = [{"foo": "bar"}]
     test_content = {"errors": errors}
     response = create_response(status_code=404, json_content=test_content)
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         assert_response_ok(response)
-    assert str(cm.value) == (
-        "Wrong status code from server (expected=200, got=404) errors={} "
-        "headers={{'Content-Type': 'application/json'}}".format(errors)
-    )
+    error = cm.value
+    assert str(error) == "Wrong status code from server (expected=200, got=404)"
+    assert error.details == f"errors={errors} headers={{'Content-Type': 'application/json'}}"
 
 
 def test_assert_response_bad_status_code_with_extra_json_errors():
@@ -120,22 +120,21 @@ def test_assert_response_bad_status_code_with_extra_json_errors():
         json_content=test_content,
         content_type="application/json;stuff",
     )
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         assert_response_ok(response)
-    assert str(cm.value) == (
-        "Wrong status code from server (expected=200, got=404) errors={} "
-        "headers={{'Content-Type': 'application/json;stuff'}}".format(errors)
-    )
+    error = cm.value
+    assert str(error) == "Wrong status code from server (expected=200, got=404)"
+    assert error.details == f"errors={errors} headers={{'Content-Type': 'application/json;stuff'}}"
 
 
 def test_assert_response_bad_status_code_blind():
     """Different status code than expected, no more info."""
     response = create_response(status_code=500, raw_content=b"stuff")
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         assert_response_ok(response)
-    assert str(cm.value) == (
-        "Wrong status code from server (expected=200, got=500) errors=None headers={}"
-    )
+    error = cm.value
+    assert str(error) == "Wrong status code from server (expected=200, got=500)"
+    assert error.details == "errors=None headers={}"
 
 
 # -- tests for OCIRegistry auth & hit helpers
@@ -541,7 +540,7 @@ def test_ociregistry_upload_blob_bad_initial_response(responses):
 
     # call!
     msg = r"Wrong status code from server \(expected=202, got=500\).*"
-    with pytest.raises(CommandError, match=msg):
+    with pytest.raises(CraftError, match=msg):
         ocireg.upload_blob("test-filepath", 8, "test-digest")
 
 
@@ -559,9 +558,11 @@ def test_ociregistry_upload_blob_bad_upload_range(responses):
     )
 
     # call!
-    msg = "Server error: bad range received"
-    with pytest.raises(CommandError, match=msg):
+    with pytest.raises(CraftError) as cm:
         ocireg.upload_blob("test-filepath", 8, "test-digest")
+    error = cm.value
+    assert str(error) == "Server error: bad range received"
+    assert error.details == "Range='9-9'"
 
 
 def test_ociregistry_upload_blob_resumed(tmp_path, emitter, responses):
@@ -662,7 +663,7 @@ def test_ociregistry_upload_blob_bad_response_middle(tmp_path, responses, monkey
 
     # call!
     msg = r"Wrong status code from server \(expected=202, got=504\).*"
-    with pytest.raises(CommandError, match=msg):
+    with pytest.raises(CraftError, match=msg):
         ocireg.upload_blob(bytes_source, 8, "test-digest")
 
 
@@ -693,7 +694,7 @@ def test_ociregistry_upload_blob_bad_response_closing(tmp_path, responses):
 
     # call!
     msg = r"Wrong status code from server \(expected=201, got=502\).*"
-    with pytest.raises(CommandError, match=msg):
+    with pytest.raises(CraftError, match=msg):
         ocireg.upload_blob(bytes_source, 8, "test-digest")
 
 

@@ -29,7 +29,7 @@ from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
 import requests_unixsocket
-from craft_cli import emit
+from craft_cli import emit, CraftError
 
 from charmcraft.cmdbase import CommandError
 
@@ -60,10 +60,10 @@ def assert_response_ok(
             errors = response.json().get("errors")
         else:
             errors = None
-        raise CommandError(
-            "Wrong status code from server (expected={}, got={}) errors={} headers={}".format(
-                expected_status, response.status_code, errors, response.headers
-            )
+        raise CraftError(
+            "Wrong status code from server "
+            f"(expected={expected_status}, got={response.status_code})",
+            details=f"errors={errors} headers={response.headers}",
         )
 
     if response.headers.get("Content-Type") not in JSON_RELATED_MIMETYPES:
@@ -206,7 +206,9 @@ class OCIRegistry:
         range_from, range_to_inclusive = [int(x) for x in response.headers["Range"].split("-")]
         emit.progress(f"Got upload URL ok with range {range_from}-{range_to_inclusive}")
         if range_from != 0:
-            raise CommandError("Server error: bad range received")
+            raise CraftError(
+                "Server error: bad range received", details=f"Range={response.headers['Range']!r}"
+            )
 
         # this `range_to_inclusive` alteration is a side effect of the range being inclusive. The
         # server tells us that it already has "0-80", means that it has 81 bytes (from 0 to 80

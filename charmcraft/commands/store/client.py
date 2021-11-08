@@ -78,20 +78,16 @@ class Client(craft_store.StoreClient):
         """Push the bytes from filepath to the Storage."""
         emit.progress(f"Starting to push {str(filepath)!r}")
 
-        def _progress(monitor):
-            # XXX Facundo 2020-07-01: use a real progress bar
-            if monitor.bytes_read <= monitor.len:
-                progress = 100 * monitor.bytes_read / monitor.len
-                print("Uploading... {:.2f}%\r".format(progress), end="", flush=True)
-
         with filepath.open("rb") as fh:
             encoder = MultipartEncoder(
                 fields={"binary": (filepath.name, fh, "application/octet-stream")}
             )
 
             # create a monitor (so that progress can be displayed) as call the real pusher
-            monitor = MultipartEncoderMonitor(encoder, _progress)
-            response = self._storage_push(monitor)
+            monitor = MultipartEncoderMonitor(encoder)
+            with emit.progress_bar("Uploading...", monitor.len, delta=False) as progress:
+                monitor.callback = lambda mon: progress.advance(mon.bytes_read)
+                response = self._storage_push(monitor)
 
         result = response.json()
         if not result["successful"]:

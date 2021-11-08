@@ -167,26 +167,29 @@ def test_client_init_removes_trailing_slashes(client_class):
     assert client.storage_base_url == "http://storage.test"
 
 
-def test_client_push_simple_ok(tmp_path, capsys, client_class):
+def test_client_push_simple_ok(tmp_path, emitter, client_class):
     """Happy path for pushing bytes."""
     # fake some bytes to push
     test_filepath = tmp_path / "supercharm.bin"
     with test_filepath.open("wb") as fh:
         fh.write(b"abcdefgh")
 
+    # used to store sizes from the monitor so we can assert emitter outside the fake
+    # pusher after all is finished
+    monitor_sizes_info = []
+
     def fake_pusher(monitor):
         """Push bytes in sequence, doing verifications in the middle."""
-        total_to_push = monitor.len  # not only the saved bytes, but also headers and stuff
+        # store the total monitor len (which is not only the saved bytes, but also
+        # headers and stuff) and the prepared read batch size
+        total_to_push = monitor.len
+        read_size = int(total_to_push * 0.3)
+        monitor_sizes_info.extend((total_to_push, read_size))
 
-        # one batch
-        monitor.read(20)
-        captured = capsys.readouterr()
-        assert captured.out == "Uploading... {:.2f}%\r".format(100 * 20 / total_to_push)
-
-        # another batch
-        monitor.read(20)
-        captured = capsys.readouterr()
-        assert captured.out == "Uploading... {:.2f}%\r".format(100 * 40 / total_to_push)
+        # read twice the prepared chunk, and the rest
+        monitor.read(read_size)
+        monitor.read(read_size)
+        monitor.read(total_to_push - read_size * 2)
 
         # check monitor is properly built
         assert isinstance(monitor.encoder, MultipartEncoder)
@@ -202,6 +205,18 @@ def test_client_push_simple_ok(tmp_path, capsys, client_class):
     client = client_class("http://api.test", "http://storage.test")
     with patch.object(client, "_storage_push", side_effect=fake_pusher):
         client.push_file(test_filepath)
+
+    total_to_push, read_size = monitor_sizes_info
+    emitter.assert_interactions(
+        [
+            call("progress", f"Starting to push {str(test_filepath)!r}"),
+            call("progress_bar", "Uploading...", total_to_push, delta=False),
+            call("advance", read_size),
+            call("advance", read_size * 2),
+            call("advance", total_to_push),
+            call("progress", "Uploading bytes ended, id test-upload-id"),
+        ]
+    )
 
 
 def test_client_push_configured_url_simple(tmp_path, client_class):

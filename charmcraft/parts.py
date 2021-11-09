@@ -281,7 +281,7 @@ class PartsLifecycle:
                 ignore_local_sources=ignore_local_sources,
             )
         except PartsError as err:
-            raise CommandError(err)
+            raise CommandError(f"Error bootstrapping lifecycle manager: {err}") from err
 
     @property
     def prime_dir(self) -> pathlib.Path:

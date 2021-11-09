@@ -390,6 +390,7 @@ def test_get_name_charm_bad_metadata(tmp_path, yaml_content):
         "Bad 'metadata.yaml' file inside charm zip "
         "'{}': must be a valid YAML with a 'name' key.".format(bad_zip)
     )
+    assert cm.value.__cause__ is not None
 
 
 def test_get_name_bundle_ok(tmp_path):
@@ -421,6 +422,7 @@ def test_get_name_bundle_bad_data(tmp_path, yaml_content):
         "Bad 'bundle.yaml' file inside bundle zip '{}': "
         "must be a valid YAML with a 'name' key.".format(bad_zip)
     )
+    assert cm.value.__cause__ is not None
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -454,7 +456,8 @@ def test_upload_call_ok(emitter, store_mock, config, tmp_path):
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[])
-    UploadCommand(config).run(args)
+    retcode = UploadCommand(config).run(args)
+    assert retcode == 0
 
     assert store_mock.mock_calls == [call.upload("mycharm", test_charm)]
     expected = "Revision 7 of 'mycharm' created"
@@ -473,7 +476,8 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path):
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[])
-    UploadCommand(config).run(args)
+    retcode = UploadCommand(config).run(args)
+    assert retcode == 1
 
     assert store_mock.mock_calls == [call.upload("mycharm", test_charm)]
     expected = [
@@ -2961,7 +2965,8 @@ def test_uploadresource_filepath_call_ok(emitter, store_mock, config, tmp_path):
         filepath=test_resource,
         image=None,
     )
-    UploadResourceCommand(config).run(args)
+    retcode = UploadResourceCommand(config).run(args)
+    assert retcode == 0
 
     assert store_mock.mock_calls == [
         call.upload_resource("mycharm", "myresource", "file", test_resource)
@@ -3203,7 +3208,8 @@ def test_uploadresource_call_error(emitter, store_mock, config, tmp_path):
     test_resource = tmp_path / "mystuff.bin"
     test_resource.write_text("sample stuff")
     args = Namespace(charm_name="mycharm", resource_name="myresource", filepath=test_resource)
-    UploadResourceCommand(config).run(args)
+    retcode = UploadResourceCommand(config).run(args)
+    assert retcode == 1
 
     emitter.assert_messages(
         [

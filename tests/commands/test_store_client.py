@@ -19,8 +19,8 @@
 import json
 from unittest import mock
 from unittest.mock import call, patch
-import craft_store
 
+import craft_store
 import pytest
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
@@ -144,6 +144,34 @@ def test_client_request_success_without_json_parsing(client_class):
 
     assert client.request_mock.mock_calls == [call("GET", "http://api.test/somepath")]
     assert result == response_value
+
+
+def test_client_request_text_error(client_class):
+    """Hits the server in text mode, getting an error."""
+    client = client_class("http://api.test", "http://storage.test")
+    original_error_text = "bad bad server"
+    store_error = craft_store.errors.CraftStoreError(original_error_text)
+    client.request_mock.side_effect = store_error
+
+    with pytest.raises(CommandError) as cm:
+        client.request_urlpath_text("GET", "/somepath")
+    exc = cm.value
+    assert str(exc) == original_error_text
+    assert exc.__cause__ == store_error
+
+
+def test_client_request_json_error(client_class):
+    """Hits the server in json mode, getting an error."""
+    client = client_class("http://api.test", "http://storage.test")
+    original_error_text = "bad bad server"
+    store_error = craft_store.errors.CraftStoreError(original_error_text)
+    client.request_mock.side_effect = store_error
+
+    with pytest.raises(CommandError) as cm:
+        client.request_urlpath_json("GET", "/somepath")
+    exc = cm.value
+    assert str(exc) == original_error_text
+    assert exc.__cause__ == store_error
 
 
 def test_client_hit_success_withbody(client_class):

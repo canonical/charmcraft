@@ -296,27 +296,27 @@ def get_name_from_zip(filepath):
     """Get the charm/bundle name from a zip file."""
     try:
         zf = zipfile.ZipFile(str(filepath))
-    except zipfile.BadZipFile:
-        raise CommandError("Cannot open {!r} (bad zip file).".format(str(filepath)))
+    except zipfile.BadZipFile as err:
+        raise CommandError(f"Cannot open {str(filepath)!r} (bad zip file).") from err
 
     # get the name from the given file (trying first if it's a charm, then a bundle,
     # otherwise it's an error)
     if "metadata.yaml" in zf.namelist():
         try:
             name = yaml.safe_load(zf.read("metadata.yaml"))["name"]
-        except Exception:
+        except Exception as err:
             raise CommandError(
                 "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
                 "a 'name' key.".format(str(filepath))
-            )
+            ) from err
     elif "bundle.yaml" in zf.namelist():
         try:
             name = yaml.safe_load(zf.read("bundle.yaml"))["name"]
-        except Exception:
+        except Exception as err:
             raise CommandError(
                 "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
                 "a 'name' key.".format(str(filepath))
-            )
+            ) from err
     else:
         raise CommandError(
             "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
@@ -408,10 +408,13 @@ class UploadCommand(BaseCommand):
                         ", ".join(f"{r.name!r} r{r.revision}" for r in parsed_args.resource)
                     )
                 emit.message(msg.format(*args))
+            retcode = 0
         else:
             emit.message(f"Upload failed with status {result.status!r}:")
             for error in result.errors:
                 emit.message(f"- {error.code}: {error.message}")
+            retcode = 1
+        return retcode
 
 
 class ListRevisionsCommand(BaseCommand):
@@ -1459,10 +1462,13 @@ class UploadResourceCommand(BaseCommand):
                 f"Revision {result.revision} created of "
                 f"resource {parsed_args.resource_name!r} for charm {parsed_args.charm_name!r}.",
             )
+            retcode = 0
         else:
             emit.message(f"Upload failed with status {result.status!r}:")
             for error in result.errors:
                 emit.message(f"- {error.code}: {error.message}")
+            retcode = 1
+        return retcode
 
 
 class ListResourceRevisionsCommand(BaseCommand):

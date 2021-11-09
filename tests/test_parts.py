@@ -22,8 +22,10 @@ import craft_parts
 import pydantic
 import pytest
 from craft_parts import Step, plugins
+from craft_parts.errors import PartsError
 
 from charmcraft import charm_builder, parts
+from charmcraft.cmdbase import CommandError
 
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -118,6 +120,21 @@ class TestCharmPlugin:
 
 class TestPartsLifecycle:
     """Ensure parts data correctly used in lifecycle."""
+
+    def test_bad_bootstrap(self, tmp_path):
+        fake_error = PartsError("pumba")
+        with patch("craft_parts.LifecycleManager.__init__") as mock:
+            mock.side_effect = fake_error
+            with pytest.raises(CommandError) as cm:
+                parts.PartsLifecycle(
+                    all_parts={},
+                    work_dir="/some/workdir",
+                    project_dir=tmp_path,
+                    ignore_local_sources=["*.charm"],
+                )
+            exc = cm.value
+            assert str(exc) == "Error bootstrapping lifecycle manager: pumba"
+            assert exc.__cause__ == fake_error
 
     def test_prime_dir(self, tmp_path):
         data = {

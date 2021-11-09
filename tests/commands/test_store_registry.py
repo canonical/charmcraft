@@ -514,6 +514,10 @@ def test_ociregistry_upload_blob_complete(tmp_path, emitter, responses, monkeypa
                 "Hitting the registry: POST https://fakereg.com/v2/test-image/blobs/uploads/",
             ),
             call("progress", "Got upload URL ok with range 0-0"),
+            call("progress_bar", "Uploading...", 8),
+            call("advance", 3),
+            call("advance", 3),
+            call("advance", 2),
             call("progress", "Closing the upload"),
             call(
                 "trace",
@@ -616,6 +620,9 @@ def test_ociregistry_upload_blob_resumed(tmp_path, emitter, responses):
                 "Hitting the registry: POST https://fakereg.com/v2/test-image/blobs/uploads/",
             ),
             call("progress", "Got upload URL ok with range 0-4"),
+            call("progress_bar", "Uploading...", 8),
+            call("advance", 5),
+            call("advance", 3),
             call("progress", "Closing the upload"),
             call(
                 "trace",
@@ -1015,6 +1022,11 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
     fakedockerd = FakeDockerd({"test-digest": image_info}, test_tar_image.read_bytes())
     monkeypatch.setattr(registry, "LocalDockerdInterface", lambda: fakedockerd)
 
+    # ensure two reads from that image, so we can properly test progress
+    image_read_from_dockerd_size_1 = int(image_size * 0.7)
+    image_read_from_dockerd_size_2 = image_size - image_read_from_dockerd_size_1
+    monkeypatch.setattr(registry, "CHUNK_SIZE", image_read_from_dockerd_size_1)
+
     fake_registry = FakeRegistry()
     im = ImageHandler(fake_registry)
     main_call_result = im.upload_from_local("test-digest")
@@ -1081,6 +1093,9 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
         [
             call("progress", "Checking image is present locally"),
             call("progress", "Getting the image from the local repo; size={}".format(image_size)),
+            call("progress_bar", "Reading image...", image_size),
+            call("advance", image_read_from_dockerd_size_1),
+            call("advance", image_read_from_dockerd_size_2),
             call("progress", "Extracting file 'config.yaml' from local tar (compress=False)"),
             call(
                 "progress",
@@ -1189,6 +1204,8 @@ def test_imagehandler_uploadfromlocal_no_config(emitter, tmp_path, monkeypatch):
         [
             call("progress", "Checking image is present locally"),
             call("progress", "Getting the image from the local repo; size={}".format(image_size)),
+            call("progress_bar", "Reading image...", image_size),
+            call("advance", image_size),
             call("progress", "Extracting file 'layer.bin' from local tar (compress=True)"),
             call(
                 "progress",

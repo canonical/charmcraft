@@ -351,6 +351,7 @@ def test_tool_exec_no_arguments_help():
     assert sorted(x[0] for x in args[0]) == [
         "-h, --help",
         "-q, --quiet",
+        "-t, --trace",
         "-v, --verbose",
     ]
 
@@ -382,6 +383,7 @@ def test_tool_exec_full_help(sysargv):
     assert sorted(x[0] for x in args[0]) == [
         "-h, --help",
         "-q, --quiet",
+        "-t, --trace",
         "-v, --verbose",
     ]
 
@@ -489,6 +491,7 @@ def test_tool_exec_command_dash_help_simple(help_option):
     assert sorted(x[0] for x in args[1]) == [
         "-h, --help",
         "-q, --quiet",
+        "-t, --trace",
         "-v, --verbose",
     ]
 
@@ -514,6 +517,7 @@ def test_tool_exec_command_dash_help_reverse(help_option):
     assert sorted(x[0] for x in args[1]) == [
         "-h, --help",
         "-q, --quiet",
+        "-t, --trace",
         "-v, --verbose",
     ]
 
@@ -544,6 +548,7 @@ def test_tool_exec_command_dash_help_missing_params(help_option):
     assert sorted(x[0] for x in args[1]) == [
         "-h, --help",
         "-q, --quiet",
+        "-t, --trace",
         "-v, --verbose",
         "mandatory",
     ]
@@ -623,6 +628,7 @@ def test_tool_exec_help_command_on_command_ok():
     assert sorted(x[0] for x in args[1]) == [
         "-h, --help",
         "-q, --quiet",
+        "-t, --trace",
         "-v, --verbose",
     ]
 
@@ -658,6 +664,7 @@ def test_tool_exec_help_command_on_command_complex():
         "-h, --help",
         "-o2, --option2",
         "-q, --quiet",
+        "-t, --trace",
         "-v, --verbose",
         "param1",
         "param2",
@@ -702,5 +709,6 @@ def test_tool_exec_help_command_all():
     assert sorted(x[0] for x in args[0]) == [
         "-h, --help",
         "-q, --quiet",
+        "-t, --trace",
         "-v, --verbose",
     ]

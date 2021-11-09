@@ -221,28 +221,30 @@ class OCIRegistry:
 
         # start the chunked upload
         with open(filepath, "rb") as fh:
-            fh.seek(from_position)
-            while True:
-                chunk = fh.read(CHUNK_SIZE)
-                if not chunk:
-                    break
+            with emit.progress_bar("Uploading...", size) as progress:
+                if from_position:
+                    fh.seek(from_position)
+                    progress.advance(from_position)
 
-                end_position = from_position + len(chunk)
-                headers = {
-                    "Content-Length": str(len(chunk)),
-                    "Content-Range": "{}-{}".format(from_position, end_position),
-                    "Content-Type": OCTET_STREAM_MIMETYPE,
-                }
-                progress = 100 * end_position / size
-                # XXX Facundo 2021-06-14: replace this print for the proper call to show progress
-                # when we have integrated the full "messages to the user" library (GH #381)
-                print("Uploading.. {:.2f}%\r".format(progress), end="", flush=True)
-                response = self._hit("PATCH", upload_url, headers=headers, data=chunk, log=False)
-                assert_response_ok(response, expected_status=202)
+                while True:
+                    chunk = fh.read(CHUNK_SIZE)
+                    if not chunk:
+                        break
 
-                upload_url = response.headers["Location"]
-                from_position += len(chunk)
+                    progress.advance(len(chunk))
+                    end_position = from_position + len(chunk)
+                    headers = {
+                        "Content-Length": str(len(chunk)),
+                        "Content-Range": "{}-{}".format(from_position, end_position),
+                        "Content-Type": OCTET_STREAM_MIMETYPE,
+                    }
+                    response = self._hit(
+                        "PATCH", upload_url, headers=headers, data=chunk, log=False
+                    )
+                    assert_response_ok(response, expected_status=202)
 
+                    upload_url = response.headers["Location"]
+                    from_position += len(chunk)
         headers = {
             "Content-Length": "0",
             "Connection": "close",
@@ -389,12 +391,10 @@ class ImageHandler:
         response = dockerd.get_streamed_image_content(digest)
 
         tmp_exported = tempfile.NamedTemporaryFile(mode="wb", delete=False)
-        extracted_total = 0
-        for chunk in response.iter_content(CHUNK_SIZE):
-            extracted_total += len(chunk)
-            progress = 100 * extracted_total / local_image_size
-            print("Extracting... {:.2f}%\r".format(progress), end="", flush=True)
-            tmp_exported.file.write(chunk)
+        with emit.progress_bar("Reading image...", local_image_size) as progress:
+            for chunk in response.iter_content(CHUNK_SIZE):
+                progress.advance(len(chunk))
+                tmp_exported.file.write(chunk)
         tmp_exported.close()
 
         # open the image tar and inspect it to get the config and layers from the only one

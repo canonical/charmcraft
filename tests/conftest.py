@@ -293,14 +293,38 @@ def init_emitter():
     temp_logfile.unlink()
 
 
+class RecordingProgresser:
+    def __init__(self, recording_emitter):
+        self.recording_emitter = recording_emitter
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        return False  # do not consume any exception
+
+    def advance(self, *a, **k):
+        """Record the advance usage."""
+        self.recording_emitter.record("advance", a, k)
+
+
 @pytest.fixture
 def emitter(monkeypatch):
     """Helper to test everything that was shown using craft-cli Emitter."""
-    re = RecordingEmitter()
+    recording_emitter = RecordingEmitter()
     for method_name in ("message", "progress", "trace"):
         monkeypatch.setattr(
             messages.emit,
             method_name,
-            lambda *a, method_name=method_name, **k: re.record(method_name, a, k),
+            lambda *a, method_name=method_name, **k: recording_emitter.record(method_name, a, k),
         )
-    return re
+
+    # progress bar is special, because it also needs to return a context manager with
+    # something that will record progress calls
+    def fake_progress_bar(*a, **k):
+        recording_emitter.record("progress_bar", a, k)
+        return RecordingProgresser(recording_emitter)
+
+    monkeypatch.setattr(messages.emit, "progress_bar", fake_progress_bar)
+
+    return recording_emitter

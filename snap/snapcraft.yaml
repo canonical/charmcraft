@@ -101,7 +101,6 @@ parts:
     stage-packages:
       - git
       - apt
-      - apt-transport-https
       - apt-utils
     # snapcraft uses venv, which doesn't pull in wheel (as opposed to virtualenv)
     # so then 'pip install PyYAML' gets cross.

@@ -123,6 +123,13 @@ _DEFAULT_GLOBAL_ARGS = [
         "--quiet",
         "Only show warnings and errors, not progress",
     ),
+    GlobalArgument(
+        "trace",
+        "flag",
+        "-t",
+        "--trace",
+        "Show all information needed to trace internal behaviour",
+    ),
 ]
 
 
@@ -293,13 +300,17 @@ class Dispatcher:
                 filtered_sysargs.append(sysarg)
 
         # control and use quiet/verbose options
-        if global_args["quiet"] and global_args["verbose"]:
-            raise ArgumentParsingError("The 'verbose' and 'quiet' options are mutually exclusive.")
+        if sum([global_args[key] for key in ("quiet", "verbose", "trace")]) > 1:
+            raise ArgumentParsingError(
+                "The 'verbose', 'trace' and 'quiet' options are mutually exclusive."
+            )
         if global_args["quiet"]:
             emit.set_mode(EmitterMode.QUIET)
         elif global_args["verbose"]:
             emit.set_mode(EmitterMode.VERBOSE)
-        emit.trace(f"Raw pre-parsed sysargs: args={ global_args} filtered={filtered_sysargs}")
+        elif global_args["trace"]:
+            emit.set_mode(EmitterMode.TRACE)
+        emit.trace(f"Raw pre-parsed sysargs: args={global_args} filtered={filtered_sysargs}")
 
         # handle requested help through -h/--help options
         if global_args["help"]:

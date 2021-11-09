@@ -38,7 +38,8 @@ class TestCharmPlugin:
         spec = {
             "plugin": "charm",
             "charm-entrypoint": "entrypoint",
-            "charm-python-packages": ["pkg1", "pkg2"],
+            "charm-binary-python-packages": ["pkg1", "pkg2"],
+            "charm-python-packages": ["pkg3", "pkg4"],
             "charm-requirements": ["reqs1.txt", "reqs2.txt"],
         }
         plugin_properties = parts.CharmPluginProperties.unmarshal(spec)
@@ -94,8 +95,10 @@ class TestCharmPlugin:
             "--charmdir {work_dir}/parts/foo/build "
             "--builddir {work_dir}/parts/foo/install "
             "--entrypoint {work_dir}/parts/foo/build/entrypoint "
-            "-p pkg1 "
-            "-p pkg2 "
+            "-b pkg1 "
+            "-b pkg2 "
+            "-p pkg3 "
+            "-p pkg4 "
             "-r reqs1.txt "
             "-r reqs2.txt".format(
                 python=sys.executable,

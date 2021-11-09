@@ -145,6 +145,7 @@ jobs:
           pushd build-packages-test
           charmcraft -v init --author testuser
           sed -i "s|20.04|$VERSION_ID|g" charmcraft.yaml
+          echo "ignore me" > venv
           touch extra_file.txt
           cat <<- EOF >> charmcraft.yaml
           parts:

@@ -68,6 +68,7 @@ class CharmBuilder:
         builddir: pathlib.Path,
         entrypoint: pathlib.Path,
         allow_pip_binary: bool = None,
+        binary_python_packages: List[str] = None,
         python_packages: List[str] = None,
         requirements: List[str] = None,
     ):
@@ -75,6 +76,7 @@ class CharmBuilder:
         self.buildpath = builddir
         self.entrypoint = entrypoint
         self.allow_pip_binary = allow_pip_binary
+        self.binary_python_packages = binary_python_packages
         self.python_packages = python_packages
         self.requirement_paths = requirements
         self.ignore_rules = self._load_juju_ignore()
@@ -221,7 +223,7 @@ class CharmBuilder:
         """Handle from-directory and virtualenv dependencies."""
         emit.progress("Installing dependencies")
 
-        if self.requirement_paths or self.python_packages:
+        if self.requirement_paths or self.binary_python_packages or self.python_packages:
             # create virtualenv using the host environment python
             staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
             _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
@@ -229,8 +231,15 @@ class CharmBuilder:
 
             _process_run([pip_cmd, "--version"])
 
+            if self.binary_python_packages:
+                # install python packages, allowing binary packages
+                cmd = [pip_cmd, "install", "--upgrade"]  # base command
+                for pkg in self.binary_python_packages:
+                    cmd.append(pkg)  # the python package to install
+                _process_run(cmd)
+
             if self.python_packages:
-                # install python packages
+                # install python packages from source
                 cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
                 for pkg in self.python_packages:
                     cmd.append(pkg)  # the python package to install
@@ -316,6 +325,14 @@ def _parse_arguments() -> argparse.Namespace:
         help="The build destination directory",
     )
     parser.add_argument(
+        "-b",
+        "--binary-package",
+        metavar="pkg",
+        action="append",
+        default=None,
+        help="Binary Python package to install before requirements.",
+    )
+    parser.add_argument(
         "-p",
         "--package",
         metavar="pkg",
@@ -346,6 +363,7 @@ def main():
         charmdir=pathlib.Path(options.charmdir),
         builddir=pathlib.Path(options.builddir),
         entrypoint=pathlib.Path(options.entrypoint),
+        binary_python_packages=options.binary_package,
         python_packages=options.package,
         requirements=options.requirement,
     )

@@ -45,7 +45,7 @@ python-dateutil==2.8.2
 pytz==2021.3
 pyxdg==0.27
 PyYAML==6.0
-regex==2021.10.23
+regex==2021.11.2
 requests==2.26.0
 requests-toolbelt==0.9.1
 requests-unixsocket==0.2.0

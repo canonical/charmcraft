@@ -157,10 +157,16 @@ class TestBundlePlugin:
         assert self._plugin.get_build_environment() == {}
 
     def test_get_build_commands(self, tmp_path):
-        assert self._plugin.get_build_commands() == [
-            f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
-            f'cp --archive --link --no-dereference * "{str(tmp_path)}/parts/foo/install"',
-        ]
+        if sys.platform == "linux":
+            assert self._plugin.get_build_commands() == [
+                f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
+                f'cp --archive --link --no-dereference * "{str(tmp_path)}/parts/foo/install"',
+            ]
+        else:
+            assert self._plugin.get_build_commands() == [
+                f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
+                f'cp -R -p -P * "{str(tmp_path)}/parts/foo/install"',
+            ]
 
     def test_invalid_properties(self):
         with pytest.raises(pydantic.ValidationError) as raised:

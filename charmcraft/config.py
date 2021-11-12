@@ -304,7 +304,7 @@ class Config(ModelConfigDefaults, validate_all=False):
 
     type: Optional[str]
     charmhub: CharmhubConfig = CharmhubConfig()
-    parts: Dict[str, Any] = {}
+    parts: Optional[Dict[str, Any]]
     bases: List[BasesConfiguration] = [
         BasesConfiguration(
             **{
@@ -318,28 +318,40 @@ class Config(ModelConfigDefaults, validate_all=False):
     project: Project
 
     @pydantic.validator("type")
-    def validate_charm_type(cls, charm_type, values):
+    def validate_charm_type(cls, charm_type):
         """Verify charm type is valid with exception when instantiated without YAML."""
         if charm_type not in ["bundle", "charm"]:
             raise ValueError("must be either 'charm' or 'bundle'")
         return charm_type
 
     @pydantic.validator("parts", pre=True)
-    def validate_charm_parts(cls, parts):
+    def validate_special_parts(cls, parts):
         """Verify parts type (craft-parts will re-validate this)."""
         if not isinstance(parts, dict):
             raise TypeError("value must be a dictionary")
+
         for name, part in parts.items():
             if not isinstance(part, dict):
                 raise TypeError(f"part {name!r} must be a dictionary")
             # implicit plugin fixup
             if "plugin" not in part:
                 part["plugin"] = name
+
+        # create source properties for special parts "charm" with plugin "charm".
+        # and "bundle" with plugin "bundle". Actual property values will be filled
+        # in charm or bundle packing preparation.
+        for name, part in parts.items():
+            if name == "charm" and part["plugin"] == "charm":
+                part.setdefault("source", "")
+
+            if name == "bundle" and part["plugin"] == "bundle":
+                part.setdefault("source", "")
+
         return parts
 
     @pydantic.validator("parts", each_item=True)
-    def validate_charm_part(cls, item):
-        """Verify each part (craft-parts will re-validate this)."""
+    def validate_each_part(cls, item):
+        """Verify each part in the parts section. Craft-parts will re-validate them."""
         validate_part(item)
         return item
 

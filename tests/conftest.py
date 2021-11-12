@@ -77,7 +77,9 @@ def config(tmp_path):
         def set(self, prime=None, **kwargs):
             # prime is special, so we don't need to write all this structure in all tests
             if prime is not None:
-                self.parts["charm"] = {"prime": prime}
+                if self.parts is None:
+                    self.parts = {}
+                self.parts["charm"] = {"plugin": "charm", "prime": prime}
 
             # the rest is direct
             for k, v in kwargs.items():
@@ -89,14 +91,7 @@ def config(tmp_path):
         config_provided=True,
     )
 
-    # implicit plugin is added by the validator during unmarshal
-    parts = {
-        "charm": {
-            "plugin": "charm",
-        }
-    }
-
-    return TestConfig(type="charm", parts=parts, project=project)
+    return TestConfig(type="charm", project=project)
 
 
 @pytest.fixture
@@ -109,7 +104,9 @@ def bundle_config(tmp_path):
         def set(self, prime=None, **kwargs):
             # prime is special, so we don't need to write all this structure in all tests
             if prime is not None:
-                self.parts["bundle"] = {"prime": prime}
+                if self.parts is None:
+                    self.parts = {}
+                self.parts["bundle"] = {"plugin": "bundle", "prime": prime}
 
             # the rest is direct
             for k, v in kwargs.items():

@@ -2173,9 +2173,6 @@ def test_parts_without_charm_part(basic_project, charmcraft_yaml, monkeypatch):
     monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None)
 
-    # create a requirements.txt file
-    pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
-
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
         mock_lifecycle.side_effect = SystemExit()
@@ -2218,9 +2215,6 @@ def test_parts_with_charm_part_with_plugin(basic_project, charmcraft_yaml, monke
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None)
-
-    # create a requirements.txt file
-    pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:

@@ -141,9 +141,9 @@ class Builder:
         # predefined values set automatically.
         charm_part = self._parts.get("charm")
         if charm_part and charm_part.get("plugin") == "charm":
-            self._charm_part = charm_part
+            self._special_charm_part = charm_part
         else:
-            self._charm_part = None
+            self._special_charm_part = None
 
         self.provider = get_provider()
 
@@ -200,7 +200,7 @@ class Builder:
 
         emit.progress(f"Building charm in {str(work_dir)!r}")
 
-        if self._charm_part:
+        if self._special_charm_part:
             # all current deprecated arguments set charm plugin parameters
             self._handle_deprecated_cli_arguments()
 
@@ -208,8 +208,8 @@ class Builder:
             self._set_prime_filter()
 
             # set source if empty or not declared in charm part
-            if not self._charm_part.get("source"):
-                self._charm_part["source"] = str(self.charmdir)
+            if not self._special_charm_part.get("source"):
+                self._special_charm_part["source"] = str(self.charmdir)
 
         # run the parts lifecycle
         emit.trace(f"Parts definition: {self._parts}")
@@ -238,7 +238,7 @@ class Builder:
 
     def _handle_deprecated_cli_arguments(self):
         # verify if deprecated --requirement is used and update the plugin property
-        if self._charm_part.get("charm-requirements"):
+        if self._special_charm_part.get("charm-requirements"):
             if self.requirement_paths:
                 raise CommandError(
                     "--requirement not supported when charm-requirements "
@@ -246,17 +246,19 @@ class Builder:
                 )
         else:
             if self.requirement_paths:
-                self._charm_part["charm-requirements"] = [str(p) for p in self.requirement_paths]
+                self._special_charm_part["charm-requirements"] = [
+                    str(p) for p in self.requirement_paths
+                ]
                 self.requirement_paths = None
             else:
                 default_reqfile = self.charmdir / "requirements.txt"
                 if default_reqfile.is_file():
-                    self._charm_part["charm-requirements"] = ["requirements.txt"]
+                    self._special_charm_part["charm-requirements"] = ["requirements.txt"]
                 else:
-                    self._charm_part["charm-requirements"] = []
+                    self._special_charm_part["charm-requirements"] = []
 
         # verify if deprecated --entrypoint is used and update the plugin property
-        if self._charm_part.get("charm-entrypoint"):
+        if self._special_charm_part.get("charm-entrypoint"):
             if self.entrypoint:
                 raise CommandError(
                     "--entrypoint not supported when charm-entrypoint "
@@ -265,10 +267,10 @@ class Builder:
         else:
             if self.entrypoint:
                 rel_entrypoint = self.entrypoint.relative_to(self.charmdir)
-                self._charm_part["charm-entrypoint"] = str(rel_entrypoint)
+                self._special_charm_part["charm-entrypoint"] = str(rel_entrypoint)
                 self.entrypoint = None
             else:
-                self._charm_part["charm-entrypoint"] = "src/charm.py"
+                self._special_charm_part["charm-entrypoint"] = "src/charm.py"
 
     def _set_prime_filter(self):
         """Add mandatory and optional charm files to the prime filter.
@@ -280,10 +282,10 @@ class Builder:
           dispatcher and the hooks directory.
         - A set of optional charm files.
         """
-        charm_part_prime = self._charm_part.setdefault("prime", [])
+        charm_part_prime = self._special_charm_part.setdefault("prime", [])
 
         # add entrypoint
-        entrypoint = pathlib.Path(self._charm_part["charm-entrypoint"])
+        entrypoint = pathlib.Path(self._special_charm_part["charm-entrypoint"])
         if str(entrypoint) == entrypoint.name:
             # the entry point is in the root of the project, just include it
             charm_part_prime.append(str(entrypoint))
@@ -292,7 +294,7 @@ class Builder:
             charm_part_prime.append(str(entrypoint.parts[0]))
 
         # add venv if there are requirements
-        if self._charm_part["charm-requirements"]:
+        if self._special_charm_part["charm-requirements"]:
             charm_part_prime.append(VENV_DIRNAME)
 
         # add mandatory and optional charm files

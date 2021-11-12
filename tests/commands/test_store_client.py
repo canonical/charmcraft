@@ -300,3 +300,27 @@ def test_storage_push_succesful(client_class):
         "Accept": "application/json",
     }
     assert http_request_mock.mock_calls == [call("POST", url, headers=headers, data=test_monitor)]
+
+
+def test_alternate_auth_login_forbidden(client_class, monkeypatch):
+    """Login functionality cannot be used if alternate auth is present."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", "super secret credentials")
+    client = client_class("http://api.test", "http://storage.test")
+    with pytest.raises(CommandError) as cm:
+        client.login()
+    expected_error = (
+        "Cannot login when using alternative auth through CHARMCRAFT_AUTH environment variable."
+    )
+    assert str(cm.value) == expected_error
+
+
+def test_alternate_auth_logout_forbidden(client_class, monkeypatch):
+    """Logout functionality cannot be used if alternate auth is present."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", "super secret credentials")
+    client = client_class("http://api.test", "http://storage.test")
+    with pytest.raises(CommandError) as cm:
+        client.logout()
+    expected_error = (
+        "Cannot logout when using alternative auth through CHARMCRAFT_AUTH environment variable."
+    )
+    assert str(cm.value) == expected_error

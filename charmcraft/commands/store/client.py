@@ -33,6 +33,8 @@ from charmcraft.cmdbase import CommandError
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
+ALTERNATE_AUTH_ENV_VAR = "CHARMCRAFT_AUTH"
+
 
 def build_user_agent():
     """Build the charmcraft's user agent."""
@@ -59,6 +61,24 @@ class Client(craft_store.StoreClient):
             application_name="charmcraft",
             user_agent=build_user_agent(),
         )
+
+    def login(self, *args, **kwargs):
+        """Intercept regular login functionality to forbid it when using alternate auth."""
+        if os.getenv(ALTERNATE_AUTH_ENV_VAR) is not None:
+            raise CommandError(
+                f"Cannot login when using alternative auth through {ALTERNATE_AUTH_ENV_VAR} "
+                "environment variable."
+            )
+        return super().login(*args, **kwargs)
+
+    def logout(self, *args, **kwargs):
+        """Intercept regular logout functionality to forbid it when using alternate auth."""
+        if os.getenv(ALTERNATE_AUTH_ENV_VAR) is not None:
+            raise CommandError(
+                f"Cannot logout when using alternative auth through {ALTERNATE_AUTH_ENV_VAR} "
+                "environment variable."
+            )
+        return super().logout(*args, **kwargs)
 
     def request_urlpath_text(self, method: str, urlpath: str, *args, **kwargs) -> str:
         """Return a request.Response to a urlpath."""

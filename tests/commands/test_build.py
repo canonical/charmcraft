@@ -2008,6 +2008,235 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
     )
 
 
+# -- tests for implicit charm part
+
+
+@pytest.fixture
+def charmcraft_yaml():
+    """Create a charmcraft.yaml with the given parts data."""
+
+    def _write_yaml_file(project_dir, parts):
+        host_base = get_host_as_base()
+        header = dedent(
+            f"""
+            type: charm
+            bases:
+              - build-on:
+                  - name: {host_base.name!r}
+                    channel: {host_base.channel!r}
+                run-on:
+                  - name: {host_base.name!r}
+                    channel: {host_base.channel!r}
+            """
+        )
+
+        charmcraft_file = project_dir / "charmcraft.yaml"
+        charmcraft_file.write_text(header + parts)
+
+    return _write_yaml_file
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_parts_not_defined(basic_project, charmcraft_yaml, monkeypatch):
+    """Parts are not defined.
+
+    When the "parts" section does not exist, create an implicit "charm" part and
+    populate it with the default charm building parameters.
+    """
+    charmcraft_yaml(basic_project, "")
+
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = get_builder(config, entrypoint=None)
+
+    # create a requirements.txt file
+    pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            builder.run([0])
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "charm": {
+                        "plugin": "charm",
+                        "charm-entrypoint": "src/charm.py",
+                        "charm-requirements": ["requirements.txt"],
+                        "source": str(basic_project),
+                        "prime": [
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                            "README.md",
+                        ],
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
+                ignore_local_sources=["*.charm"],
+            )
+        ]
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_parts_with_charm_part(basic_project, charmcraft_yaml, monkeypatch):
+    """Parts are declared with a charm part with implicit plugin.
+
+    When the "parts" section exists in chamcraft.yaml and a part named "charm"
+    is defined with implicit plugin (or explicit "charm" plugin), populate it
+    with the defaults for charm building.
+    """
+    charmcraft_yaml(
+        basic_project,
+        dedent(
+            """
+            parts:
+              charm:
+                prime:
+                  - my_extra_file.txt
+            """
+        ),
+    )
+
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = get_builder(config, entrypoint=None)
+
+    # create a requirements.txt file
+    pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            builder.run([0])
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "charm": {
+                        "plugin": "charm",
+                        "charm-entrypoint": "src/charm.py",
+                        "charm-requirements": ["requirements.txt"],
+                        "source": str(basic_project),
+                        "prime": [
+                            "my_extra_file.txt",
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                            "README.md",
+                        ],
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
+                ignore_local_sources=["*.charm"],
+            )
+        ]
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_parts_without_charm_part(basic_project, charmcraft_yaml, monkeypatch):
+    """Parts are declared without a charm part.
+
+    When the "parts" section exists in chamcraft.yaml and a part named "charm"
+    is not defined, process parts normally and don't invoke the charm plugin.
+    This scenario is used to use parts processing to pack a generic hooks-based
+    charm.
+    """
+    charmcraft_yaml(
+        basic_project,
+        dedent(
+            """
+            parts:
+              foo:
+                plugin: nil
+            """
+        ),
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = get_builder(config, entrypoint=None)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            builder.run([0])
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "foo": {
+                        "plugin": "nil",
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
+                ignore_local_sources=["*.charm"],
+            )
+        ]
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_parts_with_charm_part_with_plugin(basic_project, charmcraft_yaml, monkeypatch):
+    """Parts are declared with a charm part that uses a different plugin.
+
+    When the "parts" section exists in chamcraft.yaml and a part named "charm"
+    is defined with a plugin that's not "charm", handle it as a regular part
+    without populating fields for charm building.
+    """
+    charmcraft_yaml(
+        basic_project,
+        dedent(
+            """
+            parts:
+              charm:
+                plugin: nil
+            """
+        ),
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = get_builder(config, entrypoint=None)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            builder.run([0])
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "charm": {
+                        "plugin": "nil",
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
+                ignore_local_sources=["*.charm"],
+            )
+        ]
+    )
+
+
 # --- tests for relativise helper
 
 

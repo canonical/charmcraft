@@ -467,6 +467,44 @@ def test_schema_additional_part(create_config, check_schema_error):
     )
 
 
+def test_schema_other_charm_part_no_source(create_config, check_schema_error):
+    """Schema validation, basic prime with bad part."""
+    create_config(
+        """
+        type: charm  # mandatory
+        parts:
+            other-part:
+                plugin: charm
+    """
+    )
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field 'source' required in 'parts.other-part' configuration"""
+        )
+    )
+
+
+def test_schema_other_bundle_part_no_source(create_config, check_schema_error):
+    """Schema validation, basic prime with bad part."""
+    create_config(
+        """
+        type: bundle  # mandatory
+        parts:
+            other-part:
+                plugin: bundle
+    """
+    )
+    check_schema_error(
+        dedent(
+            """\
+            Bad charmcraft.yaml content:
+            - field 'source' required in 'parts.other-part' configuration"""
+        )
+    )
+
+
 # -- tests for Charmhub config
 
 

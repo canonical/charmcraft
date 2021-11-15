@@ -35,8 +35,8 @@ from charmcraft.cmdbase import CommandError
 class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
     """Properties used in charm building."""
 
-    source: str = ""
-    charm_entrypoint: str = ""  # TODO: add default after removing --entrypoint
+    source: str
+    charm_entrypoint: str = "src/charm.py"
     charm_binary_python_packages: List[str] = []
     charm_python_packages: List[str] = []
     charm_requirements: List[str] = []
@@ -164,7 +164,7 @@ class CharmPlugin(plugins.Plugin):
 class BundlePluginProperties(plugins.PluginProperties, plugins.PluginModel):
     """Properties used to pack bundles."""
 
-    source: str = ""
+    source: str
 
     @classmethod
     def unmarshal(cls, data: Dict[str, Any]):
@@ -198,7 +198,7 @@ class BundlePlugin(plugins.Plugin):
 
     def get_build_packages(self) -> Set[str]:
         """Return a set of required packages to install in the build environment."""
-        return {}
+        return set()
 
     def get_build_environment(self) -> Dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""

@@ -19,8 +19,9 @@ import pathlib
 import sys
 import zipfile
 from argparse import ArgumentParser, Namespace
+from textwrap import dedent
 from unittest import mock
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 import yaml
@@ -28,7 +29,7 @@ import yaml
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand, build_zip
-from charmcraft.config import Project
+from charmcraft.config import Project, load
 from charmcraft.utils import SingleOptionEnsurer, useful_filepath
 
 
@@ -263,6 +264,194 @@ def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mo
     PackCommand(bundle_config).run(get_namespace(shell_after=True))
 
     assert mock_launch_shell.mock_calls == [mock.call()]
+
+
+# -- tests for implicit bundle part
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_bundle_parts_not_defined(tmp_path, monkeypatch, bundle_yaml):
+    """Parts are not defined.
+
+    When the "parts" section does not exist, create an implicit "bundle" part and
+    populate it with the default bundle building parameters.
+    """
+    bundle_yaml(name="testbundle")
+    (tmp_path / "README.md").write_text("test readme")
+
+    charmcraft_file = tmp_path / "charmcraft.yaml"
+    charmcraft_file.write_text("type: bundle")
+
+    config = load(tmp_path)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            PackCommand(config).run(get_namespace(shell_after=True))
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "bundle": {
+                        "plugin": "bundle",
+                        "source": str(tmp_path),
+                        "prime": [
+                            "bundle.yaml",
+                            "README.md",
+                        ],
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=tmp_path,
+                ignore_local_sources=["testbundle.zip"],
+            )
+        ]
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_bundle_parts_with_bundle_part(tmp_path, monkeypatch, bundle_yaml):
+    """Parts are declared with a charm part with implicit plugin.
+
+    When the "parts" section exists in chamcraft.yaml and a part named "bundle"
+    is defined with implicit plugin (or explicit "bundle" plugin), populate it
+    with the defaults for bundle building.
+    """
+    bundle_yaml(name="testbundle")
+    (tmp_path / "README.md").write_text("test readme")
+
+    charmcraft_file = tmp_path / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            """
+            type: bundle
+            parts:
+              bundle:
+                prime:
+                  - my_extra_file.txt
+        """
+        )
+    )
+
+    config = load(tmp_path)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            PackCommand(config).run(get_namespace(shell_after=True))
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "bundle": {
+                        "plugin": "bundle",
+                        "source": str(tmp_path),
+                        "prime": [
+                            "my_extra_file.txt",
+                            "bundle.yaml",
+                            "README.md",
+                        ],
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=tmp_path,
+                ignore_local_sources=["testbundle.zip"],
+            )
+        ]
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_bundle_parts_without_bundle_part(tmp_path, monkeypatch, bundle_yaml):
+    """Parts are declared without a bundle part.
+
+    When the "parts" section exists in chamcraft.yaml and a part named "bundle"
+    is not defined, process parts normally and don't invoke the bundle plugin.
+    """
+    bundle_yaml(name="testbundle")
+    (tmp_path / "README.md").write_text("test readme")
+
+    charmcraft_file = tmp_path / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            """
+            type: bundle
+            parts:
+              foo:
+                plugin: nil
+        """
+        )
+    )
+
+    config = load(tmp_path)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            PackCommand(config).run(get_namespace(shell_after=True))
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "foo": {
+                        "plugin": "nil",
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=tmp_path,
+                ignore_local_sources=["testbundle.zip"],
+            )
+        ]
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_bundle_parts_with_bundle_part_with_plugin(tmp_path, monkeypatch, bundle_yaml):
+    """Parts are declared with a bundle part that uses a different plugin.
+
+    When the "parts" section exists in chamcraft.yaml and a part named "bundle"
+    is defined with a plugin that's not "bundle", handle it as a regular part
+    without populating fields for bundle building.
+    """
+    bundle_yaml(name="testbundle")
+    (tmp_path / "README.md").write_text("test readme")
+
+    charmcraft_file = tmp_path / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            """
+            type: bundle
+            parts:
+              bundle:
+                plugin: nil
+        """
+        )
+    )
+
+    config = load(tmp_path)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            PackCommand(config).run(get_namespace(shell_after=True))
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "bundle": {
+                        "plugin": "nil",
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=tmp_path,
+                ignore_local_sources=["testbundle.zip"],
+            )
+        ]
+    )
 
 
 # -- tests for get paths helper

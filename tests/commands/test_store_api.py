@@ -69,7 +69,8 @@ class _FakeAPI:
             raise exception
 
 
-def test_relogin_on_401(emitter):
+def test_relogin_on_401_regular_auth(emitter):
+    """Tries to re-login after receiving 401 NOT AUTHORIZED from server."""
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
     api.method()
@@ -78,6 +79,19 @@ def test_relogin_on_401(emitter):
     # check logs
     expected = "Existing credentials no longer valid. Trying to log in..."
     emitter.assert_progress(expected)
+
+
+def test_relogin_on_401_alternate_auth(monkeypatch):
+    """Got a 401, but alternate auth is used, so no re-login is done and user is informed."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
+
+    with pytest.raises(CommandError) as cm:
+        api.method()
+    assert str(cm.value) == (
+        "Provided credentials are no longer valid for Charmhub. Regenerate them and try again."
+    )
+    assert api.login_called is False
 
 
 def test_non_401_raises():
@@ -105,7 +119,8 @@ def test_craft_store_error_raises_command_error():
     assert api.login_called is False
 
 
-def test_not_logged_in_warns(emitter):
+def test_not_logged_in_warns_regular_auth(emitter):
+    """Capture the indication of not being logged in and try to log in."""
     api = _FakeAPI([NotLoggedIn(), None])
 
     api.method()
@@ -114,6 +129,20 @@ def test_not_logged_in_warns(emitter):
     # check logs
     expected = "Credentials not found. Trying to log in..."
     emitter.assert_progress(expected)
+
+
+def test_not_logged_in_warns_alternate_auth(monkeypatch):
+    """Capture an indication of not being logged in, which should never happen."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    api = _FakeAPI([NotLoggedIn(), None])
+
+    with pytest.raises(RuntimeError) as cm:
+        api.method()
+    assert str(cm.value) == (
+        "Charmcraft error: internal inconsistency detected "
+        "(NotLoggedIn error while having user provided credentials)."
+    )
+    assert api.login_called is False
 
 
 # -- tests for auth

@@ -16,6 +16,7 @@
 
 """The Store API handling."""
 
+import os
 import platform
 import time
 from collections import namedtuple
@@ -27,7 +28,7 @@ from craft_store import attenuations
 from dateutil import parser
 
 from charmcraft.cmdbase import CommandError
-from charmcraft.commands.store.client import Client
+from charmcraft.commands.store.client import Client, ALTERNATE_AUTH_ENV_VAR
 
 # helpers to build responses from this layer
 User = namedtuple("User", "name username userid")
@@ -125,9 +126,19 @@ def _store_client_wrapper(method):
         try:
             return method(self, *args, **kwargs)
         except craft_store.errors.NotLoggedIn:
+            if os.getenv(ALTERNATE_AUTH_ENV_VAR):
+                raise RuntimeError(
+                    "Charmcraft error: internal inconsistency detected "
+                    "(NotLoggedIn error while having user provided credentials)."
+                )
             emit.progress("Credentials not found. Trying to log in...")
         except craft_store.errors.StoreServerError as error:
             if error.response.status_code == 401:
+                if os.getenv(ALTERNATE_AUTH_ENV_VAR):
+                    raise CommandError(
+                        "Provided credentials are no longer valid for Charmhub. "
+                        "Regenerate them and try again."
+                    )
                 emit.progress("Existing credentials no longer valid. Trying to log in...")
             else:
                 raise CommandError(str(error)) from error

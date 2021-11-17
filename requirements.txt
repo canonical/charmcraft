@@ -4,7 +4,6 @@ cffi==1.15.0
 charset-normalizer==2.0.7
 craft-parts==1.0.3
 craft-providers==1.0.3
-craft-store==1.0.0
 cryptography==35.0.0
 humanize==3.12.0
 idna==3.3

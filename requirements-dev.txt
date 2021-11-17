@@ -7,7 +7,6 @@ click==8.0.3
 coverage==6.1.1
 craft-parts==1.0.3
 craft-providers==1.0.3
-craft-store==1.0.0
 cryptography==35.0.0
 flake8==4.0.1
 humanize==3.12.0

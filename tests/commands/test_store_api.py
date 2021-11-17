@@ -150,6 +150,10 @@ def test_not_logged_in_warns_alternate_auth(monkeypatch):
 
 def test_login(client_mock, config):
     """Simple login case."""
+    # set up a response from client's login
+    acquired_credentials = "super secret stuff"
+    client_mock.login = MagicMock(return_value=acquired_credentials)
+
     store = Store(config.charmhub)
     result = store.login()
     assert client_mock.mock_calls == [
@@ -164,7 +168,7 @@ def test_login(client_mock, config):
             ],
         )
     ]
-    assert result is None
+    assert result == acquired_credentials
 
 
 def test_logout(client_mock, config):

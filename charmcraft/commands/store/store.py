@@ -172,7 +172,7 @@ class Store:
         """
         hostname = _get_hostname()
         try:
-            self._client.login(
+            return self._client.login(
                 # 3600 * 30
                 ttl=108000,
                 # Used to identify the login on Ubuntu SSO to ease future revokations.

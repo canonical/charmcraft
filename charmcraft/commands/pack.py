@@ -24,7 +24,7 @@ from typing import List
 
 from craft_cli import emit
 
-from charmcraft import parts
+from charmcraft import env, parts
 from charmcraft.cmdbase import BaseCommand, CommandError
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
@@ -32,7 +32,7 @@ from charmcraft.parts import Step
 from charmcraft.utils import SingleOptionEnsurer, load_yaml, useful_filepath
 
 # the minimum set of files in a bundle
-MANDATORY_FILES = {"bundle.yaml", "README.md"}
+MANDATORY_FILES = ["bundle.yaml", "README.md"]
 
 
 def build_zip(zippath, prime_dir):
@@ -184,9 +184,20 @@ class PackCommand(BaseCommand):
             return []
 
         project = self.config.project
-        config_parts = self.config.parts.copy()
-        bundle_part = config_parts.setdefault("bundle", {})
-        prime = bundle_part.setdefault("prime", [])
+
+        if self.config.parts:
+            config_parts = self.config.parts.copy()
+        else:
+            # "parts" not declared, create an implicit "bundle" part
+            config_parts = {"bundle": {"plugin": "bundle"}}
+
+        # a part named "bundle" using plugin "bundle" is special and has
+        # predefined values set automatically.
+        bundle_part = config_parts.get("bundle")
+        if bundle_part and bundle_part.get("plugin") == "bundle":
+            special_bundle_part = bundle_part
+        else:
+            special_bundle_part = None
 
         # get the config files
         bundle_filepath = project.dirpath / "bundle.yaml"
@@ -202,21 +213,29 @@ class PackCommand(BaseCommand):
                 "file {!r}.".format(str(bundle_filepath))
             )
 
-        # set prime filters
-        for fname in MANDATORY_FILES:
-            fpath = project.dirpath / fname
-            if not fpath.exists():
-                raise CommandError("Missing mandatory file: {!r}.".format(str(fpath)))
-        prime.extend(MANDATORY_FILES)
+        if special_bundle_part:
+            # set prime filters
+            for fname in MANDATORY_FILES:
+                fpath = project.dirpath / fname
+                if not fpath.exists():
+                    raise CommandError("Missing mandatory file: {!r}.".format(str(fpath)))
+            prime = special_bundle_part.setdefault("prime", [])
+            prime.extend(MANDATORY_FILES)
 
-        # set source for buiding
-        bundle_part["source"] = str(project.dirpath)
+            # set source if empty or not declared in charm part
+            if not special_bundle_part.get("source"):
+                special_bundle_part["source"] = str(project.dirpath)
+
+        if env.is_charmcraft_running_in_managed_mode():
+            work_dir = env.get_managed_environment_home_path()
+        else:
+            work_dir = project.dirpath / build.BUILD_DIRNAME
 
         # run the parts lifecycle
         emit.trace(f"Parts definition: {config_parts}")
         lifecycle = parts.PartsLifecycle(
             config_parts,
-            work_dir=project.dirpath / build.BUILD_DIRNAME,
+            work_dir=work_dir,
             project_dir=project.dirpath,
             ignore_local_sources=[bundle_name + ".zip"],
         )

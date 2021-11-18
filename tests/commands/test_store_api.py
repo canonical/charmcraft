@@ -21,12 +21,21 @@ from unittest.mock import patch, call, MagicMock
 
 import pytest
 from dateutil import parser
+from craft_store import attenuations
+from craft_store.endpoints import Package
 from craft_store.errors import NetworkError, NotLoggedIn, StoreServerError
 
 from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.client import Client
 from charmcraft.utils import ResourceOption
-from charmcraft.commands.store.store import Store, Library, Base, _store_client_wrapper
+from charmcraft.commands.store.store import (
+    AUTH_DEFAULT_PERMISSIONS,
+    AUTH_DEFAULT_TTL,
+    Base,
+    Library,
+    Store,
+    _store_client_wrapper,
+)
 from tests.commands.test_store_client import FakeResponse
 
 
@@ -169,6 +178,66 @@ def test_login(client_mock, config):
         )
     ]
     assert result == acquired_credentials
+
+
+def test_login_attenuating_ttl(client_mock, config):
+    """Login with specific TTL restrictions."""
+    store = Store(config.charmhub)
+    store.login(ttl=123)
+    assert client_mock.mock_calls == [
+        call.login(
+            ttl=123,
+            description="charmcraft@fake-host",
+            permissions=AUTH_DEFAULT_PERMISSIONS,
+        )
+    ]
+
+
+def test_login_attenuating_permissions(client_mock, config):
+    """Login with specific permissions restrictions."""
+    store = Store(config.charmhub)
+    permissions_subset = [attenuations.ACCOUNT_VIEW_PACKAGES]
+    store.login(permissions=permissions_subset)
+    assert client_mock.mock_calls == [
+        call.login(
+            ttl=AUTH_DEFAULT_TTL,
+            description="charmcraft@fake-host",
+            permissions=permissions_subset,
+        )
+    ]
+
+
+def test_login_attenuating_channels(client_mock, config):
+    """Login with specific channels restrictions."""
+    store = Store(config.charmhub)
+    channels = ["edge", "beta"]
+    store.login(channels=channels)
+    assert client_mock.mock_calls == [
+        call.login(
+            ttl=AUTH_DEFAULT_TTL,
+            description="charmcraft@fake-host",
+            permissions=AUTH_DEFAULT_PERMISSIONS,
+            channels=channels,
+        )
+    ]
+
+
+def test_login_attenuating_packages(client_mock, config):
+    """Login with specific packages restrictions."""
+    store = Store(config.charmhub)
+    store.login(charms=["supercharm"], bundles=["mybundle1", "mybundle2"])
+    assert client_mock.mock_calls == [
+        call.login(
+            ttl=AUTH_DEFAULT_TTL,
+            description="charmcraft@fake-host",
+            permissions=AUTH_DEFAULT_PERMISSIONS,
+            packages=[
+                Package(package_type="charm", package_name="supercharm"),
+                Package(package_type="bundle", package_name="mybundle1"),
+                Package(package_type="bundle", package_name="mybundle2"),
+            ],
+        )
+    ]
 
 
 def test_logout(client_mock, config):

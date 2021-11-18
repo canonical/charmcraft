@@ -28,6 +28,7 @@ from operator import attrgetter
 
 import yaml
 from craft_cli import emit
+from craft_store import attenuations
 from craft_store.errors import NotLoggedIn
 from humanize import naturalsize
 from tabulate import tabulate
@@ -54,6 +55,9 @@ LibData = namedtuple(
 
 # The token used in the 'init' command (as bytes for easier comparison)
 INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
+
+# the list of valid attenuations to restrict login credentials
+VALID_ATTENUATIONS = {getattr(attenuations, x) for x in dir(attenuations) if x.isupper()}
 
 
 def get_name_from_metadata():
@@ -95,6 +99,12 @@ class LoginCommand(BaseCommand):
         Remember to `charmcraft logout` if you want to remove that token
         from your local system, especially in a shared environment.
 
+        If the credentials are exported, they can also be attenuated in
+        several ways specifying their time-to-live (`--ttl`), on which
+        channels would work (`--channel`), what actions will be able to
+        do (`--permission`), and on which packages they will work
+        (using `--charm` or `--bundle`).
+
         See also `charmcraft whoami` to verify that you are logged in.
     """
     )
@@ -104,11 +114,82 @@ class LoginCommand(BaseCommand):
         parser.add_argument(
             "--export", type=pathlib.Path, help="The file to save the credentials to"
         )
+        parser.add_argument(
+            "--charm",
+            action="append",
+            help=(
+                "The charm(s) on which the required credentials would work "
+                "(this option can be indicated multiple times; defaults to all)"
+            ),
+        )
+        parser.add_argument(
+            "--bundle",
+            action="append",
+            help=(
+                "The bundle(s) on which the required credentials would work "
+                "(this option can be indicated multiple times; defaults to all)"
+            ),
+        )
+        parser.add_argument(
+            "--channel",
+            action="append",
+            help=(
+                "The channel(s) on which the required credentials would work "
+                "(this option can be indicated multiple times, defaults to any channel)"
+            ),
+        )
+        parser.add_argument(
+            "--permission",
+            action="append",
+            help=(
+                "The permission(s) that the required credentials will have "
+                "(this option can be indicated multiple times, defaults to all permissions)"
+            ),
+        )
+        parser.add_argument(
+            "--ttl",
+            type=int,
+            help=(
+                "The time-to-live (in seconds) of the required credentials (defaults to 30 hours)"
+            ),
+        )
 
     def run(self, parsed_args):
         """Run the command."""
+        # validate that restrictions are only used if credentials are exported
+        restrictive_options = ["charm", "bundle", "channel", "permission", "ttl"]
+        if any(getattr(parsed_args, option) is not None for option in restrictive_options):
+            if parsed_args.export is None:
+                # XXX Facundo 2021-11-17: This is imported here to break a cyclic import. It will
+                # go away when we move this error to craft-cli lib.
+                from charmcraft.main import ArgumentParsingError
+
+                raise ArgumentParsingError(
+                    "The restrictive options 'bundle', 'channel', 'charm', 'permission' or 'ttl' "
+                    "can only be used when credentials are exported."
+                )
+        if parsed_args.permission is not None:
+            invalid = set(parsed_args.permission) - VALID_ATTENUATIONS
+            if invalid:
+                invalid_text = ", ".join(map(repr, sorted(invalid)))
+                raise CommandError(f"Invalid permission: {invalid_text}.")
+
+        # restrictive options, mapping the names between what is used in Namespace (singular,
+        # even if it ends up being a list) and the more natural ones used in the Store layer
+        restrictive_options_map = [
+            ("ttl", parsed_args.ttl),
+            ("channels", parsed_args.channel),
+            ("charms", parsed_args.charm),
+            ("bundles", parsed_args.bundle),
+            ("permissions", parsed_args.permission),
+        ]
+        kwargs = {}
+        for arg_name, namespace_value in restrictive_options_map:
+            if namespace_value is not None:
+                kwargs[arg_name] = namespace_value
+
         store = Store(self.config.charmhub)
-        credentials = store.login()
+        credentials = store.login(**kwargs)
         if parsed_args.export is None:
             emit.message(f"Logged in as '{store.whoami().username}'.")
         else:

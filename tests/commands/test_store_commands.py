@@ -69,6 +69,7 @@ from charmcraft.commands.store.store import (
     Uploaded,
     User,
 )
+from charmcraft.main import ArgumentParsingError
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
@@ -165,11 +166,14 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 # -- tests for auth commands
 
 
+LOGIN_OPTIONS = dict.fromkeys(["export", "charm", "bundle", "permission", "channel", "ttl"])
+
+
 def test_login_simple(emitter, store_mock, config):
     """Simple login case."""
     store_mock.whoami.return_value = User(name="John Doe", username="jdoe", userid="-1")
 
-    args = Namespace(export=None)
+    args = Namespace(**LOGIN_OPTIONS)
     LoginCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -185,7 +189,8 @@ def test_login_exporting(emitter, store_mock, config, tmp_path):
     store_mock.login.return_value = acquired_credentials
 
     credentials_file = tmp_path / "somefile.txt"
-    args = Namespace(export=credentials_file)
+    args = Namespace(**LOGIN_OPTIONS)
+    args.export = credentials_file
     LoginCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -193,6 +198,126 @@ def test_login_exporting(emitter, store_mock, config, tmp_path):
     ]
     emitter.assert_message(f"Login successful. Credentials exported to {str(credentials_file)!r}.")
     assert credentials_file.read_text() == acquired_credentials
+
+
+@pytest.mark.parametrize("rest_option", ["charm", "bundle", "permission", "channel", "ttl"])
+def test_login_restrictions_without_export(emitter, store_mock, config, tmp_path, rest_option):
+    """Login restrictions are not allowed if export option is not used."""
+    args = Namespace(**LOGIN_OPTIONS)
+    setattr(args, rest_option, "used")
+    with pytest.raises(ArgumentParsingError) as cm:
+        LoginCommand(config).run(args)
+    assert str(cm.value) == (
+        "The restrictive options 'bundle', 'channel', 'charm', 'permission' or 'ttl' "
+        "can only be used when credentials are exported."
+    )
+
+
+def test_login_restricting_ttl(emitter, store_mock, config, tmp_path):
+    """Login with a TTL restriction."""
+    store_mock.login.return_value = "super secret stuff"
+
+    args = Namespace(**LOGIN_OPTIONS)
+    args.export = tmp_path / "somefile.txt"
+    args.ttl = 1000
+    LoginCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.login(ttl=1000),
+    ]
+
+
+def test_login_restricting_channels(emitter, store_mock, config, tmp_path):
+    """Login with channels restriction."""
+    store_mock.login.return_value = "super secret stuff"
+
+    args = Namespace(**LOGIN_OPTIONS)
+    args.export = tmp_path / "somefile.txt"
+    args.channel = ["edge", "beta"]
+    LoginCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.login(channels=["edge", "beta"]),
+    ]
+
+
+def test_login_restricting_permissions(emitter, store_mock, config, tmp_path):
+    """Login with permissions restriction."""
+    store_mock.login.return_value = "super secret stuff"
+
+    args = Namespace(**LOGIN_OPTIONS)
+    args.export = tmp_path / "somefile.txt"
+    args.permission = ["package-view-metadata", "package-manage-metadata"]
+    LoginCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.login(permissions=["package-view-metadata", "package-manage-metadata"]),
+    ]
+
+
+def test_login_restricting_permission_invalid(emitter, store_mock, config, tmp_path):
+    """Login with a permission restriction that is not valid."""
+    store_mock.login.return_value = "super secret stuff"
+
+    args = Namespace(**LOGIN_OPTIONS)
+    args.export = tmp_path / "somefile.txt"
+    args.permission = ["absolute-power", "package-manage-metadata", "crazy-stuff"]
+    with pytest.raises(CommandError) as cm:
+        LoginCommand(config).run(args)
+
+    assert str(cm.value) == "Invalid permission: 'absolute-power', 'crazy-stuff'."
+
+
+def test_login_restricting_charms(emitter, store_mock, config, tmp_path):
+    """Login with charms restriction."""
+    store_mock.login.return_value = "super secret stuff"
+
+    args = Namespace(**LOGIN_OPTIONS)
+    args.export = tmp_path / "somefile.txt"
+    args.charm = ["charm1", "charm2"]
+    LoginCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.login(charms=["charm1", "charm2"]),
+    ]
+
+
+def test_login_restricting_bundles(emitter, store_mock, config, tmp_path):
+    """Login with bundles restriction."""
+    store_mock.login.return_value = "super secret stuff"
+
+    args = Namespace(**LOGIN_OPTIONS)
+    args.export = tmp_path / "somefile.txt"
+    args.bundle = ["bundle1", "bundle2"]
+    LoginCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.login(bundles=["bundle1", "bundle2"]),
+    ]
+
+
+def test_login_restriction_mix(emitter, store_mock, config, tmp_path):
+    """Sanity case combining several restrictions."""
+    store_mock.login.return_value = "super secret stuff"
+
+    args = Namespace(
+        export=tmp_path / "somefile.txt",
+        charm=["mycharm"],
+        bundle=None,
+        permission=["package-view", "package-manage"],
+        channel=["edge"],
+        ttl=259200,
+    )
+    LoginCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.login(
+            ttl=259200,
+            channels=["edge"],
+            charms=["mycharm"],
+            permissions=["package-view", "package-manage"],
+        ),
+    ]
 
 
 def test_logout(emitter, store_mock, config):

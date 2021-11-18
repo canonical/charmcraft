@@ -24,7 +24,7 @@ from functools import wraps
 
 import craft_store
 from craft_cli import emit
-from craft_store import attenuations
+from craft_store import attenuations, endpoints
 from dateutil import parser
 
 from charmcraft.cmdbase import CommandError
@@ -53,6 +53,15 @@ UPLOAD_ENDING_STATUSES = {
     "rejected": False,
 }
 POLL_DELAY = 1
+
+# default restrictions to get auth credentials
+AUTH_DEFAULT_TTL = 3600 * 30
+AUTH_DEFAULT_PERMISSIONS = [
+    attenuations.ACCOUNT_REGISTER_PACKAGE,
+    attenuations.ACCOUNT_VIEW_PACKAGES,
+    attenuations.PACKAGE_MANAGE,
+    attenuations.PACKAGE_VIEW,
+]
 
 
 def _build_errors(item):
@@ -160,30 +169,33 @@ class Store:
     def __init__(self, charmhub_config):
         self._client = Client(charmhub_config.api_url, charmhub_config.storage_url)
 
-    def login(self):
-        """Login into the store.
-
-        The login happens on every request to the Store (if current credentials were not
-        enough), so to trigger a new login we...
-
-            - remove local credentials
-
-            - exercise the simplest command regarding developer identity
-        """
+    def login(self, permissions=None, ttl=None, charms=None, bundles=None, channels=None):
+        """Login into the store."""
         hostname = _get_hostname()
-        try:
-            return self._client.login(
-                # 3600 * 30
-                ttl=108000,
-                # Used to identify the login on Ubuntu SSO to ease future revokations.
-                description=f"charmcraft@{hostname}",
-                permissions=[
-                    attenuations.ACCOUNT_REGISTER_PACKAGE,
-                    attenuations.ACCOUNT_VIEW_PACKAGES,
-                    attenuations.PACKAGE_MANAGE,
-                    attenuations.PACKAGE_VIEW,
-                ],
+        # Used to identify the login on Ubuntu SSO to ease future revokations.
+        description = f"charmcraft@{hostname}"
+
+        ttl = AUTH_DEFAULT_TTL if ttl is None else ttl
+        permissions = AUTH_DEFAULT_PERMISSIONS if permissions is None else permissions
+        kwargs = {"description": description, "ttl": ttl, "permissions": permissions}
+
+        if channels is not None:
+            kwargs["channels"] = channels
+
+        packages = []
+        if charms is not None:
+            packages.extend(
+                endpoints.Package(package_type="charm", package_name=charm) for charm in charms
             )
+        if bundles is not None:
+            packages.extend(
+                endpoints.Package(package_type="bundle", package_name=bundle) for bundle in bundles
+            )
+        if packages:
+            kwargs["packages"] = packages
+
+        try:
+            return self._client.login(**kwargs)
         except craft_store.errors.CraftStoreError as error:
             raise CommandError(str(error)) from error
 

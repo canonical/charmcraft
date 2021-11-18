@@ -7,7 +7,6 @@ click==8.0.3
 coverage==6.1.1
 craft-parts==1.0.4
 craft-providers==1.0.3
-craft-store==1.0.0
 cryptography==35.0.0
 flake8==4.0.1
 humanize==3.12.0
@@ -62,3 +61,4 @@ typing-extensions==3.10.0.2
 urllib3==1.26.7
 zipp==3.6.0
 git+git://github.com/canonical/craft-cli.git@4af19f9c0da733321dc754be1180aea28f3feeb1
+git+git://github.com/canonical/craft-store.git@e0cdcd0a47bdb89daffc2ae2491b1729248b5fd8

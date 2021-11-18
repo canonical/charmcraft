@@ -16,6 +16,7 @@
 
 """Tests for the Store client and authentication (code in store/client.py)."""
 
+import base64
 import json
 from unittest import mock
 from unittest.mock import call, patch
@@ -31,6 +32,10 @@ from charmcraft.commands.store.client import (
     build_user_agent,
 )
 from charmcraft.utils import OSPlatform
+
+
+# something well formed as tests exercise the internal machinery
+ENCODED_CREDENTIALS = base64.b64encode("secret credentials".encode()).decode()
 
 
 # --- General tests
@@ -118,6 +123,24 @@ def client_class():
         pass
 
     return _Client
+
+
+def test_client_init():
+    """Check how craft-store's Client is initiated."""
+    api_url = "http://api.test"
+    storage_url = "http://storage.test"
+    user_agent = "Super User Agent"
+    with patch("craft_store.StoreClient.__init__") as mock_client_init:
+        with patch("charmcraft.commands.store.client.build_user_agent") as mock_ua:
+            mock_ua.return_value = user_agent
+            Client(api_url, storage_url)
+    mock_client_init.assert_called_with(
+        base_url=api_url,
+        endpoints=craft_store.endpoints.CHARMHUB,
+        application_name="charmcraft",
+        user_agent=user_agent,
+        environment_auth="CHARMCRAFT_AUTH",
+    )
 
 
 def test_client_request_success_simple(client_class):
@@ -304,7 +327,7 @@ def test_storage_push_succesful(client_class):
 
 def test_alternate_auth_login_forbidden(client_class, monkeypatch):
     """Login functionality cannot be used if alternate auth is present."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "super secret credentials")
+    monkeypatch.setenv("CHARMCRAFT_AUTH", ENCODED_CREDENTIALS)
     client = client_class("http://api.test", "http://storage.test")
     with pytest.raises(CommandError) as cm:
         client.login()
@@ -316,7 +339,7 @@ def test_alternate_auth_login_forbidden(client_class, monkeypatch):
 
 def test_alternate_auth_logout_forbidden(client_class, monkeypatch):
     """Logout functionality cannot be used if alternate auth is present."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "super secret credentials")
+    monkeypatch.setenv("CHARMCRAFT_AUTH", ENCODED_CREDENTIALS)
     client = client_class("http://api.test", "http://storage.test")
     with pytest.raises(CommandError) as cm:
         client.logout()

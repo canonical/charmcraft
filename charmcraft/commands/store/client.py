@@ -60,6 +60,7 @@ class Client(craft_store.StoreClient):
             endpoints=endpoints.CHARMHUB,
             application_name="charmcraft",
             user_agent=build_user_agent(),
+            environment_auth=ALTERNATE_AUTH_ENV_VAR,
         )
 
     def login(self, *args, **kwargs):

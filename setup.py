@@ -31,7 +31,7 @@ with open("README.md", "rt", encoding="utf8") as fh:
 install_requires = [
     "craft-parts",
     "craft-providers",
-    "craft-store",
+    # "craft-store",  <--- using it from github, check tools/freeze-requirements.sh
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",

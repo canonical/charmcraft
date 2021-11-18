@@ -99,6 +99,16 @@ _charmcraft()
                     ;;
             esac
             ;;
+        login)
+            case "$prev" in
+                --export)
+                    _filedir
+                    ;;
+                *)
+                    COMPREPLY=( $(compgen -W "${globals[*]} --export" -- "$cur") )
+                    ;;
+            esac
+            ;;
         pack)
             case "$prev" in
                 -r|--requirement)

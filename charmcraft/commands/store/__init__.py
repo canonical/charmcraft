@@ -89,7 +89,8 @@ class LoginCommand(BaseCommand):
 
         Charmcraft will provide a URL for the Charmhub login. When you have
         successfully logged in, charmcraft will store a token for ongoing
-        access to Charmhub at the CLI.
+        access to Charmhub at the CLI (if `--export` option was not used
+        otherwise it will only save the credentials in the indicated file).
 
         Remember to `charmcraft logout` if you want to remove that token
         from your local system, especially in a shared environment.
@@ -98,11 +99,21 @@ class LoginCommand(BaseCommand):
     """
     )
 
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument(
+            "--export", type=pathlib.Path, help="The file to save the credentials to"
+        )
+
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        store.login()
-        emit.message(f"Logged in as '{store.whoami().username}'.")
+        credentials = store.login()
+        if parsed_args.export is None:
+            emit.message(f"Logged in as '{store.whoami().username}'.")
+        else:
+            parsed_args.export.write_text(credentials)
+            emit.message(f"Login successful. Credentials exported to {str(parsed_args.export)!r}.")
 
 
 class LogoutCommand(BaseCommand):

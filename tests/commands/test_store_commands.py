@@ -165,17 +165,34 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 # -- tests for auth commands
 
 
-def test_login(emitter, store_mock, config):
+def test_login_simple(emitter, store_mock, config):
     """Simple login case."""
     store_mock.whoami.return_value = User(name="John Doe", username="jdoe", userid="-1")
 
-    LoginCommand(config).run(noargs)
+    args = Namespace(export=None)
+    LoginCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.login(),
         call.whoami(),
     ]
     emitter.assert_message("Logged in as 'jdoe'.")
+
+
+def test_login_exporting(emitter, store_mock, config, tmp_path):
+    """Login with exported credentials."""
+    acquired_credentials = "super secret stuff"
+    store_mock.login.return_value = acquired_credentials
+
+    credentials_file = tmp_path / "somefile.txt"
+    args = Namespace(export=credentials_file)
+    LoginCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.login(),
+    ]
+    emitter.assert_message(f"Login successful. Credentials exported to {str(credentials_file)!r}.")
+    assert credentials_file.read_text() == acquired_credentials
 
 
 def test_logout(emitter, store_mock, config):

@@ -105,7 +105,7 @@ _charmcraft()
                     _filedir
                     ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --export" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --export --charm --bundle --permission --channel --ttl" -- "$cur") )
                     ;;
             esac
             ;;

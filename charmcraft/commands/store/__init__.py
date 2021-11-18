@@ -28,6 +28,7 @@ from operator import attrgetter
 
 import yaml
 from craft_cli import emit
+from craft_cli.errors import CraftError
 from craft_store import attenuations
 from craft_store.errors import NotLoggedIn
 from humanize import naturalsize
@@ -172,7 +173,11 @@ class LoginCommand(BaseCommand):
             invalid = set(parsed_args.permission) - VALID_ATTENUATIONS
             if invalid:
                 invalid_text = ", ".join(map(repr, sorted(invalid)))
-                raise CommandError(f"Invalid permission: {invalid_text}.")
+                details = (
+                    "Explore the documentation to learn about valid permissions: "
+                    "https://juju.is/docs/sdk/remote-env-auth"
+                )
+                raise CraftError(f"Invalid permission: {invalid_text}.", details=details)
 
         # restrictive options, mapping the names between what is used in Namespace (singular,
         # even if it ends up being a list) and the more natural ones used in the Store layer

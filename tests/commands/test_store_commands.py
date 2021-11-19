@@ -23,11 +23,12 @@ import sys
 import zipfile
 from argparse import Namespace, ArgumentParser
 from unittest.mock import patch, call, MagicMock, ANY
-from craft_store.errors import NotLoggedIn
 
 import dateutil.parser
 import pytest
 import yaml
+from craft_cli.errors import CraftError
+from craft_store.errors import NotLoggedIn
 
 from charmcraft.config import CharmhubConfig
 from charmcraft.cmdbase import CommandError
@@ -262,10 +263,14 @@ def test_login_restricting_permission_invalid(emitter, store_mock, config, tmp_p
     args = Namespace(**LOGIN_OPTIONS)
     args.export = tmp_path / "somefile.txt"
     args.permission = ["absolute-power", "package-manage-metadata", "crazy-stuff"]
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         LoginCommand(config).run(args)
 
     assert str(cm.value) == "Invalid permission: 'absolute-power', 'crazy-stuff'."
+    assert cm.value.details == (
+        "Explore the documentation to learn about valid permissions: "
+        "https://juju.is/docs/sdk/remote-env-auth"
+    )
 
 
 def test_login_restricting_charms(emitter, store_mock, config, tmp_path):

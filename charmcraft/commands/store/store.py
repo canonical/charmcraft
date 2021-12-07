@@ -126,41 +126,52 @@ def _get_hostname() -> str:
     return hostname
 
 
-def _store_client_wrapper(method):
+def _store_client_wrapper(auto_login=True):
     """Decorate method to handle store error and login scenarios."""
 
-    @wraps(method)
-    def error_decorator(self, *args, **kwargs):
-        """Handle craft-store error situations and login scenarios."""
-        try:
-            return method(self, *args, **kwargs)
-        except craft_store.errors.NotLoggedIn:
-            if os.getenv(ALTERNATE_AUTH_ENV_VAR):
-                raise RuntimeError(
-                    "Charmcraft error: internal inconsistency detected "
-                    "(NotLoggedIn error while having user provided credentials)."
-                )
-            emit.progress("Credentials not found. Trying to log in...")
-        except craft_store.errors.StoreServerError as error:
-            if error.response.status_code == 401:
+    def store_client_wrapper_decorator(method):
+        """Decorate methods to handle store errors."""
+
+        @wraps(method)
+        def error_decorator(self, *args, **kwargs):
+            """Handle craft-store error situations and login scenarios."""
+            try:
+                return method(self, *args, **kwargs)
+            except craft_store.errors.NotLoggedIn:
                 if os.getenv(ALTERNATE_AUTH_ENV_VAR):
-                    raise CommandError(
-                        "Provided credentials are no longer valid for Charmhub. "
-                        "Regenerate them and try again."
+                    raise RuntimeError(
+                        "Charmcraft error: internal inconsistency detected "
+                        "(NotLoggedIn error while having user provided credentials)."
                     )
-                emit.progress("Existing credentials no longer valid. Trying to log in...")
-            else:
-                raise CommandError(str(error)) from error
-        except craft_store.errors.CraftStoreError as error:
-            raise CommandError(
-                f"Server error while communicating to the Store: {error!s}"
-            ) from error
+                if not auto_login:
+                    raise
+                emit.progress("Credentials not found. Trying to log in...")
+            except craft_store.errors.StoreServerError as error:
+                if error.response.status_code == 401:
+                    if os.getenv(ALTERNATE_AUTH_ENV_VAR):
+                        raise CommandError(
+                            "Provided credentials are no longer valid for Charmhub. "
+                            "Regenerate them and try again."
+                        )
+                    if not auto_login:
+                        raise CommandError(
+                            "Existing credentials are no longer valid for Charmhub."
+                        )
+                    emit.progress("Existing credentials no longer valid. Trying to log in...")
+                else:
+                    raise CommandError(str(error)) from error
+            except craft_store.errors.CraftStoreError as error:
+                raise CommandError(
+                    f"Server error while communicating to the Store: {error!s}"
+                ) from error
 
-        self.login()
+            self.login()
 
-        return method(self, *args, **kwargs)
+            return method(self, *args, **kwargs)
 
-    return error_decorator
+        return error_decorator
+
+    return store_client_wrapper_decorator
 
 
 class Store:
@@ -206,6 +217,7 @@ class Store:
         """
         self._client.logout()
 
+    @_store_client_wrapper(auto_login=False)
     def whoami(self):
         """Return authenticated user details."""
         response = self._client.whoami()
@@ -217,14 +229,14 @@ class Store:
         )
         return result
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def register_name(self, name, entity_type):
         """Register the specified name for the authenticated user."""
         self._client.request_urlpath_json(
             "POST", "/v1/charm", json={"name": name, "type": entity_type}
         )
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def list_registered_names(self):
         """Return names registered by the authenticated user."""
         response = self._client.request_urlpath_json("GET", "/v1/charm")
@@ -270,26 +282,26 @@ class Store:
             # N attempts (which should be big, as per snapcraft experience). Issue: #79.
             time.sleep(POLL_DELAY)
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def upload(self, name, filepath):
         """Upload the content of filepath to the indicated charm."""
         endpoint = f"/v1/charm/{name}/revisions"
         return self._upload(endpoint, filepath)
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def upload_resource(self, charm_name, resource_name, resource_type, filepath):
         """Upload the content of filepath to the indicated resource."""
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/revisions"
         return self._upload(endpoint, filepath, extra_fields={"type": resource_type})
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def list_revisions(self, name):
         """Return charm revisions for the indicated charm."""
         response = self._client.request_urlpath_json("GET", f"/v1/charm/{name}/revisions")
         result = [_build_revision(item) for item in response["revisions"]]
         return result
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def release(self, name, revision, channels, resources):
         """Release one or more revisions for a package."""
         endpoint = "/v1/charm/{}/releases".format(name)
@@ -300,7 +312,7 @@ class Store:
         ]
         self._client.request_urlpath_json("POST", endpoint, json=items)
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def list_releases(self, name):
         """List current releases for a package."""
         endpoint = "/v1/charm/{}/releases".format(name)
@@ -339,7 +351,7 @@ class Store:
 
         return channel_map, channels, revisions
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def create_library_id(self, charm_name, lib_name):
         """Create a new library id."""
         endpoint = f"/v1/charm/libraries/{charm_name}"
@@ -349,7 +361,7 @@ class Store:
         lib_id = response["library-id"]
         return lib_id
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def create_library_revision(self, charm_name, lib_id, api, patch, content, content_hash):
         """Create a new library revision."""
         endpoint = f"/v1/charm/libraries/{charm_name}/{lib_id}"
@@ -363,7 +375,7 @@ class Store:
         result = _build_library(response)
         return result
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def get_library(self, charm_name, lib_id, api):
         """Get the library tip by id for a given api version."""
         endpoint = f"/v1/charm/libraries/{charm_name}/{lib_id}?api={api}"
@@ -371,7 +383,7 @@ class Store:
         result = _build_library(response)
         return result
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def get_libraries_tips(self, libraries):
         """Get the tip details for several libraries at once.
 
@@ -401,14 +413,14 @@ class Store:
         result = {(item["library-id"], item["api"]): _build_library(item) for item in libraries}
         return result
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def list_resources(self, charm):
         """Return resources associated to the indicated charm."""
         response = self._client.request_urlpath_json("GET", f"/v1/charm/{charm}/resources")
         result = [_build_resource(item) for item in response["resources"]]
         return result
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def list_resource_revisions(self, charm_name, resource_name):
         """Return revisions for the indicated charm resource."""
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/revisions"
@@ -416,7 +428,7 @@ class Store:
         result = [_build_resource_revision(item) for item in response["revisions"]]
         return result
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def get_oci_registry_credentials(self, charm_name, resource_name):
         """Get credentials to upload a resource to the Canonical's OCI Registry."""
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/oci-image/upload-credentials"
@@ -427,7 +439,7 @@ class Store:
             password=response["password"],
         )
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def get_oci_image_blob(self, charm_name, resource_name, digest):
         """Get the blob that points to the OCI image in the Canonical's OCI Registry."""
         payload = {"image-digest": digest}

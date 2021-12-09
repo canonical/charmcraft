@@ -7,7 +7,7 @@ click==8.0.3
 coverage==6.1.2
 craft-parts==1.0.4
 craft-providers==1.0.3
-craft-store==1.1.0
+craft-store==1.2.0
 cryptography==35.0.0
 flake8==4.0.1
 humanize==3.12.0
@@ -23,6 +23,7 @@ MarkupSafe==2.0.1
 mccabe==0.6.1
 mypy-extensions==0.4.3
 ops==1.2.0
+overrides==6.1.0
 packaging==21.3
 pathspec==0.9.0
 platformdirs==2.4.0
@@ -59,6 +60,7 @@ tabulate==0.8.9
 toml==0.10.2
 tomli==1.2.2
 typing-extensions==4.0.0
+typing-utils==0.1.0
 urllib3==1.26.7
 zipp==3.6.0
 git+git://github.com/canonical/craft-cli.git@4af19f9c0da733321dc754be1180aea28f3feeb1

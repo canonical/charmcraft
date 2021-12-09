@@ -196,7 +196,8 @@ class LoginCommand(BaseCommand):
         store = Store(self.config.charmhub)
         credentials = store.login(**kwargs)
         if parsed_args.export is None:
-            emit.message(f"Logged in as '{store.whoami().username}'.")
+            macaroon_info = store.whoami()
+            emit.message(f"Logged in as '{macaroon_info.account.username}'.")
         else:
             parsed_args.export.write_text(credentials)
             emit.message(f"Login successful. Credentials exported to {str(parsed_args.export)!r}.")
@@ -247,19 +248,37 @@ class WhoamiCommand(BaseCommand):
         """Run the command."""
         store = Store(self.config.charmhub)
         try:
-            result = store.whoami()
-
-            data = [
-                ("name:", result.name),
-                ("username:", result.username),
-                ("id:", result.userid),
-            ]
-            table = tabulate(data, tablefmt="plain")
-            for line in table.splitlines():
-                emit.message(line)
-
+            macaroon_info = store.whoami()
         except NotLoggedIn:
             emit.message("You are not logged in to Charmhub.")
+            return
+
+        emit.message(f"name: {macaroon_info.account.name}")
+        emit.message(f"username: {macaroon_info.account.username}")
+        emit.message(f"id: {macaroon_info.account.id}")
+
+        if macaroon_info.permissions:
+            emit.message("permissions:")
+            for item in macaroon_info.permissions:
+                emit.message(f"- {item}")
+
+        if macaroon_info.packages:
+            grouped = {}
+            for package in macaroon_info.packages:
+                grouped.setdefault(package.type, []).append(package)
+            for package_type, title in [("charm", "charms"), ("bundle", "bundles")]:
+                if package_type in grouped:
+                    emit.message(f"{title}:")
+                    for item in grouped[package_type]:
+                        if item.name is not None:
+                            emit.message(f"- name: {item.name}")
+                        elif item.id is not None:
+                            emit.message(f"- id: {item.id}")
+
+        if macaroon_info.channels:
+            emit.message("channels:")
+            for item in macaroon_info.channels:
+                emit.message(f"- {item}")
 
 
 class RegisterCharmNameCommand(BaseCommand):

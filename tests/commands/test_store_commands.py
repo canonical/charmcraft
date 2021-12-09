@@ -57,18 +57,20 @@ from charmcraft.commands.store import (
     get_name_from_zip,
 )
 from charmcraft.commands.store.store import (
+    Account,
     Base,
     Channel,
     Entity,
     Error,
     Library,
+    MacaroonInfo,
+    Package,
     RegistryCredentials,
     Release,
     Resource,
     ResourceRevision,
     Revision,
     Uploaded,
-    User,
 )
 from charmcraft.main import ArgumentParsingError
 from charmcraft.utils import (
@@ -172,7 +174,12 @@ LOGIN_OPTIONS = dict.fromkeys(["export", "charm", "bundle", "permission", "chann
 
 def test_login_simple(emitter, store_mock, config):
     """Simple login case."""
-    store_mock.whoami.return_value = User(name="John Doe", username="jdoe", userid="-1")
+    store_mock.whoami.return_value = MacaroonInfo(
+        account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
+        permissions=["perm1", "perm2"],
+        channels=None,
+        packages=None,
+    )
 
     args = Namespace(**LOGIN_OPTIONS)
     LoginCommand(config).run(args)
@@ -349,7 +356,12 @@ def test_logout_but_not_logged_in(emitter, store_mock, config):
 
 def test_whoami(emitter, store_mock, config):
     """Simple whoami case."""
-    store_response = User(name="John Doe", username="jdoe", userid="-1")
+    store_response = MacaroonInfo(
+        account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
+        permissions=["perm1", "perm2"],
+        channels=None,
+        packages=None,
+    )
     store_mock.whoami.return_value = store_response
 
     WhoamiCommand(config).run(noargs)
@@ -358,15 +370,18 @@ def test_whoami(emitter, store_mock, config):
         call.whoami(),
     ]
     expected = [
-        "name:      John Doe",
-        "username:  jdoe",
-        "id:        -1",
+        "name: John Doe",
+        "username: jdoe",
+        "id: dlq8hl8hd8qhdl3lhl",
+        "permissions:",
+        "- perm1",
+        "- perm2",
     ]
     emitter.assert_messages(expected)
 
 
 def test_whoami_but_not_logged_in(emitter, store_mock, config):
-    """Simple logout case."""
+    """Whoami when not logged."""
     store_mock.whoami.side_effect = NotLoggedIn()
 
     WhoamiCommand(config).run(noargs)
@@ -375,6 +390,137 @@ def test_whoami_but_not_logged_in(emitter, store_mock, config):
         call.whoami(),
     ]
     emitter.assert_message("You are not logged in to Charmhub.")
+
+
+def test_whoami_with_channels(emitter, store_mock, config):
+    """Whoami with channel attenuations."""
+    store_response = MacaroonInfo(
+        account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
+        permissions=["perm1", "perm2"],
+        channels=["edge", "beta"],
+        packages=None,
+    )
+    store_mock.whoami.return_value = store_response
+
+    WhoamiCommand(config).run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.whoami(),
+    ]
+    expected = [
+        "name: John Doe",
+        "username: jdoe",
+        "id: dlq8hl8hd8qhdl3lhl",
+        "permissions:",
+        "- perm1",
+        "- perm2",
+        "channels:",
+        "- edge",
+        "- beta",
+    ]
+    emitter.assert_messages(expected)
+
+
+def test_whoami_with_charms(emitter, store_mock, config):
+    """Whoami with charms attenuations."""
+    store_response = MacaroonInfo(
+        account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
+        permissions=["perm1", "perm2"],
+        channels=None,
+        packages=[
+            Package(type="charm", name="charmname1", id=None),
+            Package(type="charm", name=None, id="charmid2"),
+        ],
+    )
+    store_mock.whoami.return_value = store_response
+
+    WhoamiCommand(config).run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.whoami(),
+    ]
+    expected = [
+        "name: John Doe",
+        "username: jdoe",
+        "id: dlq8hl8hd8qhdl3lhl",
+        "permissions:",
+        "- perm1",
+        "- perm2",
+        "charms:",
+        "- name: charmname1",
+        "- id: charmid2",
+    ]
+    emitter.assert_messages(expected)
+
+
+def test_whoami_with_bundles(emitter, store_mock, config):
+    """Whoami with bundles attenuations."""
+    store_response = MacaroonInfo(
+        account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
+        permissions=["perm1", "perm2"],
+        channels=None,
+        packages=[
+            Package(type="bundle", name="bundlename1", id=None),
+            Package(type="bundle", name=None, id="bundleid2"),
+        ],
+    )
+    store_mock.whoami.return_value = store_response
+
+    WhoamiCommand(config).run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.whoami(),
+    ]
+    expected = [
+        "name: John Doe",
+        "username: jdoe",
+        "id: dlq8hl8hd8qhdl3lhl",
+        "permissions:",
+        "- perm1",
+        "- perm2",
+        "bundles:",
+        "- name: bundlename1",
+        "- id: bundleid2",
+    ]
+    emitter.assert_messages(expected)
+
+
+def test_whoami_comprehensive(emitter, store_mock, config):
+    """Whoami with ALL attenuations."""
+    store_response = MacaroonInfo(
+        account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
+        permissions=["perm1", "perm2"],
+        channels=["edge", "beta"],
+        packages=[
+            Package(type="charm", name="charmname1", id=None),
+            Package(type="charm", name=None, id="charmid2"),
+            Package(type="bundle", name="bundlename", id=None),
+        ],
+    )
+    store_mock.whoami.return_value = store_response
+
+    WhoamiCommand(config).run(noargs)
+
+    assert store_mock.mock_calls == [
+        call.whoami(),
+    ]
+    expected = [
+        "name: John Doe",
+        "username: jdoe",
+        "id: dlq8hl8hd8qhdl3lhl",
+        "permissions:",
+        "- perm1",
+        "- perm2",
+        "charms:",
+        "- name: charmname1",
+        "- id: charmid2",
+        "bundles:",
+        "- name: bundlename",
+        "channels:",
+        "- edge",
+        "- beta",
+    ]
+    emitter.assert_messages(expected)
 
 
 # -- tests for name-related commands

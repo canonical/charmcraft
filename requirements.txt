@@ -2,7 +2,7 @@ attrs==21.2.0
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.7
-craft-parts==1.0.4
+craft-parts==1.1.0
 craft-providers==1.0.3
 craft-store==1.2.0
 cryptography==35.0.0

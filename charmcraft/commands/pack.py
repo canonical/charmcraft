@@ -237,6 +237,7 @@ class PackCommand(BaseCommand):
             config_parts,
             work_dir=work_dir,
             project_dir=project.dirpath,
+            project_name=bundle_name,
             ignore_local_sources=[bundle_name + ".zip"],
         )
         try:

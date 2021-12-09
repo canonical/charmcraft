@@ -1378,6 +1378,7 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1442,6 +1443,7 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1502,6 +1504,7 @@ def test_build_entrypoint_default(basic_project, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1620,6 +1623,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1684,6 +1688,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, emitter
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1748,6 +1753,7 @@ def test_build_requirements_default(basic_project, monkeypatch, emitter):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -1808,6 +1814,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, emit
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -2081,6 +2088,7 @@ def test_parts_not_defined(basic_project, charmcraft_yaml, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -2144,6 +2152,7 @@ def test_parts_with_charm_part(basic_project, charmcraft_yaml, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -2188,6 +2197,7 @@ def test_parts_without_charm_part(basic_project, charmcraft_yaml, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]
@@ -2231,6 +2241,7 @@ def test_parts_with_charm_part_with_plugin(basic_project, charmcraft_yaml, monke
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
+                project_name="name-from-metadata",
                 ignore_local_sources=["*.charm"],
             )
         ]

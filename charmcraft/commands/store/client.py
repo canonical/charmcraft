@@ -127,7 +127,8 @@ class Client(craft_store.StoreClient):
 
     def _storage_push(self, monitor) -> requests.Response:
         """Push bytes to the storage."""
-        return super().post(
+        return super().request(
+            "POST",
             self.storage_base_url + "/unscanned-upload/",
             headers={"Content-Type": monitor.content_type, "Accept": "application/json"},
             data=monitor,

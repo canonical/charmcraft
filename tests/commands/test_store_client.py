@@ -313,8 +313,7 @@ def test_storage_push_succesful(client_class):
     )
 
     client = client_class("http://api.test", "http://test.url:0000")
-    with patch.object(client, "request") as http_request_mock:
-        client._storage_push(test_monitor)
+    client._storage_push(test_monitor)
 
     # check request was properly called
     url = "http://test.url:0000/unscanned-upload/"
@@ -322,7 +321,9 @@ def test_storage_push_succesful(client_class):
         "Content-Type": test_monitor.content_type,
         "Accept": "application/json",
     }
-    assert http_request_mock.mock_calls == [call("POST", url, headers=headers, data=test_monitor)]
+    assert client.request_mock.mock_calls == [
+        call("POST", url, headers=headers, data=test_monitor)
+    ]
 
 
 def test_alternate_auth_login_forbidden(client_class, monkeypatch):

@@ -20,14 +20,14 @@ from unittest.mock import patch
 import pytest
 
 from craft_cli import emit, EmitterMode
-from fake_craft_cli import (
+from fake_craft_cli.dispatcher import (
     _DEFAULT_GLOBAL_ARGS,
-    ArgumentParsingError,
     BaseCommand,
     CommandGroup,
     Dispatcher,
     GlobalArgument,
 )
+from fake_craft_cli.errors import ArgumentParsingError
 from tests.factory import create_command
 
 
@@ -58,6 +58,7 @@ def test_dispatcher_command_execution_ok():
 
     class MyCommandControl(BaseCommand):
         help_msg = "some help"
+        overview = "fake overview"
 
         def run(self, parsed_args):
             self._executed.append(parsed_args)
@@ -85,6 +86,7 @@ def test_dispatcher_command_return_code():
     class MyCommand(BaseCommand):
         help_msg = "some help"
         name = "cmdname"
+        overview = "fake overview"
 
         def run(self, parsed_args):
             return 17
@@ -103,6 +105,7 @@ def test_dispatcher_command_execution_crash():
     class MyCommand(BaseCommand):
         help_msg = "some help"
         name = "cmdname"
+        overview = "fake overview"
 
         def run(self, parsed_args):
             raise ValueError()
@@ -272,7 +275,7 @@ def test_dispatcher_generic_setup_paramglobal_without_param_confusing(options):
     groups = [CommandGroup("title", [cmd])]
     extra = GlobalArgument("globalparam", "option", "-g", "--globalparam", "Test global param.")
     dispatcher = Dispatcher(groups, [extra])
-    with patch("charmcraft.helptexts.HelpBuilder.get_full_help") as mock_helper:
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_full_help") as mock_helper:
         mock_helper.return_value = "help text"
         with pytest.raises(ArgumentParsingError) as err:
             dispatcher.pre_parse_args(options)
@@ -325,6 +328,7 @@ def test_dispatcher_commands_are_not_loaded_if_not_needed():
 
         name = "command1"
         help_msg = "some help"
+        overview = "fake overview"
         _executed = []
 
         def run(self, parsed_args):
@@ -335,6 +339,7 @@ def test_dispatcher_commands_are_not_loaded_if_not_needed():
 
         name = "command2"
         help_msg = "some help"
+        overview = "fake overview"
 
         def __init__(self, *args):
             raise AssertionError
@@ -381,6 +386,7 @@ def test_basecommand_holds_the_indicated_info():
     class TestClass(BaseCommand):
         help_msg = "help message"
         name = "test"
+        overview = "fake overview"
 
     config = "test config"
     tc = TestClass(config)
@@ -393,6 +399,7 @@ def test_basecommand_fill_parser_optional():
     class TestClass(BaseCommand):
         help_msg = "help message"
         name = "test"
+        overview = "fake overview"
 
         def __init__(self, config):
             self.done = False
@@ -412,7 +419,41 @@ def test_basecommand_run_mandatory():
     class TestClass(BaseCommand):
         help_msg = "help message"
         name = "test"
+        overview = "fake overview"
 
     tc = TestClass("config")
     with pytest.raises(NotImplementedError):
         tc.run([])
+
+
+def test_basecommand_mandatory_attribute_name():
+    """BaseCommand subclasses must override the name attribute."""
+
+    class TestClass(BaseCommand):
+        help_msg = "help message"
+        overview = "fake overview"
+
+    with pytest.raises(TypeError):
+        TestClass("config")
+
+
+def test_basecommand_mandatory_attribute_help_message():
+    """BaseCommand subclasses must override the help_message attribute."""
+
+    class TestClass(BaseCommand):
+        overview = "fake overview"
+        name = "test"
+
+    with pytest.raises(TypeError):
+        TestClass("config")
+
+
+def test_basecommand_mandatory_attribute_overview():
+    """BaseCommand subclasses must override the overview attribute."""
+
+    class TestClass(BaseCommand):
+        help_msg = "help message"
+        name = "test"
+
+    with pytest.raises(TypeError):
+        TestClass("config")

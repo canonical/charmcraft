@@ -17,12 +17,15 @@
 """Argument processing and command dispatching functionality."""
 
 import argparse
+from abc import ABC, abstractmethod
 from collections import namedtuple
 
 from fake_craft_cli.helptexts import help_builder
 from fake_craft_cli.errors import ArgumentParsingError, ProvideHelpException
 from craft_cli import emit, EmitterMode
 
+# a helper to group some commands together
+CommandGroup = namedtuple("CommandGroup", "name commands")
 
 # global options: the name used internally, its type, short and long parameters, and help text
 GlobalArgument = namedtuple("GlobalArgument", "name type short_option long_option help_message")
@@ -271,15 +274,19 @@ class Dispatcher:
         return self.loaded_command.run(self.parsed_command_args)
 
 
-class BaseCommand:
+class BaseCommand(ABC):
     """Base class to build charmcraft commands.
 
     Subclass this to create a new command; the subclass must define the following attributes:
 
     - name: the identifier in the command line
     - help_msg: a one line help for user documentation
-    - common: if it's a common/starter command, which are prioritized in the help
-    - needs_config: will ensure a config is provided when executing the command
+    - overview: a longer multi-line text with the whole command description
+
+    Also it may override the following ones to change their default:
+    - common: if it's a common/starter command, which are prioritized in the help (default to
+      False)
+    - needs_config: will ensure a config is provided when executing the command (default to False)
 
     It also must/can override some methods for the proper command behaviour (see each
     method's docstring).
@@ -289,14 +296,29 @@ class BaseCommand:
     subclass must pass it through upwards).
     """
 
-    name = None
-    help_msg = None
-    overview = None
+    #name = None
+    #help_msg = None
+    #overview = None
     common = False
     needs_config = False
 
     def __init__(self, config):
         self.config = config
+
+    @property
+    @abstractmethod
+    def name(self):
+        """The command name."""
+
+    @property
+    @abstractmethod
+    def help_msg(self):
+        """A one line help for user documentation."""
+
+    @property
+    @abstractmethod
+    def overview(self):
+        """Ah longer multi-line text with the whole command description."""
 
     def fill_parser(self, parser):
         """Specify command's specific parameters.

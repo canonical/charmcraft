@@ -17,4 +17,4 @@
 """Present package API."""
 
 from .errors import ArgumentParsingError, ProvideHelpException  # noqa
-from .dispatcher import GlobalArgument, Dispatcher, BaseCommand  # noqa
+from .dispatcher import GlobalArgument, Dispatcher, BaseCommand, CommandGroup  # noqa

@@ -18,10 +18,15 @@
 
 import logging
 import sys
-from collections import namedtuple
 
 from craft_cli import emit, EmitterMode, CraftError
-from fake_craft_cli import ArgumentParsingError, ProvideHelpException, GlobalArgument, Dispatcher
+from fake_craft_cli import (
+    ArgumentParsingError,
+    CommandGroup,
+    Dispatcher,
+    GlobalArgument,
+    ProvideHelpException,
+)
 from fake_craft_cli.helptexts import help_builder  #FIXME: esto NO debería pasar por aca
 
 from charmcraft import config, __version__
@@ -84,7 +89,6 @@ _charmhub_commands = [
     store.UploadResourceCommand,
     store.ListResourceRevisionsCommand,
 ]
-CommandGroup = namedtuple("CommandGroup", "name commands")
 COMMAND_GROUPS = [
     CommandGroup("Basic", _basic_commands),
     CommandGroup("Charmhub", _charmhub_commands),

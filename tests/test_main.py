@@ -197,10 +197,13 @@ def test_main_providing_help(capsys):
     assert err == "nice and shiny help message\n"
 
 
-@pytest.mark.parametrize(
-    "cmd_name", [cmd.name for cgroup in COMMAND_GROUPS for cmd in cgroup.commands]
-)
-def test_commands(cmd_name):
+# -- generic tests for the commands
+
+all_commands = list.__add__(*[cgroup.commands for cgroup in COMMAND_GROUPS])
+
+
+@pytest.mark.parametrize("command", all_commands)
+def test_commands_sanity(command):
     """Sanity validation of a command.
 
     This is done through asking help for it *in real life*, which would mean that the
@@ -218,5 +221,32 @@ def test_commands(cmd_name):
         else:
             env["PYTHONPATH"] = ":".join(env_paths)
 
-    external_command = [sys.executable, "-m", "charmcraft", cmd_name, "-h"]
+    external_command = [sys.executable, "-m", "charmcraft", command.name, "-h"]
     subprocess.run(external_command, check=True, env=env, stdout=subprocess.DEVNULL)
+
+
+@pytest.mark.parametrize("command", all_commands)
+def test_commands_aesthetic_help_msg(command):
+    """All real commands help msgs start with uppercase and do not end with a dot."""
+    msg = command.help_msg
+    assert msg[0].isupper() and msg[-1] != "."
+
+
+@pytest.mark.parametrize("command", all_commands)
+def test_commands_aesthetic_args_options_msg(command, config):
+    """All real commands args help messages start with uppercase and do not end with a dot."""
+
+    class FakeParser:
+        """A fake to get the arguments added."""
+
+        def add_mutually_exclusive_group(self, *args, **kwargs):
+            """Return self, as it is used to add arguments too."""
+            return self
+
+        def add_argument(self, *args, **kwargs):
+            """Verify that all commands have a correctly formatted help."""
+            help_msg = kwargs.get("help")
+            assert help_msg, "The help message must be present in each option"
+            assert help_msg[0].isupper() and help_msg[-1] != "."
+
+    command(config).fill_parser(FakeParser())

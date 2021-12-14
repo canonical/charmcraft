@@ -31,7 +31,9 @@ from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.client import Client, ALTERNATE_AUTH_ENV_VAR
 
 # helpers to build responses from this layer
-User = namedtuple("User", "name username userid")
+Account = namedtuple("Account", "name username id")
+Package = namedtuple("Package", "id name type")
+MacaroonInfo = namedtuple("MacaroonInfo", "account channels packages permissions")
 Entity = namedtuple("Charm", "entity_type name private status")
 Uploaded = namedtuple("Uploaded", "ok status revision errors")
 # XXX Facundo 2020-07-23: Need to do a massive rename to call `revno` to the "revision as
@@ -222,10 +224,20 @@ class Store:
         """Return authenticated user details."""
         response = self._client.whoami()
 
-        result = User(
-            name=response["display-name"],
-            username=response["username"],
-            userid=response["id"],
+        acc = response["account"]
+        account = Account(name=acc["display-name"], username=acc["username"], id=acc["id"])
+        if response["packages"] is None:
+            packages = None
+        else:
+            packages = [
+                Package(type=pkg["type"], name=pkg.get("name"), id=pkg.get("id"))
+                for pkg in response["packages"]
+            ]
+        result = MacaroonInfo(
+            account=account,
+            packages=packages,
+            channels=response["channels"],
+            permissions=response["permissions"],
         )
         return result
 

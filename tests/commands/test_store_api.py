@@ -303,10 +303,19 @@ def test_logout(client_mock, config):
     assert result is None
 
 
-def test_whoami(client_mock, config):
+def test_whoami_simple(client_mock, config):
     """Simple whoami case."""
     store = Store(config.charmhub)
-    auth_response = {"display-name": "John Doe", "username": "jdoe", "id": "-1"}
+    auth_response = {
+        "account": {
+            "display-name": "John Doe",
+            "id": "3.14",
+            "username": "jdoe",
+        },
+        "channels": None,
+        "packages": None,
+        "permissions": ["perm1", "perm2"],
+    }
     client_mock.whoami.return_value = auth_response
 
     result = store.whoami()
@@ -314,9 +323,59 @@ def test_whoami(client_mock, config):
     assert client_mock.mock_calls == [
         call.whoami(),
     ]
-    assert result.name == "John Doe"
-    assert result.username == "jdoe"
-    assert result.userid == "-1"
+    assert result.account.name == "John Doe"
+    assert result.account.username == "jdoe"
+    assert result.account.id == "3.14"
+    assert result.channels is None
+    assert result.packages is None
+    assert result.permissions == ["perm1", "perm2"]
+
+
+def test_whoami_packages(client_mock, config):
+    """Whoami case that specify packages with name or id."""
+    store = Store(config.charmhub)
+    auth_response = {
+        "account": {
+            "display-name": "John Doe",
+            "id": "3.14",
+            "username": "jdoe",
+        },
+        "channels": None,
+        "packages": [
+            {"type": "charm", "id": "charmid"},
+            {"type": "bundle", "name": "bundlename"},
+        ],
+        "permissions": ["perm1", "perm2"],
+    }
+    client_mock.whoami.return_value = auth_response
+
+    result = store.whoami()
+    pkg_1, pkg_2 = result.packages
+    assert pkg_1.type == "charm"
+    assert pkg_1.id == "charmid"
+    assert pkg_1.name is None
+    assert pkg_2.type == "bundle"
+    assert pkg_2.id is None
+    assert pkg_2.name == "bundlename"
+
+
+def test_whoami_channels(client_mock, config):
+    """Whoami case with channels indicated."""
+    store = Store(config.charmhub)
+    auth_response = {
+        "account": {
+            "display-name": "John Doe",
+            "id": "3.14",
+            "username": "jdoe",
+        },
+        "channels": ["edge", "beta"],
+        "packages": None,
+        "permissions": ["perm1", "perm2"],
+    }
+    client_mock.whoami.return_value = auth_response
+
+    result = store.whoami()
+    assert result.channels == ["edge", "beta"]
 
 
 # -- tests for register and list names
@@ -1257,7 +1316,7 @@ def test_get_tips_empty(client_mock, config):
     test_lib_id = "test-lib-id"
 
     store = Store(config.charmhub)
-    client_mock.post.return_value = {"libraries": []}
+    client_mock.request_urlpath_json.return_value = {"libraries": []}
 
     query_info = [
         {"lib_id": test_lib_id},
@@ -1269,8 +1328,6 @@ def test_get_tips_empty(client_mock, config):
     ]
     assert client_mock.mock_calls == [
         call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
-        call.request_urlpath_json().__getitem__("libraries"),
-        call.request_urlpath_json().__getitem__().__iter__(),
     ]
     assert result == {}
 
@@ -1356,7 +1413,7 @@ def test_get_tips_several(client_mock, config):
 def test_get_tips_query_combinations(client_mock, config):
     """Use all the combinations to specify what's queried."""
     store = Store(config.charmhub)
-    client_mock.post.return_value = {"libraries": []}
+    client_mock.request_urlpath_json.return_value = {"libraries": []}
 
     query_info = [
         {"lib_id": "test-lib-id-1"},
@@ -1382,8 +1439,6 @@ def test_get_tips_query_combinations(client_mock, config):
     ]
     assert client_mock.mock_calls == [
         call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
-        call.request_urlpath_json().__getitem__("libraries"),
-        call.request_urlpath_json().__getitem__().__iter__(),
     ]
 
 

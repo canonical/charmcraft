@@ -19,15 +19,17 @@ from unittest.mock import patch
 
 import pytest
 
-from charmcraft import helptexts, main
-from charmcraft.main import Dispatcher, ArgumentParsingError, ProvideHelpException, CommandGroup
+from fake_craft_cli import helptexts
+from fake_craft_cli.errors import ArgumentParsingError, ProvideHelpException
+from fake_craft_cli.dispatcher import CommandGroup, Dispatcher
+
 from tests.factory import create_command
 
 
 @pytest.fixture
 def help_builder():
     """Provide a clean and fresh help_builder instance, ensuring the module also has it."""
-    help_builder = helptexts.help_builder = main.help_builder = helptexts.HelpBuilder()
+    help_builder = helptexts.help_builder = helptexts.HelpBuilder()
     return help_builder
 
 

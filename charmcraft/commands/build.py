@@ -23,10 +23,11 @@ import zipfile
 from typing import List, Optional, Tuple
 
 from craft_cli import emit, EmitterMode
+from fake_craft_cli import BaseCommand
 
 from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.deprecations import notify_deprecation
 from charmcraft.manifest import create_manifest

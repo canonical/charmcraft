@@ -31,10 +31,11 @@ from craft_cli import emit
 from craft_cli.errors import CraftError
 from craft_store import attenuations
 from craft_store.errors import NotLoggedIn
+from fake_craft_cli import BaseCommand
 from humanize import naturalsize
 from tabulate import tabulate
 
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import CommandError
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,

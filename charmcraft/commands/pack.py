@@ -23,9 +23,10 @@ from argparse import Namespace
 from typing import List
 
 from craft_cli import emit
+from fake_craft_cli import BaseCommand
 
 from charmcraft import env, parts
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import CommandError
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step

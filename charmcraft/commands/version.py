@@ -17,9 +17,9 @@
 """Infrastructure for the 'version' command."""
 
 from craft_cli import emit
+from fake_craft_cli import BaseCommand
 
 from charmcraft import __version__
-from charmcraft.cmdbase import BaseCommand
 
 _overview = """
 Show charmcraft version.

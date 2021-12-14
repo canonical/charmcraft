@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2021 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Infrastructure for common base commands functionality."""
-
-from craft_cli import CraftError
+"""Errors."""
 
 
-class CommandError(CraftError):
-    """Base exception for all error commands."""
-    # XXX 2021-12-14 Facundo: this is kept to avoid massive renaming in all code, which
-    # we may do sometime in the future
+class ArgumentParsingError(Exception):
+    """Exception used when an argument parsing error is found."""
+
+
+class ProvideHelpException(Exception):
+    """Exception used to provide help to the user."""

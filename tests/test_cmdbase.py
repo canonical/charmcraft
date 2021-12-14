@@ -18,7 +18,7 @@
 
 import pytest
 
-from charmcraft.cmdbase import CommandError, BaseCommand
+from charmcraft.cmdbase import CommandError
 from charmcraft.main import COMMAND_GROUPS
 
 
@@ -41,50 +41,8 @@ all_commands = list.__add__(*[cgroup.commands for cgroup in COMMAND_GROUPS])
 @pytest.mark.parametrize("attrib", ["name", "help_msg", "overview"])
 def test_basecommand_mandatory_attributes(command, attrib):
     """All commands must provide the mandatory attributes."""
+    fixme # solucionar de otra manera
     assert getattr(command, attrib) is not None
-
-
-def test_basecommand_holds_the_indicated_info():
-    """BaseCommand subclasses ."""
-
-    class TestClass(BaseCommand):
-        help_msg = "help message"
-        name = "test"
-
-    config = "test config"
-    tc = TestClass(config)
-    assert tc.config == config
-
-
-def test_basecommand_fill_parser_optional():
-    """BaseCommand subclasses are allowed to not override fill_parser."""
-
-    class TestClass(BaseCommand):
-        help_msg = "help message"
-        name = "test"
-
-        def __init__(self, config):
-            self.done = False
-            super().__init__(config)
-
-        def run(self, parsed_args):
-            self.done = True
-
-    tc = TestClass("config")
-    tc.run([])
-    assert tc.done
-
-
-def test_basecommand_run_mandatory():
-    """BaseCommand subclasses must override run."""
-
-    class TestClass(BaseCommand):
-        help_msg = "help message"
-        name = "test"
-
-    tc = TestClass("config")
-    with pytest.raises(NotImplementedError):
-        tc.run([])
 
 
 # -- tests for strings in commands
@@ -93,6 +51,7 @@ def test_basecommand_run_mandatory():
 @pytest.mark.parametrize("command", all_commands)
 def test_aesthetic_help_msg(command):
     """All real commands help msgs start with uppercase and do not end with a dot."""
+    fixme # mover a main
     msg = command.help_msg
     assert msg[0].isupper() and msg[-1] != "."
 
@@ -100,6 +59,7 @@ def test_aesthetic_help_msg(command):
 @pytest.mark.parametrize("command", all_commands)
 def test_aesthetic_args_options_msg(command, config):
     """All real commands args help messages start with uppercase and do not end with a dot."""
+    fixme # mover a main
 
     class FakeParser:
         """A fake to get the arguments added."""

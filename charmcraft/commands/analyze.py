@@ -23,9 +23,10 @@ import textwrap
 import zipfile
 
 from craft_cli import emit
+from fake_craft_cli import BaseCommand
 
 from charmcraft import linters
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import CommandError
 from charmcraft.utils import useful_filepath
 
 

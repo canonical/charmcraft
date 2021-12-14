@@ -17,8 +17,8 @@
 """Infrastructure for the 'clean' command."""
 
 from craft_cli import emit
+from fake_craft_cli import BaseCommand
 
-from charmcraft.cmdbase import BaseCommand
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.providers import get_provider
 

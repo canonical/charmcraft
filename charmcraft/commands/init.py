@@ -22,8 +22,9 @@ from datetime import date
 from typing import Optional
 
 from craft_cli import emit
+from fake_craft_cli import BaseCommand
 
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import CommandError
 from charmcraft.utils import make_executable, get_templates_environment
 
 try:

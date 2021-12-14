@@ -19,7 +19,8 @@
 import pathlib
 import textwrap
 
-from charmcraft.cmdbase import BaseCommand
+from fake_craft_cli import BaseCommand
+
 from charmcraft.commands.store import _get_lib_info, create_importable_name
 
 

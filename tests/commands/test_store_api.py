@@ -71,8 +71,14 @@ class _FakeAPI:
     def login(self):
         self.login_called = True
 
-    @_store_client_wrapper
+    @_store_client_wrapper()
     def method(self):
+        exception = self.exceptions.pop(0)
+        if exception is not None:
+            raise exception
+
+    @_store_client_wrapper(auto_login=False)
+    def method_no_login(self):
         exception = self.exceptions.pop(0)
         if exception is not None:
             raise exception
@@ -97,6 +103,29 @@ def test_relogin_on_401_alternate_auth(monkeypatch):
 
     with pytest.raises(CommandError) as cm:
         api.method()
+    assert str(cm.value) == (
+        "Provided credentials are no longer valid for Charmhub. Regenerate them and try again."
+    )
+    assert api.login_called is False
+
+
+def test_relogin_on_401_disable_auto_login():
+    """Don't try to re-login after receiving 401 NOT AUTHORIZED from server."""
+    api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
+
+    with pytest.raises(CommandError) as cm:
+        api.method_no_login()
+    assert str(cm.value) == "Existing credentials are no longer valid for Charmhub."
+    assert api.login_called is False
+
+
+def test_relogin_on_401_alternate_auth_disable_auto_login(monkeypatch):
+    """Don't try to re-login after receiving 401 NOT AUTHORIZED from server."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
+
+    with pytest.raises(CommandError) as cm:
+        api.method_no_login()
     assert str(cm.value) == (
         "Provided credentials are no longer valid for Charmhub. Regenerate them and try again."
     )
@@ -147,6 +176,30 @@ def test_not_logged_in_warns_alternate_auth(monkeypatch):
 
     with pytest.raises(RuntimeError) as cm:
         api.method()
+    assert str(cm.value) == (
+        "Charmcraft error: internal inconsistency detected "
+        "(NotLoggedIn error while having user provided credentials)."
+    )
+    assert api.login_called is False
+
+
+def test_not_logged_in_disable_auto_login():
+    """Don't try to relogin if not already logged in."""
+    api = _FakeAPI([NotLoggedIn(), None])
+
+    with pytest.raises(NotLoggedIn):
+        api.method_no_login()
+
+    assert api.login_called is False
+
+
+def test_not_logged_in_alternate_auth_disable_auto_login(monkeypatch):
+    """Don't try to relogin if not already logged in."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    api = _FakeAPI([NotLoggedIn(), None])
+
+    with pytest.raises(RuntimeError) as cm:
+        api.method_no_login()
     assert str(cm.value) == (
         "Charmcraft error: internal inconsistency detected "
         "(NotLoggedIn error while having user provided credentials)."

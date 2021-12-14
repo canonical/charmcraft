@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional, Set, cast
 
 from craft_cli import emit
 from craft_parts import LifecycleManager, Step, plugins
-from craft_parts.errors import PartsError
+from craft_parts.errors import PartsError, PluginEnvironmentValidationError
 from craft_parts.parts import PartSpec
 from xdg import BaseDirectory  # type: ignore
 
@@ -260,31 +260,25 @@ class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentVali
             client_version, tools_version = output.split("\n")
 
             if not tools_version.startswith("charm-tools"):
-                raise plugins.PluginEnvironmentValidationError(
+                raise PluginEnvironmentValidationError(
                     part_name=self._part_name,
-                    reason=f"invalid charm-tools version {tools_version}",
+                    reason=f"invalid charm tools version {tools_version}",
                 )
             emit.trace(f"found {tools_version}")
         except ValueError as err:
-            raise plugins.PluginEnvironmentValidationError(
+            raise PluginEnvironmentValidationError(
                 part_name=self._part_name,
-                reason="invalid charm-tools installed",
+                reason="invalid charm tools installed",
             ) from err
         except subprocess.CalledProcessError as err:
             if err.returncode != plugins.validator.COMMAND_NOT_FOUND:
-                raise plugins.PluginEnvironmentValidationError(
+                raise PluginEnvironmentValidationError(
                     part_name=self._part_name,
-                    reason=f"charm tool failed with error code {err.returncode}",
+                    reason=f"charm tools failed with error code {err.returncode}",
                 ) from err
 
-            if part_dependencies is None:
-                raise plugins.PluginEnvironmentValidationError(
-                    part_name=self._part_name,
-                    reason="charm tool not found",
-                ) from err
-
-            if "charm-tools" not in part_dependencies:
-                raise plugins.PluginEnvironmentValidationError(
+            if part_dependencies is None or "charm-tools" not in part_dependencies:
+                raise PluginEnvironmentValidationError(
                     part_name=self._part_name,
                     reason=(
                         f"charm tool not found and part {self._part_name!r} "
@@ -296,7 +290,7 @@ class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentVali
 class ReactivePlugin(plugins.Plugin):
     """Build a reactive charm using charm-tools."""
 
-    properties_class = BundlePluginProperties
+    properties_class = ReactivePluginProperties
     validator_class = ReactivePluginEnvironmentValidator
 
     @classmethod
@@ -317,8 +311,10 @@ class ReactivePlugin(plugins.Plugin):
         install_dir = self._part_info.part_install_dir
         name = self._part_info.project_name
         commands = [
+            "rm -f charmcraft.yaml",
             # exit on errors (code 200), warnings (code 100) allowed
             'charm proof || test "$?" -ge 200 && exit 1',
+            f'mkdir -p "{install_dir}"',
             f'ln -sf . "{install_dir}/{name}"',
             f'charm build -o "{install_dir}" || test "$?" -ge 200 && exit 1',
             f'rm -f "{install_dir}/{name}"',

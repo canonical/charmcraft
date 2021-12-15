@@ -28,16 +28,25 @@ from fake_craft_cli.dispatcher import (
     GlobalArgument,
 )
 from fake_craft_cli.errors import ArgumentParsingError
+from fake_craft_cli.helptexts import help_builder
 from tests.factory import create_command
 
 
 # --- Tests for the Dispatcher
 
 
+def test_dispatcher_help_init():
+    """Init the help infrastructure properly."""
+    groups = [CommandGroup("title", [create_command("somecommand")])]
+    Dispatcher("test-appname", groups, summary="test summary")
+    assert help_builder.appname == "test-appname"
+    assert help_builder.general_summary == "test summary"
+
+
 def test_dispatcher_pre_parsing():
     """Parses and return global arguments."""
     groups = [CommandGroup("title", [create_command("somecommand")])]
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     global_args = dispatcher.pre_parse_args(["-q", "somecommand"])
     assert global_args == {"help": False, "verbose": False, "quiet": True, "trace": False}
 
@@ -46,7 +55,7 @@ def test_dispatcher_command_loading():
     """Parses and return global arguments."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(["somecommand"])
     command = dispatcher.load_command("test-config")
     assert isinstance(command, cmd)
@@ -72,7 +81,7 @@ def test_dispatcher_command_execution_ok():
         _executed = []
 
     groups = [CommandGroup("title", [MyCommand1, MyCommand2])]
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(["name2"])
     dispatcher.load_command("config")
     dispatcher.run()
@@ -92,7 +101,7 @@ def test_dispatcher_command_return_code():
             return 17
 
     groups = [CommandGroup("title", [MyCommand])]
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(["cmdname"])
     dispatcher.load_command("config")
     retcode = dispatcher.run()
@@ -111,7 +120,7 @@ def test_dispatcher_command_execution_crash():
             raise ValueError()
 
     groups = [CommandGroup("title", [MyCommand])]
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(["cmdname"])
     dispatcher.load_command("config")
     with pytest.raises(ValueError):
@@ -123,7 +132,7 @@ def test_dispatcher_generic_setup_default():
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     emit.set_mode(EmitterMode.NORMAL)  # this is how `main` will init the Emitter
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(["somecommand"])
     assert emit.get_mode() == EmitterMode.NORMAL
 
@@ -143,7 +152,7 @@ def test_dispatcher_generic_setup_verbose(options):
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     emit.set_mode(EmitterMode.NORMAL)  # this is how `main` will init the Emitter
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(options)
     assert emit.get_mode() == EmitterMode.VERBOSE
 
@@ -163,7 +172,7 @@ def test_dispatcher_generic_setup_quiet(options):
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     emit.set_mode(EmitterMode.NORMAL)  # this is how `main` will init the Emitter
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(options)
     assert emit.get_mode() == EmitterMode.QUIET
 
@@ -183,7 +192,7 @@ def test_dispatcher_generic_setup_trace(options):
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     emit.set_mode(EmitterMode.NORMAL)  # this is how `main` will init the Emitter
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(options)
     assert emit.get_mode() == EmitterMode.TRACE
 
@@ -215,7 +224,7 @@ def test_dispatcher_generic_setup_mutually_exclusive(options):
     """Disallow mutually exclusive generic options."""
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     with pytest.raises(ArgumentParsingError) as err:
         dispatcher.pre_parse_args(options)
     assert str(err.value) == "The 'verbose', 'trace' and 'quiet' options are mutually exclusive."
@@ -237,7 +246,7 @@ def test_dispatcher_generic_setup_paramglobal_with_param(options):
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     extra = GlobalArgument("globalparam", "option", "-g", "--globalparam", "Test global param.")
-    dispatcher = Dispatcher(groups, [extra])
+    dispatcher = Dispatcher("appname", groups, extra_global_args=[extra])
     global_args = dispatcher.pre_parse_args(options)
     assert global_args["globalparam"] == "foobar"
 
@@ -256,7 +265,7 @@ def test_dispatcher_generic_setup_paramglobal_without_param_simple(options):
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     extra = GlobalArgument("globalparam", "option", "-g", "--globalparam", "Test global param.")
-    dispatcher = Dispatcher(groups, [extra])
+    dispatcher = Dispatcher("appname", groups, extra_global_args=[extra])
     with pytest.raises(ArgumentParsingError) as err:
         dispatcher.pre_parse_args(options)
     assert str(err.value) == "The 'globalparam' option expects one argument."
@@ -274,7 +283,7 @@ def test_dispatcher_generic_setup_paramglobal_without_param_confusing(options):
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
     extra = GlobalArgument("globalparam", "option", "-g", "--globalparam", "Test global param.")
-    dispatcher = Dispatcher(groups, [extra])
+    dispatcher = Dispatcher("appname", groups, extra_global_args=[extra])
     with patch("fake_craft_cli.helptexts.HelpBuilder.get_full_help") as mock_helper:
         mock_helper.return_value = "help text"
         with pytest.raises(ArgumentParsingError) as err:
@@ -291,7 +300,7 @@ def test_dispatcher_build_commands_ok():
         CommandGroup("whatever title", [cmd0]),
         CommandGroup("other title", [cmd1, cmd2]),
     ]
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     assert len(dispatcher.commands) == 3
     for cmd in [cmd0, cmd1, cmd2]:
         expected_class = dispatcher.commands[cmd.name]
@@ -319,7 +328,7 @@ def test_dispatcher_build_commands_repeated():
     ]
     expected_msg = "Multiple commands with same name: (Foo|Baz) and (Baz|Foo)"
     with pytest.raises(RuntimeError, match=expected_msg):
-        Dispatcher(groups)
+        Dispatcher("appname", groups)
 
 
 def test_dispatcher_commands_are_not_loaded_if_not_needed():
@@ -351,7 +360,7 @@ def test_dispatcher_commands_are_not_loaded_if_not_needed():
             raise AssertionError
 
     groups = [CommandGroup("title", [MyCommand1, MyCommand2])]
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     dispatcher.pre_parse_args(["command1"])
     dispatcher.load_command("config")
     dispatcher.run()
@@ -363,7 +372,7 @@ def test_dispatcher_global_arguments_default():
     cmd = create_command("somecommand")
     groups = [CommandGroup("title", [cmd])]
 
-    dispatcher = Dispatcher(groups)
+    dispatcher = Dispatcher("appname", groups)
     assert dispatcher.global_arguments == _DEFAULT_GLOBAL_ARGS
 
 
@@ -373,7 +382,7 @@ def test_dispatcher_global_arguments_extra_arguments():
     groups = [CommandGroup("title", [cmd])]
 
     extra_arg = GlobalArgument("other", "flag", "-o", "--other", "Other stuff")
-    dispatcher = Dispatcher(groups, extra_global_args=[extra_arg])
+    dispatcher = Dispatcher("appname", groups, extra_global_args=[extra_arg])
     assert dispatcher.global_arguments == _DEFAULT_GLOBAL_ARGS + [extra_arg]
 
 

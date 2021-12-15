@@ -27,7 +27,6 @@ from fake_craft_cli import (
     GlobalArgument,
     ProvideHelpException,
 )
-from fake_craft_cli.helptexts import help_builder  #FIXME: esto NO debería pasar por aca
 
 from charmcraft import config, __version__
 from charmcraft.cmdbase import CommandError
@@ -97,7 +96,6 @@ COMMAND_GROUPS = [
 
 def main(argv=None):
     """Provide the main entry point."""
-    help_builder.init("charmcraft", GENERAL_SUMMARY, COMMAND_GROUPS)
     emit.init(EmitterMode.NORMAL, "charmcraft", f"Starting charmcraft version {__version__}")
 
     if argv is None:
@@ -118,7 +116,12 @@ def main(argv=None):
         setup_parts()
 
         # load the dispatcher and put everything in motion
-        dispatcher = Dispatcher(COMMAND_GROUPS, extra_global_options)
+        dispatcher = Dispatcher(
+            "charmcraft",
+            COMMAND_GROUPS,
+            summary=GENERAL_SUMMARY,
+            extra_global_args=extra_global_options,
+        )
         global_args = dispatcher.pre_parse_args(argv[1:])
         loaded_config = config.load(global_args["project_dir"])
         command = dispatcher.load_command(loaded_config)

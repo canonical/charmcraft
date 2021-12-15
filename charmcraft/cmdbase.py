@@ -21,5 +21,6 @@ from craft_cli import CraftError
 
 class CommandError(CraftError):
     """Base exception for all error commands."""
+
     # XXX 2021-12-14 Facundo: this is kept to avoid massive renaming in all code, which
     # we may do sometime in the future

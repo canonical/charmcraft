@@ -63,6 +63,7 @@ def test_main_load_config_ok(create_config):
     class MyCommand(BaseCommand):
         help_msg = "some help"
         name = "cmdname"
+        overview = "test overview"
 
         def run(self, parsed_args):
             assert self.config.type == "charm"
@@ -78,6 +79,7 @@ def test_main_load_config_not_present_ok():
     class MyCommand(BaseCommand):
         help_msg = "some help"
         name = "cmdname"
+        overview = "test overview"
 
         def run(self, parsed_args):
             assert self.config.type is None

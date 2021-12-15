@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 import pytest
 
-from fake_craft_cli import helptexts
+from fake_craft_cli import helptexts, dispatcher
 from fake_craft_cli.errors import ArgumentParsingError, ProvideHelpException
 from fake_craft_cli.dispatcher import CommandGroup, Dispatcher
 
@@ -29,7 +29,7 @@ from tests.factory import create_command
 @pytest.fixture
 def help_builder():
     """Provide a clean and fresh help_builder instance, ensuring the module also has it."""
-    help_builder = helptexts.help_builder = helptexts.HelpBuilder()
+    help_builder = helptexts.help_builder = dispatcher.help_builder = helptexts.HelpBuilder()
     return help_builder
 
 
@@ -341,8 +341,8 @@ def test_command_help_text_loneranger(config, help_builder):
 
 def test_tool_exec_no_arguments_help():
     """Execute charmcraft without any option at all."""
-    dispatcher = Dispatcher([])
-    with patch("charmcraft.helptexts.HelpBuilder.get_full_help") as mock:
+    dispatcher = Dispatcher("testapp", [])
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_full_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ArgumentParsingError) as cm:
             dispatcher.pre_parse_args([])
@@ -371,8 +371,8 @@ def test_tool_exec_no_arguments_help():
 )
 def test_tool_exec_full_help(sysargv):
     """Execute charmcraft explicitly asking for help."""
-    dispatcher = Dispatcher([])
-    with patch("charmcraft.helptexts.HelpBuilder.get_full_help") as mock:
+    dispatcher = Dispatcher("testapp", [])
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_full_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ProvideHelpException) as cm:
             dispatcher.pre_parse_args(sysargv)
@@ -392,8 +392,7 @@ def test_tool_exec_full_help(sysargv):
 
 def test_tool_exec_command_incorrect(help_builder):
     """Execute a command that doesn't exist."""
-    help_builder.init("testapp", "general summary", [])
-    dispatcher = Dispatcher([])
+    dispatcher = Dispatcher("testapp", [], summary="general summary")
     with pytest.raises(ArgumentParsingError) as cm:
         dispatcher.pre_parse_args(["wrongcommand"])
 
@@ -422,8 +421,7 @@ def test_tool_exec_command_incorrect(help_builder):
 )
 def test_tool_exec_help_on_command_incorrect(sysargv, help_builder):
     """Execute a command that doesn't exist."""
-    help_builder.init("testapp", "general summary", [])
-    dispatcher = Dispatcher([])
+    dispatcher = Dispatcher("testapp", [], summary="general summary")
     with pytest.raises(ArgumentParsingError) as cm:
         dispatcher.pre_parse_args(sysargv)
 
@@ -454,8 +452,7 @@ def test_tool_exec_help_on_command_incorrect(sysargv, help_builder):
 )
 def test_tool_exec_help_on_too_many_things(sysargv, help_builder):
     """Trying to get help on too many items."""
-    help_builder.init("testapp", "general summary", [])
-    dispatcher = Dispatcher([])
+    dispatcher = Dispatcher("testapp", [], summary="general summary")
     with pytest.raises(ArgumentParsingError) as cm:
         dispatcher.pre_parse_args(sysargv)
 
@@ -477,9 +474,9 @@ def test_tool_exec_command_dash_help_simple(help_option):
     """Execute a command (that needs no params) asking for help."""
     cmd = create_command("somecommand", "This command does that.")
     command_groups = [CommandGroup("group", [cmd])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups)
 
-    with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ProvideHelpException) as cm:
             dispatcher.pre_parse_args(["somecommand", help_option])
@@ -503,9 +500,9 @@ def test_tool_exec_command_dash_help_reverse(help_option):
     """Execute a command (that needs no params) asking for help."""
     cmd = create_command("somecommand", "This command does that.")
     command_groups = [CommandGroup("group", [cmd])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups)
 
-    with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ProvideHelpException) as cm:
             dispatcher.pre_parse_args([help_option, "somecommand"])
@@ -534,9 +531,9 @@ def test_tool_exec_command_dash_help_missing_params(help_option):
     cmd = create_command("somecommand", "This command does that.")
     cmd.fill_parser = fill_parser
     command_groups = [CommandGroup("group", [cmd])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups)
 
-    with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ProvideHelpException) as cm:
             dispatcher.pre_parse_args(["somecommand", help_option])
@@ -560,10 +557,9 @@ def test_tool_exec_command_wrong_option(help_builder):
     """Execute a correct command but with a wrong option."""
     cmd = create_command("somecommand", "This command does that.")
     command_groups = [CommandGroup("group", [cmd])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups, summary="general summary")
     dispatcher.pre_parse_args(["somecommand", "--whatever"])
 
-    help_builder.init("testapp", "general summary", command_groups)
     with pytest.raises(ArgumentParsingError) as cm:
         dispatcher.load_command("config")
 
@@ -590,10 +586,9 @@ def test_tool_exec_command_bad_option_type(help_builder):
     cmd.fill_parser = fill_parser
 
     command_groups = [CommandGroup("group", [cmd])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups, summary="general summary")
     dispatcher.pre_parse_args(["somecommand", "--number=foo"])
 
-    help_builder.init("testapp", "general summary", command_groups)
     with pytest.raises(ArgumentParsingError) as cm:
         dispatcher.load_command("config")
 
@@ -614,9 +609,9 @@ def test_tool_exec_help_command_on_command_ok():
     """Execute charmcraft asking for help on a command ok."""
     cmd = create_command("somecommand", "This command does that.")
     command_groups = [CommandGroup("group", [cmd])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups)
 
-    with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ProvideHelpException) as cm:
             dispatcher.pre_parse_args(["help", "somecommand"])
@@ -648,9 +643,9 @@ def test_tool_exec_help_command_on_command_complex():
     cmd = create_command("somecommand", "This command does that.")
     cmd.fill_parser = fill_parser
     command_groups = [CommandGroup("group", [cmd])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups)
 
-    with patch("charmcraft.helptexts.HelpBuilder.get_command_help") as mock:
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_command_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ProvideHelpException) as cm:
             dispatcher.pre_parse_args(["help", "somecommand"])
@@ -678,9 +673,9 @@ def test_tool_exec_help_command_on_command_complex():
 def test_tool_exec_help_command_on_command_wrong():
     """Execute charmcraft asking for help on a command which does not exist."""
     command_groups = [CommandGroup("group", [])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups)
 
-    with patch("charmcraft.helptexts.HelpBuilder.get_usage_message") as mock:
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_usage_message") as mock:
         mock.return_value = "test help"
         with pytest.raises(ArgumentParsingError) as cm:
             dispatcher.pre_parse_args(["help", "wrongcommand"])
@@ -696,9 +691,9 @@ def test_tool_exec_help_command_on_command_wrong():
 def test_tool_exec_help_command_all():
     """Execute charmcraft asking for detailed help."""
     command_groups = [CommandGroup("group", [])]
-    dispatcher = Dispatcher(command_groups)
+    dispatcher = Dispatcher("testapp", command_groups)
 
-    with patch("charmcraft.helptexts.HelpBuilder.get_detailed_help") as mock:
+    with patch("fake_craft_cli.helptexts.HelpBuilder.get_detailed_help") as mock:
         mock.return_value = "test help"
         with pytest.raises(ProvideHelpException) as cm:
             dispatcher.pre_parse_args(["help", "--all"])

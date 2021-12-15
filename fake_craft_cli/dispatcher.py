@@ -76,7 +76,9 @@ class Dispatcher:
     ♪♫"Leeeeeet, the command ruuun"♪♫ https://www.youtube.com/watch?v=cv-0mmVnxPA
     """
 
-    def __init__(self, commands_groups, extra_global_args=None):
+    def __init__(self, appname, commands_groups, *, summary="", extra_global_args=None):
+        help_builder.init(appname, summary, commands_groups)
+
         self.global_arguments = _DEFAULT_GLOBAL_ARGS[:]
         if extra_global_args is not None:
             self.global_arguments.extend(extra_global_args)
@@ -296,9 +298,6 @@ class BaseCommand(ABC):
     subclass must pass it through upwards).
     """
 
-    #name = None
-    #help_msg = None
-    #overview = None
     common = False
     needs_config = False
 

@@ -95,7 +95,7 @@ class HelpBuilder:
     def get_full_help(self, global_options):
         """Produce the text for the default help.
 
-        - global_options: options defined at charmcraft level (not in the commands),
+        - global_options: options defined at application level (not in the commands),
           with the (options, description) structure
 
         The help text has the following structure:
@@ -147,9 +147,9 @@ class HelpBuilder:
 
         textblocks.append(
             textwrap.dedent(
-                """
-            For more information about a command, run 'charmcraft help <command>'.
-            For a summary of all commands, run 'charmcraft help --all'.
+                f"""
+            For more information about a command, run '{self.appname} help <command>'.
+            For a summary of all commands, run '{self.appname} help --all'.
         """
             )
         )
@@ -161,7 +161,7 @@ class HelpBuilder:
     def get_detailed_help(self, global_options):
         """Produce the text for the detailed help.
 
-        - global_options: options defined at charmcraft level (not in the commands),
+        - global_options: options defined at application level (not in the commands),
           with the (options, description) structure
 
         The help text has the following structure:
@@ -203,8 +203,8 @@ class HelpBuilder:
 
         textblocks.append(
             textwrap.dedent(
-                """
-            For more information about a specific command, run 'charmcraft help <command>'.
+                f"""
+            For more information about a specific command, run '{self.appname} help <command>'.
         """
             )
         )
@@ -240,16 +240,13 @@ class HelpBuilder:
             else:
                 parameters.append(name)
 
+        joined_params = " ".join(f"<{parameter}>" for parameter in parameters)
         textblocks.append(
             textwrap.dedent(
-                """\
+                f"""\
             Usage:
-                charmcraft {} [options] {}
-        """.format(
-                    command.name,
-                    " ".join("<{}>".format(parameter) for parameter in parameters),
-                )
-            )
+                {self.appname} {command.name} [options] {joined_params}
+        """)
         )
 
         textblocks.append("Summary:{}".format(textwrap.indent(command.overview, "    ")))
@@ -279,8 +276,8 @@ class HelpBuilder:
 
         # footer
         textblocks.append(
-            """
-            For a summary of all commands, run 'charmcraft help --all'.
+            f"""
+            For a summary of all commands, run '{self.appname} help --all'.
         """
         )
 

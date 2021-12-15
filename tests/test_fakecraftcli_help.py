@@ -124,8 +124,8 @@ def test_default_help_text(help_builder):
                       group2:  cmd1, cmd3, cmd4, cmd5
                       group3:  cmd7
 
-        For more information about a command, run 'charmcraft help <command>'.
-        For a summary of all commands, run 'charmcraft help --all'.
+        For more information about a command, run 'testapp help <command>'.
+        For a summary of all commands, run 'testapp help --all'.
     """
     )
     assert text == expected
@@ -190,7 +190,7 @@ def test_detailed_help_text(help_builder):
                         cmd5:  More help.
                         cmd1:  Cmd help which is very long but whatever.
 
-        For more information about a specific command, run 'charmcraft help <command>'.
+        For more information about a specific command, run 'testapp help <command>'.
     """
     )
     assert text == expected
@@ -227,7 +227,7 @@ def test_command_help_text_no_parameters(config, help_builder):
     expected = textwrap.dedent(
         """\
         Usage:
-            charmcraft somecommand [options]
+            testapp somecommand [options]
 
         Summary:
             Quite some long text.
@@ -244,7 +244,7 @@ def test_command_help_text_no_parameters(config, help_builder):
             other-cmd-2
             other-cmd-4
 
-        For a summary of all commands, run 'charmcraft help --all'.
+        For a summary of all commands, run 'testapp help --all'.
     """
     )
     assert text == expected
@@ -277,7 +277,7 @@ def test_command_help_text_with_parameters(config, help_builder):
     expected = textwrap.dedent(
         """\
         Usage:
-            charmcraft somecommand [options] <name> <extraparam>
+            testapp somecommand [options] <name> <extraparam>
 
         Summary:
             Quite some long text.
@@ -290,7 +290,7 @@ def test_command_help_text_with_parameters(config, help_builder):
         See also:
             other-cmd-2
 
-        For a summary of all commands, run 'charmcraft help --all'.
+        For a summary of all commands, run 'testapp help --all'.
     """
     )
     assert text == expected
@@ -321,7 +321,7 @@ def test_command_help_text_loneranger(config, help_builder):
     expected = textwrap.dedent(
         """\
         Usage:
-            charmcraft somecommand [options]
+            testapp somecommand [options]
 
         Summary:
             Quite some long text.
@@ -330,7 +330,7 @@ def test_command_help_text_loneranger(config, help_builder):
              -h, --help:  Show this help message and exit.
             -q, --quiet:  Only show warnings and errors, not progress.
 
-        For a summary of all commands, run 'charmcraft help --all'.
+        For a summary of all commands, run 'testapp help --all'.
     """
     )
     assert text == expected
@@ -340,7 +340,7 @@ def test_command_help_text_loneranger(config, help_builder):
 
 
 def test_tool_exec_no_arguments_help():
-    """Execute charmcraft without any option at all."""
+    """Execute the app without any option at all."""
     dispatcher = Dispatcher("testapp", [])
     with patch("fake_craft_cli.helptexts.HelpBuilder.get_full_help") as mock:
         mock.return_value = "test help"
@@ -370,7 +370,7 @@ def test_tool_exec_no_arguments_help():
     ],
 )
 def test_tool_exec_full_help(sysargv):
-    """Execute charmcraft explicitly asking for help."""
+    """Execute the app explicitly asking for help."""
     dispatcher = Dispatcher("testapp", [])
     with patch("fake_craft_cli.helptexts.HelpBuilder.get_full_help") as mock:
         mock.return_value = "test help"
@@ -606,7 +606,7 @@ def test_tool_exec_command_bad_option_type(help_builder):
 
 
 def test_tool_exec_help_command_on_command_ok():
-    """Execute charmcraft asking for help on a command ok."""
+    """Execute the app asking for help on a command ok."""
     cmd = create_command("somecommand", "This command does that.")
     command_groups = [CommandGroup("group", [cmd])]
     dispatcher = Dispatcher("testapp", command_groups)
@@ -631,7 +631,7 @@ def test_tool_exec_help_command_on_command_ok():
 
 
 def test_tool_exec_help_command_on_command_complex():
-    """Execute charmcraft asking for help on a command with parameters and options."""
+    """Execute the app asking for help on a command with parameters and options."""
 
     def fill_parser(self, parser):
         parser.add_argument("param1", help="help on param1")
@@ -671,7 +671,7 @@ def test_tool_exec_help_command_on_command_complex():
 
 
 def test_tool_exec_help_command_on_command_wrong():
-    """Execute charmcraft asking for help on a command which does not exist."""
+    """Execute the app asking for help on a command which does not exist."""
     command_groups = [CommandGroup("group", [])]
     dispatcher = Dispatcher("testapp", command_groups)
 
@@ -689,7 +689,7 @@ def test_tool_exec_help_command_on_command_wrong():
 
 
 def test_tool_exec_help_command_all():
-    """Execute charmcraft asking for detailed help."""
+    """Execute the app asking for detailed help."""
     command_groups = [CommandGroup("group", [])]
     dispatcher = Dispatcher("testapp", command_groups)
 

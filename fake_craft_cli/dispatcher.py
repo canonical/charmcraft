@@ -277,7 +277,7 @@ class Dispatcher:
 
 
 class BaseCommand(ABC):
-    """Base class to build charmcraft commands.
+    """Base class to build application commands.
 
     Subclass this to create a new command; the subclass must define the following attributes:
 

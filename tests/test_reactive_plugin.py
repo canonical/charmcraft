@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import pathlib
+import sys
 
 import craft_parts
 import pydantic
@@ -26,6 +27,8 @@ from charmcraft.reactive_plugin import (
     ReactivePlugin,
     ReactivePluginProperties,
 )
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 
 
 @pytest.fixture

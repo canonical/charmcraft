@@ -16,7 +16,10 @@
 
 """Charmcraft's reactive plugin for craft-parts."""
 
+import shlex
 import subprocess
+import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from craft_cli import emit
@@ -61,7 +64,7 @@ class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentVali
         """
         try:
             output = self._execute("charm version").strip()
-            client_version, tools_version = output.split("\n")
+            _, tools_version = output.split("\n")
 
             if not tools_version.startswith("charm-tools"):
                 raise PluginEnvironmentValidationError(
@@ -112,15 +115,66 @@ class ReactivePlugin(plugins.Plugin):
 
     def get_build_commands(self) -> List[str]:
         """Return a list of commands to run during the build step."""
-        install_dir = self._part_info.part_install_dir
-        name = self._part_info.project_name
-        commands = [
-            "rm -f charmcraft.yaml",
-            # exit on errors (code 200), warnings (code 100) allowed
-            'charm proof || test "$?" -ge 200 && exit 1',
-            f'mkdir -p "{install_dir}"',
-            f'ln -sf . "{install_dir}/{name}"',
-            f'charm build -o "{install_dir}" || test "$?" -ge 200 && exit 1',
-            f'rm -f "{install_dir}/{name}"',
+        command = [
+            sys.executable,
+            "-I",
+            __file__,
+            self._part_info.project_name,
+            str(self._part_info.part_build_dir),
+            str(self._part_info.part_install_dir),
         ]
-        return commands
+
+        return [" ".join(shlex.quote(i) for i in command)]
+
+
+def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> None:
+    """Build a charm using charm tool.
+
+    The charm tool is used to build reactive charms, the build process
+    is as follows:
+
+    - Remove any charmcraft.yaml from the build directory (occurs for
+      local in-tree builds)
+
+    - Run charm proof to ensure the charm
+      would build with no errors (warnings are allowed) - - Create a
+      symlink to where charm
+
+    - Link charm tool's build directory to the part lifecycle's
+      install_dir.
+
+    - Run "charm build"
+    """
+    # Remove the charmcraft.yaml so it is not primed for in-tree builds.
+    charmcraft_yaml = build_dir / "charmcraft.yaml"
+    if charmcraft_yaml.exists():
+        charmcraft_yaml.unlink()
+
+    # Verify the charm is ok from a charm tool point of view.
+    try:
+        subprocess.run(["charm", "proof"], check=True)
+    except subprocess.CalledProcessError as call_error:
+        if call_error.returncode >= 200:
+            raise call_error
+
+    # Link the installation directory to the place where charm creates
+    # the charm.
+    charm_build_dir = build_dir / charm_name
+    if not charm_build_dir.exists():
+        charm_build_dir.symlink_to(install_dir, target_is_directory=True)
+
+    try:
+        subprocess.run(["charm", "build", "-o", build_dir], check=True)
+    except subprocess.CalledProcessError as call_error:
+        if call_error.returncode >= 200:
+            raise call_error
+    finally:
+        charm_build_dir.unlink()
+
+
+if __name__ == "__main__":
+    try:
+        build(charm_name=sys.argv[1], build_dir=Path(sys.argv[2]), install_dir=Path(sys.argv[3]))
+    except subprocess.CalledProcessError as call_error:
+        if call_error.returncode >= 200:
+            sys.exit(call_error.returncode)

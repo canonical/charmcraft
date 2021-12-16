@@ -16,6 +16,8 @@
 
 import pathlib
 import sys
+from subprocess import CalledProcessError
+from unittest.mock import call, patch
 
 import craft_parts
 import pydantic
@@ -23,10 +25,7 @@ import pytest
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
-from charmcraft.reactive_plugin import (
-    ReactivePlugin,
-    ReactivePluginProperties,
-)
+from charmcraft import reactive_plugin
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 
@@ -63,7 +62,7 @@ class TestReactivePlugin:
             "plugin": "reactive",
             "source": str(tmp_path),
         }
-        plugin_properties = ReactivePluginProperties.unmarshal(spec)
+        plugin_properties = reactive_plugin.ReactivePluginProperties.unmarshal(spec)
         part_spec = plugins.extract_part_properties(spec, plugin_name="reactive")
         part = craft_parts.Part(
             "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
@@ -93,18 +92,15 @@ class TestReactivePlugin:
 
     def test_get_build_commands(self, tmp_path):
         assert self._plugin.get_build_commands() == [
-            "rm -f charmcraft.yaml",
-            # exit on errors (code 200), warnings (code 100) allowed
-            'charm proof || test "$?" -ge 200 && exit 1',
-            f'mkdir -p "{tmp_path}/parts/foo/install"',
-            f'ln -sf . "{tmp_path}/parts/foo/install/fake-project"',
-            f'charm build -o "{tmp_path}/parts/foo/install" || test "$?" -ge 200 && exit 1',
-            f'rm -f "{tmp_path}/parts/foo/install/fake-project"',
+            f"{sys.executable} -I {reactive_plugin.__file__} fake-project "
+            f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install",
         ]
 
     def test_invalid_properties(self):
         with pytest.raises(pydantic.ValidationError) as raised:
-            ReactivePlugin.properties_class.unmarshal({"source": ".", "reactive-invalid": True})
+            reactive_plugin.ReactivePlugin.properties_class.unmarshal(
+                {"source": ".", "reactive-invalid": True}
+            )
         err = raised.value.errors()
         assert len(err) == 1
         assert err[0]["loc"] == ("reactive-invalid",)
@@ -138,3 +134,107 @@ class TestReactivePlugin:
             validator.validate_environment()
 
         assert raised.value.reason == "charm tools failed with error code 2"
+
+
+@pytest.fixture
+def build_dir(tmp_path):
+    build_dir = tmp_path / "build"
+    build_dir.mkdir()
+
+    return build_dir
+
+
+@pytest.fixture
+def install_dir(tmp_path):
+    install_dir = tmp_path / "install"
+    install_dir.mkdir()
+
+    return install_dir
+
+
+@pytest.fixture
+def fake_run():
+    patcher = patch("subprocess.run")
+    yield patcher.start()
+    patcher.stop()
+
+
+def test_build(build_dir, install_dir, fake_run):
+    reactive_plugin.build(charm_name="test-charm", build_dir=build_dir, install_dir=install_dir)
+
+    assert not (build_dir / "test-charm").exists()
+    assert fake_run.mock_calls == [
+        call(["charm", "proof"], check=True),
+        call(["charm", "build", "-o", build_dir], check=True),
+    ]
+
+
+def test_build_removes_charmcraft_yaml(build_dir, install_dir, fake_run):
+    charmcraft_yaml = build_dir / "charmcraft.yaml"
+    charmcraft_yaml.touch()
+
+    reactive_plugin.build(charm_name="test-charm", build_dir=build_dir, install_dir=install_dir)
+
+    assert not charmcraft_yaml.exists()
+    assert not (build_dir / "test-charm").exists()
+    assert fake_run.mock_calls == [
+        call(["charm", "proof"], check=True),
+        call(["charm", "build", "-o", build_dir], check=True),
+    ]
+
+
+def test_build_charm_proof_raises_error_messages(build_dir, install_dir, fake_run):
+    fake_run.side_effect = CalledProcessError(200, "E: name missing")
+
+    with pytest.raises(CalledProcessError):
+        reactive_plugin.build(
+            charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+        )
+
+    assert not (build_dir / "test-charm").exists()
+    assert fake_run.mock_calls == [
+        call(["charm", "proof"], check=True),
+    ]
+
+
+def test_build_charm_proof_raises_warning_messages_does_not_raise(
+    build_dir, install_dir, fake_run
+):
+    fake_run.side_effect = CalledProcessError(100, "W: Description is not pretty")
+
+    reactive_plugin.build(charm_name="test-charm", build_dir=build_dir, install_dir=install_dir)
+
+    assert not (build_dir / "test-charm").exists()
+    assert fake_run.mock_calls == [
+        call(["charm", "proof"], check=True),
+        call(["charm", "build", "-o", build_dir], check=True),
+    ]
+
+
+def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_run):
+    fake_run.side_effect = [None, CalledProcessError(200, "E: name missing")]
+
+    with pytest.raises(CalledProcessError):
+        reactive_plugin.build(
+            charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+        )
+
+    assert not (build_dir / "test-charm").exists()
+    assert fake_run.mock_calls == [
+        call(["charm", "proof"], check=True),
+        call(["charm", "build", "-o", build_dir], check=True),
+    ]
+
+
+def test_build_charm_build_raises_warning_messages_does_not_raise(
+    build_dir, install_dir, fake_run
+):
+    fake_run.side_effect = [None, CalledProcessError(100, "W: Description is not pretty")]
+
+    reactive_plugin.build(charm_name="test-charm", build_dir=build_dir, install_dir=install_dir)
+
+    assert not (build_dir / "test-charm").exists()
+    assert fake_run.mock_calls == [
+        call(["charm", "proof"], check=True),
+        call(["charm", "build", "-o", build_dir], check=True),
+    ]

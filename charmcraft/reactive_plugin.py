@@ -137,11 +137,10 @@ def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> None:
       local in-tree builds)
 
     - Run charm proof to ensure the charm
-      would build with no errors (warnings are allowed) - - Create a
-      symlink to where charm
+      would build with no errors (warnings are allowed)
 
     - Link charm tool's build directory to the part lifecycle's
-      install_dir.
+      install_dir
 
     - Run "charm build"
     """

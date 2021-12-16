@@ -160,8 +160,11 @@ def fake_run():
 
 
 def test_build(build_dir, install_dir, fake_run):
-    reactive_plugin.build(charm_name="test-charm", build_dir=build_dir, install_dir=install_dir)
+    returncode = reactive_plugin.build(
+        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+    )
 
+    assert returncode == 0
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),
@@ -173,8 +176,11 @@ def test_build_removes_charmcraft_yaml(build_dir, install_dir, fake_run):
     charmcraft_yaml = build_dir / "charmcraft.yaml"
     charmcraft_yaml.touch()
 
-    reactive_plugin.build(charm_name="test-charm", build_dir=build_dir, install_dir=install_dir)
+    returncode = reactive_plugin.build(
+        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+    )
 
+    assert returncode == 0
     assert not charmcraft_yaml.exists()
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
@@ -186,11 +192,11 @@ def test_build_removes_charmcraft_yaml(build_dir, install_dir, fake_run):
 def test_build_charm_proof_raises_error_messages(build_dir, install_dir, fake_run):
     fake_run.side_effect = CalledProcessError(200, "E: name missing")
 
-    with pytest.raises(CalledProcessError):
-        reactive_plugin.build(
-            charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
-        )
+    returncode = reactive_plugin.build(
+        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+    )
 
+    assert returncode == 200
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),
@@ -202,8 +208,11 @@ def test_build_charm_proof_raises_warning_messages_does_not_raise(
 ):
     fake_run.side_effect = CalledProcessError(100, "W: Description is not pretty")
 
-    reactive_plugin.build(charm_name="test-charm", build_dir=build_dir, install_dir=install_dir)
+    returncode = reactive_plugin.build(
+        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+    )
 
+    assert returncode == 0
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),
@@ -214,11 +223,11 @@ def test_build_charm_proof_raises_warning_messages_does_not_raise(
 def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_run):
     fake_run.side_effect = [None, CalledProcessError(200, "E: name missing")]
 
-    with pytest.raises(CalledProcessError):
-        reactive_plugin.build(
-            charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
-        )
+    returncode = reactive_plugin.build(
+        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+    )
 
+    assert returncode == 200
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),
@@ -231,8 +240,11 @@ def test_build_charm_build_raises_warning_messages_does_not_raise(
 ):
     fake_run.side_effect = [None, CalledProcessError(100, "W: Description is not pretty")]
 
-    reactive_plugin.build(charm_name="test-charm", build_dir=build_dir, install_dir=install_dir)
+    returncode = reactive_plugin.build(
+        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+    )
 
+    assert returncode == 0
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),

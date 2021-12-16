@@ -127,7 +127,7 @@ class ReactivePlugin(plugins.Plugin):
         return [" ".join(shlex.quote(i) for i in command)]
 
 
-def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> None:
+def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> int:
     """Build a charm using charm tool.
 
     The charm tool is used to build reactive charms, the build process
@@ -154,7 +154,7 @@ def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> None:
         subprocess.run(["charm", "proof"], check=True)
     except subprocess.CalledProcessError as call_error:
         if call_error.returncode >= 200:
-            raise call_error
+            return call_error.returncode
 
     # Link the installation directory to the place where charm creates
     # the charm.
@@ -166,14 +166,15 @@ def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> None:
         subprocess.run(["charm", "build", "-o", build_dir], check=True)
     except subprocess.CalledProcessError as call_error:
         if call_error.returncode >= 200:
-            raise call_error
+            return call_error.returncode
     finally:
         charm_build_dir.unlink()
 
+    return 0
+
 
 if __name__ == "__main__":
-    try:
-        build(charm_name=sys.argv[1], build_dir=Path(sys.argv[2]), install_dir=Path(sys.argv[3]))
-    except subprocess.CalledProcessError as call_error:
-        if call_error.returncode >= 200:
-            sys.exit(call_error.returncode)
+    returncode = build(
+        charm_name=sys.argv[1], build_dir=Path(sys.argv[2]), install_dir=Path(sys.argv[3])
+    )
+    sys.exit(returncode)

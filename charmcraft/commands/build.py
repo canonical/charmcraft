@@ -217,6 +217,7 @@ class Builder:
             self._parts,
             work_dir=work_dir,
             project_dir=self.charmdir,
+            project_name=self.metadata.name,
             ignore_local_sources=["*.charm"],
         )
         lifecycle.run(Step.PRIME)

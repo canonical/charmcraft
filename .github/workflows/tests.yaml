@@ -94,6 +94,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-distutils
+          sudo snap install charm --classic
       - name: Install LXD dependency on 18.04
         if: ${{ matrix.os == 'ubuntu-18.04' }}
         run: |
@@ -192,6 +193,37 @@ jobs:
           EOF
           sg lxd -c "charmcraft -v pack"
           unzip -l binary-python-packages-test_*.charm | grep "venv/bumpversion/__init__.py"
+          popd
+
+          charm create reactive-test
+          pushd reactive-test
+          cat <<- EOF > metadata.yaml
+          name: reactive-test
+          summary: test
+          maintainer: maintainer <maintainer@maintenance.com>
+          description: |
+              Longer description that summary
+          tags:
+            - misc
+          subordinate: false
+          series: [focal]
+          EOF
+          cat <<- EOF >> charmcraft.yaml
+          type: "charm"
+          bases:
+            - build-on:
+                - name: "ubuntu"
+                  channel: "20.04"
+              run-on:
+                - name: "ubuntu"
+                  channel: "20.04"
+          parts:
+            charm:
+              source: .
+              plugin: reactive
+              build-snaps: [charm]
+          EOF
+          sg lxd -c "charmcraft -v pack"
           popd
 
           sudo snap set charmcraft provider=lxd

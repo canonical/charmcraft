@@ -30,6 +30,7 @@ from xdg import BaseDirectory  # type: ignore
 
 from charmcraft import charm_builder
 from charmcraft.cmdbase import CommandError
+from charmcraft.reactive_plugin import ReactivePlugin
 
 
 class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -221,7 +222,7 @@ class BundlePlugin(plugins.Plugin):
 
 def setup_parts():
     """Initialize craft-parts plugins."""
-    plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin})
+    plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
 
 
 def validate_part(data: Dict[str, Any]) -> None:
@@ -256,6 +257,7 @@ class PartsLifecycle:
     :param work_dir: The working directory for parts processing.
     :param project_dir: The directory containing the charm project.
     :param ignore_local_sources: A list of local source patterns to be ignored.
+    :param name: Charm name as defined in ``metadata.yaml``.
     """
 
     def __init__(
@@ -264,6 +266,7 @@ class PartsLifecycle:
         *,
         work_dir: pathlib.Path,
         project_dir: pathlib.Path,
+        project_name: str,
         ignore_local_sources: List[str],
     ):
         self._all_parts = all_parts.copy()
@@ -279,6 +282,7 @@ class PartsLifecycle:
                 work_dir=work_dir,
                 cache_dir=cache_dir,
                 ignore_local_sources=ignore_local_sources,
+                project_name=project_name,
             )
         except PartsError as err:
             raise CommandError(f"Error bootstrapping lifecycle manager: {err}") from err
@@ -303,11 +307,12 @@ class PartsLifecycle:
             # invalidate build if packing a charm and entrypoint changed
             if "charm" in self._all_parts:
                 charm_part = self._all_parts["charm"]
-                entrypoint = os.path.normpath(charm_part["charm-entrypoint"])
-                dis_entrypoint = os.path.normpath(_get_dispatch_entrypoint(self.prime_dir))
-                if entrypoint != dis_entrypoint:
-                    self._lcm.clean(Step.BUILD, part_names=["charm"])
-                    self._lcm.reload_state()
+                if charm_part.get("plugin") == "charm":
+                    entrypoint = os.path.normpath(charm_part["charm-entrypoint"])
+                    dis_entrypoint = os.path.normpath(_get_dispatch_entrypoint(self.prime_dir))
+                    if entrypoint != dis_entrypoint:
+                        self._lcm.clean(Step.BUILD, part_names=["charm"])
+                        self._lcm.reload_state()
 
             emit.trace(f"Executing parts lifecycle in {str(self._project_dir)!r}")
             actions = self._lcm.plan(target_step)

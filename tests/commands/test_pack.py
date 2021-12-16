@@ -156,7 +156,7 @@ def test_resolve_bundle_with_entrypoint(config):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_config):
     """A simple happy story."""
-    # mandatory files (other thant the automatically provided manifest)
+    # mandatory files (other than the automatically provided manifest)
     content = bundle_yaml(name="testbundle")
     bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
@@ -459,7 +459,7 @@ def test_bundle_parts_with_bundle_part_with_plugin(tmp_path, monkeypatch, bundle
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_prime_mandatory_ok(tmp_path, bundle_yaml, bundle_config):
-    """Simple succesful case getting all mandatory files."""
+    """Simple successful case getting all mandatory files."""
     bundle_yaml(name="testbundle")
     test_mandatory = ["foo.txt", "bar.bin"]
     test_file1 = tmp_path / "foo.txt"

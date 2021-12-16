@@ -61,10 +61,10 @@ class BaseCommand:
     def fill_parser(self, parser):
         """Specify command's specific parameters.
 
-        Each command parameters are independant of other commands, but note there are some
+        Each command parameters are independent of other commands, but note there are some
         global ones (see `main.Dispatcher._build_argument_parser`).
 
-        If this method is not overriden, the command will not have any parameters.
+        If this method is not overridden, the command will not have any parameters.
         """
 
     def run(self, parsed_args):

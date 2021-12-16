@@ -42,7 +42,7 @@ VENV_DIRNAME = "venv"
 DISPATCH_FILENAME = "dispatch"
 # If Juju doesn't support the dispatch mechanism, it will execute the
 # hook, and we'd need sys.argv[0] to be the name of the hook but it's
-# geting lost by calling this dispatch, so we fake JUJU_DISPATCH_PATH
+# getting lost by calling this dispatch, so we fake JUJU_DISPATCH_PATH
 # to be the value it would've otherwise been.
 DISPATCH_CONTENT = """#!/bin/sh
 
@@ -423,7 +423,7 @@ class Builder:
 
         # If building in project directory, use the project path as the working
         # directory. The output charms will be placed in the correct directory
-        # without needing retrieval. If outputing to a directory other than the
+        # without needing retrieval. If outputting to a directory other than the
         # charm project directory, we need to output the charm outside the
         # project directory and can retrieve it when complete.
         cwd = pathlib.Path.cwd()

@@ -90,7 +90,7 @@ class Provider(ABC):
         :param build_on_index: Index of `build-on` within bases entry.
         :param project_name: Name of charm project.
         :param project_path: Directory of charm project.
-        :param target_arch: Targetted architecture, used in the name to prevent
+        :param target_arch: Targeted architecture, used in the name to prevent
             collisions should future work enable multiple architectures on the same
             platform.
         """

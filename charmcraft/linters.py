@@ -138,7 +138,7 @@ class Framework:
         """Parse a Python filepath and yield its imports.
 
         If the file does not exist or cannot be parsed, return empty. Otherwise
-        return the name for each imported module, splitted by possible dots.
+        return the name for each imported module, split by possible dots.
         """
         if not os.access(filepath, os.R_OK):
             return

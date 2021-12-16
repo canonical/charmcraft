@@ -31,7 +31,7 @@ def help_builder():
     return help_builder
 
 
-# -- bulding "usage" help
+# -- building "usage" help
 
 
 def test_get_usage_message_with_command(help_builder):
@@ -64,7 +64,7 @@ def test_get_usage_message_no_command(help_builder):
     assert text == expected
 
 
-# -- bulding of the big help text outputs
+# -- building of the big help text outputs
 
 
 def test_default_help_text(help_builder):

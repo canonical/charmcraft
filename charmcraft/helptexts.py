@@ -216,7 +216,7 @@ class HelpBuilder:
     def get_command_help(self, command, arguments):
         """Produce the text for each command's help.
 
-        - command: the instanciated command for which help is prepared
+        - command: the instantiated command for which help is prepared
 
         - arguments: all command options and parameters, with the (name, description) structure
 

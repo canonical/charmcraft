@@ -189,6 +189,7 @@ class TestPartsLifecycle:
                     all_parts={},
                     work_dir="/some/workdir",
                     project_dir=tmp_path,
+                    project_name="test",
                     ignore_local_sources=["*.charm"],
                 )
             exc = cm.value
@@ -206,6 +207,7 @@ class TestPartsLifecycle:
                 all_parts={"charm": data},
                 work_dir="/some/workdir",
                 project_dir=tmp_path,
+                project_name="test",
                 ignore_local_sources=["*.charm"],
             )
         assert lifecycle.prime_dir == pathlib.Path("/some/workdir/prime")
@@ -231,6 +233,7 @@ class TestPartsLifecycle:
             all_parts={"charm": data},
             work_dir=tmp_path,
             project_dir=tmp_path,
+            project_name="test",
             ignore_local_sources=["*.charm"],
         )
 
@@ -263,6 +266,7 @@ class TestPartsLifecycle:
             all_parts={"charm": data},
             work_dir=tmp_path,
             project_dir=tmp_path,
+            project_name="test",
             ignore_local_sources=["*.charm"],
         )
 
@@ -287,6 +291,7 @@ class TestPartsLifecycle:
             all_parts={"charm": data},
             work_dir=tmp_path,
             project_dir=tmp_path,
+            project_name="test",
             ignore_local_sources=["*.charm"],
         )
 

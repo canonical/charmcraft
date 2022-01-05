@@ -304,6 +304,7 @@ def test_bundle_parts_not_defined(tmp_path, monkeypatch, bundle_yaml):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=tmp_path,
+                project_name="testbundle",
                 ignore_local_sources=["testbundle.zip"],
             )
         ]
@@ -357,6 +358,7 @@ def test_bundle_parts_with_bundle_part(tmp_path, monkeypatch, bundle_yaml):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=tmp_path,
+                project_name="testbundle",
                 ignore_local_sources=["testbundle.zip"],
             )
         ]
@@ -402,6 +404,7 @@ def test_bundle_parts_without_bundle_part(tmp_path, monkeypatch, bundle_yaml):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=tmp_path,
+                project_name="testbundle",
                 ignore_local_sources=["testbundle.zip"],
             )
         ]
@@ -448,6 +451,7 @@ def test_bundle_parts_with_bundle_part_with_plugin(tmp_path, monkeypatch, bundle
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=tmp_path,
+                project_name="testbundle",
                 ignore_local_sources=["testbundle.zip"],
             )
         ]

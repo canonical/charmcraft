@@ -1317,7 +1317,7 @@ class FetchLibCommand(BaseCommand):
             elif tip.patch < lib_data.patch:
                 # the store has a lower version numbers than local
                 emit.message(
-                    f"Library {lib_data.full_name} has local changes, can not be updated.",
+                    f"Library {lib_data.full_name} has local changes, cannot be updated.",
                 )
             else:
                 # same versions locally and in the store
@@ -1328,7 +1328,7 @@ class FetchLibCommand(BaseCommand):
                     )
                 else:
                     emit.message(
-                        f"Library {lib_data.full_name} has local changes, can not be updated.",
+                        f"Library {lib_data.full_name} has local changes, cannot be updated.",
                     )
 
         for lib_data in to_fetch:

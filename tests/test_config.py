@@ -148,7 +148,7 @@ def check_schema_error(tmp_path):
 
 
 def test_schema_top_level_no_extra_properties(create_config, check_schema_error):
-    """Schema validation, can not add undefined properties at the top level."""
+    """Schema validation, cannot add undefined properties at the top level."""
     create_config(
         """
         type: bundle
@@ -322,7 +322,7 @@ def test_schema_charmhub_registry_url_bad_format(create_config, check_schema_err
 
 
 def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
-    """Schema validation, can not add undefined properties in charmhub key."""
+    """Schema validation, cannot add undefined properties in charmhub key."""
     create_config(
         """
         type: bundle

@@ -359,7 +359,7 @@ class Config(ModelConfigDefaults, validate_all=False):
     def validate_bases_presence(cls, bases, values):
         """Forbid 'bases' in bundles.
 
-        This is to avoid a posible confusion of expecting the bundle
+        This is to avoid a possible confusion of expecting the bundle
         to be built in a specific environment
         """
         if values.get("type") == "bundle":

@@ -42,7 +42,7 @@ STAGING_VENV_DIRNAME = "staging-venv"
 DISPATCH_FILENAME = "dispatch"
 # If Juju doesn't support the dispatch mechanism, it will execute the
 # hook, and we'd need sys.argv[0] to be the name of the hook but it's
-# geting lost by calling this dispatch, so we fake JUJU_DISPATCH_PATH
+# getting lost by calling this dispatch, so we fake JUJU_DISPATCH_PATH
 # to be the value it would've otherwise been.
 DISPATCH_CONTENT = """#!/bin/sh
 

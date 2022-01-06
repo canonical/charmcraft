@@ -149,7 +149,7 @@ def test_language_no_dispatch(tmp_path):
 
 
 def test_framework_run_operator():
-    """Check for Operator Framework was succesful."""
+    """Check for Operator Framework was successful."""
     checker = Framework()
     with patch.object(Framework, "_check_operator", lambda self, path: True):
         result = checker.run("somepath")
@@ -158,7 +158,7 @@ def test_framework_run_operator():
 
 
 def test_framework_run_reactive():
-    """Check for Reactive Framework was succesful."""
+    """Check for Reactive Framework was successful."""
     checker = Framework()
     with patch.object(Framework, "_check_operator", lambda self, path: False):
         with patch.object(Framework, "_check_reactive", lambda self, path: True):
@@ -168,7 +168,7 @@ def test_framework_run_reactive():
 
 
 def test_framework_run_unknown():
-    """No check for any framework was succesful."""
+    """No check for any framework was successful."""
     checker = Framework()
     with patch.object(Framework, "_check_operator", lambda self, path: False):
         with patch.object(Framework, "_check_reactive", lambda self, path: False):
@@ -327,7 +327,7 @@ def test_framework_reactive_used_ok(tmp_path, monkeypatch, import_line):
     Parametrized args:
     - import_line: different ways to express the import
     """
-    # metdata file with needed name field
+    # metadata file with needed name field
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
@@ -365,7 +365,7 @@ def test_framework_reactive_no_metadata(tmp_path, monkeypatch):
 
 def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
     """Missing entrypoint file."""
-    # metdata file with needed name field
+    # metadata file with needed name field
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
@@ -382,7 +382,7 @@ def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
     """Cannot read the entrypoint file."""
-    # metdata file with needed name field
+    # metadata file with needed name field
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
@@ -404,7 +404,7 @@ def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
 
 def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
     """The entrypoint is not really a Python file."""
-    # metdata file with needed name field
+    # metadata file with needed name field
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
@@ -425,7 +425,7 @@ def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
 
 def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
     """The wheelhouse directory does not exist."""
-    # metdata file with needed name field
+    # metadata file with needed name field
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
@@ -441,7 +441,7 @@ def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
 
 def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
     """The wheelhouse directory has no reactive lib."""
-    # metdata file with needed name field
+    # metadata file with needed name field
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
@@ -473,7 +473,7 @@ def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
 )
 def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_line):
     """Different imports that are NOT importing the Reactive Framework."""
-    # metdata file with needed name field
+    # metadata file with needed name field
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
@@ -497,7 +497,7 @@ def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_l
 
 def test_jujumetadata_all_ok(tmp_path):
     """All conditions ok for JujuMetadata to result ok."""
-    # metdata file with proper fields
+    # metadata file with proper fields
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text(
         """
@@ -526,7 +526,7 @@ def test_jujumetadata_file_corrupted(tmp_path):
 
 def test_jujumetadata_missing_name(tmp_path):
     """A required "name" is missing in the metadata file."""
-    # metdata file with not all fields
+    # metadata file with not all fields
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text(
         """
@@ -553,7 +553,7 @@ def test_jujumetadata_missing_name(tmp_path):
 )
 def test_jujumetadata_missing_field(tmp_path, fields):
     """A required field is missing in the metadata file."""
-    # metdata file with not all fields
+    # metadata file with not all fields
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text(fields)
     result = JujuMetadata().run(tmp_path)

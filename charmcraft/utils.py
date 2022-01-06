@@ -81,7 +81,7 @@ def get_templates_environment(templates_dir):
         # Running as PyInstaller bundle. For more information:
         # https://pyinstaller.readthedocs.io/en/stable/runtime-information.html
         # In this scenario we need to load from the data location that is unpacked
-        # into the temprary directory at runtime (sys._MEIPASS).
+        # into the temporary directory at runtime (sys._MEIPASS).
         emit.trace(f"Bundle directory: {sys._MEIPASS}")
         loader = FileSystemLoader(os.path.join(sys._MEIPASS, templates_dir))
     else:

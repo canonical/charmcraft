@@ -147,7 +147,7 @@ def test_get_name_from_metadata_bad_content_garbage(tmp_path, monkeypatch):
     # put a broken metadata
     metadata_file = tmp_path / "metadata.yaml"
     with metadata_file.open("wb") as fh:
-        fh.write(b"\b00\bff -- not a realy yaml stuff")
+        fh.write(b"\b00\bff -- not a really yaml stuff")
 
     result = get_name_from_metadata()
     assert result is None
@@ -1964,7 +1964,7 @@ def test_createlib_name_contains_dash(emitter, store_mock, tmp_path, monkeypatch
     ],
 )
 def test_createlib_invalid_name(lib_name, config):
-    """Verify that it can not be used with an invalid name."""
+    """Verify that it cannot be used with an invalid name."""
     args = Namespace(name=lib_name)
     with pytest.raises(CommandError) as err:
         CreateLibCommand(config).run(args)
@@ -2945,7 +2945,7 @@ def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, confi
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
-    expected = "Library charms.testcharm.v0.testlib has local changes, can not be updated."
+    expected = "Library charms.testcharm.v0.testlib has local changes, cannot be updated."
     emitter.assert_message(expected)
 
 
@@ -3003,7 +3003,7 @@ def test_fetchlib_store_same_versions_different_hash(
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
-    expected = "Library charms.testcharm.v0.testlib has local changes, can not be updated."
+    expected = "Library charms.testcharm.v0.testlib has local changes, cannot be updated."
     emitter.assert_message(expected)
 
 

@@ -49,7 +49,7 @@ ResourceRevision = namedtuple("ResourceRevision", "revision created_at size")
 RegistryCredentials = namedtuple("RegistryCredentials", "image_name username password")
 Base = namedtuple("Base", "architecture channel name")
 
-# those statuses after upload that flag that the review ended (and if it ended succesfully or not)
+# those statuses after upload that flag that the review ended (and if it ended successfully or not)
 UPLOAD_ENDING_STATUSES = {
     "approved": True,
     "rejected": False,

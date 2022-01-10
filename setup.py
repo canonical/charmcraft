@@ -36,7 +36,7 @@ install_requires = [
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
-    "pydantic",
+    "pydantic==1.8.2",  # *2
     "python-dateutil",
     "pyyaml",
     "requests",
@@ -48,6 +48,9 @@ install_requires = [
 # *1: cryptography is not needed as a direct dependency, but it will be brought in
 # newer versions from other dependencies, and the new ones need a Rust compiler
 # which is not present in armhf, ppc64el and s390x architectures.
+#
+# *2: pydantic 1.8.2 is currently required by craft-parts. We can unpin it after
+# we update craft-parts to work correctly with pydantic 1.9.0.
 
 dev_requires = [
     "black",

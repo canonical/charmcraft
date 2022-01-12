@@ -21,11 +21,11 @@ from unittest.mock import patch, call, MagicMock
 
 import pytest
 from dateutil import parser
+from craft_cli import CraftError
 from craft_store import attenuations
 from craft_store.endpoints import Package
 from craft_store.errors import NetworkError, NotLoggedIn, StoreServerError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.client import Client
 from charmcraft.utils import ResourceOption
 from charmcraft.commands.store.store import (
@@ -101,7 +101,7 @@ def test_relogin_on_401_alternate_auth(monkeypatch):
     monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         api.method()
     assert str(cm.value) == (
         "Provided credentials are no longer valid for Charmhub. Regenerate them and try again."
@@ -113,7 +113,7 @@ def test_relogin_on_401_disable_auto_login():
     """Don't try to re-login after receiving 401 NOT AUTHORIZED from server."""
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         api.method_no_login()
     assert str(cm.value) == "Existing credentials are no longer valid for Charmhub."
     assert api.login_called is False
@@ -124,7 +124,7 @@ def test_relogin_on_401_alternate_auth_disable_auto_login(monkeypatch):
     monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         api.method_no_login()
     assert str(cm.value) == (
         "Provided credentials are no longer valid for Charmhub. Regenerate them and try again."
@@ -135,7 +135,7 @@ def test_relogin_on_401_alternate_auth_disable_auto_login(monkeypatch):
 def test_non_401_raises():
     api = _FakeAPI([StoreServerError(FakeResponse("where are you?", 404))])
 
-    with pytest.raises(CommandError) as error:
+    with pytest.raises(CraftError) as error:
         api.method()
 
     assert (
@@ -149,7 +149,7 @@ def test_non_401_raises():
 def test_craft_store_error_raises_command_error():
     api = _FakeAPI([NetworkError(ValueError("network issue"))])
 
-    with pytest.raises(CommandError) as error:
+    with pytest.raises(CraftError) as error:
         api.method()
 
     assert str(error.value) == "Server error while communicating to the Store: network issue"

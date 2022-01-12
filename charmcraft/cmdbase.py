@@ -16,20 +16,6 @@
 
 """Infrastructure for common base commands functionality."""
 
-from craft_cli import CraftError
-
-
-class CommandError(CraftError):
-    """Base exception for all error commands.
-
-    It optionally receives a `retcode` parameter that will be the returned code
-    by the process on exit, and a `argsparsing` one to indicate that the problem
-    is in the command line usage.
-    """
-
-    def __init__(self, message, retcode=1):
-        super().__init__(message, retcode=retcode)
-
 
 class BaseCommand:
     """Base class to build charmcraft commands.

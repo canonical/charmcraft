@@ -34,7 +34,7 @@ from craft_store.errors import NotLoggedIn
 from humanize import naturalsize
 from tabulate import tabulate
 
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
@@ -413,7 +413,7 @@ def get_name_from_zip(filepath):
     try:
         zf = zipfile.ZipFile(str(filepath))
     except zipfile.BadZipFile as err:
-        raise CommandError(f"Cannot open {str(filepath)!r} (bad zip file).") from err
+        raise CraftError(f"Cannot open {str(filepath)!r} (bad zip file).") from err
 
     # get the name from the given file (trying first if it's a charm, then a bundle,
     # otherwise it's an error)
@@ -421,7 +421,7 @@ def get_name_from_zip(filepath):
         try:
             name = yaml.safe_load(zf.read("metadata.yaml"))["name"]
         except Exception as err:
-            raise CommandError(
+            raise CraftError(
                 "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
                 "a 'name' key.".format(str(filepath))
             ) from err
@@ -429,12 +429,12 @@ def get_name_from_zip(filepath):
         try:
             name = yaml.safe_load(zf.read("bundle.yaml"))["name"]
         except Exception as err:
-            raise CommandError(
+            raise CraftError(
                 "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
                 "a 'name' key.".format(str(filepath))
             ) from err
     else:
-        raise CommandError(
+        raise CraftError(
             "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
             "nor a bundle ('bundle.yaml' not found).".format(str(filepath))
         )
@@ -499,7 +499,7 @@ class UploadCommand(BaseCommand):
                 tainted_filenames.append(name)
 
         if tainted_filenames:
-            raise CommandError(
+            raise CraftError(
                 "Cannot upload the charm as it include the following files with a leftover "
                 "TEMPLATE-TODO token from when the project was created using the 'init' "
                 "command: {}".format(", ".join(tainted_filenames))
@@ -863,7 +863,7 @@ class StatusCommand(BaseCommand):
             emit.message(line)
 
 
-class _BadLibraryPathError(CommandError):
+class _BadLibraryPathError(CraftError):
     """Subclass to provide a specific error for a bad library path."""
 
     def __init__(self, path):
@@ -873,7 +873,7 @@ class _BadLibraryPathError(CommandError):
         )
 
 
-class _BadLibraryNameError(CommandError):
+class _BadLibraryNameError(CraftError):
     """Subclass to provide a specific error for a bad library name."""
 
     def __init__(self, name):
@@ -927,7 +927,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     charm_name = create_charm_name_from_importable(importable_charm_name)
 
     if v_api[0] != "v" or not v_api[1:].isdigit():
-        raise CommandError(
+        raise CraftError(
             "The API version in the library path must be 'vN' where N is an integer."
         )
     api_from_path = int(v_api[1:])
@@ -956,7 +956,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
                 try:
                     field, value = [x.strip() for x in line.split(b"=")]
                 except ValueError:
-                    raise CommandError(
+                    raise CraftError(
                         "Bad metadata line in {!r}: {!r}".format(str(lib_path), line)
                     )
                 metadata[field] = value
@@ -965,7 +965,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
 
     missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
     if missing:
-        raise CommandError(
+        raise CraftError(
             "Library {!r} is missing the mandatory metadata fields: {}.".format(
                 str(lib_path), ", ".join(sorted(missing))
             )
@@ -975,21 +975,21 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     try:
         libapi = _get_positive_int(metadata[b"LIBAPI"])
     except ValueError:
-        raise CommandError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
+        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
     try:
         libpatch = _get_positive_int(metadata[b"LIBPATCH"])
     except ValueError:
-        raise CommandError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
+        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
 
     if libapi == 0 and libpatch == 0:
-        raise CommandError(
+        raise CraftError(
             "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
                 str(lib_path)
             )
         )
 
     if libapi != api_from_path:
-        raise CommandError(
+        raise CraftError(
             "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
                 str(lib_path)
             )
@@ -999,9 +999,9 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     try:
         libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
     except (ValueError, UnicodeDecodeError):
-        raise CommandError(bad_libid_msg.format(str(lib_path)))
+        raise CraftError(bad_libid_msg.format(str(lib_path)))
     if not libid or not isinstance(libid, str):
-        raise CommandError(bad_libid_msg.format(str(lib_path)))
+        raise CraftError(bad_libid_msg.format(str(lib_path)))
 
     content_hash = hasher.hexdigest()
     content = lib_path.read_text()
@@ -1086,14 +1086,14 @@ class CreateLibCommand(BaseCommand):
         valid_all_chars = set(string.ascii_lowercase + string.digits + "_")
         valid_first_char = string.ascii_lowercase
         if set(lib_name) - valid_all_chars or not lib_name or lib_name[0] not in valid_first_char:
-            raise CommandError(
+            raise CraftError(
                 "Invalid library name. Must only use lowercase alphanumeric "
                 "characters and underscore, starting with alpha."
             )
 
         charm_name = get_name_from_metadata()
         if charm_name is None:
-            raise CommandError(
+            raise CraftError(
                 "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
                 "directory with metadata.yaml."
             )
@@ -1107,7 +1107,7 @@ class CreateLibCommand(BaseCommand):
         lib_data = _get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CommandError("This library already exists: {!r}.".format(str(lib_path)))
+            raise CraftError("This library already exists: {!r}.".format(str(lib_path)))
 
         emit.progress(f"Creating library {lib_name}.")
         store = Store(self.config.charmhub)
@@ -1121,7 +1121,7 @@ class CreateLibCommand(BaseCommand):
             lib_path.parent.mkdir(parents=True, exist_ok=True)
             lib_path.write_text(template.render(context))
         except OSError as exc:
-            raise CommandError(
+            raise CraftError(
                 "Error writing the library in {!r}: {!r}.".format(str(lib_path), exc)
             )
 
@@ -1158,7 +1158,7 @@ class PublishLibCommand(BaseCommand):
         """Run the command."""
         charm_name = get_name_from_metadata()
         if charm_name is None:
-            raise CommandError(
+            raise CraftError(
                 "Can't access name in 'metadata.yaml' file. The 'publish-lib' command needs to "
                 "be executed in a valid project's directory."
             )
@@ -1166,11 +1166,11 @@ class PublishLibCommand(BaseCommand):
         if parsed_args.library:
             lib_data = _get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
-                raise CommandError(
+                raise CraftError(
                     "The specified library was not found at path {!r}.".format(str(lib_data.path))
                 )
             if lib_data.charm_name != charm_name:
-                raise CommandError(
+                raise CraftError(
                     "The library {} does not belong to this charm {!r}.".format(
                         lib_data.full_name, charm_name
                     )
@@ -1393,7 +1393,7 @@ class ListLibCommand(BaseCommand):
         else:
             charm_name = get_name_from_metadata()
             if charm_name is None:
-                raise CommandError(
+                raise CraftError(
                     "Can't access name in 'metadata.yaml' file. The 'list-lib' command must "
                     "either be executed from a valid project directory, or specify a charm "
                     "name using the --charm-name option."

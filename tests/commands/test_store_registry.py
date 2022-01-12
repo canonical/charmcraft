@@ -29,7 +29,6 @@ import pytest
 import requests
 from craft_cli import CraftError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import registry
 from charmcraft.commands.store.registry import (
     CONFIG_MIMETYPE,
@@ -94,7 +93,7 @@ def test_assert_response_errors_in_result():
     errors = [{"foo": "bar"}]
     test_content = {"errors": errors}
     response = create_response(json_content=test_content)
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         assert_response_ok(response)
     assert str(cm.value) == "Response with errors from server: {}".format(errors)
 
@@ -272,7 +271,7 @@ def test_hit_simple_re_auth_problems(responses):
     expected = (
         "Bad 401 response: Bearer not found; " "headers: {.*'Www-Authenticate': 'broken header'.*}"
     )
-    with pytest.raises(CommandError, match=expected):
+    with pytest.raises(CraftError, match=expected):
         ocireg._hit("GET", "https://fakereg.com/api/stuff")
 
 
@@ -730,7 +729,7 @@ def test_ociregistry_upload_blob_bad_final_digest(tmp_path, responses):
 
     # call!
     msg = "Server error: the upload is corrupted"
-    with pytest.raises(CommandError, match=msg):
+    with pytest.raises(CraftError, match=msg):
         ocireg.upload_blob(bytes_source, 8, "test-digest")
 
 

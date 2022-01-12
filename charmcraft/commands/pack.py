@@ -22,10 +22,10 @@ import zipfile
 from argparse import Namespace
 from typing import List
 
-from craft_cli import emit
+from craft_cli import emit, CraftError
 
 from charmcraft import env, parts
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
@@ -139,14 +139,14 @@ class PackCommand(BaseCommand):
             self._pack_charm(parsed_args)
         elif self.config.type == "bundle":
             if parsed_args.entrypoint is not None:
-                raise CommandError("The -e/--entry option is valid only when packing a charm")
+                raise CraftError("The -e/--entry option is valid only when packing a charm")
             if parsed_args.requirement is not None:
-                raise CommandError(
+                raise CraftError(
                     "The -r/--requirement option is valid only when packing a charm"
                 )
             self._pack_bundle(parsed_args)
         else:
-            raise CommandError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
+            raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
 
     def _pack_charm(self, parsed_args) -> List[pathlib.Path]:
         """Pack a charm."""
@@ -203,12 +203,12 @@ class PackCommand(BaseCommand):
         bundle_filepath = project.dirpath / "bundle.yaml"
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
-            raise CommandError(
+            raise CraftError(
                 "Missing or invalid main bundle file: {!r}.".format(str(bundle_filepath))
             )
         bundle_name = bundle_config.get("name")
         if not bundle_name:
-            raise CommandError(
+            raise CraftError(
                 "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
                 "file {!r}.".format(str(bundle_filepath))
             )
@@ -218,7 +218,7 @@ class PackCommand(BaseCommand):
             for fname in MANDATORY_FILES:
                 fpath = project.dirpath / fname
                 if not fpath.exists():
-                    raise CommandError("Missing mandatory file: {!r}.".format(str(fpath)))
+                    raise CraftError("Missing mandatory file: {!r}.".format(str(fpath)))
             prime = special_bundle_part.setdefault("prime", [])
             prime.extend(MANDATORY_FILES)
 
@@ -242,7 +242,7 @@ class PackCommand(BaseCommand):
         )
         try:
             lifecycle.run(Step.PRIME)
-        except (RuntimeError, CommandError) as error:
+        except (RuntimeError, CraftError) as error:
             if parsed_args.debug:
                 emit.trace(f"Error when running PRIME step: {error}")
                 build.launch_shell()

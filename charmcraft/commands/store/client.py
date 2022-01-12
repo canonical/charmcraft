@@ -23,12 +23,11 @@ from typing import Any, Dict
 
 import craft_store
 import requests
-from craft_cli import emit
+from craft_cli import emit, CraftError
 from craft_store import endpoints
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft import __version__, utils
-from charmcraft.cmdbase import CommandError
 
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
@@ -66,7 +65,7 @@ class Client(craft_store.StoreClient):
     def login(self, *args, **kwargs):
         """Intercept regular login functionality to forbid it when using alternate auth."""
         if os.getenv(ALTERNATE_AUTH_ENV_VAR) is not None:
-            raise CommandError(
+            raise CraftError(
                 f"Cannot login when using alternative auth through {ALTERNATE_AUTH_ENV_VAR} "
                 "environment variable."
             )
@@ -75,7 +74,7 @@ class Client(craft_store.StoreClient):
     def logout(self, *args, **kwargs):
         """Intercept regular logout functionality to forbid it when using alternate auth."""
         if os.getenv(ALTERNATE_AUTH_ENV_VAR) is not None:
-            raise CommandError(
+            raise CraftError(
                 f"Cannot logout when using alternative auth through {ALTERNATE_AUTH_ENV_VAR} "
                 "environment variable."
             )
@@ -86,19 +85,19 @@ class Client(craft_store.StoreClient):
         try:
             return super().request(method, self.api_base_url + urlpath, *args, **kwargs).text
         except craft_store.errors.CraftStoreError as err:
-            raise CommandError(str(err)) from err
+            raise CraftError(str(err)) from err
 
     def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> Dict[str, Any]:
         """Return .json() from a request.Response to a urlpath."""
         try:
             response = super().request(method, self.api_base_url + urlpath, *args, **kwargs)
         except craft_store.errors.CraftStoreError as err:
-            raise CommandError(str(err)) from err
+            raise CraftError(str(err)) from err
 
         try:
             return response.json()
         except JSONDecodeError as json_error:
-            raise CommandError(
+            raise CraftError(
                 f"Could not retrieve json response ({response.status_code} from request"
             ) from json_error
 
@@ -119,7 +118,7 @@ class Client(craft_store.StoreClient):
 
         result = response.json()
         if not result["successful"]:
-            raise CommandError("Server error while pushing file: {}".format(result))
+            raise CraftError("Server error while pushing file: {}".format(result))
 
         upload_id = result["upload_id"]
         emit.progress(f"Uploading bytes ended, id {upload_id}")

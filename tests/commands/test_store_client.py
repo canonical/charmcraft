@@ -24,9 +24,9 @@ from unittest.mock import call, patch
 import craft_store
 import pytest
 import requests
+from craft_cli import CraftError
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.client import (
     Client,
     build_user_agent,
@@ -176,7 +176,7 @@ def test_client_request_text_error(client_class):
     store_error = craft_store.errors.CraftStoreError(original_error_text)
     client.request_mock.side_effect = store_error
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         client.request_urlpath_text("GET", "/somepath")
     exc = cm.value
     assert str(exc) == original_error_text
@@ -190,7 +190,7 @@ def test_client_request_json_error(client_class):
     store_error = craft_store.errors.CraftStoreError(original_error_text)
     client.request_mock.side_effect = store_error
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         client.request_urlpath_json("GET", "/somepath")
     exc = cm.value
     assert str(exc) == original_error_text
@@ -298,7 +298,7 @@ def test_client_push_response_unsuccessful(tmp_path, client_class):
 
     client = client_class("http://api.test", "https://local.test:1234/")
     with patch.object(client, "_storage_push", return_value=fake_response):
-        with pytest.raises(CommandError) as error:
+        with pytest.raises(CraftError) as error:
             client.push_file(test_filepath)
             expected_error = (
                 "Server error while pushing file: {'successful': False, 'upload_id': None}"
@@ -330,7 +330,7 @@ def test_alternate_auth_login_forbidden(client_class, monkeypatch):
     """Login functionality cannot be used if alternate auth is present."""
     monkeypatch.setenv("CHARMCRAFT_AUTH", ENCODED_CREDENTIALS)
     client = client_class("http://api.test", "http://storage.test")
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         client.login()
     expected_error = (
         "Cannot login when using alternative auth through CHARMCRAFT_AUTH environment variable."
@@ -342,7 +342,7 @@ def test_alternate_auth_logout_forbidden(client_class, monkeypatch):
     """Logout functionality cannot be used if alternate auth is present."""
     monkeypatch.setenv("CHARMCRAFT_AUTH", ENCODED_CREDENTIALS)
     client = client_class("http://api.test", "http://storage.test")
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         client.logout()
     expected_error = (
         "Cannot logout when using alternative auth through CHARMCRAFT_AUTH environment variable."

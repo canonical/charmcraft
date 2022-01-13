@@ -141,9 +141,7 @@ class PackCommand(BaseCommand):
             if parsed_args.entrypoint is not None:
                 raise CraftError("The -e/--entry option is valid only when packing a charm")
             if parsed_args.requirement is not None:
-                raise CraftError(
-                    "The -r/--requirement option is valid only when packing a charm"
-                )
+                raise CraftError("The -r/--requirement option is valid only when packing a charm")
             self._pack_bundle(parsed_args)
         else:
             raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))

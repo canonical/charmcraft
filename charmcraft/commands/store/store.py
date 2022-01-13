@@ -155,9 +155,7 @@ def _store_client_wrapper(auto_login=True):
                             "Regenerate them and try again."
                         )
                     if not auto_login:
-                        raise CraftError(
-                            "Existing credentials are no longer valid for Charmhub."
-                        )
+                        raise CraftError("Existing credentials are no longer valid for Charmhub.")
                     emit.progress("Existing credentials no longer valid. Trying to log in...")
                 else:
                     raise CraftError(str(error)) from error

@@ -927,9 +927,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
     charm_name = create_charm_name_from_importable(importable_charm_name)
 
     if v_api[0] != "v" or not v_api[1:].isdigit():
-        raise CraftError(
-            "The API version in the library path must be 'vN' where N is an integer."
-        )
+        raise CraftError("The API version in the library path must be 'vN' where N is an integer.")
     api_from_path = int(v_api[1:])
 
     lib_name = lib_path.stem
@@ -956,9 +954,7 @@ def _get_lib_info(*, full_name=None, lib_path=None):
                 try:
                     field, value = [x.strip() for x in line.split(b"=")]
                 except ValueError:
-                    raise CraftError(
-                        "Bad metadata line in {!r}: {!r}".format(str(lib_path), line)
-                    )
+                    raise CraftError("Bad metadata line in {!r}: {!r}".format(str(lib_path), line))
                 metadata[field] = value
             else:
                 hasher.update(line)
@@ -1121,9 +1117,7 @@ class CreateLibCommand(BaseCommand):
             lib_path.parent.mkdir(parents=True, exist_ok=True)
             lib_path.write_text(template.render(context))
         except OSError as exc:
-            raise CraftError(
-                "Error writing the library in {!r}: {!r}.".format(str(lib_path), exc)
-            )
+            raise CraftError("Error writing the library in {!r}: {!r}.".format(str(lib_path), exc))
 
         emit.message(f"Library {full_name} created with id {lib_id}.")
         emit.message(f"Consider 'git add {lib_path}'.")

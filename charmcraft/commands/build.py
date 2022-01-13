@@ -484,9 +484,7 @@ class Builder:
                         destination=cwd / charm_name,
                     )
                 except FileNotFoundError as error:
-                    raise CraftError(
-                        "Unexpected error retrieving charm from instance."
-                    ) from error
+                    raise CraftError("Unexpected error retrieving charm from instance.") from error
 
         emit.progress("Charm packed ok")
         return charm_name

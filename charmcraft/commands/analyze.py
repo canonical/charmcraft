@@ -22,10 +22,10 @@ import tempfile
 import textwrap
 import zipfile
 
-from craft_cli import emit
+from craft_cli import emit, CraftError
 
 from charmcraft import linters
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import useful_filepath
 
 
@@ -68,7 +68,7 @@ class AnalyzeCommand(BaseCommand):
             zf = zipfile.ZipFile(str(filepath))
             zf.extractall(path=str(tmpdir))
         except Exception as exc:
-            raise CommandError(f"Cannot open charm file {str(filepath)!r}: {exc!r}.")
+            raise CraftError(f"Cannot open charm file {str(filepath)!r}: {exc!r}.")
 
         # fix permissions as extractall does not keep them (see https://bugs.python.org/issue15795)
         for name in zf.namelist():

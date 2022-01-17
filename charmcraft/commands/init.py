@@ -21,9 +21,9 @@ import re
 from datetime import date
 from typing import Optional
 
-from craft_cli import emit
+from craft_cli import emit, CraftError
 
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import make_executable, get_templates_environment
 
 try:
@@ -100,14 +100,14 @@ class InitCommand(BaseCommand):
             init_dirpath.mkdir(parents=True)
         elif any(init_dirpath.iterdir()) and not args.force:
             tpl = "{!r} is not empty (consider using --force to work on nonempty directories)"
-            raise CommandError(tpl.format(str(init_dirpath)))
+            raise CraftError(tpl.format(str(init_dirpath)))
         emit.trace(f"Using project directory {str(init_dirpath)!r}")
 
         if args.author is None and pwd is not None:
             args.author = _get_users_full_name_gecos()
 
         if not args.author:
-            raise CommandError(
+            raise CraftError(
                 "Unable to automatically determine author's name, specify it with --author"
             )
 
@@ -116,7 +116,7 @@ class InitCommand(BaseCommand):
             emit.trace(f"Set project name to '{args.name}'")
 
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
-            raise CommandError("{} is not a valid charm name".format(args.name))
+            raise CraftError("{} is not a valid charm name".format(args.name))
 
         context = {
             "name": args.name,

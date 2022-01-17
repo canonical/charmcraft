@@ -21,11 +21,10 @@ import pathlib
 import re
 from typing import List
 
-from craft_cli import emit
+from craft_cli import emit, CraftError
 from craft_providers import bases, multipass
 from craft_providers.multipass.errors import MultipassError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
 from charmcraft.env import get_managed_environment_project_path
 from charmcraft.utils import confirm_with_user, get_host_architecture
@@ -71,7 +70,7 @@ class MultipassProvider(Provider):
         try:
             names = self.multipass.list()
         except multipass.MultipassError as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
         for name in names:
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
@@ -83,7 +82,7 @@ class MultipassProvider(Provider):
                         purge=True,
                     )
                 except multipass.MultipassError as error:
-                    raise CommandError(str(error)) from error
+                    raise CraftError(str(error)) from error
 
                 deleted.append(name)
             else:
@@ -95,7 +94,7 @@ class MultipassProvider(Provider):
     def ensure_provider_is_available(cls) -> None:
         """Ensure provider is available, prompting the user to install it if required.
 
-        :raises CommandError: if provider is not available.
+        :raises CraftError: if provider is not available.
         """
         if not multipass.is_installed():
             if confirm_with_user(
@@ -106,12 +105,12 @@ class MultipassProvider(Provider):
                 try:
                     multipass.install()
                 except multipass.MultipassInstallationError as error:
-                    raise CommandError(
+                    raise CraftError(
                         "Failed to install Multipass. Visit https://multipass.run/ for "
                         "instructions on installing Multipass for your operating system."
                     ) from error
             else:
-                raise CommandError(
+                raise CraftError(
                     "Multipass is required, but not installed. Visit https://multipass.run/ for "
                     "instructions on installing Multipass for your operating system."
                 )
@@ -119,7 +118,7 @@ class MultipassProvider(Provider):
         try:
             multipass.ensure_multipass_is_ready()
         except multipass.MultipassError as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
     @classmethod
     def is_provider_available(cls) -> bool:
@@ -174,13 +173,13 @@ class MultipassProvider(Provider):
                 auto_clean=True,
             )
         except (bases.BaseConfigurationError, MultipassError) as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
         try:
             # Mount project.
             instance.mount(host_source=project_path, target=get_managed_environment_project_path())
         except MultipassError as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
         try:
             yield instance
@@ -190,4 +189,4 @@ class MultipassProvider(Provider):
                 instance.unmount_all()
                 instance.stop()
             except MultipassError as error:
-                raise CommandError(str(error)) from error
+                raise CraftError(str(error)) from error

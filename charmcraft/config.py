@@ -71,8 +71,8 @@ import pathlib
 from typing import Any, Dict, List, Optional, Tuple
 
 import pydantic
+from craft_cli import CraftError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.deprecations import notify_deprecation
 from charmcraft.env import (
     get_managed_environment_project_path,
@@ -384,7 +384,7 @@ class Config(ModelConfigDefaults, validate_all=False):
                 for pydantic_error in pydantic_errors:
                     pydantic_error["loc"] = ("bases", index, pydantic_error["loc"][0])
 
-                raise CommandError(format_pydantic_errors(pydantic_errors))
+                raise CraftError(format_pydantic_errors(pydantic_errors))
 
             base.clear()
             base["build-on"] = [converted_base.dict()]
@@ -400,7 +400,7 @@ class Config(ModelConfigDefaults, validate_all=False):
 
         :returns: valid CharmcraftConfig.
 
-        :raises CommandError: On failure to unmarshal object.
+        :raises CraftError: On failure to unmarshal object.
         """
         try:
             # Ensure optional type is specified if loading the yaml.
@@ -432,7 +432,7 @@ class Config(ModelConfigDefaults, validate_all=False):
 
             return cls.parse_obj({"project": project, **obj})
         except pydantic.error_wrappers.ValidationError as error:
-            raise CommandError(format_pydantic_errors(error.errors()))
+            raise CraftError(format_pydantic_errors(error.errors()))
 
     @classmethod
     def schema(cls, **kwargs) -> Dict[str, Any]:

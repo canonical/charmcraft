@@ -22,8 +22,8 @@ from argparse import Namespace
 from unittest.mock import patch
 
 import pytest
+from craft_cli import CraftError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.init import InitCommand
 from charmcraft.config import Project
 from charmcraft.utils import S_IXALL
@@ -99,7 +99,7 @@ def test_force(tmp_path, config):
 
 def test_bad_name(config):
     cmd = InitCommand(config)
-    with pytest.raises(CommandError):
+    with pytest.raises(CraftError):
         cmd.run(Namespace(name="1234", author="שראלה ישראל", force=False))
 
 
@@ -154,7 +154,7 @@ def test_gecos_missing_in_getpwuid_response(config):
         # return a fack passwd struct with an empty gecos (5th parameter)
         mock_pwd.return_value = pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))
         msg = "Unable to automatically determine author's name, specify it with --author"
-        with pytest.raises(CommandError, match=msg):
+        with pytest.raises(CraftError, match=msg):
             cmd.run(Namespace(name="my-charm", author=None, force=False))
 
 
@@ -166,7 +166,7 @@ def test_gecos_missing_user_information(config):
     with patch("pwd.getpwuid") as mock_pwd:
         mock_pwd.side_effect = KeyError("no user")
         msg = "Unable to automatically determine author's name, specify it with --author"
-        with pytest.raises(CommandError, match=msg):
+        with pytest.raises(CraftError, match=msg):
             cmd.run(Namespace(name="my-charm", author=None, force=False))
 
 

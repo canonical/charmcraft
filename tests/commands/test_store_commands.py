@@ -27,11 +27,10 @@ from unittest.mock import patch, call, MagicMock, ANY
 import dateutil.parser
 import pytest
 import yaml
-from craft_cli.errors import CraftError
+from craft_cli import CraftError
 from craft_store.errors import NotLoggedIn
 
 from charmcraft.config import CharmhubConfig
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store import (
     CloseCommand,
     CreateLibCommand,
@@ -649,7 +648,7 @@ def test_get_name_bad_zip(tmp_path):
     bad_zip = tmp_path / "badstuff.zip"
     bad_zip.write_text("I'm not really a zip file")
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
     assert str(cm.value) == "Cannot open '{}' (bad zip file).".format(bad_zip)
 
@@ -677,7 +676,7 @@ def test_get_name_charm_bad_metadata(tmp_path, yaml_content):
     bad_zip = tmp_path / "badstuff.zip"
     _build_zip_with_yaml(bad_zip, "metadata.yaml", raw_yaml=yaml_content)
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
     assert str(cm.value) == (
         "Bad 'metadata.yaml' file inside charm zip "
@@ -709,7 +708,7 @@ def test_get_name_bundle_bad_data(tmp_path, yaml_content):
     bad_zip = tmp_path / "badstuff.zip"
     _build_zip_with_yaml(bad_zip, "bundle.yaml", raw_yaml=yaml_content)
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
     assert str(cm.value) == (
         "Bad 'bundle.yaml' file inside bundle zip '{}': "
@@ -724,7 +723,7 @@ def test_get_name_nor_charm_nor_bundle(tmp_path):
     bad_zip = tmp_path / "badstuff.zip"
     _build_zip_with_yaml(bad_zip, "whatever.yaml", content={})
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
     assert str(cm.value) == (
         "The indicated zip file '{}' is not a charm ('metadata.yaml' not found) nor a bundle "
@@ -887,7 +886,7 @@ def test_upload_charm_with_init_template_todo_token(tmp_path, config):
         "TEMPLATE-TODO token from when the project was created using the 'init' "
         "command: somefile.cfg, othertainted.txt"
     )
-    with pytest.raises(CommandError, match=expected_msg):
+    with pytest.raises(CraftError, match=expected_msg):
         UploadCommand(config).run(args)
 
 
@@ -1916,7 +1915,7 @@ def test_createlib_name_from_metadata_problem(store_mock, config):
     args = Namespace(name="testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = None
-        with pytest.raises(CommandError) as cm:
+        with pytest.raises(CraftError) as cm:
             CreateLibCommand(config).run(args)
         assert str(cm.value) == (
             "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
@@ -1966,7 +1965,7 @@ def test_createlib_name_contains_dash(emitter, store_mock, tmp_path, monkeypatch
 def test_createlib_invalid_name(lib_name, config):
     """Verify that it cannot be used with an invalid name."""
     args = Namespace(name=lib_name)
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         CreateLibCommand(config).run(args)
     assert str(err.value) == (
         "Invalid library name. Must only use lowercase alphanumeric "
@@ -1983,7 +1982,7 @@ def test_createlib_path_already_there(tmp_path, monkeypatch, config):
     args = Namespace(name="testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "test-charm-name"
-        with pytest.raises(CommandError) as err:
+        with pytest.raises(CraftError) as err:
             CreateLibCommand(config).run(args)
 
     assert str(err.value) == (
@@ -2005,7 +2004,7 @@ def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cle
     expected_error = "Error writing the library in .*: PermissionError.*"
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "test-charm-name"
-        with pytest.raises(CommandError, match=expected_error):
+        with pytest.raises(CraftError, match=expected_error):
             CreateLibCommand(config).run(args)
 
 
@@ -2122,7 +2121,7 @@ def test_publishlib_not_found(emitter, store_mock, tmp_path, monkeypatch, config
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
-        with pytest.raises(CommandError) as cm:
+        with pytest.raises(CraftError) as cm:
             PublishLibCommand(config).run(args)
 
         assert str(cm.value) == (
@@ -2138,7 +2137,7 @@ def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkey
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "charm2"
-        with pytest.raises(CommandError) as cm:
+        with pytest.raises(CraftError) as cm:
             PublishLibCommand(config).run(args)
 
         assert str(cm.value) == (
@@ -2151,7 +2150,7 @@ def test_publishlib_name_from_metadata_problem(store_mock, config):
     args = Namespace(library="charms.testcharm.v0.testlib")
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = None
-        with pytest.raises(CommandError) as cm:
+        with pytest.raises(CraftError) as cm:
             PublishLibCommand(config).run(args)
 
         assert str(cm.value) == (
@@ -2444,7 +2443,7 @@ def test_getlibinfo_success_content(tmp_path, monkeypatch):
 )
 def test_getlibinfo_bad_name(name):
     """Different combinations of a bad library name."""
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(full_name=name)
     assert str(err.value) == (
         "Charm library name {!r} must conform to charms.<charm>.vN.<libname>".format(name)
@@ -2465,7 +2464,7 @@ def test_getlibinfo_bad_name(name):
 )
 def test_getlibinfo_bad_path(path):
     """Different combinations of a bad library path."""
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=pathlib.Path(path))
     assert str(err.value) == (
         "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py".format(path)
@@ -2483,7 +2482,7 @@ def test_getlibinfo_bad_path(path):
 )
 def test_getlibinfo_bad_api(name):
     """Different combinations of a bad api in the path/name."""
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(full_name=name)
     assert str(err.value) == (
         "The API version in the library path must be 'vN' where N is an integer."
@@ -2527,7 +2526,7 @@ def test_getlibinfo_malformed_metadata_field(tmp_path, monkeypatch):
     """Some metadata field is not really valid."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_id="LIBID = foo = 23")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == r"Bad metadata line in {!r}: b'LIBID = foo = 23\n'".format(
         str(test_path)
@@ -2538,7 +2537,7 @@ def test_getlibinfo_missing_metadata_field(tmp_path, monkeypatch):
     """Some metadata field is not present."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_patch="", metadata_api="")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} is missing the mandatory metadata fields: LIBAPI, LIBPATCH.".format(
@@ -2551,7 +2550,7 @@ def test_getlibinfo_api_not_int(tmp_path, monkeypatch):
     """The API is not an integer."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_api="LIBAPI = v3")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBAPI is not zero or a positive integer.".format(
@@ -2564,7 +2563,7 @@ def test_getlibinfo_api_negative(tmp_path, monkeypatch):
     """The API is not negative."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_api="LIBAPI = -3")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBAPI is not zero or a positive integer.".format(
@@ -2577,7 +2576,7 @@ def test_getlibinfo_patch_not_int(tmp_path, monkeypatch):
     """The PATCH is not an integer."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_patch="LIBPATCH = beta3")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBPATCH is not zero or a positive integer.".format(
@@ -2590,7 +2589,7 @@ def test_getlibinfo_patch_negative(tmp_path, monkeypatch):
     """The PATCH is not negative."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_patch="LIBPATCH = -1")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBPATCH is not zero or a positive integer.".format(
@@ -2603,7 +2602,7 @@ def test_getlibinfo_api_patch_both_zero(tmp_path, monkeypatch):
     """Invalid combination of both API and PATCH being 0."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_patch="LIBPATCH = 0", metadata_api="LIBAPI = 0")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
@@ -2616,7 +2615,7 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     """The API value included in the file is different than the one in the path."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_api="LIBAPI = 99")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
@@ -2629,7 +2628,7 @@ def test_getlibinfo_libid_non_string(tmp_path, monkeypatch):
     """The ID is not really a string."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_id="LIBID = 99")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
@@ -2642,7 +2641,7 @@ def test_getlibinfo_libid_non_ascii(tmp_path, monkeypatch):
     """The ID is not ASCII."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_id="LIBID = 'moño'")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
@@ -2655,7 +2654,7 @@ def test_getlibinfo_libid_empty(tmp_path, monkeypatch):
     """The ID is empty."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_id="LIBID = ''")
-    with pytest.raises(CommandError) as err:
+    with pytest.raises(CraftError) as err:
         _get_lib_info(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
@@ -3054,7 +3053,7 @@ def test_listlib_name_from_metadata_problem(store_mock, config):
     args = Namespace(name=None)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = None
-        with pytest.raises(CommandError) as cm:
+        with pytest.raises(CraftError) as cm:
             ListLibCommand(config).run(args)
 
         assert str(cm.value) == (

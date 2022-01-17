@@ -31,8 +31,6 @@ import requests
 import requests_unixsocket
 from craft_cli import emit, CraftError
 
-from charmcraft.cmdbase import CommandError
-
 # some mimetypes
 CONFIG_MIMETYPE = "application/vnd.docker.container.image.v1+json"
 MANIFEST_V2_MIMETYPE = "application/vnd.docker.distribution.manifest.v2+json"
@@ -71,7 +69,7 @@ def assert_response_ok(
 
     result = response.json()
     if "errors" in result:
-        raise CommandError("Response with errors from server: {}".format(result["errors"]))
+        raise CraftError("Response with errors from server: {}".format(result["errors"]))
     return result
 
 
@@ -137,7 +135,7 @@ class OCIRegistry:
             try:
                 auth_info = self._get_auth_info(response)
             except (ValueError, KeyError) as exc:
-                raise CommandError(
+                raise CraftError(
                     "Bad 401 response: {}; headers: {!r}".format(exc, response.headers)
                 )
             self.auth_token = self._authenticate(auth_info)
@@ -258,7 +256,7 @@ class OCIRegistry:
         assert_response_ok(response, expected_status=201)
         emit.progress("Upload finished OK")
         if response.headers["Docker-Content-Digest"] != digest:
-            raise CommandError("Server error: the upload is corrupted")
+            raise CraftError("Server error: the upload is corrupted")
 
 
 class HashingTemporaryFile(io.FileIO):

@@ -25,10 +25,9 @@ from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 
 import yaml
-from craft_cli import emit
+from craft_cli import emit, CraftError
 from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.env import is_charmcraft_running_in_managed_mode
 
 OSPlatform = namedtuple("OSPlatform", "system release machine")
@@ -155,13 +154,13 @@ class ResourceOption:
 def useful_filepath(filepath):
     """Return a valid Path with user name expansion for filepath.
 
-    CommandError is raised if filepath is not a valid file or is not readable.
+    CraftError is raised if filepath is not a valid file or is not readable.
     """
     filepath = pathlib.Path(filepath).expanduser()
     if not os.access(filepath, os.R_OK):
-        raise CommandError("Cannot access {!r}.".format(str(filepath)))
+        raise CraftError("Cannot access {!r}.".format(str(filepath)))
     if not filepath.is_file():
-        raise CommandError("{!r} is not a file.".format(str(filepath)))
+        raise CraftError("{!r} is not a file.".format(str(filepath)))
     return filepath
 
 

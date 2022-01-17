@@ -23,10 +23,10 @@ import sys
 from unittest.mock import call, patch
 
 import pytest
+from craft_cli import CraftError
 
 from charmcraft import charm_builder
 from charmcraft.charm_builder import STAGING_VENV_DIRNAME, VENV_DIRNAME, CharmBuilder, _process_run
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import BUILD_DIRNAME, DISPATCH_CONTENT, DISPATCH_FILENAME
 from charmcraft.metadata import CHARM_METADATA
 
@@ -903,7 +903,7 @@ def test_processrun_stderr_logged(emitter):
 def test_processrun_failed():
     """It's logged in error if cmd fails."""
     cmd = [sys.executable, "-c", "exit(3)"]
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         _process_run(cmd)
     assert str(cm.value) == f"Subprocess command {cmd} execution failed with retcode 3"
 
@@ -912,7 +912,7 @@ def test_processrun_crashed(tmp_path):
     """It's logged in error if cmd fails."""
     nonexistent = tmp_path / "whatever"
     cmd = [str(nonexistent)]
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         _process_run(cmd)
     assert str(cm.value) == f"Subprocess execution crashed for command {cmd}"
 

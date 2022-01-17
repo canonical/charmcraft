@@ -23,11 +23,10 @@ from collections import namedtuple
 from functools import wraps
 
 import craft_store
-from craft_cli import emit
+from craft_cli import emit, CraftError
 from craft_store import attenuations, endpoints
 from dateutil import parser
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.store.client import Client, ALTERNATE_AUTH_ENV_VAR
 
 # helpers to build responses from this layer
@@ -151,19 +150,17 @@ def _store_client_wrapper(auto_login=True):
             except craft_store.errors.StoreServerError as error:
                 if error.response.status_code == 401:
                     if os.getenv(ALTERNATE_AUTH_ENV_VAR):
-                        raise CommandError(
+                        raise CraftError(
                             "Provided credentials are no longer valid for Charmhub. "
                             "Regenerate them and try again."
                         )
                     if not auto_login:
-                        raise CommandError(
-                            "Existing credentials are no longer valid for Charmhub."
-                        )
+                        raise CraftError("Existing credentials are no longer valid for Charmhub.")
                     emit.progress("Existing credentials no longer valid. Trying to log in...")
                 else:
-                    raise CommandError(str(error)) from error
+                    raise CraftError(str(error)) from error
             except craft_store.errors.CraftStoreError as error:
-                raise CommandError(
+                raise CraftError(
                     f"Server error while communicating to the Store: {error!s}"
                 ) from error
 
@@ -210,7 +207,7 @@ class Store:
         try:
             return self._client.login(**kwargs)
         except craft_store.errors.CraftStoreError as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
     def logout(self):
         """Logout from the store.

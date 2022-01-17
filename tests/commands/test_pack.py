@@ -25,8 +25,8 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 import yaml
+from craft_cli import CraftError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand, build_zip
 from charmcraft.config import Project, load
@@ -135,7 +135,7 @@ def test_resolve_bundle_with_requirement(config):
     config.set(type="bundle")
     args = Namespace(requirement="reqs.txt", entrypoint=None)
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         PackCommand(config).run(args)
     assert str(cm.value) == "The -r/--requirement option is valid only when packing a charm"
 
@@ -145,7 +145,7 @@ def test_resolve_bundle_with_entrypoint(config):
     config.set(type="bundle")
     args = Namespace(requirement=None, entrypoint="mycharm.py")
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         PackCommand(config).run(args)
     assert str(cm.value) == "The -e/--entry option is valid only when packing a charm"
 
@@ -186,7 +186,7 @@ def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_co
 def test_bundle_missing_bundle_file(tmp_path, bundle_config):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         PackCommand(bundle_config).run(noargs)
     assert str(cm.value) == (
         "Missing or invalid main bundle file: '{}'.".format(tmp_path / "bundle.yaml")
@@ -199,7 +199,7 @@ def test_bundle_missing_other_mandatory_file(tmp_path, bundle_config, bundle_yam
     bundle_config.set(type="bundle")
 
     # build without a README!
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         PackCommand(bundle_config).run(noargs)
     assert str(cm.value) == "Missing mandatory file: {!r}.".format(str(tmp_path / "README.md"))
 
@@ -210,7 +210,7 @@ def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
     bundle_config.set(type="bundle")
 
     # build!
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         PackCommand(bundle_config).run(noargs)
     assert str(cm.value) == (
         "Invalid bundle config; "
@@ -235,12 +235,12 @@ def test_bundle_debug_no_error(
 def test_bundle_debug_with_error(
     tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell
 ):
-    mock_parts.PartsLifecycle.return_value.run.side_effect = CommandError("fail")
+    mock_parts.PartsLifecycle.return_value.run.side_effect = CraftError("fail")
     bundle_yaml(name="testbundle")
     bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    with pytest.raises(CommandError):
+    with pytest.raises(CraftError):
         PackCommand(bundle_config).run(get_namespace(debug=True))
 
     assert mock_launch_shell.mock_calls == [mock.call()]
@@ -508,7 +508,7 @@ def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config):
     testfile1.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        with pytest.raises(CommandError) as err:
+        with pytest.raises(CraftError) as err:
             PackCommand(bundle_config).run(noargs)
     assert str(err.value) == (
         "Parts processing error: Failed to copy '{}/build/stage/f2.txt': "

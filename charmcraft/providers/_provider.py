@@ -56,7 +56,7 @@ class Provider(ABC):
     def ensure_provider_is_available(cls) -> None:
         """Ensure provider is available, prompting the user to install it if required.
 
-        :raises CommandError: if provider is not available.
+        :raises CraftError: if provider is not available.
         """
 
     def get_command_environment(self) -> Dict[str, str]:

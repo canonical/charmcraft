@@ -21,9 +21,9 @@ from argparse import Namespace, ArgumentParser
 from unittest.mock import patch, ANY
 
 import pytest
+from craft_cli import CraftError
 
 from charmcraft import linters
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.analyze import AnalyzeCommand, JSON_FORMAT
 from charmcraft.utils import useful_filepath
 
@@ -107,7 +107,7 @@ def test_corrupt_charm(tmp_path, config):
     charm_file.write_text("this is not a real zip content")
 
     args = Namespace(filepath=charm_file, force=None, format=None)
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         AnalyzeCommand(config).run(args)
     assert str(cm.value) == (
         "Cannot open charm file '{}': BadZipFile('File is not a zip file').".format(charm_file)

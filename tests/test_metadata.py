@@ -18,8 +18,8 @@ import re
 from textwrap import dedent
 
 import pytest
+from craft_cli import CraftError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.metadata import parse_metadata_yaml
 
 
@@ -61,10 +61,10 @@ def test_parse_metadata_yaml_error_invalid_names(tmp_path, name):
         Bad metadata.yaml content:
         - string type expected in field 'name'"""
     )
-    with pytest.raises(CommandError, match=re.escape(expected_error_msg)):
+    with pytest.raises(CraftError, match=re.escape(expected_error_msg)):
         parse_metadata_yaml(tmp_path)
 
 
 def test_parse_metadata_yaml_error_missing(tmp_path):
-    with pytest.raises(CommandError, match=r"Missing mandatory metadata.yaml."):
+    with pytest.raises(CraftError, match=r"Missing mandatory metadata.yaml."):
         parse_metadata_yaml(tmp_path)

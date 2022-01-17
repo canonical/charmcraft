@@ -99,6 +99,7 @@ parts:
       - libffi-dev
       - libapt-pkg-dev
       - libssl-dev
+      - git
     stage-packages:
       - git
       - apt

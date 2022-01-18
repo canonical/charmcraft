@@ -21,11 +21,11 @@ from unittest.mock import patch
 import craft_parts
 import pydantic
 import pytest
+from craft_cli import CraftError
 from craft_parts import Step, plugins
 from craft_parts.errors import PartsError
 
 from charmcraft import charm_builder, parts
-from charmcraft.cmdbase import CommandError
 
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -184,7 +184,7 @@ class TestPartsLifecycle:
         fake_error = PartsError("pumba")
         with patch("craft_parts.LifecycleManager.__init__") as mock:
             mock.side_effect = fake_error
-            with pytest.raises(CommandError) as cm:
+            with pytest.raises(CraftError) as cm:
                 parts.PartsLifecycle(
                     all_parts={},
                     work_dir="/some/workdir",

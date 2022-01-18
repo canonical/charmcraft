@@ -19,7 +19,8 @@
 import os
 import sys
 
-from charmcraft.cmdbase import CommandError
+from craft_cli import CraftError
+
 from charmcraft.env import is_charmcraft_running_from_snap, is_charmcraft_running_in_developer_mode
 from charmcraft.snap import get_snap_configuration
 
@@ -65,4 +66,4 @@ def get_provider():
     elif provider == "multipass":
         return MultipassProvider()
 
-    raise CommandError(f"Unsupported provider specified {provider!r}.")
+    raise CraftError(f"Unsupported provider specified {provider!r}.")

@@ -29,11 +29,10 @@ from unittest.mock import call, patch, ANY
 
 import pytest
 import yaml
-from craft_cli import EmitterMode, emit
+from craft_cli import EmitterMode, emit, CraftError
 
 from charmcraft import linters
 from charmcraft.bases import get_host_as_base
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
     DISPATCH_CONTENT,
@@ -270,7 +269,7 @@ def test_validator_from_exist(config):
     """'from' param: checks that the directory exists."""
     validator = Validator(config)
     expected_msg = "Charm directory was not found: '/not_really_there'"
-    with pytest.raises(CommandError, match=expected_msg):
+    with pytest.raises(CraftError, match=expected_msg):
         validator.validate_from(pathlib.Path("/not_really_there"))
 
 
@@ -282,7 +281,7 @@ def test_validator_from_isdir(tmp_path, config):
 
     validator = Validator(config)
     expected_msg = "Charm directory is not really a directory: '{}'".format(testfile)
-    with pytest.raises(CommandError, match=expected_msg):
+    with pytest.raises(CraftError, match=expected_msg):
         validator.validate_from(testfile)
 
 
@@ -301,7 +300,7 @@ def test_validator_bases_index_invalid(bases_indices, config):
     )
     validator = Validator(config)
     expected_msg = re.escape("Bases index '-1' is invalid (must be >= 0).")
-    with pytest.raises(CommandError, match=expected_msg):
+    with pytest.raises(CraftError, match=expected_msg):
         validator.validate_bases_indices(bases_indices)
 
 
@@ -362,7 +361,7 @@ def test_validator_entrypoint_exist(config):
     """'entrypoint' param: checks that the file exists."""
     validator = Validator(config)
     expected_msg = "Charm entry point was not found: '/not_really_there.py'"
-    with pytest.raises(CommandError, match=expected_msg):
+    with pytest.raises(CraftError, match=expected_msg):
         validator.validate_entrypoint(pathlib.Path("/not_really_there.py"))
 
 
@@ -377,7 +376,7 @@ def test_validator_entrypoint_inside_project(tmp_path, config):
     validator.basedir = project_dir
 
     expected_msg = "Charm entry point must be inside the project: '{}'".format(testfile)
-    with pytest.raises(CommandError, match=expected_msg):
+    with pytest.raises(CraftError, match=expected_msg):
         validator.validate_entrypoint(testfile)
 
 
@@ -390,7 +389,7 @@ def test_validator_entrypoint_exec(tmp_path, config):
     validator = Validator(config)
     validator.basedir = tmp_path
     expected_msg = "Charm entry point must be executable: '{}'".format(testfile)
-    with pytest.raises(CommandError, match=expected_msg):
+    with pytest.raises(CraftError, match=expected_msg):
         validator.validate_entrypoint(testfile)
 
 
@@ -476,7 +475,7 @@ def test_validator_requirement_exist(config):
     """'requirement' param: checks that the file exists."""
     validator = Validator(config)
     expected_msg = "the requirements file was not found: '/not_really_there.txt'"
-    with pytest.raises(CommandError, match=expected_msg):
+    with pytest.raises(CraftError, match=expected_msg):
         validator.validate_requirement([pathlib.Path("/not_really_there.txt")])
 
 
@@ -549,7 +548,7 @@ def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
 
-    with pytest.raises(CommandError, match=r"Missing mandatory metadata.yaml."):
+    with pytest.raises(CraftError, match=r"Missing mandatory metadata.yaml."):
         get_builder(config)
 
 
@@ -625,14 +624,14 @@ def test_build_with_debug_with_error(
     mock_parts,
     mock_launch_shell,
 ):
-    mock_parts.PartsLifecycle.return_value.run.side_effect = CommandError("fail")
+    mock_parts.PartsLifecycle.return_value.run.side_effect = CraftError("fail")
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
         debug=True,
     )
 
-    with pytest.raises(CommandError):
+    with pytest.raises(CraftError):
         builder.run(destructive_mode=True)
 
     assert mock_launch_shell.mock_calls == [mock.call()]
@@ -1054,7 +1053,7 @@ def test_build_bases_index_scenarios_provider(
     mock_instance.reset_mock()
 
     with pytest.raises(
-        CommandError,
+        CraftError,
         match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
     ):
         builder.run([3])
@@ -1064,7 +1063,7 @@ def test_build_bases_index_scenarios_provider(
 
     expected_msg = re.escape("Failed to build charm for bases index '0'.")
     with pytest.raises(
-        CommandError,
+        CraftError,
         match=expected_msg,
     ):
         mock_instance.execute_run.side_effect = subprocess.CalledProcessError(
@@ -1137,7 +1136,7 @@ def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, tm
     ]
 
     with pytest.raises(
-        CommandError,
+        CraftError,
         match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
     ):
         builder.run([1])
@@ -1182,7 +1181,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with pytest.raises(
-        CommandError,
+        CraftError,
         match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
     ):
         builder.run()
@@ -1544,7 +1543,7 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch):
     entrypoint.chmod(0o700)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with pytest.raises(CommandError) as raised:
+    with pytest.raises(CraftError) as raised:
         builder.run([0])
     assert str(raised.value) == (
         "--entrypoint not supported when charm-entrypoint specified in charmcraft.yaml"
@@ -1851,7 +1850,7 @@ def test_build_requirements_from_both(basic_project, monkeypatch, emitter):
     reqs.touch()
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with pytest.raises(CommandError) as raised:
+    with pytest.raises(CraftError) as raised:
         builder.run([0])
     assert str(raised.value) == (
         "--requirement not supported when charm-requirements specified in charmcraft.yaml"
@@ -1975,7 +1974,7 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
         ),
     ]
 
-    with pytest.raises(CommandError) as cm:
+    with pytest.raises(CraftError) as cm:
         builder.show_linting_results(linting_results)
     exc = cm.value
     assert str(exc) == "Aborting due to lint errors (use --force to override)."

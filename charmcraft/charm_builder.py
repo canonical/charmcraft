@@ -25,9 +25,8 @@ import sys
 import subprocess
 from typing import List
 
-from craft_cli import emit, EmitterMode
+from craft_cli import emit, EmitterMode, CraftError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.env import get_managed_environment_log_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
@@ -283,7 +282,7 @@ def _find_venv_site_packages(basedir):
 def _process_run(cmd: List[str]) -> None:
     """Run an external command logging its output.
 
-    :raises CommandError: if execution crashes or ends with return code not zero.
+    :raises CraftError: if execution crashes or ends with return code not zero.
     """
     emit.progress(f"Running external command {cmd}")
     try:
@@ -294,14 +293,14 @@ def _process_run(cmd: List[str]) -> None:
             universal_newlines=True,
         )
     except Exception as err:
-        raise CommandError(f"Subprocess execution crashed for command {cmd}") from err
+        raise CraftError(f"Subprocess execution crashed for command {cmd}") from err
 
     for line in proc.stdout:
         emit.trace(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 
     if retcode:
-        raise CommandError(f"Subprocess command {cmd} execution failed with retcode {retcode}")
+        raise CraftError(f"Subprocess command {cmd} execution failed with retcode {retcode}")
 
 
 def _parse_arguments() -> argparse.Namespace:

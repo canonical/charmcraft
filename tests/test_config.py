@@ -22,9 +22,9 @@ from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
+from craft_cli import CraftError
 
 from charmcraft import linters
-from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, load
 from charmcraft.utils import get_host_architecture
 
@@ -140,7 +140,7 @@ def check_schema_error(tmp_path):
         which of the verifications it will fail. After 3.5 is dropped this could be changed
         to receive only one message and compare with equality below, not inclusion.
         """
-        with pytest.raises(CommandError) as cm:
+        with pytest.raises(CraftError) as cm:
             load(tmp_path)
         assert str(cm.value) == expected_msg
 

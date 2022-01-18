@@ -17,20 +17,21 @@
 """Tests for the commands infraestructure."""
 
 import pytest
+from craft_cli import CraftError
 
-from charmcraft.cmdbase import CommandError, BaseCommand
+from charmcraft.cmdbase import BaseCommand
 from charmcraft.main import COMMAND_GROUPS
 
 
 def test_commanderror_retcode_default():
-    """The CommandError return code default."""
-    err = CommandError("problem")
+    """The CraftError return code default."""
+    err = CraftError("problem")
     assert err.retcode == 1
 
 
 def test_commanderror_retcode_given():
-    """The CommandError holds the return code."""
-    err = CommandError("problem", retcode=4)
+    """The CraftError holds the return code."""
+    err = CraftError("problem", retcode=4)
     assert err.retcode == 4
 
 

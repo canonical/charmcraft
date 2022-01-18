@@ -22,14 +22,13 @@ import shlex
 import sys
 from typing import Any, Dict, List, Set, cast
 
-from craft_cli import emit
+from craft_cli import emit, CraftError
 from craft_parts import LifecycleManager, Step, plugins
 from craft_parts.errors import PartsError
 from craft_parts.parts import PartSpec
 from xdg import BaseDirectory  # type: ignore
 
 from charmcraft import charm_builder
-from charmcraft.cmdbase import CommandError
 from charmcraft.reactive_plugin import ReactivePlugin
 
 
@@ -285,7 +284,7 @@ class PartsLifecycle:
                 project_name=project_name,
             )
         except PartsError as err:
-            raise CommandError(f"Error bootstrapping lifecycle manager: {err}") from err
+            raise CraftError(f"Error bootstrapping lifecycle manager: {err}") from err
 
     @property
     def prime_dir(self) -> pathlib.Path:
@@ -297,7 +296,7 @@ class PartsLifecycle:
 
         :param target_step: The final step to execute.
 
-        :raises CommandError: On error during lifecycle ops.
+        :raises CraftError: On error during lifecycle ops.
         :raises RuntimeError: On unexpected error.
         """
         previous_dir = os.getcwd()
@@ -325,9 +324,9 @@ class PartsLifecycle:
             msg = err.strerror
             if err.filename:
                 msg = f"{err.filename}: {msg}"
-            raise CommandError(f"Parts processing error: {msg}") from err
+            raise CraftError(f"Parts processing error: {msg}") from err
         except Exception as err:
-            raise CommandError(f"Parts processing error: {err}") from err
+            raise CraftError(f"Parts processing error: {err}") from err
         finally:
             os.chdir(previous_dir)
 

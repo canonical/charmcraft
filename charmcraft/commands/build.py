@@ -22,11 +22,11 @@ import subprocess
 import zipfile
 from typing import List, Optional, Tuple
 
-from craft_cli import emit, EmitterMode
+from craft_cli import emit, EmitterMode, CraftError
 
 from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import BaseCommand
 from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.deprecations import notify_deprecation
 from charmcraft.manifest import create_manifest
@@ -179,7 +179,7 @@ class Builder:
             if self.force_packing:
                 emit.message("Packing anyway as requested.", intermediate=True)
             else:
-                raise CommandError(
+                raise CraftError(
                     "Aborting due to lint errors (use --force to override).", retcode=2
                 )
 
@@ -190,7 +190,7 @@ class Builder:
 
         :returns: File name of charm.
 
-        :raises CommandError: on lifecycle exception.
+        :raises CraftError: on lifecycle exception.
         :raises RuntimeError: on unexpected lifecycle exception.
         """
         if env.is_charmcraft_running_in_managed_mode():
@@ -241,7 +241,7 @@ class Builder:
         # verify if deprecated --requirement is used and update the plugin property
         if self._special_charm_part.get("charm-requirements"):
             if self.requirement_paths:
-                raise CommandError(
+                raise CraftError(
                     "--requirement not supported when charm-requirements "
                     "specified in charmcraft.yaml"
                 )
@@ -261,7 +261,7 @@ class Builder:
         # verify if deprecated --entrypoint is used and update the plugin property
         if self._special_charm_part.get("charm-entrypoint"):
             if self.entrypoint:
-                raise CommandError(
+                raise CraftError(
                     "--entrypoint not supported when charm-entrypoint "
                     "specified in charmcraft.yaml"
                 )
@@ -383,7 +383,7 @@ class Builder:
             managed_mode=managed_mode,
         )
         if not build_plan:
-            raise CommandError(
+            raise CraftError(
                 "No suitable 'build-on' environment found in any 'bases' configuration."
             )
 
@@ -398,7 +398,7 @@ class Builder:
 
                 try:
                     charm_name = self.build_charm(bases_config)
-                except (CommandError, RuntimeError) as error:
+                except (CraftError, RuntimeError) as error:
                     if self.debug:
                         emit.trace(f"Launching shell as charm building ended in error: {error}")
                         launch_shell()
@@ -473,7 +473,7 @@ class Builder:
                     )
             except subprocess.CalledProcessError as error:
                 capture_logs_from_instance(instance)
-                raise CommandError(
+                raise CraftError(
                     f"Failed to build charm for bases index '{bases_index}'."
                 ) from error
 
@@ -484,9 +484,7 @@ class Builder:
                         destination=cwd / charm_name,
                     )
                 except FileNotFoundError as error:
-                    raise CommandError(
-                        "Unexpected error retrieving charm from instance."
-                    ) from error
+                    raise CraftError("Unexpected error retrieving charm from instance.") from error
 
         emit.progress("Charm packed ok")
         return charm_name
@@ -540,15 +538,15 @@ class Validator:
 
         for bases_index in bases_indices:
             if bases_index < 0:
-                raise CommandError(f"Bases index '{bases_index}' is invalid (must be >= 0).")
+                raise CraftError(f"Bases index '{bases_index}' is invalid (must be >= 0).")
 
             if not self.config.bases:
-                raise CommandError(
+                raise CraftError(
                     "No bases configuration found, required when using --bases-index.",
                 )
 
             if bases_index >= len(self.config.bases):
-                raise CommandError(
+                raise CraftError(
                     f"No bases configuration found for specified index '{bases_index}'."
                 )
 
@@ -571,9 +569,9 @@ class Validator:
             dirpath = dirpath.expanduser().absolute()
 
         if not dirpath.exists():
-            raise CommandError("Charm directory was not found: {!r}".format(str(dirpath)))
+            raise CraftError("Charm directory was not found: {!r}".format(str(dirpath)))
         if not dirpath.is_dir():
-            raise CommandError(
+            raise CraftError(
                 "Charm directory is not really a directory: {!r}".format(str(dirpath))
             )
 
@@ -588,13 +586,13 @@ class Validator:
         filepath = filepath.expanduser().absolute()
 
         if not filepath.exists():
-            raise CommandError("Charm entry point was not found: {!r}".format(str(filepath)))
+            raise CraftError("Charm entry point was not found: {!r}".format(str(filepath)))
         if self.basedir not in filepath.parents:
-            raise CommandError(
+            raise CraftError(
                 "Charm entry point must be inside the project: {!r}".format(str(filepath))
             )
         if not os.access(filepath, os.X_OK):
-            raise CommandError("Charm entry point must be executable: {!r}".format(str(filepath)))
+            raise CraftError("Charm entry point must be executable: {!r}".format(str(filepath)))
         return filepath
 
     def validate_requirement(self, filepaths):
@@ -608,7 +606,7 @@ class Validator:
         filepaths = [x.expanduser().absolute() for x in filepaths]
         for fpath in filepaths:
             if not fpath.exists():
-                raise CommandError("the requirements file was not found: {!r}".format(str(fpath)))
+                raise CraftError("the requirements file was not found: {!r}".format(str(fpath)))
         return filepaths
 
     def validate_shell(self, value):

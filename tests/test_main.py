@@ -34,7 +34,7 @@ from charmcraft.main import (
     ProvideHelpException,
     main,
 )
-from charmcraft.cmdbase import BaseCommand, CommandError
+from charmcraft.cmdbase import BaseCommand
 from tests.factory import create_command
 
 
@@ -463,8 +463,8 @@ def test_main_no_args():
 
 
 def test_main_controlled_error():
-    """Work raised CommandError: message handler notified properly, use indicated return code."""
-    simulated_exception = CommandError("boom", retcode=33)
+    """Work raised CraftError: message handler notified properly, use indicated return code."""
+    simulated_exception = CraftError("boom", retcode=33)
     with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.side_effect = simulated_exception

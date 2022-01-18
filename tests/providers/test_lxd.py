@@ -20,11 +20,11 @@ from unittest import mock
 from unittest.mock import call
 
 import pytest
+from craft_cli import CraftError
 from craft_providers import bases
 from craft_providers.lxd import LXDError, LXDInstallationError
 
 from charmcraft import providers
-from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
 
 
@@ -191,7 +191,7 @@ def test_clean_project_environments_list_failure(mock_lxc, mock_path):
     mock_lxc.list_names.side_effect = LXDError(brief="fail")
     provider = providers.LXDProvider(lxc=mock_lxc)
 
-    with pytest.raises(CommandError, match="fail"):
+    with pytest.raises(CraftError, match="fail"):
         provider.clean_project_environments(
             charm_name="charm",
             project_path=mock_path,
@@ -204,7 +204,7 @@ def test_clean_project_environments_delete_failure(mock_lxc, mock_path):
     mock_lxc.delete.side_effect = error
     provider = providers.LXDProvider(lxc=mock_lxc)
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         provider.clean_project_environments(
             charm_name="testcharm",
             project_path=mock_path,
@@ -228,7 +228,7 @@ def test_ensure_provider_is_available_errors_when_user_declines(
     provider = providers.LXDProvider()
 
     with pytest.raises(
-        CommandError,
+        CraftError,
         match=re.escape(
             "LXD is required, but not installed. Visit https://snapcraft.io/lxd for "
             "instructions on how to install the LXD snap for your distribution"
@@ -255,7 +255,7 @@ def test_ensure_provider_is_available_errors_when_lxd_install_fails(
     provider = providers.LXDProvider()
 
     with pytest.raises(
-        CommandError,
+        CraftError,
         match=re.escape(
             "Failed to install LXD. Visit https://snapcraft.io/lxd for "
             "instructions on how to install the LXD snap for your distribution"
@@ -283,7 +283,7 @@ def test_ensure_provider_is_available_errors_when_lxd_not_ready(
     provider = providers.LXDProvider()
 
     with pytest.raises(
-        CommandError,
+        CraftError,
         match=re.escape("some error\nsome details\nsome resolution"),
     ) as exc_info:
         provider.ensure_provider_is_available()
@@ -471,7 +471,7 @@ def test_launched_environment_launch_base_configuration_error(
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.LXDProvider()
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -492,7 +492,7 @@ def test_launched_environment_launch_lxd_error(
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.LXDProvider()
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -536,7 +536,7 @@ def test_launched_environment_unmount_all_error(
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.LXDProvider()
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -557,7 +557,7 @@ def test_launched_environment_stop_error(
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.LXDProvider()
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,

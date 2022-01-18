@@ -20,11 +20,11 @@ from unittest import mock
 from unittest.mock import call
 
 import pytest
+from craft_cli import CraftError
 from craft_providers import bases
 from craft_providers.multipass import MultipassError, MultipassInstallationError
 
 from charmcraft import providers
-from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
 
 
@@ -179,7 +179,7 @@ def test_clean_project_environments_list_failure(mock_multipass, mock_path):
     mock_multipass.list.side_effect = error
     provider = providers.MultipassProvider(multipass=mock_multipass)
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         provider.clean_project_environments(
             charm_name="charm",
             project_path=mock_path,
@@ -194,7 +194,7 @@ def test_clean_project_environments_delete_failure(mock_multipass, mock_path):
     mock_multipass.delete.side_effect = error
     provider = providers.MultipassProvider(multipass=mock_multipass)
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         provider.clean_project_environments(
             charm_name="testcharm",
             project_path=mock_path,
@@ -221,7 +221,7 @@ def test_ensure_provider_is_available_errors_when_user_declines(
         "Multipass is required, but not installed. Visit https://multipass.run/ for "
         "instructions on installing Multipass for your operating system."
     )
-    with pytest.raises(CommandError, match=match):
+    with pytest.raises(CraftError, match=match):
         provider.ensure_provider_is_available()
 
     assert mock_confirm_with_user.mock_calls == [
@@ -246,7 +246,7 @@ def test_ensure_provider_is_available_errors_when_multipass_install_fails(
         "Failed to install Multipass. Visit https://multipass.run/ for "
         "instructions on installing Multipass for your operating system."
     )
-    with pytest.raises(CommandError, match=match) as exc_info:
+    with pytest.raises(CraftError, match=match) as exc_info:
         provider.ensure_provider_is_available()
 
     assert mock_confirm_with_user.mock_calls == [
@@ -274,7 +274,7 @@ def test_ensure_provider_is_available_errors_when_multipass_not_ready(
     provider = providers.MultipassProvider()
 
     with pytest.raises(
-        CommandError,
+        CraftError,
         match=re.escape("some error\nsome details\nsome resolution"),
     ) as exc_info:
         provider.ensure_provider_is_available()
@@ -480,7 +480,7 @@ def test_launched_environment_launch_base_configuration_error(
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.MultipassProvider()
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -501,7 +501,7 @@ def test_launched_environment_launch_multipass_error(
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.MultipassProvider()
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -522,7 +522,7 @@ def test_launched_environment_unmount_all_error(
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.MultipassProvider()
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,
@@ -543,7 +543,7 @@ def test_launched_environment_stop_error(
     base = Base(name="ubuntu", channel="20.04", architectures=["host-arch"])
     provider = providers.MultipassProvider()
 
-    with pytest.raises(CommandError, match="fail") as exc_info:
+    with pytest.raises(CraftError, match="fail") as exc_info:
         with provider.launched_environment(
             charm_name="test-charm",
             project_path=tmp_path,

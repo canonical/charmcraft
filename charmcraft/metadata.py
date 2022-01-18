@@ -21,9 +21,8 @@ from typing import Any, Dict
 
 import pydantic
 import yaml
-from craft_cli import emit
+from craft_cli import emit, CraftError
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.config import format_pydantic_errors
 
 CHARM_METADATA = "metadata.yaml"
@@ -42,12 +41,12 @@ class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
 
         :returns: valid CharmMetadata.
 
-        :raises CommandError: On failure to unmarshal object.
+        :raises CraftError: On failure to unmarshal object.
         """
         try:
             return cls.parse_obj(obj)
         except pydantic.error_wrappers.ValidationError as error:
-            raise CommandError(format_pydantic_errors(error.errors(), file_name=CHARM_METADATA))
+            raise CraftError(format_pydantic_errors(error.errors(), file_name=CHARM_METADATA))
 
 
 def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
@@ -55,13 +54,13 @@ def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
 
     :returns: a CharmMetadata object.
 
-    :raises: CommandError if metadata does not exist.
+    :raises: CraftError if metadata does not exist.
     """
     metadata_path = charm_dir / CHARM_METADATA
     emit.trace(f"Parsing {str(metadata_path)!r}")
 
     if not metadata_path.exists():
-        raise CommandError("Missing mandatory metadata.yaml.")
+        raise CraftError("Missing mandatory metadata.yaml.")
 
     with metadata_path.open("rt", encoding="utf8") as fh:
         metadata = yaml.safe_load(fh)

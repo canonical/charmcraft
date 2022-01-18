@@ -21,10 +21,9 @@ import pathlib
 import re
 from typing import List
 
-from craft_cli import emit
+from craft_cli import emit, CraftError
 from craft_providers import bases, lxd
 
-from charmcraft.cmdbase import CommandError
 from charmcraft.config import Base
 from charmcraft.env import get_managed_environment_project_path
 from charmcraft.utils import confirm_with_user, get_host_architecture
@@ -76,7 +75,7 @@ class LXDProvider(Provider):
         try:
             names = self.lxc.list_names(project=self.lxd_project, remote=self.lxd_remote)
         except lxd.LXDError as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
         for name in names:
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
@@ -90,7 +89,7 @@ class LXDProvider(Provider):
                         remote=self.lxd_remote,
                     )
                 except lxd.LXDError as error:
-                    raise CommandError(str(error)) from error
+                    raise CraftError(str(error)) from error
                 deleted.append(name)
             else:
                 emit.trace(f"Not deleting container {name!r}.")
@@ -101,7 +100,7 @@ class LXDProvider(Provider):
     def ensure_provider_is_available(cls) -> None:
         """Ensure provider is available, prompting the user to install it if required.
 
-        :raises CommandError: if provider is not available.
+        :raises CraftError: if provider is not available.
         """
         if not lxd.is_installed():
             if confirm_with_user(
@@ -112,12 +111,12 @@ class LXDProvider(Provider):
                 try:
                     lxd.install()
                 except lxd.LXDInstallationError as error:
-                    raise CommandError(
+                    raise CraftError(
                         "Failed to install LXD. Visit https://snapcraft.io/lxd for "
                         "instructions on how to install the LXD snap for your distribution"
                     ) from error
             else:
-                raise CommandError(
+                raise CraftError(
                     "LXD is required, but not installed. Visit https://snapcraft.io/lxd for "
                     "instructions on how to install the LXD snap for your distribution"
                 )
@@ -125,7 +124,7 @@ class LXDProvider(Provider):
         try:
             lxd.ensure_lxd_is_ready()
         except lxd.LXDError as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
     @classmethod
     def is_provider_available(cls) -> bool:
@@ -168,7 +167,7 @@ class LXDProvider(Provider):
         try:
             image_remote = lxd.configure_buildd_image_remote()
         except lxd.LXDError as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
         base_configuration = CharmcraftBuilddBaseConfiguration(
             alias=alias, environment=environment, hostname=instance_name
@@ -187,7 +186,7 @@ class LXDProvider(Provider):
                 remote=self.lxd_remote,
             )
         except (bases.BaseConfigurationError, lxd.LXDError) as error:
-            raise CommandError(str(error)) from error
+            raise CraftError(str(error)) from error
 
         # Mount project.
         instance.mount(host_source=project_path, target=get_managed_environment_project_path())
@@ -200,4 +199,4 @@ class LXDProvider(Provider):
                 instance.unmount_all()
                 instance.stop()
             except lxd.LXDError as error:
-                raise CommandError(str(error)) from error
+                raise CraftError(str(error)) from error

@@ -24,7 +24,6 @@ from collections import namedtuple
 from craft_cli import emit, EmitterMode, CraftError
 
 from charmcraft import config, __version__
-from charmcraft.cmdbase import CommandError
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.helptexts import help_builder
 from charmcraft.parts import setup_parts
@@ -389,7 +388,7 @@ def main(argv=None):
         print(err, file=sys.stderr)  # to stderr, as argparse normally does
         emit.ended_ok()
         retcode = 0
-    except CommandError as err:
+    except CraftError as err:
         emit.error(err)
         retcode = err.retcode
     except KeyboardInterrupt as exc:

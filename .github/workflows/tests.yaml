@@ -232,6 +232,7 @@ jobs:
             echo "configure script failure"
             exit 1
           fi
+          sudo snap set charmcraft provider=lxd
       - name: Test building the prometheus-k8s-charm
         run: |
           git clone https://github.com/canonical/prometheus-k8s-operator

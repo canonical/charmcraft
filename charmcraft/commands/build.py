@@ -129,7 +129,8 @@ class Builder:
 
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.config = config
-        self.metadata = parse_metadata_yaml(self.charmdir)
+        #self.metadata = parse_metadata_yaml(self.charmdir)
+        self.metadata_name = "declarativepoc"
 
         if self.config.parts:
             self._parts = self.config.parts.copy()
@@ -217,7 +218,7 @@ class Builder:
             self._parts,
             work_dir=work_dir,
             project_dir=self.charmdir,
-            project_name=self.metadata.name,
+            project_name=self.metadata_name,
             ignore_local_sources=["*.charm"],
         )
         lifecycle.run(Step.PRIME)
@@ -420,7 +421,7 @@ class Builder:
         self, *, bases_index: int, build_on: Base, build_on_index: int
     ) -> str:
         """Pack instance in Charm."""
-        charm_name = format_charm_file_name(self.metadata.name, self.config.bases[bases_index])
+        charm_name = format_charm_file_name(self.metadata_name, self.config.bases[bases_index])
 
         # If building in project directory, use the project path as the working
         # directory. The output charms will be placed in the correct directory
@@ -455,7 +456,7 @@ class Builder:
 
         emit.progress(f"Launching environment to pack for base {build_on}")
         with self.provider.launched_environment(
-            charm_name=self.metadata.name,
+            charm_name=self.metadata_name,
             project_path=self.charmdir,
             base=build_on,
             bases_index=bases_index,
@@ -492,7 +493,7 @@ class Builder:
     def handle_package(self, prime_dir, bases_config: Optional[BasesConfiguration] = None):
         """Handle the final package creation."""
         emit.progress("Creating the package itself")
-        zipname = format_charm_file_name(self.metadata.name, bases_config)
+        zipname = format_charm_file_name(self.metadata_name, bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(prime_dir, followlinks=True):
             dirpath = pathlib.Path(dirpath)

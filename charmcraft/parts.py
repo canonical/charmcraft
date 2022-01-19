@@ -30,6 +30,7 @@ from xdg import BaseDirectory  # type: ignore
 
 from charmcraft import charm_builder
 from charmcraft.reactive_plugin import ReactivePlugin
+from charmcraft import declarative_plugin
 
 
 class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -219,9 +220,25 @@ class BundlePlugin(plugins.Plugin):
         return commands
 
 
+class DeclarativePlugin(CharmPlugin):
+    """Build a declarative charm using the charm plugin."""
+
+    def get_build_commands(self) -> List[str]:
+        """Hook to run declarative stuff."""
+        declarative_plugin.prepare_charm(self._part_info.part_build_dir)
+        return super().get_build_commands()
+
+
 def setup_parts():
     """Initialize craft-parts plugins."""
-    plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
+    plugins.register(
+        {
+            "bundle": BundlePlugin,
+            "charm": CharmPlugin,
+            "declarative": DeclarativePlugin,
+            "reactive": ReactivePlugin,
+        }
+    )
 
 
 def validate_part(data: Dict[str, Any]) -> None:

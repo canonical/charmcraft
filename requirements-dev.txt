@@ -5,6 +5,7 @@ cffi==1.15.0
 charset-normalizer==2.0.10
 click==8.0.3
 coverage==6.2
+craft-cli==0.1.0
 craft-parts==1.1.1
 craft-providers==1.0.3
 craft-store==1.2.0
@@ -65,4 +66,3 @@ typing-extensions==4.0.1
 typing-utils==0.1.0
 urllib3==1.26.8
 zipp==3.7.0
-git+https://github.com/canonical/craft-cli.git@4af19f9c0da733321dc754be1180aea28f3feeb1

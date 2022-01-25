@@ -45,7 +45,8 @@ DISPATCH_FILENAME = "dispatch"
 # to be the value it would've otherwise been.
 DISPATCH_CONTENT = """#!/bin/sh
 
-JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv ./{entrypoint_relative_path}
+JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv \\
+  exec ./{entrypoint_relative_path}
 """
 
 # The minimum set of hooks to be provided for compatibility with old Juju

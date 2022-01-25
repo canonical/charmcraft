@@ -232,7 +232,14 @@ jobs:
             echo "configure script failure"
             exit 1
           fi
-
+          sudo snap set charmcraft provider=lxd
+      - name: Test building the prometheus-k8s-charm
+        run: |
+          git clone https://github.com/canonical/prometheus-k8s-operator
+          cd prometheus-k8s-operator
+          export TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          git checkout $TAG
+          sg lxd -c "charmcraft -v pack"
   windows-build:
     runs-on: windows-2019
     steps:

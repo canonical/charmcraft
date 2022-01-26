@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,48 +16,17 @@
 
 """Infrastructure for common base commands functionality."""
 
+import craft_cli
 
-class BaseCommand:
-    """Base class to build charmcraft commands.
 
-    Subclass this to create a new command; the subclass must define the following attributes:
+class BaseCommand(craft_cli.BaseCommand):
+    """Subclass this to create a new command.
 
-    - name: the identifier in the command line
-    - help_msg: a one line help for user documentation
-    - common: if it's a common/starter command, which are prioritized in the help
+    The following default attribute is provided beyond craft-cli ones:
+
     - needs_config: will ensure a config is provided when executing the command
 
-    It also must/can override some methods for the proper command behaviour (see each
-    method's docstring).
-
-    The subclass must be declared in the corresponding section of main.COMMAND_GROUPS,
-    and will receive and store this group on instantiation (if overriding `__init__`, the
-    subclass must pass it through upwards).
+    The subclass must be declared in the corresponding section of main.COMMAND_GROUPS.
     """
 
-    name = None
-    help_msg = None
-    overview = None
-    common = False
     needs_config = False
-
-    def __init__(self, config):
-        self.config = config
-
-    def fill_parser(self, parser):
-        """Specify command's specific parameters.
-
-        Each command parameters are independent of other commands, but note there are some
-        global ones (see `main.Dispatcher._build_argument_parser`).
-
-        If this method is not overridden, the command will not have any parameters.
-        """
-
-    def run(self, parsed_args):
-        """Execute command's actual functionality.
-
-        It must be overridden by the command implementation.
-
-        This will receive parsed arguments that were defined in :meth:.fill_parser.
-        """
-        raise NotImplementedError()

@@ -32,15 +32,14 @@ import yaml
 from craft_cli import EmitterMode, emit, CraftError
 
 from charmcraft import linters
+from charmcraft.charm_builder import DISPATCH_CONTENT, relativise
 from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
-    DISPATCH_CONTENT,
     Builder,
     Validator,
     format_charm_file_name,
     launch_shell,
-    relativise,
 )
 from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.metadata import CHARM_METADATA

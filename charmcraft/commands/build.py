@@ -26,6 +26,7 @@ from craft_cli import emit, EmitterMode, CraftError
 
 from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
+from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.config import Base, BasesConfiguration, Config
 from charmcraft.deprecations import notify_deprecation
@@ -37,22 +38,6 @@ from charmcraft.providers import capture_logs_from_instance, get_provider
 # Some constants that are used through the code.
 BUILD_DIRNAME = "build"
 VENV_DIRNAME = "venv"
-
-# The file name and template for the dispatch script
-DISPATCH_FILENAME = "dispatch"
-# If Juju doesn't support the dispatch mechanism, it will execute the
-# hook, and we'd need sys.argv[0] to be the name of the hook but it's
-# getting lost by calling this dispatch, so we fake JUJU_DISPATCH_PATH
-# to be the value it would've otherwise been.
-DISPATCH_CONTENT = """#!/bin/sh
-
-JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv \\
-  exec ./{entrypoint_relative_path}
-"""
-
-# The minimum set of hooks to be provided for compatibility with old Juju
-MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
-HOOKS_DIR = "hooks"
 
 CHARM_FILES = [
     "metadata.yaml",
@@ -109,11 +94,6 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
     :param cwd: Working directory to start user in.
     """
     subprocess.run(["bash"], check=False, cwd=cwd)
-
-
-def relativise(src, dst):
-    """Build a relative path from src to dst."""
-    return pathlib.Path(os.path.relpath(str(dst), str(src.parent)))
 
 
 class Builder:

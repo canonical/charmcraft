@@ -26,8 +26,14 @@ import pytest
 from craft_cli import CraftError
 
 from charmcraft import charm_builder
-from charmcraft.charm_builder import STAGING_VENV_DIRNAME, VENV_DIRNAME, CharmBuilder, _process_run
-from charmcraft.commands.build import BUILD_DIRNAME, DISPATCH_CONTENT, DISPATCH_FILENAME
+from charmcraft.charm_builder import (
+    CharmBuilder,
+    DISPATCH_CONTENT,
+    STAGING_VENV_DIRNAME,
+    VENV_DIRNAME,
+    _process_run,
+)
+from charmcraft.commands.build import BUILD_DIRNAME, DISPATCH_FILENAME
 from charmcraft.metadata import CHARM_METADATA
 
 

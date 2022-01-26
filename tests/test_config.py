@@ -134,15 +134,10 @@ def check_schema_error(tmp_path):
     """Helper to check the schema error."""
 
     def check_schema_error(expected_msg):
-        """The real checker.
-
-        Note this compares for multiple messages, as for Python 3.5 we don't have control on
-        which of the verifications it will fail. After 3.5 is dropped this could be changed
-        to receive only one message and compare with equality below, not inclusion.
-        """
+        """The real checker."""
         with pytest.raises(CraftError) as cm:
             load(tmp_path)
-        assert str(cm.value) == expected_msg
+        assert str(cm.value) == dedent(expected_msg)
 
     return check_schema_error
 
@@ -156,11 +151,9 @@ def test_schema_top_level_no_extra_properties(create_config, check_schema_error)
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - extra field 'whatever' not permitted in top-level configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - extra field 'whatever' not permitted in top-level configuration"""
     )
 
 
@@ -173,11 +166,9 @@ def test_schema_type_missing(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - must be either 'charm' or 'bundle' in field 'type'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - must be either 'charm' or 'bundle' in field 'type'"""
     )
 
 
@@ -189,11 +180,9 @@ def test_schema_type_bad_type(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - must be either 'charm' or 'bundle' in field 'type'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - must be either 'charm' or 'bundle' in field 'type'"""
     )
 
 
@@ -205,11 +194,9 @@ def test_schema_type_limited_values(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - must be either 'charm' or 'bundle' in field 'type'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - must be either 'charm' or 'bundle' in field 'type'"""
     )
 
 
@@ -223,11 +210,9 @@ def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.api-url'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - invalid or missing URL scheme in field 'charmhub.api-url'"""
     )
 
 
@@ -241,11 +226,9 @@ def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.api-url'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - invalid or missing URL scheme in field 'charmhub.api-url'"""
     )
 
 
@@ -259,11 +242,9 @@ def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error)
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.storage-url'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - invalid or missing URL scheme in field 'charmhub.storage-url'"""
     )
 
 
@@ -277,11 +258,9 @@ def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_erro
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.storage-url'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - invalid or missing URL scheme in field 'charmhub.storage-url'"""
     )
 
 
@@ -295,11 +274,9 @@ def test_schema_charmhub_registry_url_bad_type(create_config, check_schema_error
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.registry-url'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - invalid or missing URL scheme in field 'charmhub.registry-url'"""
     )
 
 
@@ -313,11 +290,9 @@ def test_schema_charmhub_registry_url_bad_format(create_config, check_schema_err
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - invalid or missing URL scheme in field 'charmhub.registry-url'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - invalid or missing URL scheme in field 'charmhub.registry-url'"""
     )
 
 
@@ -332,11 +307,9 @@ def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - extra field 'crazy' not permitted in 'charmhub' configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - extra field 'crazy' not permitted in 'charmhub' configuration"""
     )
 
 
@@ -349,11 +322,9 @@ def test_schema_basicprime_bad_init_structure(create_config, check_schema_error)
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - value must be a dictionary in field 'parts'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - value must be a dictionary in field 'parts'"""
     )
 
 
@@ -368,11 +339,9 @@ def test_schema_basicprime_bad_bundle_structure(create_config, check_schema_erro
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - part 'charm' must be a dictionary in field 'parts'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - part 'charm' must be a dictionary in field 'parts'"""
     )
 
 
@@ -387,11 +356,9 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - value is not a valid list in field 'parts.charm.prime'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - value is not a valid list in field 'parts.charm.prime'"""
     )
 
 
@@ -406,11 +373,9 @@ def test_schema_basicprime_bad_prime_type(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - string type expected in field 'parts.charm.prime[0]'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - string type expected in field 'parts.charm.prime[0]'"""
     )
 
 
@@ -459,11 +424,9 @@ def test_schema_additional_part(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - part 'other-part' must be a dictionary in field 'parts'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - part 'other-part' must be a dictionary in field 'parts'"""
     )
 
 
@@ -478,11 +441,9 @@ def test_schema_other_charm_part_no_source(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - field 'source' required in 'parts.other-part' configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - field 'source' required in 'parts.other-part' configuration"""
     )
 
 
@@ -497,11 +458,9 @@ def test_schema_other_bundle_part_no_source(create_config, check_schema_error):
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - field 'source' required in 'parts.other-part' configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - field 'source' required in 'parts.other-part' configuration"""
     )
 
 
@@ -582,11 +541,9 @@ def test_bases_forbidden_for_bundles(create_config, check_schema_error):
     )
 
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - Field not allowed when type=bundle in field 'bases'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - Field not allowed when type=bundle in field 'bases'"""
     )
 
 
@@ -643,11 +600,9 @@ def test_bases_extra_field_error(create_config, check_schema_error):
     )
 
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - extra field 'extra-extra' not permitted in 'bases[0].build-on[0]' configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - extra field 'extra-extra' not permitted in 'bases[0].build-on[0]' configuration"""
     )
 
 
@@ -666,14 +621,12 @@ def test_bases_underscores_error(create_config, check_schema_error):
     )
 
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - field 'build-on' required in 'bases[0]' configuration
-            - field 'run-on' required in 'bases[0]' configuration
-            - extra field 'build_on' not permitted in 'bases[0]' configuration
-            - extra field 'run_on' not permitted in 'bases[0]' configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - field 'build-on' required in 'bases[0]' configuration
+        - field 'run-on' required in 'bases[0]' configuration
+        - extra field 'build_on' not permitted in 'bases[0]' configuration
+        - extra field 'run_on' not permitted in 'bases[0]' configuration"""
     )
 
 
@@ -692,11 +645,9 @@ def test_channel_is_yaml_number(create_config, check_schema_error):
     )
 
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - string type expected in field 'bases[0].build-on[0].channel'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - string type expected in field 'bases[0].build-on[0].channel'"""
     )
 
 
@@ -914,11 +865,9 @@ def test_bases_short_form_extra_field_error(create_config, check_schema_error):
     )
 
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - extra field 'extra-extra' not permitted in 'bases[0]' configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - extra field 'extra-extra' not permitted in 'bases[0]' configuration"""
     )
 
 
@@ -932,11 +881,9 @@ def test_bases_short_form_missing_field_error(create_config, check_schema_error)
     )
 
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - field 'channel' required in 'bases[0]' configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - field 'channel' required in 'bases[0]' configuration"""
     )
 
 
@@ -955,11 +902,9 @@ def test_bases_mixed_form_errors(create_config, check_schema_error):
     )
 
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - field 'channel' required in 'bases[0]' configuration"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - field 'channel' required in 'bases[0]' configuration"""
     )
 
 
@@ -1010,9 +955,7 @@ def test_schema_analysis_full_struct_just_empty(create_config, tmp_path):
     assert config.analysis.ignore.linters == []
 
 
-def test_schema_analysis_ignore_attributes(
-    create_config, check_schema_error, tmp_path, create_checker
-):
+def test_schema_analysis_ignore_attributes(create_config, tmp_path, create_checker):
     """Some attributes are correctly ignored."""
     create_checker("check_ok_1", linters.CheckType.attribute)
     create_checker("check_ok_2", linters.CheckType.attribute)
@@ -1029,9 +972,7 @@ def test_schema_analysis_ignore_attributes(
     assert config.analysis.ignore.linters == []
 
 
-def test_schema_analysis_ignore_linters(
-    create_config, check_schema_error, tmp_path, create_checker
-):
+def test_schema_analysis_ignore_linters(create_config, tmp_path, create_checker):
     """Some linters are correctly ignored."""
     create_checker("check_ok_1", linters.CheckType.lint)
     create_checker("check_ok_2", linters.CheckType.lint)
@@ -1064,11 +1005,9 @@ def test_schema_analysis_ignore_attribute_missing(
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - Bad attribute name 'check_missing' in field 'analysis.ignore.attributes[1]'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - Bad attribute name 'check_missing' in field 'analysis.ignore.attributes[1]'"""
     )
 
 
@@ -1088,9 +1027,7 @@ def test_schema_analysis_ignore_linter_missing(
     """
     )
     check_schema_error(
-        dedent(
-            """\
-            Bad charmcraft.yaml content:
-            - Bad lint name 'check_missing' in field 'analysis.ignore.linters[1]'"""
-        )
+        """\
+        Bad charmcraft.yaml content:
+        - Bad lint name 'check_missing' in field 'analysis.ignore.linters[1]'"""
     )

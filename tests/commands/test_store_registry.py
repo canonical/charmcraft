@@ -794,18 +794,32 @@ def test_localdockerinterface_get_info_disconnected(emitter, responses):
 
 def test_localdockerinterface_get_streamed_content(responses):
     """Get the content streamed."""
-    test_content = b"123456789"
+
+    class AuditableBufferedReader(io.BufferedReader):
+        """BufferedReader that records the size of each reading."""
+
+        _test_read_chunks = []
+
+        def read(self, size):
+            self._test_read_chunks.append(size)
+            return super().read(size)
+
+    test_content = AuditableBufferedReader(io.BytesIO(b"123456789"))
     responses.add(
         responses.GET,
         LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/get",
         body=test_content,
-        stream=True,
     )
     ldi = LocalDockerdInterface()
     resp = ldi.get_streamed_image_content("test-digest")
-    streamed = resp.iter_content(5)
+    assert test_content._test_read_chunks == []
+
+    chunk_size = 5
+    streamed = resp.iter_content(chunk_size)
     assert next(streamed) == b"12345"
+    assert test_content._test_read_chunks == [chunk_size]
     assert next(streamed) == b"6789"
+    assert test_content._test_read_chunks == [chunk_size, chunk_size]
     with pytest.raises(StopIteration):
         next(streamed)
 

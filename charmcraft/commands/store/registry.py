@@ -45,7 +45,7 @@ OCTET_STREAM_MIMETYPE = "application/octet-stream"
 # downloads and uploads happen in chunks; this size is mostly driven by the usage in the upload
 # blob, where the cost in time is similar for small and large chunks (we need to balance having
 # it large enough for speed, but not too large because of memory consumption)
-CHUNK_SIZE = 2 ** 20
+CHUNK_SIZE = 2**20
 
 
 def assert_response_ok(

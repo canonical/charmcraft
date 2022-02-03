@@ -80,16 +80,13 @@ def test_get_instance_name(
 ):
     provider = providers.LXDProvider()
 
-    assert (
-        provider.get_instance_name(
-            bases_index=bases_index,
-            build_on_index=build_on_index,
-            project_name=project_name,
-            project_path=mock_path,
-            target_arch=target_arch,
-        )
-        == expected.format(inode="445566")
-    )
+    assert provider.get_instance_name(
+        bases_index=bases_index,
+        build_on_index=build_on_index,
+        project_name=project_name,
+        project_path=mock_path,
+        target_arch=target_arch,
+    ) == expected.format(inode="445566")
 
 
 @pytest.mark.parametrize(

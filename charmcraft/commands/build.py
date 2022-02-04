@@ -70,21 +70,14 @@ def _format_bases_config(bases_config: BasesConfiguration) -> str:
     return "_".join([_format_run_on_base(r) for r in bases_config.run_on])
 
 
-def format_charm_file_name(
-    charm_name: str, bases_config: Optional[BasesConfiguration] = None
-) -> str:
+def format_charm_file_name(charm_name: str, bases_config: BasesConfiguration) -> str:
     """Formulate charm file name.
 
     :param charm_name: Name of charm.
-    :param bases_config: Bases configuration for charm.  None will use legacy
-        format that will be removed shortly.
+    :param bases_config: Bases configuration for charm.
 
     :returns: File name string, including .charm extension.
     """
-    # TODO: Patterson 2021-06-14 Temporary legacy support prior to bases configuration.
-    if bases_config is None:
-        return charm_name + ".charm"
-
     return "_".join([charm_name, _format_bases_config(bases_config)]) + ".charm"
 
 
@@ -434,7 +427,10 @@ class Builder:
         if self.shell_after:
             cmd.append("--shell-after")
 
-        emit.progress(f"Launching environment to pack for base {build_on}")
+        emit.progress(
+            f"Launching environment to pack for base {build_on} "
+            "(may take a while the first time but it's reusable)"
+        )
         with self.provider.launched_environment(
             charm_name=self.metadata.name,
             project_path=self.charmdir,
@@ -470,7 +466,7 @@ class Builder:
         emit.progress("Charm packed ok")
         return charm_name
 
-    def handle_package(self, prime_dir, bases_config: Optional[BasesConfiguration] = None):
+    def handle_package(self, prime_dir, bases_config: BasesConfiguration):
         """Handle the final package creation."""
         emit.progress("Creating the package itself")
         zipname = format_charm_file_name(self.metadata.name, bases_config)

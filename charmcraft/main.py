@@ -30,7 +30,7 @@ from craft_cli import (
     emit,
 )
 
-from charmcraft import config, __version__
+from charmcraft import config, __version__, env
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.parts import setup_parts
 
@@ -96,7 +96,17 @@ COMMAND_GROUPS = [
 
 def main(argv=None):
     """Provide the main entry point."""
-    emit.init(EmitterMode.NORMAL, "charmcraft", f"Starting charmcraft version {__version__}")
+    if env.is_charmcraft_running_in_managed_mode():
+        logpath = env.get_managed_environment_log_path()
+    else:
+        logpath = None
+
+    emit.init(
+        EmitterMode.NORMAL,
+        "charmcraft",
+        f"Starting charmcraft version {__version__}",
+        log_filepath=logpath,
+    )
 
     if argv is None:
         argv = sys.argv

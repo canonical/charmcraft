@@ -28,7 +28,7 @@ from craft_cli import (
     ProvideHelpException,
 )
 
-from charmcraft import __version__
+from charmcraft import __version__, env
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.main import COMMAND_GROUPS, main
 
@@ -52,7 +52,28 @@ def test_main_ok():
 
     # check how Emitter was initted
     emit_mock.init.assert_called_once_with(
-        EmitterMode.NORMAL, "charmcraft", f"Starting charmcraft version {__version__}"
+        EmitterMode.NORMAL,
+        "charmcraft",
+        f"Starting charmcraft version {__version__}",
+        log_filepath=None,
+    )
+
+
+def test_main_managed_instance(monkeypatch):
+    """Init emitter with a specific log filepath."""
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    with patch("charmcraft.main.emit") as emit_mock:
+        with patch("charmcraft.main.Dispatcher.run") as d_mock:
+            d_mock.return_value = None
+            main(["charmcraft", "version"])
+
+    # check how Emitter was initted
+    emit_mock.init.assert_called_once_with(
+        EmitterMode.NORMAL,
+        "charmcraft",
+        f"Starting charmcraft version {__version__}",
+        log_filepath=env.get_managed_environment_log_path(),
     )
 
 

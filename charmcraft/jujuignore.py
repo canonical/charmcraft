@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -188,7 +188,7 @@ class JujuIgnore:
                 regex=regex,
             )
             self._matchers.append(m)
-            emit.trace(f'Translated .jujuignore {line_num:d} "{orig_rule}" => "{regex}"')
+            emit.trace(f"Translated .jujuignore {line_num:d} {orig_rule!r} => {regex!r}")
 
     def match(self, path: str, is_dir: bool) -> bool:
         """Check if the given path should be ignored.

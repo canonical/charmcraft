@@ -971,6 +971,11 @@ def test_build_bases_index_scenarios_provider(
             stderr=ANY,
         ),
     ]
+    emitter.assert_progress(
+        "Launching environment to pack for base "
+        "name='ubuntu' channel='18.04' architectures=['amd64'] "
+        "(may take a while the first time but it's reusable)"
+    )
     emitter.assert_progress("Packing the charm")
     mock_provider.reset_mock()
     mock_instance.reset_mock()
@@ -1269,9 +1274,15 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
     file_deep_3.symlink_to(file_outside_1)
 
     # zip it
+    bases_config = BasesConfiguration(
+        **{
+            "build-on": [],
+            "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
+        }
+    )
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = get_builder(config, entrypoint="whatever")
-    zipname = builder.handle_package(to_be_zipped_dir)
+    zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
     # check the stuff outside is not in the zip, the stuff inside is zipped (with
     # contents!), and all relative to build dir
@@ -1297,11 +1308,17 @@ def test_build_package_name(tmp_path, monkeypatch, config):
         yaml.dump(metadata_data, fh)
 
     # zip it
+    bases_config = BasesConfiguration(
+        **{
+            "build-on": [],
+            "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
+        }
+    )
     monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = get_builder(config, entrypoint="whatever")
-    zipname = builder.handle_package(to_be_zipped_dir)
+    zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
-    assert zipname == "name-from-metadata.charm"
+    assert zipname == "name-from-metadata_xname-xchannel-xarch1.charm"
 
 
 def test_build_with_entrypoint_argument_issues_dn04(basic_project, emitter, monkeypatch):
@@ -2287,11 +2304,6 @@ def test_relativise_different_parents_deep():
     dst = pathlib.Path("/tmp/foo/baz1/baz2/baz3/dst.txt")
     rel = relativise(src, dst)
     assert rel == pathlib.Path("../../baz1/baz2/baz3/dst.txt")
-
-
-def test_format_charm_file_name_legacy():
-    """Basic entry."""
-    assert format_charm_file_name("charm-name", None) == "charm-name.charm"
 
 
 def test_format_charm_file_name_basic():

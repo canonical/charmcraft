@@ -56,6 +56,7 @@ class Client(craft_store.StoreClient):
 
         super().__init__(
             base_url=api_base_url,
+            storage_base_url=storage_base_url,
             endpoints=endpoints.CHARMHUB,
             application_name="charmcraft",
             user_agent=build_user_agent(),

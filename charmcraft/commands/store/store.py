@@ -138,11 +138,11 @@ def _store_client_wrapper(auto_login=True):
             """Handle craft-store error situations and login scenarios."""
             try:
                 return method(self, *args, **kwargs)
-            except craft_store.errors.NotLoggedIn:
+            except craft_store.errors.CredentialsUnavailable:
                 if os.getenv(ALTERNATE_AUTH_ENV_VAR):
                     raise RuntimeError(
                         "Charmcraft error: internal inconsistency detected "
-                        "(NotLoggedIn error while having user provided credentials)."
+                        "(CredentialsUnavailable error while having user provided credentials)."
                     )
                 if not auto_login:
                     raise
@@ -157,6 +157,8 @@ def _store_client_wrapper(auto_login=True):
                     if not auto_login:
                         raise CraftError("Existing credentials are no longer valid for Charmhub.")
                     emit.progress("Existing credentials no longer valid. Trying to log in...")
+                    # Clear credentials before trying to login again
+                    self.logout()
                 else:
                     raise CraftError(str(error)) from error
             except craft_store.errors.CraftStoreError as error:
@@ -177,7 +179,10 @@ class Store:
     """The main interface to the Store's API."""
 
     def __init__(self, charmhub_config):
-        self._client = Client(charmhub_config.api_url, charmhub_config.storage_url)
+        try:
+            self._client = Client(charmhub_config.api_url, charmhub_config.storage_url)
+        except craft_store.errors.NoKeyringError as error:
+            raise CraftError(str(error)) from error
 
     def login(self, permissions=None, ttl=None, charms=None, bundles=None, channels=None):
         """Login into the store."""

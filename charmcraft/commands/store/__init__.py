@@ -30,7 +30,7 @@ import yaml
 from craft_cli import emit
 from craft_cli.errors import CraftError
 from craft_store import attenuations
-from craft_store.errors import NotLoggedIn
+from craft_store.errors import CredentialsUnavailable
 from humanize import naturalsize
 from tabulate import tabulate
 
@@ -227,7 +227,7 @@ class LogoutCommand(BaseCommand):
         try:
             store.logout()
             emit.message("Charmhub token cleared.")
-        except NotLoggedIn:
+        except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
 
 
@@ -249,7 +249,7 @@ class WhoamiCommand(BaseCommand):
         store = Store(self.config.charmhub)
         try:
             macaroon_info = store.whoami()
-        except NotLoggedIn:
+        except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
             return
 

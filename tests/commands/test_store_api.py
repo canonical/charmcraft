@@ -18,13 +18,14 @@
 
 import platform
 from unittest.mock import patch, call, MagicMock
+import craft_store
 
 import pytest
 from dateutil import parser
 from craft_cli import CraftError
 from craft_store import attenuations
 from craft_store.endpoints import Package
-from craft_store.errors import NetworkError, NotLoggedIn, StoreServerError
+from craft_store.errors import NetworkError, CredentialsUnavailable, StoreServerError
 
 from charmcraft.commands.store.client import Client
 from charmcraft.utils import ResourceOption
@@ -66,10 +67,14 @@ def test_client_init(config):
 class _FakeAPI:
     def __init__(self, exceptions):
         self.login_called = False
+        self.logout_called = False
         self.exceptions = exceptions
 
     def login(self):
         self.login_called = True
+
+    def logout(self):
+        self.logout_called = True
 
     @_store_client_wrapper()
     def method(self):
@@ -91,6 +96,7 @@ def test_relogin_on_401_regular_auth(emitter):
     api.method()
 
     assert api.login_called is True
+    assert api.logout_called is True
     # check logs
     expected = "Existing credentials no longer valid. Trying to log in..."
     emitter.assert_progress(expected)
@@ -107,6 +113,7 @@ def test_relogin_on_401_alternate_auth(monkeypatch):
         "Provided credentials are no longer valid for Charmhub. Regenerate them and try again."
     )
     assert api.login_called is False
+    assert api.logout_called is False
 
 
 def test_relogin_on_401_disable_auto_login():
@@ -117,6 +124,7 @@ def test_relogin_on_401_disable_auto_login():
         api.method_no_login()
     assert str(cm.value) == "Existing credentials are no longer valid for Charmhub."
     assert api.login_called is False
+    assert api.logout_called is False
 
 
 def test_relogin_on_401_alternate_auth_disable_auto_login(monkeypatch):
@@ -130,6 +138,7 @@ def test_relogin_on_401_alternate_auth_disable_auto_login(monkeypatch):
         "Provided credentials are no longer valid for Charmhub. Regenerate them and try again."
     )
     assert api.login_called is False
+    assert api.logout_called is False
 
 
 def test_non_401_raises():
@@ -144,6 +153,7 @@ def test_non_401_raises():
     )
 
     assert api.login_called is False
+    assert api.logout_called is False
 
 
 def test_craft_store_error_raises_command_error():
@@ -155,15 +165,19 @@ def test_craft_store_error_raises_command_error():
     assert str(error.value) == "Server error while communicating to the Store: network issue"
 
     assert api.login_called is False
+    assert api.logout_called is False
 
 
 def test_not_logged_in_warns_regular_auth(emitter):
     """Capture the indication of not being logged in and try to log in."""
-    api = _FakeAPI([NotLoggedIn(), None])
+    api = _FakeAPI(
+        [CredentialsUnavailable(application="charmcraft", host="api.charmhub.io"), None]
+    )
 
     api.method()
 
     assert api.login_called is True
+    assert api.logout_called is False
     # check logs
     expected = "Credentials not found. Trying to log in..."
     emitter.assert_progress(expected)
@@ -172,42 +186,62 @@ def test_not_logged_in_warns_regular_auth(emitter):
 def test_not_logged_in_warns_alternate_auth(monkeypatch):
     """Capture an indication of not being logged in, which should never happen."""
     monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
-    api = _FakeAPI([NotLoggedIn(), None])
+    api = _FakeAPI(
+        [CredentialsUnavailable(application="charmcraft", host="api.charmhub.io"), None]
+    )
 
     with pytest.raises(RuntimeError) as cm:
         api.method()
     assert str(cm.value) == (
         "Charmcraft error: internal inconsistency detected "
-        "(NotLoggedIn error while having user provided credentials)."
+        "(CredentialsUnavailable error while having user provided credentials)."
     )
     assert api.login_called is False
+    assert api.logout_called is False
 
 
 def test_not_logged_in_disable_auto_login():
     """Don't try to relogin if not already logged in."""
-    api = _FakeAPI([NotLoggedIn(), None])
+    api = _FakeAPI(
+        [CredentialsUnavailable(application="charmcraft", host="api.charmhub.io"), None]
+    )
 
-    with pytest.raises(NotLoggedIn):
+    with pytest.raises(CredentialsUnavailable):
         api.method_no_login()
 
     assert api.login_called is False
+    assert api.logout_called is False
 
 
 def test_not_logged_in_alternate_auth_disable_auto_login(monkeypatch):
     """Don't try to relogin if not already logged in."""
     monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
-    api = _FakeAPI([NotLoggedIn(), None])
+    api = _FakeAPI(
+        [CredentialsUnavailable(application="charmcraft", host="api.charmhub.io"), None]
+    )
 
     with pytest.raises(RuntimeError) as cm:
         api.method_no_login()
     assert str(cm.value) == (
         "Charmcraft error: internal inconsistency detected "
-        "(NotLoggedIn error while having user provided credentials)."
+        "(CredentialsUnavailable error while having user provided credentials)."
     )
     assert api.login_called is False
+    assert api.logout_called is False
 
 
 # -- tests for auth
+
+
+def test_no_keyring(config):
+    """Verify CraftStore is raised from Store when no keyring is available."""
+    with patch(
+        "craft_store.StoreClient.__init__", side_effect=craft_store.errors.NoKeyringError()
+    ):
+        with pytest.raises(CraftError) as error:
+            Store(config.charmhub)
+
+    assert str(error.value) == "No keyring found to store or retrieve credentials from."
 
 
 def test_login(client_mock, config):
@@ -403,6 +437,7 @@ def test_register_name_unauthorized_logs_in(client_mock, config):
 
     assert client_mock.mock_calls == [
         call.request_urlpath_json("POST", "/v1/charm", json={"name": "testname", "type": "stuff"}),
+        call.logout(),
         call.login(
             ttl=108000,
             description="charmcraft@fake-host",
@@ -622,6 +657,7 @@ def test_upload_error(client_mock, config):
     assert error2.code == "error-code-2"
 
 
+@pytest.mark.usefixtures("client_mock")
 def test_upload_charmbundles_endpoint(config):
     """The bundle/charm upload prepares ok the endpoint and calls the generic _upload."""
     store = Store(config.charmhub)
@@ -634,6 +670,7 @@ def test_upload_charmbundles_endpoint(config):
     assert result == test_results
 
 
+@pytest.mark.usefixtures("client_mock")
 def test_upload_resources_endpoint(config):
     """The resource upload prepares ok the endpoint and calls the generic _upload."""
     store = Store(config.charmhub)

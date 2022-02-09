@@ -102,6 +102,9 @@ class FakeResponse(requests.Response):
 def client_class():
     """Return a client instance with craft-store's StoreClient methods mocked."""
 
+    auth_patch = patch("craft_store.Auth.__init__", return_value=None)
+    auth_patch.start()
+
     class _StoreClientMock(craft_store.StoreClient):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -122,7 +125,9 @@ def client_class():
     class _Client(Client, _StoreClientMock):
         pass
 
-    return _Client
+    yield _Client
+
+    auth_patch.stop()
 
 
 def test_client_init():
@@ -136,6 +141,7 @@ def test_client_init():
             Client(api_url, storage_url)
     mock_client_init.assert_called_with(
         base_url=api_url,
+        storage_base_url=storage_url,
         endpoints=craft_store.endpoints.CHARMHUB,
         application_name="charmcraft",
         user_agent=user_agent,

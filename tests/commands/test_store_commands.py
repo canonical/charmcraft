@@ -28,7 +28,7 @@ import dateutil.parser
 import pytest
 import yaml
 from craft_cli import CraftError
-from craft_store.errors import NotLoggedIn
+from craft_store.errors import CredentialsUnavailable
 
 from charmcraft.config import CharmhubConfig
 from charmcraft.commands.store import (
@@ -166,7 +166,6 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 
 
 # -- tests for auth commands
-
 
 LOGIN_OPTIONS = dict.fromkeys(["export", "charm", "bundle", "permission", "channel", "ttl"])
 
@@ -343,7 +342,9 @@ def test_logout(emitter, store_mock, config):
 
 def test_logout_but_not_logged_in(emitter, store_mock, config):
     """Simple logout case."""
-    store_mock.logout.side_effect = NotLoggedIn()
+    store_mock.logout.side_effect = CredentialsUnavailable(
+        application="charmcraft", host="api.charmcraft.io"
+    )
 
     LogoutCommand(config).run(noargs)
 
@@ -381,7 +382,9 @@ def test_whoami(emitter, store_mock, config):
 
 def test_whoami_but_not_logged_in(emitter, store_mock, config):
     """Whoami when not logged."""
-    store_mock.whoami.side_effect = NotLoggedIn()
+    store_mock.whoami.side_effect = CredentialsUnavailable(
+        application="charmcraft", host="api.charmcraft.io"
+    )
 
     WhoamiCommand(config).run(noargs)
 

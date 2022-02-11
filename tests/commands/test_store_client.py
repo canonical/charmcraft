@@ -179,28 +179,22 @@ def test_client_request_text_error(client_class):
     """Hits the server in text mode, getting an error."""
     client = client_class("http://api.test", "http://storage.test")
     original_error_text = "bad bad server"
-    store_error = craft_store.errors.CraftStoreError(original_error_text)
-    client.request_mock.side_effect = store_error
+    client.request_mock.side_effect = craft_store.errors.CraftStoreError(original_error_text)
 
-    with pytest.raises(CraftError) as cm:
+    with pytest.raises(craft_store.errors.CraftStoreError) as cm:
         client.request_urlpath_text("GET", "/somepath")
-    exc = cm.value
-    assert str(exc) == original_error_text
-    assert exc.__cause__ == store_error
+    assert str(cm.value) == original_error_text
 
 
 def test_client_request_json_error(client_class):
     """Hits the server in json mode, getting an error."""
     client = client_class("http://api.test", "http://storage.test")
     original_error_text = "bad bad server"
-    store_error = craft_store.errors.CraftStoreError(original_error_text)
-    client.request_mock.side_effect = store_error
+    client.request_mock.side_effect = craft_store.errors.CraftStoreError(original_error_text)
 
-    with pytest.raises(CraftError) as cm:
+    with pytest.raises(craft_store.errors.CraftStoreError) as cm:
         client.request_urlpath_json("GET", "/somepath")
-    exc = cm.value
-    assert str(exc) == original_error_text
-    assert exc.__cause__ == store_error
+    assert str(cm.value) == original_error_text
 
 
 def test_client_hit_success_withbody(client_class):

@@ -20,6 +20,7 @@ import platform
 from unittest.mock import patch, call, MagicMock
 import craft_store
 
+import base64
 import pytest
 from dateutil import parser
 from craft_cli import CraftError
@@ -159,10 +160,10 @@ def test_non_401_raises():
 def test_craft_store_error_raises_command_error():
     api = _FakeAPI([NetworkError(ValueError("network issue"))])
 
-    with pytest.raises(CraftError) as error:
+    with pytest.raises(NetworkError) as error:
         api.method()
 
-    assert str(error.value) == "Server error while communicating to the Store: network issue"
+    assert str(error.value) == "network issue"
 
     assert api.login_called is False
     assert api.logout_called is False
@@ -231,6 +232,23 @@ def test_not_logged_in_alternate_auth_disable_auto_login(monkeypatch):
 
 
 # -- tests for auth
+
+
+def test_auth_valid_credentials(config, monkeypatch):
+    """No errors raised when initializing Store with valid credentials."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode("good_credentials".encode()).decode())
+    Store(config.charmhub)
+
+
+def test_auth_bad_credentials(config, monkeypatch):
+    """CraftError raised when initializing Store with bad credentials."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", "bad_credentials")
+    with pytest.raises(craft_store.errors.CredentialsNotParseable) as error:
+        Store(config.charmhub)
+
+    assert (
+        str(error.value) == "Credentials could not be parsed. Expected base64 encoded credentials."
+    )
 
 
 def test_no_keyring(config):

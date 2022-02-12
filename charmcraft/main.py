@@ -30,6 +30,8 @@ from craft_cli import (
     emit,
 )
 
+from craft_store import errors
+
 from charmcraft import config, __version__, env
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
 from charmcraft.parts import setup_parts
@@ -154,6 +156,10 @@ def main(argv=None):
     except CraftError as err:
         emit.error(err)
         retcode = err.retcode
+    except errors.CraftStoreError as err:
+        error = CraftError(f"craft-store error: {err}")
+        emit.error(error)
+        retcode = 1
     except KeyboardInterrupt as exc:
         error = CraftError("Interrupted.")
         error.__cause__ = exc

@@ -161,10 +161,6 @@ def _store_client_wrapper(auto_login=True):
                     self.logout()
                 else:
                     raise CraftError(str(error)) from error
-            except craft_store.errors.CraftStoreError as error:
-                raise CraftError(
-                    f"Server error while communicating to the Store: {error!s}"
-                ) from error
 
             self.login()
 
@@ -209,10 +205,7 @@ class Store:
         if packages:
             kwargs["packages"] = packages
 
-        try:
-            return self._client.login(**kwargs)
-        except craft_store.errors.CraftStoreError as error:
-            raise CraftError(str(error)) from error
+        return self._client.login(**kwargs)
 
     def logout(self):
         """Logout from the store.

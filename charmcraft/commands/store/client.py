@@ -83,17 +83,11 @@ class Client(craft_store.StoreClient):
 
     def request_urlpath_text(self, method: str, urlpath: str, *args, **kwargs) -> str:
         """Return a request.Response to a urlpath."""
-        try:
-            return super().request(method, self.api_base_url + urlpath, *args, **kwargs).text
-        except craft_store.errors.CraftStoreError as err:
-            raise CraftError(str(err)) from err
+        return super().request(method, self.api_base_url + urlpath, *args, **kwargs).text
 
     def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> Dict[str, Any]:
         """Return .json() from a request.Response to a urlpath."""
-        try:
-            response = super().request(method, self.api_base_url + urlpath, *args, **kwargs)
-        except craft_store.errors.CraftStoreError as err:
-            raise CraftError(str(err)) from err
+        response = super().request(method, self.api_base_url + urlpath, *args, **kwargs)
 
         try:
             return response.json()

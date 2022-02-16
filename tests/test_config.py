@@ -474,23 +474,20 @@ def test_charmhub_frozen():
         config.api_url = "broken"
 
 
-def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, emitter):
-    """Support underscore in these attributes for a while."""
+def test_charmhub_underscore_in_names(create_config, check_schema_error):
+    """Do not support underscore in attributes, only dash."""
     create_config(
         """
         type: charm  # mandatory
         charmhub:
             storage_url: https://server1.com
-            api_url: https://server2.com
-            registry_url: https://server3.com
     """
     )
-    cfg = load(tmp_path)
-    assert cfg.charmhub.storage_url == "https://server1.com"
-    assert cfg.charmhub.api_url == "https://server2.com"
-    assert cfg.charmhub.registry_url == "https://server3.com"
-    deprecation_msg = "DEPRECATED: Configuration keywords are now separated using dashes."
-    emitter.assert_message(deprecation_msg, intermediate=True)
+    check_schema_error(
+        """\
+        Bad charmcraft.yaml content:
+        - extra field 'storage_url' not permitted in 'charmhub' configuration"""
+    )
 
 
 # -- tests for bases

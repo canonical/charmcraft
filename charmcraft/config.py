@@ -239,14 +239,9 @@ def format_pydantic_errors(errors, *, file_name: str = "charmcraft.yaml"):
     return "\n".join(combined)
 
 
-# XXX Facundo 2020-05-31: for backwards compatibility, we'll support the user writing
-# these attributes using underscores; when that period is done we remove the
-# `allow_population_by_field_name` parameter here in the class definition and only
-# regular dashes will be allowed.
 class CharmhubConfig(
     ModelConfigDefaults,
     alias_generator=lambda s: s.replace("_", "-"),
-    allow_population_by_field_name=True,
 ):
     """Definition of Charmhub endpoint configuration."""
 
@@ -472,10 +467,6 @@ def load(dirpath: Optional[str]) -> Config:
                 started_at=now,
             ),
         )
-
-    if any("_" in x for x in content.get("charmhub", {}).keys()):
-        # underscores in config attribs deprecated on 2021-05-31
-        notify_deprecation("dn01")
 
     return Config.unmarshal(
         content,

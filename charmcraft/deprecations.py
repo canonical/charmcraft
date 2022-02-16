@@ -32,7 +32,6 @@ from charmcraft.env import is_charmcraft_running_in_managed_mode
 # the message to show for each deprecation ID (this needs to be in sync with the
 # documentation)
 _DEPRECATION_MESSAGES = {
-    "dn01": "Configuration keywords are now separated using dashes.",
     "dn02": "A charmcraft.yaml configuration file is now required.",
     "dn03": "Bases configuration is now required.",
     "dn04": "Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point.",

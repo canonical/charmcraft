@@ -79,7 +79,6 @@ def test_load_specific_directory_ok(create_config):
 def test_load_optional_charmcraft_missing(tmp_path):
     """Specify a directory where the file is missing."""
     config = load(tmp_path)
-    assert config.type is None
     assert config.project.dirpath == tmp_path
     assert not config.project.config_provided
 
@@ -88,7 +87,6 @@ def test_load_optional_charmcraft_bad_directory(tmp_path):
     """Specify a missing directory."""
     missing_directory = tmp_path / "missing"
     config = load(missing_directory)
-    assert config.type is None
     assert config.project.dirpath == missing_directory
     assert not config.project.config_provided
 
@@ -168,7 +166,7 @@ def test_schema_type_missing(create_config, check_schema_error):
     check_schema_error(
         """\
         Bad charmcraft.yaml content:
-        - must be either 'charm' or 'bundle' in field 'type'"""
+        - field 'type' required in top-level configuration"""
     )
 
 

@@ -147,7 +147,9 @@ class ResourceOption:
             else:
                 if revision >= 0:
                     return ResourceOption(name, revision)
-        msg = "the resource format must be <name>:<revision> (revision being a non-negative integer)"
+        msg = (
+            "the resource format must be <name>:<revision> (revision being a non-negative integer)"
+        )
         raise ValueError(msg)
 
 

@@ -161,7 +161,6 @@ def test_resourceoption_convert_ok():
         "foo15",  # no separation
         "foo:",  # no revision
         "foo:x3",  # no int
-        "foo:0",  # revision 0 is not allowed
         "foo:-1",  # negative revisions are not allowed
         ":15",  # no name
         "  :15",  # no name, really!
@@ -173,7 +172,7 @@ def test_resourceoption_convert_error(value):
     with pytest.raises(ValueError) as cm:
         ResourceOption()(value)
     assert str(cm.value) == (
-        "the resource format must be <name>:<revision> (revision being a positive integer)"
+        "the resource format must be <name>:<revision> (revision being a non-negative integer)"
     )
 
 

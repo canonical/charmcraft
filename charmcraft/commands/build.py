@@ -348,9 +348,6 @@ class Builder:
         if self.requirement_paths:
             notify_deprecation("dn05")
 
-        if not (self.charmdir / "charmcraft.yaml").exists():
-            notify_deprecation("dn02")
-
         build_plan = self.plan(
             bases_indices=bases_indices,
             destructive_mode=destructive_mode,
@@ -620,6 +617,7 @@ class BuildCommand(BaseCommand):
     help_msg = "Build the charm"
     overview = _overview
     common = True
+    needs_config = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

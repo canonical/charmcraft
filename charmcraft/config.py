@@ -297,7 +297,7 @@ class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
 class Config(ModelConfigDefaults, validate_all=False):
     """Definition of charmcraft.yaml configuration."""
 
-    type: Optional[str]
+    type: str
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Optional[Dict[str, Any]]
     bases: List[BasesConfiguration] = [
@@ -398,17 +398,14 @@ class Config(ModelConfigDefaults, validate_all=False):
         :raises CraftError: On failure to unmarshal object.
         """
         try:
-            # Ensure optional type is specified if loading the yaml.
-            # This can be removed once charmcraft.yaml is mandatory.
-            if "type" not in obj:
-                obj["type"] = None
-
             # Ensure short-form bases are expanded into long-form
             # base configurations.  Doing it here rather than a Union
             # type will simplify user facing errors.
             bases = obj.get("bases")
             if bases is None:
-                if obj["type"] in (None, "charm"):
+                # "type" is accessed with get because this code happens before
+                # pydantic actually validating that type is present
+                if obj.get("type") == "charm":
                     notify_deprecation("dn03")
                 # Set default bases to Ubuntu 20.04 to match strict snap's
                 # effective behavior.
@@ -461,6 +458,7 @@ def load(dirpath: Optional[str]) -> Config:
         # configuration is mandatory only for some commands; when not provided, it will
         # be initialized all with defaults (but marked as not provided for later verification)
         return Config(
+            type="charm",
             project=Project(
                 dirpath=dirpath,
                 config_provided=False,

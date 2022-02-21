@@ -33,6 +33,19 @@ from charmcraft.cmdbase import BaseCommand
 from charmcraft.main import COMMAND_GROUPS, main
 
 
+@pytest.fixture
+def base_config_present(create_config, monkeypatch):
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - name: ubuntu
+            channel: "20.04"
+    """
+    )
+    monkeypatch.chdir(tmp_path)
+
+
 # --- Tests for the main entry point
 
 # In all the test methods below we patch Dispatcher.run so we don't really exercise any
@@ -99,7 +112,7 @@ def test_main_load_config_ok(create_config):
 
 
 def test_main_load_config_not_present_ok():
-    """Command ends indicating the return code to be used."""
+    """Config is not present but the command does not need it."""
 
     class MyCommand(BaseCommand):
         help_msg = "some help"
@@ -107,7 +120,6 @@ def test_main_load_config_not_present_ok():
         overview = "test overview"
 
         def run(self, parsed_args):
-            assert self.config.type is None
             assert not self.config.project.config_provided
 
     with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
@@ -116,7 +128,7 @@ def test_main_load_config_not_present_ok():
 
 
 def test_main_load_config_not_present_but_needed(capsys):
-    """Command ends indicating the return code to be used."""
+    """Config is not present and the command needs it."""
 
     class MyCommand(BaseCommand):
         help_msg = "some help"
@@ -148,7 +160,7 @@ def test_main_no_args():
     assert retcode == 1
 
 
-def test_main_controlled_error():
+def test_main_controlled_error(base_config_present):
     """Work raised CraftError: message handler notified properly, use indicated return code."""
     simulated_exception = CraftError("boom", retcode=33)
     with patch("charmcraft.main.emit") as emit_mock:
@@ -160,7 +172,7 @@ def test_main_controlled_error():
     emit_mock.error.assert_called_once_with(simulated_exception)
 
 
-def test_main_controlled_return_code():
+def test_main_controlled_return_code(base_config_present):
     """Work ended ok, and the command indicated the return code."""
     with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
@@ -171,7 +183,7 @@ def test_main_controlled_return_code():
     emit_mock.ended_ok.assert_called_once_with()
 
 
-def test_main_crash():
+def test_main_crash(base_config_present):
     """Work crashed: message handler notified properly, return code in 1."""
     simulated_exception = ValueError("boom")
     with patch("charmcraft.main.emit") as emit_mock:
@@ -187,7 +199,7 @@ def test_main_crash():
     assert exc.__cause__ == simulated_exception
 
 
-def test_main_interrupted():
+def test_main_interrupted(base_config_present):
     """Work interrupted: message handler notified properly, return code in 1."""
     simulated_exception = KeyboardInterrupt()
     with patch("charmcraft.main.emit") as emit_mock:
@@ -203,7 +215,7 @@ def test_main_interrupted():
     assert exc.__cause__ == simulated_exception
 
 
-def test_main_controlled_arguments_error(capsys):
+def test_main_controlled_arguments_error(capsys, base_config_present):
     """The execution failed because an argument parsing error."""
     with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
@@ -218,7 +230,7 @@ def test_main_controlled_arguments_error(capsys):
     assert err == "test error\n"
 
 
-def test_main_providing_help(capsys):
+def test_main_providing_help(capsys, base_config_present):
     """The execution ended up providing a help message."""
     with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:

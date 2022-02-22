@@ -79,7 +79,6 @@ def test_load_specific_directory_ok(create_config):
 def test_load_optional_charmcraft_missing(tmp_path):
     """Specify a directory where the file is missing."""
     config = load(tmp_path)
-    assert config.type is None
     assert config.project.dirpath == tmp_path
     assert not config.project.config_provided
 
@@ -88,7 +87,6 @@ def test_load_optional_charmcraft_bad_directory(tmp_path):
     """Specify a missing directory."""
     missing_directory = tmp_path / "missing"
     config = load(missing_directory)
-    assert config.type is None
     assert config.project.dirpath == missing_directory
     assert not config.project.config_provided
 
@@ -168,7 +166,7 @@ def test_schema_type_missing(create_config, check_schema_error):
     check_schema_error(
         """\
         Bad charmcraft.yaml content:
-        - must be either 'charm' or 'bundle' in field 'type'"""
+        - field 'type' required in top-level configuration"""
     )
 
 
@@ -474,23 +472,20 @@ def test_charmhub_frozen():
         config.api_url = "broken"
 
 
-def test_charmhub_underscore_backwards_compatibility(create_config, tmp_path, emitter):
-    """Support underscore in these attributes for a while."""
+def test_charmhub_underscore_in_names(create_config, check_schema_error):
+    """Do not support underscore in attributes, only dash."""
     create_config(
         """
         type: charm  # mandatory
         charmhub:
             storage_url: https://server1.com
-            api_url: https://server2.com
-            registry_url: https://server3.com
     """
     )
-    cfg = load(tmp_path)
-    assert cfg.charmhub.storage_url == "https://server1.com"
-    assert cfg.charmhub.api_url == "https://server2.com"
-    assert cfg.charmhub.registry_url == "https://server3.com"
-    deprecation_msg = "DEPRECATED: Configuration keywords are now separated using dashes."
-    emitter.assert_message(deprecation_msg, intermediate=True)
+    check_schema_error(
+        """\
+        Bad charmcraft.yaml content:
+        - extra field 'storage_url' not permitted in 'charmhub' configuration"""
+    )
 
 
 # -- tests for bases

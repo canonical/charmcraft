@@ -677,18 +677,6 @@ def test_build_checks_provider_error(basic_project, mock_provider):
         builder.run()
 
 
-def test_build_without_charmcraft_yaml_issues_dn02(basic_project, emitter):
-    """Test cases for base-index parameter."""
-    config = load(basic_project)
-    builder = get_builder(config)
-
-    builder.run()
-
-    emitter.assert_message(
-        "DEPRECATED: A charmcraft.yaml configuration file is now required.", intermediate=True
-    )
-
-
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_builder, emitter):
     """Build multiple charms for multiple matching bases, skipping one unmatched config."""

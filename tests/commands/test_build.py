@@ -36,6 +36,7 @@ from charmcraft.charm_builder import DISPATCH_CONTENT, relativise
 from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import (
     BUILD_DIRNAME,
+    BuildCommand,
     Builder,
     Validator,
     format_charm_file_name,
@@ -2356,3 +2357,18 @@ def test_launch_shell(mock_subprocess_run):
     launch_shell()
 
     assert mock_subprocess_run.mock_calls == [mock.call(["bash"], check=False, cwd=None)]
+
+
+def test_build_command_deprecated(emitter):
+    """The usage of BuildCommand is deprecated.
+
+    Note that the whole infrastructure behind it is ok to use, but through PackCommand.
+    """
+    cmd = BuildCommand("config")
+    try:
+        cmd.run([])
+    except CraftError:
+        # ok to fail, missing a lot of files, but *ALWAYS* needs to issue the DN
+        pass
+    msg = "DEPRECATED: The build command is deprecated, use 'pack' instead."
+    emitter.assert_message(msg, intermediate=True)

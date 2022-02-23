@@ -645,6 +645,10 @@ class BuildCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        # this command is deprecated now (note that the whole infrastructure behind
+        # is ok to use, but through PackCommand)
+        notify_deprecation("dn06")
+
         validator = Validator(self.config)
         args = validator.process(parsed_args)
         emit.trace(f"Working arguments: {args}")

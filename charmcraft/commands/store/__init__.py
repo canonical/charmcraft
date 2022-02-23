@@ -473,6 +473,11 @@ class UploadCommand(BaseCommand):
             help="The channel(s) to release to (this option can be indicated multiple times)",
         )
         parser.add_argument(
+            "--name",
+            type=str,
+            help="Name of the charm or bundle on Charmhub to upload to",
+        )
+        parser.add_argument(
             "--resource",
             action="append",
             type=ResourceOption(),
@@ -507,7 +512,10 @@ class UploadCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        name = get_name_from_zip(parsed_args.filepath)
+        if parsed_args.name:
+            name = parsed_args.name
+        else:
+            name = get_name_from_zip(parsed_args.filepath)
         self._validate_template_is_handled(parsed_args.filepath)
         store = Store(self.config.charmhub)
         result = store.upload(name, parsed_args.filepath)

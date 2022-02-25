@@ -38,14 +38,14 @@ There are multiple channels other than `stable`. See the full list with
 for everyday charming. With the snap you will always be up to date as
 Charmhub services and APIs evolve.
 
-You also can install it from PyPI but some system modules and a specific 
-Python package needs to be installed first: you need to check in the 
+You also can install it from PyPI but some system packages and a specific 
+Python module needs to be installed first: you need to check in the 
 [Python APT library page](https://launchpad.net/ubuntu/+source/python-apt) 
 and find which source file you have to use according to your system (e.g. 
 for Impish it's `python-apt_2.2.1.tar.xz`). So the instructions (including 
 virtualenv creation and activation) would be:
 
-    $ FIXME
+    $ sudo apt install -y libffi-dev libapt-pkg-dev libssl-dev
     $ python3 -m venv env
     $ source env/bin/activate
     (env)$ pip install https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/python-apt/2.2.1/python-apt_2.2.1.tar.xz

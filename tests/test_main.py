@@ -28,9 +28,10 @@ from craft_cli import (
     ProvideHelpException,
 )
 
-from charmcraft import __version__, env
+from charmcraft import __version__, env, utils
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.main import COMMAND_GROUPS, main
+from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
+from charmcraft.main import COMMAND_GROUPS, main, _get_system_details
 
 
 @pytest.fixture
@@ -243,6 +244,79 @@ def test_main_providing_help(capsys, base_config_present):
     out, err = capsys.readouterr()
     assert not out
     assert err == "nice and shiny help message\n"
+
+
+def test_main_logs_system_details(emitter, config):
+    """Calling main ends up logging the system details."""
+    system_details = "test system details"
+
+    with patch("charmcraft.main.emit") as emit_mock:
+        with patch("charmcraft.main.Dispatcher.run") as run_mock:
+            with patch("charmcraft.main._get_system_details") as details_mock:
+                details_mock.return_value = system_details
+                run_mock.return_value = None
+                main(["charmcraft", "version"])
+    emit_mock.trace.assert_called_once_with(system_details)
+
+
+# -- tests for system details producer
+
+
+def test_systemdetails_basic():
+    """Basic system details."""
+    with patch("os.environ", {}):
+        with patch("charmcraft.utils.get_os_platform") as platform_mock:
+            platform_mock.return_value = utils.OSPlatform(
+                system="test-system", release="test-release", machine="test-machine"
+            )
+            result = _get_system_details()
+    assert result == (
+        "System details: OSPlatform(system='test-system', release='test-release', "
+        "machine='test-machine'); Environment: None"
+    )
+
+
+def test_systemdetails_extra_environment(monkeypatch):
+    """System details with extra environment variables."""
+    with patch("os.environ", {"TEST1": "test1", "TEST2": "test2", "TEST3": "test3"}):
+        with patch("charmcraft.utils.get_os_platform") as platform_mock:
+            platform_mock.return_value = utils.OSPlatform(
+                system="test-system", release="test-release", machine="test-machine"
+            )
+            with patch("charmcraft.main.EXTRA_ENVIRONMENT", ("TEST1", "TEST3")):
+                result = _get_system_details()
+    assert result == (
+        "System details: OSPlatform(system='test-system', release='test-release', "
+        "machine='test-machine'); Environment: TEST1='test1', TEST3='test3'"
+    )
+
+
+def test_systemdetails_charmcraft_environment():
+    """System details with environment variables specific to Charmcraft."""
+    with patch("os.environ", {"CHARMCRAFT-TEST": "testvalue"}):
+        with patch("charmcraft.utils.get_os_platform") as platform_mock:
+            platform_mock.return_value = utils.OSPlatform(
+                system="test-system", release="test-release", machine="test-machine"
+            )
+            result = _get_system_details()
+    assert result == (
+        "System details: OSPlatform(system='test-system', release='test-release', "
+        "machine='test-machine'); Environment: CHARMCRAFT-TEST='testvalue'"
+    )
+
+
+def test_systemdetails_no_auth():
+    """System details specifically excluding secrets."""
+    with patch("os.environ", {ALTERNATE_AUTH_ENV_VAR: "supersecret"}):
+        with patch("charmcraft.utils.get_os_platform") as platform_mock:
+            platform_mock.return_value = utils.OSPlatform(
+                system="test-system", release="test-release", machine="test-machine"
+            )
+            result = _get_system_details()
+    assert result == (
+        "System details: OSPlatform(system='test-system', release='test-release', "
+        "machine='test-machine'); Environment: None"
+    )
 
 
 # -- generic tests for all Charmcraft commands

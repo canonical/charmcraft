@@ -17,6 +17,7 @@
 """Main entry point module for all the tool functionality."""
 
 import logging
+import os
 import sys
 
 from craft_cli import (
@@ -32,8 +33,9 @@ from craft_cli import (
 
 from craft_store import errors
 
-from charmcraft import config, __version__, env
+from charmcraft import config, __version__, env, utils
 from charmcraft.commands import build, clean, init, pack, store, version, analyze
+from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -95,6 +97,24 @@ COMMAND_GROUPS = [
     CommandGroup("Charmhub", _charmhub_commands),
 ]
 
+# non-charmcraft useful environment variables to log
+EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP")
+
+
+def _get_system_details():
+    """Produce details about the system."""
+    # prepare the useful environment variables: all CHARMCRAFT* (except AUTH keys)
+    # and desktop/session
+    useful_env = {name for name in os.environ if name.startswith("CHARMCRAFT")}
+    useful_env.discard(ALTERNATE_AUTH_ENV_VAR)
+    useful_env.update(EXTRA_ENVIRONMENT)
+
+    os_platform = utils.get_os_platform()
+    env_string = ", ".join(f"{k}={v!r}" for k, v in sorted(os.environ.items()) if k in useful_env)
+    if not env_string:
+        env_string = "None"
+    return f"System details: {os_platform}; Environment: {env_string}"
+
 
 def main(argv=None):
     """Provide the main entry point."""
@@ -143,6 +163,7 @@ def main(argv=None):
                 "the current directory or where specified with --project-dir option); see "
                 "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
             )
+        emit.trace(_get_system_details())
         retcode = dispatcher.run()
 
     except ArgumentParsingError as err:

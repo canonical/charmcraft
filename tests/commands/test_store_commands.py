@@ -750,7 +750,7 @@ def test_upload_call_ok(emitter, store_mock, config, tmp_path):
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=[])
+    args = Namespace(filepath=test_charm, release=[], name=None)
     retcode = UploadCommand(config).run(args)
     assert retcode == 0
 
@@ -770,7 +770,7 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path):
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=[])
+    args = Namespace(filepath=test_charm, release=[], name=None)
     retcode = UploadCommand(config).run(args)
     assert retcode == 1
 
@@ -790,7 +790,7 @@ def test_upload_call_ok_including_release(emitter, store_mock, config, tmp_path)
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=["edge"], resource=[])
+    args = Namespace(filepath=test_charm, release=["edge"], resource=[], name=None)
     UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -811,7 +811,7 @@ def test_upload_call_ok_including_release_multiple(emitter, store_mock, config, 
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=["edge", "stable"], resource=[])
+    args = Namespace(filepath=test_charm, release=["edge", "stable"], resource=[], name=None)
     UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -834,7 +834,7 @@ def test_upload_including_release_with_resources(emitter, store_mock, config, tm
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     r1 = ResourceOption(name="foo", revision=3)
     r2 = ResourceOption(name="bar", revision=17)
-    args = Namespace(filepath=test_charm, release=["edge"], resource=[r1, r2])
+    args = Namespace(filepath=test_charm, release=["edge"], resource=[r1, r2], name=None)
     UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -865,7 +865,7 @@ def test_upload_call_error_including_release(emitter, store_mock, config, tmp_pa
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=["edge"])
+    args = Namespace(filepath=test_charm, release=["edge"], name=None)
     UploadCommand(config).run(args)
 
     # check the upload was attempted, but not the release!
@@ -883,7 +883,7 @@ def test_upload_charm_with_init_template_todo_token(tmp_path, config):
         zf.writestr("file_ok.cfg", b"This is fine :).")
         zf.writestr("othertainted.txt", b"# TEMPLATE-TODO: need to fix.")
 
-    args = Namespace(filepath=test_charm, release=[])
+    args = Namespace(filepath=test_charm, release=[], name=None)
     expected_msg = (
         "Cannot upload the charm as it include the following files with a leftover "
         "TEMPLATE-TODO token from when the project was created using the 'init' "
@@ -891,6 +891,22 @@ def test_upload_charm_with_init_template_todo_token(tmp_path, config):
     )
     with pytest.raises(CraftError, match=expected_msg):
         UploadCommand(config).run(args)
+
+
+def test_upload_with_different_name_than_in_metadata(emitter, store_mock, config, tmp_path):
+    """Simple upload to a specific name different from metadata, success result."""
+    store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
+    store_mock.upload.return_value = store_response
+
+    test_charm = tmp_path / "mystuff.charm"
+    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    args = Namespace(filepath=test_charm, release=[], name="foo-mycharm")
+    retcode = UploadCommand(config).run(args)
+    assert retcode == 0
+
+    assert store_mock.mock_calls == [call.upload("foo-mycharm", test_charm)]
+    expected = "Revision 7 of 'foo-mycharm' created"
+    emitter.assert_message(expected)
 
 
 # -- tests for list revisions command

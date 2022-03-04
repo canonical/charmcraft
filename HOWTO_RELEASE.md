@@ -9,17 +9,17 @@ paste, but do please pay attention to details!
 
 ## Preparation
 
-- update master and run tests
+- update `main` and run tests
 
     git fetch upstream
-    git merge upstream/master
+    git merge upstream/main
     source venv/bin/activate
     ./run_tests
     deactivate
 
 ### if it's a minor release (Z == 0)
 
-- tag `master` with only the minor version:
+- tag `main` with only the minor version:
 
     git tag X.Y
     git push --tags upstream
@@ -28,9 +28,9 @@ paste, but do please pay attention to details!
 
     git checkout -b release-X.Y
 
-- create release notes after all main changes from last tag
+- create release notes after all `main` changes from last tag
 
-    git log --first-parent master --decorate > release-X.Y.Z.txt
+    git log --first-parent main --decorate > release-X.Y.Z.txt
 
 - tag the release (using those release notes)
 
@@ -42,7 +42,7 @@ paste, but do please pay attention to details!
 
     git checkout release-X.Y
 
-- cherry pick the needed commits from master:
+- cherry pick the needed commits from `main`:
 
    git cherry-pick -m 1 COMMIT-HASH
    ...

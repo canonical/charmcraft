@@ -922,9 +922,13 @@ def _get_lib_info(*, full_name=None, lib_path=None):
         # dir and Python extension.
         #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
         try:
-            charmsdir, importable_charm_name, v_api, libfile = full_name.split(".")
+            charmsdir, charm_name, v_api, libfile = full_name.split(".")
         except ValueError:
             raise _BadLibraryNameError(full_name)
+
+        # the lib full_name includes the charm_name which might not be importable (dashes)
+        importable_charm_name = create_importable_name(charm_name)
+
         if charmsdir != "charms":
             raise _BadLibraryNameError(full_name)
         path = pathlib.Path("lib")

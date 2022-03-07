@@ -2469,6 +2469,13 @@ def test_getlibinfo_bad_name(name):
     )
 
 
+def test_getlibinfo_not_importable_charm_name():
+    """Libraries should be save under importable paths."""
+    lib_data = _get_lib_info(full_name="charms.operator-libs-linux.v0.apt")
+    assert lib_data.charm_name == "operator-libs-linux"
+    assert lib_data.path == pathlib.Path("lib/charms/operator_libs_linux/v0/apt.py")
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
     "path",

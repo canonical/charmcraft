@@ -19,7 +19,7 @@ from pathlib import Path
 
 __all__ = ("version",)
 
-_FALLBACK = "1.4.0"  # this gets bumped after release
+_FALLBACK = "1.5.0"  # this gets bumped after release
 
 
 def _get_version():

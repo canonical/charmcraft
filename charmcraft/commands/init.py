@@ -116,7 +116,11 @@ class InitCommand(BaseCommand):
             emit.trace(f"Set project name to '{args.name}'")
 
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
-            raise CraftError("{} is not a valid charm name".format(args.name))
+            raise CraftError(
+                "{args.name} is not a valid charm name. "
+                "The name must start with a lowercase letter "
+                "and contain only alphanumeric characters and hyphens."
+            )
 
         context = {
             "name": args.name,

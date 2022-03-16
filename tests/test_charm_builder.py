@@ -838,7 +838,7 @@ def test_builder_arguments_defaults(tmp_path):
         assert self.charmdir == pathlib.Path("charmdir")
         assert self.buildpath == pathlib.Path("builddir")
         assert self.entrypoint == pathlib.Path("src/charm.py")
-        assert self.requirement_paths is None
+        assert self.requirement_paths == []
         sys.exit(42)
 
     with patch.object(sys, "argv", ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]):

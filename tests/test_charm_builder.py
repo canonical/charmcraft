@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -586,10 +586,11 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, emitter
 
 def test_build_dependencies_virtualenv_simple(tmp_path):
     """A virtualenv is created with the specified requirements file."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+
+    reqs_file = tmp_path / "reqs.txt"
+    reqs_file.touch()
 
     builder = CharmBuilder(
         charmdir=tmp_path,
@@ -597,7 +598,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=[],
-        requirements=["reqs.txt"],
+        requirements=[reqs_file],
     )
 
     with patch("charmcraft.charm_builder._process_run") as mock:
@@ -609,7 +610,9 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "--version"]),
-        call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "--requirement=reqs.txt"]),
+        call(
+            [pip_cmd, "install", "--upgrade", "--no-binary", ":all:", f"--requirement={reqs_file}"]
+        ),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
@@ -618,10 +621,13 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
 
 def test_build_dependencies_virtualenv_multiple(tmp_path):
     """A virtualenv is created with multiple requirements files."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+
+    reqs_file_1 = tmp_path / "reqs.txt"
+    reqs_file_1.touch()
+    reqs_file_2 = tmp_path / "reqs.txt"
+    reqs_file_1.touch()
 
     builder = CharmBuilder(
         charmdir=tmp_path,
@@ -629,7 +635,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=[],
-        requirements=["reqs1.txt", "reqs2.txt"],
+        requirements=[reqs_file_1, reqs_file_2],
     )
 
     with patch("charmcraft.charm_builder._process_run") as mock:
@@ -647,8 +653,8 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
                 "--upgrade",
                 "--no-binary",
                 ":all:",
-                "--requirement=reqs1.txt",
-                "--requirement=reqs2.txt",
+                f"--requirement={reqs_file_1}",
+                f"--requirement={reqs_file_2}",
             ]
         ),
     ]
@@ -659,8 +665,6 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
 
 def test_build_dependencies_virtualenv_none(tmp_path):
     """The virtualenv is NOT created if no needed."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -681,8 +685,6 @@ def test_build_dependencies_virtualenv_none(tmp_path):
 
 def test_build_dependencies_virtualenv_packages(tmp_path):
     """A virtualenv is created with the specified packages."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -713,8 +715,6 @@ def test_build_dependencies_virtualenv_packages(tmp_path):
 
 def test_build_dependencies_virtualenv_binary_packages(tmp_path):
     """A virtualenv is created with the specified packages."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
@@ -745,10 +745,13 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path):
 
 def test_build_dependencies_virtualenv_all(tmp_path):
     """A virtualenv is created with the specified packages."""
-    metadata = tmp_path / CHARM_METADATA
-    metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
+
+    reqs_file_1 = tmp_path / "reqs.txt"
+    reqs_file_1.touch()
+    reqs_file_2 = tmp_path / "reqs.txt"
+    reqs_file_1.touch()
 
     builder = CharmBuilder(
         charmdir=tmp_path,
@@ -756,7 +759,7 @@ def test_build_dependencies_virtualenv_all(tmp_path):
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=["pkg1", "pkg2"],
         python_packages=["pkg3", "pkg4"],
-        requirements=["reqs1.txt", "reqs2.txt"],
+        requirements=[reqs_file_1, reqs_file_2],
     )
 
     with patch("charmcraft.charm_builder._process_run") as mock:
@@ -777,8 +780,8 @@ def test_build_dependencies_virtualenv_all(tmp_path):
                 "--upgrade",
                 "--no-binary",
                 ":all:",
-                "--requirement=reqs1.txt",
-                "--requirement=reqs2.txt",
+                f"--requirement={reqs_file_1}",
+                f"--requirement={reqs_file_2}",
             ]
         ),
     ]
@@ -853,7 +856,7 @@ def test_builder_arguments_full(tmp_path):
         assert self.charmdir == pathlib.Path("charmdir")
         assert self.buildpath == pathlib.Path("builddir")
         assert self.entrypoint == pathlib.Path("src/charm.py")
-        assert self.requirement_paths == ["reqs1.txt", "reqs2.txt"]
+        assert self.requirement_paths == [pathlib.Path("reqs1.txt"), pathlib.Path("reqs2.txt")]
         sys.exit(42)
 
     fake_argv = ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]

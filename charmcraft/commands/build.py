@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -269,7 +269,11 @@ class Builder:
             charm_part_prime.append(str(entrypoint.parts[0]))
 
         # add venv if there are requirements
-        if self._special_charm_part["charm-requirements"]:
+        if (
+            self._special_charm_part.get("charm-requirements")
+            or self._special_charm_part.get("charm-binary-python-packages")
+            or self._special_charm_part.get("charm-python-packages")
+        ):
             charm_part_prime.append(VENV_DIRNAME)
 
         # add mandatory and optional charm files

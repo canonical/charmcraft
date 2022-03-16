@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ class CharmBuilder:
         allow_pip_binary: bool = None,
         binary_python_packages: List[str] = None,
         python_packages: List[str] = None,
-        requirements: List[str] = None,
+        requirements: List[pathlib.Path] = None,
     ):
         self.charmdir = charmdir
         self.buildpath = builddir
@@ -346,6 +346,7 @@ def _parse_arguments() -> argparse.Namespace:
         metavar="reqfile",
         action="append",
         default=None,
+        type=pathlib.Path,
         help="Requirements file to install dependencies from.",
     )
 

@@ -308,44 +308,38 @@ def _parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--entrypoint",
-        metavar="filename",
         default="src/charm.py",
+        type=pathlib.Path,
         help="The charm entry point. Default is 'src/charm.py'.",
     )
     parser.add_argument(
         "--charmdir",
-        metavar="dirname",
         default=".",
+        type=pathlib.Path,
         help="The charm source directory. Default is current.",
     )
     parser.add_argument(
         "--builddir",
-        metavar="dirname",
         required=True,
+        type=pathlib.Path,
         help="The build destination directory",
     )
     parser.add_argument(
         "-b",
         "--binary-package",
-        metavar="pkg",
         action="append",
-        default=None,
         help="Binary Python package to install before requirements.",
     )
     parser.add_argument(
         "-p",
         "--package",
-        metavar="pkg",
         action="append",
-        default=None,
         help="Python package to install before requirements.",
     )
     parser.add_argument(
         "-r",
         "--requirement",
-        metavar="reqfile",
         action="append",
-        default=None,
         type=pathlib.Path,
         help="Requirements file to install dependencies from.",
     )

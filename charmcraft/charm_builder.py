@@ -355,12 +355,12 @@ def main():
     emit.init(EmitterMode.TRACE, "charm-builder", "Starting charm builder", log_filepath=logpath)
 
     builder = CharmBuilder(
-        charmdir=pathlib.Path(options.charmdir),
-        builddir=pathlib.Path(options.builddir),
-        entrypoint=pathlib.Path(options.entrypoint),
-        binary_python_packages=options.binary_package,
-        python_packages=options.package,
-        requirements=options.requirement,
+        charmdir=options.charmdir,
+        builddir=options.builddir,
+        entrypoint=options.entrypoint,
+        binary_python_packages=options.binary_package or [],
+        python_packages=options.package or [],
+        requirements=options.requirement or [],
     )
     builder.build_charm()
 

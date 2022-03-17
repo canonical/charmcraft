@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1859,6 +1859,134 @@ def test_build_requirements_from_both(basic_project, monkeypatch, emitter):
         builder.run([0])
     assert str(raised.value) == (
         "--requirement not supported when charm-requirements specified in charmcraft.yaml"
+    )
+
+
+def test_build_python_packages_from_parts(basic_project, monkeypatch):
+    """Test cases for base-index parameter."""
+    host_base = get_host_as_base()
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                    run-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+
+                parts:
+                  charm:
+                    charm-entrypoint: src/charm.py
+                    charm-python-packages: ["foo", "bar"]
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = get_builder(config, entrypoint=None, force=True)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            builder.run([0])
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "charm": {
+                        "plugin": "charm",
+                        "prime": [
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                            "README.md",
+                        ],
+                        "charm-entrypoint": "src/charm.py",
+                        "charm-python-packages": ["foo", "bar"],
+                        "source": str(basic_project),
+                        "charm-requirements": [],
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
+                project_name="name-from-metadata",
+                ignore_local_sources=["*.charm"],
+            )
+        ]
+    )
+
+
+def test_build_binary_python_packages_from_parts(basic_project, monkeypatch):
+    """Test cases for base-index parameter."""
+    host_base = get_host_as_base()
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                    run-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+
+                parts:
+                  charm:
+                    charm-entrypoint: src/charm.py
+                    charm-binary-python-packages: ["foo", "bar"]
+                """
+        )
+    )
+    config = load(basic_project)
+    monkeypatch.chdir(basic_project)
+    builder = get_builder(config, entrypoint=None, force=True)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            builder.run([0])
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "charm": {
+                        "plugin": "charm",
+                        "prime": [
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                            "README.md",
+                        ],
+                        "charm-entrypoint": "src/charm.py",
+                        "charm-binary-python-packages": ["foo", "bar"],
+                        "source": str(basic_project),
+                        "charm-requirements": [],
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
+                project_name="name-from-metadata",
+                ignore_local_sources=["*.charm"],
+            )
+        ]
     )
 
 

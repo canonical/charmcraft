@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ class CharmBuilder:
         allow_pip_binary: bool = None,
         binary_python_packages: List[str] = None,
         python_packages: List[str] = None,
-        requirements: List[str] = None,
+        requirements: List[pathlib.Path] = None,
     ):
         self.charmdir = charmdir
         self.buildpath = builddir
@@ -308,44 +308,39 @@ def _parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--entrypoint",
-        metavar="filename",
         default="src/charm.py",
+        type=pathlib.Path,
         help="The charm entry point. Default is 'src/charm.py'.",
     )
     parser.add_argument(
         "--charmdir",
-        metavar="dirname",
         default=".",
+        type=pathlib.Path,
         help="The charm source directory. Default is current.",
     )
     parser.add_argument(
         "--builddir",
-        metavar="dirname",
         required=True,
+        type=pathlib.Path,
         help="The build destination directory",
     )
     parser.add_argument(
         "-b",
         "--binary-package",
-        metavar="pkg",
         action="append",
-        default=None,
         help="Binary Python package to install before requirements.",
     )
     parser.add_argument(
         "-p",
         "--package",
-        metavar="pkg",
         action="append",
-        default=None,
         help="Python package to install before requirements.",
     )
     parser.add_argument(
         "-r",
         "--requirement",
-        metavar="reqfile",
         action="append",
-        default=None,
+        type=pathlib.Path,
         help="Requirements file to install dependencies from.",
     )
 
@@ -360,12 +355,12 @@ def main():
     emit.init(EmitterMode.TRACE, "charm-builder", "Starting charm builder", log_filepath=logpath)
 
     builder = CharmBuilder(
-        charmdir=pathlib.Path(options.charmdir),
-        builddir=pathlib.Path(options.builddir),
-        entrypoint=pathlib.Path(options.entrypoint),
-        binary_python_packages=options.binary_package,
-        python_packages=options.package,
-        requirements=options.requirement,
+        charmdir=options.charmdir,
+        builddir=options.builddir,
+        entrypoint=options.entrypoint,
+        binary_python_packages=options.binary_package or [],
+        python_packages=options.package or [],
+        requirements=options.requirement or [],
     )
     builder.build_charm()
 

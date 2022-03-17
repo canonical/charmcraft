@@ -18,6 +18,7 @@
 
 import argparse
 import errno
+import hashlib
 import os
 import pathlib
 import shutil
@@ -36,6 +37,7 @@ from charmcraft.utils import make_executable
 WORK_DIRNAME = "work_dir"
 VENV_DIRNAME = "venv"
 STAGING_VENV_DIRNAME = "staging-venv"
+DEPENDENCIES_HASH_FILENAME = "charmcraft-dependencies-hash.txt"
 
 # The file name and template for the dispatch script
 DISPATCH_FILENAME = "dispatch"
@@ -219,43 +221,81 @@ class CharmBuilder:
                 relative_link = relativise(dest_hook, dispatch_path)
                 dest_hook.symlink_to(relative_link)
 
+    def _calculate_dependencies_hash(self):
+        """Calculate a hash for all current dependencies."""
+        all_deps = []
+        for req_file in self.requirement_paths:
+            all_deps.append(req_file.read_text())
+        all_deps.extend(self.binary_python_packages)
+        all_deps.extend(self.python_packages)
+        deps_mashup = "".join(map(repr, all_deps))
+        deps_hash = hashlib.sha1(deps_mashup.encode("utf8")).hexdigest()
+        return deps_hash
+
+    def _install_dependencies(self, staging_venv_dir):
+        """Install all dependencies in a specific directory."""
+        # create virtualenv using the host environment python
+        _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
+        pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
+
+        _process_run([pip_cmd, "--version"])
+
+        if self.binary_python_packages:
+            # install python packages, allowing binary packages
+            cmd = [pip_cmd, "install", "--upgrade"]  # base command
+            cmd.extend(self.binary_python_packages)  # the python packages to install
+            _process_run(cmd)
+
+        if self.python_packages:
+            # install python packages from source
+            cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+            cmd.extend(self.python_packages)  # the python packages to install
+            _process_run(cmd)
+
+        if self.requirement_paths:
+            # install dependencies from requirement files
+            cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+            for reqspath in self.requirement_paths:
+                cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
+            _process_run(cmd)
+
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
-        emit.progress("Installing dependencies")
+        emit.trace("Handling dependencies")
+        if not (self.requirement_paths or self.binary_python_packages or self.python_packages):
+            emit.trace("No dependencies to handle")
+            return
 
-        if self.requirement_paths or self.binary_python_packages or self.python_packages:
-            # create virtualenv using the host environment python
-            staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
-            _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
-            pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
+        staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
+        hash_file = self.charmdir / DEPENDENCIES_HASH_FILENAME
 
-            _process_run([pip_cmd, "--version"])
+        # find out if current dependencies are the same than the last run.
+        current_deps_hash = self._calculate_dependencies_hash()
+        emit.trace(f"Current dependencies hash: {current_deps_hash!r}")
+        if not staging_venv_dir.exists():
+            emit.trace("Dependencies directory not found")
+            same_dependencies = False
+        elif hash_file.exists():
+            previous_deps_hash = hash_file.read_text()
+            emit.trace(f"Previous dependencies hash: {previous_deps_hash!r}")
+            same_dependencies = previous_deps_hash == current_deps_hash
+        else:
+            emit.trace("Dependencies hash file not found")
+            same_dependencies = False
 
-            if self.binary_python_packages:
-                # install python packages, allowing binary packages
-                cmd = [pip_cmd, "install", "--upgrade"]  # base command
-                for pkg in self.binary_python_packages:
-                    cmd.append(pkg)  # the python package to install
-                _process_run(cmd)
+        if same_dependencies:
+            emit.trace("Reusing installed dependencies, they are equal to last run ones")
+        else:
+            emit.progress("Installing dependencies")
+            self._install_dependencies(staging_venv_dir)
 
-            if self.python_packages:
-                # install python packages from source
-                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-                for pkg in self.python_packages:
-                    cmd.append(pkg)  # the python package to install
-                _process_run(cmd)
+            # save the hash file after all successful installations
+            hash_file.write_text(current_deps_hash)
 
-            if self.requirement_paths:
-                # install dependencies from requirement files
-                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-                for reqspath in self.requirement_paths:
-                    cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
-                _process_run(cmd)
-
-            # copy the virtualvenv site-packages directory to /venv in charm
-            basedir = pathlib.Path(STAGING_VENV_DIRNAME)
-            site_packages_dir = _find_venv_site_packages(basedir)
-            shutil.copytree(site_packages_dir, self.buildpath / VENV_DIRNAME)
+        # always copy the virtualvenv site-packages directory to /venv in charm
+        basedir = pathlib.Path(STAGING_VENV_DIRNAME)
+        site_packages_dir = _find_venv_site_packages(basedir)
+        shutil.copytree(site_packages_dir, self.buildpath / VENV_DIRNAME)
 
 
 def _find_venv_bin(basedir, exec_base):

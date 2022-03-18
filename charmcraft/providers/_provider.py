@@ -26,11 +26,7 @@ from craft_providers import bases
 
 from charmcraft.config import Base
 from charmcraft.utils import get_host_architecture
-
-BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
-    "18.04": bases.BuilddBaseAlias.BIONIC,
-    "20.04": bases.BuilddBaseAlias.FOCAL,
-}
+from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS
 
 
 class Provider(ABC):

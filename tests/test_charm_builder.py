@@ -910,6 +910,61 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
 
+def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
+    """Dependencies are built again because having problems to read the previous hash file."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = CharmBuilder(
+        charmdir=tmp_path,
+        builddir=build_dir,
+        entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
+        python_packages=["ops"],
+        requirements=[],
+    )
+    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+
+    # patch the dependencies installation method so it skips all subprocessing but actually
+    # creates the directory, to simplify testing
+    builder._install_dependencies = lambda dirpath: dirpath.mkdir(exist_ok=True)
+
+    # first run!
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed
+    assert staging_venv_dir.exists()
+
+    # installation directory copied to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+    # avoid the file to be read succesfully
+    hash_file = tmp_path / DEPENDENCIES_HASH_FILENAME
+    hash_file.chmod(0o222)
+
+    # second run!
+    emitter.interactions.clear()
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace(
+        f"Problems reading the dependencies hash file: [Errno 13] Permission denied: '{hash_file}'"
+    )
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed *again*
+    assert staging_venv_dir.exists()
+
+    # installation directory copied *again* to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+
 @pytest.mark.parametrize(
     "new_reqs_content, new_pypackages, new_pybinaries",
     [

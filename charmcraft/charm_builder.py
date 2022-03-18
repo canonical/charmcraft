@@ -276,9 +276,14 @@ class CharmBuilder:
             emit.trace("Dependencies directory not found")
             same_dependencies = False
         elif hash_file.exists():
-            previous_deps_hash = hash_file.read_text()
-            emit.trace(f"Previous dependencies hash: {previous_deps_hash!r}")
-            same_dependencies = previous_deps_hash == current_deps_hash
+            try:
+                previous_deps_hash = hash_file.read_text()
+            except Exception as exc:
+                emit.trace(f"Problems reading the dependencies hash file: {exc}")
+                same_dependencies = False
+            else:
+                emit.trace(f"Previous dependencies hash: {previous_deps_hash!r}")
+                same_dependencies = previous_deps_hash == current_deps_hash
         else:
             emit.trace("Dependencies hash file not found")
             same_dependencies = False

@@ -166,7 +166,7 @@ class MultipassProvider(Provider):
             instance = multipass.launch(
                 name=instance_name,
                 base_configuration=base_configuration,
-                image_name=base.channel,
+                image_name=f"snapcraft:{base.channel}",
                 cpus=2,
                 disk_gb=64,
                 mem_gb=2,

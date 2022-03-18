@@ -945,7 +945,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
 
     # avoid the file to be read succesfully
     hash_file = tmp_path / DEPENDENCIES_HASH_FILENAME
-    hash_file.chmod(0o222)
+    hash_file.chmod(0o333)
 
     # second run!
     emitter.interactions.clear()

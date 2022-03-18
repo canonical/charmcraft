@@ -277,7 +277,7 @@ class CharmBuilder:
             same_dependencies = False
         elif hash_file.exists():
             try:
-                previous_deps_hash = hash_file.read_text()
+                previous_deps_hash = hash_file.read_text(encoding="utf8")
             except Exception as exc:
                 emit.trace(f"Problems reading the dependencies hash file: {exc}")
                 same_dependencies = False
@@ -295,7 +295,7 @@ class CharmBuilder:
             self._install_dependencies(staging_venv_dir)
 
             # save the hash file after all successful installations
-            hash_file.write_text(current_deps_hash)
+            hash_file.write_text(current_deps_hash, encoding="utf8")
 
         # always copy the virtualvenv site-packages directory to /venv in charm
         basedir = pathlib.Path(STAGING_VENV_DIRNAME)

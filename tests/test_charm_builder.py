@@ -944,8 +944,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
     # avoid the file to be read succesfully
-    hash_file = tmp_path / DEPENDENCIES_HASH_FILENAME
-    hash_file.chmod(0o333)
+    (tmp_path / DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
 
     # second run!
     emitter.interactions.clear()
@@ -953,7 +952,8 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
         builder.handle_dependencies()
     emitter.assert_trace("Handling dependencies")
     emitter.assert_trace(
-        f"Problems reading the dependencies hash file: [Errno 13] Permission denied: '{hash_file}'"
+        "Problems reading the dependencies hash file: "
+        "'utf-8' codec can't decode byte 0xc3 in position 0: invalid continuation byte"
     )
     emitter.assert_progress("Installing dependencies")
 

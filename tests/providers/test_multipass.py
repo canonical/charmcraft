@@ -422,7 +422,7 @@ def test_launched_environment(
             mock.call(
                 name="charmcraft-test-charm-445566-1-2-host-arch",
                 base_configuration=mock_buildd_base_configuration.return_value,
-                image_name=channel,
+                image_name=f"snapcraft:{channel}",
                 cpus=2,
                 disk_gb=64,
                 mem_gb=2,

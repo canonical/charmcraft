@@ -28,6 +28,7 @@ from craft_cli import CraftError
 from charmcraft import charm_builder
 from charmcraft.charm_builder import (
     CharmBuilder,
+    DEPENDENCIES_HASH_FILENAME,
     DISPATCH_CONTENT,
     STAGING_VENV_DIRNAME,
     VENV_DIRNAME,
@@ -584,7 +585,10 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, emitter
     emitter.assert_trace(expected)
 
 
-def test_build_dependencies_virtualenv_simple(tmp_path):
+# -- tests about dependencies handling
+
+
+def test_build_dependencies_virtualenv_simple(tmp_path, emitter):
     """A virtualenv is created with the specified requirements file."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -617,9 +621,11 @@ def test_build_dependencies_virtualenv_simple(tmp_path):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_progress("Installing dependencies")
 
 
-def test_build_dependencies_virtualenv_multiple(tmp_path):
+def test_build_dependencies_virtualenv_multiple(tmp_path, emitter):
     """A virtualenv is created with multiple requirements files."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -661,9 +667,11 @@ def test_build_dependencies_virtualenv_multiple(tmp_path):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_progress("Installing dependencies")
 
 
-def test_build_dependencies_virtualenv_none(tmp_path):
+def test_build_dependencies_virtualenv_none(tmp_path, emitter):
     """The virtualenv is NOT created if no needed."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -681,9 +689,11 @@ def test_build_dependencies_virtualenv_none(tmp_path):
         builder.handle_dependencies()
 
     mock_run.assert_not_called()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("No dependencies to handle")
 
 
-def test_build_dependencies_virtualenv_packages(tmp_path):
+def test_build_dependencies_virtualenv_packages(tmp_path, emitter):
     """A virtualenv is created with the specified packages."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -711,9 +721,11 @@ def test_build_dependencies_virtualenv_packages(tmp_path):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_progress("Installing dependencies")
 
 
-def test_build_dependencies_virtualenv_binary_packages(tmp_path):
+def test_build_dependencies_virtualenv_binary_packages(tmp_path, emitter):
     """A virtualenv is created with the specified packages."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -741,9 +753,11 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_progress("Installing dependencies")
 
 
-def test_build_dependencies_virtualenv_all(tmp_path):
+def test_build_dependencies_virtualenv_all(tmp_path, emitter):
     """A virtualenv is created with the specified packages."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -788,6 +802,295 @@ def test_build_dependencies_virtualenv_all(tmp_path):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_progress("Installing dependencies")
+
+
+def test_build_dependencies_no_reused_missing_venv(tmp_path, emitter):
+    """Dependencies are built again because installation dir was not found."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = CharmBuilder(
+        charmdir=tmp_path,
+        builddir=build_dir,
+        entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
+        python_packages=["ops"],
+        requirements=[],
+    )
+    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+
+    # patch the dependencies installation method so it skips all subprocessing but actually
+    # creates the directory, to simplify testing
+    builder._install_dependencies = lambda dirpath: dirpath.mkdir()
+
+    # first run!
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed
+    assert staging_venv_dir.exists()
+
+    # installation directory copied to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+    # remove the site venv directory
+    staging_venv_dir.rmdir()
+
+    # second run!
+    emitter.interactions.clear()
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed *again*
+    assert staging_venv_dir.exists()
+
+    # installation directory copied *again* to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+
+def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
+    """Dependencies are built again because previous hash file was not found."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = CharmBuilder(
+        charmdir=tmp_path,
+        builddir=build_dir,
+        entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
+        python_packages=["ops"],
+        requirements=[],
+    )
+    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+
+    # patch the dependencies installation method so it skips all subprocessing but actually
+    # creates the directory, to simplify testing
+    builder._install_dependencies = lambda dirpath: dirpath.mkdir(exist_ok=True)
+
+    # first run!
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed
+    assert staging_venv_dir.exists()
+
+    # installation directory copied to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+    # remove the hash file
+    (tmp_path / DEPENDENCIES_HASH_FILENAME).unlink()
+
+    # second run!
+    emitter.interactions.clear()
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Dependencies hash file not found")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed *again*
+    assert staging_venv_dir.exists()
+
+    # installation directory copied *again* to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+
+def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
+    """Dependencies are built again because having problems to read the previous hash file."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    builder = CharmBuilder(
+        charmdir=tmp_path,
+        builddir=build_dir,
+        entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
+        python_packages=["ops"],
+        requirements=[],
+    )
+    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+
+    # patch the dependencies installation method so it skips all subprocessing but actually
+    # creates the directory, to simplify testing
+    builder._install_dependencies = lambda dirpath: dirpath.mkdir(exist_ok=True)
+
+    # first run!
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed
+    assert staging_venv_dir.exists()
+
+    # installation directory copied to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+    # avoid the file to be read succesfully
+    (tmp_path / DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
+
+    # second run!
+    emitter.interactions.clear()
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace(
+        "Problems reading the dependencies hash file: "
+        "'utf-8' codec can't decode byte 0xc3 in position 0: invalid continuation byte"
+    )
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed *again*
+    assert staging_venv_dir.exists()
+
+    # installation directory copied *again* to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+
+@pytest.mark.parametrize(
+    "new_reqs_content, new_pypackages, new_pybinaries",
+    [
+        ("ops==2", None, None),
+        (None, ["foo2", "bar"], None),
+        (None, None, ["otherbinthing"]),
+    ],
+)
+def test_build_dependencies_no_reused_different_dependencies(
+    tmp_path, emitter, new_reqs_content, new_pypackages, new_pybinaries
+):
+    """Dependencies are built again because changed from previous run."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    # prepare some dependencies for the first call (and some content for the second one)
+    reqs_file = tmp_path / "requirements.txt"
+    reqs_file.write_text("ops==1")
+    requirements = [reqs_file]
+    python_packages = ["foo", "bar"]
+    binary_python_packages = ["binthing"]
+
+    builder = CharmBuilder(
+        charmdir=tmp_path,
+        builddir=build_dir,
+        entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=binary_python_packages,
+        python_packages=python_packages,
+        requirements=requirements,
+    )
+    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+
+    # patch the dependencies installation method so it skips all subprocessing but actually
+    # creates the directory, to simplify testing
+    builder._install_dependencies = lambda dirpath: dirpath.mkdir(exist_ok=True)
+
+    # first run!
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed
+    assert staging_venv_dir.exists()
+
+    # installation directory copied to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+    # for the second call, default new dependencies to first ones so only one is changed at a time
+    if new_reqs_content is not None:
+        reqs_file.write_text(new_reqs_content)
+    if new_pypackages is None:
+        new_pypackages = python_packages
+    if new_pybinaries is None:
+        new_pybinaries = binary_python_packages
+
+    # second run with other dependencies!
+    emitter.interactions.clear()
+    builder.binary_python_packages = new_pybinaries
+    builder.python_packages = new_pypackages
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed *again*
+    assert staging_venv_dir.exists()
+
+    # installation directory copied *again* to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+
+def test_build_dependencies_reused(tmp_path, emitter):
+    """Happy case to reuse dependencies from last run."""
+    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir.mkdir()
+
+    reqs_file = tmp_path / "reqs.txt"
+    reqs_file.touch()
+
+    builder = CharmBuilder(
+        charmdir=tmp_path,
+        builddir=build_dir,
+        entrypoint=pathlib.Path("whatever"),
+        binary_python_packages=[],
+        python_packages=[],
+        requirements=[reqs_file],
+    )
+    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+
+    # patch the dependencies installation method so it skips all subprocessing but actually
+    # creates the directory, to simplify testing; note that we specifically are calling mkdir
+    # to fail if the directory is already there, so we ensure it is called once
+    builder._install_dependencies = lambda dirpath: dirpath.mkdir(exist_ok=False)
+
+    # first run!
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_progress("Installing dependencies")
+
+    # directory created and packages installed
+    assert staging_venv_dir.exists()
+
+    # installation directory copied to the build directory
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+    # second run!
+    emitter.interactions.clear()
+    with patch("shutil.copytree") as mock_copytree:
+        builder.handle_dependencies()
+    emitter.assert_trace("Handling dependencies")
+    emitter.assert_trace("Reusing installed dependencies, they are equal to last run ones")
+
+    # installation directory copied *again* to the build directory (this is always done as
+    # buildpath is cleaned)
+    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+
+
+# -- tests about juju ignore
 
 
 def test_builder_without_jujuignore(tmp_path):

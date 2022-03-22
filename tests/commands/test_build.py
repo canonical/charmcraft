@@ -25,7 +25,7 @@ from collections import namedtuple
 from textwrap import dedent
 from typing import List
 from unittest import mock
-from unittest.mock import call, patch, ANY
+from unittest.mock import call, patch
 
 import pytest
 import yaml
@@ -823,8 +823,6 @@ def test_build_project_is_cwd(
             ["charmcraft", "pack", "--bases-index", "0"],
             check=True,
             cwd=pathlib.Path("/root/project"),
-            stdout=ANY,
-            stderr=ANY,
         ),
     ]
 
@@ -877,8 +875,6 @@ def test_build_project_is_not_cwd(
             ["charmcraft", "pack", "--bases-index", "0"],
             check=True,
             cwd=pathlib.Path("/root"),
-            stdout=ANY,
-            stderr=ANY,
         ),
         call.pull_file(
             source=pathlib.Path("/root") / zipnames[0],
@@ -956,8 +952,6 @@ def test_build_bases_index_scenarios_provider(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
-            stdout=ANY,
-            stderr=ANY,
         ),
     ]
     emitter.assert_progress(
@@ -991,8 +985,6 @@ def test_build_bases_index_scenarios_provider(
             ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
-            stdout=ANY,
-            stderr=ANY,
         ),
     ]
     mock_provider.reset_mock()
@@ -1031,15 +1023,11 @@ def test_build_bases_index_scenarios_provider(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
-            stdout=ANY,
-            stderr=ANY,
         ),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
-            stdout=ANY,
-            stderr=ANY,
         ),
     ]
     mock_provider.reset_mock()
@@ -1072,11 +1060,10 @@ def test_build_bases_index_scenarios_provider(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
             cwd=pathlib.Path("/root/project"),
-            stdout=ANY,
-            stderr=ANY,
         ),
     ]
-    assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)]
+    # it was called five times, for success and errors
+    assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)] * 5
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

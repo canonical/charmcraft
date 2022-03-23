@@ -167,9 +167,13 @@ class PackCommand(BaseCommand):
         emit.trace(f"Working arguments: {args}")
         builder = build.Builder(args, self.config)
         charms = builder.run(parsed_args.bases_index, destructive_mode=build_args.destructive_mode)
-        emit.message("Charms packed:")
-        for charm in charms:
-            emit.message(f"    {charm}")
+
+        # avoid showing results when run inside a container (the outer charmcraft
+        # is responsible of the final message to the user)
+        if not env.is_charmcraft_running_in_managed_mode():
+            emit.message("Charms packed:")
+            for charm in charms:
+                emit.message(f"    {charm}")
 
     def _pack_bundle(self, parsed_args) -> List[pathlib.Path]:
         """Pack a bundle."""

@@ -208,7 +208,7 @@ class Builder:
         )
 
         zipname = self.handle_package(lifecycle.prime_dir, bases_config)
-        emit.message(f"Created '{zipname}'.")
+        emit.message(f"Created '{zipname}'.", intermediate=True)
         return zipname
 
     def _handle_deprecated_cli_arguments(self):
@@ -440,20 +440,16 @@ class Builder:
             build_on_index=build_on_index,
         ) as instance:
             emit.progress("Packing the charm")
+            emit.trace(f"Running {cmd}")
             try:
-                with emit.open_stream(f"Running {cmd}") as stream:
-                    instance.execute_run(
-                        cmd,
-                        check=True,
-                        cwd=instance_output_dir,
-                        stdout=stream,
-                        stderr=stream,
-                    )
+                with emit.pause():
+                    instance.execute_run(cmd, check=True, cwd=instance_output_dir)
             except subprocess.CalledProcessError as error:
-                capture_logs_from_instance(instance)
                 raise CraftError(
                     f"Failed to build charm for bases index '{bases_index}'."
                 ) from error
+            finally:
+                capture_logs_from_instance(instance)
 
             if pull_charm:
                 try:

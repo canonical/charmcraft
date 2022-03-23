@@ -317,7 +317,9 @@ class PartsLifecycle:
             actions = self._lcm.plan(target_step)
             emit.trace(f"Parts actions: {actions}")
             with self._lcm.action_executor() as aex:
-                aex.execute(actions)
+                for action in actions:
+                    emit.progress(f"Running step {action.step.name} for part {action.part_name!r}")
+                    aex.execute([action])
         except RuntimeError as err:
             raise RuntimeError(f"Parts processing internal error: {err}") from err
         except OSError as err:

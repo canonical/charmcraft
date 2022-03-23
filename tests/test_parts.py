@@ -16,13 +16,13 @@
 
 import pathlib
 import sys
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 import craft_parts
 import pydantic
 import pytest
 from craft_cli import CraftError
-from craft_parts import Step, plugins
+from craft_parts import Step, plugins, Action, ActionType
 from craft_parts.errors import PartsError
 
 from charmcraft import charm_builder, parts
@@ -302,6 +302,41 @@ class TestPartsLifecycle:
                     lifecycle.run(Step.PRIME)
 
         mock_clean.assert_called_once_with(Step.BUILD, part_names=["charm"])
+
+    def test_run_actions_progress(self, tmp_path, monkeypatch, emitter):
+        data = {
+            "plugin": "charm",
+            "source": ".",
+            "charm-entrypoint": "my-entrypoint",
+        }
+
+        lifecycle = parts.PartsLifecycle(
+            all_parts={"charm": data},
+            work_dir=tmp_path,
+            project_dir=tmp_path,
+            project_name="test",
+            ignore_local_sources=["*.charm"],
+        )
+
+        action1 = Action(
+            part_name="charm", step=Step.STAGE, action_type=ActionType.RUN, reason=None
+        )
+        action2 = Action(
+            part_name="charm", step=Step.PRIME, action_type=ActionType.RUN, reason=None
+        )
+
+        with patch("craft_parts.LifecycleManager.clean"):
+            with patch("craft_parts.LifecycleManager.plan") as mock_plan:
+                mock_plan.return_value = [action1, action2]
+                with patch("craft_parts.executor.executor.ExecutionContext.execute") as mock_exec:
+                    lifecycle.run(Step.PRIME)
+
+        emitter.assert_progress("Running step STAGE for part 'charm'")
+        emitter.assert_progress("Running step PRIME for part 'charm'")
+        assert mock_exec.call_args_list == [
+            call([action1]),
+            call([action2]),
+        ]
 
 
 class TestPartHelpers:

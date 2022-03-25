@@ -16,7 +16,7 @@
 
 import pathlib
 import sys
-from unittest.mock import patch, call
+from unittest.mock import ANY, patch, call
 
 import craft_parts
 import pydantic
@@ -334,8 +334,8 @@ class TestPartsLifecycle:
         emitter.assert_progress("Running step STAGE for part 'charm'")
         emitter.assert_progress("Running step PRIME for part 'charm'")
         assert mock_exec.call_args_list == [
-            call([action1]),
-            call([action2]),
+            call([action1], stdout=ANY, stderr=ANY),
+            call([action2], stdout=ANY, stderr=ANY),
         ]
 
 

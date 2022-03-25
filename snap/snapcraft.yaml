@@ -62,6 +62,7 @@ apps:
       # help git find its stuff
       GIT_TEMPLATE_DIR: $SNAP/git/templates
       GIT_EXEC_PATH: $SNAP/git/git-core
+      PATH: $SNAP/libexec/charmcraft:$PATH
 
 grade: stable
 confinement: classic
@@ -128,6 +129,12 @@ parts:
       usr/share/git-core/templates: git/templates
       usr/bin/git: bin/git
       lib/python3.8/site-packages: lib/
+
+  craftctl:
+    plugin: dump
+    source: libexec
+    organize:
+      craftctl: libexec/charmcraft/craftctl
 
 hooks:
   configure:

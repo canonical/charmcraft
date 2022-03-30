@@ -30,6 +30,7 @@ from charmcraft.linters import (
     IGNORED,
     JujuActions,
     JujuConfig,
+    JujuManifest,
     JujuMetadata,
     Language,
     UNKNOWN,
@@ -561,6 +562,114 @@ def test_jujumetadata_missing_field(tmp_path, fields):
     metadata_file.write_text(fields)
     result = JujuMetadata().run(tmp_path)
     assert result == JujuMetadata.Result.errors
+
+
+# --- tests for JujuManifest checker
+
+
+def test_jujumanifest_all_ok(tmp_path):
+    """All conditions ok for JujuManifest to result ok."""
+    # manifest file with proper fields
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text(
+        """
+        name: foobar
+        summary: Small text.
+        description: Lot of text.
+    """
+    )
+    manifest_file = tmp_path / "manifest.yaml"
+    manifest_file.write_text(
+        """
+        bases: 
+          - name: host-OS
+            channel: host-CHANNEL
+            architectures: 
+              - arch1
+              - arch2
+    """
+    )
+    result = JujuManifest().run(tmp_path)
+    assert result == JujuManifest.Result.ok
+
+
+def test_jujumanifest_metadata_series_and_manifest(tmp_path):
+    """All conditions ok for JujuManifest to result ok."""
+    # manifest file with proper fields
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text(
+        """
+        name: foobar
+        summary: Small text.
+        description: Lot of text.
+        series: series1, series2
+    """
+    )
+    manifest_file = tmp_path / "manifest.yaml"
+    manifest_file.write_text(
+        """
+        bases: 
+          - name: host-OS
+            channel: host-CHANNEL
+            architectures: 
+              - arch1
+              - arch2
+    """
+    )
+    result = JujuManifest().run(tmp_path)
+    assert result == JujuManifest.Result.errors
+
+
+def test_jujumanifest_metadata_series(tmp_path):
+    """All conditions ok for JujuManifest to result ok."""
+    # manifest file with proper fields
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text(
+        """
+        name: foobar
+        summary: Small text.
+        description: Lot of text.
+        series: series1, series2
+    """
+    )
+    manifest_file = tmp_path / "manifest.yaml"
+    manifest_file.write_text(
+        """
+        bases: []
+    """
+    )
+    result = JujuManifest().run(tmp_path)
+    assert result == JujuManifest.Result.ok
+
+
+def test_jujumanifest_missing_file(tmp_path):
+    """No manifest.yaml file at all."""
+    result = JujuManifest().run(tmp_path)
+    assert result == JujuManifest.Result.ok
+
+
+def test_jujumanifest_file_corrupted(tmp_path):
+    """The manifest.yaml file is not valid YAML."""
+    manifest_file = tmp_path / "manifest.yaml"
+    manifest_file.write_text(" - \n-")
+    result = JujuManifest().run(tmp_path)
+    assert result == JujuManifest.Result.errors
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        """
+    """,
+    ],
+)
+def test_jujumanifest_missing_field(tmp_path, fields):
+    """A required field is missing in the manifest file."""
+    # manifest file with not all fields
+    manifest_file = tmp_path / "manifest.yaml"
+    manifest_file.write_text(fields)
+    result = JujuManifest().run(tmp_path)
+    assert result == JujuManifest.Result.errors
 
 
 # --- tests for analyze function

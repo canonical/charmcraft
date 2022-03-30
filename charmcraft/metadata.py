@@ -17,7 +17,7 @@
 """Logic related to metadata.yaml."""
 
 import pathlib
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 import pydantic
 import yaml
@@ -34,6 +34,7 @@ class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
     name: pydantic.StrictStr
     summary: pydantic.StrictStr = ""
     description: pydantic.StrictStr = ""
+    series: List[pydantic.StrictStr] = []
 
     @classmethod
     def unmarshal(cls, obj: Dict[str, Any]):

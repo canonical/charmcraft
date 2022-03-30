@@ -19,20 +19,27 @@
 import datetime
 import logging
 import pathlib
-from typing import Optional, List
+from typing import Any, Dict, List, Optional
 
 import yaml
+import pydantic
 
-from charmcraft import __version__, config, linters
+from charmcraft import __version__, config
+from craft_cli import emit, CraftError
+
+from charmcraft.config import format_pydantic_errors
+from charmcraft.linters import CheckResult, CheckType
 
 logger = logging.getLogger(__name__)
+
+CHARM_MANIFEST = "manifest.yaml"
 
 
 def create_manifest(
     basedir: pathlib.Path,
     started_at: datetime.datetime,
     bases_config: Optional[config.BasesConfiguration],
-    linting_results: List[linters.CheckResult],
+    linting_results: List[CheckResult],
 ):
     """Create manifest.yaml in basedir for given base configuration.
 
@@ -45,6 +52,7 @@ def create_manifest(
 
     :returns: Path to created manifest.yaml.
     """
+
     content = {
         "charmcraft-version": __version__,
         "charmcraft-started-at": started_at.isoformat() + "Z",
@@ -66,10 +74,47 @@ def create_manifest(
     attributes_info = [
         {"name": result.name, "result": result.result}
         for result in linting_results
-        if result.check_type == linters.CheckType.attribute
+        if result.check_type == CheckType.attribute
     ]
     content["analysis"] = {"attributes": attributes_info}
 
-    filepath = basedir / "manifest.yaml"
+    filepath = basedir / CHARM_MANIFEST
     filepath.write_text(yaml.dump(content))
     return filepath
+
+
+class CharmManifest(pydantic.BaseModel, frozen=True, validate_all=True):
+    """Object representing manifest.yaml contents."""
+
+    bases: Optional[List[config.Base]]
+
+    @classmethod
+    def unmarshal(cls, obj: Dict[str, Any]):
+        """Unmarshal object with necessary translations and error handling.
+
+        :returns: valid CharmManifest.
+
+        :raises CraftError: On failure to unmarshal object.
+        """
+        try:
+            return cls.parse_obj(obj)
+        except pydantic.error_wrappers.ValidationError as error:
+            raise CraftError(format_pydantic_errors(error.errors(), file_name=CHARM_MANIFEST))
+
+
+def parse_manifest_yaml(charm_dir: pathlib.Path) -> Optional[CharmManifest]:
+    """Parse project's manifest.yaml.
+
+    :returns: a CharmManifest object.
+
+    :raises: CraftError if manifest does not exist.
+    """
+    manifest_path = charm_dir / CHARM_MANIFEST
+    emit.trace(f"Parsing {str(manifest_path)!r}")
+
+    if not manifest_path.exists():
+        return None
+
+    with manifest_path.open("rt", encoding="utf8") as fh:
+        manifest = yaml.safe_load(fh)
+        return CharmManifest.unmarshal(manifest)

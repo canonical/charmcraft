@@ -22,6 +22,30 @@ import yaml
 from charmcraft import __version__, config, linters
 from charmcraft.manifest import create_manifest
 from charmcraft.utils import OSPlatform
+from charmcraft.manifest import parse_manifest_yaml
+
+
+def test_parse_manifest_yaml_complete(tmp_path):
+    """Example of parsing with all the optional attributes."""
+    manifest_file = tmp_path / "manifest.yaml"
+    manifest_file.write_text(
+        """
+        bases:
+          - name: test-name
+            channel: test-channel
+            architectures:
+              - arch1
+              - arch2
+    """
+    )
+
+    manifest = parse_manifest_yaml(tmp_path)
+
+    assert manifest.bases == [config.Base(
+                    name="test-name",
+                    channel="test-channel",
+                    architectures=["arch1", "arch2"],
+                )]
 
 
 def test_manifest_simple_ok(tmp_path):

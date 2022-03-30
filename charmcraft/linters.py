@@ -236,6 +236,46 @@ class JujuMetadata:
         return result
 
 
+class JujuManifest:
+    """Check that the manifest.yaml file is valid YAML if it exists and that
+    if it contains a base, that the metadata YAML does not contain a series
+    field.
+    """
+
+    check_type = CheckType.lint
+    name = "manifest"
+    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--manifest"
+    text = "Problems found with manifest.yaml file."
+
+     # different result constants
+    Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        from charmcraft.manifest import parse_manifest_yaml
+
+        try:
+            manifest = parse_manifest_yaml(basedir)
+        except Exception:
+            # file not found, corrupted, or mandatory "name" not present
+            return self.Result.errors
+
+        if manifest is None or manifest.bases is None or len(manifest.bases) == 0:
+            return self.Result.ok
+
+        try:
+            metadata = parse_metadata_yaml(basedir)
+        except Exception:
+            # metadata.yaml file not found, corrupted, or mandatory "name" not present
+            return self.Result.errors
+
+        if metadata.series is not None and len(metadata.series) > 0:
+            # manifest.yaml contains bases and metadata.yaml file contains a series, only one is required 
+            return self.Result.errors
+
+        return self.Result.ok
+
+
 class JujuActions:
     """Check that the actions.yaml file is valid YAML if it exists."""
 
@@ -317,6 +357,7 @@ CHECKERS = [
     JujuActions,
     JujuConfig,
     JujuMetadata,
+    JujuManifest,
     Framework,
 ]
 

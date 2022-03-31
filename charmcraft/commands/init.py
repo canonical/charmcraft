@@ -117,7 +117,7 @@ class InitCommand(BaseCommand):
 
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
             raise CraftError(
-                "{args.name} is not a valid charm name. "
+                f"{args.name} is not a valid charm name. "
                 "The name must start with a lowercase letter "
                 "and contain only alphanumeric characters and hyphens."
             )

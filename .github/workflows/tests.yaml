@@ -162,7 +162,10 @@ jobs:
               plugin: nil
               build-packages: [hello]
               override-build: |
-                hello > "\$CHARMCRAFT_PART_INSTALL/hello.txt"
+                hello > "\$CRAFT_PART_INSTALL/hello.txt"
+              override-prime: |
+                echo "Running the prime step"
+                craftctl default
           EOF
           sg lxd -c "charmcraft -v pack"
           unzip -c build-packages-test_*.charm hello.txt | grep "^Hello, world!"

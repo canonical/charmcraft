@@ -74,6 +74,7 @@ class PackCommand(BaseCommand):
     help_msg = "Build the charm or bundle"
     overview = _overview
     needs_config = True
+    common = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

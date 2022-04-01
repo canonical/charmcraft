@@ -2,7 +2,7 @@ attrs==21.4.0
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.12
-craft-cli==0.3.1
+craft-cli==0.4.0
 craft-parts==1.4.0
 craft-providers==1.1.0
 craft-store==2.0.1

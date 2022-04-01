@@ -396,10 +396,21 @@ def test_confirm_with_user(user_input, expected, mock_input, mock_isatty):
     assert mock_input.mock_calls == [call("prompt [y/N]: ")]
 
 
-def test_confirm_with_user_errors_in_managed_mode(
-    mock_is_charmcraft_running_in_managed_mode,
-):
+def test_confirm_with_user_errors_in_managed_mode(mock_is_charmcraft_running_in_managed_mode):
     mock_is_charmcraft_running_in_managed_mode.return_value = True
 
     with pytest.raises(RuntimeError):
+        confirm_with_user("prompt")
+
+
+def test_confirm_with_user_pause_emitter(mock_isatty, emitter):
+    """The emitter should be paused when using the terminal."""
+    mock_isatty.return_value = True
+
+    def fake_input(prompt):
+        """Check if the Emitter is paused."""
+        assert emitter.paused
+        return ""
+
+    with patch("charmcraft.utils.input", fake_input):
         confirm_with_user("prompt")

@@ -616,7 +616,7 @@ class BuildCommand(BaseCommand):
     name = "build"
     help_msg = "Build the charm"
     overview = _overview
-    common = True
+    hidden = True
     needs_config = True
 
     def fill_parser(self, parser):

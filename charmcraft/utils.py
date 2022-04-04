@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -206,7 +206,6 @@ def confirm_with_user(prompt, default=False) -> bool:
     If stdin is not a tty, the default value is returned.
 
     If user returns an empty answer, the default value is returned.
-    returns default value.
 
     :returns: True if answer starts with [yY], False if answer starts with [nN],
         otherwise the default.
@@ -219,7 +218,9 @@ def confirm_with_user(prompt, default=False) -> bool:
 
     choices = " [Y/n]: " if default else " [y/N]: "
 
-    reply = str(input(prompt + choices)).lower().strip()
+    with emit.pause():
+        reply = input(prompt + choices).lower().strip()
+
     if reply and reply[0] == "y":
         return True
     elif reply and reply[0] == "n":

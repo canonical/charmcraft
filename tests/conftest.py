@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -188,6 +188,16 @@ class RecordingEmitter:
 
     def __init__(self):
         self.interactions = []
+        self.paused = False
+
+    @contextlib.contextmanager
+    def pause(self):
+        """Mimics the pause context manager, storing the state to simplify tests."""
+        self.paused = True
+        try:
+            yield
+        finally:
+            self.paused = False
 
     def record(self, method_name, args, kwargs):
         """Record the method call and its specific parameters."""
@@ -300,5 +310,8 @@ def emitter(monkeypatch):
         return RecordingProgresser(recording_emitter)
 
     monkeypatch.setattr(messages.emit, "progress_bar", fake_progress_bar)
+
+    # pause is also special, as it's specifically implemented in the recording emitter
+    monkeypatch.setattr(messages.emit, "pause", recording_emitter.pause)
 
     return recording_emitter

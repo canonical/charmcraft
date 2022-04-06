@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,20 @@
 """Charmcraft manifest.yaml related functionality."""
 
 import datetime
+import json
 import logging
+import os
 import pathlib
 from typing import Optional, List
 
 import yaml
+from craft_cli import CraftError
 
 from charmcraft import __version__, config, linters
 
 logger = logging.getLogger(__name__)
+
+IMAGE_INFO_ENV_VAR = "CHARMCRAFT_IMAGE_INFO"
 
 
 def create_manifest(
@@ -69,6 +74,16 @@ def create_manifest(
         if result.check_type == linters.CheckType.attribute
     ]
     content["analysis"] = {"attributes": attributes_info}
+
+    # include the image info, if present
+    image_info_raw = os.environ.get(IMAGE_INFO_ENV_VAR)
+    if image_info_raw:
+        try:
+            image_info = json.loads(image_info_raw)
+        except json.decoder.JSONDecodeError as exc:
+            msg = f"Failed to parse the content of {IMAGE_INFO_ENV_VAR} environment variable"
+            raise CraftError(msg) from exc
+        content["image-info"] = image_info
 
     filepath = basedir / "manifest.yaml"
     filepath.write_text(yaml.dump(content))

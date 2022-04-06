@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,15 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
+import json
 from unittest.mock import patch
 
+import pytest
 import yaml
+from craft_cli import CraftError
 
 from charmcraft import __version__, config, linters
-from charmcraft.manifest import create_manifest
+from charmcraft.manifest import create_manifest, IMAGE_INFO_ENV_VAR
 from charmcraft.utils import OSPlatform
 
 
@@ -154,3 +157,28 @@ def test_manifest_checkers_multiple(tmp_path):
         },
     ]
     assert saved["analysis"]["attributes"] == expected
+
+
+def test_manifest_image_info_ok(tmp_path, monkeypatch):
+    """Include the image info in the manifest."""
+    test_image_content = {"some info": ["whatever", 123]}
+    monkeypatch.setenv(IMAGE_INFO_ENV_VAR, json.dumps(test_image_content))
+
+    tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
+    os_platform = OSPlatform(system="SuperUbuntu", release="40.10", machine="SomeRISC")
+    with patch("charmcraft.utils.get_os_platform", return_value=os_platform):
+        result_filepath = create_manifest(tmp_path, tstamp, None, [])
+
+    saved = yaml.safe_load(result_filepath.read_text())
+    assert saved["image-info"] == test_image_content
+
+
+def test_manifest_image_info_bad(tmp_path, monkeypatch):
+    """The format of the image info environment variable is wrong."""
+    monkeypatch.setenv(IMAGE_INFO_ENV_VAR, "this is not a json")
+    tstamp = datetime.datetime(2020, 2, 1, 15, 40, 33)
+    with pytest.raises(CraftError) as cm:
+        create_manifest(tmp_path, tstamp, None, [])
+    exc = cm.value
+    assert str(exc) == "Failed to parse the content of CHARMCRAFT_IMAGE_INFO environment variable"
+    assert isinstance(exc.__cause__, json.JSONDecodeError)

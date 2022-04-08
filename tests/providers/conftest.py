@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,12 @@ from craft_providers import bases
 def bypass_buildd_base_setup(monkeypatch):
     """Patch out inherited setup steps."""
     monkeypatch.setattr(bases.BuilddBase, "setup", lambda *args, **kwargs: None)
+
+
+@pytest.fixture(autouse=True)
+def bypass_buildd_base_warmup(monkeypatch):
+    """Patch out inherited warmup steps."""
+    monkeypatch.setattr(bases.BuilddBase, "warmup", lambda *args, **kwargs: None)
 
 
 @pytest.fixture(autouse=True)

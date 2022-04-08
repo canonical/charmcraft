@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,13 +39,15 @@ def mock_install_from_store():
 
 
 @pytest.mark.parametrize("alias", [bases.BuilddBaseAlias.BIONIC, bases.BuilddBaseAlias.FOCAL])
+@pytest.mark.parametrize("method_name", ["setup", "warmup"])
 def test_base_configuration_setup_inject_from_host(
-    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias
+    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias, method_name
 ):
     monkeypatch.setattr(sys, "platform", "linux")
 
     config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
-    config.setup(executor=mock_instance)
+    preparation_method = getattr(config, method_name)
+    preparation_method(executor=mock_instance)
 
     assert mock_inject.mock_calls == [
         call(executor=mock_instance, snap_name="charmcraft", classic=True)
@@ -56,14 +58,16 @@ def test_base_configuration_setup_inject_from_host(
 
 
 @pytest.mark.parametrize("alias", [bases.BuilddBaseAlias.BIONIC, bases.BuilddBaseAlias.FOCAL])
+@pytest.mark.parametrize("method_name", ["setup", "warmup"])
 def test_base_configuration_setup_from_store(
-    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias
+    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias, method_name
 ):
     channel = "test-track/test-channel"
     monkeypatch.setenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", channel)
 
     config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
-    config.setup(executor=mock_instance)
+    preparation_method = getattr(config, method_name)
+    preparation_method(executor=mock_instance)
 
     assert mock_inject.mock_calls == []
     assert mock_install_from_store.mock_calls == [
@@ -74,13 +78,15 @@ def test_base_configuration_setup_from_store(
 
 
 @pytest.mark.parametrize("alias", [bases.BuilddBaseAlias.BIONIC, bases.BuilddBaseAlias.FOCAL])
+@pytest.mark.parametrize("method_name", ["setup", "warmup"])
 def test_base_configuration_setup_from_store_default_for_windows(
-    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias
+    mock_instance, mock_inject, mock_install_from_store, monkeypatch, alias, method_name
 ):
     monkeypatch.setattr(sys, "platform", "win32")
 
     config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
-    config.setup(executor=mock_instance)
+    preparation_method = getattr(config, method_name)
+    preparation_method(executor=mock_instance)
 
     assert mock_inject.mock_calls == []
     assert mock_install_from_store.mock_calls == [
@@ -90,24 +96,29 @@ def test_base_configuration_setup_from_store_default_for_windows(
     assert config.compatibility_tag == "charmcraft-buildd-base-v0.0"
 
 
-def test_base_configuration_setup_snap_injection_error(mock_instance, mock_inject, monkeypatch):
+@pytest.mark.parametrize("method_name", ["setup", "warmup"])
+def test_base_configuration_setup_snap_injection_error(
+    mock_instance, mock_inject, monkeypatch, method_name
+):
     monkeypatch.setattr(sys, "platform", "linux")
 
     alias = bases.BuilddBaseAlias.FOCAL
     config = providers.CharmcraftBuilddBaseConfiguration(alias=alias)
     mock_inject.side_effect = snap_installer.SnapInstallationError(brief="foo error")
 
+    preparation_method = getattr(config, method_name)
     with pytest.raises(
         bases.BaseConfigurationError,
         match=r"Failed to inject host Charmcraft snap into target environment.",
     ) as exc_info:
-        config.setup(executor=mock_instance)
+        preparation_method(executor=mock_instance)
 
     assert exc_info.value.__cause__ is not None
 
 
+@pytest.mark.parametrize("method_name", ["setup", "warmup"])
 def test_base_configuration_setup_snap_install_from_store_error(
-    mock_instance, mock_install_from_store, monkeypatch
+    mock_instance, mock_install_from_store, monkeypatch, method_name
 ):
     channel = "test-track/test-channel"
     monkeypatch.setenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", channel)
@@ -119,10 +130,11 @@ def test_base_configuration_setup_snap_install_from_store_error(
         "'test-track/test-channel' into target environment."
     )
 
+    preparation_method = getattr(config, method_name)
     with pytest.raises(
         bases.BaseConfigurationError,
         match=match,
     ) as exc_info:
-        config.setup(executor=mock_instance)
+        preparation_method(executor=mock_instance)
 
     assert exc_info.value.__cause__ is not None

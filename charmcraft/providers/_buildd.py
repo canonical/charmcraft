@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -98,8 +98,6 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
 
             - charmcraft installed
 
-            - python3 pip and setuptools installed
-
         :param executor: Executor for target container.
         :param retry_wait: Duration to sleep() between status checks (if
             required).
@@ -109,5 +107,28 @@ class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
         :raises BaseConfigurationError: on other unexpected error.
         """
         super().setup(executor=executor, retry_wait=retry_wait, timeout=timeout)
+        self._setup_charmcraft(executor=executor)
 
+    def warmup(
+        self,
+        *,
+        executor: Executor,
+        retry_wait: float = 0.25,
+        timeout: Optional[float] = None,
+    ) -> None:
+        """Prepare a previously created and setup instance for use by the application.
+
+        In addition to the guarantees provided by buildd:
+
+            - charmcraft installed
+
+        :param executor: Executor for target container.
+        :param retry_wait: Duration to sleep() between status checks (if
+            required).
+        :param timeout: Timeout in seconds.
+
+        :raises BaseCompatibilityError: if instance is incompatible.
+        :raises BaseConfigurationError: on other unexpected error.
+        """
+        super().warmup(executor=executor, retry_wait=retry_wait, timeout=timeout)
         self._setup_charmcraft(executor=executor)

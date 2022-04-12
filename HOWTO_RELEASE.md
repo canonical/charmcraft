@@ -11,8 +11,8 @@ paste, but do please pay attention to details!
 
 - update `main` and run tests
 
-    git fetch upstream
-    git merge upstream/main
+    git checkout main
+    git pull
     source venv/bin/activate
     ./run_tests
     deactivate
@@ -22,7 +22,7 @@ paste, but do please pay attention to details!
 - tag `main` with only the minor version:
 
     git tag X.Y
-    git push --tags upstream
+    git push --tags
 
 - create a new release branch
 
@@ -85,9 +85,9 @@ paste, but do please pay attention to details!
 
 ## Release
 
-- push the tags to upstream
+- push the tags
 
-    git push --tags upstream
+    git push --tags
 
 - release in Github
 

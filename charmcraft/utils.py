@@ -240,6 +240,6 @@ def format_timestamp(dt: datetime.datetime) -> str:
 
     Always in UTC.
     """
-    # convert to UTC no matter the timezone `dt` has
+    # convert to UTC from whatever timezone `dt` has
     dtz = datetime.datetime.fromtimestamp(time.mktime(dt.utctimetuple()))
     return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")

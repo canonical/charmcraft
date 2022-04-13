@@ -16,10 +16,12 @@
 
 """Collection of utilities for charmcraft."""
 
+import datetime
 import os
 import pathlib
 import platform
 import sys
+import time
 from collections import namedtuple
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
@@ -227,3 +229,17 @@ def confirm_with_user(prompt, default=False) -> bool:
         return False
     else:
         return default
+
+
+def format_timestamp(dt: datetime.datetime) -> str:
+    """Convert a datetime object (with or without timezone) to a string.
+
+    The format is
+
+        <DATE>T<TIME>Z
+
+    Always in UTC.
+    """
+    # convert to UTC no matter the timezone `dt` has
+    dtz = datetime.datetime.fromtimestamp(time.mktime(dt.utctimetuple()))
+    return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -239,14 +239,15 @@ class RecordingEmitter:
         """
         if expected_call_list is None:
             if self.interactions:
-                raise AssertionError(f"Expected no call but really got {self.interactions}")
+                show_interactions = "\n".join(map(str, self.interactions))
+                raise AssertionError("Expected no call but really got:\n" + show_interactions)
             return
 
         for pos, stored_call in enumerate(self.interactions):
             if stored_call == expected_call_list[0]:
                 break
         else:
-            raise AssertionError(f"Initial expected call not found in {self.interactions}")
+            pos = 0
 
         stored = self.interactions[pos : pos + len(expected_call_list)]
         assert stored == expected_call_list

@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,14 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import datetime
 import os
 import pathlib
 import sys
 from textwrap import dedent
 from unittest.mock import call, patch
 
+import dateutil.parser
 import pytest
 from craft_cli import CraftError
 
@@ -27,6 +29,7 @@ from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
     confirm_with_user,
+    format_timestamp,
     get_host_architecture,
     get_os_platform,
     load_yaml,
@@ -414,3 +417,24 @@ def test_confirm_with_user_pause_emitter(mock_isatty, emitter):
 
     with patch("charmcraft.utils.input", fake_input):
         confirm_with_user("prompt")
+
+
+def test_timestampstr_simple():
+    """Converts a timestamp without timezone."""
+    source = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    result = format_timestamp(source)
+    assert result == "2020-07-03T20:30:40Z"
+
+
+def test_timestampstr_utc():
+    """Converts a timestamp with UTC timezone."""
+    source = dateutil.parser.parse("2020-07-03T20:30:40Z")
+    result = format_timestamp(source)
+    assert result == "2020-07-03T20:30:40Z"
+
+
+def test_timestampstr_nonutc():
+    """Converts a timestamp with other timezone."""
+    source = dateutil.parser.parse("2020-07-03T20:30:40+03:00")
+    result = format_timestamp(source)
+    assert result == "2020-07-03T17:30:40Z"

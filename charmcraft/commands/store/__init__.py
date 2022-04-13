@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
+    format_timestamp,
     get_templates_environment,
     useful_filepath,
 )
@@ -553,8 +554,8 @@ class ListRevisionsCommand(BaseCommand):
         For example:
 
            $ charmcraft revisions mycharm
-           Revision    Version    Created at    Status
-           1           1          2020-11-15    released
+           Revision    Version    Created at              Status
+           1           1          2020-11-15T11:13:15Z    released
 
         Listing revisions will take you through login if needed.
     """
@@ -587,7 +588,7 @@ class ListRevisionsCommand(BaseCommand):
                 [
                     item.revision,
                     item.version,
-                    item.created_at.strftime("%Y-%m-%d"),
+                    format_timestamp(item.created_at),
                     status,
                 ]
             )
@@ -858,7 +859,7 @@ class StatusCommand(BaseCommand):
                         # not for this base!
                         continue
                     description = "/".join((branch.risk, branch.branch))
-                    expiration = release.expires_at.isoformat()
+                    expiration = format_timestamp(release.expires_at)
                     revision = revisions_by_revno[release.revision]
                     datum = ["", "", description, revision.version, release.revision]
                     if resources_present:
@@ -1605,8 +1606,8 @@ class ListResourceRevisionsCommand(BaseCommand):
         For example:
 
            $ charmcraft resource-revisions my-charm my-resource
-           Revision    Created at     Size
-           1           2020-11-15   183151
+           Revision    Created at               Size
+           1           2020-11-15 T11:13:15Z  183151
 
         Listing revisions will take you through login if needed.
     """
@@ -1630,12 +1631,12 @@ class ListResourceRevisionsCommand(BaseCommand):
             return
 
         headers = ["Revision", "Created at", "Size"]
-        custom_alignment = ["left", None, "right"]
+        custom_alignment = ["left", "left", "right"]
         result.sort(key=attrgetter("revision"), reverse=True)
         data = [
             (
                 item.revision,
-                item.created_at.strftime("%Y-%m-%d"),
+                format_timestamp(item.created_at),
                 naturalsize(item.size, gnu=True),
             )
             for item in result

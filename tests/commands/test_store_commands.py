@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -934,8 +934,8 @@ def test_revisions_simple(emitter, store_mock, config):
         call.list_revisions("testcharm"),
     ]
     expected = [
-        "Revision    Version    Created at    Status",
-        "1           v1         2020-07-03    accepted",
+        "Revision    Version    Created at            Status",
+        "1           v1         2020-07-03T20:30:40Z  accepted",
     ]
     emitter.assert_messages(expected)
 
@@ -992,10 +992,10 @@ def test_revisions_ordered_by_revision(emitter, store_mock, config):
     ListRevisionsCommand(config).run(args)
 
     expected = [
-        "Revision    Version    Created at    Status",
-        "3           v1         2020-07-03    accepted",
-        "2           v1         2020-07-03    accepted",
-        "1           v1         2020-07-03    accepted",
+        "Revision    Version    Created at            Status",
+        "3           v1         2020-07-03T20:30:40Z  accepted",
+        "2           v1         2020-07-03T20:30:40Z  accepted",
+        "1           v1         2020-07-03T20:30:40Z  accepted",
     ]
     emitter.assert_messages(expected)
 
@@ -1019,8 +1019,8 @@ def test_revisions_version_null(emitter, store_mock, config):
     ListRevisionsCommand(config).run(args)
 
     expected = [
-        "Revision    Version    Created at    Status",
-        "1                      2020-07-03    accepted",
+        "Revision    Version    Created at            Status",
+        "1                      2020-07-03T20:30:40Z  accepted",
     ]
     emitter.assert_messages(expected)
 
@@ -1044,8 +1044,8 @@ def test_revisions_errors_simple(emitter, store_mock, config):
     ListRevisionsCommand(config).run(args)
 
     expected = [
-        "Revision    Version    Created at    Status",
-        "1                      2020-07-03    rejected: error text [broken]",
+        "Revision    Version    Created at            Status",
+        "1                      2020-07-03T20:30:40Z  rejected: error text [broken]",
     ]
     emitter.assert_messages(expected)
 
@@ -1072,8 +1072,8 @@ def test_revisions_errors_multiple(emitter, store_mock, config):
     ListRevisionsCommand(config).run(args)
 
     expected = [
-        "Revision    Version    Created at    Status",
-        "1                      2020-07-03    rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
+        "Revision    Version    Created at            Status",
+        "1                      2020-07-03T20:30:40Z  rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
     ]
     emitter.assert_messages(expected)
 
@@ -1498,7 +1498,7 @@ def test_status_with_one_branch(emitter, store_mock, config):
         "                               candidate      -          -",
         "                               beta           5.1        5",
         "                               edge           ↑          ↑",
-        "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40+00:00",  # NOQA
+        "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40Z",  # NOQA
     ]
     emitter.assert_messages(expected)
 
@@ -1550,8 +1550,8 @@ def test_status_with_multiple_branches(emitter, store_mock, config):
         "                               candidate      -          -",
         "                               beta           5.1        5",
         "                               edge           ↑          ↑",
-        "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40+00:00",  # NOQA
-        "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40+00:00",  # NOQA
+        "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40Z",  # NOQA
+        "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40Z",  # NOQA
     ]
     emitter.assert_messages(expected)
 
@@ -1649,7 +1649,7 @@ def test_status_with_resources_and_branches(emitter, store_mock, config):
         "                               candidate      -          -           -",
         "                               beta           7.0.0      23          testres (r14)",
         "                               edge           ↑          ↑           ↑",
-        "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40+00:00",  # NOQA
+        "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40Z",  # NOQA
     ]
     emitter.assert_messages(expected)
 
@@ -1818,12 +1818,12 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
         "                               candidate      v7            7           -",
         "                               beta           ↑             ↑           ↑",
         "                               edge           git-0db35ea1  156         -",
-        "                               candidate/br1  v7            7           -             2020-07-03T20:30:40+00:00",  # NOQA
+        "                               candidate/br1  v7            7           -             2020-07-03T20:30:40Z",  # NOQA
         "         xz 1 (16b)            stable         v7            7           -",
         "                               candidate      ↑             ↑           ↑",
         "                               beta           2.0           80          -",
         "                               edge           ↑             ↑           ↑",
-        "                               beta/br2       weird         99          testres (r1)  2020-07-03T20:30:40+00:00",  # NOQA
+        "                               beta/br2       weird         99          testres (r1)  2020-07-03T20:30:40Z",  # NOQA
         "2.0      ubuntu 20.04 (amd64)  stable         -             -           -",
         "                               candidate      v7            7           -",
         "                               beta           2.0           80          -",
@@ -1832,7 +1832,7 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
         "                               candidate      ↑             ↑           ↑",
         "                               beta           ↑             ↑           ↑",
         "                               edge           2.0           80          -",
-        "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40+00:00",  # NOQA
+        "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40Z",  # NOQA
     ]
     emitter.assert_messages(expected)
 
@@ -3555,8 +3555,8 @@ def test_resourcerevisions_simple(emitter, store_mock, config):
         call.list_resource_revisions("testcharm", "testresource"),
     ]
     expected = [
-        "Revision    Created at    Size",
-        "1           2020-07-03     50B",
+        "Revision    Created at              Size",
+        "1           2020-07-03T02:30:40Z     50B",
     ]
     emitter.assert_messages(expected)
 
@@ -3589,10 +3589,10 @@ def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config):
     ListResourceRevisionsCommand(config).run(args)
 
     expected = [
-        "Revision    Created at    Size",
-        "4           2020-07-03  856.0K",
-        "3           2020-07-03   32.9M",
-        "2           2020-07-03     50B",
-        "1           2020-07-03    4.9K",
+        "Revision    Created at              Size",
+        "4           2020-07-03T20:30:40Z  856.0K",
+        "3           2020-07-03T20:30:40Z   32.9M",
+        "2           2020-07-03T20:30:40Z     50B",
+        "1           2020-07-03T20:30:40Z    4.9K",
     ]
     emitter.assert_messages(expected)

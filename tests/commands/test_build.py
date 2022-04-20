@@ -183,12 +183,6 @@ def mock_provider(mock_instance, fake_provider):
         yield mock_provider
 
 
-@pytest.fixture
-def mock_subprocess_run():
-    with mock.patch("subprocess.run") as mock_run:
-        yield mock_run
-
-
 # --- Validator tests
 
 
@@ -2468,10 +2462,18 @@ def test_format_charm_file_name_multi_run_on():
     )
 
 
-def test_launch_shell(mock_subprocess_run):
-    launch_shell()
+def test_launch_shell(emitter):
+    """Check bash is called while Emitter is paused."""
 
-    assert mock_subprocess_run.mock_calls == [mock.call(["bash"], check=False, cwd=None)]
+    def fake_run(command, check, cwd):
+        """MITM to verify parameters and that emitter is paused when it's called."""
+        assert command == ["bash"]
+        assert check is False
+        assert cwd is None
+        assert emitter.paused
+
+    with mock.patch("subprocess.run", fake_run):
+        launch_shell()
 
 
 def test_build_command_deprecated(emitter):

@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ def test_pep8():
 def pep8_test(python_filepaths):
     """Helper to check PEP8 (used from this module and from test_init.py to check templates)."""
     style_guide = get_style_guide()
-    fake_stdout = io.StringIO()
+    fake_stdout = io.TextIOWrapper(io.BytesIO())
     with patch("sys.stdout", fake_stdout):
         report = style_guide.check_files(python_filepaths)
 
@@ -62,7 +62,8 @@ def pep8_test(python_filepaths):
         return
 
     # grab on which files we have issues
-    flake8_issues = fake_stdout.getvalue().split("\n")
+    fake_stdout.seek(0)
+    flake8_issues = fake_stdout.read().split("\n")
 
     if flake8_issues:
         msg = "Please fix the following flake8 issues!\n" + "\n".join(flake8_issues)

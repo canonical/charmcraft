@@ -86,7 +86,8 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 
     :param cwd: Working directory to start user in.
     """
-    subprocess.run(["bash"], check=False, cwd=cwd)
+    with emit.pause():
+        subprocess.run(["bash"], check=False, cwd=cwd)
 
 
 class Builder:

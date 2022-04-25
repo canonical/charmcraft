@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ from typing import List, Generator, Union
 import yaml
 
 from charmcraft import config
-from charmcraft.metadata import parse_metadata_yaml
+from charmcraft.metadata import parse_metadata_yaml, read_metadata_yaml
 
 CheckType = namedtuple("CheckType", "attribute lint")(attribute="attribute", lint="lint")
 
@@ -215,25 +215,30 @@ class JujuMetadata:
     check_type = CheckType.lint
     name = "metadata"
     url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--metadata"
-    text = "Problems found with metadata.yaml file."
 
     # different result constants
     Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
 
+    def __init__(self):
+        self.text = None
+
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         try:
-            metadata = parse_metadata_yaml(basedir)
+            metadata = read_metadata_yaml(basedir)
+        except yaml.YAMLError:
+            self.text = "The metadata.yaml file is not a valid YAML file."
+            return self.Result.errors
         except Exception:
-            # file not found, corrupted, or mandatory "name" not present
+            self.text = "Cannot read the metadata.yaml file."
             return self.Result.errors
 
-        # no need to verify "name" as it's mandatory in the metadata parsing
-        if metadata.summary and metadata.description:
-            result = self.Result.ok
-        else:
-            result = self.Result.errors
-        return result
+        # check required attributes
+        for field in ["name", "summary", "description"]:
+            if field not in metadata:
+                self.text = f"Error in metadata.yaml: must have a {field!r} attribute."
+                return self.Result.errors
+        return self.Result.ok
 
 
 class JujuActions:

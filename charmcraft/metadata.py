@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,6 +49,17 @@ class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
             raise CraftError(format_pydantic_errors(error.errors(), file_name=CHARM_METADATA))
 
 
+def read_metadata_yaml(charm_dir: pathlib.Path) -> Any:
+    """Parse project's metadata.yaml.
+
+    :returns: the YAML decoded metadata.yaml content
+    """
+    metadata_path = charm_dir / CHARM_METADATA
+    emit.trace(f"Reading {str(metadata_path)!r}")
+    with metadata_path.open("rt", encoding="utf8") as fh:
+        return yaml.safe_load(fh)
+
+
 def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
     """Parse project's metadata.yaml.
 
@@ -56,12 +67,10 @@ def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
 
     :raises: CraftError if metadata does not exist.
     """
-    metadata_path = charm_dir / CHARM_METADATA
-    emit.trace(f"Parsing {str(metadata_path)!r}")
+    try:
+        metadata = read_metadata_yaml(charm_dir)
+    except OSError as exc:
+        raise CraftError(f"Cannot read the metadata.yaml file: {exc!r}") from exc
 
-    if not metadata_path.exists():
-        raise CraftError("Missing mandatory metadata.yaml.")
-
-    with metadata_path.open("rt", encoding="utf8") as fh:
-        metadata = yaml.safe_load(fh)
-        return CharmMetadata.unmarshal(metadata)
+    emit.trace("Validating metadata format")
+    return CharmMetadata.unmarshal(metadata)

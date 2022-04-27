@@ -25,7 +25,7 @@ from typing import List, Generator, Union
 
 import yaml
 
-from charmcraft import config
+from charmcraft import config, utils
 from charmcraft.metadata import parse_metadata_yaml, read_metadata_yaml
 
 CheckType = namedtuple("CheckType", "attribute lint")(attribute="attribute", lint="lint")
@@ -234,10 +234,12 @@ class JujuMetadata:
             return self.Result.errors
 
         # check required attributes
-        for field in ["name", "summary", "description"]:
-            if field not in metadata:
-                self.text = f"Error in metadata.yaml: must have a {field!r} attribute."
-                return self.Result.errors
+        missing_fields = {"name", "summary", "description"} - set(metadata)
+        if missing_fields:
+            missing = utils.humanize_list(missing_fields, "and")
+            self.text = f"The metadata.yaml file is missing the following attribute(s): {missing}."
+            return self.Result.errors
+
         return self.Result.ok
 
 

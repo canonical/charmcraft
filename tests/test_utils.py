@@ -32,6 +32,7 @@ from charmcraft.utils import (
     format_timestamp,
     get_host_architecture,
     get_os_platform,
+    humanize_list,
     load_yaml,
     make_executable,
     useful_filepath,
@@ -438,3 +439,26 @@ def test_timestampstr_nonutc():
     source = dateutil.parser.parse("2020-07-03T20:30:40+03:00")
     result = format_timestamp(source)
     assert result == "2020-07-03T17:30:40Z"
+
+
+# -- tests for humanizing list joins
+
+
+@pytest.mark.parametrize(
+    "items,conjunction,expected",
+    (
+        (["foo"], "xor", "'foo'"),
+        (["foo", "bar"], "xor", "'bar' xor 'foo'"),
+        (["foo", "bar", "baz"], "xor", "'bar', 'baz' xor 'foo'"),
+        (["foo", "bar", "baz", "qux"], "xor", "'bar', 'baz', 'foo' xor 'qux'"),
+    ),
+)
+def test_humanize_list_ok(items, conjunction, expected):
+    """Several successful cases."""
+    assert humanize_list(items, conjunction) == expected
+
+
+def test_humanize_list_empty():
+    """Calling to humanize an empty list is an error that should be explicit."""
+    with pytest.raises(ValueError):
+        humanize_list([], "whatever")

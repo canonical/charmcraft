@@ -535,7 +535,7 @@ _mandatory_fields = ["summary", "description", "name"]
 
 
 @pytest.mark.parametrize("to_miss", range(len(_mandatory_fields)))
-def test_jujumetadata_missing_field(tmp_path, to_miss):
+def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
     """A required field is missing in the metadata file."""
     included_fields = _mandatory_fields.copy()
     missing = included_fields.pop(to_miss)
@@ -547,7 +547,27 @@ def test_jujumetadata_missing_field(tmp_path, to_miss):
     linter = JujuMetadata()
     result = linter.run(tmp_path)
     assert result == JujuMetadata.Result.errors
-    assert linter.text == f"Error in metadata.yaml: must have a '{missing}' attribute."
+    assert linter.text == (
+        f"The metadata.yaml file is missing the following attribute(s): '{missing}'."
+    )
+
+
+def test_jujumetadata_missing_field_multiple(tmp_path):
+    """More than one required field is missing in the metadata file."""
+    # metadata file with not all fields
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text(
+        """
+        name: foobar
+    """
+    )
+    linter = JujuMetadata()
+    result = linter.run(tmp_path)
+    assert result == JujuMetadata.Result.errors
+    assert linter.text == (
+        "The metadata.yaml file is missing the following attribute(s): "
+        "'description' and 'summary'."
+    )
 
 
 # --- tests for analyze function

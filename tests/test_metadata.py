@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,10 @@ from textwrap import dedent
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.metadata import parse_metadata_yaml
+from charmcraft.metadata import parse_metadata_yaml, read_metadata_yaml
+
+
+# tests for parsing metadata
 
 
 def test_parse_metadata_yaml_complete(tmp_path):
@@ -66,5 +69,40 @@ def test_parse_metadata_yaml_error_invalid_names(tmp_path, name):
 
 
 def test_parse_metadata_yaml_error_missing(tmp_path):
-    with pytest.raises(CraftError, match=r"Missing mandatory metadata.yaml."):
+    msg = re.escape(
+        "Cannot read the metadata.yaml file: FileNotFoundError(2, 'No such file or directory')"
+    )
+    with pytest.raises(CraftError, match=msg):
         parse_metadata_yaml(tmp_path)
+
+
+# tests for reading metadata raw content
+
+
+def test_read_metadata_yaml_complete(tmp_path):
+    """Example of parsing with all the optional attributes."""
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text(
+        """
+        name: test-name
+        summary: Test summary
+        description: Text.
+    """
+    )
+
+    metadata = read_metadata_yaml(tmp_path)
+    assert metadata == {"name": "test-name", "summary": "Test summary", "description": "Text."}
+
+
+def test_read_metadata_yaml_error_invalid(tmp_path):
+    """Open a metadata.yaml that would fail verification."""
+    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file.write_text("- whatever")
+    metadata = read_metadata_yaml(tmp_path)
+    assert metadata == ["whatever"]
+
+
+def test_read_metadata_yaml_error_missing(tmp_path):
+    """Do not hide the file not being accesible."""
+    with pytest.raises(OSError):
+        read_metadata_yaml(tmp_path)

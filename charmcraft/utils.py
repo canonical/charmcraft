@@ -25,6 +25,7 @@ import time
 from collections import namedtuple
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
+from typing import Iterable
 
 import yaml
 from craft_cli import emit, CraftError
@@ -243,3 +244,18 @@ def format_timestamp(dt: datetime.datetime) -> str:
     # convert to UTC from whatever timezone `dt` has
     dtz = datetime.datetime.fromtimestamp(time.mktime(dt.utctimetuple()))
     return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def humanize_list(items: Iterable[str], conjunction: str) -> str:
+    """Format a list into a human-readable string.
+
+    :param items: list to humanize, must not be empty
+    :param conjunction: the conjunction used to join the final element to
+                        the rest of the list (e.g. 'and').
+    """
+    if not items:
+        raise ValueError("Cannot humanize an empty list.")
+    *initials, final = map(repr, sorted(items))
+    if not initials:
+        return final
+    return f"{', '.join(initials)} {conjunction} {final}"

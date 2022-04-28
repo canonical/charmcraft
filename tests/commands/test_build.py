@@ -542,7 +542,10 @@ def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
     config = load(basic_project)
     monkeypatch.chdir(basic_project)
 
-    with pytest.raises(CraftError, match=r"Missing mandatory metadata.yaml."):
+    msg = re.escape(
+        "Cannot read the metadata.yaml file: FileNotFoundError(2, 'No such file or directory')"
+    )
+    with pytest.raises(CraftError, match=msg):
         get_builder(config)
 
 

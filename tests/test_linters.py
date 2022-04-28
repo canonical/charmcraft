@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -515,52 +515,59 @@ def test_jujumetadata_all_ok(tmp_path):
 
 def test_jujumetadata_missing_file(tmp_path):
     """No metadata.yaml file at all."""
-    result = JujuMetadata().run(tmp_path)
+    linter = JujuMetadata()
+    result = linter.run(tmp_path)
     assert result == JujuMetadata.Result.errors
+    assert linter.text == "Cannot read the metadata.yaml file."
 
 
 def test_jujumetadata_file_corrupted(tmp_path):
     """The metadata.yaml file is not valid YAML."""
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text(" - \n-")
-    result = JujuMetadata().run(tmp_path)
+    linter = JujuMetadata()
+    result = linter.run(tmp_path)
     assert result == JujuMetadata.Result.errors
+    assert linter.text == "The metadata.yaml file is not a valid YAML file."
 
 
-def test_jujumetadata_missing_name(tmp_path):
-    """A required "name" is missing in the metadata file."""
+_mandatory_fields = ["summary", "description", "name"]
+
+
+@pytest.mark.parametrize("to_miss", range(len(_mandatory_fields)))
+def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
+    """A required field is missing in the metadata file."""
+    included_fields = _mandatory_fields.copy()
+    missing = included_fields.pop(to_miss)
+
+    # metadata file with not all fields
+    metadata_file = tmp_path / "metadata.yaml"
+    content = "\n".join(f"{field}: some text" for field in included_fields)
+    metadata_file.write_text(content)
+    linter = JujuMetadata()
+    result = linter.run(tmp_path)
+    assert result == JujuMetadata.Result.errors
+    assert linter.text == (
+        f"The metadata.yaml file is missing the following attribute(s): '{missing}'."
+    )
+
+
+def test_jujumetadata_missing_field_multiple(tmp_path):
+    """More than one required field is missing in the metadata file."""
     # metadata file with not all fields
     metadata_file = tmp_path / "metadata.yaml"
     metadata_file.write_text(
         """
-        summary: Small text.
-        description: Lot of text.
+        name: foobar
     """
     )
-    result = JujuMetadata().run(tmp_path)
+    linter = JujuMetadata()
+    result = linter.run(tmp_path)
     assert result == JujuMetadata.Result.errors
-
-
-@pytest.mark.parametrize(
-    "fields",
-    [
-        """
-    name: foobar
-    summary: Small text.
-    """,
-        """
-    name: foobar
-    description: Lot of text.
-    """,
-    ],
-)
-def test_jujumetadata_missing_field(tmp_path, fields):
-    """A required field is missing in the metadata file."""
-    # metadata file with not all fields
-    metadata_file = tmp_path / "metadata.yaml"
-    metadata_file.write_text(fields)
-    result = JujuMetadata().run(tmp_path)
-    assert result == JujuMetadata.Result.errors
+    assert linter.text == (
+        "The metadata.yaml file is missing the following attribute(s): "
+        "'description' and 'summary'."
+    )
 
 
 # --- tests for analyze function

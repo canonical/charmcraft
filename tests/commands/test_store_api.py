@@ -46,7 +46,9 @@ def client_mock(monkeypatch):
     """Fixture to provide a mocked client."""
     monkeypatch.setattr(platform, "node", lambda: "fake-host")
     client_mock = MagicMock(spec=Client)
-    with patch("charmcraft.commands.store.store.Client", lambda api, storage: client_mock):
+    with patch(
+        "charmcraft.commands.store.store.Client", lambda api, storage, ephemeral=True: client_mock
+    ):
         yield client_mock
 
 
@@ -58,7 +60,16 @@ def test_client_init(config):
     with patch("charmcraft.commands.store.store.Client") as client_mock:
         Store(config.charmhub)
     assert client_mock.mock_calls == [
-        call(config.charmhub.api_url, config.charmhub.storage_url),
+        call(config.charmhub.api_url, config.charmhub.storage_url, ephemeral=False),
+    ]
+
+
+def test_client_init_ephemeral(config):
+    """Check that the client is initiated with no keyring."""
+    with patch("charmcraft.commands.store.store.Client") as client_mock:
+        Store(config.charmhub, ephemeral=True)
+    assert client_mock.mock_calls == [
+        call(config.charmhub.api_url, config.charmhub.storage_url, ephemeral=True),
     ]
 
 

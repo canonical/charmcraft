@@ -1563,10 +1563,11 @@ class UploadResourceCommand(BaseCommand):
             content = store.get_oci_image_blob(
                 parsed_args.charm_name, parsed_args.resource_name, image_digest
             )
-            _, tname = tempfile.mkstemp(prefix="image-resource", suffix=".json")
+            tfd, tname = tempfile.mkstemp(prefix="image-resource", suffix=".json")
+            with open(tfd, "wt", encoding="utf-8") as fh:  # reuse the file descriptor and close it
+                fh.write(content)
             resource_filepath = pathlib.Path(tname)
             resource_filepath_is_temp = True
-            resource_filepath.write_text(content)
             resource_type = ResourceType.oci_image
 
         result = store.upload_resource(

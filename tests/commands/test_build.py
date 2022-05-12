@@ -1561,10 +1561,12 @@ def test_build_entrypoint_default_missing(basic_project, monkeypatch):
     entrypoint.unlink()
 
     builder = get_builder(config, entrypoint=None, force=True)
-    with pytest.raises(CraftError, match=f"Charm entry point was not found: '{entrypoint}'"):
+    with pytest.raises(CraftError) as cm:
         builder.run([0])
+    assert str(cm.value) == f"Charm entry point was not found: {str(entrypoint)!r}"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_entrypoint_default_nonexec(basic_project, monkeypatch):
     """The entrypoint is not specified and the file for its default is not executable."""
     host_base = get_host_as_base()
@@ -1590,8 +1592,9 @@ def test_build_entrypoint_default_nonexec(basic_project, monkeypatch):
     entrypoint.chmod(0o666)
 
     builder = get_builder(config, entrypoint=None, force=True)
-    with pytest.raises(CraftError, match=f"Charm entry point must be executable: '{entrypoint}'"):
+    with pytest.raises(CraftError) as cm:
         builder.run([0])
+    assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
 
 
 def test_build_entrypoint_from_parts_missing(basic_project, monkeypatch):
@@ -1616,8 +1619,9 @@ def test_build_entrypoint_from_parts_missing(basic_project, monkeypatch):
 
     builder = get_builder(config, entrypoint=None)
     entrypoint = basic_project / "my_entrypoint.py"
-    with pytest.raises(CraftError, match=f"Charm entry point was not found: '{entrypoint}'"):
+    with pytest.raises(CraftError) as cm:
         builder.run([0])
+    assert str(cm.value) == f"Charm entry point was not found: {str(entrypoint)!r}"
 
 
 def test_build_entrypoint_from_parts_outside(basic_project, monkeypatch):
@@ -1646,11 +1650,14 @@ def test_build_entrypoint_from_parts_outside(basic_project, monkeypatch):
     entrypoint.touch(mode=0o755)
 
     builder = get_builder(config, entrypoint=None)
-    match_msg = f"Charm entry point must be inside the project: '{entrypoint.resolve()}'"
-    with pytest.raises(CraftError, match=match_msg):
+    with pytest.raises(CraftError) as cm:
         builder.run([0])
+    assert str(cm.value) == (
+        f"Charm entry point must be inside the project: {str(entrypoint.resolve())!r}"
+    )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_entrypoint_from_parts_nonexec(basic_project, monkeypatch):
     """The specified entrypoint not points to a non-executable file."""
     host_base = get_host_as_base()
@@ -1675,8 +1682,9 @@ def test_build_entrypoint_from_parts_nonexec(basic_project, monkeypatch):
     entrypoint.touch(mode=0o666)
 
     builder = get_builder(config, entrypoint=None)
-    with pytest.raises(CraftError, match=f"Charm entry point must be executable: '{entrypoint}'"):
+    with pytest.raises(CraftError) as cm:
         builder.run([0])
+    assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
 
 
 def test_build_with_requirement_argment_issues_dn05(basic_project, emitter, monkeypatch):

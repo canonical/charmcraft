@@ -250,7 +250,7 @@ class Builder:
         # store the entrypoint always relative to the project's path (no matter if the origin
         # was relative or absolute)
         rel_entrypoint = (self.charmdir / entrypoint).relative_to(self.charmdir)
-        self._special_charm_part["charm-entrypoint"] = str(rel_entrypoint)
+        self._special_charm_part["charm-entrypoint"] = rel_entrypoint.as_posix()
 
         # validate the entrypoint (no matter if it came from the config or it's the default)
         filepath = (self.charmdir / self._special_charm_part["charm-entrypoint"]).resolve()

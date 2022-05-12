@@ -46,18 +46,18 @@ CHARM_FILES = [
 ]
 
 CHARM_OPTIONAL = [
-    "actions",
-    "actions.yaml",
     "config.yaml",
-    "icon.svg",
-    "lib",
-    "LICENSE",
-    "lxd-profile.yaml",
     "metrics.yaml",
-    "mod",
-    "README.md",
+    "actions.yaml",
+    "lxd-profile.yaml",
     "templates",
     "version",
+    "lib",
+    "mod",
+    "LICENSE",
+    "icon.svg",
+    "README.md",
+    "actions",
 ]
 
 

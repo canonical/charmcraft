@@ -50,7 +50,7 @@ def build_user_agent():
 class Client(craft_store.StoreClient):
     """Lightweight layer above StoreClient."""
 
-    def __init__(self, api_base_url, storage_base_url):
+    def __init__(self, api_base_url, storage_base_url, ephemeral=False):
         self.api_base_url = api_base_url.rstrip("/")
         self.storage_base_url = storage_base_url.rstrip("/")
 
@@ -61,6 +61,7 @@ class Client(craft_store.StoreClient):
             application_name="charmcraft",
             user_agent=build_user_agent(),
             environment_auth=ALTERNATE_AUTH_ENV_VAR,
+            ephemeral=ephemeral,
         )
 
     def login(self, *args, **kwargs):

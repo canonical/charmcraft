@@ -146,6 +146,7 @@ def test_client_init():
         application_name="charmcraft",
         user_agent=user_agent,
         environment_auth="CHARMCRAFT_AUTH",
+        ephemeral=False,
     )
 
 

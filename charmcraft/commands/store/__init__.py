@@ -194,7 +194,8 @@ class LoginCommand(BaseCommand):
             if namespace_value is not None:
                 kwargs[arg_name] = namespace_value
 
-        store = Store(self.config.charmhub)
+        ephemeral = parsed_args.export is not None
+        store = Store(self.config.charmhub, ephemeral=ephemeral)
         credentials = store.login(**kwargs)
         if parsed_args.export is None:
             macaroon_info = store.whoami()

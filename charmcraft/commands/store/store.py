@@ -174,9 +174,11 @@ def _store_client_wrapper(auto_login=True):
 class Store:
     """The main interface to the Store's API."""
 
-    def __init__(self, charmhub_config):
+    def __init__(self, charmhub_config, ephemeral=False):
         try:
-            self._client = Client(charmhub_config.api_url, charmhub_config.storage_url)
+            self._client = Client(
+                charmhub_config.api_url, charmhub_config.storage_url, ephemeral=ephemeral
+            )
         except craft_store.errors.NoKeyringError as error:
             raise CraftError(str(error)) from error
 

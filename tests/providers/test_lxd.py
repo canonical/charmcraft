@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -410,7 +410,6 @@ def test_launched_environment(
     mock_lxd_launch,
     monkeypatch,
     tmp_path,
-    mock_path,
 ):
     expected_environment = {
         "CHARMCRAFT_MANAGED_MODE": "1",
@@ -419,10 +418,11 @@ def test_launched_environment(
 
     base = Base(name="ubuntu", channel=channel, architectures=["host-arch"])
     provider = providers.LXDProvider()
+    charm_name = f"charmcraft-test-charm-{tmp_path.stat().st_ino}-1-2-host-arch"
 
     with provider.launched_environment(
         charm_name="test-charm",
-        project_path=mock_path,
+        project_path=tmp_path,
         base=base,
         bases_index=1,
         build_on_index=2,
@@ -431,7 +431,7 @@ def test_launched_environment(
         assert mock_configure_buildd_image_remote.mock_calls == [mock.call()]
         assert mock_lxd_launch.mock_calls == [
             mock.call(
-                name="charmcraft-test-charm-445566-1-2-host-arch",
+                name=charm_name,
                 base_configuration=mock_buildd_base_configuration.return_value,
                 image_name=channel,
                 image_remote="buildd-remote",
@@ -441,14 +441,15 @@ def test_launched_environment(
                 use_snapshots=True,
                 project="charmcraft",
                 remote="local",
+                uid=tmp_path.stat().st_uid,
             ),
-            mock.call().mount(host_source=mock_path, target=pathlib.Path("/root/project")),
+            mock.call().mount(host_source=tmp_path, target=pathlib.Path("/root/project")),
         ]
         assert mock_buildd_base_configuration.mock_calls == [
             call(
                 alias=alias,
                 environment=expected_environment,
-                hostname="charmcraft-test-charm-445566-1-2-host-arch",
+                hostname=charm_name,
             )
         ]
 

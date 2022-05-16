@@ -503,6 +503,14 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     host_arch = host_base.architectures[0]
     builder = get_builder(config)
 
+    # add an optional actions dir
+    actions_dir = basic_project / "actions"
+    actions_dir.mkdir()
+    (actions_dir / "actions_script.sh").write_text("run!")
+    actions_sub_dir = actions_dir / "subd"
+    actions_sub_dir.mkdir()
+    (actions_sub_dir / "blob.bin").write_text("123")
+
     # save original metadata and verify later
     metadata_file = basic_project / "metadata.yaml"
     metadata_raw = metadata_file.read_bytes()
@@ -530,6 +538,8 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     assert zf.read("LICENSE") == b"license content"
     assert zf.read("icon.svg") == b"icon content"
     assert zf.read("README.md") == b"README content"
+    assert zf.read("actions/actions_script.sh") == b"run!"
+    assert zf.read("actions/subd/blob.bin") == b"123"
 
     # check the manifest is present and with particular values that depend on given info
     manifest = yaml.safe_load(zf.read("manifest.yaml"))

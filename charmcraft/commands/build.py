@@ -241,13 +241,28 @@ class Builder:
                     "--entrypoint not supported when charm-entrypoint "
                     "specified in charmcraft.yaml"
                 )
+            entrypoint = self._special_charm_part.get("charm-entrypoint")
+        elif self.entrypoint:
+            entrypoint = self.entrypoint
+            self.entrypoint = None
         else:
-            if self.entrypoint:
-                rel_entrypoint = self.entrypoint.relative_to(self.charmdir)
-                self._special_charm_part["charm-entrypoint"] = str(rel_entrypoint)
-                self.entrypoint = None
-            else:
-                self._special_charm_part["charm-entrypoint"] = "src/charm.py"
+            entrypoint = "src/charm.py"
+
+        # store the entrypoint always relative to the project's path (no matter if the origin
+        # was relative or absolute)
+        rel_entrypoint = (self.charmdir / entrypoint).relative_to(self.charmdir)
+        self._special_charm_part["charm-entrypoint"] = rel_entrypoint.as_posix()
+
+        # validate the entrypoint (no matter if it came from the config or it's the default)
+        filepath = (self.charmdir / self._special_charm_part["charm-entrypoint"]).resolve()
+        if not filepath.exists():
+            raise CraftError("Charm entry point was not found: {!r}".format(str(filepath)))
+        if self.charmdir not in filepath.parents:
+            raise CraftError(
+                "Charm entry point must be inside the project: {!r}".format(str(filepath))
+            )
+        if not os.access(filepath, os.X_OK):
+            raise CraftError("Charm entry point must be executable: {!r}".format(str(filepath)))
 
     def _set_prime_filter(self):
         """Add mandatory and optional charm files to the prime filter.
@@ -572,10 +587,7 @@ class Validator:
         return filepath
 
     def validate_requirement(self, filepaths):
-        """Validate that the given requirement(s) (if any) exist.
-
-        If not specified, default to requirements.txt if there.
-        """
+        """Validate that the given requirement(s) (if any) exist."""
         if filepaths is None:
             return []
 

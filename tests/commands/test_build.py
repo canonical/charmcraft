@@ -81,7 +81,7 @@ def get_builder(
 
 
 @pytest.fixture
-def basic_project(tmp_path):
+def basic_project(tmp_path, monkeypatch):
     """Create a basic Charmcraft project."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -109,6 +109,7 @@ def basic_project(tmp_path):
     src_dir.mkdir()
     charm_script = src_dir / "charm.py"
     charm_script.write_bytes(b"all the magic")
+    charm_script.chmod(0o755)
 
     # the license file
     license = tmp_path / "LICENSE"
@@ -121,6 +122,9 @@ def basic_project(tmp_path):
     # README
     readme = tmp_path / "README.md"
     readme.write_text("README content")
+
+    # paths are relative, make all tests to run in the project's directory
+    monkeypatch.chdir(tmp_path)
 
     yield tmp_path
 
@@ -497,7 +501,6 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     caplog.set_level(logging.WARNING, logger="charmcraft")
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
-    monkeypatch.chdir(basic_project)  # so the zip file is left in the temp dir
     builder = get_builder(config)
 
     # add an optional actions dir
@@ -544,13 +547,12 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     assert caplog.records == []
 
 
-def test_build_error_without_metadata_yaml(basic_project, monkeypatch):
+def test_build_error_without_metadata_yaml(basic_project):
     """Validate error if trying to build project without metadata.yaml."""
     metadata = basic_project / CHARM_METADATA
     metadata.unlink()
 
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
 
     msg = re.escape(
         "Cannot read the metadata.yaml file: FileNotFoundError(2, 'No such file or directory')"
@@ -785,7 +787,6 @@ def test_build_project_is_cwd(
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
-    monkeypatch,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.NORMAL)
@@ -806,7 +807,6 @@ def test_build_project_is_cwd(
     config = load(basic_project)
     builder = get_builder(config)
 
-    monkeypatch.chdir(basic_project)
     zipnames = builder.run([0])
 
     assert zipnames == [
@@ -839,6 +839,7 @@ def test_build_project_is_not_cwd(
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
+    monkeypatch,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.NORMAL)
@@ -859,6 +860,7 @@ def test_build_project_is_not_cwd(
     config = load(basic_project)
     builder = get_builder(config)
 
+    monkeypatch.chdir("/")  # make the working directory NOT the project's one
     zipnames = builder.run([0])
 
     assert zipnames == [
@@ -908,7 +910,6 @@ def test_build_bases_index_scenarios_provider(
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
-    monkeypatch,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(mode)
@@ -933,7 +934,6 @@ def test_build_bases_index_scenarios_provider(
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config)
 
     zipnames = builder.run([0])
@@ -1112,7 +1112,6 @@ def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, tm
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -1162,7 +1161,6 @@ def test_build_error_no_match_with_charmcraft_yaml(
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config)
 
     # Managed bases build.
@@ -1211,7 +1209,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_package_tree_structure(tmp_path, monkeypatch, config):
+def test_build_package_tree_structure(tmp_path, config):
     """The zip file is properly built internally."""
     # the metadata
     metadata_data = {"name": "name-from-metadata"}
@@ -1263,7 +1261,6 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
             "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
         }
     )
-    monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = get_builder(config, entrypoint="whatever")
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
@@ -1279,7 +1276,7 @@ def test_build_package_tree_structure(tmp_path, monkeypatch, config):
     assert zf.read("linkeddir/file_ext") == b"external file"  # from file in the outside linked dir
 
 
-def test_build_package_name(tmp_path, monkeypatch, config):
+def test_build_package_name(tmp_path, config):
     """The zip file name comes from the metadata."""
     to_be_zipped_dir = tmp_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
@@ -1297,7 +1294,6 @@ def test_build_package_name(tmp_path, monkeypatch, config):
             "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
         }
     )
-    monkeypatch.chdir(tmp_path)  # so the zip file is left in the temp dir
     builder = get_builder(config, entrypoint="whatever")
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
@@ -1317,10 +1313,15 @@ def test_build_with_entrypoint_argument_issues_dn04(basic_project, emitter, monk
     )
 
 
-def test_build_entrypoint_from_parts(basic_project, monkeypatch):
+@pytest.mark.parametrize("absolute_entrypoint", [True, False])
+def test_build_entrypoint_from_parts_ok(basic_project, monkeypatch, absolute_entrypoint):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
+    if absolute_entrypoint:
+        entrypoint_path = basic_project / "my_entrypoint.py"
+    else:
+        entrypoint_path = "my_entrypoint.py"
     charmcraft_file.write_text(
         dedent(
             f"""\
@@ -1334,13 +1335,12 @@ def test_build_entrypoint_from_parts(basic_project, monkeypatch):
                         channel: {host_base.channel!r}
                 parts:
                   charm:
-                    charm-entrypoint: "my_entrypoint.py"
+                    charm-entrypoint: {entrypoint_path}
                     charm-requirements: ["reqs.txt"]
                 """
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None)
 
     entrypoint = basic_project / "my_entrypoint.py"
@@ -1405,7 +1405,6 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     entrypoint = basic_project / "my_entrypoint.py"
     builder = get_builder(config, entrypoint=entrypoint)
 
@@ -1448,7 +1447,7 @@ def test_build_entrypoint_from_commandline(basic_project, monkeypatch):
     )
 
 
-def test_build_entrypoint_default(basic_project, monkeypatch):
+def test_build_entrypoint_default_ok(basic_project, monkeypatch):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1470,7 +1469,6 @@ def test_build_entrypoint_default(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -1533,7 +1531,6 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     entrypoint = basic_project / "my_entrypoint.py"
 
     builder = get_builder(config, entrypoint=entrypoint, force=True)
@@ -1547,6 +1544,157 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch):
     assert str(raised.value) == (
         "--entrypoint not supported when charm-entrypoint specified in charmcraft.yaml"
     )
+
+
+def test_build_entrypoint_default_missing(basic_project, monkeypatch):
+    """The entrypoint is not specified and there is no file for its default."""
+    host_base = get_host_as_base()
+    charmcraft_yaml_content = f"""\
+       type: charm
+       bases:
+         - build-on:
+             - name: {host_base.name!r}
+               channel: {host_base.channel!r}
+           run-on:
+             - name: {host_base.name!r}
+               channel: {host_base.channel!r}
+       parts:
+         charm:
+            charm-requirements: ["reqs.txt"]
+       """
+    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
+    config = load(basic_project)
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    # remove the default entrypoint to make it fail
+    entrypoint = basic_project / "src" / "charm.py"
+    entrypoint.unlink()
+
+    builder = get_builder(config, entrypoint=None, force=True)
+    with pytest.raises(CraftError) as cm:
+        builder.run([0])
+    assert str(cm.value) == f"Charm entry point was not found: {str(entrypoint)!r}"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_build_entrypoint_default_nonexec(basic_project, monkeypatch):
+    """The entrypoint is not specified and the file for its default is not executable."""
+    host_base = get_host_as_base()
+    charmcraft_yaml_content = f"""\
+       type: charm
+       bases:
+         - build-on:
+             - name: {host_base.name!r}
+               channel: {host_base.channel!r}
+           run-on:
+             - name: {host_base.name!r}
+               channel: {host_base.channel!r}
+       parts:
+         charm:
+            charm-requirements: ["reqs.txt"]
+       """
+    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
+    config = load(basic_project)
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    # remove exec properties from the file
+    entrypoint = basic_project / "src" / "charm.py"
+    entrypoint.chmod(0o666)
+
+    builder = get_builder(config, entrypoint=None, force=True)
+    with pytest.raises(CraftError) as cm:
+        builder.run([0])
+    assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
+
+
+def test_build_entrypoint_from_parts_missing(basic_project, monkeypatch):
+    """The specified entrypoint does not point to an existing file."""
+    host_base = get_host_as_base()
+    charmcraft_yaml_content = f"""\
+        type: charm
+        bases:
+          - build-on:
+              - name: {host_base.name!r}
+                channel: {host_base.channel!r}
+            run-on:
+              - name: {host_base.name!r}
+                channel: {host_base.channel!r}
+        parts:
+          charm:
+            charm-entrypoint: my_entrypoint.py
+        """
+    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
+    config = load(basic_project)
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    builder = get_builder(config, entrypoint=None)
+    entrypoint = basic_project / "my_entrypoint.py"
+    with pytest.raises(CraftError) as cm:
+        builder.run([0])
+    assert str(cm.value) == f"Charm entry point was not found: {str(entrypoint)!r}"
+
+
+def test_build_entrypoint_from_parts_outside(basic_project, monkeypatch):
+    """The specified entrypoint not points to a file outside the project."""
+    host_base = get_host_as_base()
+    outside = basic_project.parent
+    charmcraft_yaml_content = f"""\
+        type: charm
+        bases:
+          - build-on:
+              - name: {host_base.name!r}
+                channel: {host_base.channel!r}
+            run-on:
+              - name: {host_base.name!r}
+                channel: {host_base.channel!r}
+        parts:
+          charm:
+            charm-entrypoint: ../my_entrypoint.py
+        """
+    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
+    config = load(basic_project)
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    # file exists and it's fine
+    entrypoint = outside / "my_entrypoint.py"
+    entrypoint.touch(mode=0o755)
+
+    builder = get_builder(config, entrypoint=None)
+    with pytest.raises(CraftError) as cm:
+        builder.run([0])
+    assert str(cm.value) == (
+        f"Charm entry point must be inside the project: {str(entrypoint.resolve())!r}"
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_build_entrypoint_from_parts_nonexec(basic_project, monkeypatch):
+    """The specified entrypoint not points to a non-executable file."""
+    host_base = get_host_as_base()
+    charmcraft_yaml_content = f"""\
+        type: charm
+        bases:
+          - build-on:
+              - name: {host_base.name!r}
+                channel: {host_base.channel!r}
+            run-on:
+              - name: {host_base.name!r}
+                channel: {host_base.channel!r}
+        parts:
+          charm:
+            charm-entrypoint: entrypoint.py
+        """
+    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
+    config = load(basic_project)
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    entrypoint = basic_project / "entrypoint.py"
+    entrypoint.touch(mode=0o666)
+
+    builder = get_builder(config, entrypoint=None)
+    with pytest.raises(CraftError) as cm:
+        builder.run([0])
+    assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
 
 
 def test_build_with_requirement_argment_issues_dn05(basic_project, emitter, monkeypatch):
@@ -1586,7 +1734,6 @@ def test_build_requirements_from_parts(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None, force=True)
 
     reqs = basic_project / "reqs.txt"
@@ -1651,7 +1798,6 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, emitter
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None, force=True, requirement=["reqs.txt"])
 
     reqs = basic_project / "reqs.txt"
@@ -1716,7 +1862,6 @@ def test_build_requirements_default(basic_project, monkeypatch, emitter):
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None, force=True)
 
     # create a requirements.txt file
@@ -1781,7 +1926,6 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, emit
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -1842,7 +1986,6 @@ def test_build_requirements_from_both(basic_project, monkeypatch, emitter):
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None, force=True, requirement=["reqs.txt"])
 
     reqs = basic_project / "reqs.txt"
@@ -1880,7 +2023,6 @@ def test_build_python_packages_from_parts(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -1944,7 +2086,6 @@ def test_build_binary_python_packages_from_parts(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -2179,7 +2320,6 @@ def test_parts_not_defined(basic_project, charmcraft_yaml, monkeypatch):
     charmcraft_yaml(basic_project, "")
 
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None)
 
     # create a requirements.txt file
@@ -2242,7 +2382,6 @@ def test_parts_with_charm_part(basic_project, charmcraft_yaml, monkeypatch):
     )
 
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None)
 
     # create a requirements.txt file
@@ -2305,7 +2444,6 @@ def test_parts_without_charm_part(basic_project, charmcraft_yaml, monkeypatch):
         ),
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -2349,7 +2487,6 @@ def test_parts_with_charm_part_with_plugin(basic_project, charmcraft_yaml, monke
         ),
     )
     config = load(basic_project)
-    monkeypatch.chdir(basic_project)
     builder = get_builder(config, entrypoint=None)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")

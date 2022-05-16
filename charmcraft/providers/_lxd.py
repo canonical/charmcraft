@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -169,6 +169,10 @@ class LXDProvider(Provider):
         except lxd.LXDError as error:
             raise CraftError(str(error)) from error
 
+        # specify the uid of the owner of the project directory to prevent read-only mounts of
+        # the project dir when the currently running user and project dir owner are different
+        projectdir_owner_id = project_path.stat().st_uid
+
         base_configuration = CharmcraftBuilddBaseConfiguration(
             alias=alias, environment=environment, hostname=instance_name
         )
@@ -184,6 +188,7 @@ class LXDProvider(Provider):
                 use_snapshots=True,
                 project=self.lxd_project,
                 remote=self.lxd_remote,
+                uid=projectdir_owner_id,
             )
         except (bases.BaseConfigurationError, lxd.LXDError) as error:
             raise CraftError(str(error)) from error

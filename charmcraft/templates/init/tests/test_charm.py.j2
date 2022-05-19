@@ -36,6 +36,8 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(action_event.fail.call_args, [("fail this",)])
 
     def test_httpbin_pebble_ready(self):
+        # Simulate making the Pebble socket available
+        self.harness.set_can_connect("httpbin", True)
         # Check the initial Pebble plan is empty
         initial_plan = self.harness.get_container_pebble_plan("httpbin")
         self.assertEqual(initial_plan.to_yaml(), "{}\n")

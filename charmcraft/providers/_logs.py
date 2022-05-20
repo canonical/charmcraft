@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,8 +32,11 @@ def capture_logs_from_instance(instance: Executor) -> None:
 
     :returns: String of logs.
     """
-    # Get a temporary file path.
-    tmp_file = tempfile.NamedTemporaryFile(delete=False, prefix="charmcraft-")
+    # Get a temporary file path (placing it in current directory as it's the most predictible
+    # place where a strictly-snapped app could write)
+    tmp_file = tempfile.NamedTemporaryFile(
+        delete=False, prefix="charmcraft-", suffix="-temporary.log", dir="."
+    )
     tmp_file.close()
 
     local_log_path = pathlib.Path(tmp_file.name)
@@ -42,6 +45,7 @@ def capture_logs_from_instance(instance: Executor) -> None:
     try:
         instance.pull_file(source=instance_log_path, destination=local_log_path)
     except FileNotFoundError:
+        local_log_path.unlink()
         emit.trace("No logs found in instance.")
         return
 

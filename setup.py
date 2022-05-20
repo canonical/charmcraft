@@ -54,7 +54,7 @@ dev_requires = [
     "black",
     "coverage",
     "flake8",
-    "ops>=0.8.0",
+    "ops>=1.4.0",
     "pydocstyle",
     "pytest",
     "responses",

@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,15 +50,17 @@ def test_capture_logs_from_instance(emitter, mock_instance, mock_namedtemporaryf
         ]
     )
     assert mock_namedtemporaryfile.mock_calls == [
-        mock.call(delete=False, prefix="charmcraft-"),
+        mock.call(delete=False, prefix="charmcraft-", suffix="-temporary.log", dir="."),
         mock.call().close(),
     ]
+    assert not fake_log.exists()
 
 
 def test_capture_logs_from_instance_not_found(
     emitter, mock_instance, mock_namedtemporaryfile, tmp_path
 ):
     fake_log = pathlib.Path(mock_namedtemporaryfile.return_value.name)
+    fake_log.touch()  # temp file is created when NamedTemporaryFile called
     mock_instance.pull_file.side_effect = FileNotFoundError()
 
     providers.capture_logs_from_instance(mock_instance)
@@ -67,3 +69,4 @@ def test_capture_logs_from_instance_not_found(
         mock.call.pull_file(source=pathlib.Path("/tmp/charmcraft.log"), destination=fake_log),
     ]
     emitter.assert_trace("No logs found in instance.")
+    assert not fake_log.exists()

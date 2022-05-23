@@ -444,6 +444,9 @@ class Builder:
 
         if self.shell_after:
             cmd.append("--shell-after")
+            
+        if shell.force_packing:
+            cmd.append("--force")
 
         emit.progress(
             f"Launching environment to pack for base {build_on} "

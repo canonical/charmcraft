@@ -124,9 +124,11 @@ class Provider(ABC):
             )
 
         if base.channel not in BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS.keys():
+            *firsts, last = sorted(BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS.keys())
+            allowed = f"{', '.join(map(repr, firsts))} or {last!r}"
             return (
                 False,
-                f"channel {base.channel!r} is not yet supported (must be '18.04' or '20.04')",
+                f"channel {base.channel!r} is not yet supported (must be {allowed})",
             )
 
         return True, None

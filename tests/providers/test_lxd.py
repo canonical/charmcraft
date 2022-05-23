@@ -355,6 +355,7 @@ def test_get_instance_name(
     [
         ("ubuntu", "18.04", ["host-arch"], True, None),
         ("ubuntu", "20.04", ["host-arch"], True, None),
+        ("ubuntu", "22.04", ["host-arch"], True, None),
         ("ubuntu", "20.04", ["extra-arch", "host-arch"], True, None),
         (
             "not-ubuntu",
@@ -368,7 +369,7 @@ def test_get_instance_name(
             "10.04",
             ["host-arch"],
             False,
-            "channel '10.04' is not yet supported (must be '18.04' or '20.04')",
+            "channel '10.04' is not yet supported (must be '18.04', '20.04' or '22.04')",
         ),
         (
             "ubuntu",

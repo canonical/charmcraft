@@ -62,10 +62,10 @@ class TestReactivePlugin:
             "plugin": "reactive",
             "source": str(tmp_path),
         }
-        plugin_properties = reactive_plugin.ReactivePluginProperties.unmarshal(spec)
+        self.plugin_properties = reactive_plugin.ReactivePluginProperties.unmarshal(spec)
         part_spec = plugins.extract_part_properties(spec, plugin_name="reactive")
         part = craft_parts.Part(
-            "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+            "foo", part_spec, project_dirs=project_dirs, plugin_properties=self.plugin_properties
         )
         project_info = craft_parts.ProjectInfo(
             application_name="test",
@@ -78,7 +78,7 @@ class TestReactivePlugin:
         self._plugin = plugins.get_plugin(
             part=part,
             part_info=part_info,
-            properties=plugin_properties,
+            properties=self.plugin_properties,
         )
 
     def test_get_build_package(self):
@@ -108,16 +108,22 @@ class TestReactivePlugin:
 
     def test_validate_environment(self, charm_exe):
         validator = self._plugin.validator_class(
-            part_name="my-part", env=f"PATH={str(charm_exe.parent)}"
+            part_name="my-part",
+            env=f"PATH={str(charm_exe.parent)}",
+            properties=self.plugin_properties,
         )
         validator.validate_environment()
 
     def test_validate_environment_with_charm_part(self):
-        validator = self._plugin.validator_class(part_name="my-part", env="PATH=/foo")
+        validator = self._plugin.validator_class(
+            part_name="my-part", env="PATH=/foo", properties=self.plugin_properties
+        )
         validator.validate_environment(part_dependencies=["charm-tools"])
 
     def test_validate_missing_charm(self):
-        validator = self._plugin.validator_class(part_name="my-part", env="/foo")
+        validator = self._plugin.validator_class(
+            part_name="my-part", env="/foo", properties=self.plugin_properties
+        )
         with pytest.raises(PluginEnvironmentValidationError) as raised:
             validator.validate_environment()
 
@@ -128,7 +134,9 @@ class TestReactivePlugin:
 
     def test_validate_broken_charm(self, broken_charm_exe):
         validator = self._plugin.validator_class(
-            part_name="my-part", env=f"PATH={str(broken_charm_exe.parent)}"
+            part_name="my-part",
+            env=f"PATH={str(broken_charm_exe.parent)}",
+            properties=self.plugin_properties,
         )
         with pytest.raises(PluginEnvironmentValidationError) as raised:
             validator.validate_environment()

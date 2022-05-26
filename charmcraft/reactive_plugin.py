@@ -133,9 +133,6 @@ def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> int:
     The charm tool is used to build reactive charms, the build process
     is as follows:
 
-    - Remove any charmcraft.yaml from the build directory (occurs for
-      local in-tree builds)
-
     - Run charm proof to ensure the charm
       would build with no errors (warnings are allowed)
 
@@ -143,12 +140,11 @@ def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> int:
       install_dir
 
     - Run "charm build"
-    """
-    # Remove the charmcraft.yaml so it is not primed for in-tree builds.
-    charmcraft_yaml = build_dir / "charmcraft.yaml"
-    if charmcraft_yaml.exists():
-        charmcraft_yaml.unlink()
 
+    Note that no files/dirs in the original project are modified nor removed
+    because in that case the VCS will detect something changed and the version
+    string produced by `charm` would be misleading.
+    """
     # Verify the charm is ok from a charm tool point of view.
     try:
         subprocess.run(["charm", "proof"], check=True)

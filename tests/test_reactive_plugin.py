@@ -180,23 +180,6 @@ def test_build(build_dir, install_dir, fake_run):
     ]
 
 
-def test_build_removes_charmcraft_yaml(build_dir, install_dir, fake_run):
-    charmcraft_yaml = build_dir / "charmcraft.yaml"
-    charmcraft_yaml.touch()
-
-    returncode = reactive_plugin.build(
-        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
-    )
-
-    assert returncode == 0
-    assert not charmcraft_yaml.exists()
-    assert not (build_dir / "test-charm").exists()
-    assert fake_run.mock_calls == [
-        call(["charm", "proof"], check=True),
-        call(["charm", "build", "-o", build_dir], check=True),
-    ]
-
-
 def test_build_charm_proof_raises_error_messages(build_dir, install_dir, fake_run):
     fake_run.side_effect = CalledProcessError(200, "E: name missing")
 

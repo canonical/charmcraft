@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,6 +49,14 @@ class VersionCommand(BaseCommand):
     overview = _overview
     common = True
 
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        self.include_format_option(parser)
+
     def run(self, parsed_args):
         """Run the command."""
-        emit.message(__version__)
+        if parsed_args.format:
+            info = {"version": __version__}
+            emit.message(self.format_content(parsed_args.format, info))
+        else:
+            emit.message(__version__)

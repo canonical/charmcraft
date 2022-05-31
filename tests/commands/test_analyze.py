@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import pytest
 from craft_cli import CraftError
 
 from charmcraft import linters
-from charmcraft.commands.analyze import AnalyzeCommand, JSON_FORMAT
+from charmcraft.cmdbase import JSON_FORMAT
+from charmcraft.commands.analyze import AnalyzeCommand
 from charmcraft.utils import useful_filepath
 
 

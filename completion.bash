@@ -118,7 +118,7 @@ _charmcraft()
                     _filedir py
                     ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --entrypoint --requirement --force" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --entrypoint --requirement --force --format" -- "$cur") )
                     ;;
             esac
             ;;
@@ -140,6 +140,9 @@ _charmcraft()
                     COMPREPLY=( $(compgen -W "${globals[*]} --filepath --image" -- "$cur") )
                     ;;
             esac
+            ;;
+        version)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
             ;;
         *)
             # by default just the global options

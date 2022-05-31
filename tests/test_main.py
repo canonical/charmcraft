@@ -14,9 +14,11 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import argparse
 import os
 import subprocess
 import sys
+import textwrap
 from unittest.mock import patch
 
 import pytest
@@ -29,7 +31,7 @@ from craft_cli import (
 )
 
 from charmcraft import __version__, env, utils
-from charmcraft.cmdbase import BaseCommand
+from charmcraft.cmdbase import BaseCommand, JSON_FORMAT
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.main import COMMAND_GROUPS, main, _get_system_details
 
@@ -374,6 +376,52 @@ def test_aesthetic_args_options_msg(command, config):
     command(config).fill_parser(FakeParser())
 
 
+# -- tests for the base command
+
+
+class MySimpleCommand(BaseCommand):
+    """A simple minimal command to be used by different tests."""
+
+    help_msg = "some help"
+    name = "cmdname"
+    overview = "test overview"
+
+
 def test_basecommand_needs_config_default():
     """A command by default does not needs config."""
-    assert BaseCommand.needs_config is False
+    assert MySimpleCommand.needs_config is False
+
+
+def test_basecommand_include_format_option(config):
+    """Include a format option in the received parser."""
+    parser = argparse.ArgumentParser()
+    cmd = MySimpleCommand(config)
+    cmd.include_format_option(parser)
+
+    (action,) = [action for action in parser._actions if action.dest == "format"]
+    assert action.option_strings == ["--format"]
+    assert action.dest == "format"
+    assert action.default is None
+    assert action.choices == [JSON_FORMAT]
+    assert action.help == "Produce the result formatted as a JSON string"
+
+
+def test_basecommand_format_content_json(config):
+    """Properly format content in JSON format."""
+    data = ["foo", "bar"]
+    cmd = MySimpleCommand(config)
+    result = cmd.format_content(JSON_FORMAT, data)
+    assert result == textwrap.dedent(
+        """\
+        [
+            "foo",
+            "bar"
+        ]"""
+    )
+
+
+def test_basecommand_format_content_unkown(config):
+    """The specified format is unknown."""
+    cmd = MySimpleCommand(config)
+    with pytest.raises(ValueError):
+        cmd.format_content("bad format", {})

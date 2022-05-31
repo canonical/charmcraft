@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -78,6 +78,7 @@ class PackCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        self.include_format_option(parser)
         parser.add_argument(
             "--debug",
             action="store_true",
@@ -171,7 +172,13 @@ class PackCommand(BaseCommand):
 
         # avoid showing results when run inside a container (the outer charmcraft
         # is responsible of the final message to the user)
-        if not env.is_charmcraft_running_in_managed_mode():
+        if env.is_charmcraft_running_in_managed_mode():
+            return
+
+        if parsed_args.format:
+            info = {"charm": charms}
+            emit.message(self.format_content(parsed_args.format, info))
+        else:
             emit.message("Charms packed:")
             for charm in charms:
                 emit.message(f"    {charm}")
@@ -253,7 +260,11 @@ class PackCommand(BaseCommand):
         zipname = project.dirpath / (bundle_name + ".zip")
         build_zip(zipname, lifecycle.prime_dir)
 
-        emit.message(f"Created {str(zipname)!r}.")
+        if parsed_args.format:
+            info = {"bundle": [str(zipname)]}
+            emit.message(self.format_content(parsed_args.format, info))
+        else:
+            emit.message(f"Created {str(zipname)!r}.")
 
         if parsed_args.shell_after:
             build.launch_shell()

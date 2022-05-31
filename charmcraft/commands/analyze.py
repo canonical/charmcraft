@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 """Infrastructure for the 'analyze' command."""
 
-import json
 import pathlib
 import tempfile
 import textwrap
@@ -27,9 +26,6 @@ from craft_cli import emit, CraftError
 from charmcraft import linters
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import useful_filepath
-
-
-JSON_FORMAT = "json"
 
 
 class AnalyzeCommand(BaseCommand):
@@ -49,16 +45,12 @@ class AnalyzeCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        self.include_format_option(parser)
         parser.add_argument("filepath", type=useful_filepath, help="The charm to analyze")
         parser.add_argument(
             "--force",
             action="store_true",
             help="Force to run all checks, even those set to ignore in the configuration",
-        )
-        parser.add_argument(
-            "--format",
-            choices=[JSON_FORMAT],
-            help="Produce the result formatted as a JSON string",
         )
 
     def _unzip_charm(self, filepath: pathlib.Path) -> pathlib.Path:
@@ -94,7 +86,7 @@ class AnalyzeCommand(BaseCommand):
         )
 
         # if format is json almost no further processing is needed
-        if parsed_args.format == JSON_FORMAT:
+        if parsed_args.format:
             info = [
                 {
                     "name": r.name,
@@ -104,7 +96,7 @@ class AnalyzeCommand(BaseCommand):
                 }
                 for r in linting_results
             ]
-            emit.message(json.dumps(info, indent=4))
+            emit.message(self.format_content(parsed_args.format, info))
             return
 
         # group by attributes and lint outcomes (discarding ignored ones)

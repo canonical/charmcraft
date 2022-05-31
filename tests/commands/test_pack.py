@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import pytest
 import yaml
 from craft_cli import CraftError
 
+from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand, build_zip
 from charmcraft.config import Project, load
@@ -43,6 +44,7 @@ def get_namespace(
     requirement=None,
     shell=False,
     shell_after=False,
+    format=None,
 ):
     if bases_index is None:
         bases_index = []
@@ -56,10 +58,11 @@ def get_namespace(
         requirement=requirement,
         shell=shell,
         shell_after=shell_after,
+        format=format,
     )
 
 
-# empty namespace
+# default namespace
 noargs = get_namespace()
 
 
@@ -154,7 +157,8 @@ def test_resolve_bundle_with_entrypoint(config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_config, formatted):
     """A simple happy story."""
     # mandatory files (other than the automatically provided manifest)
     content = bundle_yaml(name="testbundle")
@@ -162,7 +166,8 @@ def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_co
     (tmp_path / "README.md").write_text("test readme")
 
     # build!
-    PackCommand(bundle_config).run(noargs)
+    args = get_namespace(format=formatted)
+    PackCommand(bundle_config).run(args)
 
     # check
     zipname = tmp_path / "testbundle.zip"
@@ -171,8 +176,11 @@ def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_co
     assert zf.read("bundle.yaml") == content.encode("ascii")
     assert zf.read("README.md") == b"test readme"
 
-    expected = "Created '{}'.".format(zipname)
-    emitter.assert_message(expected)
+    if formatted:
+        emitter.assert_json_output({"bundle": [str(zipname)]})
+    else:
+        expected = "Created '{}'.".format(zipname)
+        emitter.assert_message(expected)
 
     # check the manifest is present and with particular values that depend on given info
     manifest = yaml.safe_load(zf.read("manifest.yaml"))
@@ -729,6 +737,7 @@ def test_charm_parameters_validator(config, tmp_path):
         requirement="test-reqs",
         shell=True,
         shell_after=True,
+        format=None,
     )
     config.set(
         type="charm",
@@ -765,3 +774,67 @@ def test_charm_builder_infrastructure_called(config):
             PackCommand(config).run(noargs)
     builder_class_mock.assert_called_with("processed args", config)
     builder_instance_mock.run.assert_called_with([], destructive_mode=False)
+
+
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_charm_pack_output_simple(config, emitter, formatted):
+    """Output when packing one charm."""
+    args = get_namespace(format=formatted)
+    config.set(type="charm")
+
+    builder_instance_mock = MagicMock()
+    builder_instance_mock.run.return_value = ["mystuff.charm"]
+    with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+        builder_class_mock.return_value = builder_instance_mock
+        PackCommand(config).run(args)
+
+    if formatted:
+        emitter.assert_json_output({"charm": ["mystuff.charm"]})
+    else:
+        emitter.assert_messages(
+            [
+                "Charms packed:",
+                "    mystuff.charm",
+            ]
+        )
+
+
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_charm_pack_output_multiple(config, emitter, formatted):
+    """Output when packing multiple charm."""
+    args = get_namespace(format=formatted)
+    config.set(type="charm")
+
+    builder_instance_mock = MagicMock()
+    builder_instance_mock.run.return_value = ["mystuff1.charm", "mystuff2.charm"]
+    with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+        builder_class_mock.return_value = builder_instance_mock
+        PackCommand(config).run(args)
+
+    if formatted:
+        emitter.assert_json_output({"charm": ["mystuff1.charm", "mystuff2.charm"]})
+    else:
+        emitter.assert_messages(
+            [
+                "Charms packed:",
+                "    mystuff1.charm",
+                "    mystuff2.charm",
+            ]
+        )
+
+
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_charm_pack_output_managed_mode(config, emitter, formatted, monkeypatch):
+    """Output when packing charms under managed mode."""
+    args = get_namespace(format=formatted)
+    config.set(type="charm")
+
+    builder_instance_mock = MagicMock()
+    builder_instance_mock.run.return_value = ["mystuff.charm"]
+    with patch("charmcraft.env.is_charmcraft_running_in_managed_mode", return_value=True):
+        with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+            builder_class_mock.return_value = builder_instance_mock
+            PackCommand(config).run(args)
+
+    for emitter_call in emitter.interactions:
+        assert emitter_call.args[0] != "message"

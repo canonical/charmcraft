@@ -177,7 +177,7 @@ def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_co
     assert zf.read("README.md") == b"test readme"
 
     if formatted:
-        emitter.assert_json_output({"bundle": [str(zipname)]})
+        emitter.assert_json_output({"bundles": [str(zipname)]})
     else:
         expected = "Created '{}'.".format(zipname)
         emitter.assert_message(expected)
@@ -789,7 +789,7 @@ def test_charm_pack_output_simple(config, emitter, formatted):
         PackCommand(config).run(args)
 
     if formatted:
-        emitter.assert_json_output({"charm": ["mystuff.charm"]})
+        emitter.assert_json_output({"charms": ["mystuff.charm"]})
     else:
         emitter.assert_messages(
             [
@@ -812,7 +812,7 @@ def test_charm_pack_output_multiple(config, emitter, formatted):
         PackCommand(config).run(args)
 
     if formatted:
-        emitter.assert_json_output({"charm": ["mystuff1.charm", "mystuff2.charm"]})
+        emitter.assert_json_output({"charms": ["mystuff1.charm", "mystuff2.charm"]})
     else:
         emitter.assert_messages(
             [

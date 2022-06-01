@@ -39,14 +39,14 @@ class BaseCommand(craft_cli.BaseCommand):
 
     needs_config = False
 
-    def format_content(self, format_, content):
+    def format_content(self, fmt, content):
         """Format the content."""
-        if format_ == JSON_FORMAT:
+        if fmt == JSON_FORMAT:
             return json.dumps(content, indent=4)
         raise ValueError("Specified format not supported.")
 
     def include_format_option(self, parser):
-        """Add the 'format' option to the indicated parser."""
+        """Add the 'format' option to this parser."""
         parser.add_argument(
             "--format",
             choices=[JSON_FORMAT],

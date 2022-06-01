@@ -176,7 +176,7 @@ class PackCommand(BaseCommand):
             return
 
         if parsed_args.format:
-            info = {"charm": charms}
+            info = {"charms": charms}
             emit.message(self.format_content(parsed_args.format, info))
         else:
             emit.message("Charms packed:")
@@ -261,7 +261,7 @@ class PackCommand(BaseCommand):
         build_zip(zipname, lifecycle.prime_dir)
 
         if parsed_args.format:
-            info = {"bundle": [str(zipname)]}
+            info = {"bundles": [str(zipname)]}
             emit.message(self.format_content(parsed_args.format, info))
         else:
             emit.message(f"Created {str(zipname)!r}.")

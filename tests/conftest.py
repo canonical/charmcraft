@@ -16,8 +16,10 @@
 
 import contextlib
 import datetime
+import json
 import pathlib
 import tempfile
+import types
 from typing import List
 from unittest.mock import Mock
 
@@ -168,3 +170,22 @@ def create_config(tmp_path):
         return tmp_path
 
     return create_config
+
+
+@pytest.fixture
+def emitter(emitter):
+    """Monkeypatch craft-cli's emitter fixture to easily test the JSON encoded output."""
+
+    def assert_json_output(self, expected_content):
+        """Get last output, which should be a message, and validate its content."""
+        last_output = self.interactions[-1]
+        output_type, raw_output = last_output.args
+        assert output_type == "message", "Last command output is not 'message'"
+        try:
+            output_content = json.loads(raw_output)
+        except json.decoder.JSONDecodeError:
+            pytest.fail("Last command output is not valid JSON.")
+        assert output_content == expected_content
+
+    emitter.assert_json_output = types.MethodType(assert_json_output, emitter)
+    return emitter

@@ -16,7 +16,11 @@
 
 """Infrastructure for common base commands functionality."""
 
+import json
+
 import craft_cli
+
+JSON_FORMAT = "json"
 
 
 class BaseCommand(craft_cli.BaseCommand):
@@ -27,6 +31,24 @@ class BaseCommand(craft_cli.BaseCommand):
     - needs_config: will ensure a config is provided when executing the command
 
     The subclass must be declared in the corresponding section of main.COMMAND_GROUPS.
+
+    If the command may produce the result in a programmatic-friendly format, it
+    should call the 'include_format_option' method to properly affect the parser and
+    then emit only one message with the result of the 'format_content' method.
     """
 
     needs_config = False
+
+    def format_content(self, fmt, content):
+        """Format the content."""
+        if fmt == JSON_FORMAT:
+            return json.dumps(content, indent=4)
+        raise ValueError("Specified format not supported.")
+
+    def include_format_option(self, parser):
+        """Add the 'format' option to this parser."""
+        parser.add_argument(
+            "--format",
+            choices=[JSON_FORMAT],
+            help="Produce the result formatted as a JSON string",
+        )

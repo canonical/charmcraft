@@ -113,6 +113,8 @@ paste, but do please pay attention to details!
     snapcraft upload charmcraft_X.Y.Z_armhf.snap --release=edge,candidate
     snapcraft upload charmcraft_X.Y.Z_ppc64el.snap --release=edge,candidate
 
+- remember to also release to the **corresponding track**
+
 - verify all archs are consistent:
 
     snapcraft status charmcraft

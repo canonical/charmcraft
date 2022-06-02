@@ -30,6 +30,7 @@ import yaml
 from craft_cli import CraftError
 from craft_store.errors import CredentialsUnavailable
 
+from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.config import CharmhubConfig
 from charmcraft.commands.store import (
     CloseCommand,
@@ -355,7 +356,8 @@ def test_logout_but_not_logged_in(emitter, store_mock, config):
     emitter.assert_message("You are not logged in to Charmhub.")
 
 
-def test_whoami(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_whoami(emitter, store_mock, config, formatted):
     """Simple whoami case."""
     store_response = MacaroonInfo(
         account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
@@ -370,18 +372,29 @@ def test_whoami(emitter, store_mock, config):
     assert store_mock.mock_calls == [
         call.whoami(),
     ]
-    expected = [
-        "name: John Doe",
-        "username: jdoe",
-        "id: dlq8hl8hd8qhdl3lhl",
-        "permissions:",
-        "- perm1",
-        "- perm2",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = {
+            "logged": True,
+            "name": "John Doe",
+            "username": "jdoe",
+            "id": "dlq8hl8hd8qhdl3lhl",
+            "permissions": ["perm1", "perm2"],
+        }
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "name: John Doe",
+            "username: jdoe",
+            "id: dlq8hl8hd8qhdl3lhl",
+            "permissions:",
+            "- perm1",
+            "- perm2",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_whoami_but_not_logged_in(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_whoami_but_not_logged_in(emitter, store_mock, config, formatted):
     """Whoami when not logged."""
     store_mock.whoami.side_effect = CredentialsUnavailable(
         application="charmcraft", host="api.charmcraft.io"
@@ -392,10 +405,17 @@ def test_whoami_but_not_logged_in(emitter, store_mock, config):
     assert store_mock.mock_calls == [
         call.whoami(),
     ]
-    emitter.assert_message("You are not logged in to Charmhub.")
+    if formatted:
+        expected = {
+            "logged": False,
+        }
+        emitter.assert_json_output(expected)
+    else:
+        emitter.assert_message("You are not logged in to Charmhub.")
 
 
-def test_whoami_with_channels(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_whoami_with_channels(emitter, store_mock, config, formatted):
     """Whoami with channel attenuations."""
     store_response = MacaroonInfo(
         account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
@@ -410,21 +430,33 @@ def test_whoami_with_channels(emitter, store_mock, config):
     assert store_mock.mock_calls == [
         call.whoami(),
     ]
-    expected = [
-        "name: John Doe",
-        "username: jdoe",
-        "id: dlq8hl8hd8qhdl3lhl",
-        "permissions:",
-        "- perm1",
-        "- perm2",
-        "channels:",
-        "- edge",
-        "- beta",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = {
+            "logged": True,
+            "name": "John Doe",
+            "username": "jdoe",
+            "id": "dlq8hl8hd8qhdl3lhl",
+            "permissions": ["perm1", "perm2"],
+            "channels": ["edge", "beta"],
+        }
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "name: John Doe",
+            "username: jdoe",
+            "id: dlq8hl8hd8qhdl3lhl",
+            "permissions:",
+            "- perm1",
+            "- perm2",
+            "channels:",
+            "- edge",
+            "- beta",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_whoami_with_charms(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_whoami_with_charms(emitter, store_mock, config, formatted):
     """Whoami with charms attenuations."""
     store_response = MacaroonInfo(
         account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
@@ -442,21 +474,33 @@ def test_whoami_with_charms(emitter, store_mock, config):
     assert store_mock.mock_calls == [
         call.whoami(),
     ]
-    expected = [
-        "name: John Doe",
-        "username: jdoe",
-        "id: dlq8hl8hd8qhdl3lhl",
-        "permissions:",
-        "- perm1",
-        "- perm2",
-        "charms:",
-        "- name: charmname1",
-        "- id: charmid2",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = {
+            "logged": True,
+            "name": "John Doe",
+            "username": "jdoe",
+            "id": "dlq8hl8hd8qhdl3lhl",
+            "permissions": ["perm1", "perm2"],
+            "charms": [{"name": "charmname1"}, {"id": "charmid2"}],
+        }
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "name: John Doe",
+            "username: jdoe",
+            "id: dlq8hl8hd8qhdl3lhl",
+            "permissions:",
+            "- perm1",
+            "- perm2",
+            "charms:",
+            "- name: charmname1",
+            "- id: charmid2",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_whoami_with_bundles(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_whoami_with_bundles(emitter, store_mock, config, formatted):
     """Whoami with bundles attenuations."""
     store_response = MacaroonInfo(
         account=Account(name="John Doe", username="jdoe", id="dlq8hl8hd8qhdl3lhl"),
@@ -474,18 +518,29 @@ def test_whoami_with_bundles(emitter, store_mock, config):
     assert store_mock.mock_calls == [
         call.whoami(),
     ]
-    expected = [
-        "name: John Doe",
-        "username: jdoe",
-        "id: dlq8hl8hd8qhdl3lhl",
-        "permissions:",
-        "- perm1",
-        "- perm2",
-        "bundles:",
-        "- name: bundlename1",
-        "- id: bundleid2",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = {
+            "logged": True,
+            "name": "John Doe",
+            "username": "jdoe",
+            "id": "dlq8hl8hd8qhdl3lhl",
+            "permissions": ["perm1", "perm2"],
+            "bundles": [{"name": "bundlename1"}, {"id": "bundleid2"}],
+        }
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "name: John Doe",
+            "username: jdoe",
+            "id: dlq8hl8hd8qhdl3lhl",
+            "permissions:",
+            "- perm1",
+            "- perm2",
+            "bundles:",
+            "- name: bundlename1",
+            "- id: bundleid2",
+        ]
+        emitter.assert_messages(expected)
 
 
 def test_whoami_comprehensive(emitter, store_mock, config):
@@ -553,7 +608,8 @@ def test_register_bundle_name(emitter, store_mock, config):
     emitter.assert_message(expected)
 
 
-def test_list_registered_empty(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_list_registered_empty(emitter, store_mock, config, formatted):
     """List registered with empty response."""
     store_response = []
     store_mock.list_registered_names.return_value = store_response
@@ -563,11 +619,15 @@ def test_list_registered_empty(emitter, store_mock, config):
     assert store_mock.mock_calls == [
         call.list_registered_names(),
     ]
-    expected = "No charms or bundles registered."
-    emitter.assert_message(expected)
+    if formatted:
+        emitter.assert_json_output([])
+    else:
+        expected = "No charms or bundles registered."
+        emitter.assert_message(expected)
 
 
-def test_list_registered_one_private(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_list_registered_one_private(emitter, store_mock, config, formatted):
     """List registered with one private item in the response."""
     store_response = [
         Entity(entity_type="charm", name="charm", private=True, status="status"),
@@ -583,10 +643,22 @@ def test_list_registered_one_private(emitter, store_mock, config):
         "Name    Type    Visibility    Status",
         "charm   charm   private       status",
     ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "name": "charm",
+                "type": "charm",
+                "visibility": "private",
+                "status": "status",
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        emitter.assert_messages(expected)
 
 
-def test_list_registered_one_public(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_list_registered_one_public(emitter, store_mock, config, formatted):
     """List registered with one public item in the response."""
     store_response = [
         Entity(entity_type="charm", name="charm", private=False, status="status"),
@@ -602,10 +674,22 @@ def test_list_registered_one_public(emitter, store_mock, config):
         "Name    Type    Visibility    Status",
         "charm   charm   public        status",
     ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "name": "charm",
+                "type": "charm",
+                "visibility": "public",
+                "status": "status",
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        emitter.assert_messages(expected)
 
 
-def test_list_registered_several(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_list_registered_several(emitter, store_mock, config, formatted):
     """List registered with several itemsssssssss in the response."""
     store_response = [
         Entity(entity_type="charm", name="charm1", private=True, status="simple status"),
@@ -625,14 +709,43 @@ def test_list_registered_several(emitter, store_mock, config):
     assert store_mock.mock_calls == [
         call.list_registered_names(),
     ]
-    expected = [
-        "Name              Type    Visibility    Status",
-        "charm1            charm   private       simple status",
-        "charm2-long-name  charm   public        other",
-        "charm3            charm   private       super long status",
-        "somebundle        bundle  public        bundle status",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "name": "charm1",
+                "type": "charm",
+                "visibility": "private",
+                "status": "simple status",
+            },
+            {
+                "name": "charm2-long-name",
+                "type": "charm",
+                "visibility": "public",
+                "status": "other",
+            },
+            {
+                "name": "charm3",
+                "type": "charm",
+                "visibility": "private",
+                "status": "super long status",
+            },
+            {
+                "name": "somebundle",
+                "type": "bundle",
+                "visibility": "public",
+                "status": "bundle status",
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Name              Type    Visibility    Status",
+            "charm1            charm   private       simple status",
+            "charm2-long-name  charm   public        other",
+            "charm3            charm   private       super long status",
+            "somebundle        bundle  public        bundle status",
+        ]
+        emitter.assert_messages(expected)
 
 
 # -- tests for upload command

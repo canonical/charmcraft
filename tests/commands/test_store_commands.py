@@ -367,7 +367,8 @@ def test_whoami(emitter, store_mock, config, formatted):
     )
     store_mock.whoami.return_value = store_response
 
-    WhoamiCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    WhoamiCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.whoami(),
@@ -400,7 +401,8 @@ def test_whoami_but_not_logged_in(emitter, store_mock, config, formatted):
         application="charmcraft", host="api.charmcraft.io"
     )
 
-    WhoamiCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    WhoamiCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.whoami(),
@@ -425,7 +427,8 @@ def test_whoami_with_channels(emitter, store_mock, config, formatted):
     )
     store_mock.whoami.return_value = store_response
 
-    WhoamiCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    WhoamiCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.whoami(),
@@ -469,7 +472,8 @@ def test_whoami_with_charms(emitter, store_mock, config, formatted):
     )
     store_mock.whoami.return_value = store_response
 
-    WhoamiCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    WhoamiCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.whoami(),
@@ -513,7 +517,8 @@ def test_whoami_with_bundles(emitter, store_mock, config, formatted):
     )
     store_mock.whoami.return_value = store_response
 
-    WhoamiCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    WhoamiCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.whoami(),
@@ -557,7 +562,8 @@ def test_whoami_comprehensive(emitter, store_mock, config):
     )
     store_mock.whoami.return_value = store_response
 
-    WhoamiCommand(config).run(noargs)
+    args = Namespace(format=False)
+    WhoamiCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.whoami(),
@@ -614,7 +620,8 @@ def test_list_registered_empty(emitter, store_mock, config, formatted):
     store_response = []
     store_mock.list_registered_names.return_value = store_response
 
-    ListNamesCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    ListNamesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -634,7 +641,8 @@ def test_list_registered_one_private(emitter, store_mock, config, formatted):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListNamesCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    ListNamesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -665,7 +673,8 @@ def test_list_registered_one_public(emitter, store_mock, config, formatted):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListNamesCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    ListNamesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -704,7 +713,8 @@ def test_list_registered_several(emitter, store_mock, config, formatted):
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    ListNamesCommand(config).run(noargs)
+    args = Namespace(format=formatted)
+    ListNamesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_registered_names(),
@@ -857,23 +867,29 @@ def test_upload_parameters_filepath_type(config):
     assert action.type is useful_filepath
 
 
-def test_upload_call_ok(emitter, store_mock, config, tmp_path):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_upload_call_ok(emitter, store_mock, config, tmp_path, formatted):
     """Simple upload, success result."""
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=[], name=None)
+    args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
     retcode = UploadCommand(config).run(args)
     assert retcode == 0
 
     assert store_mock.mock_calls == [call.upload("mycharm", test_charm)]
-    expected = "Revision 7 of 'mycharm' created"
-    emitter.assert_message(expected)
+    if formatted:
+        expected = {"revision": 7}
+        emitter.assert_json_output(expected)
+    else:
+        expected = "Revision 7 of 'mycharm' created"
+        emitter.assert_message(expected)
 
 
-def test_upload_call_error(emitter, store_mock, config, tmp_path):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_upload_call_error(emitter, store_mock, config, tmp_path, formatted):
     """Simple upload but with a response indicating an error."""
     errors = [
         Error(message="text 1", code="missing-stuff"),
@@ -884,38 +900,54 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path):
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=[], name=None)
+    args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
     retcode = UploadCommand(config).run(args)
     assert retcode == 1
 
     assert store_mock.mock_calls == [call.upload("mycharm", test_charm)]
-    expected = [
-        "Upload failed with status 400:",
-        "- missing-stuff: text 1",
-        "- broken: other long error text",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = {
+            "errors": [
+                {"code": "missing-stuff", "message": "text 1"},
+                {"code": "broken", "message": "other long error text"},
+            ]
+        }
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Upload failed with status 400:",
+            "- missing-stuff: text 1",
+            "- broken: other long error text",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_upload_call_ok_including_release(emitter, store_mock, config, tmp_path):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_upload_call_ok_including_release(emitter, store_mock, config, tmp_path, formatted):
     """Upload with a release included, success result."""
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=["edge"], resource=[], name=None)
+    args = Namespace(
+        filepath=test_charm, release=["edge"], resource=[], name=None, format=formatted
+    )
     UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.upload("mycharm", test_charm),
         call.release("mycharm", 7, ["edge"], []),
     ]
-    expected = [
-        "Revision 7 of 'mycharm' created",
-        "Revision released to edge",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = {"revision": 7}
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision 7 of 'mycharm' created",
+            "Revision released to edge",
+        ]
+        emitter.assert_messages(expected)
 
 
 def test_upload_call_ok_including_release_multiple(emitter, store_mock, config, tmp_path):
@@ -925,7 +957,9 @@ def test_upload_call_ok_including_release_multiple(emitter, store_mock, config, 
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=["edge", "stable"], resource=[], name=None)
+    args = Namespace(
+        filepath=test_charm, release=["edge", "stable"], resource=[], name=None, format=False
+    )
     UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -939,7 +973,8 @@ def test_upload_call_ok_including_release_multiple(emitter, store_mock, config, 
     emitter.assert_messages(expected)
 
 
-def test_upload_including_release_with_resources(emitter, store_mock, config, tmp_path):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_upload_including_release_with_resources(emitter, store_mock, config, tmp_path, formatted):
     """Releasing with resources."""
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload.return_value = store_response
@@ -948,18 +983,24 @@ def test_upload_including_release_with_resources(emitter, store_mock, config, tm
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
     r1 = ResourceOption(name="foo", revision=3)
     r2 = ResourceOption(name="bar", revision=17)
-    args = Namespace(filepath=test_charm, release=["edge"], resource=[r1, r2], name=None)
+    args = Namespace(
+        filepath=test_charm, release=["edge"], resource=[r1, r2], name=None, format=formatted
+    )
     UploadCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.upload("mycharm", test_charm),
         call.release("mycharm", 7, ["edge"], [r1, r2]),
     ]
-    expected = [
-        "Revision 7 of 'mycharm' created",
-        "Revision released to edge (attaching resources: 'foo' r3, 'bar' r17)",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = {"revision": 7}
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision 7 of 'mycharm' created",
+            "Revision released to edge (attaching resources: 'foo' r3, 'bar' r17)",
+        ]
+        emitter.assert_messages(expected)
 
 
 def test_upload_options_resource(config):
@@ -979,7 +1020,7 @@ def test_upload_call_error_including_release(emitter, store_mock, config, tmp_pa
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=["edge"], name=None)
+    args = Namespace(filepath=test_charm, release=["edge"], name=None, format=False)
     UploadCommand(config).run(args)
 
     # check the upload was attempted, but not the release!
@@ -997,7 +1038,7 @@ def test_upload_charm_with_init_template_todo_token(tmp_path, config):
         zf.writestr("file_ok.cfg", b"This is fine :).")
         zf.writestr("othertainted.txt", b"# TEMPLATE-TODO: need to fix.")
 
-    args = Namespace(filepath=test_charm, release=[], name=None)
+    args = Namespace(filepath=test_charm, release=[], name=None, format=False)
     expected_msg = (
         "Cannot upload the charm as it include the following files with a leftover "
         "TEMPLATE-TODO token from when the project was created using the 'init' "
@@ -1014,7 +1055,7 @@ def test_upload_with_different_name_than_in_metadata(emitter, store_mock, config
 
     test_charm = tmp_path / "mystuff.charm"
     _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
-    args = Namespace(filepath=test_charm, release=[], name="foo-mycharm")
+    args = Namespace(filepath=test_charm, release=[], name="foo-mycharm", format=False)
     retcode = UploadCommand(config).run(args)
     assert retcode == 0
 
@@ -1026,7 +1067,8 @@ def test_upload_with_different_name_than_in_metadata(emitter, store_mock, config
 # -- tests for list revisions command
 
 
-def test_revisions_simple(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_revisions_simple(emitter, store_mock, config, formatted):
     """Happy path of one result from the Store."""
     bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
@@ -1041,34 +1083,50 @@ def test_revisions_simple(emitter, store_mock, config):
     ]
     store_mock.list_revisions.return_value = store_response
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     ListRevisionsCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_revisions("testcharm"),
     ]
-    expected = [
-        "Revision    Version    Created at            Status",
-        "1           v1         2020-07-03T20:30:40Z  accepted",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "revision": 1,
+                "version": "v1",
+                "created_at": "2020-07-03T20:30:40Z",
+                "status": "accepted",
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision    Version    Created at            Status",
+            "1           v1         2020-07-03T20:30:40Z  accepted",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_revisions_empty(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_revisions_empty(emitter, store_mock, config, formatted):
     """No results from the store."""
     store_response = []
     store_mock.list_revisions.return_value = store_response
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     ListRevisionsCommand(config).run(args)
 
-    expected = [
-        "No revisions found.",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        emitter.assert_json_output([])
+    else:
+        expected = [
+            "No revisions found.",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_revisions_ordered_by_revision(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_revisions_ordered_by_revision(emitter, store_mock, config, formatted):
     """Results are presented ordered by revision in the table."""
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
@@ -1102,19 +1160,43 @@ def test_revisions_ordered_by_revision(emitter, store_mock, config):
     ]
     store_mock.list_revisions.return_value = store_response
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     ListRevisionsCommand(config).run(args)
 
-    expected = [
-        "Revision    Version    Created at            Status",
-        "3           v1         2020-07-03T20:30:40Z  accepted",
-        "2           v1         2020-07-03T20:30:40Z  accepted",
-        "1           v1         2020-07-03T20:30:40Z  accepted",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "revision": 3,
+                "version": "v1",
+                "created_at": "2020-07-03T20:30:40Z",
+                "status": "accepted",
+            },
+            {
+                "revision": 2,
+                "version": "v1",
+                "created_at": "2020-07-03T20:30:40Z",
+                "status": "accepted",
+            },
+            {
+                "revision": 1,
+                "version": "v1",
+                "created_at": "2020-07-03T20:30:40Z",
+                "status": "accepted",
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision    Version    Created at            Status",
+            "3           v1         2020-07-03T20:30:40Z  accepted",
+            "2           v1         2020-07-03T20:30:40Z  accepted",
+            "1           v1         2020-07-03T20:30:40Z  accepted",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_revisions_version_null(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_revisions_version_null(emitter, store_mock, config, formatted):
     """Support the case of version being None."""
     bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
@@ -1129,17 +1211,29 @@ def test_revisions_version_null(emitter, store_mock, config):
     ]
     store_mock.list_revisions.return_value = store_response
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     ListRevisionsCommand(config).run(args)
 
-    expected = [
-        "Revision    Version    Created at            Status",
-        "1                      2020-07-03T20:30:40Z  accepted",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "revision": 1,
+                "version": None,
+                "created_at": "2020-07-03T20:30:40Z",
+                "status": "accepted",
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision    Version    Created at            Status",
+            "1                      2020-07-03T20:30:40Z  accepted",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_revisions_errors_simple(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_revisions_errors_simple(emitter, store_mock, config, formatted):
     """Support having one case with a simple error."""
     bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
@@ -1154,17 +1248,30 @@ def test_revisions_errors_simple(emitter, store_mock, config):
     ]
     store_mock.list_revisions.return_value = store_response
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     ListRevisionsCommand(config).run(args)
 
-    expected = [
-        "Revision    Version    Created at            Status",
-        "1                      2020-07-03T20:30:40Z  rejected: error text [broken]",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "revision": 1,
+                "version": None,
+                "created_at": "2020-07-03T20:30:40Z",
+                "status": "rejected",
+                "errors": [{"message": "error text", "code": "broken"}],
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision    Version    Created at            Status",
+            "1                      2020-07-03T20:30:40Z  rejected: error text [broken]",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_revisions_errors_multiple(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_revisions_errors_multiple(emitter, store_mock, config, formatted):
     """Support having one case with multiple errors."""
     bases = [Base(architecture="amd64", channel="20.04", name="ubuntu")]
     store_response = [
@@ -1182,14 +1289,29 @@ def test_revisions_errors_multiple(emitter, store_mock, config):
     ]
     store_mock.list_revisions.return_value = store_response
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     ListRevisionsCommand(config).run(args)
 
-    expected = [
-        "Revision    Version    Created at            Status",
-        "1                      2020-07-03T20:30:40Z  rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "revision": 1,
+                "version": None,
+                "created_at": "2020-07-03T20:30:40Z",
+                "status": "rejected",
+                "errors": [
+                    {"message": "text 1", "code": "missing-stuff"},
+                    {"message": "other long error text", "code": "broken"},
+                ],
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision    Version    Created at            Status",
+            "1                      2020-07-03T20:30:40Z  rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
+        ]
+        emitter.assert_messages(expected)
 
 
 # -- tests for the release command
@@ -1383,7 +1505,8 @@ def _build_release(revision, channel, expires_at=None, resources=None, base=DEFA
     )
 
 
-def test_status_simple_ok(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_simple_ok(emitter, store_mock, config, formatted):
     """Simple happy case of getting a status."""
     channel_map = [
         _build_release(revision=7, channel="latest/stable"),
@@ -1399,34 +1522,90 @@ def test_status_simple_ok(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
     ]
 
-    expected = [
-        "Track    Base                  Channel    Version       Revision",
-        "latest   ubuntu 20.04 (amd64)  stable     v7            7",
-        "                               candidate  v7            7",
-        "                               beta       2.0           80",
-        "                               edge       git-0db35ea1  156",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "track": "latest",
+                "channels": [
+                    {
+                        "base": {
+                            "name": "ubuntu",
+                            "channel": "20.04",
+                            "architecture": "amd64",
+                        },
+                        "releases": [
+                            {
+                                "status": "open",
+                                "channel": "stable",
+                                "version": "v7",
+                                "revision": 7,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "candidate",
+                                "version": "v7",
+                                "revision": 7,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "beta",
+                                "version": "2.0",
+                                "revision": 80,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "edge",
+                                "version": "git-0db35ea1",
+                                "revision": 156,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Track    Base                  Channel    Version       Revision",
+            "latest   ubuntu 20.04 (amd64)  stable     v7            7",
+            "                               candidate  v7            7",
+            "                               beta       2.0           80",
+            "                               edge       git-0db35ea1  156",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_status_empty(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_empty(emitter, store_mock, config, formatted):
     """Empty response from the store."""
     store_mock.list_releases.return_value = [], [], []
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
-    expected = "Nothing has been released yet."
-    emitter.assert_message(expected)
+    if formatted:
+        emitter.assert_json_output({})
+    else:
+        expected = "Nothing has been released yet."
+        emitter.assert_message(expected)
 
 
-def test_status_channels_not_released_with_fallback(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_channels_not_released_with_fallback(emitter, store_mock, config, formatted):
     """Support gaps in channel releases, having fallbacks."""
     channel_map = [
         _build_release(revision=7, channel="latest/stable"),
@@ -1439,24 +1618,76 @@ def test_status_channels_not_released_with_fallback(emitter, store_mock, config)
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
     ]
 
-    expected = [
-        "Track    Base                  Channel    Version    Revision",
-        "latest   ubuntu 20.04 (amd64)  stable     v7         7",
-        "                               candidate  ↑          ↑",
-        "                               beta       ↑          ↑",
-        "                               edge       2.0        80",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "track": "latest",
+                "channels": [
+                    {
+                        "base": {
+                            "name": "ubuntu",
+                            "channel": "20.04",
+                            "architecture": "amd64",
+                        },
+                        "releases": [
+                            {
+                                "status": "open",
+                                "channel": "stable",
+                                "version": "v7",
+                                "revision": 7,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "candidate",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "beta",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "edge",
+                                "version": "2.0",
+                                "revision": 80,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Track    Base                  Channel    Version    Revision",
+            "latest   ubuntu 20.04 (amd64)  stable     v7         7",
+            "                               candidate  ↑          ↑",
+            "                               beta       ↑          ↑",
+            "                               edge       2.0        80",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_status_channels_not_released_without_fallback(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_channels_not_released_without_fallback(emitter, store_mock, config, formatted):
     """Support gaps in channel releases, nothing released in more stable ones."""
     channel_map = [
         _build_release(revision=5, channel="latest/beta"),
@@ -1469,24 +1700,76 @@ def test_status_channels_not_released_without_fallback(emitter, store_mock, conf
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
     ]
 
-    expected = [
-        "Track    Base                  Channel    Version      Revision",
-        "latest   ubuntu 20.04 (amd64)  stable     -            -",
-        "                               candidate  -            -",
-        "                               beta       5.1          5",
-        "                               edge       almostready  12",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "track": "latest",
+                "channels": [
+                    {
+                        "base": {
+                            "name": "ubuntu",
+                            "channel": "20.04",
+                            "architecture": "amd64",
+                        },
+                        "releases": [
+                            {
+                                "status": "closed",
+                                "channel": "stable",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "closed",
+                                "channel": "candidate",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "beta",
+                                "version": "5.1",
+                                "revision": 5,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "edge",
+                                "version": "almostready",
+                                "revision": 12,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Track    Base                  Channel    Version      Revision",
+            "latest   ubuntu 20.04 (amd64)  stable     -            -",
+            "                               candidate  -            -",
+            "                               beta       5.1          5",
+            "                               edge       almostready  12",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_status_multiple_tracks(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_multiple_tracks(emitter, store_mock, config, formatted):
     """Support multiple tracks."""
     channel_map = [
         _build_release(revision=503, channel="latest/stable"),
@@ -1501,25 +1784,122 @@ def test_status_multiple_tracks(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
     ]
 
-    expected = [
-        "Track    Base                  Channel    Version    Revision",
-        "latest   ubuntu 20.04 (amd64)  stable     7.5.3      503",
-        "                               candidate  ↑          ↑",
-        "                               beta       ↑          ↑",
-        "                               edge       ↑          ↑",
-        "2.0      ubuntu 20.04 (amd64)  stable     -          -",
-        "                               candidate  -          -",
-        "                               beta       -          -",
-        "                               edge       1          1",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "track": "latest",
+                "channels": [
+                    {
+                        "base": {
+                            "name": "ubuntu",
+                            "channel": "20.04",
+                            "architecture": "amd64",
+                        },
+                        "releases": [
+                            {
+                                "status": "open",
+                                "channel": "stable",
+                                "version": "7.5.3",
+                                "revision": 503,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "candidate",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "beta",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "edge",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                "track": "2.0",
+                "channels": [
+                    {
+                        "base": {
+                            "name": "ubuntu",
+                            "channel": "20.04",
+                            "architecture": "amd64",
+                        },
+                        "releases": [
+                            {
+                                "status": "closed",
+                                "channel": "stable",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "closed",
+                                "channel": "candidate",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "closed",
+                                "channel": "beta",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "edge",
+                                "version": "1",
+                                "revision": 1,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Track    Base                  Channel    Version    Revision",
+            "latest   ubuntu 20.04 (amd64)  stable     7.5.3      503",
+            "                               candidate  ↑          ↑",
+            "                               beta       ↑          ↑",
+            "                               edge       ↑          ↑",
+            "2.0      ubuntu 20.04 (amd64)  stable     -          -",
+            "                               candidate  -          -",
+            "                               beta       -          -",
+            "                               edge       1          1",
+        ]
+        emitter.assert_messages(expected)
 
 
 def test_status_tracks_order(emitter, store_mock, config):
@@ -1543,7 +1923,7 @@ def test_status_tracks_order(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=False)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -1572,7 +1952,8 @@ def test_status_tracks_order(emitter, store_mock, config):
     emitter.assert_messages(expected)
 
 
-def test_status_with_one_branch(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_with_one_branch(emitter, store_mock, config, formatted):
     """Support having one branch."""
     tstamp_with_timezone = dateutil.parser.parse("2020-07-03T20:30:40Z")
     channel_map = [
@@ -1599,22 +1980,81 @@ def test_status_with_one_branch(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
     ]
 
-    expected = [
-        "Track    Base                  Channel        Version    Revision    Expires at",
-        "latest   ubuntu 20.04 (amd64)  stable         -          -",
-        "                               candidate      -          -",
-        "                               beta           5.1        5",
-        "                               edge           ↑          ↑",
-        "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40Z",  # NOQA
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "track": "latest",
+                "channels": [
+                    {
+                        "base": {
+                            "name": "ubuntu",
+                            "channel": "20.04",
+                            "architecture": "amd64",
+                        },
+                        "releases": [
+                            {
+                                "status": "closed",
+                                "channel": "stable",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "closed",
+                                "channel": "candidate",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "beta",
+                                "version": "5.1",
+                                "revision": 5,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "edge",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "beta/mybranch",
+                                "version": "ver.12",
+                                "revision": 12,
+                                "resources": [],
+                                "expires_at": "2020-07-03T20:30:40Z",
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Track    Base                  Channel        Version    Revision    Expires at",
+            "latest   ubuntu 20.04 (amd64)  stable         -          -",
+            "                               candidate      -          -",
+            "                               beta           5.1        5",
+            "                               edge           ↑          ↑",
+            "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40Z",  # NOQA
+        ]
+        emitter.assert_messages(expected)
 
 
 def test_status_with_multiple_branches(emitter, store_mock, config):
@@ -1651,7 +2091,7 @@ def test_status_with_multiple_branches(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=False)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -1670,7 +2110,8 @@ def test_status_with_multiple_branches(emitter, store_mock, config):
     emitter.assert_messages(expected)
 
 
-def test_status_with_resources(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_with_resources(emitter, store_mock, config, formatted):
     """Support having multiple branches."""
     res1 = Resource(name="resource1", optional=True, revision=1, resource_type="file")
     res2 = Resource(name="resource2", optional=True, revision=54, resource_type="file")
@@ -1684,17 +2125,71 @@ def test_status_with_resources(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
-    expected = [
-        "Track    Base                  Channel    Version    Revision    Resources",
-        "latest   ubuntu 20.04 (amd64)  stable     -          -           -",
-        "                               candidate  5.1        5           resource1 (r1), resource2 (r54)",  # NOQA
-        "                               beta       5.1        5           resource1 (r1)",
-        "                               edge       ↑          ↑           ↑",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "track": "latest",
+                "channels": [
+                    {
+                        "base": {
+                            "name": "ubuntu",
+                            "channel": "20.04",
+                            "architecture": "amd64",
+                        },
+                        "releases": [
+                            {
+                                "status": "closed",
+                                "channel": "stable",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "candidate",
+                                "version": "5.1",
+                                "revision": 5,
+                                "resources": [
+                                    {"name": "resource1", "revision": 1},
+                                    {"name": "resource2", "revision": 54},
+                                ],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "beta",
+                                "version": "5.1",
+                                "revision": 5,
+                                "resources": [{"name": "resource1", "revision": 1}],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "edge",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Track    Base                  Channel    Version    Revision    Resources",
+            "latest   ubuntu 20.04 (amd64)  stable     -          -           -",
+            "                               candidate  5.1        5           resource1 (r1), resource2 (r54)",  # NOQA
+            "                               beta       5.1        5           resource1 (r1)",
+            "                               edge       ↑          ↑           ↑",
+        ]
+        emitter.assert_messages(expected)
 
 
 def test_status_with_resources_missing_after_closed_channel(emitter, store_mock, config):
@@ -1711,7 +2206,7 @@ def test_status_with_resources_missing_after_closed_channel(emitter, store_mock,
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=False)
     StatusCommand(config).run(args)
 
     expected = [
@@ -1754,7 +2249,7 @@ def test_status_with_resources_and_branches(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=False)
     StatusCommand(config).run(args)
 
     expected = [
@@ -1768,7 +2263,8 @@ def test_status_with_resources_and_branches(emitter, store_mock, config):
     emitter.assert_messages(expected)
 
 
-def test_status_multiplebases_single_track(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_multiplebases_single_track(emitter, store_mock, config, formatted):
     """Multiple bases with one track."""
     other_base = Base(architecture="16b", channel="1", name="xz")
     channel_map = [
@@ -1785,25 +2281,117 @@ def test_status_multiplebases_single_track(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
     ]
 
-    expected = [
-        "Track    Base                  Channel    Version       Revision",
-        "latest   ubuntu 20.04 (amd64)  stable     -             -",
-        "                               candidate  v7            7",
-        "                               beta       ↑             ↑",
-        "                               edge       git-0db35ea1  156",
-        "         xz 1 (16b)            stable     v7            7",
-        "                               candidate  ↑             ↑",
-        "                               beta       2.0           80",
-        "                               edge       ↑             ↑",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "track": "latest",
+                "channels": [
+                    {
+                        "base": {
+                            "name": "ubuntu",
+                            "channel": "20.04",
+                            "architecture": "amd64",
+                        },
+                        "releases": [
+                            {
+                                "status": "closed",
+                                "channel": "stable",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "candidate",
+                                "version": "v7",
+                                "revision": 7,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "beta",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "edge",
+                                "version": "git-0db35ea1",
+                                "revision": 156,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                    {
+                        "base": {
+                            "name": "xz",
+                            "channel": "1",
+                            "architecture": "16b",
+                        },
+                        "releases": [
+                            {
+                                "status": "open",
+                                "channel": "stable",
+                                "version": "v7",
+                                "revision": 7,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "candidate",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "beta",
+                                "version": "2.0",
+                                "revision": 80,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "edge",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Track    Base                  Channel    Version       Revision",
+            "latest   ubuntu 20.04 (amd64)  stable     -             -",
+            "                               candidate  v7            7",
+            "                               beta       ↑             ↑",
+            "                               edge       git-0db35ea1  156",
+            "         xz 1 (16b)            stable     v7            7",
+            "                               candidate  ↑             ↑",
+            "                               beta       2.0           80",
+            "                               edge       ↑             ↑",
+        ]
+        emitter.assert_messages(expected)
 
 
 def test_status_multiplebases_multiple_tracks(emitter, store_mock, config):
@@ -1828,7 +2416,7 @@ def test_status_multiplebases_multiple_tracks(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=False)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -1919,7 +2507,7 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=False)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -1951,7 +2539,8 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
     emitter.assert_messages(expected)
 
 
-def test_status_with_base_in_none(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_status_with_base_in_none(emitter, store_mock, config, formatted):
     """Support the case of base being None."""
     channel_map = [
         _build_release(revision=7, channel="latest/stable", base=None),
@@ -1961,24 +2550,71 @@ def test_status_with_base_in_none(emitter, store_mock, config):
     revisions = [_build_revision(revno=7, version="v7")]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=formatted)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_releases("testcharm"),
     ]
 
-    expected = [
-        "Track    Base    Channel    Version    Revision",
-        "latest   -       stable     v7         7",
-        "                 candidate  v7         7",
-        "                 beta       ↑          ↑",
-        "                 edge       ↑          ↑",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "track": "latest",
+                "channels": [
+                    {
+                        "base": None,
+                        "releases": [
+                            {
+                                "status": "open",
+                                "channel": "stable",
+                                "version": "v7",
+                                "revision": 7,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "open",
+                                "channel": "candidate",
+                                "version": "v7",
+                                "revision": 7,
+                                "resources": [],
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "beta",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                            {
+                                "status": "tracking",
+                                "channel": "edge",
+                                "version": None,
+                                "revision": None,
+                                "resources": None,
+                                "expires_at": None,
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Track    Base    Channel    Version    Revision",
+            "latest   -       stable     v7         7",
+            "                 candidate  v7         7",
+            "                 beta       ↑          ↑",
+            "                 edge       ↑          ↑",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_status_ureleased_track(emitter, store_mock, config):
+def test_status_unreleased_track(emitter, store_mock, config):
     """The package has a track, but nothing is released to it."""
     channel_map = [
         _build_release(revision=5, channel="latest/stable"),
@@ -1991,7 +2627,7 @@ def test_status_ureleased_track(emitter, store_mock, config):
     ]
     store_mock.list_releases.return_value = (channel_map, channels, revisions)
 
-    args = Namespace(name="testcharm")
+    args = Namespace(name="testcharm", format=False)
     StatusCommand(config).run(args)
 
     assert store_mock.mock_calls == [

@@ -246,23 +246,38 @@ class WhoamiCommand(BaseCommand):
     """
     )
 
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        self.include_format_option(parser)
+
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         try:
             macaroon_info = store.whoami()
         except CredentialsUnavailable:
-            emit.message("You are not logged in to Charmhub.")
+            if parsed_args.format:
+                info = {"logged": False}
+                emit.message(self.format_content(parsed_args.format, info))
+            else:
+                emit.message("You are not logged in to Charmhub.")
             return
 
-        emit.message(f"name: {macaroon_info.account.name}")
-        emit.message(f"username: {macaroon_info.account.username}")
-        emit.message(f"id: {macaroon_info.account.id}")
+        human_msgs = []
+        prog_info = {"logged": True}
+
+        human_msgs.append(f"name: {macaroon_info.account.name}")
+        prog_info["name"] = macaroon_info.account.name
+        human_msgs.append(f"username: {macaroon_info.account.username}")
+        prog_info["username"] = macaroon_info.account.username
+        human_msgs.append(f"id: {macaroon_info.account.id}")
+        prog_info["id"] = macaroon_info.account.id
 
         if macaroon_info.permissions:
-            emit.message("permissions:")
+            human_msgs.append("permissions:")
             for item in macaroon_info.permissions:
-                emit.message(f"- {item}")
+                human_msgs.append(f"- {item}")
+            prog_info["permissions"] = macaroon_info.permissions
 
         if macaroon_info.packages:
             grouped = {}
@@ -270,17 +285,28 @@ class WhoamiCommand(BaseCommand):
                 grouped.setdefault(package.type, []).append(package)
             for package_type, title in [("charm", "charms"), ("bundle", "bundles")]:
                 if package_type in grouped:
-                    emit.message(f"{title}:")
+                    human_msgs.append(f"{title}:")
+                    pkg_info = []
                     for item in grouped[package_type]:
                         if item.name is not None:
-                            emit.message(f"- name: {item.name}")
+                            human_msgs.append(f"- name: {item.name}")
+                            pkg_info.append({"name": item.name})
                         elif item.id is not None:
-                            emit.message(f"- id: {item.id}")
+                            human_msgs.append(f"- id: {item.id}")
+                            pkg_info.append({"id": item.id})
+                    prog_info[title] = pkg_info
 
         if macaroon_info.channels:
-            emit.message("channels:")
+            human_msgs.append("channels:")
             for item in macaroon_info.channels:
-                emit.message(f"- {item}")
+                human_msgs.append(f"- {item}")
+            prog_info["channels"] = macaroon_info.channels
+
+        if parsed_args.format:
+            emit.message(self.format_content(parsed_args.format, prog_info))
+        else:
+            for msg in human_msgs:
+                emit.message(msg)
 
 
 class RegisterCharmNameCommand(BaseCommand):
@@ -384,15 +410,18 @@ class ListNamesCommand(BaseCommand):
     )
     common = True
 
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        self.include_format_option(parser)
+
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         result = store.list_registered_names()
-        if not result:
-            emit.message("No charms or bundles registered.")
-            return
 
+        # build the structure that we need for both human and programmatic output
         headers = ["Name", "Type", "Visibility", "Status"]
+        prog_keys = ["name", "type", "visibility", "status"]
         data = []
         for item in result:
             visibility = "private" if item.private else "public"
@@ -404,6 +433,15 @@ class ListNamesCommand(BaseCommand):
                     item.status,
                 ]
             )
+
+        if parsed_args.format:
+            info = [dict(zip(prog_keys, item)) for item in data]
+            emit.message(self.format_content(parsed_args.format, info))
+            return
+
+        if not result:
+            emit.message("No charms or bundles registered.")
+            return
 
         table = tabulate(data, headers=headers, tablefmt="plain")
         for line in table.splitlines():
@@ -521,11 +559,28 @@ class UploadCommand(BaseCommand):
         self._validate_template_is_handled(parsed_args.filepath)
         store = Store(self.config.charmhub)
         result = store.upload(name, parsed_args.filepath)
-        if result.ok:
+
+        if not result.ok:
+            if parsed_args.format:
+                errors = [{"code": err.code, "message": err.message} for err in result.errors]
+                info = {"errors": errors}
+                emit.message(self.format_content(parsed_args.format, info))
+            else:
+                emit.message(f"Upload failed with status {result.status!r}:")
+                for error in result.errors:
+                    emit.message(f"- {error.code}: {error.message}")
+            return 1
+
+        if parsed_args.release:
+            # also release!
+            store.release(name, result.revision, parsed_args.release, parsed_args.resource)
+
+        if parsed_args.format:
+            info = {"revision": result.revision}
+            emit.message(self.format_content(parsed_args.format, info))
+        else:
             emit.message(f"Revision {result.revision} of {str(name)!r} created")
             if parsed_args.release:
-                # also release!
-                store.release(name, result.revision, parsed_args.release, parsed_args.resource)
                 msg = "Revision released to {}"
                 args = [", ".join(parsed_args.release)]
                 if parsed_args.resource:
@@ -534,13 +589,7 @@ class UploadCommand(BaseCommand):
                         ", ".join(f"{r.name!r} r{r.revision}" for r in parsed_args.resource)
                     )
                 emit.message(msg.format(*args))
-            retcode = 0
-        else:
-            emit.message(f"Upload failed with status {result.status!r}:")
-            for error in result.errors:
-                emit.message(f"- {error.code}: {error.message}")
-            retcode = 1
-        return retcode
+        return 0
 
 
 class ListRevisionsCommand(BaseCommand):
@@ -565,18 +614,18 @@ class ListRevisionsCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        self.include_format_option(parser)
         parser.add_argument("name", help="The name of the charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         result = store.list_revisions(parsed_args.name)
-        if not result:
-            emit.message("No revisions found.")
-            return
 
+        # build the structure that we need for both human and programmatic output
         headers = ["Revision", "Version", "Created at", "Status"]
-        data = []
+        human_data = []
+        prog_data = []
         for item in sorted(result, key=attrgetter("revision"), reverse=True):
             # use just the status or include error message/code in it (if exist)
             if item.errors:
@@ -585,16 +634,35 @@ class ListRevisionsCommand(BaseCommand):
             else:
                 status = item.status
 
-            data.append(
+            tstamp = format_timestamp(item.created_at)
+            human_data.append(
                 [
                     item.revision,
                     item.version,
-                    format_timestamp(item.created_at),
+                    tstamp,
                     status,
                 ]
             )
 
-        table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
+            prog_info = {
+                "revision": item.revision,
+                "version": item.version,
+                "created_at": tstamp,
+                "status": item.status,
+            }
+            if item.errors:
+                prog_info["errors"] = [{"message": e.message, "code": e.code} for e in item.errors]
+            prog_data.append(prog_info)
+
+        if parsed_args.format:
+            emit.message(self.format_content(parsed_args.format, prog_data))
+            return
+
+        if not result:
+            emit.message("No revisions found.")
+            return
+
+        table = tabulate(human_data, headers=headers, tablefmt="plain", numalign="left")
         for line in table.splitlines():
             emit.message(line)
 
@@ -757,6 +825,7 @@ class StatusCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        self.include_format_option(parser)
         parser.add_argument("name", help="The name of the charm or bundle")
 
     def _build_resources_repr(self, resources):
@@ -767,12 +836,19 @@ class StatusCommand(BaseCommand):
             result = "-"
         return result
 
+    def _build_resources_prog(self, resources):
+        """Build the programmatic object for a list of resources."""
+        return [{"name": res.name, "revision": res.revision} for res in resources]
+
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         channel_map, channels, revisions = store.list_releases(parsed_args.name)
         if not channel_map:
-            emit.message("Nothing has been released yet.")
+            if parsed_args.format:
+                emit.message(self.format_content(parsed_args.format, {}))
+            else:
+                emit.message("Nothing has been released yet.")
             return
 
         # group released revision by track and base
@@ -780,11 +856,7 @@ class StatusCommand(BaseCommand):
         for item in channel_map:
             track = item.channel.split("/")[0]
             by_base = releases_by_track.setdefault(track, {})
-            if item.base is None:
-                base_str = "-"
-            else:
-                base_str = "{0.name} {0.channel} ({0.architecture})".format(item.base)
-            by_channel = by_base.setdefault(base_str, {})
+            by_channel = by_base.setdefault(item.base, {})
             by_channel[item.channel] = item
 
         # groupe revision objects by revision number
@@ -816,16 +888,35 @@ class StatusCommand(BaseCommand):
 
         # show everything, grouped by tracks and bases, with regular channels at first and
         # branches (if any) after those
-        data = []
-        unreleased_track = {"-": {}}  # show a dash in "base" and no releases at all
+        human_data = []
+        prog_data = []
+        unreleased_track = {None: {}}  # base in None with no releases at all
         for track, (channels, branches) in per_track.items():
+            prog_channels_info = []
+            prog_data.append({"track": track, "channels": prog_channels_info})
+
             releases_by_base = releases_by_track.get(track, unreleased_track)
             shown_track = track
 
             # bases are shown alphabetically ordered
-            for base in sorted(releases_by_base):
+            sorted_bases = sorted(
+                releases_by_base, key=lambda b: b and (b.name, b.channel, b.architecture)
+            )
+            for base in sorted_bases:
                 releases_by_channel = releases_by_base[base]
-                shown_base = base
+                if base is None:
+                    shown_base = "-"
+                    prog_base = None
+                else:
+                    shown_base = "{0.name} {0.channel} ({0.architecture})".format(base)
+                    prog_base = {
+                        "name": base.name,
+                        "channel": base.channel,
+                        "architecture": base.architecture,
+                    }
+
+                prog_releases_info = []
+                prog_channels_info.append({"base": prog_base, "releases": prog_releases_info})
 
                 release_shown_for_this_track_base = False
 
@@ -838,17 +929,32 @@ class StatusCommand(BaseCommand):
                         version = revno = resources = (
                             "↑" if release_shown_for_this_track_base else "-"
                         )
+                        prog_version = prog_revno = prog_resources = None
+                        prog_status = "tracking" if release_shown_for_this_track_base else "closed"
                     else:
                         release_shown_for_this_track_base = True
-                        revno = release.revision
+                        revno = prog_revno = release.revision
                         revision = revisions_by_revno[revno]
-                        version = revision.version
+                        version = prog_version = revision.version
                         resources = self._build_resources_repr(release.resources)
+                        prog_resources = self._build_resources_prog(release.resources)
+                        prog_status = "open"
 
                     datum = [shown_track, shown_base, description, version, revno]
                     if resources_present:
                         datum.append(resources)
-                    data.append(datum)
+                    human_data.append(datum)
+
+                    prog_releases_info.append(
+                        {
+                            "status": prog_status,
+                            "channel": description,
+                            "version": prog_version,
+                            "revision": prog_revno,
+                            "resources": prog_resources,
+                            "expires_at": None,
+                        }
+                    )
 
                     # stop showing the track and base for the rest of the struct
                     shown_track = ""
@@ -866,11 +972,25 @@ class StatusCommand(BaseCommand):
                     if resources_present:
                         datum.append(self._build_resources_repr(release.resources))
                     datum.append(expiration)
-                    data.append(datum)
+                    human_data.append(datum)
 
-        table = tabulate(data, headers=headers, tablefmt="plain", numalign="left")
-        for line in table.splitlines():
-            emit.message(line)
+                    prog_releases_info.append(
+                        {
+                            "status": "open",
+                            "channel": description,
+                            "version": revision.version,
+                            "revision": release.revision,
+                            "resources": self._build_resources_prog(release.resources),
+                            "expires_at": expiration,
+                        }
+                    )
+
+        if parsed_args.format:
+            emit.message(self.format_content(parsed_args.format, prog_data))
+        else:
+            table = tabulate(human_data, headers=headers, tablefmt="plain", numalign="left")
+            for line in table.splitlines():
+                emit.message(line)
 
 
 class _BadLibraryPathError(CraftError):

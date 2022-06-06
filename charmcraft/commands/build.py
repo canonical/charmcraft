@@ -198,6 +198,9 @@ class Builder:
         )
         lifecycle.run(Step.PRIME)
 
+        # validate entrypoint after all processing
+        self._validate_entrypoint(lifecycle.prime_dir)
+
         # run linters and show the results
         linting_results = linters.analyze(self.config, lifecycle.prime_dir)
         self.show_linting_results(linting_results)
@@ -246,6 +249,9 @@ class Builder:
             entrypoint = self.entrypoint
             self.entrypoint = None
         else:
+            # XXX Facundo 2022-06-06: this default should come from the config itself, but
+            # that can only be done when the command line option for entrypoint is removed
+            # (otherwise we couldn't validate that the two options conflict).
             entrypoint = "src/charm.py"
 
         # store the entrypoint always relative to the project's path (no matter if the origin
@@ -253,8 +259,19 @@ class Builder:
         rel_entrypoint = (self.charmdir / entrypoint).relative_to(self.charmdir)
         self._special_charm_part["charm-entrypoint"] = rel_entrypoint.as_posix()
 
-        # validate the entrypoint (no matter if it came from the config or it's the default)
-        filepath = (self.charmdir / self._special_charm_part["charm-entrypoint"]).resolve()
+    def _validate_entrypoint(self, basedir):
+        """Validate the charm's entrypoint.
+
+        This is done no matter if it came from the config or it's the default.
+
+        This validation happens *after the build*, as in some cases the entrypoint itself
+        is generated during that step. This is done differently from other project files
+        (e.g. requirements.txt) as they are needed for the build itself.
+        """
+        # XXX Facundo 2022-06-06: we should move this to be a proper linter, but that can only
+        # be done cleanly when the command line option for entrypoint is removed (and the
+        # source of truth, including the default value, is the config)
+        filepath = (basedir / self._special_charm_part["charm-entrypoint"]).resolve()
         if not filepath.exists():
             raise CraftError("Charm entry point was not found: {!r}".format(str(filepath)))
         if self.charmdir not in filepath.parents:

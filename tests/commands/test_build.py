@@ -1623,6 +1623,31 @@ def test_build_postlifecycle_validation_is_properly_called(basic_project, monkey
     mock_validation.assert_called_with(basic_project)
 
 
+def test_build_postlifecycle_validation_no_charm(basic_project):
+    """Post lifecycle validation when it's not a charm."""
+    host_base = get_host_as_base()
+    charmcraft_yaml_content = f"""\
+       type: charm
+       bases:
+         - build-on:
+             - name: {host_base.name!r}
+               channel: {host_base.channel!r}
+           run-on:
+             - name: {host_base.name!r}
+               channel: {host_base.channel!r}
+       parts:
+         charm:
+           source: .
+           plugin: reactive
+           build-snaps: [charm]
+       """
+    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
+    config = load(basic_project)
+
+    builder = get_builder(config, entrypoint=None, force=True)
+    builder._post_lifecycle_validation(basic_project)
+
+
 def test_build_postlifecycle_validation_entrypoint_missing(basic_project):
     """The entrypoint is not specified and there is no file for its default."""
     host_base = get_host_as_base()

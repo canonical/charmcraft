@@ -285,14 +285,15 @@ class Builder:
 
         - the charm's entrypoint, no matter if it came from the config or it's the default.
         """
-        # XXX Facundo 2022-06-06: we should move this to be a proper linter, but that can only
-        # be done cleanly when the command line option for entrypoint is removed (and the
-        # source of truth, including the default value, is the config)
-        filepath = (basedir / self._special_charm_part["charm-entrypoint"]).resolve()
-        if not filepath.exists():
-            raise CraftError("Charm entry point was not found: {!r}".format(str(filepath)))
-        if not os.access(filepath, os.X_OK):
-            raise CraftError("Charm entry point must be executable: {!r}".format(str(filepath)))
+        if self._special_charm_part is not None:
+            # XXX Facundo 2022-06-06: we should move this to be a proper linter, but that can only
+            # be done cleanly when the command line option for entrypoint is removed (and the
+            # source of truth, including the default value, is the config)
+            fpath = (basedir / self._special_charm_part["charm-entrypoint"]).resolve()
+            if not fpath.exists():
+                raise CraftError("Charm entry point was not found: {!r}".format(str(fpath)))
+            if not os.access(fpath, os.X_OK):
+                raise CraftError("Charm entry point must be executable: {!r}".format(str(fpath)))
 
     def _set_prime_filter(self):
         """Add mandatory and optional charm files to the prime filter.

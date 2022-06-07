@@ -621,7 +621,7 @@ def test_build_with_debug_no_error(
         debug=True,
     )
 
-    with patch.object(Builder, "_validate_entrypoint"):
+    with patch.object(Builder, "_post_lifecycle_validation"):
         charms = builder.run(destructive_mode=True)
 
     assert len(charms) == 1
@@ -672,7 +672,7 @@ def test_build_with_shell_after(
         shell_after=True,
     )
 
-    with patch.object(Builder, "_validate_entrypoint"):
+    with patch.object(Builder, "_post_lifecycle_validation"):
         charms = builder.run(destructive_mode=True)
 
     assert len(charms) == 1
@@ -1548,7 +1548,40 @@ def test_build_entrypoint_from_both(basic_project, monkeypatch):
     )
 
 
-def test_build_entrypoint_validation_is_properly_called(basic_project, monkeypatch):
+def test_build_entrypoint_from_parts_outside(basic_project, monkeypatch):
+    """The specified entrypoint not points to a file outside the project."""
+    host_base = get_host_as_base()
+    outside = basic_project.parent
+    charmcraft_yaml_content = f"""\
+        type: charm
+        bases:
+          - build-on:
+              - name: {host_base.name!r}
+                channel: {host_base.channel!r}
+            run-on:
+              - name: {host_base.name!r}
+                channel: {host_base.channel!r}
+        parts:
+          charm:
+            charm-entrypoint: ../my_entrypoint.py
+        """
+    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
+    config = load(basic_project)
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    # file exists and it's fine
+    entrypoint = outside / "my_entrypoint.py"
+    entrypoint.touch(mode=0o755)
+
+    builder = get_builder(config, entrypoint=None)
+    with pytest.raises(CraftError) as cm:
+        builder.run([0])
+    assert str(cm.value) == (
+        f"Charm entry point must be inside the project: {str(entrypoint.resolve())!r}"
+    )
+
+
+def test_build_postlifecycle_validation_is_properly_called(basic_project, monkeypatch):
     """Check how the entrypoint validation helper is called."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -1583,14 +1616,14 @@ def test_build_entrypoint_validation_is_properly_called(basic_project, monkeypat
         mock_lifecycle_instance.run().return_value = None
         with patch("charmcraft.linters.analyze"):
             with patch.object(Builder, "show_linting_results"):
-                with patch.object(Builder, "_validate_entrypoint") as mock_entrypoint_validation:
+                with patch.object(Builder, "_post_lifecycle_validation") as mock_validation:
                     builder.run([0])
 
     # check that the entrypoint validation was called correctly
-    mock_entrypoint_validation.assert_called_with(basic_project)
+    mock_validation.assert_called_with(basic_project)
 
 
-def test_build_entrypoint_validation_missing(basic_project):
+def test_build_postlifecycle_validation_entrypoint_missing(basic_project):
     """The entrypoint is not specified and there is no file for its default."""
     host_base = get_host_as_base()
     charmcraft_yaml_content = f"""\
@@ -1613,13 +1646,13 @@ def test_build_entrypoint_validation_missing(basic_project):
     builder = get_builder(config, entrypoint=None, force=True)
     builder._handle_deprecated_cli_arguments()  # load from config
     with pytest.raises(CraftError) as cm:
-        builder._validate_entrypoint(basic_project)
+        builder._post_lifecycle_validation(basic_project)
     entrypoint = basic_project / "missing.py"
     assert str(cm.value) == f"Charm entry point was not found: {str(entrypoint)!r}"
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_entrypoint_validation_nonexec(basic_project):
+def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
     """The entrypoint is not specified and the file for its default is not executable."""
     host_base = get_host_as_base()
     charmcraft_yaml_content = f"""\
@@ -1645,41 +1678,8 @@ def test_build_entrypoint_validation_nonexec(basic_project):
     builder = get_builder(config, entrypoint=None, force=True)
     builder._handle_deprecated_cli_arguments()  # load from config
     with pytest.raises(CraftError) as cm:
-        builder._validate_entrypoint(basic_project)
+        builder._post_lifecycle_validation(basic_project)
     assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
-
-
-def test_build_entrypoint_validation_outside(basic_project):
-    """The specified entrypoint not points to a file outside the project."""
-    host_base = get_host_as_base()
-    outside = basic_project.parent
-    charmcraft_yaml_content = f"""\
-        type: charm
-        bases:
-          - build-on:
-              - name: {host_base.name!r}
-                channel: {host_base.channel!r}
-            run-on:
-              - name: {host_base.name!r}
-                channel: {host_base.channel!r}
-        parts:
-          charm:
-            charm-entrypoint: ../my_entrypoint.py
-        """
-    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
-    config = load(basic_project)
-
-    # file exists and it's fine
-    entrypoint = outside / "my_entrypoint.py"
-    entrypoint.touch(mode=0o755)
-
-    builder = get_builder(config, entrypoint=None)
-    builder._handle_deprecated_cli_arguments()  # load from config
-    with pytest.raises(CraftError) as cm:
-        builder._validate_entrypoint(basic_project)
-    assert str(cm.value) == (
-        f"Charm entry point must be inside the project: {str(entrypoint.resolve())!r}"
-    )
 
 
 def test_build_with_requirement_argment_issues_dn05(basic_project, emitter, monkeypatch):

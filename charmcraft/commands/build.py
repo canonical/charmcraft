@@ -198,8 +198,8 @@ class Builder:
         )
         lifecycle.run(Step.PRIME)
 
-        # validate entrypoint after all processing
-        self._validate_entrypoint(lifecycle.prime_dir)
+        # validate after all processing
+        self._post_lifecycle_validation(lifecycle.prime_dir)
 
         # run linters and show the results
         linting_results = linters.analyze(self.config, lifecycle.prime_dir)
@@ -217,6 +217,14 @@ class Builder:
         return zipname
 
     def _handle_deprecated_cli_arguments(self):
+        """Handle the mix of deprecated CLI args and config options.
+
+        This function also validate the result files from the mix when they are needed for
+        the lifecycle process itself (e.g. requirements.txt).
+        """
+        # XXX Facundo 2022-06-07: after these CLI args are removed, we could transform this
+        # function in a `_pre_lifecycle_validation` one.
+
         # verify if deprecated --requirement is used and update the plugin property
         if self._special_charm_part.get("charm-requirements"):
             if self.requirement_paths:
@@ -259,14 +267,23 @@ class Builder:
         rel_entrypoint = (self.charmdir / entrypoint).relative_to(self.charmdir)
         self._special_charm_part["charm-entrypoint"] = rel_entrypoint.as_posix()
 
-    def _validate_entrypoint(self, basedir):
-        """Validate the charm's entrypoint.
+        # check that the entrypoint, if exists, is inside the project (this cannot be done
+        # after the lifecycle process, when the file would be just copied in)
+        filepath = (self.charmdir / self._special_charm_part["charm-entrypoint"]).resolve()
+        if filepath.exists() and self.charmdir not in filepath.parents:
+            raise CraftError(
+                "Charm entry point must be inside the project: {!r}".format(str(filepath))
+            )
 
-        This is done no matter if it came from the config or it's the default.
+    def _post_lifecycle_validation(self, basedir):
+        """Validate files after lifecycle steps.
 
-        This validation happens *after the build*, as in some cases the entrypoint itself
-        is generated during that step. This is done differently from other project files
-        (e.g. requirements.txt) as they are needed for the build itself.
+        Validations here happen *after all steps*, as in some cases required files (e.g. the
+        entrypoint itself) are generated during that process.
+
+        Current validation:
+
+        - the charm's entrypoint, no matter if it came from the config or it's the default.
         """
         # XXX Facundo 2022-06-06: we should move this to be a proper linter, but that can only
         # be done cleanly when the command line option for entrypoint is removed (and the
@@ -274,10 +291,6 @@ class Builder:
         filepath = (basedir / self._special_charm_part["charm-entrypoint"]).resolve()
         if not filepath.exists():
             raise CraftError("Charm entry point was not found: {!r}".format(str(filepath)))
-        if self.charmdir not in filepath.parents:
-            raise CraftError(
-                "Charm entry point must be inside the project: {!r}".format(str(filepath))
-            )
         if not os.access(filepath, os.X_OK):
             raise CraftError("Charm entry point must be executable: {!r}".format(str(filepath)))
 

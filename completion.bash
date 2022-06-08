@@ -137,11 +137,23 @@ _charmcraft()
                     _filedir
                     ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath --image" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath --image --format" -- "$cur") )
                     ;;
             esac
             ;;
         version)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            ;;
+        whoami)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            ;;
+        names)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            ;;
+        revisions)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            ;;
+        status)
             COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
             ;;
         *)

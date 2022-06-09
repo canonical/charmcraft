@@ -129,7 +129,7 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${globals[*]} --name --author --force" -- "$cur") )
             ;;
         upload)
-            COMPREPLY=( $(compgen -W "${globals[*]} --release --resource" -- "$cur") )
+            COMPREPLY=( $(compgen -W "${globals[*]} --release --resource --format" -- "$cur") )
             ;;
         upload-resource)
             case "$prev" in
@@ -137,7 +137,7 @@ _charmcraft()
                     _filedir
                     ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath --image --format" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --filepath --image" -- "$cur") )
                     ;;
             esac
             ;;
@@ -154,6 +154,18 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
             ;;
         status)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            ;;
+        create-lib)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            ;;
+        publish-lib)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            ;;
+        fetch-lib)
+            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            ;;
+        list-lib)
             COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
             ;;
         *)

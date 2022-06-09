@@ -506,6 +506,9 @@ class UploadCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        # XXX Facundo 2022-06-09: we need to test that the proper args are defined here
+        self.include_format_option(parser)
+
         parser.add_argument("filepath", type=useful_filepath, help="The charm or bundle to upload")
         parser.add_argument(
             "--release",

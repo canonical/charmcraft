@@ -4180,60 +4180,112 @@ def test_listlib_properly_sorted(emitter, store_mock, config, formatted):
 # -- tests for list resources command
 
 
-def test_resources_simple(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_resources_simple(emitter, store_mock, config, formatted):
     """Happy path of one result from the Store."""
     store_response = [
         Resource(name="testresource", optional=True, revision=1, resource_type="file"),
     ]
     store_mock.list_resources.return_value = store_response
 
-    args = Namespace(charm_name="testcharm")
+    args = Namespace(charm_name="testcharm", format=formatted)
     ListResourcesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_resources("testcharm"),
     ]
-    expected = [
-        "Charm Rev    Resource      Type    Optional",
-        "1            testresource  file    True",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "charm_revision": 1,
+                "name": "testresource",
+                "type": "file",
+                "optional": True,
+            }
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Charm Rev    Resource      Type    Optional",
+            "1            testresource  file    True",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_resources_empty(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_resources_empty(emitter, store_mock, config, formatted):
     """No results from the store."""
     store_response = []
     store_mock.list_resources.return_value = store_response
 
-    args = Namespace(charm_name="testcharm")
+    args = Namespace(charm_name="testcharm", format=formatted)
     ListResourcesCommand(config).run(args)
 
-    emitter.assert_message("No resources associated to testcharm.")
+    if formatted:
+        emitter.assert_json_output([])
+    else:
+        emitter.assert_message("No resources associated to testcharm.")
 
 
-def test_resources_ordered_and_grouped(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_resources_ordered_and_grouped(emitter, store_mock, config, formatted):
     """Results are presented ordered by name in the table."""
     store_response = [
         Resource(name="bbb-resource", optional=True, revision=2, resource_type="file"),
         Resource(name="ccc-resource", optional=True, revision=1, resource_type="file"),
-        Resource(name="bbb-resource", optional=True, revision=3, resource_type="file"),
-        Resource(name="aaa-resource", optional=True, revision=2, resource_type="file"),
+        Resource(name="bbb-resource", optional=False, revision=3, resource_type="file"),
+        Resource(name="aaa-resource", optional=True, revision=2, resource_type="oci-image"),
         Resource(name="bbb-resource", optional=True, revision=5, resource_type="file"),
     ]
     store_mock.list_resources.return_value = store_response
 
-    args = Namespace(charm_name="testcharm")
+    args = Namespace(charm_name="testcharm", format=formatted)
     ListResourcesCommand(config).run(args)
 
-    expected = [
-        "Charm Rev    Resource      Type    Optional",
-        "5            bbb-resource  file    True",
-        "3            bbb-resource  file    True",
-        "2            aaa-resource  file    True",
-        "             bbb-resource  file    True",
-        "1            ccc-resource  file    True",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "charm_revision": 2,
+                "name": "bbb-resource",
+                "type": "file",
+                "optional": True,
+            },
+            {
+                "charm_revision": 1,
+                "name": "ccc-resource",
+                "type": "file",
+                "optional": True,
+            },
+            {
+                "charm_revision": 3,
+                "name": "bbb-resource",
+                "type": "file",
+                "optional": False,
+            },
+            {
+                "charm_revision": 2,
+                "name": "aaa-resource",
+                "type": "oci-image",
+                "optional": True,
+            },
+            {
+                "charm_revision": 5,
+                "name": "bbb-resource",
+                "type": "file",
+                "optional": True,
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Charm Rev    Resource      Type       Optional",
+            "5            bbb-resource  file       True",
+            "3            bbb-resource  file       False",
+            "2            aaa-resource  oci-image  True",
+            "             bbb-resource  file       True",
+            "1            ccc-resource  file       True",
+        ]
+        emitter.assert_messages(expected)
 
 
 # -- tests for upload resources command
@@ -4302,7 +4354,8 @@ def test_uploadresource_options_bad_combinations(config, sysargs, tmp_path, monk
         cmd.parsed_args_post_verification(parser, parsed_args)
 
 
-def test_uploadresource_filepath_call_ok(emitter, store_mock, config, tmp_path):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_uploadresource_filepath_call_ok(emitter, store_mock, config, tmp_path, formatted):
     """Simple upload, success result."""
     store_response = Uploaded(ok=True, status=200, revision=7, errors=[])
     store_mock.upload_resource.return_value = store_response
@@ -4314,6 +4367,7 @@ def test_uploadresource_filepath_call_ok(emitter, store_mock, config, tmp_path):
         resource_name="myresource",
         filepath=test_resource,
         image=None,
+        format=formatted,
     )
     retcode = UploadResourceCommand(config).run(args)
     assert retcode == 0
@@ -4321,17 +4375,24 @@ def test_uploadresource_filepath_call_ok(emitter, store_mock, config, tmp_path):
     assert store_mock.mock_calls == [
         call.upload_resource("mycharm", "myresource", "file", test_resource)
     ]
-    emitter.assert_interactions(
-        [
-            call("progress", f"Uploading resource directly from file {str(test_resource)!r}."),
-            call("message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."),
-        ]
-    )
+    if formatted:
+        expected = {"revision": 7}
+        emitter.assert_json_output(expected)
+    else:
+        emitter.assert_interactions(
+            [
+                call("progress", f"Uploading resource directly from file {str(test_resource)!r}."),
+                call(
+                    "message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."
+                ),
+            ]
+        )
     assert test_resource.exists()  # provided by the user, don't touch it
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config, formatted):
     """Upload an oci-image resource, the image itself already being in the registry."""
     # fake credentials for the charm/resource, and the final json content
     store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
@@ -4368,6 +4429,7 @@ def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config)
         resource_name="myresource",
         filepath=None,
         image=original_image_digest,
+        format=formatted,
     )
     with patch("charmcraft.commands.store.ImageHandler", autospec=True) as im_class_mock:
         with patch("charmcraft.commands.store.OCIRegistry", autospec=True) as reg_class_mock:
@@ -4402,17 +4464,23 @@ def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config)
         call.upload_resource("mycharm", "myresource", "oci-image", uploaded_resource_filepath),
     ]
 
-    emitter.assert_interactions(
-        [
-            call(
-                "progress",
-                "Uploading resource from image "
-                "charm/charm-id/test-image-name @ test-digest-given-by-user.",
-            ),
-            call("message", "Using OCI image from Canonical's registry.", intermediate=True),
-            call("message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."),
-        ]
-    )
+    if formatted:
+        expected = {"revision": 7}
+        emitter.assert_json_output(expected)
+    else:
+        emitter.assert_interactions(
+            [
+                call(
+                    "progress",
+                    "Uploading resource from image "
+                    "charm/charm-id/test-image-name @ test-digest-given-by-user.",
+                ),
+                call("progress", "Using OCI image from Canonical's registry."),
+                call(
+                    "message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."
+                ),
+            ]
+        )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -4437,6 +4505,7 @@ def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config
         resource_name="myresource",
         filepath=None,
         image=original_image_digest,
+        format=False,
     )
     with patch("charmcraft.commands.store.ImageHandler", autospec=True) as im_class_mock:
         with patch("charmcraft.commands.store.OCIRegistry", autospec=True) as reg_class_mock:
@@ -4471,14 +4540,12 @@ def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config
                 "charm/charm-id/test-image-name @ test-digest-given-by-user.",
             ),
             call(
-                "message",
+                "progress",
                 "Remote image not found, uploading from local registry.",
-                intermediate=True,
             ),
             call(
-                "message",
+                "progress",
                 "Image uploaded, new remote digest: new-digest-after-upload.",
-                intermediate=True,
             ),
             call("message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."),
         ]
@@ -4501,6 +4568,7 @@ def test_uploadresource_image_call_missing_everywhere(emitter, store_mock, confi
         resource_name="myresource",
         filepath=None,
         image=original_image_digest,
+        format=False,
     )
     with patch("charmcraft.commands.store.ImageHandler", autospec=True) as im_class_mock:
         with patch("charmcraft.commands.store.OCIRegistry", autospec=True) as reg_class_mock:
@@ -4532,21 +4600,20 @@ def test_uploadresource_image_call_missing_everywhere(emitter, store_mock, confi
                 "image charm/charm-id/test-image-name @ test-digest-given-by-user.",
             ),
             call(
-                "message",
+                "progress",
                 "Remote image not found, uploading from local registry.",
-                intermediate=True,
             ),
             call(
-                "message",
+                "progress",
                 "Image with digest test-digest-given-by-user is not available in "
                 "the Canonical's registry nor locally.",
-                intermediate=True,
             ),
         ]
     )
 
 
-def test_uploadresource_call_error(emitter, store_mock, config, tmp_path):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_uploadresource_call_error(emitter, store_mock, config, tmp_path, formatted):
     """Simple upload but with a response indicating an error."""
     errors = [
         Error(message="text 1", code="missing-stuff"),
@@ -4557,54 +4624,81 @@ def test_uploadresource_call_error(emitter, store_mock, config, tmp_path):
 
     test_resource = tmp_path / "mystuff.bin"
     test_resource.write_text("sample stuff")
-    args = Namespace(charm_name="mycharm", resource_name="myresource", filepath=test_resource)
+    args = Namespace(
+        charm_name="mycharm", resource_name="myresource", filepath=test_resource, format=formatted
+    )
     retcode = UploadResourceCommand(config).run(args)
     assert retcode == 1
 
-    emitter.assert_messages(
-        [
-            "Upload failed with status 400:",
-            "- missing-stuff: text 1",
-            "- broken: other long error text",
-        ]
-    )
+    if formatted:
+        expected = {
+            "errors": [
+                {"code": "missing-stuff", "message": "text 1"},
+                {"code": "broken", "message": "other long error text"},
+            ]
+        }
+        emitter.assert_json_output(expected)
+    else:
+        emitter.assert_messages(
+            [
+                "Upload failed with status 400:",
+                "- missing-stuff: text 1",
+                "- broken: other long error text",
+            ]
+        )
 
 
 # -- tests for list resource revisions command
 
 
-def test_resourcerevisions_simple(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
     """Happy path of one result from the Store."""
     store_response = [
         ResourceRevision(revision=1, size=50, created_at=datetime.datetime(2020, 7, 3, 2, 30, 40)),
     ]
     store_mock.list_resource_revisions.return_value = store_response
 
-    args = Namespace(charm_name="testcharm", resource_name="testresource")
+    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
     ListResourceRevisionsCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.list_resource_revisions("testcharm", "testresource"),
     ]
-    expected = [
-        "Revision    Created at              Size",
-        "1           2020-07-03T02:30:40Z     50B",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "revision": 1,
+                "created at": "2020-07-03T02:30:40Z",
+                "size": 50,
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision    Created at              Size",
+            "1           2020-07-03T02:30:40Z     50B",
+        ]
+        emitter.assert_messages(expected)
 
 
-def test_resourcerevisions_empty(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_resourcerevisions_empty(emitter, store_mock, config, formatted):
     """No results from the store."""
     store_response = []
     store_mock.list_resource_revisions.return_value = store_response
 
-    args = Namespace(charm_name="testcharm", resource_name="testresource")
+    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
     ListResourceRevisionsCommand(config).run(args)
 
-    emitter.assert_message("No revisions found.")
+    if formatted:
+        emitter.assert_json_output([])
+    else:
+        emitter.assert_message("No revisions found.")
 
 
-def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config):
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, formatted):
     """Results are presented ordered by revision in the table."""
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
@@ -4617,14 +4711,39 @@ def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config):
     ]
     store_mock.list_resource_revisions.return_value = store_response
 
-    args = Namespace(charm_name="testcharm", resource_name="testresource")
+    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
     ListResourceRevisionsCommand(config).run(args)
 
-    expected = [
-        "Revision    Created at              Size",
-        "4           2020-07-03T20:30:40Z  856.0K",
-        "3           2020-07-03T20:30:40Z   32.9M",
-        "2           2020-07-03T20:30:40Z     50B",
-        "1           2020-07-03T20:30:40Z    4.9K",
-    ]
-    emitter.assert_messages(expected)
+    if formatted:
+        expected = [
+            {
+                "revision": 1,
+                "created at": "2020-07-03T20:30:40Z",
+                "size": 5000,
+            },
+            {
+                "revision": 3,
+                "created at": "2020-07-03T20:30:40Z",
+                "size": 34450520,
+            },
+            {
+                "revision": 4,
+                "created at": "2020-07-03T20:30:40Z",
+                "size": 876543,
+            },
+            {
+                "revision": 2,
+                "created at": "2020-07-03T20:30:40Z",
+                "size": 50,
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Revision    Created at              Size",
+            "4           2020-07-03T20:30:40Z  856.0K",
+            "3           2020-07-03T20:30:40Z   32.9M",
+            "2           2020-07-03T20:30:40Z     50B",
+            "1           2020-07-03T20:30:40Z    4.9K",
+        ]
+        emitter.assert_messages(expected)

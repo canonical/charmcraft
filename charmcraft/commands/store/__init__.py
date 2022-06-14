@@ -1650,12 +1650,27 @@ class ListResourcesCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        self.include_format_option(parser)
         parser.add_argument("charm_name", metavar="charm-name", help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
         result = store.list_resources(parsed_args.charm_name)
+
+        if parsed_args.format:
+            info = [
+                {
+                    "charm_revision": item.revision,
+                    "name": item.name,
+                    "type": item.resource_type,
+                    "optional": item.optional,
+                }
+                for item in result
+            ]
+            emit.message(self.format_content(parsed_args.format, info))
+            return
+
         if not result:
             emit.message(f"No resources associated to {parsed_args.charm_name}.")
             return
@@ -1701,6 +1716,7 @@ class UploadResourceCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        self.include_format_option(parser)
         parser.add_argument(
             "charm_name",
             metavar="charm-name",
@@ -1751,24 +1767,22 @@ class UploadResourceCommand(BaseCommand):
 
             # check if the specific image is already in Canonical's registry
             already_uploaded = ih.check_in_registry(image_digest)
+            # XXX Facundo 2022-06-13: converting the following four messages to progress ones
+            # so they don't interfere with the programmatic output; we need to add the
+            # permanent=True flag once is available from Craft CLI
             if already_uploaded:
-                emit.message("Using OCI image from Canonical's registry.", intermediate=True)
+                emit.progress("Using OCI image from Canonical's registry.")
             else:
                 # upload it from local registry
-                emit.message(
-                    "Remote image not found, uploading from local registry.", intermediate=True
-                )
+                emit.progress("Remote image not found, uploading from local registry.")
                 image_digest = ih.upload_from_local(image_digest)
                 if image_digest is None:
-                    emit.message(
+                    emit.progress(
                         f"Image with digest {parsed_args.image} is not available in "
                         "the Canonical's registry nor locally.",
-                        intermediate=True,
                     )
                     return
-                emit.message(
-                    f"Image uploaded, new remote digest: {image_digest}.", intermediate=True
-                )
+                emit.progress(f"Image uploaded, new remote digest: {image_digest}.")
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(
@@ -1793,15 +1807,27 @@ class UploadResourceCommand(BaseCommand):
             resource_filepath.unlink()
 
         if result.ok:
-            emit.message(
-                f"Revision {result.revision} created of "
-                f"resource {parsed_args.resource_name!r} for charm {parsed_args.charm_name!r}.",
-            )
+            if parsed_args.format:
+                info = {"revision": result.revision}
+                emit.message(self.format_content(parsed_args.format, info))
+            else:
+                emit.message(
+                    f"Revision {result.revision} created of resource "
+                    f"{parsed_args.resource_name!r} for charm {parsed_args.charm_name!r}.",
+                )
             retcode = 0
         else:
-            emit.message(f"Upload failed with status {result.status!r}:")
-            for error in result.errors:
-                emit.message(f"- {error.code}: {error.message}")
+            if parsed_args.format:
+                info = {
+                    "errors": [
+                        {"code": error.code, "message": error.message} for error in result.errors
+                    ]
+                }
+                emit.message(self.format_content(parsed_args.format, info))
+            else:
+                emit.message(f"Upload failed with status {result.status!r}:")
+                for error in result.errors:
+                    emit.message(f"- {error.code}: {error.message}")
             retcode = 1
         return retcode
 
@@ -1827,6 +1853,7 @@ class ListResourceRevisionsCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
+        self.include_format_option(parser)
         parser.add_argument(
             "charm_name",
             metavar="charm-name",
@@ -1838,6 +1865,19 @@ class ListResourceRevisionsCommand(BaseCommand):
         """Run the command."""
         store = Store(self.config.charmhub)
         result = store.list_resource_revisions(parsed_args.charm_name, parsed_args.resource_name)
+
+        if parsed_args.format:
+            info = [
+                {
+                    "revision": item.revision,
+                    "created at": format_timestamp(item.created_at),
+                    "size": item.size,
+                }
+                for item in result
+            ]
+            emit.message(self.format_content(parsed_args.format, info))
+            return
+
         if not result:
             emit.message("No revisions found.")
             return

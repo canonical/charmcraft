@@ -29,6 +29,7 @@ from craft_cli import (
     EmitterMode,
     ProvideHelpException,
 )
+from craft_store.errors import CraftStoreError
 
 from charmcraft import __version__, env, utils
 from charmcraft.cmdbase import BaseCommand, JSON_FORMAT
@@ -75,7 +76,7 @@ def test_main_ok():
     )
 
 
-def test_main_managed_instance(monkeypatch):
+def test_main_managed_instance_init(monkeypatch):
     """Init emitter with a specific log filepath."""
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
 
@@ -91,6 +92,30 @@ def test_main_managed_instance(monkeypatch):
         f"Starting charmcraft version {__version__}",
         log_filepath=env.get_managed_environment_log_path(),
     )
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ValueError("broken"),
+        KeyboardInterrupt("interrupted"),
+        CraftStoreError("bad server"),
+        CraftError("bad charmcraft"),
+    ],
+)
+def test_main_managed_instance_error(monkeypatch, side_effect, config):
+    """The managed instance will not expose the "internal" log filepath."""
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+
+    with patch("charmcraft.main.emit") as emit_mock:
+        with patch("charmcraft.main.Dispatcher.pre_parse_args") as d_mock:
+            d_mock.side_effect = side_effect
+            main(["charmcraft", "version"])
+
+    # check that the error sent to Craft CLI will not report the logpath
+    (end_in_error_call,) = emit_mock.error.mock_calls
+    error = end_in_error_call.args[0]
+    assert error.logpath_report is False
 
 
 def test_main_load_config_ok(create_config):

@@ -116,6 +116,20 @@ def _get_system_details():
     return f"System details: {os_platform}; Environment: {env_string}"
 
 
+def _emit_error(error, cause=None):
+    """Emit the error in a centralized way so we can alter it consistently."""
+    # set the cause, if any
+    if cause is not None:
+        error.__cause__ = cause
+
+    # if it's a charmcraft running inside a provided instance, do not report the internal logpath
+    if env.is_charmcraft_running_in_managed_mode():
+        error.logpath_report = False
+
+    # finally, emit
+    emit.error(error)
+
+
 def main(argv=None):
     """Provide the main entry point."""
     if env.is_charmcraft_running_in_managed_mode():
@@ -175,21 +189,19 @@ def main(argv=None):
         emit.ended_ok()
         retcode = 0
     except CraftError as err:
-        emit.error(err)
+        _emit_error(err)
         retcode = err.retcode
     except errors.CraftStoreError as err:
         error = CraftError(f"craft-store error: {err}")
-        emit.error(error)
+        _emit_error(error)
         retcode = 1
     except KeyboardInterrupt as exc:
         error = CraftError("Interrupted.")
-        error.__cause__ = exc
-        emit.error(error)
+        _emit_error(error, cause=exc)
         retcode = 1
     except Exception as err:
         error = CraftError(f"charmcraft internal error: {err!r}")
-        error.__cause__ = err
-        emit.error(error)
+        _emit_error(error, cause=err)
         retcode = 1
     else:
         emit.ended_ok()

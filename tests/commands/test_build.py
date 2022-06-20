@@ -1221,7 +1221,11 @@ def test_build_error_no_match_with_charmcraft_yaml(
     ],
 )
 def test_build_arguments_managed_charmcraft(
-    builder_flag, cmd_flag, mock_capture_logs_from_instance, mock_instance, basic_project_builder,
+    builder_flag,
+    cmd_flag,
+    mock_capture_logs_from_instance,
+    mock_instance,
+    basic_project_builder,
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
     emit.set_mode(EmitterMode.NORMAL)

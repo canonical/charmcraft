@@ -1221,7 +1221,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     ],
 )
 def test_build_arguments_managed_charmcraft(
-    builder_flag, cmd_flag, mock_capture_logs_from_instance, mock_instance, basic_project_builder
+    builder_flag, cmd_flag, mock_capture_logs_from_instance, mock_instance, basic_project_builder,
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
     emit.set_mode(EmitterMode.NORMAL)
@@ -1230,8 +1230,11 @@ def test_build_arguments_managed_charmcraft(
 
     kwargs = {builder_flag: True}
     builder = basic_project_builder(bases_config, **kwargs)
-    builder.run([0])
-
+    builder.pack_charm_in_instance(
+        build_on=bases_config[0].build_on[0],
+        bases_index=0,
+        build_on_index=0,
+    )
     expected_cmd = ["charmcraft", "pack", "--bases-index", "0", cmd_flag]
     assert mock_instance.mock_calls == [
         call.execute_run(expected_cmd, check=True, cwd=pathlib.Path("/root/project")),

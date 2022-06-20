@@ -431,7 +431,7 @@ def test_usage_of_parsed_args(command_class, config):
 
     # get the node for the 'run' function
     for node in ast.walk(class_node):
-        if isinstance(node, ast.FunctionDef) and node.name == 'run':
+        if isinstance(node, ast.FunctionDef) and node.name == "run":
             run_method_node = node
             break
     else:
@@ -453,7 +453,8 @@ def test_usage_of_parsed_args(command_class, config):
             if accessed_attribute not in added_attributes:
                 pytest.fail(
                     f"Found an accessed but not added argument ({accessed_attribute!r}) "
-                    f"in command {command_class}")
+                    f"in command {command_class}"
+                )
 
 
 # -- tests for the base command

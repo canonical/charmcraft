@@ -1211,6 +1211,34 @@ def test_build_error_no_match_with_charmcraft_yaml(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+@pytest.mark.parametrize(
+    "builder_flag,cmd_flag",
+    [
+        ("debug", "--debug"),
+        ("shell", "--shell"),
+        ("shell_after", "--shell-after"),
+        ("force", "--force"),
+    ],
+)
+def test_build_arguments_managed_charmcraft(
+    builder_flag, cmd_flag, mock_capture_logs_from_instance, mock_instance, basic_project_builder
+):
+    """Check that the command to run charmcraft inside the environment is properly built."""
+    emit.set_mode(EmitterMode.NORMAL)
+    host_base = get_host_as_base()
+    bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
+
+    kwargs = {builder_flag: True}
+    builder = basic_project_builder(bases_config, **kwargs)
+    builder.run([0])
+
+    expected_cmd = ["charmcraft", "pack", "--bases-index", "0", cmd_flag]
+    assert mock_instance.mock_calls == [
+        call.execute_run(expected_cmd, check=True, cwd=pathlib.Path("/root/project")),
+    ]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_package_tree_structure(tmp_path, config):
     """The zip file is properly built internally."""
     # the metadata

@@ -81,7 +81,7 @@ def get_builder(
 
 
 @pytest.fixture
-def basic_project(tmp_path, monkeypatch):
+def basic_project(tmp_path, monkeypatch, create_config):
     """Create a basic Charmcraft project."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -122,6 +122,18 @@ def basic_project(tmp_path, monkeypatch):
     # README
     readme = tmp_path / "README.md"
     readme.write_text("README content")
+
+    # the config
+    host_base = get_host_as_base()
+    create_config(
+        f"""
+        type: charm
+        bases:
+          - name: {host_base.name}
+            channel: "{host_base.channel}"
+            architectures: {host_base.architectures!r}
+        """
+    )
 
     # paths are relative, make all tests to run in the project's directory
     monkeypatch.chdir(tmp_path)

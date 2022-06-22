@@ -616,7 +616,11 @@ def test_build_checks_provider(basic_project, mock_provider):
     config = load(basic_project)
     builder = get_builder(config)
 
-    builder.run()
+    try:
+        builder.run()
+    except CraftError:
+        # 'No suitable 'build-on' environment...' error will be raised on some test platforms
+        pass
 
     mock_provider.ensure_provider_is_available.assert_called_once()
 
@@ -1349,12 +1353,13 @@ def test_build_package_name(tmp_path, config):
     assert zipname == "name-from-metadata_xname-xchannel-xarch1.charm"
 
 
-def test_build_with_entrypoint_argument_issues_dn04(basic_project, emitter, monkeypatch):
+def test_build_with_entrypoint_argument_issues_dn04(basic_project, emitter):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config)
 
-    builder.run()
+    with patch("charmcraft.commands.build.Builder.build_charm"):
+        builder.run(destructive_mode=True)
 
     emitter.assert_message(
         "DEPRECATED: Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point.",
@@ -1754,12 +1759,13 @@ def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
     assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
 
 
-def test_build_with_requirement_argment_issues_dn05(basic_project, emitter, monkeypatch):
+def test_build_with_requirement_argment_issues_dn05(basic_project, emitter):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config, entrypoint=None, requirement=["reqs.txt"])
 
-    builder.run()
+    with patch("charmcraft.commands.build.Builder.build_charm"):
+        builder.run(destructive_mode=True)
 
     emitter.assert_message(
         "DEPRECATED: Use 'charm-requirements' in charmcraft.yaml parts to define requirements.",

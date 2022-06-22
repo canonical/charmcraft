@@ -15,10 +15,12 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import argparse
+import ast
 import os
 import subprocess
 import sys
 import textwrap
+from argparse import ArgumentParser
 from unittest.mock import patch
 
 import pytest
@@ -399,6 +401,60 @@ def test_aesthetic_args_options_msg(command, config):
             assert help_msg[0].isupper() and help_msg[-1] != "."
 
     command(config).fill_parser(FakeParser())
+
+
+@pytest.mark.parametrize("command_class", all_commands)
+def test_usage_of_parsed_args(command_class, config):
+    """The elements accesed on parsed_args need to be added before.
+
+    This test is useful because normally all the tests for any command fake the
+    Namespace and it happened in the past that we added functionality in the command
+    execution but forgot to add the parameter in the 'fill_parser' method.
+    """
+    # get the list of attributes added by the command to the parser
+    cmd = command_class(config)
+    parser = ArgumentParser()
+    cmd.fill_parser(parser)
+    added_attributes = {action.dest for action in parser._actions}
+
+    # build the abstract source tree for the command
+    filepath = sys.modules[command_class.__module__].__file__
+    tree = ast.parse(open(filepath, "rt").read())
+
+    # get the node for the command
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == command_class.__name__:
+            class_node = node
+            break
+    else:
+        pytest.fail(f"Cannot find the class node for command {command_class}")
+
+    # get the node for the 'run' function
+    for node in ast.walk(class_node):
+        if isinstance(node, ast.FunctionDef) and node.name == "run":
+            run_method_node = node
+            break
+    else:
+        pytest.fail(f"Cannot find the 'run' method node for command {command_class}")
+
+    # get how the second argument to the function is called (normally
+    # "parsed_args", but it's not enforced by the system)
+    arg1, arg2 = run_method_node.args.args
+    assert arg1.arg == "self"
+    parsed_args_arg = arg2.arg
+
+    for node in ast.walk(run_method_node):
+        if not isinstance(node, ast.Attribute):
+            continue
+        attrib_value = node.value
+
+        if isinstance(attrib_value, ast.Name) and attrib_value.id == parsed_args_arg:
+            accessed_attribute = node.attr
+            if accessed_attribute not in added_attributes:
+                pytest.fail(
+                    f"Found an accessed but not added argument ({accessed_attribute!r}) "
+                    f"in command {command_class}"
+                )
 
 
 # -- tests for the base command

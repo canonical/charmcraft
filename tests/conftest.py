@@ -29,7 +29,8 @@ from craft_providers import Executor
 
 from charmcraft import config as config_module
 from charmcraft import deprecations, parts
-from charmcraft.config import Base
+from charmcraft.bases import get_host_as_base
+from charmcraft.config import Base, BasesConfiguration
 from charmcraft.providers import Provider
 
 
@@ -67,7 +68,8 @@ def config(tmp_path):
         config_provided=True,
     )
 
-    return TestConfig(type="charm", project=project)
+    base = BasesConfiguration(**{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]})
+    return TestConfig(type="charm", bases=[base], project=project)
 
 
 @pytest.fixture
@@ -162,9 +164,23 @@ def fake_provider(mock_instance, monkeypatch):
 
 @pytest.fixture
 def create_config(tmp_path):
-    """Helper to create a config file in disk."""
+    """Helper to create a config file in disk.
 
-    def create_config(text):
+    If content is not given, create a minimum valid file.
+    """
+
+    def create_config(text=None):
+        if text is None:
+            text = """
+                type: charm
+                bases:
+                  - build-on:
+                    - name: test-build-name
+                      channel: test-build-channel
+                    run-on:
+                    - name: test-build-name
+                      channel: test-build-channel
+            """
         test_file = tmp_path / "charmcraft.yaml"
         test_file.write_text(text)
         return tmp_path

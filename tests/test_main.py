@@ -124,7 +124,7 @@ def test_main_load_config_ok(create_config):
     """Command is properly executed, after loading and receiving the config."""
     tmp_path = create_config(
         """
-        type: charm
+        type: bundle
     """
     )
 
@@ -134,7 +134,7 @@ def test_main_load_config_ok(create_config):
         overview = "test overview"
 
         def run(self, parsed_args):
-            assert self.config.type == "charm"
+            assert self.config.type == "bundle"
 
     with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
         retcode = main(["charmcraft", "cmdname", f"--project-dir={tmp_path}"])

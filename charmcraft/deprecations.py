@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ from charmcraft.env import is_charmcraft_running_in_managed_mode
 # the message to show for each deprecation ID (this needs to be in sync with the
 # documentation)
 _DEPRECATION_MESSAGES = {
-    "dn03": "Bases configuration is now required.",
     "dn04": "Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point.",
     "dn05": "Use 'charm-requirements' in charmcraft.yaml parts to define requirements.",
     "dn06": "The build command is deprecated, use 'pack' instead.",

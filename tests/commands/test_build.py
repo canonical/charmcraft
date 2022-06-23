@@ -81,7 +81,7 @@ def get_builder(
 
 
 @pytest.fixture
-def basic_project(tmp_path, monkeypatch):
+def basic_project(tmp_path, monkeypatch, create_config):
     """Create a basic Charmcraft project."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -122,6 +122,18 @@ def basic_project(tmp_path, monkeypatch):
     # README
     readme = tmp_path / "README.md"
     readme.write_text("README content")
+
+    # the config
+    host_base = get_host_as_base()
+    create_config(
+        f"""
+        type: charm
+        bases:
+          - name: {host_base.name}
+            channel: "{host_base.channel}"
+            architectures: {host_base.architectures!r}
+        """
+    )
 
     # paths are relative, make all tests to run in the project's directory
     monkeypatch.chdir(tmp_path)
@@ -522,7 +534,9 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     ), patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         zipnames = builder.run()
 
-    assert zipnames == [f"name-from-metadata_ubuntu-20.04-{host_arch}.charm"]
+    assert zipnames == [
+        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
+    ]
 
     # check all is properly inside the zip
     # contents!), and all relative to build dir
@@ -604,7 +618,11 @@ def test_build_checks_provider(basic_project, mock_provider):
     config = load(basic_project)
     builder = get_builder(config)
 
-    builder.run()
+    try:
+        builder.run()
+    except CraftError:
+        # 'No suitable 'build-on' environment...' error will be raised on some test platforms
+        pass
 
     mock_provider.ensure_provider_is_available.assert_called_once()
 
@@ -1337,12 +1355,13 @@ def test_build_package_name(tmp_path, config):
     assert zipname == "name-from-metadata_xname-xchannel-xarch1.charm"
 
 
-def test_build_with_entrypoint_argument_issues_dn04(basic_project, emitter, monkeypatch):
+def test_build_with_entrypoint_argument_issues_dn04(basic_project, emitter):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config)
 
-    builder.run()
+    with patch("charmcraft.commands.build.Builder.build_charm"):
+        builder.run(destructive_mode=True)
 
     emitter.assert_message(
         "DEPRECATED: Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point.",
@@ -1742,12 +1761,13 @@ def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
     assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
 
 
-def test_build_with_requirement_argment_issues_dn05(basic_project, emitter, monkeypatch):
+def test_build_with_requirement_argment_issues_dn05(basic_project, emitter):
     """Test cases for base-index parameter."""
     config = load(basic_project)
     builder = get_builder(config, entrypoint=None, requirement=["reqs.txt"])
 
-    builder.run()
+    with patch("charmcraft.commands.build.Builder.build_charm"):
+        builder.run(destructive_mode=True)
 
     emitter.assert_message(
         "DEPRECATED: Use 'charm-requirements' in charmcraft.yaml parts to define requirements.",

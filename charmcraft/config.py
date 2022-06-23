@@ -73,7 +73,6 @@ from typing import Any, Dict, List, Optional, Tuple
 import pydantic
 from craft_cli import CraftError
 
-from charmcraft.deprecations import notify_deprecation
 from charmcraft.env import (
     get_managed_environment_project_path,
     is_charmcraft_running_in_managed_mode,
@@ -300,14 +299,7 @@ class Config(ModelConfigDefaults, validate_all=False):
     type: str
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Optional[Dict[str, Any]]
-    bases: List[BasesConfiguration] = [
-        BasesConfiguration(
-            **{
-                "build-on": [Base(name="ubuntu", channel="20.04")],
-                "run-on": [Base(name="ubuntu", channel="20.04")],
-            }
-        )
-    ]
+    bases: Optional[List[BasesConfiguration]]
     analysis: AnalysisConfig = AnalysisConfig()
 
     project: Project
@@ -404,9 +396,9 @@ class Config(ModelConfigDefaults, validate_all=False):
             bases = obj.get("bases")
             if bases is None:
                 # "type" is accessed with get because this code happens before
-                # pydantic actually validating that type is present
+                # pydantic actually validating that the key is present
                 if obj.get("type") == "charm":
-                    notify_deprecation("dn03")
+                    raise CraftError("The field 'bases' is mandatory when type=charm")
                 # Set default bases to Ubuntu 20.04 to match strict snap's
                 # effective behavior.
                 bases = [

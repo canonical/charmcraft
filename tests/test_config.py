@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,11 +34,7 @@ from charmcraft.utils import get_host_architecture
 
 def test_load_current_directory(create_config, monkeypatch):
     """Init the config using charmcraft.yaml in current directory."""
-    tmp_path = create_config(
-        """
-        type: charm
-    """
-    )
+    tmp_path = create_config()
     monkeypatch.chdir(tmp_path)
     fake_utcnow = datetime.datetime(1970, 1, 1, 0, 0, 2, tzinfo=datetime.timezone.utc)
     with patch("datetime.datetime") as mock:
@@ -66,11 +62,7 @@ def test_load_managed_mode_directory(create_config, monkeypatch, tmp_path):
 
 def test_load_specific_directory_ok(create_config):
     """Init the config using charmcraft.yaml in a specific directory."""
-    tmp_path = create_config(
-        """
-        type: charm
-    """
-    )
+    tmp_path = create_config()
     config = load(tmp_path)
     assert config.type == "charm"
     assert config.project.dirpath == tmp_path
@@ -93,11 +85,7 @@ def test_load_optional_charmcraft_bad_directory(tmp_path):
 
 def test_load_specific_directory_resolved(create_config, monkeypatch):
     """Ensure that the given directory is resolved to always show the whole path."""
-    tmp_path = create_config(
-        """
-        type: charm
-    """
-    )
+    tmp_path = create_config()
     # change to some dir, and reference the config dir relatively
     subdir = tmp_path / "subdir"
     subdir.mkdir()
@@ -111,11 +99,7 @@ def test_load_specific_directory_resolved(create_config, monkeypatch):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_load_specific_directory_expanded(create_config, monkeypatch):
     """Ensure that the given directory is user-expanded."""
-    tmp_path = create_config(
-        """
-        type: charm
-    """
-    )
+    tmp_path = create_config()
     # fake HOME so the '~' indication is verified to work
     monkeypatch.setitem(os.environ, "HOME", str(tmp_path))
     config = load("~")
@@ -161,6 +145,13 @@ def test_schema_type_missing(create_config, check_schema_error):
         """
         charmhub:
             api-url: https://www.canonical.com
+        bases:
+          - build-on:
+            - name: test-build-name
+              channel: test-build-channel
+            run-on:
+            - name: test-build-name
+              channel: test-build-channel
     """
     )
     check_schema_error(
@@ -202,7 +193,7 @@ def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
     """Schema validation, charmhub.api-url must be a string."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         charmhub:
             api-url: 33
     """
@@ -218,7 +209,7 @@ def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
     """Schema validation, charmhub.api-url must be a full URL."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         charmhub:
             api-url: stuff.com
     """
@@ -234,7 +225,7 @@ def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error)
     """Schema validation, charmhub.storage-url must be a string."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         charmhub:
             storage-url: 33
     """
@@ -250,7 +241,7 @@ def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_erro
     """Schema validation, charmhub.storage-url must be a full URL."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         charmhub:
             storage-url: stuff.com
     """
@@ -266,7 +257,7 @@ def test_schema_charmhub_registry_url_bad_type(create_config, check_schema_error
     """Schema validation, charmhub.registry-url must be a string."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         charmhub:
             registry-url: 33
     """
@@ -282,7 +273,7 @@ def test_schema_charmhub_registry_url_bad_format(create_config, check_schema_err
     """Schema validation, charmhub.registry-url must be a full URL."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         charmhub:
             registry-url: stuff.com
     """
@@ -315,7 +306,7 @@ def test_schema_basicprime_bad_init_structure(create_config, check_schema_error)
     """Schema validation, basic prime with bad parts."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         parts: ['foo', 'bar']
     """
     )
@@ -331,7 +322,7 @@ def test_schema_basicprime_bad_bundle_structure(create_config, check_schema_erro
     """Schema validation, basic prime with bad bundle."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         parts:
             charm: ['foo', 'bar']
     """
@@ -347,7 +338,7 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
     """Schema validation, basic prime with bad prime."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         parts:
             charm:
                 prime: foo
@@ -364,7 +355,7 @@ def test_schema_basicprime_bad_prime_type(create_config, check_schema_error):
     """Schema validation, basic prime with a prime holding not strings."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         parts:
             charm:
                 prime: [{}, 'foo']
@@ -381,7 +372,7 @@ def test_schema_basicprime_bad_prime_type_empty(create_config, check_schema_erro
     """Schema validation, basic prime with a prime holding not strings."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         parts:
             charm:
                 prime: ['', 'foo']
@@ -396,7 +387,7 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
     """Schema validation, basic prime with a prime holding not strings."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         parts:
             charm:
                 prime: ['/bar/foo', 'foo']
@@ -416,7 +407,7 @@ def test_schema_additional_part(create_config, check_schema_error):
     """Schema validation, basic prime with bad part."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         parts:
             other-part: 1
     """
@@ -433,6 +424,13 @@ def test_schema_other_charm_part_no_source(create_config, check_schema_error):
     create_config(
         """
         type: charm  # mandatory
+        bases:  # mandatory
+          - build-on:
+            - name: test-build-name
+              channel: test-build-channel
+            run-on:
+            - name: test-build-name
+              channel: test-build-channel
         parts:
             other-part:
                 plugin: charm
@@ -476,7 +474,7 @@ def test_charmhub_underscore_in_names(create_config, check_schema_error):
     """Do not support underscore in attributes, only dash."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         charmhub:
             storage_url: https://server1.com
     """
@@ -491,24 +489,13 @@ def test_charmhub_underscore_in_names(create_config, check_schema_error):
 # -- tests for bases
 
 
-def test_no_bases_defaults_to_ubuntu_20_04_with_dn03(emitter, create_config, tmp_path):
+def test_no_bases_for_charms(create_config, check_schema_error):
     create_config(
         """
         type: charm
     """
     )
-
-    config = load(tmp_path)
-
-    assert config.bases == [
-        BasesConfiguration(
-            **{
-                "build-on": [Base(name="ubuntu", channel="20.04")],
-                "run-on": [Base(name="ubuntu", channel="20.04")],
-            }
-        )
-    ]
-    emitter.assert_message("DEPRECATED: Bases configuration is now required.", intermediate=True)
+    check_schema_error("The field 'bases' is mandatory when type=charm")
 
 
 def test_no_bases_is_ok_for_bundles(emitter, create_config, tmp_path):
@@ -926,7 +913,7 @@ def test_schema_analysis_missing(create_config, tmp_path):
     """No analysis configuration leads to some defaults in place."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
     """
     )
     config = load(tmp_path)
@@ -938,7 +925,7 @@ def test_schema_analysis_full_struct_just_empty(create_config, tmp_path):
     """Complete analysis structure, empty."""
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         analysis:
             ignore:
                 attributes: []
@@ -956,7 +943,7 @@ def test_schema_analysis_ignore_attributes(create_config, tmp_path, create_check
     create_checker("check_ok_2", linters.CheckType.attribute)
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         analysis:
             ignore:
                 attributes: [check_ok_1, check_ok_2]
@@ -973,7 +960,7 @@ def test_schema_analysis_ignore_linters(create_config, tmp_path, create_checker)
     create_checker("check_ok_2", linters.CheckType.lint)
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         analysis:
             ignore:
                 linters: [check_ok_1, check_ok_2]
@@ -992,7 +979,7 @@ def test_schema_analysis_ignore_attribute_missing(
     create_checker("check_ok_2", linters.CheckType.lint)
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         analysis:
             ignore:
                 attributes: [check_ok_1, check_missing]
@@ -1014,7 +1001,7 @@ def test_schema_analysis_ignore_linter_missing(
     create_checker("check_ok_2", linters.CheckType.lint)
     create_config(
         """
-        type: charm  # mandatory
+        type: bundle  # mandatory
         analysis:
             ignore:
                 attributes: [check_ok_1]

@@ -534,7 +534,9 @@ def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, conf
     ), patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         zipnames = builder.run()
 
-    assert zipnames == [f"name-from-metadata_ubuntu-20.04-{host_arch}.charm"]
+    assert zipnames == [
+        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
+    ]
 
     # check all is properly inside the zip
     # contents!), and all relative to build dir

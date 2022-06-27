@@ -31,7 +31,7 @@ from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand, build_zip
 from charmcraft.config import Project, load
-from charmcraft.utils import SingleOptionEnsurer, useful_filepath
+from charmcraft.utils import useful_filepath
 
 
 def get_namespace(
@@ -39,7 +39,6 @@ def get_namespace(
     bases_index=None,
     debug=False,
     destructive_mode=False,
-    entrypoint=None,
     force=None,
     requirement=None,
     shell=False,
@@ -53,7 +52,6 @@ def get_namespace(
         bases_index=bases_index,
         debug=debug,
         destructive_mode=destructive_mode,
-        entrypoint=entrypoint,
         force=force,
         requirement=requirement,
         shell=shell,
@@ -136,21 +134,11 @@ def test_resolve_no_config_packs_charm(config, tmp_path):
 def test_resolve_bundle_with_requirement(config):
     """The requirement option is not valid when packing a bundle."""
     config.set(type="bundle")
-    args = Namespace(requirement="reqs.txt", entrypoint=None)
+    args = Namespace(requirement="reqs.txt")
 
     with pytest.raises(CraftError) as cm:
         PackCommand(config).run(args)
     assert str(cm.value) == "The -r/--requirement option is valid only when packing a charm"
-
-
-def test_resolve_bundle_with_entrypoint(config):
-    """The entrypoint option is not valid when packing a bundle."""
-    config.set(type="bundle")
-    args = Namespace(requirement=None, entrypoint="mycharm.py")
-
-    with pytest.raises(CraftError) as cm:
-        PackCommand(config).run(args)
-    assert str(cm.value) == "The -e/--entry option is valid only when packing a charm"
 
 
 # -- tests for main bundle building process
@@ -716,23 +704,12 @@ def test_charm_parameters_requirement(config):
     assert action.type is useful_filepath
 
 
-def test_charm_parameters_entrypoint(config):
-    """The --entrypoint option implies a set of validations."""
-    cmd = PackCommand(config)
-    parser = ArgumentParser()
-    cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "entrypoint"]
-    assert isinstance(action.type, SingleOptionEnsurer)
-    assert action.type.converter is useful_filepath
-
-
 def test_charm_parameters_validator(config, tmp_path):
     """Check that build.Builder is properly called."""
     args = Namespace(
         bases_index=[],
         debug=True,
         destructive_mode=True,
-        entrypoint="test-epoint",
         force=True,
         requirement="test-reqs",
         shell=True,
@@ -753,7 +730,6 @@ def test_charm_parameters_validator(config, tmp_path):
                 "bases_indices": [],
                 "debug": True,
                 "destructive_mode": True,
-                "entrypoint": "test-epoint",
                 "from": tmp_path,
                 "force": True,
                 "requirement": "test-reqs",

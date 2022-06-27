@@ -96,7 +96,6 @@ class Builder:
 
     def __init__(self, args, config):
         self.charmdir = args["from"]
-        self.entrypoint = args["entrypoint"]
         self.requirement_paths = args["requirement"]
         self.force_packing = args["force"]
         self.debug = args["debug"]
@@ -245,22 +244,9 @@ class Builder:
                 else:
                     self._special_charm_part["charm-requirements"] = []
 
-        # verify if deprecated --entrypoint is used and update the plugin property
-        if self._special_charm_part.get("charm-entrypoint"):
-            if self.entrypoint:
-                raise CraftError(
-                    "--entrypoint not supported when charm-entrypoint "
-                    "specified in charmcraft.yaml"
-                )
-            entrypoint = self._special_charm_part.get("charm-entrypoint")
-        elif self.entrypoint:
-            entrypoint = self.entrypoint
-            self.entrypoint = None
-        else:
-            # XXX Facundo 2022-06-06: this default should come from the config itself, but
-            # that can only be done when the command line option for entrypoint is removed
-            # (otherwise we couldn't validate that the two options conflict).
-            entrypoint = "src/charm.py"
+        # XXX Facundo 2022-06-27: this default should come from the config itself,
+        # we need to refactor how the config is loaded.
+        entrypoint = self._special_charm_part.get("charm-entrypoint", "src/charm.py")
 
         # store the entrypoint always relative to the project's path (no matter if the origin
         # was relative or absolute)
@@ -393,9 +379,6 @@ class Builder:
         managed_mode = env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
             self.provider.ensure_provider_is_available()
-
-        if self.entrypoint:
-            notify_deprecation("dn04")
 
         if self.requirement_paths:
             notify_deprecation("dn05")
@@ -535,7 +518,6 @@ class Validator:
     _options = [
         "from",  # this needs to be processed first, as it's a base dir to find other files
         "destructive_mode",
-        "entrypoint",
         "requirement",
         "bases_indices",
         "force",
@@ -603,23 +585,6 @@ class Validator:
         self.basedir = dirpath
         return dirpath
 
-    def validate_entrypoint(self, filepath):
-        """Validate that the entrypoint exists and is executable."""
-        if filepath is None:
-            return None
-
-        filepath = filepath.expanduser().absolute()
-
-        if not filepath.exists():
-            raise CraftError("Charm entry point was not found: {!r}".format(str(filepath)))
-        if self.basedir not in filepath.parents:
-            raise CraftError(
-                "Charm entry point must be inside the project: {!r}".format(str(filepath))
-            )
-        if not os.access(filepath, os.X_OK):
-            raise CraftError("Charm entry point must be executable: {!r}".format(str(filepath)))
-        return filepath
-
     def validate_requirement(self, filepaths):
         """Validate that the given requirement(s) (if any) exist."""
         if filepaths is None:
@@ -675,12 +640,6 @@ class BuildCommand(BaseCommand):
             type=pathlib.Path,
             help="Charm directory with metadata.yaml where the build "
             "takes place; defaults to '.'",
-        )
-        parser.add_argument(
-            "-e",
-            "--entrypoint",
-            type=pathlib.Path,
-            help="The executable which is the operator entry point; " "defaults to 'src/charm.py'",
         )
         parser.add_argument(
             "-r",

@@ -29,7 +29,7 @@ from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
-from charmcraft.utils import SingleOptionEnsurer, load_yaml, useful_filepath
+from charmcraft.utils import load_yaml, useful_filepath
 
 # the minimum set of files in a bundle
 MANDATORY_FILES = ["bundle.yaml", "README.md"]
@@ -93,12 +93,6 @@ class PackCommand(BaseCommand):
             ),
         )
         parser.add_argument(
-            "-e",
-            "--entrypoint",
-            type=SingleOptionEnsurer(useful_filepath),
-            help=("The executable which is the operator entry point; defaults to 'src/charm.py'"),
-        )
-        parser.add_argument(
             "-r",
             "--requirement",
             action="append",
@@ -137,8 +131,6 @@ class PackCommand(BaseCommand):
         if self.config.type == "charm":
             self._pack_charm(parsed_args)
         elif self.config.type == "bundle":
-            if parsed_args.entrypoint is not None:
-                raise CraftError("The -e/--entry option is valid only when packing a charm")
             if parsed_args.requirement is not None:
                 raise CraftError("The -r/--requirement option is valid only when packing a charm")
             self._pack_bundle(parsed_args)
@@ -154,7 +146,6 @@ class PackCommand(BaseCommand):
                 "debug": parsed_args.debug,
                 "destructive_mode": parsed_args.destructive_mode,
                 "from": self.config.project.dirpath,
-                "entrypoint": parsed_args.entrypoint,
                 "requirement": parsed_args.requirement,
                 "shell": parsed_args.shell,
                 "shell_after": parsed_args.shell_after,

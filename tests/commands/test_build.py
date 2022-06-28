@@ -50,7 +50,6 @@ def get_builder(
     config,
     *,
     project_dir=None,
-    entrypoint="src/charm.py",
     requirement=None,
     force=False,
     debug=False,
@@ -60,16 +59,12 @@ def get_builder(
     if project_dir is None:
         project_dir = config.project.dirpath
 
-    if entrypoint == "src/charm.py":
-        entrypoint = project_dir / "src" / "charm.py"
-
     if requirement is None:
         requirement = []
 
     return Builder(
         {
             "debug": debug,
-            "entrypoint": entrypoint,
             "force": force,
             "from": project_dir,
             "requirement": requirement,
@@ -312,95 +307,6 @@ def test_validator_bases_index_invalid(bases_indices, config):
     expected_msg = re.escape("Bases index '-1' is invalid (must be >= 0).")
     with pytest.raises(CraftError, match=expected_msg):
         validator.validate_bases_indices(bases_indices)
-
-
-def test_validator_entrypoint_simple(tmp_path, config):
-    """'entrypoint' param: simple validation."""
-    testfile = tmp_path / "testfile"
-    testfile.touch(mode=0o777)
-
-    validator = Validator(config)
-    validator.basedir = tmp_path
-    resp = validator.validate_entrypoint(testfile)
-    assert resp == testfile
-
-
-def test_validator_entrypoint_none(tmp_path, config):
-    """'entrypoint' param: default value."""
-
-    validator = Validator(config)
-    validator.basedir = tmp_path
-    resp = validator.validate_entrypoint(None)
-    assert resp is None
-
-
-def test_validator_entrypoint_absolutized(tmp_path, monkeypatch, config):
-    """'entrypoint' param: check it's made absolute."""
-    # change dir to the temp one, where we will have the 'dirX/file.py' stuff
-    dirx = tmp_path / "dirX"
-    dirx.mkdir()
-    testfile = dirx / "file.py"
-    testfile.touch(mode=0o777)
-    monkeypatch.chdir(tmp_path)
-
-    validator = Validator(config)
-    validator.basedir = tmp_path
-    resp = validator.validate_entrypoint(pathlib.Path("dirX/file.py"))
-    assert resp == testfile
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_validator_entrypoint_expanded(tmp_path, config):
-    """'entrypoint' param: expands the user-home prefix."""
-    fake_home = tmp_path / "homedir"
-    fake_home.mkdir()
-
-    testfile = fake_home / "testfile"
-    testfile.touch(mode=0o777)
-
-    validator = Validator(config)
-    validator.basedir = tmp_path
-
-    with patch.dict(os.environ, {"HOME": str(fake_home)}):
-        resp = validator.validate_entrypoint(pathlib.Path("~/testfile"))
-    assert resp == testfile
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_validator_entrypoint_exist(config):
-    """'entrypoint' param: checks that the file exists."""
-    validator = Validator(config)
-    expected_msg = "Charm entry point was not found: '/not_really_there.py'"
-    with pytest.raises(CraftError, match=expected_msg):
-        validator.validate_entrypoint(pathlib.Path("/not_really_there.py"))
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_validator_entrypoint_inside_project(tmp_path, config):
-    """'entrypoint' param: checks that it's part of the project."""
-    project_dir = tmp_path / "test-project"
-    testfile = tmp_path / "testfile"
-    testfile.touch(mode=0o777)
-
-    validator = Validator(config)
-    validator.basedir = project_dir
-
-    expected_msg = "Charm entry point must be inside the project: '{}'".format(testfile)
-    with pytest.raises(CraftError, match=expected_msg):
-        validator.validate_entrypoint(testfile)
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_validator_entrypoint_exec(tmp_path, config):
-    """'entrypoint' param: checks that the file is executable."""
-    testfile = tmp_path / "testfile"
-    testfile.touch(mode=0o444)
-
-    validator = Validator(config)
-    validator.basedir = tmp_path
-    expected_msg = "Charm entry point must be executable: '{}'".format(testfile)
-    with pytest.raises(CraftError, match=expected_msg):
-        validator.validate_entrypoint(testfile)
 
 
 def test_validator_requirement_simple(tmp_path, config):
@@ -1316,7 +1222,7 @@ def test_build_package_tree_structure(tmp_path, config):
             "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
         }
     )
-    builder = get_builder(config, entrypoint="whatever")
+    builder = get_builder(config)
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
     # check the stuff outside is not in the zip, the stuff inside is zipped (with
@@ -1349,24 +1255,10 @@ def test_build_package_name(tmp_path, config):
             "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
         }
     )
-    builder = get_builder(config, entrypoint="whatever")
+    builder = get_builder(config)
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
     assert zipname == "name-from-metadata_xname-xchannel-xarch1.charm"
-
-
-def test_build_with_entrypoint_argument_issues_dn04(basic_project, emitter):
-    """Test cases for base-index parameter."""
-    config = load(basic_project)
-    builder = get_builder(config)
-
-    with patch("charmcraft.commands.build.Builder.build_charm"):
-        builder.run(destructive_mode=True)
-
-    emitter.assert_message(
-        "DEPRECATED: Use 'charm-entrypoint' in charmcraft.yaml parts to define the entry point.",
-        intermediate=True,
-    )
 
 
 @pytest.mark.parametrize("absolute_entrypoint", [True, False])
@@ -1397,73 +1289,9 @@ def test_build_entrypoint_from_parts_ok(basic_project, monkeypatch, absolute_ent
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None)
+    builder = get_builder(config)
 
     entrypoint = basic_project / "my_entrypoint.py"
-    entrypoint.touch()
-    entrypoint.chmod(0o700)
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "prime": [
-                            "my_entrypoint.py",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                        "charm-entrypoint": "my_entrypoint.py",
-                        "charm-requirements": ["reqs.txt"],
-                        "source": str(basic_project),
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-def test_build_entrypoint_from_commandline(basic_project, monkeypatch):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                parts:
-                  charm:
-                     charm-requirements: ["reqs.txt"]
-                """
-        )
-    )
-    config = load(basic_project)
-    entrypoint = basic_project / "my_entrypoint.py"
-    builder = get_builder(config, entrypoint=entrypoint)
-
     entrypoint.touch()
     entrypoint.chmod(0o700)
 
@@ -1525,7 +1353,7 @@ def test_build_entrypoint_default_ok(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -1563,45 +1391,6 @@ def test_build_entrypoint_default_ok(basic_project, monkeypatch):
     )
 
 
-def test_build_entrypoint_from_both(basic_project, monkeypatch):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-
-                parts:
-                  charm:
-                    charm-entrypoint: "my_entrypoint.py"
-                    charm-requirements: ["reqs.txt"]
-                """
-        )
-    )
-    config = load(basic_project)
-    entrypoint = basic_project / "my_entrypoint.py"
-
-    builder = get_builder(config, entrypoint=entrypoint, force=True)
-
-    entrypoint.touch()
-    entrypoint.chmod(0o700)
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with pytest.raises(CraftError) as raised:
-        builder.run([0])
-    assert str(raised.value) == (
-        "--entrypoint not supported when charm-entrypoint specified in charmcraft.yaml"
-    )
-
-
 def test_build_entrypoint_from_parts_outside(basic_project, monkeypatch):
     """The specified entrypoint not points to a file outside the project."""
     host_base = get_host_as_base()
@@ -1627,7 +1416,7 @@ def test_build_entrypoint_from_parts_outside(basic_project, monkeypatch):
     entrypoint = outside / "my_entrypoint.py"
     entrypoint.touch(mode=0o755)
 
-    builder = get_builder(config, entrypoint=None)
+    builder = get_builder(config)
     with pytest.raises(CraftError) as cm:
         builder.run([0])
     assert str(cm.value) == (
@@ -1658,7 +1447,7 @@ def test_build_postlifecycle_validation_is_properly_called(basic_project, monkey
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None)
+    builder = get_builder(config)
 
     entrypoint = basic_project / "my_entrypoint.py"
     entrypoint.touch(mode=0o700)
@@ -1698,7 +1487,7 @@ def test_build_postlifecycle_validation_no_charm(basic_project):
     (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
     config = load(basic_project)
 
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
     builder._post_lifecycle_validation(basic_project)
 
 
@@ -1722,7 +1511,7 @@ def test_build_postlifecycle_validation_entrypoint_missing(basic_project):
     (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
     config = load(basic_project)
 
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
     builder._handle_deprecated_cli_arguments()  # load from config
     with pytest.raises(CraftError) as cm:
         builder._post_lifecycle_validation(basic_project)
@@ -1754,7 +1543,7 @@ def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
     entrypoint = basic_project / "src" / "charm.py"
     entrypoint.chmod(0o666)
 
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
     builder._handle_deprecated_cli_arguments()  # load from config
     with pytest.raises(CraftError) as cm:
         builder._post_lifecycle_validation(basic_project)
@@ -1764,7 +1553,7 @@ def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
 def test_build_with_requirement_argment_issues_dn05(basic_project, emitter):
     """Test cases for base-index parameter."""
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, requirement=["reqs.txt"])
+    builder = get_builder(config, requirement=["reqs.txt"])
 
     with patch("charmcraft.commands.build.Builder.build_charm"):
         builder.run(destructive_mode=True)
@@ -1799,7 +1588,7 @@ def test_build_requirements_from_parts(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
 
     reqs = basic_project / "reqs.txt"
     reqs.touch()
@@ -1863,7 +1652,7 @@ def test_build_requirements_from_commandline(basic_project, monkeypatch, emitter
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, force=True, requirement=["reqs.txt"])
+    builder = get_builder(config, force=True, requirement=["reqs.txt"])
 
     reqs = basic_project / "reqs.txt"
     reqs.touch()
@@ -1927,7 +1716,7 @@ def test_build_requirements_default(basic_project, monkeypatch, emitter):
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
 
     # create a requirements.txt file
     pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
@@ -1991,7 +1780,7 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, emit
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -2051,7 +1840,7 @@ def test_build_requirements_from_both(basic_project, monkeypatch, emitter):
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, force=True, requirement=["reqs.txt"])
+    builder = get_builder(config, force=True, requirement=["reqs.txt"])
 
     reqs = basic_project / "reqs.txt"
     reqs.touch()
@@ -2088,7 +1877,7 @@ def test_build_python_packages_from_parts(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -2151,7 +1940,7 @@ def test_build_binary_python_packages_from_parts(basic_project, monkeypatch):
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None, force=True)
+    builder = get_builder(config, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -2385,7 +2174,7 @@ def test_parts_not_defined(basic_project, charmcraft_yaml, monkeypatch):
     charmcraft_yaml(basic_project, "")
 
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None)
+    builder = get_builder(config)
 
     # create a requirements.txt file
     pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
@@ -2447,7 +2236,7 @@ def test_parts_with_charm_part(basic_project, charmcraft_yaml, monkeypatch):
     )
 
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None)
+    builder = get_builder(config)
 
     # create a requirements.txt file
     pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
@@ -2509,7 +2298,7 @@ def test_parts_without_charm_part(basic_project, charmcraft_yaml, monkeypatch):
         ),
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None)
+    builder = get_builder(config)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -2552,7 +2341,7 @@ def test_parts_with_charm_part_with_plugin(basic_project, charmcraft_yaml, monke
         ),
     )
     config = load(basic_project)
-    builder = get_builder(config, entrypoint=None)
+    builder = get_builder(config)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:

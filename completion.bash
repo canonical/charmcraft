@@ -88,14 +88,11 @@ _charmcraft()
                 -r|--requirement)
                     _filedir txt
                     ;;
-                -e|--entrypoint)
-                    _filedir py
-                    ;;
                 -f|--from)
                     _filedir -d
                     ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --from --entrypoint --requirement" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --from --requirement" -- "$cur") )
                     ;;
             esac
             ;;
@@ -114,11 +111,8 @@ _charmcraft()
                 -r|--requirement)
                     _filedir txt
                     ;;
-                -e|--entrypoint)
-                    _filedir py
-                    ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --entrypoint --requirement --force --format" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --requirement --force --format" -- "$cur") )
                     ;;
             esac
             ;;

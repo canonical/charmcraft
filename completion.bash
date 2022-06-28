@@ -85,14 +85,11 @@ _charmcraft()
             ;;
         build)
             case "$prev" in
-                -r|--requirement)
-                    _filedir txt
-                    ;;
                 -f|--from)
                     _filedir -d
                     ;;
                 *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --from --requirement" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "${globals[*]} --from" -- "$cur") )
                     ;;
             esac
             ;;
@@ -107,14 +104,7 @@ _charmcraft()
             esac
             ;;
         pack)
-            case "$prev" in
-                -r|--requirement)
-                    _filedir txt
-                    ;;
-                *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --requirement --force --format" -- "$cur") )
-                    ;;
-            esac
+            COMPREPLY=( $(compgen -W "${globals[*]} --force --format" -- "$cur") )
             ;;
         release)
             COMPREPLY=( $(compgen -W "${globals[*]} --revision --channel --resource" -- "$cur") )

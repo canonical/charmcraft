@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import logging
-import os
 import pathlib
 import re
 import subprocess
@@ -50,7 +49,6 @@ def get_builder(
     config,
     *,
     project_dir=None,
-    requirement=None,
     force=False,
     debug=False,
     shell=False,
@@ -59,15 +57,11 @@ def get_builder(
     if project_dir is None:
         project_dir = config.project.dirpath
 
-    if requirement is None:
-        requirement = []
-
     return Builder(
         {
             "debug": debug,
             "force": force,
             "from": project_dir,
-            "requirement": requirement,
             "shell": shell,
             "shell_after": shell_after,
         },
@@ -307,92 +301,6 @@ def test_validator_bases_index_invalid(bases_indices, config):
     expected_msg = re.escape("Bases index '-1' is invalid (must be >= 0).")
     with pytest.raises(CraftError, match=expected_msg):
         validator.validate_bases_indices(bases_indices)
-
-
-def test_validator_requirement_simple(tmp_path, config):
-    """'requirement' param: simple validation."""
-    testfile = tmp_path / "testfile"
-    testfile.touch()
-
-    validator = Validator(config)
-    resp = validator.validate_requirement([testfile])
-    assert resp == [testfile]
-
-
-def test_validator_requirement_multiple(tmp_path, config):
-    """'requirement' param: multiple files."""
-    testfile1 = tmp_path / "testfile1"
-    testfile1.touch()
-    testfile2 = tmp_path / "testfile2"
-    testfile2.touch()
-
-    validator = Validator(config)
-    resp = validator.validate_requirement([testfile1, testfile2])
-    assert resp == [testfile1, testfile2]
-
-
-def test_validator_requirement_none(tmp_path, config):
-    """'requirement' param: default value when a requirements.txt is there and readable."""
-    validator = Validator(config)
-    validator.basedir = tmp_path
-    resp = validator.validate_requirement(None)
-    assert resp == []
-
-
-def test_validator_requirement_default_present_not_readable(tmp_path, config):
-    """'requirement' param: default value when a requirements.txt is there but not readable."""
-    default_requirement = tmp_path / "requirements.txt"
-    default_requirement.touch(0o230)
-
-    validator = Validator(config)
-    validator.basedir = tmp_path
-    resp = validator.validate_requirement(None)
-    assert resp == []
-
-
-def test_validator_requirement_default_missing(tmp_path, config):
-    """'requirement' param: default value when no requirements.txt is there."""
-    validator = Validator(config)
-    validator.basedir = tmp_path
-    resp = validator.validate_requirement(None)
-    assert resp == []
-
-
-def test_validator_requirement_absolutized(tmp_path, monkeypatch, config):
-    """'requirement' param: check it's made absolute."""
-    # change dir to the temp one, where we will have the reqs file
-    testfile = tmp_path / "reqs.txt"
-    testfile.touch()
-    monkeypatch.chdir(tmp_path)
-
-    validator = Validator(config)
-    resp = validator.validate_requirement([pathlib.Path("reqs.txt")])
-    assert resp == [testfile]
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_validator_requirement_expanded(tmp_path, config):
-    """'requirement' param: expands the user-home prefix."""
-    fake_home = tmp_path / "homedir"
-    fake_home.mkdir()
-
-    requirement = fake_home / "requirements.txt"
-    requirement.touch(0o230)
-
-    validator = Validator(config)
-
-    with patch.dict(os.environ, {"HOME": str(fake_home)}):
-        resp = validator.validate_requirement([pathlib.Path("~/requirements.txt")])
-    assert resp == [requirement]
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_validator_requirement_exist(config):
-    """'requirement' param: checks that the file exists."""
-    validator = Validator(config)
-    expected_msg = "the requirements file was not found: '/not_really_there.txt'"
-    with pytest.raises(CraftError, match=expected_msg):
-        validator.validate_requirement([pathlib.Path("/not_really_there.txt")])
 
 
 @pytest.mark.parametrize(
@@ -1512,7 +1420,7 @@ def test_build_postlifecycle_validation_entrypoint_missing(basic_project):
     config = load(basic_project)
 
     builder = get_builder(config, force=True)
-    builder._handle_deprecated_cli_arguments()  # load from config
+    builder._pre_lifecycle_validation()  # load from config
     with pytest.raises(CraftError) as cm:
         builder._post_lifecycle_validation(basic_project)
     entrypoint = basic_project / "missing.py"
@@ -1544,24 +1452,10 @@ def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
     entrypoint.chmod(0o666)
 
     builder = get_builder(config, force=True)
-    builder._handle_deprecated_cli_arguments()  # load from config
+    builder._pre_lifecycle_validation()  # load from config
     with pytest.raises(CraftError) as cm:
         builder._post_lifecycle_validation(basic_project)
     assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
-
-
-def test_build_with_requirement_argment_issues_dn05(basic_project, emitter):
-    """Test cases for base-index parameter."""
-    config = load(basic_project)
-    builder = get_builder(config, requirement=["reqs.txt"])
-
-    with patch("charmcraft.commands.build.Builder.build_charm"):
-        builder.run(destructive_mode=True)
-
-    emitter.assert_message(
-        "DEPRECATED: Use 'charm-requirements' in charmcraft.yaml parts to define requirements.",
-        intermediate=True,
-    )
 
 
 def test_build_requirements_from_parts(basic_project, monkeypatch):
@@ -1589,70 +1483,6 @@ def test_build_requirements_from_parts(basic_project, monkeypatch):
     )
     config = load(basic_project)
     builder = get_builder(config, force=True)
-
-    reqs = basic_project / "reqs.txt"
-    reqs.touch()
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-requirements": ["reqs.txt"],
-                        "source": str(basic_project),
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-def test_build_requirements_from_commandline(basic_project, monkeypatch, emitter):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-
-                parts:
-                  charm:
-                    charm-entrypoint: src/charm.py
-                """
-        )
-    )
-    config = load(basic_project)
-    builder = get_builder(config, force=True, requirement=["reqs.txt"])
 
     reqs = basic_project / "reqs.txt"
     reqs.touch()
@@ -1814,42 +1644,6 @@ def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, emit
                 ignore_local_sources=["*.charm"],
             )
         ]
-    )
-
-
-def test_build_requirements_from_both(basic_project, monkeypatch, emitter):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-
-                parts:
-                  charm:
-                    charm-requirements: ["reqs.txt"]
-                """
-        )
-    )
-    config = load(basic_project)
-    builder = get_builder(config, force=True, requirement=["reqs.txt"])
-
-    reqs = basic_project / "reqs.txt"
-    reqs.touch()
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with pytest.raises(CraftError) as raised:
-        builder.run([0])
-    assert str(raised.value) == (
-        "--requirement not supported when charm-requirements specified in charmcraft.yaml"
     )
 
 

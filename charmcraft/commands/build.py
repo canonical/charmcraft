@@ -96,7 +96,6 @@ class Builder:
 
     def __init__(self, args, config):
         self.charmdir = args["from"]
-        self.requirement_paths = args["requirement"]
         self.force_packing = args["force"]
         self.debug = args["debug"]
         self.shell = args["shell"]
@@ -177,7 +176,7 @@ class Builder:
 
         if self._special_charm_part:
             # all current deprecated arguments set charm plugin parameters
-            self._handle_deprecated_cli_arguments()
+            self._pre_lifecycle_validation()
 
             # add charm files to the prime filter
             self._set_prime_filter()
@@ -215,37 +214,16 @@ class Builder:
         emit.message(f"Created '{zipname}'.", intermediate=True)
         return zipname
 
-    def _handle_deprecated_cli_arguments(self):
-        """Handle the mix of deprecated CLI args and config options.
-
-        This function also validate the result files from the mix when they are needed for
-        the lifecycle process itself (e.g. requirements.txt).
-        """
-        # XXX Facundo 2022-06-07: after these CLI args are removed, we could transform this
-        # function in a `_pre_lifecycle_validation` one.
-
-        # verify if deprecated --requirement is used and update the plugin property
-        if self._special_charm_part.get("charm-requirements"):
-            if self.requirement_paths:
-                raise CraftError(
-                    "--requirement not supported when charm-requirements "
-                    "specified in charmcraft.yaml"
-                )
-        else:
-            if self.requirement_paths:
-                self._special_charm_part["charm-requirements"] = [
-                    str(p) for p in self.requirement_paths
-                ]
-                self.requirement_paths = None
-            else:
-                default_reqfile = self.charmdir / "requirements.txt"
-                if default_reqfile.is_file():
-                    self._special_charm_part["charm-requirements"] = ["requirements.txt"]
-                else:
-                    self._special_charm_part["charm-requirements"] = []
-
-        # XXX Facundo 2022-06-27: this default should come from the config itself,
+    def _pre_lifecycle_validation(self):
+        """Handle pre lifecycle validations."""
+        # XXX Facundo 2022-06-27: these defaults should come from the config itself,
         # we need to refactor how the config is loaded.
+        if "charm-requirements" not in self._special_charm_part:
+            default_reqfile = self.charmdir / "requirements.txt"
+            if default_reqfile.is_file():
+                self._special_charm_part["charm-requirements"] = ["requirements.txt"]
+            else:
+                self._special_charm_part["charm-requirements"] = []
         entrypoint = self._special_charm_part.get("charm-entrypoint", "src/charm.py")
 
         # store the entrypoint always relative to the project's path (no matter if the origin
@@ -379,9 +357,6 @@ class Builder:
         managed_mode = env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
             self.provider.ensure_provider_is_available()
-
-        if self.requirement_paths:
-            notify_deprecation("dn05")
 
         build_plan = self.plan(
             bases_indices=bases_indices,
@@ -518,7 +493,6 @@ class Validator:
     _options = [
         "from",  # this needs to be processed first, as it's a base dir to find other files
         "destructive_mode",
-        "requirement",
         "bases_indices",
         "force",
         "debug",
@@ -585,17 +559,6 @@ class Validator:
         self.basedir = dirpath
         return dirpath
 
-    def validate_requirement(self, filepaths):
-        """Validate that the given requirement(s) (if any) exist."""
-        if filepaths is None:
-            return []
-
-        filepaths = [x.expanduser().absolute() for x in filepaths]
-        for fpath in filepaths:
-            if not fpath.exists():
-                raise CraftError("the requirements file was not found: {!r}".format(str(fpath)))
-        return filepaths
-
     def validate_shell(self, value):
         """Validate the value (just convert to bool to make None explicit)."""
         return bool(value)
@@ -640,14 +603,6 @@ class BuildCommand(BaseCommand):
             type=pathlib.Path,
             help="Charm directory with metadata.yaml where the build "
             "takes place; defaults to '.'",
-        )
-        parser.add_argument(
-            "-r",
-            "--requirement",
-            action="append",
-            type=pathlib.Path,
-            help="File(s) listing needed PyPI dependencies (can be used multiple "
-            "times); defaults to 'requirements.txt'",
         )
 
     def run(self, parsed_args):

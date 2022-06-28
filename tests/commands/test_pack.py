@@ -18,7 +18,7 @@ import datetime
 import pathlib
 import sys
 import zipfile
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from textwrap import dedent
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
@@ -31,7 +31,6 @@ from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand, build_zip
 from charmcraft.config import Project, load
-from charmcraft.utils import useful_filepath
 
 
 def get_namespace(
@@ -40,7 +39,6 @@ def get_namespace(
     debug=False,
     destructive_mode=False,
     force=None,
-    requirement=None,
     shell=False,
     shell_after=False,
     format=None,
@@ -53,7 +51,6 @@ def get_namespace(
         debug=debug,
         destructive_mode=destructive_mode,
         force=force,
-        requirement=requirement,
         shell=shell,
         shell_after=shell_after,
         format=format,
@@ -129,16 +126,6 @@ def test_resolve_no_config_packs_charm(config, tmp_path):
     with patch.object(cmd, "_pack_charm") as mock:
         cmd.run(noargs)
     mock.assert_called_with(noargs)
-
-
-def test_resolve_bundle_with_requirement(config):
-    """The requirement option is not valid when packing a bundle."""
-    config.set(type="bundle")
-    args = Namespace(requirement="reqs.txt")
-
-    with pytest.raises(CraftError) as cm:
-        PackCommand(config).run(args)
-    assert str(cm.value) == "The -r/--requirement option is valid only when packing a charm"
 
 
 # -- tests for main bundle building process
@@ -695,15 +682,6 @@ def test_zipbuild_symlink_outside(tmp_path):
 # infrastructure, until we migrate the (adapted) behaviour to this command
 
 
-def test_charm_parameters_requirement(config):
-    """The --requirement option implies a set of validations."""
-    cmd = PackCommand(config)
-    parser = ArgumentParser()
-    cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "requirement"]
-    assert action.type is useful_filepath
-
-
 def test_charm_parameters_validator(config, tmp_path):
     """Check that build.Builder is properly called."""
     args = Namespace(
@@ -711,7 +689,6 @@ def test_charm_parameters_validator(config, tmp_path):
         debug=True,
         destructive_mode=True,
         force=True,
-        requirement="test-reqs",
         shell=True,
         shell_after=True,
         format=None,
@@ -732,7 +709,6 @@ def test_charm_parameters_validator(config, tmp_path):
                 "destructive_mode": True,
                 "from": tmp_path,
                 "force": True,
-                "requirement": "test-reqs",
                 "shell": True,
                 "shell_after": True,
             }

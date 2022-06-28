@@ -29,7 +29,7 @@ from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
-from charmcraft.utils import load_yaml, useful_filepath
+from charmcraft.utils import load_yaml
 
 # the minimum set of files in a bundle
 MANDATORY_FILES = ["bundle.yaml", "README.md"]
@@ -93,16 +93,6 @@ class PackCommand(BaseCommand):
             ),
         )
         parser.add_argument(
-            "-r",
-            "--requirement",
-            action="append",
-            type=useful_filepath,
-            help=(
-                "File(s) listing needed PyPI dependencies (can be used multiple "
-                "times); defaults to 'requirements.txt'"
-            ),
-        )
-        parser.add_argument(
             "--shell",
             action="store_true",
             help="Launch shell in build environment in lieu of packing",
@@ -131,8 +121,6 @@ class PackCommand(BaseCommand):
         if self.config.type == "charm":
             self._pack_charm(parsed_args)
         elif self.config.type == "bundle":
-            if parsed_args.requirement is not None:
-                raise CraftError("The -r/--requirement option is valid only when packing a charm")
             self._pack_bundle(parsed_args)
         else:
             raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
@@ -146,7 +134,6 @@ class PackCommand(BaseCommand):
                 "debug": parsed_args.debug,
                 "destructive_mode": parsed_args.destructive_mode,
                 "from": self.config.project.dirpath,
-                "requirement": parsed_args.requirement,
                 "shell": parsed_args.shell,
                 "shell_after": parsed_args.shell_after,
                 "bases_indices": parsed_args.bases_index,

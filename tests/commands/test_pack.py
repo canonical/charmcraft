@@ -770,6 +770,7 @@ def test_charm_pack_output_managed_mode(config, emitter, formatted, monkeypatch)
 @pytest.mark.parametrize(
     "bases_indices, bad_index",
     [
+        (None, None),  # not used, it's fine
         ([], None),  # empty, it's fine
         ([0], None),  # first one
         ([1], None),  # second one

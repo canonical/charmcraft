@@ -126,6 +126,9 @@ class PackCommand(BaseCommand):
 
     def _validate_bases_indices(self, bases_indices):
         """Validate that bases index is valid."""
+        if bases_indices is None:
+            return
+
         msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
         len_configured_bases = len(self.config.bases)
         for bases_index in bases_indices:

@@ -14,7 +14,9 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Infrastructure for the 'build' command."""
+"""Infrastructure for the 'pack' command."""
+# XXX Facundo 2022-06-29: all this functionality will be moved into the
+# pack.py file (in a branch with no semantic changes, just move stuff around)
 
 import os
 import pathlib
@@ -27,9 +29,7 @@ from craft_cli import emit, EmitterMode, CraftError
 from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
-from charmcraft.cmdbase import BaseCommand
-from charmcraft.config import Base, BasesConfiguration, Config
-from charmcraft.deprecations import notify_deprecation
+from charmcraft.config import Base, BasesConfiguration
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
@@ -94,13 +94,13 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 class Builder:
     """The package builder."""
 
-    def __init__(self, args, config):
-        self.charmdir = args["from"]
-        self.force_packing = args["force"]
-        self.debug = args["debug"]
-        self.shell = args["shell"]
-        self.shell_after = args["shell_after"]
+    def __init__(self, *, config, force, debug, shell, shell_after):
+        self.force_packing = force
+        self.debug = debug
+        self.shell = shell
+        self.shell_after = shell_after
 
+        self.charmdir = config.project.dirpath
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.config = config
         self.metadata = parse_metadata_yaml(self.charmdir)
@@ -485,134 +485,3 @@ class Builder:
 
         zipfh.close()
         return zipname
-
-
-class Validator:
-    """A validator of all received options."""
-
-    _options = [
-        "from",  # this needs to be processed first, as it's a base dir to find other files
-        "destructive_mode",
-        "bases_indices",
-        "force",
-        "debug",
-        "shell",
-        "shell_after",
-    ]
-
-    def __init__(self, config: Config):
-        self.basedir = None  # this will be fulfilled when processing 'from'
-        self.config = config
-
-    def process(self, parsed_args):
-        """Process the received options."""
-        result = {}
-        for opt in self._options:
-            meth = getattr(self, "validate_" + opt)
-            result[opt] = meth(getattr(parsed_args, opt, None))
-        return result
-
-    def validate_bases_indices(self, bases_indices):
-        """Validate that bases index is valid."""
-        if not bases_indices:
-            return
-
-        for bases_index in bases_indices:
-            if bases_index < 0:
-                raise CraftError(f"Bases index '{bases_index}' is invalid (must be >= 0).")
-
-            if not self.config.bases:
-                raise CraftError(
-                    "No bases configuration found, required when using --bases-index.",
-                )
-
-            if bases_index >= len(self.config.bases):
-                raise CraftError(
-                    f"No bases configuration found for specified index '{bases_index}'."
-                )
-
-    def validate_debug(self, value):
-        """Validate the value (just convert to bool to make None explicit)."""
-        return bool(value)
-
-    def validate_destructive_mode(self, destructive_mode):
-        """Validate that destructive mode option is valid."""
-        if not isinstance(destructive_mode, bool):
-            return False
-
-        return destructive_mode
-
-    def validate_from(self, dirpath):
-        """Validate that the charm dir is there and yes, a directory."""
-        if dirpath is None:
-            dirpath = pathlib.Path.cwd()
-        else:
-            dirpath = dirpath.expanduser().absolute()
-
-        if not dirpath.exists():
-            raise CraftError("Charm directory was not found: {!r}".format(str(dirpath)))
-        if not dirpath.is_dir():
-            raise CraftError(
-                "Charm directory is not really a directory: {!r}".format(str(dirpath))
-            )
-
-        self.basedir = dirpath
-        return dirpath
-
-    def validate_shell(self, value):
-        """Validate the value (just convert to bool to make None explicit)."""
-        return bool(value)
-
-    def validate_shell_after(self, value):
-        """Validate the value (just convert to bool to make None explicit)."""
-        return bool(value)
-
-    def validate_force(self, value):
-        """Validate the value (just convert to bool to make None explicit)."""
-        return bool(value)
-
-
-_overview = """
-Build a charm operator package.
-
-You can `juju deploy` the resulting `.charm` file directly, or upload it
-to Charmhub with `charmcraft upload`.
-
-You must be inside a charm directory with a valid `metadata.yaml`,
-`requirements.txt` including the `ops` package for the Python operator
-framework, and an operator entrypoint, usually `src/charm.py`.
-
-See `charmcraft init` to create a template charm directory structure.
-"""
-
-
-class BuildCommand(BaseCommand):
-    """Build the charm."""
-
-    name = "build"
-    help_msg = "Build the charm"
-    overview = _overview
-    hidden = True
-    needs_config = True
-
-    def fill_parser(self, parser):
-        """Add own parameters to the general parser."""
-        parser.add_argument(
-            "-f",
-            "--from",
-            type=pathlib.Path,
-            help="Charm directory with metadata.yaml where the build "
-            "takes place; defaults to '.'",
-        )
-
-    def run(self, parsed_args):
-        """Run the command."""
-        # this command is deprecated now (note that the whole infrastructure behind
-        # is ok to use, but through PackCommand)
-        notify_deprecation("dn06")
-
-        validator = Validator(self.config)
-        args = validator.process(parsed_args)
-        emit.trace(f"Working arguments: {args}")
-        builder = Builder(args, self.config)
-        builder.run(destructive_mode=args["destructive_mode"])

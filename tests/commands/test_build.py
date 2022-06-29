@@ -20,7 +20,6 @@ import re
 import subprocess
 import sys
 import zipfile
-from collections import namedtuple
 from textwrap import dedent
 from typing import List
 from unittest import mock
@@ -33,14 +32,7 @@ from craft_cli import EmitterMode, emit, CraftError
 from charmcraft import linters
 from charmcraft.charm_builder import DISPATCH_CONTENT, relativise
 from charmcraft.bases import get_host_as_base
-from charmcraft.commands.build import (
-    BUILD_DIRNAME,
-    BuildCommand,
-    Builder,
-    Validator,
-    format_charm_file_name,
-    launch_shell,
-)
+from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
 from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.metadata import CHARM_METADATA
 
@@ -57,16 +49,7 @@ def get_builder(
     if project_dir is None:
         project_dir = config.project.dirpath
 
-    return Builder(
-        {
-            "debug": debug,
-            "force": force,
-            "from": project_dir,
-            "shell": shell,
-            "shell_after": shell_after,
-        },
-        config,
-    )
+    return Builder(config=config, debug=debug, force=force, shell=shell, shell_after=shell_after)
 
 
 @pytest.fixture
@@ -186,136 +169,6 @@ def mock_provider(mock_instance, fake_provider):
     mock_provider = mock.Mock(wraps=fake_provider)
     with patch("charmcraft.commands.build.get_provider", return_value=mock_provider):
         yield mock_provider
-
-
-# --- Validator tests
-
-
-def test_validator_process_simple(config):
-    """Process the present options and store the result."""
-
-    class TestValidator(Validator):
-        _options = ["foo", "bar"]
-
-        def validate_foo(self, arg):
-            assert arg == 35
-            return 70
-
-        def validate_bar(self, arg):
-            assert arg == 45
-            return 80
-
-    test_args = namedtuple("T", "foo bar")(35, 45)
-    validator = TestValidator(config)
-    result = validator.process(test_args)
-    assert result == dict(foo=70, bar=80)
-
-
-def test_validator_process_notpresent(config):
-    """Process an option after not finding the value."""
-
-    class TestValidator(Validator):
-        _options = ["foo"]
-
-        def validate_foo(self, arg):
-            assert arg is None
-            return 70
-
-    test_args = namedtuple("T", "bar")(35)
-    validator = TestValidator(config)
-    result = validator.process(test_args)
-    assert result == dict(foo=70)
-
-
-def test_validator_from_simple(tmp_path, config):
-    """'from' param: simple validation and setting in Validation."""
-    validator = Validator(config)
-    resp = validator.validate_from(tmp_path)
-    assert resp == tmp_path
-    assert validator.basedir == tmp_path
-
-
-def test_validator_from_default(config):
-    """'from' param: default value."""
-    validator = Validator(config)
-    resp = validator.validate_from(None)
-    assert resp == pathlib.Path(".").absolute()
-
-
-def test_validator_from_absolutized(tmp_path, monkeypatch, config):
-    """'from' param: check it's made absolute."""
-    # change dir to the temp one, where we will have the 'dir1/dir2' tree
-    dir1 = tmp_path / "dir1"
-    dir1.mkdir()
-    dir2 = dir1 / "dir2"
-    dir2.mkdir()
-    monkeypatch.chdir(tmp_path)
-
-    validator = Validator(config)
-    resp = validator.validate_from(pathlib.Path("dir1/dir2"))
-    assert resp == dir2
-
-
-def test_validator_from_expanded(config):
-    """'from' param: expands the user-home prefix."""
-    validator = Validator(config)
-    resp = validator.validate_from(pathlib.Path("~"))
-    assert resp == pathlib.Path.home()
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_validator_from_exist(config):
-    """'from' param: checks that the directory exists."""
-    validator = Validator(config)
-    expected_msg = "Charm directory was not found: '/not_really_there'"
-    with pytest.raises(CraftError, match=expected_msg):
-        validator.validate_from(pathlib.Path("/not_really_there"))
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_validator_from_isdir(tmp_path, config):
-    """'from' param: checks that the directory is really that."""
-    testfile = tmp_path / "testfile"
-    testfile.touch()
-
-    validator = Validator(config)
-    expected_msg = "Charm directory is not really a directory: '{}'".format(testfile)
-    with pytest.raises(CraftError, match=expected_msg):
-        validator.validate_from(testfile)
-
-
-@pytest.mark.parametrize("bases_indices", [[-1], [0, -1], [0, 1, -1]])
-def test_validator_bases_index_invalid(bases_indices, config):
-    """'entrypoint' param: checks that the file exists."""
-    config.set(
-        bases=[
-            BasesConfiguration(
-                **{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]}
-            ),
-            BasesConfiguration(
-                **{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]}
-            ),
-        ]
-    )
-    validator = Validator(config)
-    expected_msg = re.escape("Bases index '-1' is invalid (must be >= 0).")
-    with pytest.raises(CraftError, match=expected_msg):
-        validator.validate_bases_indices(bases_indices)
-
-
-@pytest.mark.parametrize(
-    "inp_value,out_value",
-    [
-        (None, False),
-        (False, False),
-        (True, True),
-    ],
-)
-def test_validator_force(config, inp_value, out_value):
-    """'entrypoint' param: checks that the file exists."""
-    validator = Validator(config)
-    result = validator.validate_force(inp_value)
-    assert result == out_value
 
 
 # --- (real) build tests
@@ -2272,18 +2125,3 @@ def test_launch_shell(emitter):
 
     with mock.patch("subprocess.run", fake_run):
         launch_shell()
-
-
-def test_build_command_deprecated(emitter):
-    """The usage of BuildCommand is deprecated.
-
-    Note that the whole infrastructure behind it is ok to use, but through PackCommand.
-    """
-    cmd = BuildCommand("config")
-    try:
-        cmd.run([])
-    except CraftError:
-        # ok to fail, missing a lot of files, but *ALWAYS* needs to issue the DN
-        pass
-    msg = "DEPRECATED: The build command is deprecated, use 'pack' instead."
-    emitter.assert_message(msg, intermediate=True)

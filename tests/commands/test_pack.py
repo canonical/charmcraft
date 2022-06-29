@@ -27,10 +27,11 @@ import pytest
 import yaml
 from craft_cli import CraftError
 
+from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand, build_zip
-from charmcraft.config import Project, load
+from charmcraft.config import Project, load, BasesConfiguration
 
 
 def get_namespace(
@@ -678,11 +679,10 @@ def test_zipbuild_symlink_outside(tmp_path):
     assert zf.read("link.txt") == b"123\x00456"
 
 
-# tests for the main charm building process -- so far this is only using the "build" command
-# infrastructure, until we migrate the (adapted) behaviour to this command
+# tests for the main charm building process
 
 
-def test_charm_parameters_validator(config, tmp_path):
+def test_charm_builder_infrastructure_called(config):
     """Check that build.Builder is properly called."""
     args = Namespace(
         bases_index=[],
@@ -693,39 +693,14 @@ def test_charm_parameters_validator(config, tmp_path):
         shell_after=True,
         format=None,
     )
-    config.set(
-        type="charm",
-        project=Project(dirpath=tmp_path, started_at=datetime.datetime.utcnow()),
-    )
-    with patch("charmcraft.commands.build.Validator", autospec=True) as validator_class_mock:
-        validator_class_mock.return_value = validator_instance_mock = MagicMock()
-        with patch("charmcraft.commands.build.Builder"):
-            PackCommand(config).run(args)
-    validator_instance_mock.process.assert_called_with(
-        Namespace(
-            **{
-                "bases_indices": [],
-                "debug": True,
-                "destructive_mode": True,
-                "from": tmp_path,
-                "force": True,
-                "shell": True,
-                "shell_after": True,
-            }
-        )
-    )
-
-
-def test_charm_builder_infrastructure_called(config):
-    """Check that build.Builder is properly called."""
     config.set(type="charm")
-    with patch("charmcraft.commands.build.Validator", autospec=True) as validator_mock:
-        validator_mock(config).process.return_value = "processed args"
-        with patch("charmcraft.commands.build.Builder") as builder_class_mock:
-            builder_class_mock.return_value = builder_instance_mock = MagicMock()
-            PackCommand(config).run(noargs)
-    builder_class_mock.assert_called_with("processed args", config)
-    builder_instance_mock.run.assert_called_with([], destructive_mode=False)
+    with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+        builder_class_mock.return_value = builder_instance_mock = MagicMock()
+        PackCommand(config).run(args)
+    builder_class_mock.assert_called_with(
+        config=config, debug=True, force=True, shell_after=True, shell=True
+    )
+    builder_instance_mock.run.assert_called_with([], destructive_mode=True)
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
@@ -790,3 +765,42 @@ def test_charm_pack_output_managed_mode(config, emitter, formatted, monkeypatch)
 
     for emitter_call in emitter.interactions:
         assert emitter_call.args[0] != "message"
+
+
+@pytest.mark.parametrize(
+    "bases_indices, bad_index",
+    [
+        ([], None),  # empty, it's fine
+        ([0], None),  # first one
+        ([1], None),  # second one
+        ([1, 0], None),  # a sequence
+        ([-1], -1),  # not negative!
+        ([0, -1], -1),  # also negative, after a valid one
+        ([1, 0, -1], -1),  # other sequence
+        ([3, 1], 3),  # too big
+    ],
+)
+def test_validator_bases_index_invalid(bases_indices, bad_index, config):
+    """Validate the bases indices given in the command line."""
+    config.set(
+        bases=[
+            BasesConfiguration(
+                **{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]}
+            ),
+            BasesConfiguration(
+                **{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]}
+            ),
+        ]
+    )
+    cmd = PackCommand(config)
+
+    if bad_index is None:
+        # success case
+        cmd._validate_bases_indices(bases_indices)
+    else:
+        with pytest.raises(CraftError) as exc_cm:
+            cmd._validate_bases_indices(bases_indices)
+        expected_msg = (
+            f"Bases index '{bad_index}' is invalid (must be >= 0 and fit in configured bases)."
+        )
+        assert str(exc_cm.value) == expected_msg

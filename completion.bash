@@ -21,7 +21,6 @@ _charmcraft()
     local cur prev words cword cmd cmds
     cmds=(
         analyze
-        build
         clean
         close
         create-lib 
@@ -82,16 +81,6 @@ _charmcraft()
     case "$cmd" in
         analyze)
             COMPREPLY=( $(compgen -W "${globals[*]} --force --format" -- "$cur") )
-            ;;
-        build)
-            case "$prev" in
-                -f|--from)
-                    _filedir -d
-                    ;;
-                *)
-                    COMPREPLY=( $(compgen -W "${globals[*]} --from" -- "$cur") )
-                    ;;
-            esac
             ;;
         login)
             case "$prev" in

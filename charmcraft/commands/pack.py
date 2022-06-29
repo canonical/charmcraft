@@ -19,7 +19,6 @@
 import os
 import pathlib
 import zipfile
-from argparse import Namespace
 from typing import List
 
 from craft_cli import emit, CraftError
@@ -125,28 +124,36 @@ class PackCommand(BaseCommand):
         else:
             raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
 
+    def _validate_bases_indices(self, bases_indices):
+        """Validate that bases index is valid."""
+        if bases_indices is None:
+            return
+
+        msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
+        len_configured_bases = len(self.config.bases)
+        for bases_index in bases_indices:
+            if bases_index < 0:
+                raise CraftError(msg.format(bases_index))
+            if bases_index >= len_configured_bases:
+                raise CraftError(msg.format(bases_index))
+
     def _pack_charm(self, parsed_args) -> List[pathlib.Path]:
         """Pack a charm."""
-        emit.progress("Packing the charm.")
-        # adapt arguments to use the build infrastructure
-        build_args = Namespace(
-            **{
-                "debug": parsed_args.debug,
-                "destructive_mode": parsed_args.destructive_mode,
-                "from": self.config.project.dirpath,
-                "shell": parsed_args.shell,
-                "shell_after": parsed_args.shell_after,
-                "bases_indices": parsed_args.bases_index,
-                "force": parsed_args.force,
-            }
-        )
+        self._validate_bases_indices(parsed_args.bases_index)
 
-        # mimic the "build" command
-        validator = build.Validator(self.config)
-        args = validator.process(build_args)
-        emit.trace(f"Working arguments: {args}")
-        builder = build.Builder(args, self.config)
-        charms = builder.run(parsed_args.bases_index, destructive_mode=build_args.destructive_mode)
+        # build
+        emit.progress("Packing the charm.")
+        builder = build.Builder(
+            config=self.config,
+            force=parsed_args.force,
+            debug=parsed_args.debug,
+            shell=parsed_args.shell,
+            shell_after=parsed_args.shell_after,
+        )
+        charms = builder.run(
+            parsed_args.bases_index,
+            destructive_mode=parsed_args.destructive_mode,
+        )
 
         # avoid showing results when run inside a container (the outer charmcraft
         # is responsible of the final message to the user)

@@ -63,7 +63,7 @@ def mock_is_charmcraft_running_in_managed_mode():
 def test_make_executable_read_bits(tmp_path):
     pth = tmp_path / "test"
     pth.touch(mode=0o640)
-    # sanity check
+    # validity check
     assert pth.stat().st_mode & 0o777 == 0o640
     with pth.open() as fd:
         make_executable(fd)

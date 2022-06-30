@@ -302,7 +302,7 @@ def test_build_generics_symlink_dir(tmp_path):
     entrypoint.touch()
     somedir = tmp_path / "somedir"
     somedir.mkdir()
-    somefile = somedir / "sanity check"
+    somefile = somedir / "some file"
     somefile.touch()
     the_symlink = tmp_path / "thelink"
     the_symlink.symlink_to(somedir)
@@ -320,8 +320,8 @@ def test_build_generics_symlink_dir(tmp_path):
     real_link = os.readlink(str(built_symlink))
     assert real_link == "somedir"
 
-    # as a sanity check, the file inside the linked dir should exist
-    assert (build_dir / "thelink" / "sanity check").exists()
+    # the file inside the linked dir should exist
+    assert (build_dir / "thelink" / "some file").exists()
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

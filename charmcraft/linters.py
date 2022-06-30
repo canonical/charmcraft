@@ -203,7 +203,7 @@ class Framework:
 
 
 class JujuMetadata:
-    """Check that the metadata.yaml file exists and is sane.
+    """Check that the metadata.yaml file exists and is valid.
 
     The charm is considered to have a valid metadata if the following checks are true:
 

@@ -355,7 +355,7 @@ all_commands = list.__add__(*[cgroup.commands for cgroup in COMMAND_GROUPS])
 
 @pytest.mark.parametrize("command", all_commands)
 def test_commands(command):
-    """Sanity validation of a command.
+    """Assert commands are valid.
 
     This is done through asking help for it *in real life*, which would mean that the
     command is usable by the tool: that can be imported, instantiated, parse arguments, etc.

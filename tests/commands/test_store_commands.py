@@ -309,7 +309,7 @@ def test_login_restricting_bundles(emitter, store_mock, config, tmp_path):
 
 
 def test_login_restriction_mix(emitter, store_mock, config, tmp_path):
-    """Sanity case combining several restrictions."""
+    """Valid case combining several restrictions."""
     store_mock.login.return_value = "super secret stuff"
 
     args = Namespace(
@@ -1411,7 +1411,7 @@ def test_release_options_resource(config):
     ],
 )
 def test_release_parameters_ok(config, sysargs, expected_parsed):
-    """Control of different combination of sane parameters."""
+    """Control of different combination of valid parameters."""
     cmd = ReleaseCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
@@ -2450,7 +2450,7 @@ def test_status_multiplebases_multiple_tracks(emitter, store_mock, config):
 
 
 def test_status_multiplebases_everything_combined(emitter, store_mock, config):
-    """Multiple bases with several other modifiers, just a sanity check."""
+    """Validate multiple bases with several other modifiers."""
     other_base = Base(architecture="16b", channel="1", name="xz")
     tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
     resource = Resource(name="testres", optional=True, revision=1, resource_type="file")
@@ -3321,7 +3321,7 @@ def test_getlibinfo_success_content(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     extra_content = """
         extra lines for the file
-        extra non-ascii, for sanity: ñáéíóú
+        extra non-ascii: ñáéíóú
         the content is everything, this plus metadata
         the hash should be of this, excluding metadata
     """

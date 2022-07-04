@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -157,7 +157,7 @@ class OCIRegistry:
         else:
             # something else is going on, log what we have and return False so at least
             # we can continue with the upload
-            emit.trace(
+            emit.debug(
                 f"Bad response when checking for uploaded {url!r}: "
                 f"{response.status_code!r} (headers={response.headers})",
             )
@@ -299,7 +299,7 @@ class LocalDockerdInterface:
         try:
             response = self.session.get(url)
         except requests.exceptions.ConnectionError:
-            emit.trace(
+            emit.debug(
                 "Cannot connect to /var/run/docker.sock , please ensure dockerd is running.",
             )
             return
@@ -311,7 +311,7 @@ class LocalDockerdInterface:
         # 404 is the standard response to "not found", if not exactly that let's log
         # for proper debugging
         if response.status_code != 404:
-            emit.trace(f"Bad response when validation local image: {response.status_code}")
+            emit.debug(f"Bad response when validation local image: {response.status_code}")
 
     def get_streamed_image_content(self, digest: str) -> requests.Response:
         """Stream the content of a specific image."""

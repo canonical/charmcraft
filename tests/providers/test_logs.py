@@ -43,10 +43,10 @@ def test_capture_logs_from_instance(emitter, mock_instance, mock_namedtemporaryf
     ]
     emitter.assert_interactions(
         [
-            mock.call("trace", "Logs captured from managed instance:"),
-            mock.call("trace", ":: some"),
-            mock.call("trace", ":: log data"),
-            mock.call("trace", ":: here"),
+            mock.call("debug", "Logs captured from managed instance:"),
+            mock.call("debug", ":: some"),
+            mock.call("debug", ":: log data"),
+            mock.call("debug", ":: here"),
         ]
     )
     assert mock_namedtemporaryfile.mock_calls == [
@@ -68,5 +68,5 @@ def test_capture_logs_from_instance_not_found(
     assert mock_instance.mock_calls == [
         mock.call.pull_file(source=pathlib.Path("/tmp/charmcraft.log"), destination=fake_log),
     ]
-    emitter.assert_trace("No logs found in instance.")
+    emitter.assert_debug("No logs found in instance.")
     assert not fake_log.exists()

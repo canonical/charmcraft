@@ -137,7 +137,7 @@ def main(argv=None):
         logpath = None
 
     emit.init(
-        EmitterMode.NORMAL,
+        EmitterMode.BRIEF,
         "charmcraft",
         f"Starting charmcraft version {__version__}",
         log_filepath=logpath,
@@ -176,7 +176,7 @@ def main(argv=None):
                 "the current directory or where specified with --project-dir option); see "
                 "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
             )
-        emit.trace(_get_system_details())
+        emit.debug(_get_system_details())
         retcode = dispatcher.run()
 
     except ArgumentParsingError as err:

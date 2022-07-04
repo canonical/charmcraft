@@ -224,7 +224,7 @@ class PackCommand(BaseCommand):
             work_dir = project.dirpath / build.BUILD_DIRNAME
 
         # run the parts lifecycle
-        emit.trace(f"Parts definition: {config_parts}")
+        emit.debug(f"Parts definition: {config_parts}")
         lifecycle = parts.PartsLifecycle(
             config_parts,
             work_dir=work_dir,
@@ -236,7 +236,7 @@ class PackCommand(BaseCommand):
             lifecycle.run(Step.PRIME)
         except (RuntimeError, CraftError) as error:
             if parsed_args.debug:
-                emit.trace(f"Error when running PRIME step: {error}")
+                emit.debug(f"Error when running PRIME step: {error}")
                 build.launch_shell()
             raise
 

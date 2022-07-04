@@ -80,7 +80,7 @@ class LXDProvider(Provider):
         for name in names:
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
             if re.match(match_regex, name):
-                emit.trace(f"Deleting container {name!r}.")
+                emit.debug(f"Deleting container {name!r}.")
                 try:
                     self.lxc.delete(
                         instance_name=name,
@@ -92,7 +92,7 @@ class LXDProvider(Provider):
                     raise CraftError(str(error)) from error
                 deleted.append(name)
             else:
-                emit.trace(f"Not deleting container {name!r}.")
+                emit.debug(f"Not deleting container {name!r}.")
 
         return deleted
 

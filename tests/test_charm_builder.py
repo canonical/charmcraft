@@ -123,7 +123,7 @@ def test_build_generics_ignored_file(tmp_path, emitter):
     assert not (build_dir / "file2.txt").exists()
 
     expected = "Ignoring file because of rules: 'file2.txt'"
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 def test_build_generics_ignored_dir(tmp_path, emitter):
@@ -155,7 +155,7 @@ def test_build_generics_ignored_dir(tmp_path, emitter):
     assert not (build_dir / "dir2").exists()
 
     expected = "Ignoring directory because of rules: 'dir2'"
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
@@ -385,7 +385,7 @@ def test_build_generics_symlink_file_outside(tmp_path, emitter):
 
     assert not (build_dir / "external-file").exists()
     expected = "Ignoring symlink because targets outside the project: 'external-file'"
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -415,7 +415,7 @@ def test_build_generics_symlink_directory_outside(tmp_path, emitter):
 
     assert not (build_dir / "external-dir").exists()
     expected = "Ignoring symlink because targets outside the project: 'external-dir'"
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -445,7 +445,7 @@ def test_build_generics_different_filetype(tmp_path, emitter, monkeypatch):
 
     assert not (build_dir / "test-socket").exists()
     expected = "Ignoring file because of type: 'test-socket'"
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -582,7 +582,7 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, emitter
     assert test_hook.is_symlink()
     assert test_hook.resolve() == included_dispatcher
     expected = "Replacing existing hook 'somehook' as it's a symlink to the entrypoint"
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 # -- tests about dependencies handling
@@ -621,7 +621,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_trace("Handling dependencies")
+    emitter.assert_debug("Handling dependencies")
     emitter.assert_progress("Installing dependencies")
 
 
@@ -667,7 +667,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_trace("Handling dependencies")
+    emitter.assert_debug("Handling dependencies")
     emitter.assert_progress("Installing dependencies")
 
 
@@ -689,8 +689,8 @@ def test_build_dependencies_virtualenv_none(tmp_path, emitter):
         builder.handle_dependencies()
 
     mock_run.assert_not_called()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("No dependencies to handle")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("No dependencies to handle")
 
 
 def test_build_dependencies_virtualenv_packages(tmp_path, emitter):
@@ -721,7 +721,7 @@ def test_build_dependencies_virtualenv_packages(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_trace("Handling dependencies")
+    emitter.assert_debug("Handling dependencies")
     emitter.assert_progress("Installing dependencies")
 
 
@@ -753,7 +753,7 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_trace("Handling dependencies")
+    emitter.assert_debug("Handling dependencies")
     emitter.assert_progress("Installing dependencies")
 
 
@@ -802,7 +802,7 @@ def test_build_dependencies_virtualenv_all(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_trace("Handling dependencies")
+    emitter.assert_debug("Handling dependencies")
     emitter.assert_progress("Installing dependencies")
 
 
@@ -828,8 +828,8 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, emitter):
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("Dependencies directory not found")
     emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed
@@ -846,8 +846,8 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, emitter):
     emitter.interactions.clear()
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("Dependencies directory not found")
     emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed *again*
@@ -880,8 +880,8 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("Dependencies directory not found")
     emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed
@@ -898,8 +898,8 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
     emitter.interactions.clear()
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("Dependencies hash file not found")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("Dependencies hash file not found")
     emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed *again*
@@ -932,8 +932,8 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("Dependencies directory not found")
     emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed
@@ -950,8 +950,8 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
     emitter.interactions.clear()
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace(
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug(
         "Problems reading the dependencies hash file: "
         "'utf-8' codec can't decode byte 0xc3 in position 0: invalid continuation byte"
     )
@@ -1004,8 +1004,8 @@ def test_build_dependencies_no_reused_different_dependencies(
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("Dependencies directory not found")
     emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed
@@ -1029,7 +1029,7 @@ def test_build_dependencies_no_reused_different_dependencies(
     builder.python_packages = new_pypackages
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
+    emitter.assert_debug("Handling dependencies")
     emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed *again*
@@ -1066,8 +1066,8 @@ def test_build_dependencies_reused(tmp_path, emitter):
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("Dependencies directory not found")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("Dependencies directory not found")
     emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed
@@ -1081,8 +1081,8 @@ def test_build_dependencies_reused(tmp_path, emitter):
     emitter.interactions.clear()
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_trace("Handling dependencies")
-    emitter.assert_trace("Reusing installed dependencies, they are equal to last run ones")
+    emitter.assert_debug("Handling dependencies")
+    emitter.assert_debug("Reusing installed dependencies, they are equal to last run ones")
 
     # installation directory copied *again* to the build directory (this is always done as
     # buildpath is cleaned)
@@ -1195,7 +1195,7 @@ def test_processrun_stdout_logged(emitter):
     emitter.assert_interactions(
         [
             call("progress", "Running external command ['echo', 'HELO']"),
-            call("trace", "   :: HELO"),
+            call("debug", "   :: HELO"),
         ]
     )
 
@@ -1207,7 +1207,7 @@ def test_processrun_stderr_logged(emitter):
     emitter.assert_interactions(
         [
             call("progress", "Running external command " + str(cmd)),
-            call("trace", "   :: weird, huh?"),
+            call("debug", "   :: weird, huh?"),
         ]
     )
 

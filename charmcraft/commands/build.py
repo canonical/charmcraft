@@ -24,7 +24,7 @@ import subprocess
 import zipfile
 from typing import List, Optional, Tuple
 
-from craft_cli import emit, EmitterMode, CraftError
+from craft_cli import emit, CraftError
 
 from charmcraft import env, linters, parts
 from charmcraft.bases import check_if_base_matches_host
@@ -135,7 +135,7 @@ class Builder:
 
         # show attribute results
         for result in attribute_results:
-            emit.trace(
+            emit.verbose(
                 f"Check result: {result.name} [{result.check_type}] {result.result} "
                 f"({result.text}; see more at {result.url}).",
             )
@@ -143,15 +143,15 @@ class Builder:
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
         if linters.WARNINGS in lint_results_by_outcome:
-            emit.message("Lint Warnings:", intermediate=True)
+            emit.progress("Lint Warnings:", permanent=True)
             for result in lint_results_by_outcome[linters.WARNINGS]:
-                emit.message(template.format(result), intermediate=True)
+                emit.progress(template.format(result), permanent=True)
         if linters.ERRORS in lint_results_by_outcome:
-            emit.message("Lint Errors:", intermediate=True)
+            emit.progress("Lint Errors:", permanent=True)
             for result in lint_results_by_outcome[linters.ERRORS]:
-                emit.message(template.format(result), intermediate=True)
+                emit.progress(template.format(result), permanent=True)
             if self.force_packing:
-                emit.message("Packing anyway as requested.", intermediate=True)
+                emit.progress("Packing anyway as requested.", permanent=True)
             else:
                 raise CraftError(
                     "Aborting due to lint errors (use --force to override).", retcode=2
@@ -186,7 +186,7 @@ class Builder:
                 self._special_charm_part["source"] = str(self.charmdir)
 
         # run the parts lifecycle
-        emit.trace(f"Parts definition: {self._parts}")
+        emit.debug(f"Parts definition: {self._parts}")
         lifecycle = parts.PartsLifecycle(
             self._parts,
             work_dir=work_dir,
@@ -211,7 +211,7 @@ class Builder:
         )
 
         zipname = self.handle_package(lifecycle.prime_dir, bases_config)
-        emit.message(f"Created '{zipname}'.", intermediate=True)
+        emit.progress(f"Created '{zipname}'.", permanent=True)
         return zipname
 
     def _pre_lifecycle_validation(self):
@@ -310,7 +310,7 @@ class Builder:
 
         for bases_index, bases_config in enumerate(self.config.bases):
             if bases_indices and bases_index not in bases_indices:
-                emit.trace(f"Skipping 'bases[{bases_index:d}]' due to --base-index usage.")
+                emit.debug(f"Skipping 'bases[{bases_index:d}]' due to --base-index usage.")
                 continue
 
             for build_on_index, build_on in enumerate(bases_config.build_on):
@@ -320,7 +320,7 @@ class Builder:
                     matches, reason = self.provider.is_base_available(build_on)
 
                 if matches:
-                    emit.trace(
+                    emit.debug(
                         f"Building for 'bases[{bases_index:d}]' "
                         f"as host matches 'build-on[{build_on_index:d}]'.",
                     )
@@ -332,10 +332,10 @@ class Builder:
                         f"{reason}.",
                     )
             else:
-                emit.message(
+                emit.progress(
                     "No suitable 'build-on' environment found "
                     f"in 'bases[{bases_index:d}]' configuration.",
-                    intermediate=True,
+                    permanent=True,
                 )
 
         return build_plan
@@ -370,7 +370,7 @@ class Builder:
 
         charms = []
         for bases_config, build_on, bases_index, build_on_index in build_plan:
-            emit.trace(f"Building for 'bases[{ bases_index:d}][{build_on_index:d}]'.")
+            emit.debug(f"Building for 'bases[{ bases_index:d}][{build_on_index:d}]'.")
             if managed_mode or destructive_mode:
                 if self.shell:
                     # Execute shell in lieu of build.
@@ -381,7 +381,7 @@ class Builder:
                     charm_name = self.build_charm(bases_config)
                 except (CraftError, RuntimeError) as error:
                     if self.debug:
-                        emit.trace(f"Launching shell as charm building ended in error: {error}")
+                        emit.debug(f"Launching shell as charm building ended in error: {error}")
                         launch_shell()
                     raise
 
@@ -416,14 +416,8 @@ class Builder:
             instance_output_dir = env.get_managed_environment_home_path()
             pull_charm = True
 
-        cmd = ["charmcraft", "pack", "--bases-index", str(bases_index)]
-
-        if emit.get_mode() == EmitterMode.VERBOSE:
-            cmd.append("--verbose")
-        elif emit.get_mode() == EmitterMode.QUIET:
-            cmd.append("--quiet")
-        elif emit.get_mode() == EmitterMode.TRACE:
-            cmd.append("--trace")
+        mode = emit.get_mode().name.lower()
+        cmd = ["charmcraft", "pack", "--bases-index", str(bases_index), f"--verbosity={mode}"]
 
         if self.debug:
             cmd.append("--debug")
@@ -449,7 +443,7 @@ class Builder:
             build_on_index=build_on_index,
         ) as instance:
             emit.progress("Packing the charm")
-            emit.trace(f"Running {cmd}")
+            emit.debug(f"Running {cmd}")
             try:
                 with emit.pause():
                     instance.execute_run(cmd, check=True, cwd=instance_output_dir)

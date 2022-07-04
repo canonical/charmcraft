@@ -2894,7 +2894,7 @@ def test_publishlib_all(emitter, store_mock, tmp_path, monkeypatch, config, form
         "charms.testcharm_1.v0.testlib-b",
         "charms.testcharm_1.v1.testlib-b",
     ]
-    emitter.assert_trace("Libraries found under 'lib/charms/testcharm_1': " + str(names))
+    emitter.assert_debug("Libraries found under 'lib/charms/testcharm_1': " + str(names))
     if formatted:
         expected = [
             {
@@ -3824,7 +3824,7 @@ def test_fetchlib_all(emitter, store_mock, tmp_path, monkeypatch, config, format
         "charms.testcharm1.v0.testlib1",
         "charms.testcharm2.v3.testlib2",
     ]
-    emitter.assert_trace("Libraries found under 'lib/charms': " + str(names))
+    emitter.assert_debug("Libraries found under 'lib/charms': " + str(names))
     if formatted:
         expected = [
             {
@@ -4475,7 +4475,7 @@ def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config,
                     "Uploading resource from image "
                     "charm/charm-id/test-image-name @ test-digest-given-by-user.",
                 ),
-                call("progress", "Using OCI image from Canonical's registry."),
+                call("progress", "Using OCI image from Canonical's registry.", permanent=True),
                 call(
                     "message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."
                 ),
@@ -4542,10 +4542,12 @@ def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config
             call(
                 "progress",
                 "Remote image not found, uploading from local registry.",
+                permanent=True,
             ),
             call(
                 "progress",
                 "Image uploaded, new remote digest: new-digest-after-upload.",
+                permanent=True,
             ),
             call("message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."),
         ]
@@ -4602,11 +4604,13 @@ def test_uploadresource_image_call_missing_everywhere(emitter, store_mock, confi
             call(
                 "progress",
                 "Remote image not found, uploading from local registry.",
+                permanent=True,
             ),
             call(
                 "progress",
                 "Image with digest test-digest-given-by-user is not available in "
                 "the Canonical's registry nor locally.",
+                permanent=True,
             ),
         ]
     )

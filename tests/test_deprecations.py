@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ def test_notice_ok(monkeypatch, emitter):
     notify_deprecation("dn666")
     emitter.assert_interactions(
         [
-            call("message", "DEPRECATED: Test message for the user.", intermediate=True),
-            call("message", "See http://docs.com/#dn666 for more information.", intermediate=True),
+            call("progress", "DEPRECATED: Test message for the user.", permanent=True),
+            call("progress", "See http://docs.com/#dn666 for more information.", permanent=True),
         ]
     )
 
@@ -74,7 +74,7 @@ def test_log_deprecation_only_once(monkeypatch, emitter):
     notify_deprecation("dn666")
     emitter.assert_interactions(
         [
-            call("message", "DEPRECATED: Test message for the user.", intermediate=True),
-            call("message", "See http://docs.com/#dn666 for more information.", intermediate=True),
+            call("progress", "DEPRECATED: Test message for the user.", permanent=True),
+            call("progress", "See http://docs.com/#dn666 for more information.", permanent=True),
         ]
     )

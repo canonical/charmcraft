@@ -55,7 +55,7 @@ def read_metadata_yaml(charm_dir: pathlib.Path) -> Any:
     :returns: the YAML decoded metadata.yaml content
     """
     metadata_path = charm_dir / CHARM_METADATA
-    emit.trace(f"Reading {str(metadata_path)!r}")
+    emit.debug(f"Reading {str(metadata_path)!r}")
     with metadata_path.open("rt", encoding="utf8") as fh:
         return yaml.safe_load(fh)
 
@@ -72,5 +72,5 @@ def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
     except OSError as exc:
         raise CraftError(f"Cannot read the metadata.yaml file: {exc!r}") from exc
 
-    emit.trace("Validating metadata format")
+    emit.debug("Validating metadata format")
     return CharmMetadata.unmarshal(metadata)

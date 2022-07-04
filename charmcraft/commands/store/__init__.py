@@ -1177,7 +1177,7 @@ def _get_libs_from_tree(charm_name=None):
                     local_libs_data.append(_get_lib_info(lib_path=libfile))
 
     found_libs = [lib_data.full_name for lib_data in local_libs_data]
-    emit.trace(f"Libraries found under {str(base_dir)!r}: {found_libs}")
+    emit.debug(f"Libraries found under {str(base_dir)!r}: {found_libs}")
     return local_libs_data
 
 
@@ -1322,9 +1322,9 @@ class PublishLibCommand(BaseCommand):
         libs_tips = store.get_libraries_tips(to_query)
         analysis = []
         for lib_data in local_libs_data:
-            emit.trace(f"Verifying local lib {lib_data}")
+            emit.debug(f"Verifying local lib {lib_data}")
             tip = libs_tips.get((lib_data.lib_id, lib_data.api))
-            emit.trace(f"Store tip: {tip}")
+            emit.debug(f"Store tip: {tip}")
 
             # big decision branch to analyse if the library needs publishing or there is a reason
             # not to (to be actioned later in consideration of having a error situation or not)
@@ -1461,7 +1461,7 @@ class FetchLibCommand(BaseCommand):
         # check if something needs to be done
         analysis = []
         for lib_data in local_libs_data:
-            emit.trace(f"Verifying local lib {lib_data}")
+            emit.debug(f"Verifying local lib {lib_data}")
             # fix any missing lib id using the Store info
             if lib_data.lib_id is None:
                 for tip in libs_tips.values():
@@ -1470,7 +1470,7 @@ class FetchLibCommand(BaseCommand):
                         break
 
             tip = libs_tips.get((lib_data.lib_id, lib_data.api))
-            emit.trace(f"Store tip: {tip}")
+            emit.debug(f"Store tip: {tip}")
             error_message = None
             if tip is None:
                 error_message = f"Library {lib_data.full_name} not found in Charmhub."
@@ -1767,22 +1767,24 @@ class UploadResourceCommand(BaseCommand):
 
             # check if the specific image is already in Canonical's registry
             already_uploaded = ih.check_in_registry(image_digest)
-            # XXX Facundo 2022-06-13: converting the following four messages to progress ones
-            # so they don't interfere with the programmatic output; we need to add the
-            # permanent=True flag once is available from Craft CLI
             if already_uploaded:
-                emit.progress("Using OCI image from Canonical's registry.")
+                emit.progress("Using OCI image from Canonical's registry.", permanent=True)
             else:
                 # upload it from local registry
-                emit.progress("Remote image not found, uploading from local registry.")
+                emit.progress(
+                    "Remote image not found, uploading from local registry.", permanent=True
+                )
                 image_digest = ih.upload_from_local(image_digest)
                 if image_digest is None:
                     emit.progress(
                         f"Image with digest {parsed_args.image} is not available in "
                         "the Canonical's registry nor locally.",
+                        permanent=True,
                     )
                     return
-                emit.progress(f"Image uploaded, new remote digest: {image_digest}.")
+                emit.progress(
+                    f"Image uploaded, new remote digest: {image_digest}.", permanent=True
+                )
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(

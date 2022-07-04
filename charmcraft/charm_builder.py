@@ -115,7 +115,7 @@ class CharmBuilder:
             dest_path.symlink_to(relative_link)
         else:
             rel_path = src_path.relative_to(self.charmdir)
-            emit.trace(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
+            emit.debug(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
 
     def handle_generic_paths(self):
         """Handle all files and dirs except what's ignored and what will be handled later.
@@ -139,7 +139,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    emit.trace(f"Ignoring directory because of rules: {str(rel_path)!r}")
+                    emit.debug(f"Ignoring directory because of rules: {str(rel_path)!r}")
                     ignored.append(pos)
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
@@ -158,7 +158,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    emit.trace(f"Ignoring file because of rules: {str(rel_path)!r}")
+                    emit.debug(f"Ignoring file because of rules: {str(rel_path)!r}")
                 elif abs_path.is_symlink():
                     dest_path = self.buildpath / rel_path
                     self.create_symlink(abs_path, dest_path)
@@ -174,7 +174,7 @@ class CharmBuilder:
                             raise
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
-                    emit.trace(f"Ignoring file because of type: {str(rel_path)!r}")
+                    emit.debug(f"Ignoring file because of type: {str(rel_path)!r}")
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
@@ -208,14 +208,14 @@ class CharmBuilder:
             if node.resolve() == linked_entrypoint:
                 current_hooks_to_replace.append(node)
                 node.unlink()
-                emit.trace(
+                emit.debug(
                     f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint"
                 )
 
         # include the mandatory ones and those we need to replace
         hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
         for hookname in hooknames:
-            emit.trace(f"Creating the {hookname!r} hook script pointing to dispatch")
+            emit.debug(f"Creating the {hookname!r} hook script pointing to dispatch")
             dest_hook = dest_hookpath / hookname
             if not dest_hook.exists():
                 relative_link = relativise(dest_hook, dispatch_path)
@@ -261,9 +261,9 @@ class CharmBuilder:
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
-        emit.trace("Handling dependencies")
+        emit.debug("Handling dependencies")
         if not (self.requirement_paths or self.binary_python_packages or self.python_packages):
-            emit.trace("No dependencies to handle")
+            emit.debug("No dependencies to handle")
             return
 
         staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
@@ -271,25 +271,25 @@ class CharmBuilder:
 
         # find out if current dependencies are the same than the last run.
         current_deps_hash = self._calculate_dependencies_hash()
-        emit.trace(f"Current dependencies hash: {current_deps_hash!r}")
+        emit.debug(f"Current dependencies hash: {current_deps_hash!r}")
         if not staging_venv_dir.exists():
-            emit.trace("Dependencies directory not found")
+            emit.debug("Dependencies directory not found")
             same_dependencies = False
         elif hash_file.exists():
             try:
                 previous_deps_hash = hash_file.read_text(encoding="utf8")
             except Exception as exc:
-                emit.trace(f"Problems reading the dependencies hash file: {exc}")
+                emit.debug(f"Problems reading the dependencies hash file: {exc}")
                 same_dependencies = False
             else:
-                emit.trace(f"Previous dependencies hash: {previous_deps_hash!r}")
+                emit.debug(f"Previous dependencies hash: {previous_deps_hash!r}")
                 same_dependencies = previous_deps_hash == current_deps_hash
         else:
-            emit.trace("Dependencies hash file not found")
+            emit.debug("Dependencies hash file not found")
             same_dependencies = False
 
         if same_dependencies:
-            emit.trace("Reusing installed dependencies, they are equal to last run ones")
+            emit.debug("Reusing installed dependencies, they are equal to last run ones")
         else:
             emit.progress("Installing dependencies")
             self._install_dependencies(staging_venv_dir)
@@ -342,7 +342,7 @@ def _process_run(cmd: List[str]) -> None:
         raise CraftError(f"Subprocess execution crashed for command {cmd}") from err
 
     for line in proc.stdout:
-        emit.trace(f"   :: {line.rstrip()}")
+        emit.debug(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 
     if retcode:

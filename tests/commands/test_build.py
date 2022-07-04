@@ -256,7 +256,7 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, emit
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
 
-    emitter.assert_trace("Building for 'bases[0]' as host matches 'build-on[0]'.")
+    emitter.assert_debug("Building for 'bases[0]' as host matches 'build-on[0]'.")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -277,7 +277,7 @@ def test_build_with_charmcraft_yaml_managed_mode(
         f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
 
-    emitter.assert_trace("Building for 'bases[0]' as host matches 'build-on[0]'.")
+    emitter.assert_debug("Building for 'bases[0]' as host matches 'build-on[0]'.")
 
 
 def test_build_checks_provider(basic_project, mock_provider):
@@ -407,14 +407,14 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_buil
     reason = f"name 'unmatched-name' does not match host {host_base.name!r}."
     emitter.assert_interactions(
         [
-            call("trace", "Building for 'bases[0]' as host matches 'build-on[0]'."),
+            call("debug", "Building for 'bases[0]' as host matches 'build-on[0]'."),
             call("progress", f"Skipping 'bases[1].build-on[0]': {reason}"),
             call(
-                "message",
+                "progress",
                 "No suitable 'build-on' environment found in 'bases[1]' configuration.",
-                intermediate=True,
+                permanent=True,
             ),
-            call("trace", "Building for 'bases[2]' as host matches 'build-on[0]'."),
+            call("debug", "Building for 'bases[2]' as host matches 'build-on[0]'."),
         ]
     )
 
@@ -456,14 +456,14 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
     reason = f"name 'unmatched-name' does not match host {host_base.name!r}."
     emitter.assert_interactions(
         [
-            call("trace", "Building for 'bases[0]' as host matches 'build-on[0]'."),
+            call("debug", "Building for 'bases[0]' as host matches 'build-on[0]'."),
             call("progress", f"Skipping 'bases[1].build-on[0]': {reason}"),
             call(
-                "message",
+                "progress",
                 "No suitable 'build-on' environment found in 'bases[1]' configuration.",
-                intermediate=True,
+                permanent=True,
             ),
-            call("trace", "Building for 'bases[2]' as host matches 'build-on[0]'."),
+            call("debug", "Building for 'bases[2]' as host matches 'build-on[0]'."),
         ]
     )
 
@@ -476,7 +476,7 @@ def test_build_project_is_cwd(
     mock_provider,
 ):
     """Test cases for base-index parameter."""
-    emit.set_mode(EmitterMode.NORMAL)
+    emit.set_mode(EmitterMode.BRIEF)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -514,7 +514,7 @@ def test_build_project_is_cwd(
     ]
     assert mock_instance.mock_calls == [
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "0"],
+            ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief"],
             check=True,
             cwd=pathlib.Path("/root/project"),
         ),
@@ -529,7 +529,7 @@ def test_build_project_is_not_cwd(
     monkeypatch,
 ):
     """Test cases for base-index parameter."""
-    emit.set_mode(EmitterMode.NORMAL)
+    emit.set_mode(EmitterMode.BRIEF)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     charmcraft_file = basic_project / "charmcraft.yaml"
@@ -568,7 +568,7 @@ def test_build_project_is_not_cwd(
     ]
     assert mock_instance.mock_calls == [
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "0"],
+            ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief"],
             check=True,
             cwd=pathlib.Path("/root"),
         ),
@@ -583,10 +583,11 @@ def test_build_project_is_not_cwd(
 @pytest.mark.parametrize(
     "mode,cmd_flags",
     [
-        (EmitterMode.VERBOSE, ["--verbose"]),
-        (EmitterMode.QUIET, ["--quiet"]),
-        (EmitterMode.TRACE, ["--trace"]),
-        (EmitterMode.NORMAL, []),
+        (EmitterMode.VERBOSE, ["--verbosity=verbose"]),
+        (EmitterMode.QUIET, ["--verbosity=quiet"]),
+        (EmitterMode.DEBUG, ["--verbosity=debug"]),
+        (EmitterMode.TRACE, ["--verbosity=trace"]),
+        (EmitterMode.BRIEF, ["--verbosity=brief"]),
     ],
 )
 def test_build_bases_index_scenarios_provider(
@@ -866,9 +867,9 @@ def test_build_error_no_match_with_charmcraft_yaml(
                 "name 'unmatched-name' does not match host 'xname'.",
             ),
             call(
-                "message",
+                "progress",
                 "No suitable 'build-on' environment found in 'bases[0]' configuration.",
-                intermediate=True,
+                permanent=True,
             ),
             call(
                 "progress",
@@ -876,9 +877,9 @@ def test_build_error_no_match_with_charmcraft_yaml(
                 "channel 'unmatched-channel' does not match host 'xchannel'.",
             ),
             call(
-                "message",
+                "progress",
                 "No suitable 'build-on' environment found in 'bases[1]' configuration.",
-                intermediate=True,
+                permanent=True,
             ),
             call(
                 "progress",
@@ -887,9 +888,9 @@ def test_build_error_no_match_with_charmcraft_yaml(
                 "['unmatched-arch1', 'unmatched-arch2'].",
             ),
             call(
-                "message",
+                "progress",
                 "No suitable 'build-on' environment found in 'bases[2]' configuration.",
-                intermediate=True,
+                permanent=True,
             ),
         ]
     )
@@ -913,7 +914,7 @@ def test_build_arguments_managed_charmcraft(
     basic_project_builder,
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
-    emit.set_mode(EmitterMode.NORMAL)
+    emit.set_mode(EmitterMode.BRIEF)
     host_base = get_host_as_base()
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
 
@@ -924,7 +925,7 @@ def test_build_arguments_managed_charmcraft(
         bases_index=0,
         build_on_index=0,
     )
-    expected_cmd = ["charmcraft", "pack", "--bases-index", "0", cmd_flag]
+    expected_cmd = ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief", cmd_flag]
     assert mock_instance.mock_calls == [
         call.execute_run(expected_cmd, check=True, cwd=pathlib.Path("/root/project")),
     ]
@@ -1700,7 +1701,7 @@ def test_show_linters_attributes(basic_project, emitter, config):
     builder.show_linting_results(linting_results)
 
     expected = "Check result: check-name-1 [attribute] check-result-1 (text; see more at url)."
-    emitter.assert_trace(expected)
+    emitter.assert_verbose(expected)
 
 
 def test_show_linters_lint_warnings(basic_project, emitter, config):
@@ -1722,8 +1723,8 @@ def test_show_linters_lint_warnings(basic_project, emitter, config):
 
     emitter.assert_interactions(
         [
-            call("message", "Lint Warnings:", intermediate=True),
-            call("message", "- check-name: Some text (check-url)", intermediate=True),
+            call("progress", "Lint Warnings:", permanent=True),
+            call("progress", "- check-name: Some text (check-url)", permanent=True),
         ]
     )
 
@@ -1751,8 +1752,8 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
 
     emitter.assert_interactions(
         [
-            call("message", "Lint Errors:", intermediate=True),
-            call("message", "- check-name: Some text (check-url)", intermediate=True),
+            call("progress", "Lint Errors:", permanent=True),
+            call("progress", "- check-name: Some text (check-url)", permanent=True),
         ]
     )
 
@@ -1776,9 +1777,9 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
 
     emitter.assert_interactions(
         [
-            call("message", "Lint Errors:", intermediate=True),
-            call("message", "- check-name: Some text (check-url)", intermediate=True),
-            call("message", "Packing anyway as requested.", intermediate=True),
+            call("progress", "Lint Errors:", permanent=True),
+            call("progress", "- check-name: Some text (check-url)", permanent=True),
+            call("progress", "Packing anyway as requested.", permanent=True),
         ]
     )
 

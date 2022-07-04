@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -412,7 +412,7 @@ def test_ociregistry_is_item_uploaded_strange_response(responses, emitter):
         "'http://fakereg.com/v2/test-image/stuff/some-reference': 400 "
         "(headers={'Content-Type': 'text/plain', 'foo': 'bar'})"
     )
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 # -- test for the OCIRegistry manifest upload
@@ -778,7 +778,7 @@ def test_localdockerinterface_get_info_bad_response(responses, emitter):
     resp = ldi.get_image_info("test-digest")
     assert resp is None
 
-    emitter.assert_trace("Bad response when validation local image: 500")
+    emitter.assert_debug("Bad response when validation local image: 500")
 
 
 def test_localdockerinterface_get_info_disconnected(emitter, responses):
@@ -787,7 +787,7 @@ def test_localdockerinterface_get_info_disconnected(emitter, responses):
     resp = ldi.get_image_info("test-digest")
     assert resp is None
 
-    emitter.assert_trace(
+    emitter.assert_debug(
         "Cannot connect to /var/run/docker.sock , please ensure dockerd is running."
     )
 

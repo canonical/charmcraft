@@ -1533,7 +1533,7 @@ def test_status_simple_ok(emitter, store_mock, config, formatted):
         expected = [
             {
                 "track": "latest",
-                "channels": [
+                "mappings": [
                     {
                         "base": {
                             "name": "ubuntu",
@@ -1543,7 +1543,7 @@ def test_status_simple_ok(emitter, store_mock, config, formatted):
                         "releases": [
                             {
                                 "status": "open",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": "v7",
                                 "revision": 7,
                                 "resources": [],
@@ -1551,7 +1551,7 @@ def test_status_simple_ok(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": "v7",
                                 "revision": 7,
                                 "resources": [],
@@ -1559,7 +1559,7 @@ def test_status_simple_ok(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": "2.0",
                                 "revision": 80,
                                 "resources": [],
@@ -1567,7 +1567,7 @@ def test_status_simple_ok(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": "git-0db35ea1",
                                 "revision": 156,
                                 "resources": [],
@@ -1629,7 +1629,7 @@ def test_status_channels_not_released_with_fallback(emitter, store_mock, config,
         expected = [
             {
                 "track": "latest",
-                "channels": [
+                "mappings": [
                     {
                         "base": {
                             "name": "ubuntu",
@@ -1639,7 +1639,7 @@ def test_status_channels_not_released_with_fallback(emitter, store_mock, config,
                         "releases": [
                             {
                                 "status": "open",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": "v7",
                                 "revision": 7,
                                 "resources": [],
@@ -1647,7 +1647,7 @@ def test_status_channels_not_released_with_fallback(emitter, store_mock, config,
                             },
                             {
                                 "status": "tracking",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1655,7 +1655,7 @@ def test_status_channels_not_released_with_fallback(emitter, store_mock, config,
                             },
                             {
                                 "status": "tracking",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1663,7 +1663,7 @@ def test_status_channels_not_released_with_fallback(emitter, store_mock, config,
                             },
                             {
                                 "status": "open",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": "2.0",
                                 "revision": 80,
                                 "resources": [],
@@ -1711,7 +1711,7 @@ def test_status_channels_not_released_without_fallback(emitter, store_mock, conf
         expected = [
             {
                 "track": "latest",
-                "channels": [
+                "mappings": [
                     {
                         "base": {
                             "name": "ubuntu",
@@ -1721,7 +1721,7 @@ def test_status_channels_not_released_without_fallback(emitter, store_mock, conf
                         "releases": [
                             {
                                 "status": "closed",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1729,7 +1729,7 @@ def test_status_channels_not_released_without_fallback(emitter, store_mock, conf
                             },
                             {
                                 "status": "closed",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1737,7 +1737,7 @@ def test_status_channels_not_released_without_fallback(emitter, store_mock, conf
                             },
                             {
                                 "status": "open",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": "5.1",
                                 "revision": 5,
                                 "resources": [],
@@ -1745,7 +1745,7 @@ def test_status_channels_not_released_without_fallback(emitter, store_mock, conf
                             },
                             {
                                 "status": "open",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": "almostready",
                                 "revision": 12,
                                 "resources": [],
@@ -1795,7 +1795,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
         expected = [
             {
                 "track": "latest",
-                "channels": [
+                "mappings": [
                     {
                         "base": {
                             "name": "ubuntu",
@@ -1805,7 +1805,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
                         "releases": [
                             {
                                 "status": "open",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": "7.5.3",
                                 "revision": 503,
                                 "resources": [],
@@ -1813,7 +1813,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "tracking",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1821,7 +1821,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "tracking",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1829,7 +1829,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "tracking",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1841,7 +1841,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
             },
             {
                 "track": "2.0",
-                "channels": [
+                "mappings": [
                     {
                         "base": {
                             "name": "ubuntu",
@@ -1851,7 +1851,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
                         "releases": [
                             {
                                 "status": "closed",
-                                "channel": "stable",
+                                "channel": "2.0/stable",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1859,7 +1859,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "closed",
-                                "channel": "candidate",
+                                "channel": "2.0/candidate",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1867,7 +1867,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "closed",
-                                "channel": "beta",
+                                "channel": "2.0/beta",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -1875,7 +1875,7 @@ def test_status_multiple_tracks(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "edge",
+                                "channel": "2.0/edge",
                                 "version": "1",
                                 "revision": 1,
                                 "resources": [],
@@ -1991,7 +1991,7 @@ def test_status_with_one_branch(emitter, store_mock, config, formatted):
         expected = [
             {
                 "track": "latest",
-                "channels": [
+                "mappings": [
                     {
                         "base": {
                             "name": "ubuntu",
@@ -2001,7 +2001,7 @@ def test_status_with_one_branch(emitter, store_mock, config, formatted):
                         "releases": [
                             {
                                 "status": "closed",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2009,7 +2009,7 @@ def test_status_with_one_branch(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "closed",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2017,7 +2017,7 @@ def test_status_with_one_branch(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": "5.1",
                                 "revision": 5,
                                 "resources": [],
@@ -2025,7 +2025,7 @@ def test_status_with_one_branch(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "tracking",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2033,7 +2033,7 @@ def test_status_with_one_branch(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "beta/mybranch",
+                                "channel": "latest/beta/mybranch",
                                 "version": "ver.12",
                                 "revision": 12,
                                 "resources": [],
@@ -2132,7 +2132,7 @@ def test_status_with_resources(emitter, store_mock, config, formatted):
         expected = [
             {
                 "track": "latest",
-                "channels": [
+                "mappings": [
                     {
                         "base": {
                             "name": "ubuntu",
@@ -2142,7 +2142,7 @@ def test_status_with_resources(emitter, store_mock, config, formatted):
                         "releases": [
                             {
                                 "status": "closed",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2150,7 +2150,7 @@ def test_status_with_resources(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": "5.1",
                                 "revision": 5,
                                 "resources": [
@@ -2161,7 +2161,7 @@ def test_status_with_resources(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": "5.1",
                                 "revision": 5,
                                 "resources": [{"name": "resource1", "revision": 1}],
@@ -2169,7 +2169,7 @@ def test_status_with_resources(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "tracking",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2292,7 +2292,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
         expected = [
             {
                 "track": "latest",
-                "channels": [
+                "mappings": [
                     {
                         "base": {
                             "name": "ubuntu",
@@ -2302,7 +2302,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
                         "releases": [
                             {
                                 "status": "closed",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2310,7 +2310,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
                             },
                             {
                                 "status": "open",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": "v7",
                                 "revision": 7,
                                 "resources": [],
@@ -2318,7 +2318,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
                             },
                             {
                                 "status": "tracking",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2326,7 +2326,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
                             },
                             {
                                 "status": "open",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": "git-0db35ea1",
                                 "revision": 156,
                                 "resources": [],
@@ -2343,7 +2343,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
                         "releases": [
                             {
                                 "status": "open",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": "v7",
                                 "revision": 7,
                                 "resources": [],
@@ -2351,7 +2351,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
                             },
                             {
                                 "status": "tracking",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2359,7 +2359,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
                             },
                             {
                                 "status": "open",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": "2.0",
                                 "revision": 80,
                                 "resources": [],
@@ -2367,7 +2367,7 @@ def test_status_multiplebases_single_track(emitter, store_mock, config, formatte
                             },
                             {
                                 "status": "tracking",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2561,13 +2561,13 @@ def test_status_with_base_in_none(emitter, store_mock, config, formatted):
         expected = [
             {
                 "track": "latest",
-                "channels": [
+                "mappings": [
                     {
                         "base": None,
                         "releases": [
                             {
                                 "status": "open",
-                                "channel": "stable",
+                                "channel": "latest/stable",
                                 "version": "v7",
                                 "revision": 7,
                                 "resources": [],
@@ -2575,7 +2575,7 @@ def test_status_with_base_in_none(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "open",
-                                "channel": "candidate",
+                                "channel": "latest/candidate",
                                 "version": "v7",
                                 "revision": 7,
                                 "resources": [],
@@ -2583,7 +2583,7 @@ def test_status_with_base_in_none(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "tracking",
-                                "channel": "beta",
+                                "channel": "latest/beta",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,
@@ -2591,7 +2591,7 @@ def test_status_with_base_in_none(emitter, store_mock, config, formatted):
                             },
                             {
                                 "status": "tracking",
-                                "channel": "edge",
+                                "channel": "latest/edge",
                                 "version": None,
                                 "revision": None,
                                 "resources": None,

@@ -896,7 +896,7 @@ class StatusCommand(BaseCommand):
         unreleased_track = {None: {}}  # base in None with no releases at all
         for track, (channels, branches) in per_track.items():
             prog_channels_info = []
-            prog_data.append({"track": track, "channels": prog_channels_info})
+            prog_data.append({"track": track, "mappings": prog_channels_info})
 
             releases_by_base = releases_by_track.get(track, unreleased_track)
             shown_track = track
@@ -924,8 +924,6 @@ class StatusCommand(BaseCommand):
                 release_shown_for_this_track_base = False
 
                 for channel in channels:
-                    description = channel.risk
-
                     # get the release of the channel, fallbacking accordingly
                     release = releases_by_channel.get(channel.name)
                     if release is None:
@@ -943,7 +941,7 @@ class StatusCommand(BaseCommand):
                         prog_resources = self._build_resources_prog(release.resources)
                         prog_status = "open"
 
-                    datum = [shown_track, shown_base, description, version, revno]
+                    datum = [shown_track, shown_base, channel.risk, version, revno]
                     if resources_present:
                         datum.append(resources)
                     human_data.append(datum)
@@ -951,7 +949,7 @@ class StatusCommand(BaseCommand):
                     prog_releases_info.append(
                         {
                             "status": prog_status,
-                            "channel": description,
+                            "channel": channel.name,
                             "version": prog_version,
                             "revision": prog_revno,
                             "resources": prog_resources,
@@ -980,7 +978,7 @@ class StatusCommand(BaseCommand):
                     prog_releases_info.append(
                         {
                             "status": "open",
-                            "channel": description,
+                            "channel": branch.name,
                             "version": revision.version,
                             "revision": release.revision,
                             "resources": self._build_resources_prog(release.resources),

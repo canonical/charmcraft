@@ -71,7 +71,7 @@ def test_main_ok():
 
     # check how Emitter was initted
     emit_mock.init.assert_called_once_with(
-        EmitterMode.NORMAL,
+        EmitterMode.BRIEF,
         "charmcraft",
         f"Starting charmcraft version {__version__}",
         log_filepath=None,
@@ -89,7 +89,7 @@ def test_main_managed_instance_init(monkeypatch):
 
     # check how Emitter was initted
     emit_mock.init.assert_called_once_with(
-        EmitterMode.NORMAL,
+        EmitterMode.BRIEF,
         "charmcraft",
         f"Starting charmcraft version {__version__}",
         log_filepath=env.get_managed_environment_log_path(),
@@ -285,7 +285,7 @@ def test_main_logs_system_details(emitter, config):
                 details_mock.return_value = system_details
                 run_mock.return_value = None
                 main(["charmcraft", "version"])
-    emit_mock.trace.assert_called_once_with(system_details)
+    emit_mock.debug.assert_called_once_with(system_details)
 
 
 # -- tests for system details producer

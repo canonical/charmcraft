@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ class MultipassProvider(Provider):
         for name in names:
             match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
             if re.match(match_regex, name):
-                emit.trace(f"Deleting Multipass VM {name!r}.")
+                emit.debug(f"Deleting Multipass VM {name!r}.")
                 try:
                     self.multipass.delete(
                         instance_name=name,
@@ -86,7 +86,7 @@ class MultipassProvider(Provider):
 
                 deleted.append(name)
             else:
-                emit.trace(f"Not deleting Multipass VM {name!r}.")
+                emit.debug(f"Not deleting Multipass VM {name!r}.")
 
         return deleted
 

@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -313,9 +313,9 @@ class PartsLifecycle:
                         self._lcm.clean(Step.BUILD, part_names=["charm"])
                         self._lcm.reload_state()
 
-            emit.trace(f"Executing parts lifecycle in {str(self._project_dir)!r}")
+            emit.debug(f"Executing parts lifecycle in {str(self._project_dir)!r}")
             actions = self._lcm.plan(target_step)
-            emit.trace(f"Parts actions: {actions}")
+            emit.debug(f"Parts actions: {actions}")
             with self._lcm.action_executor() as aex:
                 for action in actions:
                     emit.progress(f"Running step {action.step.name} for part {action.part_name!r}")

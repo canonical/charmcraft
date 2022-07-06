@@ -317,7 +317,7 @@ def test_from_file():
 
 def test_log_matching_rule(emitter):
     jujuignore.JujuIgnore(["foo/bar\n"])
-    emitter.assert_trace(r"Translated .jujuignore 1 'foo/bar\n' => '.*/foo/bar\\Z'")
+    emitter.assert_debug(r"Translated .jujuignore 1 'foo/bar\n' => '.*/foo/bar\\Z'")
 
 
 def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):

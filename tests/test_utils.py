@@ -88,7 +88,7 @@ def test_load_yaml_no_file(tmp_path, emitter):
     assert content is None
 
     expected = "Couldn't find config file {!r}".format(str(test_file))
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 def test_load_yaml_directory(tmp_path, emitter):
@@ -98,7 +98,7 @@ def test_load_yaml_directory(tmp_path, emitter):
     assert content is None
 
     expected = "Couldn't find config file {!r}".format(str(test_file))
-    emitter.assert_trace(expected)
+    emitter.assert_debug(expected)
 
 
 def test_load_yaml_corrupted_format(tmp_path, emitter):
@@ -112,7 +112,7 @@ def test_load_yaml_corrupted_format(tmp_path, emitter):
     assert content is None
 
     expected = "Failed to read/parse config file.*testfile.yaml.*ParserError.*"
-    emitter.assert_trace(expected, regex=True)
+    emitter.assert_debug(expected, regex=True)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -128,7 +128,7 @@ def test_load_yaml_file_problem(tmp_path, emitter):
     assert content is None
 
     expected = f"Failed to read/parse config file {str(test_file)!r}.*PermissionError.*"
-    emitter.assert_trace(expected, regex=True)
+    emitter.assert_debug(expected, regex=True)
 
 
 # -- tests for the SingleOptionEnsurer helper class

@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ class InitCommand(BaseCommand):
         elif any(init_dirpath.iterdir()) and not args.force:
             tpl = "{!r} is not empty (consider using --force to work on nonempty directories)"
             raise CraftError(tpl.format(str(init_dirpath)))
-        emit.trace(f"Using project directory {str(init_dirpath)!r}")
+        emit.debug(f"Using project directory {str(init_dirpath)!r}")
 
         if args.author is None and pwd is not None:
             args.author = _get_users_full_name_gecos()
@@ -113,7 +113,7 @@ class InitCommand(BaseCommand):
 
         if not args.name:
             args.name = init_dirpath.name
-            emit.trace(f"Set project name to '{args.name}'")
+            emit.debug(f"Set project name to '{args.name}'")
 
         if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
             raise CraftError(
@@ -139,7 +139,7 @@ class InitCommand(BaseCommand):
                 continue
             template = env.get_template(template_name)
             template_name = template_name[:-3]
-            emit.trace(f"Rendering {template_name}")
+            emit.debug(f"Rendering {template_name}")
             path = init_dirpath / template_name
             if path.exists():
                 continue
@@ -151,7 +151,7 @@ class InitCommand(BaseCommand):
                     todos.append((template_name, todo))
                 if template_name in executables and os.name == "posix":
                     make_executable(fh)
-                    emit.trace("  made executable")
+                    emit.debug("  made executable")
         emit.message("Charm operator package file and directory tree initialized.")
         if todos:
             emit.message("TODO:")

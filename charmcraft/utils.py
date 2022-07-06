@@ -65,13 +65,13 @@ def make_executable(fh):
 def load_yaml(fpath):
     """Return the content of a YAML file."""
     if not fpath.is_file():
-        emit.trace(f"Couldn't find config file {str(fpath)!r}")
+        emit.debug(f"Couldn't find config file {str(fpath)!r}")
         return
     try:
         with fpath.open("rb") as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
-        emit.trace(f"Failed to read/parse config file {str(fpath)!r}: {err!r}")
+        emit.debug(f"Failed to read/parse config file {str(fpath)!r}: {err!r}")
         return
     return content
 
@@ -84,7 +84,7 @@ def get_templates_environment(templates_dir):
         # https://pyinstaller.readthedocs.io/en/stable/runtime-information.html
         # In this scenario we need to load from the data location that is unpacked
         # into the temporary directory at runtime (sys._MEIPASS).
-        emit.trace(f"Bundle directory: {sys._MEIPASS}")
+        emit.debug(f"Bundle directory: {sys._MEIPASS}")
         loader = FileSystemLoader(os.path.join(sys._MEIPASS, templates_dir))
     else:
         loader = PackageLoader("charmcraft", templates_dir)
@@ -180,7 +180,7 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
             with filepath.open("rt", encoding="utf-8") as fh:
                 lines = fh.readlines()
         except FileNotFoundError:
-            emit.trace("Unable to locate 'os-release' file, using default values")
+            emit.debug("Unable to locate 'os-release' file, using default values")
         else:
             os_release = {}
             for line in lines:

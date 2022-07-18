@@ -104,6 +104,9 @@ def basic_project(tmp_path, monkeypatch, create_config):
           - name: {host_base.name}
             channel: "{host_base.channel}"
             architectures: {host_base.architectures!r}
+        parts:  # just to avoid "default charm parts" sneaking in
+          foo:
+            plugin: nil
         """
     )
 
@@ -132,6 +135,9 @@ def basic_project_builder(basic_project):
                     print(f"  - name: {base.name!r}", file=f)
                     print(f"    channel: {base.channel!r}", file=f)
                     print(f"    architectures: {base.architectures!r}", file=f)
+            print("parts:", file=f)
+            print("  foo:", file=f)
+            print("    plugin: nil", file=f)
 
         config = load(basic_project)
         return get_builder(config, **builder_kwargs)
@@ -246,7 +252,8 @@ def test_build_error_without_metadata_yaml(basic_project):
 def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, emitter, monkeypatch):
     host_base = get_host_as_base()
     builder = basic_project_builder(
-        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
+        force=True,  # to ignore any linter issue
     )
 
     zipnames = builder.run(destructive_mode=True)
@@ -266,7 +273,8 @@ def test_build_with_charmcraft_yaml_managed_mode(
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     host_base = get_host_as_base()
     builder = basic_project_builder(
-        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
+        force=True,  # to ignore any linter issue
     )
 
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
@@ -393,7 +401,8 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_buil
             BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]}),
             BasesConfiguration(**{"build-on": [unmatched_base], "run-on": [unmatched_base]}),
             BasesConfiguration(**{"build-on": [host_base], "run-on": [matched_cross_base]}),
-        ]
+        ],
+        force=True,
     )
 
     zipnames = builder.run(destructive_mode=True)
@@ -440,7 +449,8 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
             BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]}),
             BasesConfiguration(**{"build-on": [unmatched_base], "run-on": [unmatched_base]}),
             BasesConfiguration(**{"build-on": [host_base], "run-on": [matched_cross_base]}),
-        ]
+        ],
+        force=True,
     )
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -762,45 +772,29 @@ def test_build_bases_index_scenarios_provider(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_bases_index_scenarios_managed_mode(basic_project, monkeypatch, tmp_path):
+def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeypatch, tmp_path):
     """Test cases for base-index parameter."""
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                        architectures: {host_base.architectures!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                        architectures: {host_base.architectures!r}
-                  - build-on:
-                      - name: unmatched-name
-                        channel: unmatched-channel
-                        architectures: [unmatched-arch1]
-                    run-on:
-                      - name: unmatched-name
-                        channel: unmatched-channel
-                        architectures: [unmatched-arch1]
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                        architectures: {host_base.architectures!r}
-                    run-on:
-                      - name: cross-name
-                        channel: cross-channel
-                        architectures: [cross-arch1]
-                """
-        )
+    host_base = get_host_as_base()
+    unmatched_base = Base(
+        name="unmatched-name",
+        channel="unmatched-channel",
+        architectures=["unmatched-arch1"],
     )
-    config = load(basic_project)
-    builder = get_builder(config)
+    matched_cross_base = Base(
+        name="cross-name",
+        channel="cross-channel",
+        architectures=["cross-arch1"],
+    )
+    builder = basic_project_builder(
+        [
+            BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]}),
+            BasesConfiguration(**{"build-on": [unmatched_base], "run-on": [unmatched_base]}),
+            BasesConfiguration(**{"build-on": [host_base], "run-on": [matched_cross_base]}),
+        ],
+        force=True,
+    )
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
@@ -1023,169 +1017,6 @@ def test_build_package_name(tmp_path, config):
     assert zipname == "name-from-metadata_xname-xchannel-xarch1.charm"
 
 
-@pytest.mark.parametrize("absolute_entrypoint", [True, False])
-def test_build_entrypoint_from_parts_ok(basic_project, monkeypatch, absolute_entrypoint):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    if absolute_entrypoint:
-        entrypoint_path = basic_project / "my_entrypoint.py"
-    else:
-        entrypoint_path = "my_entrypoint.py"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                parts:
-                  charm:
-                    charm-entrypoint: {entrypoint_path}
-                    charm-requirements: ["reqs.txt"]
-                """
-        )
-    )
-    config = load(basic_project)
-    builder = get_builder(config)
-
-    entrypoint = basic_project / "my_entrypoint.py"
-    entrypoint.touch()
-    entrypoint.chmod(0o700)
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "prime": [
-                            "my_entrypoint.py",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                        "charm-entrypoint": "my_entrypoint.py",
-                        "charm-requirements": ["reqs.txt"],
-                        "source": str(basic_project),
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-def test_build_entrypoint_default_ok(basic_project, monkeypatch):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                parts:
-                  charm:
-                     charm-requirements: ["reqs.txt"]
-                """
-        )
-    )
-    config = load(basic_project)
-    builder = get_builder(config, force=True)
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-requirements": ["reqs.txt"],
-                        "source": str(basic_project),
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-def test_build_entrypoint_from_parts_outside(basic_project, monkeypatch):
-    """The specified entrypoint not points to a file outside the project."""
-    host_base = get_host_as_base()
-    outside = basic_project.parent
-    charmcraft_yaml_content = f"""\
-        type: charm
-        bases:
-          - build-on:
-              - name: {host_base.name!r}
-                channel: {host_base.channel!r}
-            run-on:
-              - name: {host_base.name!r}
-                channel: {host_base.channel!r}
-        parts:
-          charm:
-            charm-entrypoint: ../my_entrypoint.py
-        """
-    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
-    config = load(basic_project)
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-
-    # file exists and it's fine
-    entrypoint = outside / "my_entrypoint.py"
-    entrypoint.touch(mode=0o755)
-
-    builder = get_builder(config)
-    with pytest.raises(CraftError) as cm:
-        builder.run([0])
-    assert str(cm.value) == (
-        f"Charm entry point must be inside the project: {str(entrypoint.resolve())!r}"
-    )
-
-
 def test_build_postlifecycle_validation_is_properly_called(basic_project, monkeypatch):
     """Check how the entrypoint validation helper is called."""
     host_base = get_host_as_base()
@@ -1204,7 +1035,6 @@ def test_build_postlifecycle_validation_is_properly_called(basic_project, monkey
                 parts:
                   charm:
                     charm-entrypoint: my_entrypoint.py
-                    charm-requirements: ["reqs.txt"]
                 """
         )
     )
@@ -1267,14 +1097,13 @@ def test_build_postlifecycle_validation_entrypoint_missing(basic_project):
                channel: {host_base.channel!r}
        parts:
          charm:
-            charm-requirements: ["reqs.txt"]
+            prime: [xyz]
             charm-entrypoint: missing.py
        """
     (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
     config = load(basic_project)
 
     builder = get_builder(config, force=True)
-    builder._pre_lifecycle_validation()  # load from config
     with pytest.raises(CraftError) as cm:
         builder._post_lifecycle_validation(basic_project)
     entrypoint = basic_project / "missing.py"
@@ -1296,7 +1125,7 @@ def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
                channel: {host_base.channel!r}
        parts:
          charm:
-            charm-requirements: ["reqs.txt"]
+            prime: [xyz]
        """
     (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
     config = load(basic_project)
@@ -1306,203 +1135,13 @@ def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
     entrypoint.chmod(0o666)
 
     builder = get_builder(config, force=True)
-    builder._pre_lifecycle_validation()  # load from config
     with pytest.raises(CraftError) as cm:
         builder._post_lifecycle_validation(basic_project)
     assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
 
 
-def test_build_requirements_from_parts(basic_project, monkeypatch):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-
-                parts:
-                  charm:
-                    charm-entrypoint: src/charm.py
-                    charm-requirements: ["reqs.txt"]
-                """
-        )
-    )
-    config = load(basic_project)
-    builder = get_builder(config, force=True)
-
-    reqs = basic_project / "reqs.txt"
-    reqs.touch()
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-requirements": ["reqs.txt"],
-                        "source": str(basic_project),
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-def test_build_requirements_default(basic_project, monkeypatch, emitter):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-
-                parts:
-                  charm:
-                    charm-entrypoint: src/charm.py
-                """
-        )
-    )
-    config = load(basic_project)
-    builder = get_builder(config, force=True)
-
-    # create a requirements.txt file
-    pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-requirements": ["requirements.txt"],
-                        "source": str(basic_project),
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-def test_build_requirements_no_requirements_txt(basic_project, monkeypatch, emitter):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-
-                parts:
-                  charm:
-                    charm-entrypoint: src/charm.py
-                """
-        )
-    )
-    config = load(basic_project)
-    builder = get_builder(config, force=True)
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-requirements": [],
-                        "source": str(basic_project),
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-def test_build_python_packages_from_parts(basic_project, monkeypatch):
-    """Test cases for base-index parameter."""
+def test_build_part_from_config(basic_project, monkeypatch):
+    """Check that the "parts" are passed to the lifecycle correctly."""
     host_base = get_host_as_base()
     charmcraft_file = basic_project / "charmcraft.yaml"
     charmcraft_file.write_text(
@@ -1521,9 +1160,13 @@ def test_build_python_packages_from_parts(basic_project, monkeypatch):
                   charm:
                     charm-entrypoint: src/charm.py
                     charm-python-packages: ["foo", "bar"]
+                    charm-binary-python-packages: ["baz"]
+                    charm-requirements: ["reqs.txt"]
                 """
         )
     )
+    reqs_file = basic_project / "reqs.txt"
+    reqs_file.write_text("somedep")
     config = load(basic_project)
     builder = get_builder(config, force=True)
 
@@ -1551,71 +1194,9 @@ def test_build_python_packages_from_parts(basic_project, monkeypatch):
                         ],
                         "charm-entrypoint": "src/charm.py",
                         "charm-python-packages": ["foo", "bar"],
+                        "charm-binary-python-packages": ["baz"],
                         "source": str(basic_project),
-                        "charm-requirements": [],
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-def test_build_binary_python_packages_from_parts(basic_project, monkeypatch):
-    """Test cases for base-index parameter."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-
-                parts:
-                  charm:
-                    charm-entrypoint: src/charm.py
-                    charm-binary-python-packages: ["foo", "bar"]
-                """
-        )
-    )
-    config = load(basic_project)
-    builder = get_builder(config, force=True)
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-binary-python-packages": ["foo", "bar"],
-                        "source": str(basic_project),
-                        "charm-requirements": [],
+                        "charm-requirements": ["reqs.txt"],
                     }
                 },
                 work_dir=pathlib.Path("/root"),
@@ -1780,235 +1361,6 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
             call("progress", "Lint Errors:", permanent=True),
             call("progress", "- check-name: Some text (check-url)", permanent=True),
             call("progress", "Packing anyway as requested.", permanent=True),
-        ]
-    )
-
-
-# -- tests for implicit charm part
-
-
-@pytest.fixture
-def charmcraft_yaml():
-    """Create a charmcraft.yaml with the given parts data."""
-
-    def _write_yaml_file(project_dir, parts):
-        host_base = get_host_as_base()
-        header = dedent(
-            f"""
-            type: charm
-            bases:
-              - build-on:
-                  - name: {host_base.name!r}
-                    channel: {host_base.channel!r}
-                run-on:
-                  - name: {host_base.name!r}
-                    channel: {host_base.channel!r}
-            """
-        )
-
-        charmcraft_file = project_dir / "charmcraft.yaml"
-        charmcraft_file.write_text(header + parts)
-
-    return _write_yaml_file
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_parts_not_defined(basic_project, charmcraft_yaml, monkeypatch):
-    """Parts are not defined.
-
-    When the "parts" section does not exist, create an implicit "charm" part and
-    populate it with the default charm building parameters.
-    """
-    charmcraft_yaml(basic_project, "")
-
-    config = load(basic_project)
-    builder = get_builder(config)
-
-    # create a requirements.txt file
-    pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-requirements": ["requirements.txt"],
-                        "source": str(basic_project),
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_parts_with_charm_part(basic_project, charmcraft_yaml, monkeypatch):
-    """Parts are declared with a charm part with implicit plugin.
-
-    When the "parts" section exists in chamcraft.yaml and a part named "charm"
-    is defined with implicit plugin (or explicit "charm" plugin), populate it
-    with the defaults for charm building.
-    """
-    charmcraft_yaml(
-        basic_project,
-        dedent(
-            """
-            parts:
-              charm:
-                prime:
-                  - my_extra_file.txt
-            """
-        ),
-    )
-
-    config = load(basic_project)
-    builder = get_builder(config)
-
-    # create a requirements.txt file
-    pathlib.Path(basic_project, "requirements.txt").write_text("ops >= 1.2.0")
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "charm",
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-requirements": ["requirements.txt"],
-                        "source": str(basic_project),
-                        "prime": [
-                            "my_extra_file.txt",
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_parts_without_charm_part(basic_project, charmcraft_yaml, monkeypatch):
-    """Parts are declared without a charm part.
-
-    When the "parts" section exists in chamcraft.yaml and a part named "charm"
-    is not defined, process parts normally and don't invoke the charm plugin.
-    This scenario is used to use parts processing to pack a generic hooks-based
-    charm.
-    """
-    charmcraft_yaml(
-        basic_project,
-        dedent(
-            """
-            parts:
-              foo:
-                plugin: nil
-            """
-        ),
-    )
-    config = load(basic_project)
-    builder = get_builder(config)
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "foo": {
-                        "plugin": "nil",
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
-        ]
-    )
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_parts_with_charm_part_with_plugin(basic_project, charmcraft_yaml, monkeypatch):
-    """Parts are declared with a charm part that uses a different plugin.
-
-    When the "parts" section exists in chamcraft.yaml and a part named "charm"
-    is defined with a plugin that's not "charm", handle it as a regular part
-    without populating fields for charm building.
-    """
-    charmcraft_yaml(
-        basic_project,
-        dedent(
-            """
-            parts:
-              charm:
-                plugin: nil
-            """
-        ),
-    )
-    config = load(basic_project)
-    builder = get_builder(config)
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            builder.run([0])
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "charm": {
-                        "plugin": "nil",
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=basic_project,
-                project_name="name-from-metadata",
-                ignore_local_sources=["*.charm"],
-            )
         ]
     )
 

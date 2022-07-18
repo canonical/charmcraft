@@ -439,7 +439,8 @@ def test_schema_other_charm_part_no_source(create_config, check_schema_error):
     check_schema_error(
         """\
         Bad charmcraft.yaml content:
-        - field 'source' required in 'parts.other-part' configuration"""
+        - field 'source' required in 'parts.other-part' configuration
+        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""  # NOQA
     )
 
 
@@ -457,6 +458,199 @@ def test_schema_other_bundle_part_no_source(create_config, check_schema_error):
         """\
         Bad charmcraft.yaml content:
         - field 'source' required in 'parts.other-part' configuration"""
+    )
+
+
+# -- tests to check the double layer schema loading; using the 'charm' plugin
+#    because it is the default (and has good default properties to be overriden and )
+#    the 'dump' one because it's a special case of no having a model
+
+
+def test_schema_doublelayer_no_parts_type_charm(create_config):
+    """No 'parts' specified at all, full default to charm plugin."""
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - name: somebase
+            channel: "30.04"
+    """
+    )
+    config = load(tmp_path)
+    assert config.parts == {
+        "charm": {
+            "plugin": "charm",
+            "source": str(tmp_path),
+            "charm-binary-python-packages": [],
+            "charm-entrypoint": "src/charm.py",
+            "charm-python-packages": [],
+            "charm-requirements": [],
+        }
+    }
+
+
+def test_schema_doublelayer_no_parts_type_bundle(create_config):
+    """No 'parts' specified at all, full default to bundle plugin."""
+    tmp_path = create_config(
+        """
+        type: bundle
+    """
+    )
+    config = load(tmp_path)
+    assert config.parts == {
+        "bundle": {
+            "plugin": "bundle",
+            "source": str(tmp_path),
+        }
+    }
+
+
+def test_schema_doublelayer_parts_no_charm(create_config):
+    """The 'parts' key is specified, but no 'charm' entry."""
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - name: somebase
+            channel: "30.04"
+        parts:
+          mycharm:
+             plugin: dump
+             source: https://the.net/whatever.tar.gz
+             source-type: tar
+    """
+    )
+    config = load(tmp_path)
+    assert config.parts == {
+        "mycharm": {
+            "plugin": "dump",
+            "source": "https://the.net/whatever.tar.gz",
+            "source-type": "tar",
+        }
+    }
+
+
+def test_schema_doublelayer_parts_with_charm_plugin_missing(create_config):
+    """A charm part is specified but no plugin is indicated."""
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - name: somebase
+            channel: "30.04"
+        parts:
+          charm:
+            prime: [to_be_included.*]  # random key to have a valid yaml
+    """
+    )
+    config = load(tmp_path)
+    assert config.parts == {
+        "charm": {
+            "plugin": "charm",
+            "source": str(tmp_path),
+            "charm-binary-python-packages": [],
+            "charm-entrypoint": "src/charm.py",
+            "charm-python-packages": [],
+            "charm-requirements": [],
+            "prime": ["to_be_included.*"],
+        }
+    }
+
+
+def test_schema_doublelayer_parts_with_charm_plugin_charm(create_config):
+    """A charm part is fully specified."""
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - name: somebase
+            channel: "30.04"
+        parts:
+          charm:
+            plugin: charm
+    """
+    )
+    config = load(tmp_path)
+    assert config.parts == {
+        "charm": {
+            "plugin": "charm",
+            "source": str(tmp_path),
+            "charm-binary-python-packages": [],
+            "charm-entrypoint": "src/charm.py",
+            "charm-python-packages": [],
+            "charm-requirements": [],
+        }
+    }
+
+
+def test_schema_doublelayer_parts_with_charm_plugin_different(create_config):
+    """There is a 'charm' part but using a different plugin."""
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - name: somebase
+            channel: "30.04"
+        parts:
+          charm:
+             plugin: dump
+             source: https://the.net/whatever.tar.gz
+             source-type: tar
+    """
+    )
+    config = load(tmp_path)
+    assert config.parts == {
+        "charm": {
+            "plugin": "dump",
+            "source": "https://the.net/whatever.tar.gz",
+            "source-type": "tar",
+        }
+    }
+
+
+def test_schema_doublelayer_parts_with_charm_overriding_properties(create_config):
+    """A charm plugin is used and its default properties are overriden."""
+    tmp_path = create_config(
+        """
+        type: charm
+        bases:
+          - name: somebase
+            channel: "30.04"
+        parts:
+          charm:
+            charm-entrypoint: different.py
+    """
+    )
+    config = load(tmp_path)
+    assert config.parts == {
+        "charm": {
+            "plugin": "charm",
+            "source": str(tmp_path),
+            "charm-binary-python-packages": [],
+            "charm-entrypoint": "different.py",
+            "charm-python-packages": [],
+            "charm-requirements": [],
+        }
+    }
+
+
+def test_schema_doublelayer_parts_with_charm_validating_props(create_config, check_schema_error):
+    """A charm plugin is used and its validation schema is triggered ok."""
+    create_config(
+        """
+        type: charm
+        bases:
+          - name: somebase
+            channel: "30.04"
+        parts:
+          charm:
+            charm-point: different.py  # mispelled!
+    """
+    )
+    check_schema_error(
+        """\
+        Bad charmcraft.yaml content:
+        - extra field 'charm-point' not permitted in 'parts.charm' configuration"""
     )
 
 

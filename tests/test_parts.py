@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,6 +36,9 @@ class TestCharmPlugin:
 
     @pytest.fixture(autouse=True)
     def setup_method_fixture(self, tmp_path):
+        requirement_files = ["reqs1.txt", "reqs2.txt"]
+        for req in requirement_files:
+            (tmp_path / req).write_text("somedep")
         project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
         spec = {
             "plugin": "charm",
@@ -43,7 +46,7 @@ class TestCharmPlugin:
             "charm-entrypoint": "entrypoint",
             "charm-binary-python-packages": ["pkg1", "pkg2"],
             "charm-python-packages": ["pkg3", "pkg4"],
-            "charm-requirements": ["reqs1.txt", "reqs2.txt"],
+            "charm-requirements": requirement_files,
         }
         plugin_properties = parts.CharmPluginProperties.unmarshal(spec)
         part_spec = plugins.extract_part_properties(spec, plugin_name="charm")
@@ -110,13 +113,95 @@ class TestCharmPlugin:
             )
         ]
 
+
+class TestCharmPluginProperties:
+    """Test for the CharmPluginProperties validations."""
+
     def test_invalid_properties(self):
+        content = {"source": ".", "charm-invalid": True}
         with pytest.raises(pydantic.ValidationError) as raised:
-            parts.CharmPlugin.properties_class.unmarshal({"source": ".", "charm-invalid": True})
+            parts.CharmPlugin.properties_class.unmarshal(content)
         err = raised.value.errors()
         assert len(err) == 1
         assert err[0]["loc"] == ("charm-invalid",)
         assert err[0]["type"] == "value_error.extra"
+
+    def test_entrypoint_ok(self):
+        """Simple valid entrypoint."""
+        content = {"source": ".", "charm-entrypoint": "myep.py"}
+        properties = parts.CharmPlugin.properties_class.unmarshal(content)
+        assert properties.charm_entrypoint == "myep.py"
+
+    def test_entrypoint_default(self):
+        """Specific default if not configured."""
+        content = {"source": "."}
+        properties = parts.CharmPlugin.properties_class.unmarshal(content)
+        assert properties.charm_entrypoint == "src/charm.py"
+
+    def test_entrypoint_relative(self, tmp_path):
+        """The configuration is stored relative no matter what."""
+        absolute_path = tmp_path / "myep.py"
+        content = {"source": str(tmp_path), "charm-entrypoint": str(absolute_path)}
+        properties = parts.CharmPlugin.properties_class.unmarshal(content)
+        assert properties.charm_entrypoint == "myep.py"
+
+    def test_entrypoint_outside_project_absolute(self, tmp_path):
+        """The entrypoint must be inside the project."""
+        outside_path = tmp_path.parent / "charm.py"
+        content = {"source": str(tmp_path), "charm-entrypoint": str(outside_path)}
+        with pytest.raises(pydantic.ValidationError) as raised:
+            parts.CharmPlugin.properties_class.unmarshal(content)
+        err = raised.value.errors()
+        assert len(err) == 1
+        assert err[0]["loc"] == ("charm-entrypoint",)
+        assert (
+            err[0]["msg"] == f"charm entry point must be inside the project: {str(outside_path)!r}"
+        )
+
+    def test_entrypoint_outside_project_relative(self, tmp_path):
+        """The entrypoint must be inside the project."""
+        outside_path = tmp_path.parent / "charm.py"
+        content = {"source": str(tmp_path), "charm-entrypoint": "../charm.py"}
+        with pytest.raises(pydantic.ValidationError) as raised:
+            parts.CharmPlugin.properties_class.unmarshal(content)
+        err = raised.value.errors()
+        assert len(err) == 1
+        assert err[0]["loc"] == ("charm-entrypoint",)
+        assert (
+            err[0]["msg"] == f"charm entry point must be inside the project: {str(outside_path)!r}"
+        )
+
+    def test_requirements_default(self, tmp_path):
+        """The configuration is empty by default."""
+        content = {"source": str(tmp_path)}
+        properties = parts.CharmPlugin.properties_class.unmarshal(content)
+        assert properties.charm_requirements == []
+
+    def test_requirements_must_exist(self, tmp_path):
+        """The configured files must be present."""
+        reqs_path = tmp_path / "reqs.txt"  # not in disk, really
+        content = {"source": str(tmp_path), "charm-requirements": [str(reqs_path)]}
+        with pytest.raises(pydantic.ValidationError) as raised:
+            parts.CharmPlugin.properties_class.unmarshal(content)
+        err = raised.value.errors()
+        assert len(err) == 1
+        assert err[0]["loc"] == ("charm-requirements",)
+        assert err[0]["msg"] == f"requirements file {str(reqs_path)!r} not found"
+
+    def test_requirements_filepresent_ok(self, tmp_path):
+        """If a specific file is present in disk it's used."""
+        (tmp_path / "requirements.txt").write_text("somedep")
+        content = {"source": str(tmp_path)}
+        properties = parts.CharmPlugin.properties_class.unmarshal(content)
+        assert properties.charm_requirements == ["requirements.txt"]
+
+    def test_requirements_filepresent_but_configured(self, tmp_path):
+        """The specific file is present in disk but configuration takes priority."""
+        (tmp_path / "requirements.txt").write_text("somedep")
+        (tmp_path / "alternative.txt").write_text("somedep")
+        content = {"source": str(tmp_path), "charm-requirements": ["alternative.txt"]}
+        properties = parts.CharmPlugin.properties_class.unmarshal(content)
+        assert properties.charm_requirements == ["alternative.txt"]
 
 
 class TestBundlePlugin:
@@ -218,7 +303,7 @@ class TestPartsLifecycle:
             "source": ".",
             "charm-entrypoint": "my-entrypoint",
             "charm-python-packages": ["pkg1", "pkg2"],
-            "charm-requirements": ["reqs1.txt", "reqs2.txt"],
+            "charm-requirements": [],
         }
 
         # create dispatcher from previous run
@@ -251,7 +336,7 @@ class TestPartsLifecycle:
             "source": ".",
             "charm-entrypoint": "src/charm.py",
             "charm-python-packages": ["pkg1", "pkg2"],
-            "charm-requirements": ["reqs1.txt", "reqs2.txt"],
+            "charm-requirements": [],
         }
 
         # create dispatcher from previous run
@@ -284,7 +369,7 @@ class TestPartsLifecycle:
             "source": ".",
             "charm-entrypoint": "my-entrypoint",
             "charm-python-packages": ["pkg1", "pkg2"],
-            "charm-requirements": ["reqs1.txt", "reqs2.txt"],
+            "charm-requirements": [],
         }
 
         lifecycle = parts.PartsLifecycle(
@@ -355,57 +440,70 @@ class TestPartHelpers:
         assert entrypoint == ""
 
 
-class TestPartValidation:
-    """Part data validation scenarios."""
+class TestPartConfigProcessing:
+    """Part data processing scenarios."""
 
-    def test_part_validation_happy(self):
+    def test_happy_validation_and_completion(self):
         data = {
             "plugin": "charm",
             "source": ".",
         }
-        parts.validate_part(data)
+        completed = parts.process_part_config(data)
+        assert completed == {
+            "plugin": "charm",
+            "source": ".",
+            "charm-binary-python-packages": [],
+            "charm-entrypoint": "src/charm.py",
+            "charm-python-packages": [],
+            "charm-requirements": ["requirements.txt"],
+        }
 
-    def test_part_validation_no_plugin(self):
+    def test_no_plugin(self):
         data = {
             "source": ".",
         }
         with pytest.raises(ValueError) as raised:
-            parts.validate_part(data)
+            parts.process_part_config(data)
         assert str(raised.value) == "'plugin' not defined"
 
-    def test_part_validation_bad_property(self):
+    def test_bad_property(self):
         data = {
             "plugin": "charm",
             "source": ".",
             "color": "purple",
         }
         with pytest.raises(pydantic.ValidationError) as raised:
-            parts.validate_part(data)
+            parts.process_part_config(data)
         err = raised.value.errors()
         assert len(err) == 1
         assert err[0]["loc"] == ("color",)
         assert err[0]["msg"] == "extra fields not permitted"
 
-    def test_part_validation_bad_type(self):
+    def test_bad_type(self):
         data = {
             "plugin": "charm",
             "source": ["."],
         }
         with pytest.raises(pydantic.ValidationError) as raised:
-            parts.validate_part(data)
+            parts.process_part_config(data)
         err = raised.value.errors()
-        assert len(err) == 1
+        assert len(err) == 2
         assert err[0]["loc"] == ("source",)
         assert err[0]["msg"] == "str type expected"
+        assert err[1]["loc"] == ("charm-requirements",)
+        assert (
+            err[1]["msg"]
+            == "cannot validate 'charm-requirements' because invalid 'source' configuration"
+        )
 
-    def test_part_validation_bad_plugin_property(self):
+    def test_bad_plugin_property(self):
         data = {
             "plugin": "charm",
             "charm-timeout": "never",
             "source": ".",
         }
         with pytest.raises(pydantic.ValidationError) as raised:
-            parts.validate_part(data)
+            parts.process_part_config(data)
         err = raised.value.errors()
         assert len(err) == 1
         assert err[0]["loc"] == ("charm-timeout",)

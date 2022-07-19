@@ -77,7 +77,7 @@ from charmcraft.env import (
     get_managed_environment_project_path,
     is_charmcraft_running_in_managed_mode,
 )
-from charmcraft.parts import validate_part
+from charmcraft.parts import process_part_config
 from charmcraft.utils import get_host_architecture, load_yaml
 
 
@@ -296,13 +296,14 @@ class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
 class Config(ModelConfigDefaults, validate_all=False):
     """Definition of charmcraft.yaml configuration."""
 
+    # this needs to go before 'parts', as it used by the validator
+    project: Project
+
     type: str
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Optional[Dict[str, Any]]
     bases: Optional[List[BasesConfiguration]]
     analysis: AnalysisConfig = AnalysisConfig()
-
-    project: Project
 
     @pydantic.validator("type")
     def validate_charm_type(cls, charm_type):
@@ -311,9 +312,19 @@ class Config(ModelConfigDefaults, validate_all=False):
             raise ValueError("must be either 'charm' or 'bundle'")
         return charm_type
 
-    @pydantic.validator("parts", pre=True)
-    def validate_special_parts(cls, parts):
-        """Verify parts type (craft-parts will re-validate this)."""
+    @pydantic.validator("parts", pre=True, always=True)
+    def validate_special_parts(cls, parts, values):
+        """Verify parts type (craft-parts will re-validate the schemas for the plugins)."""
+        if "type" not in values:
+            # we need 'type' to be set in this validator; if not there it's an error in
+            # the schema anyway, so the whole loading will fail (no need to raise an
+            # extra error here, it gets confusing to the user)
+            return
+
+        if parts is None:
+            # no parts indicated, default to the type of package
+            parts = {values["type"]: {}}
+
         if not isinstance(parts, dict):
             raise TypeError("value must be a dictionary")
 
@@ -324,23 +335,22 @@ class Config(ModelConfigDefaults, validate_all=False):
             if "plugin" not in part:
                 part["plugin"] = name
 
-        # create source properties for special parts "charm" with plugin "charm".
-        # and "bundle" with plugin "bundle". Actual property values will be filled
-        # in charm or bundle packing preparation.
+        # if needed, create 'source' properties for special parts "charm" with plugin "charm".
+        # and "bundle" with plugin "bundle", pointing to project's directory
         for name, part in parts.items():
             if name == "charm" and part["plugin"] == "charm":
-                part.setdefault("source", "")
+                part.setdefault("source", str(values["project"].dirpath))
 
             if name == "bundle" and part["plugin"] == "bundle":
-                part.setdefault("source", "")
+                part.setdefault("source", str(values["project"].dirpath))
 
         return parts
 
     @pydantic.validator("parts", each_item=True)
-    def validate_each_part(cls, item):
+    def validate_each_part(cls, item, values):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
-        validate_part(item)
-        return item
+        completed_item = process_part_config(item)
+        return completed_item
 
     @pydantic.validator("bases", pre=True)
     def validate_bases_presence(cls, bases, values):

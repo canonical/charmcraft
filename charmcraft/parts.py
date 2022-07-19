@@ -22,6 +22,7 @@ import shlex
 import sys
 from typing import Any, Dict, List, Set, cast
 
+import pydantic
 from craft_cli import emit, CraftError
 from craft_parts import LifecycleManager, Step, plugins
 from craft_parts.errors import PartsError
@@ -40,6 +41,57 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
     charm_binary_python_packages: List[str] = []
     charm_python_packages: List[str] = []
     charm_requirements: List[str] = []
+
+    @pydantic.validator("charm_entrypoint")
+    def validate_entry_point(cls, charm_entrypoint, values):
+        """Validate the entry point."""
+        # the location of the project is needed
+        if "source" not in values:
+            raise ValueError(
+                "cannot validate 'charm-entrypoint' because invalid 'source' configuration"
+            )
+        project_dirpath = pathlib.Path(values["source"]).resolve()
+
+        # check that the entrypoint is inside the project
+        filepath = (project_dirpath / charm_entrypoint).resolve()
+        if project_dirpath not in filepath.parents:
+            raise ValueError(
+                "charm entry point must be inside the project: {!r}".format(str(filepath))
+            )
+
+        # store the entrypoint always relative to the project's path (no matter if the origin
+        # was relative or absolute)
+        rel_entrypoint = (project_dirpath / charm_entrypoint).relative_to(project_dirpath)
+        charm_entrypoint = rel_entrypoint.as_posix()
+
+        return charm_entrypoint
+
+    @pydantic.validator("charm_requirements", always=True)
+    def validate_requirements(cls, charm_requirements, values):
+        """Validate the specified requirement or dynamically default it.
+
+        The default is dynamic because it's only requirements.txt if the
+        file is there.
+        """
+        # the location of the project is needed
+        if "source" not in values:
+            raise ValueError(
+                "cannot validate 'charm-requirements' because invalid 'source' configuration"
+            )
+        project_dirpath = pathlib.Path(values["source"])
+
+        # check that all indicated files are present
+        for reqs_filename in charm_requirements:
+            reqs_path = project_dirpath / reqs_filename
+            if not reqs_path.is_file():
+                raise ValueError(f"requirements file {str(reqs_path)!r} not found")
+
+        # if nothing indicated, and default file is there, use it
+        default_reqs_name = "requirements.txt"
+        if not charm_requirements and (project_dirpath / default_reqs_name).is_file():
+            charm_requirements.append(default_reqs_name)
+
+        return charm_requirements
 
     @classmethod
     def unmarshal(cls, data: Dict[str, Any]):
@@ -224,10 +276,12 @@ def setup_parts():
     plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
 
 
-def validate_part(data: Dict[str, Any]) -> None:
-    """Validate the given part data against common and plugin models.
+def process_part_config(data: Dict[str, Any]) -> None:
+    """Validate and fill the given part data against/with common and plugin models.
 
-    :param data: The part data to validate.
+    :param data: The part data to use.
+
+    :return: The part data validated and completed with plugin defaults.
     """
     if not isinstance(data, dict):
         raise TypeError("value must be a dictionary")
@@ -242,11 +296,21 @@ def validate_part(data: Dict[str, Any]) -> None:
     plugin_class = plugins.get_plugin_class(plugin_name)
 
     # validate plugin properties
-    plugin_class.properties_class.unmarshal(spec)
+    plugin_properties = plugin_class.properties_class.unmarshal(spec)
 
     # validate common part properties
     part_spec = plugins.extract_part_properties(spec, plugin_name=plugin_name)
     PartSpec(**part_spec)
+
+    # get plugin properties data if it's model based (otherwise it's empty), and
+    # update with the received config
+    if isinstance(plugin_properties, plugins.PluginModel):
+        full_config = plugin_properties.dict(by_alias=True)
+    else:
+        full_config = {}
+    full_config.update(data)
+
+    return full_config
 
 
 class PartsLifecycle:

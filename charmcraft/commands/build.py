@@ -104,12 +104,7 @@ class Builder:
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.config = config
         self.metadata = parse_metadata_yaml(self.charmdir)
-
-        if self.config.parts:
-            self._parts = self.config.parts.copy()
-        else:
-            # "parts" not declared, create an implicit "charm" part
-            self._parts = {"charm": {"plugin": "charm"}}
+        self._parts = self.config.parts.copy()
 
         # a part named "charm" using plugin "charm" is special and has
         # predefined values set automatically.
@@ -175,15 +170,9 @@ class Builder:
         emit.progress(f"Building charm in {str(work_dir)!r}")
 
         if self._special_charm_part:
-            # all current deprecated arguments set charm plugin parameters
-            self._pre_lifecycle_validation()
-
             # add charm files to the prime filter
+            # XXX Facundo 2022-07-18: we need to move this also to the plugin config
             self._set_prime_filter()
-
-            # set source if empty or not declared in charm part
-            if not self._special_charm_part.get("source"):
-                self._special_charm_part["source"] = str(self.charmdir)
 
         # run the parts lifecycle
         emit.debug(f"Parts definition: {self._parts}")
@@ -213,31 +202,6 @@ class Builder:
         zipname = self.handle_package(lifecycle.prime_dir, bases_config)
         emit.progress(f"Created '{zipname}'.", permanent=True)
         return zipname
-
-    def _pre_lifecycle_validation(self):
-        """Handle pre lifecycle validations."""
-        # XXX Facundo 2022-06-27: these defaults should come from the config itself,
-        # we need to refactor how the config is loaded.
-        if "charm-requirements" not in self._special_charm_part:
-            default_reqfile = self.charmdir / "requirements.txt"
-            if default_reqfile.is_file():
-                self._special_charm_part["charm-requirements"] = ["requirements.txt"]
-            else:
-                self._special_charm_part["charm-requirements"] = []
-        entrypoint = self._special_charm_part.get("charm-entrypoint", "src/charm.py")
-
-        # store the entrypoint always relative to the project's path (no matter if the origin
-        # was relative or absolute)
-        rel_entrypoint = (self.charmdir / entrypoint).relative_to(self.charmdir)
-        self._special_charm_part["charm-entrypoint"] = rel_entrypoint.as_posix()
-
-        # check that the entrypoint, if exists, is inside the project (this cannot be done
-        # after the lifecycle process, when the file would be just copied in)
-        filepath = (self.charmdir / self._special_charm_part["charm-entrypoint"]).resolve()
-        if filepath.exists() and self.charmdir not in filepath.parents:
-            raise CraftError(
-                "Charm entry point must be inside the project: {!r}".format(str(filepath))
-            )
 
     def _post_lifecycle_validation(self, basedir):
         """Validate files after lifecycle steps.

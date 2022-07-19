@@ -317,7 +317,8 @@ class Config(ModelConfigDefaults, validate_all=False):
         """Verify parts type (craft-parts will re-validate the schemas for the plugins)."""
         if "type" not in values:
             # we need 'type' to be set in this validator; if not there it's an error in
-            # the schema anyway, so the whole loading will fail
+            # the schema anyway, so the whole loading will fail (no need to raise an
+            # extra error here, it gets confusing to the user)
             return
 
         if parts is None:

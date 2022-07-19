@@ -42,7 +42,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
     charm_python_packages: List[str] = []
     charm_requirements: List[str] = []
 
-    @pydantic.validator("charm_entrypoint", pre=True)
+    @pydantic.validator("charm_entrypoint")
     def validate_entry_point(cls, charm_entrypoint, values):
         """Validate the entry point."""
         # the location of the project is needed
@@ -52,7 +52,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
             )
         project_dirpath = pathlib.Path(values["source"]).resolve()
 
-        # check that the entrypoint, is inside the project
+        # check that the entrypoint is inside the project
         filepath = (project_dirpath / charm_entrypoint).resolve()
         if project_dirpath not in filepath.parents:
             raise ValueError(
@@ -66,7 +66,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
 
         return charm_entrypoint
 
-    @pydantic.validator("charm_requirements", pre=True, always=True)
+    @pydantic.validator("charm_requirements", always=True)
     def validate_requirements(cls, charm_requirements, values):
         """Validate the specified requirement or dynamically default it.
 

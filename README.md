@@ -31,7 +31,7 @@ multi-cloud application management.
 
 The recommended way to install `charmcraft` is from the stable channel with
 
-    sudo snap install charmcraft
+    sudo snap install charmcraft --classic
 
 There are multiple channels other than `stable`. See the full list with
 `snap info charmcraft`. We recommend either `latest/stable` or `latest/beta`

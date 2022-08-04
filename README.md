@@ -88,11 +88,11 @@ With a correct `metadata.yaml` and with `ops` in `requirements.txt` you can
 build a charmed operator with:
 
 ```text
-$ charmcraft build
+$ charmcraft pack
 Created 'test-charm.charm'.
 ```
 
-`charmcraft build` will fetch additional files into the tree from PyPI based
+`charmcraft pack` will fetch additional files into the tree from PyPI based
 on `requirements.txt` and will compile modules using a virtualenv.
 
 The charmed operator is just a zipfile with metadata and the operator code

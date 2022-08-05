@@ -885,3 +885,28 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     result = linter.run(tmp_path)
     assert result == JujuConfig.Result.errors
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
+
+
+# --- tests for Entrypoint checker
+
+def test_entrypoint_not_used(tmp_path):
+    """An entrypoint is not really used, nothing to check."""
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = None
+        result = Entrypoint().run(tmp_path)
+    assert result is ok
+    mock_check.assert_called_with(tmp_path)
+
+
+def test_entrypoint_all_ok(tmp_path, import_line):
+    """All conditions for 'framework' are in place."""
+    # an entry point that import ops
+    entrypoint = tmp_path / "charm.py"
+    entrypoint.touch(mode=0o777)
+
+    # check
+    with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
+        mock_check.return_value = pathlib.Path(entrypoint)
+        result = Entrypoint().run(tmp_path)
+    assert result is ok
+    mock_check.assert_called_with(tmp_path)

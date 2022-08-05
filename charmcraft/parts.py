@@ -24,12 +24,12 @@ from typing import Any, Dict, List, Set, cast
 
 import pydantic
 from craft_cli import emit, CraftError
-from craft_parts import LifecycleManager, Step, plugins
+from craft_parts import LifecycleManager, Step, plugins, callbacks
 from craft_parts.errors import PartsError
 from craft_parts.parts import PartSpec
 from xdg import BaseDirectory  # type: ignore
 
-from charmcraft import charm_builder
+from charmcraft import charm_builder, mt, env
 from charmcraft.reactive_plugin import ReactivePlugin
 
 
@@ -161,6 +161,9 @@ class CharmPlugin(plugins.Plugin):
         """Return a dictionary with the environment to use in the build step."""
         return {}
 
+    def after_build_execution_hook(self):
+        ...
+
     def get_build_commands(self) -> List[str]:
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
@@ -210,7 +213,14 @@ class CharmPlugin(plugins.Plugin):
 
         commands = [" ".join(shlex.quote(i) for i in build_cmd)]
 
+        # hook a callback after the BUILD happened (to collect metrics left by charm builder)
+        callbacks.register_post_step(self.post_build_callback, step_list=[Step.BUILD])
+
         return commands
+
+    def post_build_callback(self, step_info):
+        """Collect metrics left by charm_builder.py."""
+        mt.merge_metrics_from(env.get_charm_builder_metrics_path())
 
 
 class BundlePluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -368,23 +378,26 @@ class PartsLifecycle:
             os.chdir(self._project_dir)
 
             # invalidate build if packing a charm and entrypoint changed
-            if "charm" in self._all_parts:
-                charm_part = self._all_parts["charm"]
-                if charm_part.get("plugin") == "charm":
-                    entrypoint = os.path.normpath(charm_part["charm-entrypoint"])
-                    dis_entrypoint = os.path.normpath(_get_dispatch_entrypoint(self.prime_dir))
-                    if entrypoint != dis_entrypoint:
-                        self._lcm.clean(Step.BUILD, part_names=["charm"])
-                        self._lcm.reload_state()
+            with mt.Timer("Validating entrypoint, maybe invalidating build"):
+                if "charm" in self._all_parts:
+                    charm_part = self._all_parts["charm"]
+                    if charm_part.get("plugin") == "charm":
+                        entrypoint = os.path.normpath(charm_part["charm-entrypoint"])
+                        dis_entrypoint = os.path.normpath(_get_dispatch_entrypoint(self.prime_dir))
+                        if entrypoint != dis_entrypoint:
+                            self._lcm.clean(Step.BUILD, part_names=["charm"])
+                            self._lcm.reload_state()
 
             emit.debug(f"Executing parts lifecycle in {str(self._project_dir)!r}")
-            actions = self._lcm.plan(target_step)
+            with mt.Timer("Calculating lifecycle plan"):
+                actions = self._lcm.plan(target_step)
             emit.debug(f"Parts actions: {actions}")
             with self._lcm.action_executor() as aex:
                 for action in actions:
                     emit.progress(f"Running step {action.step.name} for part {action.part_name!r}")
-                    with emit.open_stream("Execute action") as stream:
-                        aex.execute([action], stdout=stream, stderr=stream)
+                    with mt.Timer("Running step", step=action.step.name):
+                        with emit.open_stream("Execute action") as stream:
+                            aex.execute([action], stdout=stream, stderr=stream)
         except RuntimeError as err:
             raise RuntimeError(f"Parts processing internal error: {err}") from err
         except OSError as err:

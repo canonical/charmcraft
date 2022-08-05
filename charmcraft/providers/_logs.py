@@ -16,6 +16,7 @@
 
 """Build environment provider support for charmcraft."""
 
+import contextlib
 import pathlib
 import tempfile
 
@@ -54,3 +55,21 @@ def capture_logs_from_instance(instance: Executor) -> None:
         for line in fh:
             emit.debug(f":: {line.rstrip()}")
     local_log_path.unlink()
+
+
+@contextlib.contextmanager
+def file_from_instance(instance: Executor, instance_filepath: pathlib.Path) -> pathlib.Path:
+    """Retrieve a file from the instance as a temp file accesible in the context block."""
+    # Get a temporary file path (placing it in current directory as it's the most predictible
+    # place where a strictly-snapped app could write)
+    tmp_file = tempfile.NamedTemporaryFile(
+        delete=False, prefix="charmcraft-", suffix=".temp", dir="."
+    )
+    tmp_file.close()
+
+    local_filepath = pathlib.Path(tmp_file.name)
+    try:
+        instance.pull_file(source=instance_filepath, destination=local_filepath)
+        yield local_filepath
+    finally:
+        local_filepath.unlink()

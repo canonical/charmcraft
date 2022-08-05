@@ -33,6 +33,16 @@ def get_managed_environment_log_path():
     return pathlib.Path("/tmp/charmcraft.log")
 
 
+def get_managed_environment_metrics_path():
+    """Path for charmcraft metrics when running in managed environment."""
+    return pathlib.Path("/tmp/metrics.json")
+
+
+def get_charm_builder_metrics_path():
+    """Path for charmcraft metrics when running charm_builder."""
+    return pathlib.Path("/tmp/charm_builder_metrics.json")
+
+
 def get_managed_environment_project_path():
     """Path for project when running in managed environment."""
     return get_managed_environment_home_path() / "project"

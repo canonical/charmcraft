@@ -41,6 +41,9 @@ ERRORS = "errors"
 FATAL = "fatal"
 OK = "ok"
 
+# the documentation page for "Analyzers and linters"
+BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
+
 
 def check_dispatch_with_python_entrypoint(
     basedir: pathlib.Path,
@@ -80,7 +83,7 @@ class Language:
 
     check_type = CheckType.attribute
     name = "language"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--language"
+    url = BASE_DOCS_URL + "#heading--language"
     text = "The charm is written with Python."
 
     # different result constants
@@ -110,7 +113,7 @@ class Framework:
 
     check_type = CheckType.attribute
     name = "framework"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--framework"
+    url = BASE_DOCS_URL + "#heading--framework"
 
     # different result constants
     Result = namedtuple("Result", "operator reactive unknown")(
@@ -214,7 +217,7 @@ class JujuMetadata:
 
     check_type = CheckType.lint
     name = "metadata"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--metadata"
+    url = BASE_DOCS_URL + "#heading--metadata"
 
     # different result constants
     Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
@@ -248,7 +251,7 @@ class JujuActions:
 
     check_type = CheckType.lint
     name = "juju-actions"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-actions"
+    url = BASE_DOCS_URL + "#heading--juju-actions"
     text = "The actions.yaml file is not a valid YAML file."
 
     # different result constants
@@ -282,7 +285,7 @@ class JujuConfig:
 
     check_type = CheckType.lint
     name = "juju-config"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-config"
+    url = BASE_DOCS_URL + "#heading--juju-config"
 
     # different result constants
     Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
@@ -329,7 +332,7 @@ class Entrypoint:
 
     check_type = CheckType.lint
     name = "entrypoint"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--entrypoint"
+    url = BASE_DOCS_URL + "#heading--entrypoint"
 
     # different result constants
     Result = namedtuple("Result", "operator reactive unknown")(
@@ -419,7 +422,6 @@ class Entrypoint:
             result = self.Result.unknown
         self.result = result
         return result
-
 
 
 # all checkers to run; the order here is important, as some checkers depend on the

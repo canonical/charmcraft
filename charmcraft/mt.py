@@ -41,9 +41,16 @@ class Timer:
 
     def __enter__(self):
         self.measurement_id = _measurements.start(self.msg, self.extra_info)
+        return self
 
     def __exit__(self, *exc):
         _measurements.end(self.measurement_id)
+
+    def mark(self, msg, **extra_info):
+        """Mark middle measurements inside a contextual one."""
+        # close the previous one, and start a new measure
+        _measurements.end(self.measurement_id)
+        self.measurement_id = _measurements.start("MARK: " + msg, extra_info)
 
 
 def timer_decorator(msg):

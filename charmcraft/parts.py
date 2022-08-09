@@ -392,12 +392,17 @@ class PartsLifecycle:
             with mt.Timer("Calculating lifecycle plan"):
                 actions = self._lcm.plan(target_step)
             emit.debug(f"Parts actions: {actions}")
-            with self._lcm.action_executor() as aex:
-                for action in actions:
-                    emit.progress(f"Running step {action.step.name} for part {action.part_name!r}")
-                    with mt.Timer("Running step", step=action.step.name):
-                        with emit.open_stream("Execute action") as stream:
-                            aex.execute([action], stdout=stream, stderr=stream)
+            with mt.Timer("Running action executor") as executor_timer:
+                with self._lcm.action_executor() as aex:
+                    executor_timer.mark("Context enter")
+                    for action in actions:
+                        emit.progress(
+                            f"Running step {action.step.name} for part {action.part_name!r}")
+                        with mt.Timer(
+                                f"Running step={action.step.name} part={action.part_name!r}"):
+                            with emit.open_stream("Execute action") as stream:
+                                aex.execute([action], stdout=stream, stderr=stream)
+                    executor_timer.mark("Context exit")
         except RuntimeError as err:
             raise RuntimeError(f"Parts processing internal error: {err}") from err
         except OSError as err:

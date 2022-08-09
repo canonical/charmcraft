@@ -59,9 +59,10 @@ def main(filepath):
             layers.append(layer)
         locating = layer
 
-    # get the measurement limits to only show texts when relevant
+    # get the measurement limits to only show texts when relevant or decide its angle
     max_t = max(measurement["tend"] for measurement in results.values())
-    wide_metric = max_t * 0.05  # more than 5% of the total
+    wide_metric = max_t * 0.05  # more than this, show it horizontal
+    ignorable_metric = max_t * 0.005  # less than this, don't show it
 
     fig, ax = plt.subplots()
 
@@ -82,10 +83,13 @@ def main(filepath):
         # the texts
         text_y_pos = layer_y_pos + Y_STEPS / 2
         for measurement in measurements:
-            if measurement["tend"] - measurement["tstart"] > wide_metric:
-                rotation = 0
-            else:
+            tdelta = measurement["tend"] - measurement["tstart"]
+            if tdelta < ignorable_metric:
+                continue
+            if tdelta < wide_metric:
                 rotation = 90
+            else:
+                rotation = 0
             text = measurement["msg"]
             if measurement["extra"]:
                 text += "\n" + str(measurement["extra"])

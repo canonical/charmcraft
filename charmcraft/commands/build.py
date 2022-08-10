@@ -26,7 +26,7 @@ from typing import List, Optional, Tuple
 
 from craft_cli import emit, CraftError
 
-from charmcraft import env, linters, parts, mt
+from charmcraft import env, linters, parts, instrum
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
 from charmcraft.config import Base, BasesConfiguration
@@ -184,7 +184,7 @@ class Builder:
             project_name=self.metadata.name,
             ignore_local_sources=["*.charm"],
         )
-        with mt.Timer("Lifecycle run"):
+        with instrum.Timer("Lifecycle run"):
             lifecycle.run(Step.PRIME)
 
         # validate after all processing
@@ -306,7 +306,7 @@ class Builder:
 
         return build_plan
 
-    @mt.timer_decorator("Builder run")
+    @instrum.Timer("Builder run")
     def run(
         self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
     ) -> List[str]:
@@ -345,7 +345,7 @@ class Builder:
                     continue
 
                 try:
-                    with mt.Timer("Building the charm"):
+                    with instrum.Timer("Building the charm"):
                         charm_name = self.build_charm(bases_config)
                 except (CraftError, RuntimeError) as error:
                     if self.debug:
@@ -417,12 +417,12 @@ class Builder:
             emit.progress("Packing the charm")
             emit.debug(f"Running {cmd}")
             try:
-                with mt.Timer("Execution inside instance"):
+                with instrum.Timer("Execution inside instance"):
                     with emit.pause():
                         instance.execute_run(cmd, check=True, cwd=instance_output_dir)
                     if self.measure:
                         with file_from_instance(instance, instance_metrics) as local_filepath:
-                            mt.merge_metrics_from(local_filepath)
+                            instrum.merge_from(local_filepath)
             except subprocess.CalledProcessError as error:
                 raise CraftError(
                     f"Failed to build charm for bases index '{bases_index}'."

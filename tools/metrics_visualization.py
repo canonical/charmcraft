@@ -16,7 +16,8 @@
 
 """Script to visualize metrics when running Charmcraft with --measure.
 
-It needs the following dependencies, for which you can use fades:
+It needs the following dependencies, for which you need to set up a
+virtualenv or just use fades:
 
     matplotlib
 """
@@ -49,12 +50,10 @@ def main(filepath):
     locating = [None]
     while locating:
         layer = []
-        print("====== locating", locating)
         for parent in locating:
             for mid in by_parent.get(parent, []):
                 layer.append(mid)
 
-        print("====== layer", layer)
         if layer:
             layers.append(layer)
         locating = layer
@@ -75,9 +74,7 @@ def main(filepath):
         x_ranges = []
         for measurement in measurements:
             x_ranges.append((measurement["tstart"], measurement["tend"] - measurement["tstart"]))
-        print("======== xr", x_ranges)
         colors = [next(COLORS) for _ in x_ranges]
-        print("======== colors", colors)
         ax.broken_barh(x_ranges, (layer_y_pos, layer_height), facecolors=colors)
 
         # the texts

@@ -23,7 +23,7 @@ from typing import List
 
 from craft_cli import emit, CraftError
 
-from charmcraft import env, parts, mt
+from charmcraft import env, parts, instrum
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
@@ -123,7 +123,7 @@ class PackCommand(BaseCommand):
         """Run the command."""
         # decide if this will work on a charm or a bundle
         if self.config.type == "charm":
-            with mt.Timer("Whole pack run"):
+            with instrum.Timer("Whole pack run"):
                 self._pack_charm(parsed_args)
         elif self.config.type == "bundle":
             self._pack_bundle(parsed_args)
@@ -131,7 +131,7 @@ class PackCommand(BaseCommand):
             raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
 
         if parsed_args.measure:
-            mt.dump(parsed_args.measure)
+            instrum.dump(parsed_args.measure)
 
     def _validate_bases_indices(self, bases_indices):
         """Validate that bases index is valid."""

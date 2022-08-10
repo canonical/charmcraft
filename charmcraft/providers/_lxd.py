@@ -24,7 +24,7 @@ from typing import List
 from craft_cli import emit, CraftError
 from craft_providers import bases, lxd
 
-from charmcraft import mt
+from charmcraft import instrum
 from charmcraft.config import Base
 from charmcraft.env import get_managed_environment_project_path
 from charmcraft.utils import confirm_with_user, get_host_architecture
@@ -165,7 +165,7 @@ class LXDProvider(Provider):
         )
 
         environment = self.get_command_environment()
-        with mt.Timer("LXD: Configure buildd image"):
+        with instrum.Timer("LXD: Configure buildd image"):
             try:
                 image_remote = lxd.configure_buildd_image_remote()
             except lxd.LXDError as error:
@@ -178,7 +178,7 @@ class LXDProvider(Provider):
         base_configuration = CharmcraftBuilddBaseConfiguration(
             alias=alias, environment=environment, hostname=instance_name
         )
-        with mt.Timer("LXD: Launch"):
+        with instrum.Timer("LXD: Launch"):
             try:
                 instance = lxd.launch(
                     name=instance_name,
@@ -197,14 +197,14 @@ class LXDProvider(Provider):
                 raise CraftError(str(error)) from error
 
         # Mount project.
-        with mt.Timer("LXD: Mount"):
+        with instrum.Timer("LXD: Mount"):
             instance.mount(host_source=project_path, target=get_managed_environment_project_path())
 
         try:
             yield instance
         finally:
             # Ensure to unmount everything and stop instance upon completion.
-            with mt.Timer("LXD: Unmount and stop"):
+            with instrum.Timer("LXD: Unmount and stop"):
                 try:
                     instance.unmount_all()
                     instance.stop()

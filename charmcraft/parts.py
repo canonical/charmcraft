@@ -29,7 +29,7 @@ from craft_parts.errors import PartsError
 from craft_parts.parts import PartSpec
 from xdg import BaseDirectory  # type: ignore
 
-from charmcraft import charm_builder, mt, env
+from charmcraft import charm_builder, instrum, env
 from charmcraft.reactive_plugin import ReactivePlugin
 
 
@@ -161,9 +161,6 @@ class CharmPlugin(plugins.Plugin):
         """Return a dictionary with the environment to use in the build step."""
         return {}
 
-    def after_build_execution_hook(self):
-        ...
-
     def get_build_commands(self) -> List[str]:
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
@@ -220,7 +217,7 @@ class CharmPlugin(plugins.Plugin):
 
     def post_build_callback(self, step_info):
         """Collect metrics left by charm_builder.py."""
-        mt.merge_metrics_from(env.get_charm_builder_metrics_path())
+        instrum.merge_from(env.get_charm_builder_metrics_path())
 
 
 class BundlePluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -378,7 +375,7 @@ class PartsLifecycle:
             os.chdir(self._project_dir)
 
             # invalidate build if packing a charm and entrypoint changed
-            with mt.Timer("Validating entrypoint, maybe invalidating build"):
+            with instrum.Timer("Validating entrypoint, maybe invalidating build"):
                 if "charm" in self._all_parts:
                     charm_part = self._all_parts["charm"]
                     if charm_part.get("plugin") == "charm":
@@ -389,17 +386,17 @@ class PartsLifecycle:
                             self._lcm.reload_state()
 
             emit.debug(f"Executing parts lifecycle in {str(self._project_dir)!r}")
-            with mt.Timer("Calculating lifecycle plan"):
+            with instrum.Timer("Calculating lifecycle plan"):
                 actions = self._lcm.plan(target_step)
             emit.debug(f"Parts actions: {actions}")
-            with mt.Timer("Running action executor") as executor_timer:
+            with instrum.Timer("Running action executor") as executor_timer:
                 with self._lcm.action_executor() as aex:
                     executor_timer.mark("Context enter")
                     for action in actions:
                         emit.progress(
                             f"Running step {action.step.name} for part {action.part_name!r}")
-                        with mt.Timer(
-                                f"Running step={action.step.name} part={action.part_name!r}"):
+                        with instrum.Timer(
+                                "Running step", step=action.step_name, part=action.part_name):
                             with emit.open_stream("Execute action") as stream:
                                 aex.execute([action], stdout=stream, stderr=stream)
                     executor_timer.mark("Context exit")

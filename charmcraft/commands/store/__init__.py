@@ -1701,8 +1701,8 @@ class UploadResourceCommand(BaseCommand):
         specified charm. This charm needs to have the resource declared
         in its metadata (in a previously uploaded to Charmhub revision).
 
-        The resource can be a file from your computer (use the '--filepath'
-        option) or an OCI Image (use the '--image' option to indicate the
+        The resource can be a file from your computer (use the `--filepath`
+        option) or an OCI Image (use the `--image` option to indicate the
         image digest), which can be already in Canonical's registry and
         used directly, or locally in your computer and will be uploaded
         and used.

@@ -1273,10 +1273,16 @@ class PublishLibCommand(BaseCommand):
         Publish charm libraries.
 
         Upload and release in Charmhub the new api/patch version of the
-        indicated library, or all the charm libraries if --all is used.
+        indicated library, or all the charm libraries if `--all` is used.
 
         It will automatically take you through the login process if
         your credentials are missing or too old.
+
+        Note that in order to be able to publish a charm library, you need
+        to be signed into Charmcraft as a user that has permissions to
+        publish libraries to this charm. In particular you need to be the
+        owner of this charm or registered as a contributor to the
+        charm (a status that can be requested via Discourse).
     """
     )
 
@@ -1420,8 +1426,8 @@ class FetchLibCommand(BaseCommand):
         version. For example, to fetch the API version 3 of library 'somelib'
         from charm `specialcharm`, do:
 
-        $ charmcraft fetch-lib charms.specialcharm.v3.somelib
-        Library charms.specialcharm.v3.somelib version 3.7 downloaded.
+            $ charmcraft fetch-lib charms.specialcharm.v3.somelib
+            Library charms.specialcharm.v3.somelib version 3.7 downloaded.
 
         If the command is executed without parameters, it will update all the currently
         downloaded libraries.
@@ -1562,13 +1568,13 @@ class ListLibCommand(BaseCommand):
 
         For example:
 
-        $ charmcraft list-lib my-charm
-        Library name    API    Patch
-        my_great_lib    0      3
-        my_great_lib    1      0
-        other_lib       0      5
+            $ charmcraft list-lib my-charm
+            Library name    API    Patch
+            my_great_lib    0      3
+            my_great_lib    1      0
+            other_lib       0      5
 
-        To fetch one of the shown libraries you can use the fetch-lib command.
+        To fetch one of the shown libraries you can use the `fetch-lib` command.
     """
     )
 

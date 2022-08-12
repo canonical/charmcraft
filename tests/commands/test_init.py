@@ -65,7 +65,7 @@ def test_all_the_files(tmp_path, config):
         ".gitignore",
         ".jujuignore",
         ".vscode",
-        ".vscode/settings.json",
+        os.path.join(".vscode", "settings.json"),
         "CONTRIBUTING.md",
         "LICENSE",
         "README.md",

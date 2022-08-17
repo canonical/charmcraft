@@ -390,34 +390,32 @@ class TestPartsLifecycle:
 
     def test_run_actions_progress(self, tmp_path, monkeypatch, emitter):
         data = {
-            "plugin": "charm",
+            "plugin": "nil",
             "source": ".",
-            "charm-entrypoint": "my-entrypoint",
         }
 
         lifecycle = parts.PartsLifecycle(
-            all_parts={"charm": data},
+            all_parts={"testpart": data},
             work_dir=tmp_path,
             project_dir=tmp_path,
             project_name="test",
-            ignore_local_sources=["*.charm"],
+            ignore_local_sources=[],
         )
 
         action1 = Action(
-            part_name="charm", step=Step.STAGE, action_type=ActionType.RUN, reason=None
+            part_name="testpart", step=Step.STAGE, action_type=ActionType.RUN, reason=None
         )
         action2 = Action(
-            part_name="charm", step=Step.PRIME, action_type=ActionType.RUN, reason=None
+            part_name="testpart", step=Step.PRIME, action_type=ActionType.RUN, reason=None
         )
 
-        with patch("craft_parts.LifecycleManager.clean"):
-            with patch("craft_parts.LifecycleManager.plan") as mock_plan:
-                mock_plan.return_value = [action1, action2]
-                with patch("craft_parts.executor.executor.ExecutionContext.execute") as mock_exec:
-                    lifecycle.run(Step.PRIME)
+        with patch("craft_parts.LifecycleManager.plan") as mock_plan:
+            mock_plan.return_value = [action1, action2]
+            with patch("craft_parts.executor.executor.ExecutionContext.execute") as mock_exec:
+                lifecycle.run(Step.PRIME)
 
-        emitter.assert_progress("Running step STAGE for part 'charm'")
-        emitter.assert_progress("Running step PRIME for part 'charm'")
+        emitter.assert_progress("Running step STAGE for part 'testpart'")
+        emitter.assert_progress("Running step PRIME for part 'testpart'")
         assert mock_exec.call_args_list == [
             call([action1], stdout=ANY, stderr=ANY),
             call([action2], stdout=ANY, stderr=ANY),

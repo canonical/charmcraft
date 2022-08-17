@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import logging
 import pathlib
 import re
 import subprocess
@@ -30,7 +29,7 @@ import yaml
 from craft_cli import EmitterMode, emit, CraftError
 
 from charmcraft import linters
-from charmcraft.charm_builder import DISPATCH_CONTENT, relativise
+from charmcraft.charm_builder import relativise
 from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
 from charmcraft.config import Base, BasesConfiguration, load
@@ -178,60 +177,6 @@ def mock_provider(mock_instance, fake_provider):
 
 
 # --- (real) build tests
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_basic_complete_structure(basic_project, caplog, monkeypatch, config, tmp_path):
-    """Integration test: a simple structure with custom lib and normal src dir."""
-    caplog.set_level(logging.WARNING, logger="charmcraft")
-    host_base = get_host_as_base()
-    host_arch = host_base.architectures[0]
-    builder = get_builder(config)
-
-    # add an optional actions dir
-    actions_dir = basic_project / "actions"
-    actions_dir.mkdir()
-    (actions_dir / "actions_script.sh").write_text("run!")
-    actions_sub_dir = actions_dir / "subd"
-    actions_sub_dir.mkdir()
-    (actions_sub_dir / "blob.bin").write_text("123")
-
-    # save original metadata and verify later
-    metadata_file = basic_project / "metadata.yaml"
-    metadata_raw = metadata_file.read_bytes()
-
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch(
-        "charmcraft.commands.build.check_if_base_matches_host",
-        return_value=(True, None),
-    ), patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
-        zipnames = builder.run()
-
-    assert zipnames == [
-        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
-    ]
-
-    # check all is properly inside the zip
-    # contents!), and all relative to build dir
-    zf = zipfile.ZipFile(zipnames[0])
-    assert zf.read("metadata.yaml") == metadata_raw
-    assert zf.read("src/charm.py") == b"all the magic"
-    dispatch = DISPATCH_CONTENT.format(entrypoint_relative_path="src/charm.py").encode("ascii")
-    assert zf.read("dispatch") == dispatch
-    assert zf.read("hooks/install") == dispatch
-    assert zf.read("hooks/start") == dispatch
-    assert zf.read("hooks/upgrade-charm") == dispatch
-    assert zf.read("lib/ops/stuff.txt") == b"ops stuff"
-    assert zf.read("LICENSE") == b"license content"
-    assert zf.read("icon.svg") == b"icon content"
-    assert zf.read("README.md") == b"README content"
-    assert zf.read("actions/actions_script.sh") == b"run!"
-    assert zf.read("actions/subd/blob.bin") == b"123"
-
-    # check the manifest is present and with particular values that depend on given info
-    manifest = yaml.safe_load(zf.read("manifest.yaml"))
-    assert manifest["charmcraft-started-at"] == config.project.started_at.isoformat() + "Z"
-    assert caplog.records == []
 
 
 def test_build_error_without_metadata_yaml(basic_project):
@@ -1209,9 +1154,13 @@ def test_build_part_from_config(basic_project, monkeypatch):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_using_linters_attributes(basic_project, monkeypatch, config, tmp_path):
+def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_path):
     """Generic use of linters, pass them ok to their proceessor and save them in the manifest."""
-    builder = get_builder(config)
+    host_base = get_host_as_base()
+    builder = basic_project_builder(
+        [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
+        force=True,  # to ignore any linter issue
+    )
 
     # the results from the analyzer
     linting_results = [
@@ -1232,17 +1181,14 @@ def test_build_using_linters_attributes(basic_project, monkeypatch, config, tmp_
     ]
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch(
-        "charmcraft.commands.build.check_if_base_matches_host",
-        return_value=(True, None),
-    ), patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
+    with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         with patch("charmcraft.linters.analyze") as mock_analyze:
             with patch.object(Builder, "show_linting_results") as mock_show_lint:
                 mock_analyze.return_value = linting_results
                 zipnames = builder.run()
 
     # check the analyze and processing functions were called properly
-    mock_analyze.assert_called_with(config, tmp_path / "root" / "prime")
+    mock_analyze.assert_called_with(builder.config, tmp_path / "root" / "prime")
     mock_show_lint.assert_called_with(linting_results)
 
     # the manifest should have all the results (including the ignored one)

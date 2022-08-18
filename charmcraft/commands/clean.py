@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,11 +21,13 @@ from craft_cli import emit
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.providers import get_provider
+from charmcraft.providers.providers import create_build_plan
 
 _overview = """
 Purge Charmcraft project's artifacts, including:
 
 - LXD Containers created for building charm(s)
+- Multipass Containers created for building charm(s)
 """
 
 
@@ -38,11 +40,29 @@ class CleanCommand(BaseCommand):
     common = True
 
     def run(self, parsed_args):
-        """Run the command."""
+        """Run the clean command.
+
+        First, a build plan is created.
+        Then each item in the build plan is cleaned.
+        """
         project_path = self.config.project.dirpath
         metadata = parse_metadata_yaml(project_path)
-        emit.progress(f"Cleaning project {metadata.name!r}.")
-
+        emit.message(f"Cleaning project {metadata.name!r}.")
         provider = get_provider()
-        provider.clean_project_environments(charm_name=metadata.name, project_path=project_path)
+        build_plan = create_build_plan(
+            bases=self.config.bases,
+            bases_indices=None,
+            destructive_mode=False,
+            managed_mode=False,
+            provider=provider,
+        )
+
+        for plan in build_plan:
+            provider.clean_project_environments(
+                charm_name=metadata.name,
+                project_path=project_path,
+                bases_index=plan.bases_index,
+                build_on_index=plan.build_on_index,
+            )
+
         emit.message(f"Cleaned project {metadata.name!r}.")

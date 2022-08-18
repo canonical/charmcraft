@@ -18,11 +18,10 @@
 
 import contextlib
 import pathlib
-import re
-from typing import List
+from typing import Generator
 
-from craft_cli import emit, CraftError
-from craft_providers import bases, lxd
+from craft_cli import CraftError
+from craft_providers import Executor, bases, lxd
 
 from charmcraft import instrum
 from charmcraft.config import Base
@@ -51,51 +50,6 @@ class LXDProvider(Provider):
         self.lxc = lxc
         self.lxd_project = lxd_project
         self.lxd_remote = lxd_remote
-
-    def clean_project_environments(
-        self,
-        *,
-        charm_name: str,
-        project_path: pathlib.Path,
-    ) -> List[str]:
-        """Clean up any environments created for project.
-
-        :param charm_name: Name of project.
-        :param project_path: Directory of charm project.
-
-        :returns: List of containers deleted.
-        """
-        deleted: List[str] = []
-
-        # Nothing to do if provider is not installed.
-        if not self.is_provider_available():
-            return deleted
-
-        inode = str(project_path.stat().st_ino)
-
-        try:
-            names = self.lxc.list_names(project=self.lxd_project, remote=self.lxd_remote)
-        except lxd.LXDError as error:
-            raise CraftError(str(error)) from error
-
-        for name in names:
-            match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
-            if re.match(match_regex, name):
-                emit.debug(f"Deleting container {name!r}.")
-                try:
-                    self.lxc.delete(
-                        instance_name=name,
-                        force=True,
-                        project=self.lxd_project,
-                        remote=self.lxd_remote,
-                    )
-                except lxd.LXDError as error:
-                    raise CraftError(str(error)) from error
-                deleted.append(name)
-            else:
-                emit.debug(f"Not deleting container {name!r}.")
-
-        return deleted
 
     @classmethod
     def ensure_provider_is_available(cls) -> None:
@@ -135,6 +89,20 @@ class LXDProvider(Provider):
         """
         return lxd.is_installed()
 
+    def environment(self, *, instance_name: str) -> Executor:
+        """Create a bare environment for specified base.
+
+        No initializing, launching, or cleaning up of the environment occurs.
+
+        :param instance_name: Name of the instance.
+        """
+        return lxd.LXDInstance(
+            name=instance_name,
+            default_command_environment=self.get_command_environment(),
+            project=self.lxd_project,
+            remote=self.lxd_remote,
+        )
+
     @contextlib.contextmanager
     def launched_environment(
         self,
@@ -144,7 +112,7 @@ class LXDProvider(Provider):
         base: Base,
         bases_index: int,
         build_on_index: int,
-    ):
+    ) -> Generator[Executor, None, None]:
         """Launch environment for specified base.
 
         :param charm_name: Name of project.

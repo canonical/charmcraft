@@ -21,7 +21,6 @@ import imp
 import pathlib
 import tempfile
 import types
-from typing import List
 from unittest.mock import Mock
 
 import pytest
@@ -146,12 +145,21 @@ def fake_provider(mock_instance, monkeypatch):
             *,
             charm_name: str,
             project_path: pathlib.Path,
-        ) -> List[str]:
-            return []
+            bases_index: int,
+            build_on_index: int,
+        ) -> None:
+            pass
 
         @classmethod
         def ensure_provider_is_available(cls) -> None:
             pass
+
+        def environment(
+            self,
+            *,
+            instance_name: str,
+        ) -> Executor:
+            return mock_instance
 
         @contextlib.contextmanager
         def launched_environment(

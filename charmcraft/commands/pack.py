@@ -23,7 +23,7 @@ from typing import List
 
 from craft_cli import emit, CraftError
 
-from charmcraft import env, parts
+from charmcraft import env, parts, instrum
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
@@ -113,16 +113,25 @@ class PackCommand(BaseCommand):
             action="store_true",
             help="Force packing even after finding lint errors",
         )
+        parser.add_argument(
+            "--measure",
+            type=pathlib.Path,
+            help="Dump measurements to the specified file",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
         # decide if this will work on a charm or a bundle
         if self.config.type == "charm":
-            self._pack_charm(parsed_args)
+            with instrum.Timer("Whole pack run"):
+                self._pack_charm(parsed_args)
         elif self.config.type == "bundle":
             self._pack_bundle(parsed_args)
         else:
             raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
+
+        if parsed_args.measure:
+            instrum.dump(parsed_args.measure)
 
     def _validate_bases_indices(self, bases_indices):
         """Validate that bases index is valid."""
@@ -149,6 +158,7 @@ class PackCommand(BaseCommand):
             debug=parsed_args.debug,
             shell=parsed_args.shell,
             shell_after=parsed_args.shell_after,
+            measure=parsed_args.measure,
         )
         charms = builder.run(
             parsed_args.bases_index,

@@ -26,14 +26,14 @@ from typing import List, Optional, Tuple
 
 from craft_cli import emit, CraftError
 
-from charmcraft import env, linters, parts
+from charmcraft import env, linters, parts, instrum
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
-from charmcraft.providers import capture_logs_from_instance, get_provider
+from charmcraft.providers import capture_logs_from_instance, get_provider, file_from_instance #FIXME
 
 # Some constants that are used through the code.
 BUILD_DIRNAME = "build"
@@ -94,11 +94,12 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 class Builder:
     """The package builder."""
 
-    def __init__(self, *, config, force, debug, shell, shell_after):
+    def __init__(self, *, config, force, debug, shell, shell_after, measure):
         self.force_packing = force
         self.debug = debug
         self.shell = shell
         self.shell_after = shell_after
+        self.measure = measure
 
         self.charmdir = config.project.dirpath
         self.buildpath = self.charmdir / BUILD_DIRNAME
@@ -183,7 +184,8 @@ class Builder:
             project_name=self.metadata.name,
             ignore_local_sources=["*.charm"],
         )
-        lifecycle.run(Step.PRIME)
+        with instrum.Timer("Lifecycle run"):
+            lifecycle.run(Step.PRIME)
 
         # validate after all processing
         self._post_lifecycle_validation(lifecycle.prime_dir)
@@ -304,6 +306,7 @@ class Builder:
 
         return build_plan
 
+    @instrum.Timer("Builder run")
     def run(
         self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
     ) -> List[str]:
@@ -342,7 +345,8 @@ class Builder:
                     continue
 
                 try:
-                    charm_name = self.build_charm(bases_config)
+                    with instrum.Timer("Building the charm"):
+                        charm_name = self.build_charm(bases_config)
                 except (CraftError, RuntimeError) as error:
                     if self.debug:
                         emit.debug(f"Launching shell as charm building ended in error: {error}")
@@ -395,6 +399,10 @@ class Builder:
         if self.force_packing:
             cmd.append("--force")
 
+        if self.measure:
+            instance_metrics = env.get_managed_environment_metrics_path()
+            cmd.append(f"--measure={str(instance_metrics)}")
+
         emit.progress(
             f"Launching environment to pack for base {build_on} "
             "(may take a while the first time but it's reusable)"
@@ -409,8 +417,12 @@ class Builder:
             emit.progress("Packing the charm")
             emit.debug(f"Running {cmd}")
             try:
-                with emit.pause():
-                    instance.execute_run(cmd, check=True, cwd=instance_output_dir)
+                with instrum.Timer("Execution inside instance"):
+                    with emit.pause():
+                        instance.execute_run(cmd, check=True, cwd=instance_output_dir)
+                    if self.measure:
+                        with file_from_instance(instance, instance_metrics) as local_filepath:  # FIXME
+                            instrum.merge_from(local_filepath)
             except subprocess.CalledProcessError as error:
                 raise CraftError(
                     f"Failed to build charm for bases index '{bases_index}'."

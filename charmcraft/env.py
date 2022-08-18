@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,16 @@ def get_managed_environment_home_path():
 def get_managed_environment_log_path():
     """Path for charmcraft log when running in managed environment."""
     return pathlib.Path("/tmp/charmcraft.log")
+
+
+def get_managed_environment_metrics_path():
+    """Path for charmcraft metrics when running in managed environment."""
+    return pathlib.Path("/tmp/metrics.json")
+
+
+def get_charm_builder_metrics_path():
+    """Path for charmcraft metrics when running charm_builder."""
+    return pathlib.Path("/tmp/charm_builder_metrics.json")
 
 
 def get_managed_environment_project_path():

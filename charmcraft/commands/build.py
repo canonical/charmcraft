@@ -290,8 +290,8 @@ class Builder:
             )
 
         charms = []
-        for bases_config, build_on, bases_index, build_on_index in build_plan:
-            emit.debug(f"Building for 'bases[{ bases_index:d}][{build_on_index:d}]'.")
+        for plan in build_plan:
+            emit.debug(f"Building for 'bases[{plan.bases_index:d}][{plan.build_on_index:d}]'.")
             if managed_mode or destructive_mode:
                 if self.shell:
                     # Execute shell in lieu of build.
@@ -299,7 +299,7 @@ class Builder:
                     continue
 
                 try:
-                    charm_name = self.build_charm(bases_config)
+                    charm_name = self.build_charm(plan.bases_config)
                 except (CraftError, RuntimeError) as error:
                     if self.debug:
                         emit.debug(f"Launching shell as charm building ended in error: {error}")
@@ -310,9 +310,9 @@ class Builder:
                     launch_shell()
             else:
                 charm_name = self.pack_charm_in_instance(
-                    bases_index=bases_index,
-                    build_on=build_on,
-                    build_on_index=build_on_index,
+                    bases_index=plan.bases_index,
+                    build_on=plan.build_on,
+                    build_on_index=plan.build_on_index,
                 )
             charms.append(charm_name)
 

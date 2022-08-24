@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
+import json
 import pathlib
 import sys
 import zipfile
@@ -43,6 +44,7 @@ def get_namespace(
     shell=False,
     shell_after=False,
     format=None,
+    measure=None,
 ):
     if bases_index is None:
         bases_index = []
@@ -55,6 +57,7 @@ def get_namespace(
         shell=shell,
         shell_after=shell_after,
         format=format,
+        measure=measure,
     )
 
 
@@ -127,6 +130,28 @@ def test_resolve_no_config_packs_charm(config, tmp_path):
     with patch.object(cmd, "_pack_charm") as mock:
         cmd.run(noargs)
     mock.assert_called_with(noargs)
+
+
+def test_resolve_dump_measure_if_indicated(config, tmp_path):
+    """Dumps measurement if the user requested it."""
+    config.set(type="charm")
+    cmd = PackCommand(config)
+
+    measure_filepath = tmp_path / "testmeasures.json"
+    args = get_namespace(measure=measure_filepath)
+    with patch.object(cmd, "_pack_charm"):
+        cmd.run(args)
+
+    # check the measurement file is created, and check that the root measurement
+    # is the whole pack run
+    assert measure_filepath.exists()
+    dumped = json.loads(measure_filepath.read_text())
+    (root_measurement,) = [
+        measurement
+        for measurement in dumped.values()
+        if "parent" in measurement and measurement["parent"] is None
+    ]
+    assert root_measurement["msg"] == "Whole pack run"
 
 
 # -- tests for main bundle building process
@@ -684,6 +709,7 @@ def test_zipbuild_symlink_outside(tmp_path):
 
 def test_charm_builder_infrastructure_called(config):
     """Check that build.Builder is properly called."""
+    measure_filepath = pathlib.Path("/tmp/whatever")
     args = Namespace(
         bases_index=[],
         debug=True,
@@ -692,13 +718,19 @@ def test_charm_builder_infrastructure_called(config):
         shell=True,
         shell_after=True,
         format=None,
+        measure=measure_filepath,
     )
     config.set(type="charm")
     with patch("charmcraft.commands.build.Builder") as builder_class_mock:
         builder_class_mock.return_value = builder_instance_mock = MagicMock()
         PackCommand(config).run(args)
     builder_class_mock.assert_called_with(
-        config=config, debug=True, force=True, shell_after=True, shell=True
+        config=config,
+        debug=True,
+        force=True,
+        shell_after=True,
+        shell=True,
+        measure=measure_filepath,
     )
     builder_instance_mock.run.assert_called_with([], destructive_mode=True)
 

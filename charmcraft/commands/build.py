@@ -33,7 +33,7 @@ from charmcraft.config import Base, BasesConfiguration
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
-from charmcraft.providers import capture_logs_from_instance, get_provider, file_from_instance #FIXME
+from charmcraft.providers import capture_logs_from_instance, get_provider
 
 # Some constants that are used through the code.
 BUILD_DIRNAME = "build"
@@ -421,7 +421,7 @@ class Builder:
                     with emit.pause():
                         instance.execute_run(cmd, check=True, cwd=instance_output_dir)
                     if self.measure:
-                        with file_from_instance(instance, instance_metrics) as local_filepath:  # FIXME
+                        with instance.temporarily_pull_file(instance_metrics) as local_filepath:
                             instrum.merge_from(local_filepath)
             except subprocess.CalledProcessError as error:
                 raise CraftError(

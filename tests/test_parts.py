@@ -25,7 +25,7 @@ from craft_cli import CraftError
 from craft_parts import Step, plugins, Action, ActionType
 from craft_parts.errors import PartsError
 
-from charmcraft import charm_builder, parts
+from charmcraft import charm_builder, parts, env
 
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -91,27 +91,36 @@ class TestCharmPlugin:
         monkeypatch.setenv("https_proxy", "https_proxy_value")
         monkeypatch.setenv("no_proxy", "no_proxy_value")
 
-        assert self._plugin.get_build_commands() == [
-            "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
-            "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
-            "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
-            "https_proxy=https_proxy_value no_proxy=no_proxy_value "
-            "{python} -I "
-            "{charm_builder} "
-            "--charmdir {work_dir}/parts/foo/build "
-            "--builddir {work_dir}/parts/foo/install "
-            "--entrypoint {work_dir}/parts/foo/build/entrypoint "
-            "-b pkg1 "
-            "-b pkg2 "
-            "-p pkg3 "
-            "-p pkg4 "
-            "-r reqs1.txt "
-            "-r reqs2.txt".format(
-                python=sys.executable,
-                charm_builder=charm_builder.__file__,
-                work_dir=str(tmp_path),
-            )
-        ]
+        with patch("craft_parts.callbacks.register_post_step") as mock_register:
+            assert self._plugin.get_build_commands() == [
+                "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
+                "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
+                "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
+                "https_proxy=https_proxy_value no_proxy=no_proxy_value "
+                "{python} -I "
+                "{charm_builder} "
+                "--charmdir {work_dir}/parts/foo/build "
+                "--builddir {work_dir}/parts/foo/install "
+                "--entrypoint {work_dir}/parts/foo/build/entrypoint "
+                "-b pkg1 "
+                "-b pkg2 "
+                "-p pkg3 "
+                "-p pkg4 "
+                "-r reqs1.txt "
+                "-r reqs2.txt".format(
+                    python=sys.executable,
+                    charm_builder=charm_builder.__file__,
+                    work_dir=str(tmp_path),
+                )
+            ]
+
+        # check the callback is properly registered for running own method after build
+        mock_register.assert_called_with(self._plugin.post_build_callback, step_list=[Step.BUILD])
+
+    def test_post_build_metric_collection(self):
+        with patch("charmcraft.instrum.merge_from") as mock_collection:
+            self._plugin.post_build_callback("test step info")
+        mock_collection.assert_called_with(env.get_charm_builder_metrics_path())
 
 
 class TestCharmPluginProperties:

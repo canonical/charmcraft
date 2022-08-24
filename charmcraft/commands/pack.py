@@ -123,12 +123,14 @@ class PackCommand(BaseCommand):
         """Run the command."""
         # decide if this will work on a charm or a bundle
         if self.config.type == "charm":
-            with instrum.Timer("Whole pack run"):
-                self._pack_charm(parsed_args)
+            pack_method = self._pack_charm
         elif self.config.type == "bundle":
-            self._pack_bundle(parsed_args)
+            pack_method = self._pack_bundle
         else:
             raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
+
+        with instrum.Timer("Whole pack run"):
+            pack_method(parsed_args)
 
         if parsed_args.measure:
             instrum.dump(parsed_args.measure)

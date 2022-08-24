@@ -390,14 +390,13 @@ class PartsLifecycle:
             with instrum.Timer("Running action executor") as executor_timer:
                 with self._lcm.action_executor() as aex:
                     executor_timer.mark("Context enter")
-                    for action in actions:
-                        emit.progress(
-                            f"Running step {action.step.name} for part {action.part_name!r}")
-                        with instrum.Timer(
-                                "Running step", step=action.step_name, part=action.part_name):
+                    for act in actions:
+                        emit.progress(f"Running step {act.step.name} for part {act.part_name!r}")
+                        with instrum.Timer("Running step", step=act.step.name, part=act.part_name):
                             with emit.open_stream("Execute action") as stream:
-                                aex.execute([action], stdout=stream, stderr=stream)
+                                aex.execute([act], stdout=stream, stderr=stream)
                     executor_timer.mark("Context exit")
+
         except RuntimeError as err:
             raise RuntimeError(f"Parts processing internal error: {err}") from err
         except OSError as err:

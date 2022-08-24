@@ -28,7 +28,7 @@ import pytest
 import yaml
 from craft_cli import EmitterMode, emit, CraftError
 
-from charmcraft import linters
+from charmcraft import linters, instrum
 from charmcraft.charm_builder import relativise
 from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
@@ -44,11 +44,19 @@ def get_builder(
     debug=False,
     shell=False,
     shell_after=False,
+    measure=None,
 ):
     if project_dir is None:
         project_dir = config.project.dirpath
 
-    return Builder(config=config, debug=debug, force=force, shell=shell, shell_after=shell_after)
+    return Builder(
+        config=config,
+        debug=debug,
+        force=force,
+        shell=shell,
+        shell_after=shell_after,
+        measure=measure,
+    )
 
 
 @pytest.fixture
@@ -845,7 +853,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
         ("force", "--force"),
     ],
 )
-def test_build_arguments_managed_charmcraft(
+def test_build_arguments_managed_charmcraft_simples(
     builder_flag,
     cmd_flag,
     mock_capture_logs_from_instance,
@@ -867,6 +875,42 @@ def test_build_arguments_managed_charmcraft(
     expected_cmd = ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief", cmd_flag]
     assert mock_instance.mock_calls == [
         call.execute_run(expected_cmd, check=True, cwd=pathlib.Path("/root/project")),
+    ]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_build_arguments_managed_charmcraft_measure(
+    mock_capture_logs_from_instance,
+    mock_instance,
+    basic_project_builder,
+    tmp_path,
+):
+    """Check that the command to run charmcraft inside the environment is properly built."""
+    emit.set_mode(EmitterMode.BRIEF)
+    host_base = get_host_as_base()
+    bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
+
+    # fake a dumped mesure to be pulled from the instance
+    fake_local_m = tmp_path / "local.json"
+    instrum._Measurements().dump(fake_local_m)
+
+    # specially patch the context manager
+    fake_inst_m = tmp_path / "inst.json"
+    mock_instance.temporarily_pull_file = MagicMock()
+    mock_instance.temporarily_pull_file.return_value = fake_local_m
+
+    builder = basic_project_builder(bases_config, measure=tmp_path)
+    with patch("charmcraft.env.get_managed_environment_metrics_path", return_value=fake_inst_m):
+        builder.pack_charm_in_instance(
+            build_on=bases_config[0].build_on[0],
+            bases_index=0,
+            build_on_index=0,
+        )
+    cmd_flag = f"--measure={str(fake_inst_m)}"
+    expected_cmd = ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief", cmd_flag]
+    assert mock_instance.mock_calls == [
+        call.execute_run(expected_cmd, check=True, cwd=pathlib.Path("/root/project")),
+        call.temporarily_pull_file(fake_inst_m),
     ]
 
 

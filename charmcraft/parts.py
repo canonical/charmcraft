@@ -24,12 +24,12 @@ from typing import Any, Dict, List, Set, cast
 
 import pydantic
 from craft_cli import emit, CraftError
-from craft_parts import LifecycleManager, Step, plugins
+from craft_parts import LifecycleManager, Step, plugins, callbacks
 from craft_parts.errors import PartsError
 from craft_parts.parts import PartSpec
 from xdg import BaseDirectory  # type: ignore
 
-from charmcraft import charm_builder
+from charmcraft import charm_builder, instrum, env
 from charmcraft.reactive_plugin import ReactivePlugin
 
 
@@ -210,7 +210,14 @@ class CharmPlugin(plugins.Plugin):
 
         commands = [" ".join(shlex.quote(i) for i in build_cmd)]
 
+        # hook a callback after the BUILD happened (to collect metrics left by charm builder)
+        callbacks.register_post_step(self.post_build_callback, step_list=[Step.BUILD])
+
         return commands
+
+    def post_build_callback(self, step_info):
+        """Collect metrics left by charm_builder.py."""
+        instrum.merge_from(env.get_charm_builder_metrics_path())
 
 
 class BundlePluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -380,11 +387,16 @@ class PartsLifecycle:
             emit.debug(f"Executing parts lifecycle in {str(self._project_dir)!r}")
             actions = self._lcm.plan(target_step)
             emit.debug(f"Parts actions: {actions}")
-            with self._lcm.action_executor() as aex:
-                for action in actions:
-                    emit.progress(f"Running step {action.step.name} for part {action.part_name!r}")
-                    with emit.open_stream("Execute action") as stream:
-                        aex.execute([action], stdout=stream, stderr=stream)
+            with instrum.Timer("Running action executor") as executor_timer:
+                with self._lcm.action_executor() as aex:
+                    executor_timer.mark("Context enter")
+                    for act in actions:
+                        emit.progress(f"Running step {act.step.name} for part {act.part_name!r}")
+                        with instrum.Timer("Running step", step=act.step.name, part=act.part_name):
+                            with emit.open_stream("Execute action") as stream:
+                                aex.execute([act], stdout=stream, stderr=stream)
+                    executor_timer.mark("Context exit")
+
         except RuntimeError as err:
             raise RuntimeError(f"Parts processing internal error: {err}") from err
         except OSError as err:

@@ -28,7 +28,8 @@ from typing import List
 
 from craft_cli import emit, EmitterMode, CraftError
 
-from charmcraft.env import get_managed_environment_log_path
+from charmcraft import instrum
+from charmcraft.env import get_managed_environment_log_path, get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
 
@@ -117,6 +118,7 @@ class CharmBuilder:
             rel_path = src_path.relative_to(self.charmdir)
             emit.debug(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
 
+    @instrum.Timer("Handling generic paths")
     def handle_generic_paths(self):
         """Handle all files and dirs except what's ignored and what will be handled later.
 
@@ -181,6 +183,7 @@ class CharmBuilder:
 
         return linked_entrypoint
 
+    @instrum.Timer("Handling dispatcher")
     def handle_dispatcher(self, linked_entrypoint):
         """Handle modern and classic dispatch mechanisms."""
         # dispatch mechanism, create one if wasn't provided by the project
@@ -232,32 +235,36 @@ class CharmBuilder:
         deps_hash = hashlib.sha1(deps_mashup.encode("utf8")).hexdigest()
         return deps_hash
 
+    @instrum.Timer("Installing dependencies")
     def _install_dependencies(self, staging_venv_dir):
         """Install all dependencies in a specific directory."""
         # create virtualenv using the host environment python
-        _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
+        with instrum.Timer("Creating venv"):
+            _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
         pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
 
-        _process_run([pip_cmd, "--version"])
+        with instrum.Timer("Getting pip version"):
+            _process_run([pip_cmd, "--version"])
 
-        if self.binary_python_packages:
-            # install python packages, allowing binary packages
-            cmd = [pip_cmd, "install", "--upgrade"]  # base command
-            cmd.extend(self.binary_python_packages)  # the python packages to install
-            _process_run(cmd)
+        with instrum.Timer("Installing all dependencies"):
+            if self.binary_python_packages:
+                # install python packages, allowing binary packages
+                cmd = [pip_cmd, "install", "--upgrade"]  # base command
+                cmd.extend(self.binary_python_packages)  # the python packages to install
+                _process_run(cmd)
 
-        if self.python_packages:
-            # install python packages from source
-            cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-            cmd.extend(self.python_packages)  # the python packages to install
-            _process_run(cmd)
+            if self.python_packages:
+                # install python packages from source
+                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                cmd.extend(self.python_packages)  # the python packages to install
+                _process_run(cmd)
 
-        if self.requirement_paths:
-            # install dependencies from requirement files
-            cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-            for reqspath in self.requirement_paths:
-                cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
-            _process_run(cmd)
+            if self.requirement_paths:
+                # install dependencies from requirement files
+                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                for reqspath in self.requirement_paths:
+                    cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
+                _process_run(cmd)
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
@@ -411,4 +418,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    with instrum.Timer("Full charm_builder.py main"):
+        main()
+    instrum.dump(get_charm_builder_metrics_path())

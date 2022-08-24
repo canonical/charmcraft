@@ -24,6 +24,7 @@ from typing import List
 from craft_cli import emit, CraftError
 from craft_providers import bases, lxd
 
+from charmcraft import instrum
 from charmcraft.config import Base
 from charmcraft.env import get_managed_environment_project_path
 from charmcraft.utils import confirm_with_user, get_host_architecture
@@ -164,10 +165,11 @@ class LXDProvider(Provider):
         )
 
         environment = self.get_command_environment()
-        try:
-            image_remote = lxd.configure_buildd_image_remote()
-        except lxd.LXDError as error:
-            raise CraftError(str(error)) from error
+        with instrum.Timer("LXD: Configure buildd image"):
+            try:
+                image_remote = lxd.configure_buildd_image_remote()
+            except lxd.LXDError as error:
+                raise CraftError(str(error)) from error
 
         # specify the uid of the owner of the project directory to prevent read-only mounts of
         # the project dir when the currently running user and project dir owner are different
@@ -176,32 +178,35 @@ class LXDProvider(Provider):
         base_configuration = CharmcraftBuilddBaseConfiguration(
             alias=alias, environment=environment, hostname=instance_name
         )
-        try:
-            instance = lxd.launch(
-                name=instance_name,
-                base_configuration=base_configuration,
-                image_name=base.channel,
-                image_remote=image_remote,
-                auto_clean=True,
-                auto_create_project=True,
-                map_user_uid=True,
-                use_snapshots=True,
-                project=self.lxd_project,
-                remote=self.lxd_remote,
-                uid=projectdir_owner_id,
-            )
-        except (bases.BaseConfigurationError, lxd.LXDError) as error:
-            raise CraftError(str(error)) from error
+        with instrum.Timer("LXD: Launch"):
+            try:
+                instance = lxd.launch(
+                    name=instance_name,
+                    base_configuration=base_configuration,
+                    image_name=base.channel,
+                    image_remote=image_remote,
+                    auto_clean=True,
+                    auto_create_project=True,
+                    map_user_uid=True,
+                    use_snapshots=True,
+                    project=self.lxd_project,
+                    remote=self.lxd_remote,
+                    uid=projectdir_owner_id,
+                )
+            except (bases.BaseConfigurationError, lxd.LXDError) as error:
+                raise CraftError(str(error)) from error
 
         # Mount project.
-        instance.mount(host_source=project_path, target=get_managed_environment_project_path())
+        with instrum.Timer("LXD: Mount"):
+            instance.mount(host_source=project_path, target=get_managed_environment_project_path())
 
         try:
             yield instance
         finally:
             # Ensure to unmount everything and stop instance upon completion.
-            try:
-                instance.unmount_all()
-                instance.stop()
-            except lxd.LXDError as error:
-                raise CraftError(str(error)) from error
+            with instrum.Timer("LXD: Unmount and stop"):
+                try:
+                    instance.unmount_all()
+                    instance.stop()
+                except lxd.LXDError as error:
+                    raise CraftError(str(error)) from error

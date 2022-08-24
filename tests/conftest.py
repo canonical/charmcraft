@@ -17,6 +17,7 @@
 import contextlib
 import datetime
 import json
+import imp
 import pathlib
 import tempfile
 import types
@@ -25,9 +26,10 @@ from unittest.mock import Mock
 
 import pytest
 import responses as responses_module
+from craft_parts import callbacks
 from craft_providers import Executor
 
-from charmcraft import config as config_module
+from charmcraft import config as config_module, instrum
 from charmcraft import deprecations, parts
 from charmcraft.bases import get_host_as_base
 from charmcraft.config import Base, BasesConfiguration
@@ -100,13 +102,25 @@ def bundle_config(tmp_path):
 
 
 @pytest.fixture(autouse=True)
-def clean_already_notified():
-    """Clear the already-notified structure for each test.
+def intertests_cleanups():
+    """Run some cleanups between tests.
 
-    This is needed as that structure is a module-level one (by design), so otherwise
-    it will be dirty between tests.
+    Before each test:
+
+    - reload the instrumentator module to start clean.
+
+    After each test:
+
+    - clear the already-notified structure for each test (this is needed as that
+      structure is a module-level one (by design), so otherwise it will be dirty
+      between tests).
+
+    - unregister all Craft Parts plugins callbacks
     """
+    imp.reload(instrum)
+    yield
     deprecations._ALREADY_NOTIFIED.clear()
+    callbacks.unregister_all()
 
 
 @pytest.fixture

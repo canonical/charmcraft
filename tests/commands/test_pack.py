@@ -707,9 +707,9 @@ def test_zipbuild_symlink_outside(tmp_path):
 # tests for the main charm building process
 
 
-def test_charm_builder_infrastructure_called(config):
+def test_charm_builder_infrastructure_called(config, tmp_path):
     """Check that build.Builder is properly called."""
-    measure_filepath = pathlib.Path("/tmp/whatever")
+    measure_filepath = tmp_path / "measurements.json"
     args = Namespace(
         bases_index=[],
         debug=True,

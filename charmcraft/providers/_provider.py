@@ -20,9 +20,10 @@ import contextlib
 import os
 import pathlib
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Generator, Tuple, Union
 
-from craft_providers import bases
+from craft_cli import emit, CraftError
+from craft_providers import bases, Executor, ProviderError
 
 from charmcraft.config import Base
 from charmcraft.utils import get_host_architecture
@@ -32,20 +33,43 @@ from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS
 class Provider(ABC):
     """Charmcraft's build environment provider."""
 
-    @abstractmethod
     def clean_project_environments(
         self,
         *,
         charm_name: str,
         project_path: pathlib.Path,
-    ) -> List[str]:
+        bases_index: int,
+        build_on_index: int,
+    ) -> None:
         """Clean up any environments created for project.
 
         :param charm_name: Name of project.
         :param project_path: Directory of charm project.
+        :param bases_index: Index of `bases:` entry.
+        :param build_on_index: Index of `build-on` within bases entry.
 
         :returns: List of containers deleted.
+        :raises CraftError: If environment cannot be deleted.
         """
+        if not self.is_provider_available():
+            emit.debug("Not cleaning environment because the provider is not installed.")
+            return
+
+        instance_name = self.get_instance_name(
+            bases_index=bases_index,
+            build_on_index=build_on_index,
+            project_name=charm_name,
+            project_path=project_path,
+            target_arch=get_host_architecture(),
+        )
+
+        emit.debug(f"Cleaning environment {instance_name!r}")
+        environment = self.environment(instance_name=instance_name)
+        try:
+            if environment.exists():
+                environment.delete()
+        except ProviderError as error:
+            raise CraftError(str(error)) from error
 
     @classmethod
     @abstractmethod
@@ -142,6 +166,15 @@ class Provider(ABC):
         """
 
     @abstractmethod
+    def environment(self, *, instance_name: str) -> Executor:
+        """Create a bare environment for specified base.
+
+        No initializing, launching, or cleaning up of the environment occurs.
+
+        :param instance_name: Name of the instance.
+        """
+
+    @abstractmethod
     @contextlib.contextmanager
     def launched_environment(
         self,
@@ -151,7 +184,7 @@ class Provider(ABC):
         base: Base,
         bases_index: int,
         build_on_index: int,
-    ):
+    ) -> Generator[Executor, None, None]:
         """Launch environment for specified base.
 
         :param charm_name: Name of project.

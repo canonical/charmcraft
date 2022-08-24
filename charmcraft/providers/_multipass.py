@@ -18,11 +18,10 @@
 
 import contextlib
 import pathlib
-import re
-from typing import List
+from typing import Generator
 
-from craft_cli import emit, CraftError
-from craft_providers import bases, multipass
+from craft_cli import CraftError
+from craft_providers import bases, multipass, Executor
 from craft_providers.multipass.errors import MultipassError
 
 from charmcraft.config import Base
@@ -45,50 +44,6 @@ class MultipassProvider(Provider):
         multipass: multipass.Multipass = multipass.Multipass(),
     ) -> None:
         self.multipass = multipass
-
-    def clean_project_environments(
-        self,
-        *,
-        charm_name: str,
-        project_path: pathlib.Path,
-    ) -> List[str]:
-        """Clean up any environments created for project.
-
-        :param charm_name: Name of project.
-        :param project_path: Directory of charm project.
-
-        :returns: List of containers deleted.
-        """
-        deleted: List[str] = []
-
-        # Nothing to do if provider is not installed.
-        if not self.is_provider_available():
-            return deleted
-
-        inode = project_path.stat().st_ino
-
-        try:
-            names = self.multipass.list()
-        except multipass.MultipassError as error:
-            raise CraftError(str(error)) from error
-
-        for name in names:
-            match_regex = f"^charmcraft-{charm_name}-{inode}-.+-.+-.+$"
-            if re.match(match_regex, name):
-                emit.debug(f"Deleting Multipass VM {name!r}.")
-                try:
-                    self.multipass.delete(
-                        instance_name=name,
-                        purge=True,
-                    )
-                except multipass.MultipassError as error:
-                    raise CraftError(str(error)) from error
-
-                deleted.append(name)
-            else:
-                emit.debug(f"Not deleting Multipass VM {name!r}.")
-
-        return deleted
 
     @classmethod
     def ensure_provider_is_available(cls) -> None:
@@ -128,6 +83,15 @@ class MultipassProvider(Provider):
         """
         return multipass.is_installed()
 
+    def environment(self, *, instance_name: str) -> Executor:
+        """Create a bare environment for specified base.
+
+        No initializing, launching, or cleaning up of the environment occurs.
+
+        :param instance_name: Name of the instance.
+        """
+        return multipass.MultipassInstance(name=instance_name)
+
     @contextlib.contextmanager
     def launched_environment(
         self,
@@ -137,7 +101,7 @@ class MultipassProvider(Provider):
         base: Base,
         bases_index: int,
         build_on_index: int,
-    ):
+    ) -> Generator[Executor, None, None]:
         """Launch environment for specified base.
 
         :param charm_name: Name of project.

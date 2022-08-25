@@ -19,6 +19,7 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus
 
+# Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
 
 

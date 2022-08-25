@@ -38,22 +38,22 @@ This command will modify the directory to create the necessary files for a
 charm operator package. By default it will work in the current directory.
 It will setup the following tree of files and directories:
 
-.
-├── metadata.yaml        - Charm operator package description
-├── README.md            - Frontpage for your charmhub.io/charm/
-├── CONTRIBUTING.md      - Instructions for how to build and develop your charm
-├── actions.yaml         - Day-2 action declarations, e.g. backup, restore
-├── charmcraft.yaml      - Charm build configuration
-├── config.yaml          - Config schema for your operator
-├── LICENSE              - Your charm license, we recommend Apache 2
-├── requirements.txt     - PyPI dependencies for your charm, with `ops`
-├── requirements-dev.txt - PyPI for development tooling, notably flake8
-├── run_tests
-├── src
-│   └── charm.py         - Minimal operator using Python operator framework
-└── tests
-    ├── __init__.py
-    └── test_charm.py
+    .
+    ├── metadata.yaml        - Charm operator package description
+    ├── README.md            - Frontpage for your charmhub.io/charm/
+    ├── CONTRIBUTING.md      - Instructions for how to build and develop your charm
+    ├── actions.yaml         - Day-2 action declarations, e.g. backup, restore
+    ├── charmcraft.yaml      - Charm build configuration
+    ├── config.yaml          - Config schema for your operator
+    ├── LICENSE              - Your charm license, we recommend Apache 2
+    ├── requirements.txt     - PyPI dependencies for your charm, with `ops`
+    ├── requirements-dev.txt - PyPI for development tooling, notably flake8
+    ├── run_tests
+    ├── src
+    │   └── charm.py         - Minimal operator using Python operator framework
+    └── tests
+        ├── __init__.py
+        └── test_charm.py
 
 You will need to edit at least metadata.yaml and README.md.
 

@@ -25,7 +25,7 @@ from craft_cli import CraftError
 from craft_parts import Step, plugins, Action, ActionType
 from craft_parts.errors import PartsError
 
-from charmcraft import charm_builder, parts
+from charmcraft import charm_builder, parts, env
 
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -91,27 +91,36 @@ class TestCharmPlugin:
         monkeypatch.setenv("https_proxy", "https_proxy_value")
         monkeypatch.setenv("no_proxy", "no_proxy_value")
 
-        assert self._plugin.get_build_commands() == [
-            "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
-            "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
-            "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
-            "https_proxy=https_proxy_value no_proxy=no_proxy_value "
-            "{python} -I "
-            "{charm_builder} "
-            "--charmdir {work_dir}/parts/foo/build "
-            "--builddir {work_dir}/parts/foo/install "
-            "--entrypoint {work_dir}/parts/foo/build/entrypoint "
-            "-b pkg1 "
-            "-b pkg2 "
-            "-p pkg3 "
-            "-p pkg4 "
-            "-r reqs1.txt "
-            "-r reqs2.txt".format(
-                python=sys.executable,
-                charm_builder=charm_builder.__file__,
-                work_dir=str(tmp_path),
-            )
-        ]
+        with patch("craft_parts.callbacks.register_post_step") as mock_register:
+            assert self._plugin.get_build_commands() == [
+                "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
+                "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
+                "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
+                "https_proxy=https_proxy_value no_proxy=no_proxy_value "
+                "{python} -I "
+                "{charm_builder} "
+                "--charmdir {work_dir}/parts/foo/build "
+                "--builddir {work_dir}/parts/foo/install "
+                "--entrypoint {work_dir}/parts/foo/build/entrypoint "
+                "-b pkg1 "
+                "-b pkg2 "
+                "-p pkg3 "
+                "-p pkg4 "
+                "-r reqs1.txt "
+                "-r reqs2.txt".format(
+                    python=sys.executable,
+                    charm_builder=charm_builder.__file__,
+                    work_dir=str(tmp_path),
+                )
+            ]
+
+        # check the callback is properly registered for running own method after build
+        mock_register.assert_called_with(self._plugin.post_build_callback, step_list=[Step.BUILD])
+
+    def test_post_build_metric_collection(self):
+        with patch("charmcraft.instrum.merge_from") as mock_collection:
+            self._plugin.post_build_callback("test step info")
+        mock_collection.assert_called_with(env.get_charm_builder_metrics_path())
 
 
 class TestCharmPluginProperties:
@@ -390,34 +399,32 @@ class TestPartsLifecycle:
 
     def test_run_actions_progress(self, tmp_path, monkeypatch, emitter):
         data = {
-            "plugin": "charm",
+            "plugin": "nil",
             "source": ".",
-            "charm-entrypoint": "my-entrypoint",
         }
 
         lifecycle = parts.PartsLifecycle(
-            all_parts={"charm": data},
+            all_parts={"testpart": data},
             work_dir=tmp_path,
             project_dir=tmp_path,
             project_name="test",
-            ignore_local_sources=["*.charm"],
+            ignore_local_sources=[],
         )
 
         action1 = Action(
-            part_name="charm", step=Step.STAGE, action_type=ActionType.RUN, reason=None
+            part_name="testpart", step=Step.STAGE, action_type=ActionType.RUN, reason=None
         )
         action2 = Action(
-            part_name="charm", step=Step.PRIME, action_type=ActionType.RUN, reason=None
+            part_name="testpart", step=Step.PRIME, action_type=ActionType.RUN, reason=None
         )
 
-        with patch("craft_parts.LifecycleManager.clean"):
-            with patch("craft_parts.LifecycleManager.plan") as mock_plan:
-                mock_plan.return_value = [action1, action2]
-                with patch("craft_parts.executor.executor.ExecutionContext.execute") as mock_exec:
-                    lifecycle.run(Step.PRIME)
+        with patch("craft_parts.LifecycleManager.plan") as mock_plan:
+            mock_plan.return_value = [action1, action2]
+            with patch("craft_parts.executor.executor.ExecutionContext.execute") as mock_exec:
+                lifecycle.run(Step.PRIME)
 
-        emitter.assert_progress("Running step STAGE for part 'charm'")
-        emitter.assert_progress("Running step PRIME for part 'charm'")
+        emitter.assert_progress("Running step STAGE for part 'testpart'")
+        emitter.assert_progress("Running step PRIME for part 'testpart'")
         assert mock_exec.call_args_list == [
             call([action1], stdout=ANY, stderr=ANY),
             call([action2], stdout=ANY, stderr=ANY),

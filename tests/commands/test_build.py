@@ -267,8 +267,7 @@ def test_build_with_debug_no_error(
         debug=True,
     )
 
-    with patch.object(Builder, "_post_lifecycle_validation"):
-        charms = builder.run(destructive_mode=True)
+    charms = builder.run(destructive_mode=True)
 
     assert len(charms) == 1
     assert mock_launch_shell.mock_calls == []
@@ -318,8 +317,7 @@ def test_build_with_shell_after(
         shell_after=True,
     )
 
-    with patch.object(Builder, "_post_lifecycle_validation"):
-        charms = builder.run(destructive_mode=True)
+    charms = builder.run(destructive_mode=True)
 
     assert len(charms) == 1
     assert mock_launch_shell.mock_calls == [mock.call()]
@@ -1040,93 +1038,7 @@ def test_build_postlifecycle_validation_is_properly_called(basic_project, monkey
         mock_lifecycle_instance.run().return_value = None
         with patch("charmcraft.linters.analyze"):
             with patch.object(Builder, "show_linting_results"):
-                with patch.object(Builder, "_post_lifecycle_validation") as mock_validation:
-                    builder.run([0])
-
-    # check that the entrypoint validation was called correctly
-    mock_validation.assert_called_with(basic_project)
-
-
-def test_build_postlifecycle_validation_no_charm(basic_project):
-    """Post lifecycle validation when it's not a charm."""
-    host_base = get_host_as_base()
-    charmcraft_yaml_content = f"""\
-       type: charm
-       bases:
-         - build-on:
-             - name: {host_base.name!r}
-               channel: {host_base.channel!r}
-           run-on:
-             - name: {host_base.name!r}
-               channel: {host_base.channel!r}
-       parts:
-         charm:
-           source: .
-           plugin: reactive
-           build-snaps: [charm]
-       """
-    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
-    config = load(basic_project)
-
-    builder = get_builder(config, force=True)
-    builder._post_lifecycle_validation(basic_project)
-
-
-def test_build_postlifecycle_validation_entrypoint_missing(basic_project):
-    """The entrypoint is not specified and there is no file for its default."""
-    host_base = get_host_as_base()
-    charmcraft_yaml_content = f"""\
-       type: charm
-       bases:
-         - build-on:
-             - name: {host_base.name!r}
-               channel: {host_base.channel!r}
-           run-on:
-             - name: {host_base.name!r}
-               channel: {host_base.channel!r}
-       parts:
-         charm:
-            prime: [xyz]
-            charm-entrypoint: missing.py
-       """
-    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
-    config = load(basic_project)
-
-    builder = get_builder(config, force=True)
-    with pytest.raises(CraftError) as cm:
-        builder._post_lifecycle_validation(basic_project)
-    entrypoint = basic_project / "missing.py"
-    assert str(cm.value) == f"Charm entry point was not found: {str(entrypoint)!r}"
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_postlifecycle_validation_entrypoint_nonexec(basic_project):
-    """The entrypoint is not specified and the file for its default is not executable."""
-    host_base = get_host_as_base()
-    charmcraft_yaml_content = f"""\
-       type: charm
-       bases:
-         - build-on:
-             - name: {host_base.name!r}
-               channel: {host_base.channel!r}
-           run-on:
-             - name: {host_base.name!r}
-               channel: {host_base.channel!r}
-       parts:
-         charm:
-            prime: [xyz]
-       """
-    (basic_project / "charmcraft.yaml").write_text(dedent(charmcraft_yaml_content))
-    config = load(basic_project)
-
-    # remove exec properties from the file
-    entrypoint = basic_project / "src" / "charm.py"
-    entrypoint.chmod(0o666)
-
-    builder = get_builder(config, force=True)
-    with pytest.raises(CraftError) as cm:
-        builder._post_lifecycle_validation(basic_project)
-    assert str(cm.value) == f"Charm entry point must be executable: {str(entrypoint)!r}"
+                builder.run([0])
 
 
 def test_build_part_from_config(basic_project, monkeypatch):

@@ -40,14 +40,13 @@ WARNINGS = "warnings"
 ERRORS = "errors"
 FATAL = "fatal"
 OK = "ok"
+NONAPPLICABLE = "nonapplicable"
 
 # the documentation page for "Analyzers and linters"
 BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
 
 
-def check_dispatch_with_python_entrypoint(
-    basedir: pathlib.Path,
-) -> Union[pathlib.Path, None]:
+def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
     """Verify if the charm has a dispatch file pointing to a Python entrypoint.
 
     :returns: the entrypoint path if all succeeds, None otherwise.
@@ -65,9 +64,19 @@ def check_dispatch_with_python_entrypoint(
                 entrypoint_str = shlex.split(last_line)[-1]
     except (IOError, UnicodeDecodeError):
         return
-
+    if not entrypoint_str:
+        return
     entrypoint = basedir / entrypoint_str
-    if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
+    return entrypoint
+
+
+def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
+    """Verify if the charm has a dispatch file pointing to a Python entrypoint.
+
+    :returns: the entrypoint path if all succeeds, None otherwise.
+    """
+    entrypoint = get_entrypoint_from_dispatch(basedir)
+    if entrypoint and entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
         return entrypoint
 
 
@@ -323,7 +332,7 @@ class JujuConfig:
 class Entrypoint:
     """Check the entrypoint is correct.
 
-    It validates that the entrypoint, if used by dispatch...
+    It validates that the entrypoint, if used by 'dispatch', ...
 
     - exists
     - is a file
@@ -335,93 +344,35 @@ class Entrypoint:
     url = BASE_DOCS_URL + "#heading--entrypoint"
 
     # different result constants
-    Result = namedtuple("Result", "operator reactive unknown")(
-        operator="operator", reactive="reactive", unknown=UNKNOWN
+    Result = namedtuple("Result", "nonapplicable ok errors")(
+        nonapplicable=NONAPPLICABLE,
+        ok=OK,
+        errors=ERRORS,
     )
 
-    # different texts to be exposed as `text` (see the property below)
-    result_texts = {
-        Result.operator: "The charm is based on the Operator Framework.",
-        Result.reactive: "The charm is based on the Reactive Framework.",
-        Result.unknown: "The charm is not based on any known Framework.",
-    }
-
     def __init__(self):
-        self.result = None
-
-    @property
-    def text(self):
-        """Return a text in function of the result state."""
-        if self.result is None:
-            return None
-        return self.result_texts[self.result]
-
-    def _get_imports(self, filepath: pathlib.Path) -> Generator[List[str], None, None]:
-        """Parse a Python filepath and yield its imports.
-
-        If the file does not exist or cannot be parsed, return empty. Otherwise
-        return the name for each imported module, split by possible dots.
-        """
-        if not os.access(filepath, os.R_OK):
-            return
-        try:
-            parsed = ast.parse(filepath.read_bytes())
-        except SyntaxError:
-            return
-
-        for node in ast.walk(parsed):
-            if isinstance(node, ast.Import):
-                for name in node.names:
-                    yield name.name.split(".")
-            elif isinstance(node, ast.ImportFrom):
-                yield node.module.split(".")
-
-    def _check_operator(self, basedir: pathlib.Path) -> bool:
-        """Detect if the Operator Framework is used."""
-        python_entrypoint = check_dispatch_with_python_entrypoint(basedir)
-        if python_entrypoint is None:
-            return False
-
-        opsdir = basedir / "venv" / "ops"
-        if not opsdir.exists() or not opsdir.is_dir():
-            return False
-
-        for import_parts in self._get_imports(python_entrypoint):
-            if import_parts[0] == "ops":
-                return True
-        return False
-
-    def _check_reactive(self, basedir: pathlib.Path) -> bool:
-        """Detect if the Reactive Framework is used."""
-        try:
-            metadata = parse_metadata_yaml(basedir)
-        except Exception:
-            # file not found, corrupted, or mandatory "name" not present
-            return False
-
-        wheelhouse_dir = basedir / "wheelhouse"
-        if not wheelhouse_dir.exists():
-            return False
-        if not any(f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()):
-            return False
-
-        module_basename = metadata.name.replace("-", "_")
-        entrypoint = basedir / "reactive" / f"{module_basename}.py"
-        for import_parts in self._get_imports(entrypoint):
-            if import_parts[0] == "charms" and import_parts[1] == "reactive":
-                return True
-        return False
+        self.text = None
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        if self._check_operator(basedir):
-            result = self.Result.operator
-        elif self._check_reactive(basedir):
-            result = self.Result.reactive
-        else:
-            result = self.Result.unknown
-        self.result = result
-        return result
+        entrypoint = get_entrypoint_from_dispatch(basedir)
+        if entrypoint is None:
+            self.text = "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            return self.Result.nonapplicable
+
+        if not entrypoint.exists():
+            self.text = f"Cannot find the entrypoint file: {str(entrypoint)!r}"
+            return self.Result.errors
+
+        if not entrypoint.is_file():
+            self.text = f"The entrypoint is not a file: {str(entrypoint)!r}"
+            return self.Result.errors
+
+        if not os.access(entrypoint, os.X_OK):
+            self.text = f"The entrypoint file is not executable: {str(entrypoint)!r}"
+            return self.Result.errors
+
+        return self.Result.ok
 
 
 # all checkers to run; the order here is important, as some checkers depend on the
@@ -432,6 +383,7 @@ CHECKERS = [
     JujuConfig,
     JujuMetadata,
     Framework,
+    Entrypoint,
 ]
 
 

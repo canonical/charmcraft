@@ -948,6 +948,7 @@ def test_entrypoint_directory(tmp_path):
     assert linter.text == f"The entrypoint is not a file: {str(entrypoint)!r}"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_entrypoint_non_exec(tmp_path):
     """The pointed entrypoint is not an executable file."""
     entrypoint = tmp_path / "charm"

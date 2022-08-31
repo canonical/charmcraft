@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ from unittest.mock import patch
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.commands.init import InitCommand
+from charmcraft.commands.init import InitCommand, DEFAULT_PROFILE
 from charmcraft.config import Project
 from charmcraft.utils import S_IXALL
 from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
@@ -39,14 +39,14 @@ def mock_pwd():
 
 def test_init_pep257(tmp_path, config):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="J Doe", force=False))
+    cmd.run(Namespace(name="my-charm", author="J Doe", force=False, profile=DEFAULT_PROFILE))
     paths = get_python_filepaths(roots=[str(tmp_path / "src")], python_paths=[])
     pep257_test(paths)
 
 
 def test_init_pep8(tmp_path, config, *, author="J Doe"):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author=author, force=False))
+    cmd.run(Namespace(name="my-charm", author=author, force=False, profile=DEFAULT_PROFILE))
     paths = get_python_filepaths(
         roots=[str(tmp_path / "src"), str(tmp_path / "tests")], python_paths=[]
     )
@@ -59,9 +59,10 @@ def test_init_non_ascii_author(tmp_path, config):
 
 def test_all_the_files(tmp_path, config):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", force=False))
+    cmd.run(
+        Namespace(name="my-charm", author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", force=False, profile=DEFAULT_PROFILE)
+    )
     assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
-        ".flake8",
         ".gitignore",
         ".jujuignore",
         "CONTRIBUTING.md",
@@ -71,14 +72,16 @@ def test_all_the_files(tmp_path, config):
         "charmcraft.yaml",
         "config.yaml",
         "metadata.yaml",
-        "requirements-dev.txt",
+        "pyproject.toml",
         "requirements.txt",
-        "run_tests",
         "src",
         os.path.join("src", "charm.py"),
         "tests",
-        os.path.join("tests", "__init__.py"),
-        os.path.join("tests", "test_charm.py"),
+        os.path.join("tests", "integration"),
+        os.path.join("tests", "integration", "test_charm.py"),
+        os.path.join("tests", "unit"),
+        os.path.join("tests", "unit", "test_charm.py"),
+        "tox.ini",
     ]
 
 
@@ -87,7 +90,9 @@ def test_force(tmp_path, config):
     tmp_file = tmp_path / "README.md"
     with tmp_file.open("w") as f:
         f.write("This is a nonsense readme")
-    cmd.run(Namespace(name="my-charm", author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", force=True))
+    cmd.run(
+        Namespace(name="my-charm", author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", force=True, profile=DEFAULT_PROFILE)
+    )
 
     # Check that init ran
     assert (tmp_path / "LICENSE").exists()
@@ -100,13 +105,13 @@ def test_force(tmp_path, config):
 def test_bad_name(config):
     cmd = InitCommand(config)
     with pytest.raises(CraftError):
-        cmd.run(Namespace(name="1234", author="שראלה ישראל", force=False))
+        cmd.run(Namespace(name="1234", author="שראלה ישראל", force=False, profile=DEFAULT_PROFILE))
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="mocking for pwd/gecos only")
 def test_no_author_gecos(tmp_path, config, mock_pwd):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author=None, force=False))
+    cmd.run(Namespace(name="my-charm", author=None, force=False, profile=DEFAULT_PROFILE))
 
     text = (tmp_path / "src" / "charm.py").read_text()
     assert "Test Gecos Author Name" in text
@@ -114,10 +119,9 @@ def test_no_author_gecos(tmp_path, config, mock_pwd):
 
 def test_executables(tmp_path, config):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="홍길동", force=False))
+    cmd.run(Namespace(name="my-charm", author="홍길동", force=False, profile=DEFAULT_PROFILE))
 
     if os.name == "posix":
-        assert (tmp_path / "run_tests").stat().st_mode & S_IXALL == S_IXALL
         assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
 
 
@@ -138,9 +142,9 @@ def test_tests(tmp_path, config):
             env["PATH"] = bin_path + ":" + env["PATH"]
 
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="だれだれ", force=False))
+    cmd.run(Namespace(name="my-charm", author="だれだれ", force=False, profile=DEFAULT_PROFILE))
 
-    subprocess.run(["./run_tests"], cwd=str(tmp_path), check=True, env=env)
+    subprocess.run(["tox"], cwd=str(tmp_path), check=True, env=env)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
@@ -155,7 +159,7 @@ def test_gecos_missing_in_getpwuid_response(config):
         mock_pwd.return_value = pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))
         msg = "Unable to automatically determine author's name, specify it with --author"
         with pytest.raises(CraftError, match=msg):
-            cmd.run(Namespace(name="my-charm", author=None, force=False))
+            cmd.run(Namespace(name="my-charm", author=None, force=False, profile=DEFAULT_PROFILE))
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
@@ -167,7 +171,7 @@ def test_gecos_missing_user_information(config):
         mock_pwd.side_effect = KeyError("no user")
         msg = "Unable to automatically determine author's name, specify it with --author"
         with pytest.raises(CraftError, match=msg):
-            cmd.run(Namespace(name="my-charm", author=None, force=False))
+            cmd.run(Namespace(name="my-charm", author=None, force=False, profile=DEFAULT_PROFILE))
 
 
 def test_missing_directory(tmp_path, config):
@@ -182,7 +186,7 @@ def test_missing_directory(tmp_path, config):
     )
 
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="testauthor"))
+    cmd.run(Namespace(name="my-charm", author="testauthor", profile=DEFAULT_PROFILE))
 
     # check it run ok
     assert (init_dir / "LICENSE").exists()

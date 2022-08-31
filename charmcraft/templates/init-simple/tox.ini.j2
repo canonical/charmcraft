@@ -1,0 +1,76 @@
+# Copyright {{ year }} {{ author }}
+# See LICENSE file for licensing details.
+
+[tox]
+skipsdist=True
+skip_missing_interpreters = True
+envlist = lint, unit
+
+[vars]
+src_path = {toxinidir}/src/
+tst_path = {toxinidir}/tests/
+;lib_path = {toxinidir}/lib/charms/operator_name_with_underscores
+all_path = {[vars]src_path} {[vars]tst_path} 
+
+[testenv]
+setenv =
+  PYTHONPATH = {toxinidir}:{toxinidir}/lib:{[vars]src_path}
+  PYTHONBREAKPOINT=pdb.set_trace
+  PY_COLORS=1
+passenv =
+  PYTHONPATH
+  CHARM_BUILD_DIR
+  MODEL_SETTINGS
+
+[testenv:fmt]
+description = Apply coding style standards to code
+deps =
+    black
+    isort
+commands =
+    isort {[vars]all_path}
+    black {[vars]all_path}
+
+[testenv:lint]
+description = Check code against coding style standards
+deps =
+    black
+    flake8<5
+    flake8-docstrings
+    flake8-copyright
+    flake8-builtins
+    pyproject-flake8
+    pep8-naming
+    isort
+    codespell
+commands =
+    # uncomment the following line if this charm owns a lib
+    # codespell {[vars]lib_path}
+    codespell {toxinidir}/. --skip {toxinidir}/.git --skip {toxinidir}/.tox \
+      --skip {toxinidir}/build --skip {toxinidir}/lib --skip {toxinidir}/venv \
+      --skip {toxinidir}/.mypy_cache --skip {toxinidir}/icon.svg
+    # pflake8 wrapper supports config from pyproject.toml
+    pflake8 {[vars]all_path}
+    isort --check-only --diff {[vars]all_path}
+    black --check --diff {[vars]all_path}
+
+[testenv:unit]
+description = Run unit tests
+deps =
+    pytest
+    coverage[toml]
+    -r{toxinidir}/requirements.txt
+commands =
+    coverage run --source={[vars]src_path} \
+        -m pytest --ignore={[vars]tst_path}integration -v --tb native -s {posargs}
+    coverage report
+
+[testenv:integration]
+description = Run integration tests
+deps =
+    pytest
+    juju
+    pytest-operator>=0.13.0
+    -r{toxinidir}/requirements.txt
+commands =
+    pytest -v --tb native --ignore={[vars]tst_path}unit --log-cli-level=INFO -s {posargs}

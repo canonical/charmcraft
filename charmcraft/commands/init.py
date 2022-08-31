@@ -31,6 +31,13 @@ try:
 except ImportError:
     pwd = None
 
+# the available profiles and in which directory the template can be found
+PROFILES = {
+    "simple": "init-simple",
+}
+DEFAULT_PROFILE = "simple"
+
+
 _overview = """
 Initialize a charm operator package tree and files.
 
@@ -38,28 +45,32 @@ This command will modify the directory to create the necessary files for a
 charm operator package. By default it will work in the current directory.
 It will setup the following tree of files and directories:
 
-    .
-    ├── metadata.yaml        - Charm operator package description
-    ├── README.md            - Frontpage for your charmhub.io/charm/
-    ├── CONTRIBUTING.md      - Instructions for how to build and develop your charm
-    ├── actions.yaml         - Day-2 action declarations, e.g. backup, restore
-    ├── charmcraft.yaml      - Charm build configuration
-    ├── config.yaml          - Config schema for your operator
-    ├── LICENSE              - Your charm license, we recommend Apache 2
-    ├── requirements.txt     - PyPI dependencies for your charm, with `ops`
     ├── requirements-dev.txt - PyPI for development tooling, notably flake8
-    ├── run_tests
+
+    .
+    ├── actions.yaml           - Day-2 action declarations, e.g. backup, restore
+    ├── charmcraft.yaml        - Charm build configuration
+    ├── config.yaml            - Config schema for your operator
+    ├── CONTRIBUTING.md        - Instructions for how to build and develop your charm
+    ├── LICENSE                - Your charm license, we recommend Apache 2
+    ├── metadata.yaml          - Charm operator package description
+    ├── pyproject.toml         - Configuration for testing, formatting and linting tools
+    ├── README.md              - Frontpage for your charmhub.io/charm/
+    ├── requirements.txt       - PyPI dependencies for your charm, with `ops`
     ├── src
-    │   └── charm.py         - Minimal operator using Python operator framework
-    └── tests
-        ├── __init__.py
-        └── test_charm.py
+    │   └── charm.py           - Minimal operator using Python operator framework
+    ├── tests
+    │   ├── integration
+    │   │   └── test_charm.py  - Integration tests
+    │   └── unit
+    │       └── test_charm.py  - Unit tests
+    └── tox.ini                - Configuration for tox, the tool to run all tests
 
 You will need to edit at least metadata.yaml and README.md.
 
 Your minimal operator code is in src/charm.py which uses the Python operator
 framework from https://github.com/canonical/operator and there are some
-example tests with a harness to run them.
+example unit and integration tests with a harness to run them.
 """
 
 
@@ -91,6 +102,12 @@ class InitCommand(BaseCommand):
             "--force",
             action="store_true",
             help="Initialize even if the directory is not empty (will not overwrite files)",
+        )
+        parser.add_argument(
+            "--profile",
+            choices=list(PROFILES),
+            default=DEFAULT_PROFILE,
+            help=f"Use the specified project profile (defaults to '{DEFAULT_PROFILE}')",
         )
 
     def run(self, args):
@@ -129,7 +146,8 @@ class InitCommand(BaseCommand):
             "class_name": "".join(re.split(r"\W+", args.name.title())) + "Charm",
         }
 
-        env = get_templates_environment("init")
+        template_directory = PROFILES[args.profile]
+        env = get_templates_environment(template_directory)
 
         _todo_rx = re.compile("TODO: (.*)")
         todos = []

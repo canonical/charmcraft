@@ -99,7 +99,7 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${globals[*]} --revision --channel --resource" -- "$cur") )
             ;;
         init)
-            COMPREPLY=( $(compgen -W "${globals[*]} --name --author --force" -- "$cur") )
+            COMPREPLY=( $(compgen -W "${globals[*]} --name --author --force --profile" -- "$cur") )
             ;;
         upload)
             COMPREPLY=( $(compgen -W "${globals[*]} --release --resource --format" -- "$cur") )

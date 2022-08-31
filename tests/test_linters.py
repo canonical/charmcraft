@@ -25,6 +25,7 @@ import pytest
 from charmcraft.linters import (
     CHECKERS,
     CheckType,
+    Entrypoint,
     FATAL,
     Framework,
     IGNORED,
@@ -35,6 +36,7 @@ from charmcraft.linters import (
     UNKNOWN,
     analyze,
     check_dispatch_with_python_entrypoint,
+    get_entrypoint_from_dispatch,
 )
 
 
@@ -47,53 +49,67 @@ PYTHONPATH=lib:venv ./charm.py
 # --- tests for helper functions
 
 
-def test_checkdispatchpython_python(tmp_path):
-    """The charm is written in Python."""
+def test_epfromdispatch_ok(tmp_path):
+    """An entrypoint is found in the dispatch."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
-    entrypoint.touch()
-    entrypoint.chmod(0o700)
-    result = check_dispatch_with_python_entrypoint(tmp_path)
+    result = get_entrypoint_from_dispatch(tmp_path)
     assert result == entrypoint
 
 
-def test_checkdispatchpython_no_dispatch(tmp_path):
+def test_epfromdispatch_no_dispatch(tmp_path):
     """The charm has no dispatch at all."""
-    result = check_dispatch_with_python_entrypoint(tmp_path)
+    result = get_entrypoint_from_dispatch(tmp_path)
     assert result is None
 
 
-def test_checkdispatchpython_inaccessible_dispatch(tmp_path):
+def test_epfromdispatch_inaccessible_dispatch(tmp_path):
     """The charm has a dispatch we can't use."""
     dispatch = tmp_path / "dispatch"
     dispatch.touch()
     dispatch.chmod(0o000)
-    result = check_dispatch_with_python_entrypoint(tmp_path)
+    result = get_entrypoint_from_dispatch(tmp_path)
     assert result is None
 
 
-def test_checkdispatchpython_broken_dispatch(tmp_path):
+def test_epfromdispatch_broken_dispatch(tmp_path):
     """The charm has a dispatch which we can't decode."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_bytes(b"\xC0\xC0")
-    result = check_dispatch_with_python_entrypoint(tmp_path)
+    result = get_entrypoint_from_dispatch(tmp_path)
     assert result is None
 
 
-def test_checkdispatchpython_empty_dispatch(tmp_path):
+def test_epfromdispatch_empty_dispatch(tmp_path):
     """The charm dispatch is empty."""
     dispatch = tmp_path / "dispatch"
     dispatch.write_text("")
-    result = check_dispatch_with_python_entrypoint(tmp_path)
+    result = get_entrypoint_from_dispatch(tmp_path)
     assert result is None
+
+
+def test_checkdispatchpython_python_ok(tmp_path):
+    """The charm is written in Python."""
+    entrypoint = tmp_path / "charm.py"
+    entrypoint.touch(mode=0o700)
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
+        result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result == entrypoint
 
 
 def test_checkdispatchpython_no_entrypoint(tmp_path):
     """Cannot find the entrypoint used in dispatch."""
-    dispatch = tmp_path / "dispatch"
-    dispatch.write_text(EXAMPLE_DISPATCH)
-    result = check_dispatch_with_python_entrypoint(tmp_path)
+    entrypoint = tmp_path / "charm.py"
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
+        result = check_dispatch_with_python_entrypoint(tmp_path)
+    assert result is None
+
+
+def test_checkdispatchpython_nothing_from_dispatch(tmp_path):
+    """The dispatch is not there, or not usable."""
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=None):
+        result = check_dispatch_with_python_entrypoint(tmp_path)
     assert result is None
 
 
@@ -106,10 +122,10 @@ def test_checkdispatchpython_entrypoint_is_not_python(tmp_path):
         ./charm
     """
     )
-    entrypoint = tmp_path / "charm.py"
-    entrypoint.touch()
-    entrypoint.chmod(0o700)
-    result = check_dispatch_with_python_entrypoint(tmp_path)
+    entrypoint = tmp_path / "charm"
+    entrypoint.touch(mode=0o700)
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
+        result = check_dispatch_with_python_entrypoint(tmp_path)
     assert result is None
 
 
@@ -120,7 +136,8 @@ def test_checkdispatchpython_entrypoint_no_exec(tmp_path):
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
-    result = check_dispatch_with_python_entrypoint(tmp_path)
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
+        result = check_dispatch_with_python_entrypoint(tmp_path)
     assert result is None
 
 
@@ -885,3 +902,59 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     result = linter.run(tmp_path)
     assert result == JujuConfig.Result.errors
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
+
+
+# --- tests for Entrypoint checker
+
+
+def test_entrypoint_not_used(tmp_path):
+    """An entrypoint is not really used, nothing to check."""
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch") as mock_check:
+        mock_check.return_value = None
+        result = Entrypoint().run(tmp_path)
+    assert result == Entrypoint.Result.nonapplicable
+    mock_check.assert_called_with(tmp_path)
+
+
+def test_entrypoint_all_ok(tmp_path):
+    """All conditions for 'framework' are in place."""
+    entrypoint = tmp_path / "charm.sh"
+    entrypoint.touch(mode=0o777)
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch") as mock_check:
+        mock_check.return_value = entrypoint
+        result = Entrypoint().run(tmp_path)
+    assert result == Entrypoint.Result.ok
+    mock_check.assert_called_with(tmp_path)
+
+
+def test_entrypoint_missing(tmp_path):
+    """The file does not exist."""
+    entrypoint = tmp_path / "charm"
+    linter = Entrypoint()
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
+        result = linter.run(tmp_path)
+    assert result == Entrypoint.Result.errors
+    assert linter.text == f"Cannot find the entrypoint file: {str(entrypoint)!r}"
+
+
+def test_entrypoint_directory(tmp_path):
+    """The pointed entrypoint is a directory."""
+    entrypoint = tmp_path / "charm"
+    entrypoint.mkdir()
+    linter = Entrypoint()
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
+        result = linter.run(tmp_path)
+    assert result == Entrypoint.Result.errors
+    assert linter.text == f"The entrypoint is not a file: {str(entrypoint)!r}"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_entrypoint_non_exec(tmp_path):
+    """The pointed entrypoint is not an executable file."""
+    entrypoint = tmp_path / "charm"
+    entrypoint.touch()
+    linter = Entrypoint()
+    with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
+        result = linter.run(tmp_path)
+    assert result == Entrypoint.Result.errors
+    assert linter.text == f"The entrypoint file is not executable: {str(entrypoint)!r}"

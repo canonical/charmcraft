@@ -40,11 +40,13 @@ WARNINGS = "warnings"
 ERRORS = "errors"
 FATAL = "fatal"
 OK = "ok"
+NONAPPLICABLE = "nonapplicable"
+
+# the documentation page for "Analyzers and linters"
+BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
 
 
-def check_dispatch_with_python_entrypoint(
-    basedir: pathlib.Path,
-) -> Union[pathlib.Path, None]:
+def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
     """Verify if the charm has a dispatch file pointing to a Python entrypoint.
 
     :returns: the entrypoint path if all succeeds, None otherwise.
@@ -62,9 +64,19 @@ def check_dispatch_with_python_entrypoint(
                 entrypoint_str = shlex.split(last_line)[-1]
     except (IOError, UnicodeDecodeError):
         return
-
+    if not entrypoint_str:
+        return
     entrypoint = basedir / entrypoint_str
-    if entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
+    return entrypoint
+
+
+def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
+    """Verify if the charm has a dispatch file pointing to a Python entrypoint.
+
+    :returns: the entrypoint path if all succeeds, None otherwise.
+    """
+    entrypoint = get_entrypoint_from_dispatch(basedir)
+    if entrypoint and entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
         return entrypoint
 
 
@@ -80,7 +92,7 @@ class Language:
 
     check_type = CheckType.attribute
     name = "language"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--language"
+    url = BASE_DOCS_URL + "#heading--language"
     text = "The charm is written with Python."
 
     # different result constants
@@ -110,7 +122,7 @@ class Framework:
 
     check_type = CheckType.attribute
     name = "framework"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--framework"
+    url = BASE_DOCS_URL + "#heading--framework"
 
     # different result constants
     Result = namedtuple("Result", "operator reactive unknown")(
@@ -214,7 +226,7 @@ class JujuMetadata:
 
     check_type = CheckType.lint
     name = "metadata"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--metadata"
+    url = BASE_DOCS_URL + "#heading--metadata"
 
     # different result constants
     Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
@@ -248,7 +260,7 @@ class JujuActions:
 
     check_type = CheckType.lint
     name = "juju-actions"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-actions"
+    url = BASE_DOCS_URL + "#heading--juju-actions"
     text = "The actions.yaml file is not a valid YAML file."
 
     # different result constants
@@ -282,7 +294,7 @@ class JujuConfig:
 
     check_type = CheckType.lint
     name = "juju-config"
-    url = "https://juju.is/docs/sdk/charmcraft-analyze#heading--juju-config"
+    url = BASE_DOCS_URL + "#heading--juju-config"
 
     # different result constants
     Result = namedtuple("Result", "ok errors")(ok=OK, errors=ERRORS)
@@ -317,6 +329,52 @@ class JujuConfig:
         return self.Result.ok
 
 
+class Entrypoint:
+    """Check the entrypoint is correct.
+
+    It validates that the entrypoint, if used by 'dispatch', ...
+
+    - exists
+    - is a file
+    - is executable
+    """
+
+    check_type = CheckType.lint
+    name = "entrypoint"
+    url = BASE_DOCS_URL + "#heading--entrypoint"
+
+    # different result constants
+    Result = namedtuple("Result", "nonapplicable ok errors")(
+        nonapplicable=NONAPPLICABLE,
+        ok=OK,
+        errors=ERRORS,
+    )
+
+    def __init__(self):
+        self.text = None
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        entrypoint = get_entrypoint_from_dispatch(basedir)
+        if entrypoint is None:
+            self.text = "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            return self.Result.nonapplicable
+
+        if not entrypoint.exists():
+            self.text = f"Cannot find the entrypoint file: {str(entrypoint)!r}"
+            return self.Result.errors
+
+        if not entrypoint.is_file():
+            self.text = f"The entrypoint is not a file: {str(entrypoint)!r}"
+            return self.Result.errors
+
+        if not os.access(entrypoint, os.X_OK):
+            self.text = f"The entrypoint file is not executable: {str(entrypoint)!r}"
+            return self.Result.errors
+
+        return self.Result.ok
+
+
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
 CHECKERS = [
@@ -325,6 +383,7 @@ CHECKERS = [
     JujuConfig,
     JujuMetadata,
     Framework,
+    Entrypoint,
 ]
 
 

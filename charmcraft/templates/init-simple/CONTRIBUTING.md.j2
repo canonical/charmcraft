@@ -31,15 +31,3 @@ Build the charm in this git repository using:
 ```shell
 charmcraft pack
 ```
-
-### Deploy
-
-```bash
-# Create a model
-juju add-model dev
-# Enable DEBUG logging
-juju model-config logging-config="<root>=INFO;unit=DEBUG"
-# Deploy the charm
-juju deploy ./{{ name }}.charm \
-    --resource httpbin-image=kennethreitz/httpbin \
-```

@@ -67,11 +67,9 @@ def test_all_the_files(tmp_path, config):
     cmd.run(create_namespace())
     assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
         ".gitignore",
-        ".jujuignore",
         "CONTRIBUTING.md",
         "LICENSE",
         "README.md",
-        "actions.yaml",
         "charmcraft.yaml",
         "config.yaml",
         "metadata.yaml",
@@ -83,6 +81,7 @@ def test_all_the_files(tmp_path, config):
         os.path.join("tests", "integration"),
         os.path.join("tests", "integration", "test_charm.py"),
         os.path.join("tests", "unit"),
+        os.path.join("tests", "unit", "__init__.py"),
         os.path.join("tests", "unit", "test_charm.py"),
         "tox.ini",
     ]

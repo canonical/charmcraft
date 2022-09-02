@@ -37,16 +37,21 @@ def mock_pwd():
         yield mock_pwd
 
 
+def create_namespace(*, name="my-charm", author="J Doe", force=False):
+    """Helper to create a valid namespace."""
+    return Namespace(name=name, author=author, force=force, profile=DEFAULT_PROFILE)
+
+
 def test_init_pep257(tmp_path, config):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="J Doe", force=False, profile=DEFAULT_PROFILE))
+    cmd.run(create_namespace())
     paths = get_python_filepaths(roots=[str(tmp_path / "src")], python_paths=[])
     pep257_test(paths)
 
 
 def test_init_pep8(tmp_path, config, *, author="J Doe"):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author=author, force=False, profile=DEFAULT_PROFILE))
+    cmd.run(create_namespace(author=author))
     paths = get_python_filepaths(
         roots=[str(tmp_path / "src"), str(tmp_path / "tests")], python_paths=[]
     )
@@ -59,9 +64,7 @@ def test_init_non_ascii_author(tmp_path, config):
 
 def test_all_the_files(tmp_path, config):
     cmd = InitCommand(config)
-    cmd.run(
-        Namespace(name="my-charm", author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", force=False, profile=DEFAULT_PROFILE)
-    )
+    cmd.run(create_namespace())
     assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
         ".gitignore",
         ".jujuignore",
@@ -90,9 +93,7 @@ def test_force(tmp_path, config):
     tmp_file = tmp_path / "README.md"
     with tmp_file.open("w") as f:
         f.write("This is a nonsense readme")
-    cmd.run(
-        Namespace(name="my-charm", author="ಅಪರಿಚಿತ ವ್ಯಕ್ತಿ", force=True, profile=DEFAULT_PROFILE)
-    )
+    cmd.run(create_namespace(force=True))
 
     # Check that init ran
     assert (tmp_path / "LICENSE").exists()
@@ -105,13 +106,13 @@ def test_force(tmp_path, config):
 def test_bad_name(config):
     cmd = InitCommand(config)
     with pytest.raises(CraftError):
-        cmd.run(Namespace(name="1234", author="שראלה ישראל", force=False, profile=DEFAULT_PROFILE))
+        cmd.run(create_namespace(name="1234"))
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="mocking for pwd/gecos only")
 def test_no_author_gecos(tmp_path, config, mock_pwd):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author=None, force=False, profile=DEFAULT_PROFILE))
+    cmd.run(create_namespace(author=None))
 
     text = (tmp_path / "src" / "charm.py").read_text()
     assert "Test Gecos Author Name" in text
@@ -119,7 +120,7 @@ def test_no_author_gecos(tmp_path, config, mock_pwd):
 
 def test_executables(tmp_path, config):
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="홍길동", force=False, profile=DEFAULT_PROFILE))
+    cmd.run(create_namespace())
 
     if os.name == "posix":
         assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
@@ -142,7 +143,7 @@ def test_tests(tmp_path, config):
             env["PATH"] = bin_path + ":" + env["PATH"]
 
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="だれだれ", force=False, profile=DEFAULT_PROFILE))
+    cmd.run(create_namespace())
 
     subprocess.run(["tox"], cwd=str(tmp_path), check=True, env=env)
 
@@ -159,7 +160,7 @@ def test_gecos_missing_in_getpwuid_response(config):
         mock_pwd.return_value = pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))
         msg = "Unable to automatically determine author's name, specify it with --author"
         with pytest.raises(CraftError, match=msg):
-            cmd.run(Namespace(name="my-charm", author=None, force=False, profile=DEFAULT_PROFILE))
+            cmd.run(create_namespace(author=None))
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
@@ -171,7 +172,7 @@ def test_gecos_missing_user_information(config):
         mock_pwd.side_effect = KeyError("no user")
         msg = "Unable to automatically determine author's name, specify it with --author"
         with pytest.raises(CraftError, match=msg):
-            cmd.run(Namespace(name="my-charm", author=None, force=False, profile=DEFAULT_PROFILE))
+            cmd.run(create_namespace(author=None))
 
 
 def test_missing_directory(tmp_path, config):
@@ -186,7 +187,7 @@ def test_missing_directory(tmp_path, config):
     )
 
     cmd = InitCommand(config)
-    cmd.run(Namespace(name="my-charm", author="testauthor", profile=DEFAULT_PROFILE))
+    cmd.run(create_namespace())
 
     # check it run ok
     assert (init_dir / "LICENSE").exists()

@@ -58,6 +58,7 @@ dev_requires = [
     "pydocstyle",
     "pytest",
     "responses",
+    "tox",
 ]
 
 extras_require = {

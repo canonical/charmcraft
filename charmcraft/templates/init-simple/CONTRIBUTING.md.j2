@@ -1,0 +1,33 @@
+# Contributing
+
+## Overview
+
+This document explains the processes and practices recommended for contributing enhancements to
+this operator.
+
+## Developing
+
+You can use the environments created by `tox` for development:
+
+```shell
+tox --notest -e unit
+source .tox/unit/bin/activate
+```
+
+### Testing
+
+```shell
+tox -e fmt           # update your code according to linting rules
+tox -e lint          # code style
+tox -e unit          # unit tests
+tox -e integration   # integration tests
+tox                  # runs 'lint' and 'unit' environments
+```
+
+## Build charm
+
+Build the charm in this git repository using:
+
+```shell
+charmcraft pack
+```

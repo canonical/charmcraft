@@ -27,7 +27,7 @@ from collections import namedtuple
 from operator import attrgetter
 
 import yaml
-from craft_cli import emit
+from craft_cli import emit, ArgumentParsingError
 from craft_cli.errors import CraftError
 from craft_store import attenuations
 from craft_store.errors import CredentialsUnavailable
@@ -162,10 +162,6 @@ class LoginCommand(BaseCommand):
         restrictive_options = ["charm", "bundle", "channel", "permission", "ttl"]
         if any(getattr(parsed_args, option) is not None for option in restrictive_options):
             if parsed_args.export is None:
-                # XXX Facundo 2021-11-17: This is imported here to break a cyclic import. It will
-                # go away when we move this error to craft-cli lib.
-                from charmcraft.main import ArgumentParsingError
-
                 raise ArgumentParsingError(
                     "The restrictive options 'bundle', 'channel', 'charm', 'permission' or 'ttl' "
                     "can only be used when credentials are exported."
@@ -506,7 +502,6 @@ class UploadCommand(BaseCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        # XXX Facundo 2022-06-09: we need to test that the proper args are defined here
         self.include_format_option(parser)
 
         parser.add_argument("filepath", type=useful_filepath, help="The charm or bundle to upload")

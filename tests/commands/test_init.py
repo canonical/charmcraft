@@ -81,7 +81,6 @@ def test_all_the_files(tmp_path, config):
         os.path.join("tests", "integration"),
         os.path.join("tests", "integration", "test_charm.py"),
         os.path.join("tests", "unit"),
-        os.path.join("tests", "unit", "__init__.py"),
         os.path.join("tests", "unit", "test_charm.py"),
         "tox.ini",
     ]

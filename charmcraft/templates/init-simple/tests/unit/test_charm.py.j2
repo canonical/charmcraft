@@ -5,10 +5,15 @@
 
 import unittest
 
+import ops.testing
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import {{ class_name }}
+
+# Enable more accurate simulation of container networking.
+# For more information, see https://juju.is/docs/sdk/testing#heading--simulate-can-connect
+ops.testing.SIMULATE_CAN_CONNECT = True
 
 
 class TestCharm(unittest.TestCase):

@@ -60,7 +60,6 @@ It will setup the following tree of files and directories:
     │   ├── integration
     │   │   └── test_charm.py  - Integration tests
     │   └── unit
-    │       ├── __init__.py
     │       └── test_charm.py  - Unit tests
     └── tox.ini                - Configuration for tox, the tool to run all tests
 
@@ -69,6 +68,17 @@ You will need to edit at least metadata.yaml and README.md.
 Your minimal operator code is in src/charm.py which uses the Python operator
 framework from https://github.com/canonical/operator and there are some
 example unit and integration tests with a harness to run them.
+"""
+
+SUCCESS_MESSAGE = """\
+Charmed operator package file and directory tree initialised.
+
+Now edit the following package files to provide fundamental charm metadata and other information:
+
+metadata.yaml
+config.yaml
+src/charm.py
+README.md
 """
 
 
@@ -164,4 +174,5 @@ class InitCommand(BaseCommand):
                 if template_name in executables and os.name == "posix":
                     make_executable(fh)
                     emit.debug("  made executable")
-        emit.message("Charm operator package file and directory tree initialised.")
+        for line in SUCCESS_MESSAGE.split("\n"):
+            emit.message(line)

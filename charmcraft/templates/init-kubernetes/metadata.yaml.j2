@@ -1,10 +1,10 @@
 # This file populates the Overview on Charmhub.
-# See https://juju.is/docs/sdk/metadata-reference for a checklist and guidance.
+# See https://juju.is/docs/some-url-to-be-determined/ for a checklist and guidance.
 
 # The charm package name, no spaces (required)
 # See https://juju.is/docs/sdk/naming#heading--naming-charms for guidance.
 name: {{ name }}
- 
+
 # The following metadata are human-readable and will be published prominently on Charmhub.
 
 # (Recommended)
@@ -22,22 +22,19 @@ description: |
 
   Finally, a paragraph that describes whom the charm is useful for.
 
-# The containers and resources metadata apply to Kubernetes charms only.
-# Remove them if not required.
-
 # Your workload’s containers.
 containers:
-  httpbin:
-    resource: httpbin-image
+  some-container:
+    resource: some-oci-resource
 
 # This field populates the Resources tab on Charmhub.
 resources:
   # An OCI image resource for each container listed above.
   # You may remove this if your charm will run without a workload sidecar container.
-  httpbin-image:
+  some-container-image:
     type: oci-image
-    description: OCI image for httpbin
+    description: OCI image for the 'some-container' container
     # The upstream-source field is ignored by Juju. It is included here as a reference
     # so the integration testing suite knows which image to deploy during testing. This field
     # is also used by the 'canonical/charming-actions' Github action for automated releasing.
-    upstream-source: kennethreitz/httpbin
+    upstream-source: some-repo/some-image:some-tag

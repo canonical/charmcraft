@@ -34,6 +34,7 @@ except ImportError:
 # the available profiles and in which directory the template can be found
 PROFILES = {
     "simple": "init-simple",
+    "kubernetes": "init-kubernetes",
 }
 DEFAULT_PROFILE = "simple"
 

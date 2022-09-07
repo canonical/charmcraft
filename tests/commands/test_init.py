@@ -67,11 +67,9 @@ def test_all_the_files(tmp_path, config):
     cmd.run(create_namespace())
     assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
         ".gitignore",
-        ".jujuignore",
         "CONTRIBUTING.md",
         "LICENSE",
         "README.md",
-        "actions.yaml",
         "charmcraft.yaml",
         "config.yaml",
         "metadata.yaml",

@@ -1,11 +1,6 @@
 # Contributing
 
-## Overview
-
-This document explains the processes and practices recommended for contributing enhancements to
-this operator.
-
-## Developing
+To make contributions to this charm, you'll need a working [development setup](https://juju.is/docs/sdk/dev-setup).
 
 You can use the environments created by `tox` for development:
 
@@ -14,7 +9,10 @@ tox --notest -e unit
 source .tox/unit/bin/activate
 ```
 
-### Testing
+## Testing
+
+This project uses `tox` for managing test environments. There are some pre-configured environments
+that can be used for linting and formatting code when you're preparing contributions to the charm:
 
 ```shell
 tox -e fmt           # update your code according to linting rules
@@ -24,10 +22,12 @@ tox -e integration   # integration tests
 tox                  # runs 'lint' and 'unit' environments
 ```
 
-## Build charm
+## Build the charm
 
 Build the charm in this git repository using:
 
 ```shell
 charmcraft pack
 ```
+
+<!-- You may want to include any contribution/style guidelines in this document>

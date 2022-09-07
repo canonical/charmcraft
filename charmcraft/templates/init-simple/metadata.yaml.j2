@@ -1,25 +1,43 @@
-# Copyright {{ year }} {{ author }}
-# See LICENSE file for licensing details.
+# This file populates the Overview on Charmhub.
+# See https://juju.is/docs/sdk/metadata-reference for a checklist and guidance.
 
-# For a complete list of supported options, see:
-# https://juju.is/docs/sdk/metadata-reference
+# The charm package name, no spaces (required)
+# See https://juju.is/docs/sdk/naming#heading--naming-charms for guidance.
 name: {{ name }}
-display-name: |
-  TEMPLATE-TODO: fill out a display name for the Charmcraft store
-description: |
-  TEMPLATE-TODO: fill out the charm's description
-summary: |
-  TEMPLATE-TODO: fill out the charm's summary
+ 
+# The following metadata are human-readable and will be published prominently on Charmhub.
 
-# TEMPLATE-TODO: replace with containers for your workload (delete for non-k8s)
+# (Recommended)
+display-name: Charm Template
+
+# (Required)
+summary: A very short one-line summary of the charm.
+
+description: |
+  A single sentence that says what the charm is, concisely and memorably.
+
+  A paragraph of one to three short sentences, that describe what the charm does.
+
+  A third paragraph that explains what need the charm meets.
+
+  Finally, a paragraph that describes whom the charm is useful for.
+
+# The containers and resources metadata apply to Kubernetes charms only.
+# Remove them if not required.
+
+# Your workload’s containers.
 containers:
   httpbin:
-    resource: httpbin-image
+    resource: httpbin
 
-# TEMPLATE-TODO: each container defined above must specify an oci-image resource
+# This field populates the Resources tab on Charmhub.
 resources:
+  # An OCI image resource for each container listed above.
+  # You may remove this if your charm will run without a workload sidecar container.
   httpbin-image:
     type: oci-image
-    description: OCI image for httpbin (kennethreitz/httpbin)
-    # Included for simplicity in integration tests
+    description: OCI image for httpbin
+    # The upstream-source field is ignored by Juju. It is included here as a reference
+    # so the integration testing suite knows which image to deploy during testing. This field
+    # is also used by the 'canonical/charming-actions' Github action for automated releasing.
     upstream-source: kennethreitz/httpbin

@@ -1,14 +1,11 @@
-# Copyright {{ year }} {{ author }}
-# See LICENSE file for licensing details.
+# This file configures Charmcraft.
+# See https://juju.is/docs/sdk/charmcraft-config for guidance.
 
-# Learn more about charmcraft.yaml configuration at:
-# https://juju.is/docs/sdk/charmcraft-config
-#
-type: "charm"
+type: charm
 bases:
   - build-on:
-    - name: "ubuntu"
+    - name: ubuntu
       channel: "20.04"
     run-on:
-    - name: "ubuntu"
+    - name: ubuntu
       channel: "20.04"

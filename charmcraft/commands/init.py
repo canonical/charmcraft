@@ -45,10 +45,7 @@ This command will modify the directory to create the necessary files for a
 charm operator package. By default it will work in the current directory.
 It will setup the following tree of files and directories:
 
-    ├── requirements-dev.txt - PyPI for development tooling, notably flake8
-
     .
-    ├── actions.yaml           - Day-2 action declarations, e.g. backup, restore
     ├── charmcraft.yaml        - Charm build configuration
     ├── config.yaml            - Config schema for your operator
     ├── CONTRIBUTING.md        - Instructions for how to build and develop your charm
@@ -71,6 +68,17 @@ You will need to edit at least metadata.yaml and README.md.
 Your minimal operator code is in src/charm.py which uses the Python operator
 framework from https://github.com/canonical/operator and there are some
 example unit and integration tests with a harness to run them.
+"""
+
+SUCCESS_MESSAGE = """\
+Charmed operator package file and directory tree initialised.
+
+Now edit the following package files to provide fundamental charm metadata and other information:
+
+metadata.yaml
+config.yaml
+src/charm.py
+README.md
 """
 
 
@@ -149,8 +157,6 @@ class InitCommand(BaseCommand):
         template_directory = PROFILES[args.profile]
         env = get_templates_environment(template_directory)
 
-        _todo_rx = re.compile("TODO: (.*)")
-        todos = []
         executables = ["run_tests", "src/charm.py"]
         for template_name in env.list_templates():
             if not template_name.endswith(".j2"):
@@ -165,15 +171,8 @@ class InitCommand(BaseCommand):
             with path.open("wt", encoding="utf8") as fh:
                 out = template.render(context)
                 fh.write(out)
-                for todo in _todo_rx.findall(out):
-                    todos.append((template_name, todo))
                 if template_name in executables and os.name == "posix":
                     make_executable(fh)
                     emit.debug("  made executable")
-        emit.message("Charm operator package file and directory tree initialized.")
-        if todos:
-            emit.message("TODO:")
-            emit.message("")
-            width = max(len(i[0]) for i in todos) + 2
-            for fn, todo in todos:
-                emit.message(f"{fn:>{width}s}: {todo}")
+        for line in SUCCESS_MESSAGE.split("\n"):
+            emit.message(line)

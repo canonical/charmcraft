@@ -35,9 +35,7 @@ commands =
 description = Check code against coding style standards
 deps =
     black
-    flake8<5
     flake8-docstrings
-    flake8-copyright
     flake8-builtins
     pyproject-flake8
     pep8-naming
@@ -70,7 +68,7 @@ description = Run integration tests
 deps =
     pytest
     juju
-    pytest-operator>=0.13.0
+    pytest-operator
     -r{toxinidir}/requirements.txt
 commands =
     pytest -v --tb native --ignore={[vars]tst_path}unit --log-cli-level=INFO -s {posargs}

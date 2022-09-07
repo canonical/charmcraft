@@ -24,5 +24,6 @@ class {{ class_name }}(CharmBase):
         """Handle pebble-ready event."""
         self.unit.status = ActiveStatus()
 
+
 if __name__ == "__main__":  # pragma: nocover
     main({{ class_name }})

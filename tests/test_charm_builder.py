@@ -50,8 +50,8 @@ def test_build_generics_simple_files(tmp_path):
     entrypoint.touch()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
     linked_entrypoint = builder.handle_generic_paths()
@@ -83,8 +83,8 @@ def test_build_generics_simple_dir(tmp_path):
     somedir.mkdir(mode=0o700)
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
     builder.handle_generic_paths()
@@ -110,8 +110,8 @@ def test_build_generics_ignored_file(tmp_path, emitter):
     entrypoint.touch()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
 
@@ -142,8 +142,8 @@ def test_build_generics_ignored_dir(tmp_path, emitter):
     entrypoint.touch()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
 
@@ -197,8 +197,8 @@ def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
     dir5.mkdir()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
 
@@ -277,8 +277,8 @@ def test_build_generics_symlink_file(tmp_path):
     the_symlink.symlink_to(entrypoint)
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
     builder.handle_generic_paths()
@@ -308,8 +308,8 @@ def test_build_generics_symlink_dir(tmp_path):
     the_symlink.symlink_to(somedir)
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
     builder.handle_generic_paths()
@@ -345,8 +345,8 @@ def test_build_generics_symlink_deep(tmp_path):
     the_symlink.symlink_to(original_target)
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
     builder.handle_generic_paths()
@@ -377,8 +377,8 @@ def test_build_generics_symlink_file_outside(tmp_path, emitter):
     the_symlink.symlink_to(outside_project)
 
     builder = CharmBuilder(
-        charmdir=project_dir,
-        builddir=build_dir,
+        builddir=project_dir,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
     builder.handle_generic_paths()
@@ -407,8 +407,8 @@ def test_build_generics_symlink_directory_outside(tmp_path, emitter):
     the_symlink.symlink_to(outside_project)
 
     builder = CharmBuilder(
-        charmdir=project_dir,
-        builddir=build_dir,
+        builddir=project_dir,
+        installdir=build_dir,
         entrypoint=entrypoint,
     )
     builder.handle_generic_paths()
@@ -437,8 +437,8 @@ def test_build_generics_different_filetype(tmp_path, emitter, monkeypatch):
     sock.bind("test-socket")
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=tmp_path / entrypoint,
     )
     builder.handle_generic_paths()
@@ -459,8 +459,8 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     linked_entrypoint = build_dir / "somestuff.py"
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
     builder.handle_dispatcher(linked_entrypoint)
@@ -484,8 +484,8 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path):
         fh.write(b"abc")
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
     builder.handle_dispatcher("whatever")
@@ -506,8 +506,8 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     included_dispatcher = build_dir / DISPATCH_FILENAME
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
     with patch("charmcraft.charm_builder.MANDATORY_HOOK_NAMES", {"testhook"}):
@@ -537,8 +537,8 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
     linked_entrypoint = build_dir / "somestuff.py"
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
     with patch("charmcraft.charm_builder.MANDATORY_HOOK_NAMES", {"testhook"}):
@@ -572,8 +572,8 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, emitter
     included_dispatcher = build_dir / DISPATCH_FILENAME
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
     builder.handle_dispatcher(built_charm_script)
@@ -597,8 +597,8 @@ def test_build_dependencies_virtualenv_simple(tmp_path, emitter):
     reqs_file.touch()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=[],
@@ -636,8 +636,8 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, emitter):
     reqs_file_1.touch()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=[],
@@ -677,8 +677,8 @@ def test_build_dependencies_virtualenv_none(tmp_path, emitter):
     build_dir.mkdir()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=[],
@@ -699,8 +699,8 @@ def test_build_dependencies_virtualenv_packages(tmp_path, emitter):
     build_dir.mkdir()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=["pkg1", "pkg2"],
@@ -731,8 +731,8 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, emitter):
     build_dir.mkdir()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=["pkg1", "pkg2"],
         python_packages=[],
@@ -768,8 +768,8 @@ def test_build_dependencies_virtualenv_all(tmp_path, emitter):
     reqs_file_1.touch()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=["pkg1", "pkg2"],
         python_packages=["pkg3", "pkg4"],
@@ -812,8 +812,8 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, emitter):
     build_dir.mkdir()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=["ops"],
@@ -864,8 +864,8 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
     build_dir.mkdir()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=["ops"],
@@ -916,8 +916,8 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
     build_dir.mkdir()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=["ops"],
@@ -988,8 +988,8 @@ def test_build_dependencies_no_reused_different_dependencies(
     binary_python_packages = ["binthing"]
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=binary_python_packages,
         python_packages=python_packages,
@@ -1049,8 +1049,8 @@ def test_build_dependencies_reused(tmp_path, emitter):
     reqs_file.touch()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
         binary_python_packages=[],
         python_packages=[],
@@ -1101,8 +1101,8 @@ def test_builder_without_jujuignore(tmp_path):
     build_dir.mkdir()
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
     ignore = builder._load_juju_ignore()
@@ -1121,8 +1121,8 @@ def test_builder_with_jujuignore(tmp_path):
         ignores.write("*.py\n" "/h\xef.txt\n")
 
     builder = CharmBuilder(
-        charmdir=tmp_path,
-        builddir=build_dir,
+        builddir=tmp_path,
+        installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
     ignore = builder._load_juju_ignore()
@@ -1138,13 +1138,14 @@ def test_builder_arguments_defaults(tmp_path):
     """The arguments passed to the cli must be correctly parsed."""
 
     def mock_build_charm(self):
-        assert self.charmdir == pathlib.Path("charmdir")
-        assert self.buildpath == pathlib.Path("builddir")
+        assert self.builddir == pathlib.Path("builddir")
+        assert self.installdir == pathlib.Path("installdir")
         assert self.entrypoint == pathlib.Path("src/charm.py")
         assert self.requirement_paths == []
         sys.exit(42)
 
-    with patch.object(sys, "argv", ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]):
+    fake_argv = ["cmd", "--builddir", "builddir", "--installdir", "installdir"]
+    with patch.object(sys, "argv", fake_argv):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
             with patch("charmcraft.charm_builder.emit.init"):
                 with pytest.raises(SystemExit) as raised:
@@ -1156,13 +1157,13 @@ def test_builder_arguments_full(tmp_path):
     """The arguments passed to the cli must be correctly parsed."""
 
     def mock_build_charm(self):
-        assert self.charmdir == pathlib.Path("charmdir")
-        assert self.buildpath == pathlib.Path("builddir")
+        assert self.builddir == pathlib.Path("builddir")
+        assert self.installdir == pathlib.Path("installdir")
         assert self.entrypoint == pathlib.Path("src/charm.py")
         assert self.requirement_paths == [pathlib.Path("reqs1.txt"), pathlib.Path("reqs2.txt")]
         sys.exit(42)
 
-    fake_argv = ["cmd", "--charmdir", "charmdir", "--builddir", "builddir"]
+    fake_argv = ["cmd", "--builddir", "builddir", "--installdir", "installdir"]
     fake_argv += ["-r" "reqs1.txt", "--requirement", "reqs2.txt"]
     with patch.object(sys, "argv", fake_argv):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):

@@ -24,7 +24,7 @@ from unittest.mock import patch
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.commands.init import InitCommand, DEFAULT_PROFILE
+from charmcraft.commands.init import InitCommand, DEFAULT_PROFILE, PROFILES
 from charmcraft.config import Project
 from charmcraft.utils import S_IXALL
 from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
@@ -37,21 +37,23 @@ def mock_pwd():
         yield mock_pwd
 
 
-def create_namespace(*, name="my-charm", author="J Doe", force=False):
+def create_namespace(*, name="my-charm", author="J Doe", force=False, profile=DEFAULT_PROFILE):
     """Helper to create a valid namespace."""
-    return Namespace(name=name, author=author, force=force, profile=DEFAULT_PROFILE)
+    return Namespace(name=name, author=author, force=force, profile=profile)
 
 
-def test_init_pep257(tmp_path, config):
+@pytest.mark.parametrize("profile", list(PROFILES))
+def test_init_pep257(tmp_path, config, profile):
     cmd = InitCommand(config)
-    cmd.run(create_namespace())
+    cmd.run(create_namespace(profile=profile))
     paths = get_python_filepaths(roots=[str(tmp_path / "src")], python_paths=[])
     pep257_test(paths)
 
 
-def test_init_pep8(tmp_path, config, *, author="J Doe"):
+@pytest.mark.parametrize("profile", list(PROFILES))
+def test_init_pep8(tmp_path, config, *, author="J Doe", profile):
     cmd = InitCommand(config)
-    cmd.run(create_namespace(author=author))
+    cmd.run(create_namespace(author=author, profile=profile))
     paths = get_python_filepaths(
         roots=[str(tmp_path / "src"), str(tmp_path / "tests")], python_paths=[]
     )
@@ -59,21 +61,21 @@ def test_init_pep8(tmp_path, config, *, author="J Doe"):
 
 
 def test_init_non_ascii_author(tmp_path, config):
-    test_init_pep8(tmp_path, config, author="فلانة الفلانية")
+    test_init_pep8(tmp_path, config, author="فلانة الفلانية", profile=DEFAULT_PROFILE)
 
 
-def test_all_the_files(tmp_path, config):
+def test_all_the_files_simple(tmp_path, config):
     cmd = InitCommand(config)
     cmd.run(create_namespace())
-    assert sorted(str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")) == [
+    assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
         ".gitignore",
+        "charmcraft.yaml",
         "CONTRIBUTING.md",
         "LICENSE",
-        "README.md",
-        "charmcraft.yaml",
         "config.yaml",
         "metadata.yaml",
         "pyproject.toml",
+        "README.md",
         "requirements.txt",
         "src",
         os.path.join("src", "charm.py"),
@@ -83,7 +85,30 @@ def test_all_the_files(tmp_path, config):
         os.path.join("tests", "unit"),
         os.path.join("tests", "unit", "test_charm.py"),
         "tox.ini",
-    ]
+    }
+
+
+def test_all_the_files_kubernetes(tmp_path, config):
+    cmd = InitCommand(config)
+    cmd.run(create_namespace(profile="kubernetes"))
+    assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
+        ".gitignore",
+        "charmcraft.yaml",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "metadata.yaml",
+        "pyproject.toml",
+        "README.md",
+        "requirements.txt",
+        "src",
+        os.path.join("src", "charm.py"),
+        "tests",
+        os.path.join("tests", "integration"),
+        os.path.join("tests", "integration", "test_charm.py"),
+        os.path.join("tests", "unit"),
+        os.path.join("tests", "unit", "test_charm.py"),
+        "tox.ini",
+    }
 
 
 def test_force(tmp_path, config):
@@ -125,7 +150,8 @@ def test_executables(tmp_path, config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-def test_tests(tmp_path, config):
+@pytest.mark.parametrize("profile", list(PROFILES))
+def test_tests(tmp_path, config, profile):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
     # virtualenv libs and bins (if any), as they need them, but we're not creating a
     # venv for the local tests (note that for CI doesn't use a venv)
@@ -141,7 +167,7 @@ def test_tests(tmp_path, config):
             env["PATH"] = bin_path + ":" + env["PATH"]
 
     cmd = InitCommand(config)
-    cmd.run(create_namespace())
+    cmd.run(create_namespace(profile=profile))
 
     subprocess.run(["tox"], cwd=str(tmp_path), check=True, env=env)
 

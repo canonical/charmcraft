@@ -142,7 +142,7 @@ jobs:
           pushd destructive-mode-tests
           source /etc/os-release
           charmcraft -v init --author testuser
-          sed -i "s|20.04|$VERSION_ID|g" charmcraft.yaml
+          sed -i "s|22.04|$VERSION_ID|g" charmcraft.yaml
           charmcraft -v pack --destructive-mode
           test -f "destructive-mode-tests_ubuntu-$VERSION_ID-amd64.charm"
           popd
@@ -150,7 +150,7 @@ jobs:
           mkdir -p build-packages-test
           pushd build-packages-test
           charmcraft -v init --author testuser
-          sed -i "s|20.04|$VERSION_ID|g" charmcraft.yaml
+          sed -i "s|22.04|$VERSION_ID|g" charmcraft.yaml
           echo "ignore me" > venv
           touch extra_file.txt
           cat <<- EOF >> charmcraft.yaml
@@ -180,7 +180,7 @@ jobs:
           mkdir -p python-packages-test
           pushd python-packages-test
           charmcraft -v init --author testuser
-          sed -i "s|20.04|$VERSION_ID|g" charmcraft.yaml
+          sed -i "s|22.04|$VERSION_ID|g" charmcraft.yaml
           cat <<- EOF >> charmcraft.yaml
           parts:
             charm:
@@ -193,7 +193,7 @@ jobs:
           mkdir -p binary-python-packages-test
           pushd binary-python-packages-test
           charmcraft -v init --author testuser
-          sed -i "s|20.04|$VERSION_ID|g" charmcraft.yaml
+          sed -i "s|22.04|$VERSION_ID|g" charmcraft.yaml
           cat <<- EOF >> charmcraft.yaml
           parts:
             charm:

@@ -67,16 +67,16 @@ class CharmBuilder:
 
     def __init__(
         self,
-        charmdir: pathlib.Path,
         builddir: pathlib.Path,
+        installdir: pathlib.Path,
         entrypoint: pathlib.Path,
         allow_pip_binary: bool = None,
         binary_python_packages: List[str] = None,
         python_packages: List[str] = None,
         requirements: List[pathlib.Path] = None,
     ):
-        self.charmdir = charmdir
-        self.buildpath = builddir
+        self.builddir = builddir
+        self.installdir = installdir
         self.entrypoint = entrypoint
         self.allow_pip_binary = allow_pip_binary
         self.binary_python_packages = binary_python_packages
@@ -87,11 +87,11 @@ class CharmBuilder:
 
     def build_charm(self) -> None:
         """Build the charm."""
-        emit.progress(f"Building charm in {str(self.buildpath)!r}")
+        emit.progress(f"Building charm in {str(self.installdir)!r}")
 
-        if self.buildpath.exists():
-            shutil.rmtree(str(self.buildpath))
-        self.buildpath.mkdir()
+        if self.installdir.exists():
+            shutil.rmtree(str(self.installdir))
+        self.installdir.mkdir()
 
         linked_entrypoint = self.handle_generic_paths()
         self.handle_dispatcher(linked_entrypoint)
@@ -99,7 +99,7 @@ class CharmBuilder:
 
     def _load_juju_ignore(self):
         ignore = JujuIgnore(default_juju_ignore)
-        path = self.charmdir / ".jujuignore"
+        path = self.builddir / ".jujuignore"
         if path.exists():
             with path.open("r", encoding="utf-8") as ignores:
                 ignore.extend_patterns(ignores)
@@ -111,11 +111,11 @@ class CharmBuilder:
         It also verifies that the linked dir or file is inside the project.
         """
         resolved_path = src_path.resolve()
-        if self.charmdir in resolved_path.parents:
+        if self.builddir in resolved_path.parents:
             relative_link = relativise(src_path, resolved_path)
             dest_path.symlink_to(relative_link)
         else:
-            rel_path = src_path.relative_to(self.charmdir)
+            rel_path = src_path.relative_to(self.builddir)
             emit.debug(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
 
     @instrum.Timer("Handling generic paths")
@@ -130,9 +130,9 @@ class CharmBuilder:
         """
         emit.progress("Linking in generic paths")
 
-        for basedir, dirnames, filenames in os.walk(str(self.charmdir), followlinks=False):
+        for basedir, dirnames, filenames in os.walk(str(self.builddir), followlinks=False):
             abs_basedir = pathlib.Path(basedir)
-            rel_basedir = abs_basedir.relative_to(self.charmdir)
+            rel_basedir = abs_basedir.relative_to(self.builddir)
 
             # process the directories
             ignored = []
@@ -144,10 +144,10 @@ class CharmBuilder:
                     emit.debug(f"Ignoring directory because of rules: {str(rel_path)!r}")
                     ignored.append(pos)
                 elif abs_path.is_symlink():
-                    dest_path = self.buildpath / rel_path
+                    dest_path = self.installdir / rel_path
                     self.create_symlink(abs_path, dest_path)
                 else:
-                    dest_path = self.buildpath / rel_path
+                    dest_path = self.installdir / rel_path
                     dest_path.mkdir(mode=abs_path.stat().st_mode)
 
             # in the future don't go inside ignored directories
@@ -162,10 +162,10 @@ class CharmBuilder:
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
                     emit.debug(f"Ignoring file because of rules: {str(rel_path)!r}")
                 elif abs_path.is_symlink():
-                    dest_path = self.buildpath / rel_path
+                    dest_path = self.installdir / rel_path
                     self.create_symlink(abs_path, dest_path)
                 elif abs_path.is_file():
-                    dest_path = self.buildpath / rel_path
+                    dest_path = self.installdir / rel_path
                     try:
                         os.link(str(abs_path), str(dest_path))
                     except PermissionError:
@@ -179,7 +179,7 @@ class CharmBuilder:
                     emit.debug(f"Ignoring file because of type: {str(rel_path)!r}")
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
-        linked_entrypoint = self.buildpath / self.entrypoint.relative_to(self.charmdir)
+        linked_entrypoint = self.installdir / self.entrypoint.relative_to(self.builddir)
 
         return linked_entrypoint
 
@@ -187,11 +187,11 @@ class CharmBuilder:
     def handle_dispatcher(self, linked_entrypoint):
         """Handle modern and classic dispatch mechanisms."""
         # dispatch mechanism, create one if wasn't provided by the project
-        dispatch_path = self.buildpath / DISPATCH_FILENAME
+        dispatch_path = self.installdir / DISPATCH_FILENAME
         if not dispatch_path.exists():
             emit.progress("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
-                entrypoint_relative_path=linked_entrypoint.relative_to(self.buildpath)
+                entrypoint_relative_path=linked_entrypoint.relative_to(self.installdir)
             )
             with dispatch_path.open("wt", encoding="utf8") as fh:
                 fh.write(dispatch_content)
@@ -200,7 +200,7 @@ class CharmBuilder:
         # bunch of symlinks, to support old juju: verify that any of the already included hooks
         # in the directory is not linking directly to the entrypoint, and also check all the
         # mandatory ones are present
-        dest_hookpath = self.buildpath / HOOKS_DIR
+        dest_hookpath = self.installdir / HOOKS_DIR
         if not dest_hookpath.exists():
             dest_hookpath.mkdir()
 
@@ -273,8 +273,8 @@ class CharmBuilder:
             emit.debug("No dependencies to handle")
             return
 
-        staging_venv_dir = self.charmdir / STAGING_VENV_DIRNAME
-        hash_file = self.charmdir / DEPENDENCIES_HASH_FILENAME
+        staging_venv_dir = self.builddir / STAGING_VENV_DIRNAME
+        hash_file = self.builddir / DEPENDENCIES_HASH_FILENAME
 
         # find out if current dependencies are the same than the last run.
         current_deps_hash = self._calculate_dependencies_hash()
@@ -307,7 +307,7 @@ class CharmBuilder:
         # always copy the virtualvenv site-packages directory to /venv in charm
         basedir = pathlib.Path(STAGING_VENV_DIRNAME)
         site_packages_dir = _find_venv_site_packages(basedir)
-        shutil.copytree(site_packages_dir, self.buildpath / VENV_DIRNAME)
+        shutil.copytree(site_packages_dir, self.installdir / VENV_DIRNAME)
 
 
 def _find_venv_bin(basedir, exec_base):
@@ -365,13 +365,13 @@ def _parse_arguments() -> argparse.Namespace:
         help="The charm entry point. Default is 'src/charm.py'.",
     )
     parser.add_argument(
-        "--charmdir",
+        "--builddir",
         default=".",
         type=pathlib.Path,
         help="The charm source directory. Default is current.",
     )
     parser.add_argument(
-        "--builddir",
+        "--installdir",
         required=True,
         type=pathlib.Path,
         help="The build destination directory",
@@ -407,8 +407,8 @@ def main():
     emit.init(EmitterMode.TRACE, "charm-builder", "Starting charm builder", log_filepath=logpath)
 
     builder = CharmBuilder(
-        charmdir=options.charmdir,
         builddir=options.builddir,
+        installdir=options.installdir,
         entrypoint=options.entrypoint,
         binary_python_packages=options.binary_package or [],
         python_packages=options.package or [],

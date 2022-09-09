@@ -189,9 +189,9 @@ class CharmPlugin(plugins.Plugin):
             sys.executable,
             "-I",
             charm_builder.__file__,
-            "--charmdir",
-            str(self._part_info.part_build_dir),
             "--builddir",
+            str(self._part_info.part_build_dir),
+            "--installdir",
             str(self._part_info.part_install_dir),
         ]
 

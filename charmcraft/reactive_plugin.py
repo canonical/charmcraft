@@ -19,7 +19,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, cast
 
 from craft_cli import emit
 from craft_parts import plugins
@@ -30,6 +30,7 @@ class ReactivePluginProperties(plugins.PluginProperties, plugins.PluginModel):
     """Properties used to pack reactive charms using charm-tools."""
 
     source: str
+    reactive_charm_build_arguments: Optional[List[str]] = []
 
     @classmethod
     def unmarshal(cls, data: Dict[str, Any]):
@@ -119,6 +120,8 @@ class ReactivePlugin(plugins.Plugin):
 
     def get_build_commands(self) -> List[str]:
         """Return a list of commands to run during the build step."""
+        options = cast(ReactivePluginProperties, self._options)
+
         command = [
             sys.executable,
             "-I",
@@ -127,11 +130,19 @@ class ReactivePlugin(plugins.Plugin):
             str(self._part_info.part_build_dir),
             str(self._part_info.part_install_dir),
         ]
-
+        # The YAML List[str] schema would colocate any options with arguments
+        # in the same string.  This is not what we want as we need to send
+        # these separately when calling out to the command later.
+        #
+        # Expand any such strings as we add them to the command.
+        for arg in options.reactive_charm_build_arguments:
+            command.extend(shlex.split(arg))
         return [" ".join(shlex.quote(i) for i in command)]
 
 
-def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> int:
+def build(
+    *, charm_name: str, build_dir: Path, install_dir: Path, charm_build_arguments: List[str]
+):
     """Build a charm using charm tool.
 
     The charm tool is used to build reactive charms, the build process
@@ -162,8 +173,13 @@ def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> int:
     if not charm_build_dir.exists():
         charm_build_dir.symlink_to(install_dir, target_is_directory=True)
 
+    cmd = ["charm", "build"]
+    if charm_build_arguments:
+        cmd.extend(charm_build_arguments)
+    cmd.extend(["-o", build_dir])
+
     try:
-        subprocess.run(["charm", "build", "-o", build_dir], check=True)
+        subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as call_error:
         if call_error.returncode >= 200:
             return call_error.returncode
@@ -175,6 +191,9 @@ def build(*, charm_name: str, build_dir: Path, install_dir: Path) -> int:
 
 if __name__ == "__main__":
     returncode = build(
-        charm_name=sys.argv[1], build_dir=Path(sys.argv[2]), install_dir=Path(sys.argv[3])
+        charm_name=sys.argv[1],
+        build_dir=Path(sys.argv[2]),
+        install_dir=Path(sys.argv[3]),
+        charm_build_arguments=sys.argv[4:],
     )
     sys.exit(returncode)

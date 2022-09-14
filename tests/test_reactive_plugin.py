@@ -61,6 +61,10 @@ class TestReactivePlugin:
         spec = {
             "plugin": "reactive",
             "source": str(tmp_path),
+            "reactive-charm-build-arguments": [
+                "--charm-argument",
+                "--charm-argument-with argument",
+            ],
         }
         self.plugin_properties = reactive_plugin.ReactivePluginProperties.unmarshal(spec)
         part_spec = plugins.extract_part_properties(spec, plugin_name="reactive")
@@ -93,7 +97,8 @@ class TestReactivePlugin:
     def test_get_build_commands(self, tmp_path):
         assert self._plugin.get_build_commands() == [
             f"{sys.executable} -I {reactive_plugin.__file__} fake-project "
-            f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install",
+            f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
+            "--charm-argument --charm-argument-with argument"
         ]
 
     def test_invalid_properties(self):
@@ -169,14 +174,28 @@ def fake_run():
 
 def test_build(build_dir, install_dir, fake_run):
     returncode = reactive_plugin.build(
-        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+        charm_name="test-charm",
+        build_dir=build_dir,
+        install_dir=install_dir,
+        charm_build_arguments=["--charm-argument", "--charm-argument-with", "argument"],
     )
 
     assert returncode == 0
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),
-        call(["charm", "build", "-o", build_dir], check=True),
+        call(
+            [
+                "charm",
+                "build",
+                "--charm-argument",
+                "--charm-argument-with",
+                "argument",
+                "-o",
+                build_dir,
+            ],
+            check=True,
+        ),
     ]
 
 
@@ -184,7 +203,10 @@ def test_build_charm_proof_raises_error_messages(build_dir, install_dir, fake_ru
     fake_run.side_effect = CalledProcessError(200, "E: name missing")
 
     returncode = reactive_plugin.build(
-        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+        charm_name="test-charm",
+        build_dir=build_dir,
+        install_dir=install_dir,
+        charm_build_arguments=["--charm-argument", "--charm-argument-with", "argument"],
     )
 
     assert returncode == 200
@@ -200,14 +222,28 @@ def test_build_charm_proof_raises_warning_messages_does_not_raise(
     fake_run.side_effect = CalledProcessError(100, "W: Description is not pretty")
 
     returncode = reactive_plugin.build(
-        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+        charm_name="test-charm",
+        build_dir=build_dir,
+        install_dir=install_dir,
+        charm_build_arguments=["--charm-argument", "--charm-argument-with", "argument"],
     )
 
     assert returncode == 0
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),
-        call(["charm", "build", "-o", build_dir], check=True),
+        call(
+            [
+                "charm",
+                "build",
+                "--charm-argument",
+                "--charm-argument-with",
+                "argument",
+                "-o",
+                build_dir,
+            ],
+            check=True,
+        ),
     ]
 
 
@@ -215,14 +251,28 @@ def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_ru
     fake_run.side_effect = [None, CalledProcessError(200, "E: name missing")]
 
     returncode = reactive_plugin.build(
-        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+        charm_name="test-charm",
+        build_dir=build_dir,
+        install_dir=install_dir,
+        charm_build_arguments=["--charm-argument", "--charm-argument-with", "argument"],
     )
 
     assert returncode == 200
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),
-        call(["charm", "build", "-o", build_dir], check=True),
+        call(
+            [
+                "charm",
+                "build",
+                "--charm-argument",
+                "--charm-argument-with",
+                "argument",
+                "-o",
+                build_dir,
+            ],
+            check=True,
+        ),
     ]
 
 
@@ -232,12 +282,26 @@ def test_build_charm_build_raises_warning_messages_does_not_raise(
     fake_run.side_effect = [None, CalledProcessError(100, "W: Description is not pretty")]
 
     returncode = reactive_plugin.build(
-        charm_name="test-charm", build_dir=build_dir, install_dir=install_dir
+        charm_name="test-charm",
+        build_dir=build_dir,
+        install_dir=install_dir,
+        charm_build_arguments=["--charm-argument", "--charm-argument-with", "argument"],
     )
 
     assert returncode == 0
     assert not (build_dir / "test-charm").exists()
     assert fake_run.mock_calls == [
         call(["charm", "proof"], check=True),
-        call(["charm", "build", "-o", build_dir], check=True),
+        call(
+            [
+                "charm",
+                "build",
+                "--charm-argument",
+                "--charm-argument-with",
+                "argument",
+                "-o",
+                build_dir,
+            ],
+            check=True,
+        ),
     ]

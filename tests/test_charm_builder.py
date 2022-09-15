@@ -1207,10 +1207,14 @@ def test_processrun_crashed(tmp_path):
     cmd = [str(nonexistent)]
     with pytest.raises(RuntimeError) as cm:
         _process_run(cmd)
-    assert str(cm.value) == (
-        f"Subprocess command {cmd} execution crashed: "
-        "FileNotFoundError(2, 'No such file or directory')"
-    )
+
+    # get a real exception to build the message as its internal text varies across OSes
+    try:
+        nonexistent.open()
+    except Exception as exc:
+        exc_text = repr(exc)
+
+    assert str(cm.value) == f"Subprocess command {cmd} execution crashed: {exc_text}"
 
 
 # --- helper tests

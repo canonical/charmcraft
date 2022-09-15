@@ -14,12 +14,13 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Indicate which files are ignored by Juju."""
+"""Indicate which files are ignored by Juju.
+
+This module is used by charm_builder.py script in a separate process than Charmcraft.
+"""
 
 import re
 import typing
-
-from craft_cli import emit
 
 KEEP = "keep"
 SKIP = "skip"
@@ -188,7 +189,7 @@ class JujuIgnore:
                 regex=regex,
             )
             self._matchers.append(m)
-            emit.debug(f"Translated .jujuignore {line_num:d} {orig_rule!r} => {regex!r}")
+            print(f"Translated .jujuignore {line_num:d} {orig_rule!r} => {regex!r}")
 
     def match(self, path: str, is_dir: bool) -> bool:
         """Check if the given path should be ignored.

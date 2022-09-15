@@ -227,3 +227,24 @@ def emitter(emitter):
 
     emitter.assert_json_output = types.MethodType(assert_json_output, emitter)
     return emitter
+
+
+@pytest.fixture
+def assert_output(capsys):
+    """Assert that a given string was sent to stdout.
+
+    This is a helper to simplify tests for charm_builder.py and its modules that print
+    directly to stdout.
+
+    Note that every call to this helper will clear the previous captured output.
+    """
+
+    def helper(*match_lines):
+        captured = capsys.readouterr()
+        printed_lines = captured.out.splitlines()
+        for match_line in match_lines:
+            if match_line not in printed_lines:
+                printed_repr = "\n".join(map(repr, printed_lines))
+                pytest.fail(f"Line {match_line!r} not found in the output found:\n{printed_repr}")
+
+    return helper

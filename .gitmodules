@@ -1,0 +1,3 @@
+[submodule "tools/external"]
+	path = tools/external
+	url = https://github.com/snapcore/snapd-testing-tools.git

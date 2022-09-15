@@ -1,6 +1,6 @@
-# Charmcraft is for Kubernetes operator developers
+# Charmcraft is for Kubernetes and machine operator developers
 
-Charmcraft supports Kubernetes operator development.
+Charmcraft supports Kubernetes and machine operator development.
 
 Charmcraft enables collaboration between charmed operator developers, and
 publication on [Charmhub](https://charmhub.io/), home of the Charmed Operator
@@ -21,7 +21,7 @@ PyPI](https://pypi.org/project/ops/) for ease of development and
 collaboration.
 
 Charmcraft and the Charmed Operator Framework extend the operator pattern
-beyond Kubernetes with [universal
+beyond Kubernetes or machine deployments with [universal
 operators](https://juju.is/universal-operators) that drive Linux and
 Windows apps. The universal operator pattern is very exciting for
 multi-cloud application management.
@@ -61,19 +61,13 @@ Use `charmcraft init` to create a new template charm operator file tree:
 $ mkdir my-new-charm; cd my-new-charm
 $ charmcraft init
 Charm operator package file and directory tree initialized.
-TODO:
 
-      README.md: Describe your charm in a few paragraphs of Markdown
-      README.md: Provide high-level usage, such as required config or relations
-   actions.yaml: change this example to suit your needs.
-    config.yaml: change this example to suit your needs.
-  metadata.yaml: fill out the charm's description
-  metadata.yaml: fill out the charm's summary
-  metadata.yaml: replace with containers for your workload (delete for non-k8s)
-  metadata.yaml: each container defined above must specify an oci-image resource
-   src/charm.py: change this example to suit your needs.
-   src/charm.py: change this example to suit your needs.
-   src/charm.py: change this example to suit your needs.
+Now edit the following package files to provide fundamental charm metadata and other information:
+
+metadata.yaml
+config.yaml
+src/charm.py
+README.md
 ```
 
 You will now have all the essential files for a charmed operator, including
@@ -112,6 +106,7 @@ Archive:  test-charm.charm
 
 Now, if you have a Kubernetes cluster with the Juju OLM accessible you can issue
 `juju deploy ./my-new-charm.charm --resource httpbin-image=kennethreitz/httpbin`.
+For classic machine deployments you can issue `juju deploy ./my-new-charm.charm`.
 You do not need to publish your operator on Charmhub, you can pass the charmed
 operator file around directly to users, or for CI/CD purposes.
 

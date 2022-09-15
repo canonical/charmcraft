@@ -19,6 +19,7 @@ import filecmp
 import os
 import pathlib
 import socket
+import subprocess
 import sys
 from unittest.mock import call, patch
 
@@ -1210,7 +1211,7 @@ def test_processrun_crashed(tmp_path):
 
     # get a real exception to build the message as its internal text varies across OSes
     try:
-        nonexistent.open()
+        subprocess.run([nonexistent])
     except Exception as exc:
         exc_text = repr(exc)
 

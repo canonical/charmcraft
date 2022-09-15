@@ -111,6 +111,29 @@ def test_all_the_files_kubernetes(tmp_path, config):
     }
 
 
+def test_all_the_files_machine(tmp_path, config):
+    cmd = InitCommand(config)
+    cmd.run(create_namespace(profile="machine"))
+    assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
+        ".gitignore",
+        "charmcraft.yaml",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "metadata.yaml",
+        "pyproject.toml",
+        "README.md",
+        "requirements.txt",
+        "src",
+        os.path.join("src", "charm.py"),
+        "tests",
+        os.path.join("tests", "integration"),
+        os.path.join("tests", "integration", "test_charm.py"),
+        os.path.join("tests", "unit"),
+        os.path.join("tests", "unit", "test_charm.py"),
+        "tox.ini",
+    }
+
+
 def test_force(tmp_path, config):
     cmd = InitCommand(config)
     tmp_file = tmp_path / "README.md"

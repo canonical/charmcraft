@@ -14,6 +14,7 @@
 
 """Charmcraft's reactive plugin for craft-parts."""
 
+import json
 import shlex
 import subprocess
 import sys
@@ -61,14 +62,19 @@ class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentVali
         :raises PluginEnvironmentValidationError: If the environment is invalid.
         """
         try:
-            output = self._execute("charm version").strip()
-            _, tools_version = output.split("\n")
+            version_data = json.loads(self._execute("charm version --format json"))
 
-            if not tools_version.startswith("charm-tools"):
+            tool_name = "charm-tools"
+            if not (
+                tool_name in version_data
+                and "version" in version_data[tool_name]
+                and "git" in version_data[tool_name]
+            ):
                 raise PluginEnvironmentValidationError(
                     part_name=self._part_name,
-                    reason=f"invalid charm tools version {tools_version}",
+                    reason=f"invalid charm tools version {version_data}",
                 )
+            tools_version = f"{tool_name} {version_data[tool_name]['version']} ({version_data[tool_name]['git']})"
             emit.debug(f"found {tools_version}")
         except ValueError as err:
             raise PluginEnvironmentValidationError(

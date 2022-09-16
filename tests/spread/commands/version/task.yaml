@@ -1,0 +1,7 @@
+summary: simple version command probe
+
+execute: |
+  if ! charmcraft version; then
+      echo charmcraft version command is not working
+      exit 1
+  fi

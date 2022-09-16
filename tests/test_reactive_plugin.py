@@ -36,7 +36,7 @@ def charm_exe(tmp_path):
     charm_bin = pathlib.Path(tmp_path, "mock_bin", "charm")
     charm_bin.parent.mkdir(exist_ok=True)
     charm_bin.write_text(
-        '#!/bin/sh\necho "charmstore-client 2.5.1"\necho "charm-tools version 2.8.2"'
+        '#!/bin/sh\necho \'{"charm-tools": {"version": "2.8.4", "git": "+git-7-6126e17", "gitn": 7, "gitsha": "6126e17", "pre_release": false, "snap": "+snap-x12"}}\''
     )
     charm_bin.chmod(0o755)
     yield charm_bin

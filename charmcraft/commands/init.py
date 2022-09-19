@@ -35,6 +35,7 @@ except ImportError:
 PROFILES = {
     "simple": "init-simple",
     "kubernetes": "init-kubernetes",
+    "machine": "init-machine",
 }
 DEFAULT_PROFILE = "simple"
 

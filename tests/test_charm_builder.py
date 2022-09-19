@@ -19,11 +19,11 @@ import filecmp
 import os
 import pathlib
 import socket
+import subprocess
 import sys
 from unittest.mock import call, patch
 
 import pytest
-from craft_cli import CraftError
 
 from charmcraft import charm_builder
 from charmcraft.charm_builder import (
@@ -94,7 +94,7 @@ def test_build_generics_simple_dir(tmp_path):
     assert built_dir.stat().st_mode & 0xFFF == 0o700
 
 
-def test_build_generics_ignored_file(tmp_path, emitter):
+def test_build_generics_ignored_file(tmp_path, assert_output):
     """Don't include ignored filed."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -123,10 +123,10 @@ def test_build_generics_ignored_file(tmp_path, emitter):
     assert not (build_dir / "file2.txt").exists()
 
     expected = "Ignoring file because of rules: 'file2.txt'"
-    emitter.assert_debug(expected)
+    assert_output(expected)
 
 
-def test_build_generics_ignored_dir(tmp_path, emitter):
+def test_build_generics_ignored_dir(tmp_path, assert_output):
     """Don't include ignored dir."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -155,7 +155,7 @@ def test_build_generics_ignored_dir(tmp_path, emitter):
     assert not (build_dir / "dir2").exists()
 
     expected = "Ignoring directory because of rules: 'dir2'"
-    emitter.assert_debug(expected)
+    assert_output(expected)
 
 
 def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
@@ -359,7 +359,7 @@ def test_build_generics_symlink_deep(tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_symlink_file_outside(tmp_path, emitter):
+def test_build_generics_symlink_file_outside(tmp_path, assert_output):
     """Ignores (with warning) a symlink pointing a file outside projects dir."""
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
@@ -385,11 +385,11 @@ def test_build_generics_symlink_file_outside(tmp_path, emitter):
 
     assert not (build_dir / "external-file").exists()
     expected = "Ignoring symlink because targets outside the project: 'external-file'"
-    emitter.assert_debug(expected)
+    assert_output(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_symlink_directory_outside(tmp_path, emitter):
+def test_build_generics_symlink_directory_outside(tmp_path, assert_output):
     """Ignores (with warning) a symlink pointing a dir outside projects dir."""
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
@@ -415,11 +415,11 @@ def test_build_generics_symlink_directory_outside(tmp_path, emitter):
 
     assert not (build_dir / "external-dir").exists()
     expected = "Ignoring symlink because targets outside the project: 'external-dir'"
-    emitter.assert_debug(expected)
+    assert_output(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_generics_different_filetype(tmp_path, emitter, monkeypatch):
+def test_build_generics_different_filetype(tmp_path, assert_output, monkeypatch):
     """Ignores whatever is not a regular file, symlink or dir."""
     # change into the tmp path and do everything locally, because otherwise the socket path
     # will be too long for mac os
@@ -445,7 +445,7 @@ def test_build_generics_different_filetype(tmp_path, emitter, monkeypatch):
 
     assert not (build_dir / "test-socket").exists()
     expected = "Ignoring file because of type: 'test-socket'"
-    emitter.assert_debug(expected)
+    assert_output(expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -549,7 +549,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, emitter):
+def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_output):
     """Hooks that are just a symlink to the entrypoint are replaced."""
     metadata = tmp_path / CHARM_METADATA
     metadata.write_text("name: crazycharm")
@@ -582,13 +582,13 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, emitter
     assert test_hook.is_symlink()
     assert test_hook.resolve() == included_dispatcher
     expected = "Replacing existing hook 'somehook' as it's a symlink to the entrypoint"
-    emitter.assert_debug(expected)
+    assert_output(expected)
 
 
 # -- tests about dependencies handling
 
 
-def test_build_dependencies_virtualenv_simple(tmp_path, emitter):
+def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
     """A virtualenv is created with the specified requirements file."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -621,11 +621,10 @@ def test_build_dependencies_virtualenv_simple(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_progress("Installing dependencies")
+    assert_output("Handling dependencies", "Installing dependencies")
 
 
-def test_build_dependencies_virtualenv_multiple(tmp_path, emitter):
+def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
     """A virtualenv is created with multiple requirements files."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -667,11 +666,10 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_progress("Installing dependencies")
+    assert_output("Handling dependencies", "Installing dependencies")
 
 
-def test_build_dependencies_virtualenv_none(tmp_path, emitter):
+def test_build_dependencies_virtualenv_none(tmp_path, assert_output):
     """The virtualenv is NOT created if no needed."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -689,11 +687,10 @@ def test_build_dependencies_virtualenv_none(tmp_path, emitter):
         builder.handle_dependencies()
 
     mock_run.assert_not_called()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("No dependencies to handle")
+    assert_output("Handling dependencies", "No dependencies to handle")
 
 
-def test_build_dependencies_virtualenv_packages(tmp_path, emitter):
+def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
     """A virtualenv is created with the specified packages."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -721,11 +718,10 @@ def test_build_dependencies_virtualenv_packages(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_progress("Installing dependencies")
+    assert_output("Handling dependencies", "Installing dependencies")
 
 
-def test_build_dependencies_virtualenv_binary_packages(tmp_path, emitter):
+def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
     """A virtualenv is created with the specified packages."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -753,11 +749,10 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_progress("Installing dependencies")
+    assert_output("Handling dependencies", "Installing dependencies")
 
 
-def test_build_dependencies_virtualenv_all(tmp_path, emitter):
+def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
     """A virtualenv is created with the specified packages."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -802,11 +797,10 @@ def test_build_dependencies_virtualenv_all(tmp_path, emitter):
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_progress("Installing dependencies")
+    assert_output("Handling dependencies", "Installing dependencies")
 
 
-def test_build_dependencies_no_reused_missing_venv(tmp_path, emitter):
+def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     """Dependencies are built again because installation dir was not found."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -828,9 +822,9 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, emitter):
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("Dependencies directory not found")
-    emitter.assert_progress("Installing dependencies")
+    assert_output(
+        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+    )
 
     # directory created and packages installed
     assert staging_venv_dir.exists()
@@ -843,12 +837,11 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, emitter):
     staging_venv_dir.rmdir()
 
     # second run!
-    emitter.interactions.clear()
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("Dependencies directory not found")
-    emitter.assert_progress("Installing dependencies")
+    assert_output(
+        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+    )
 
     # directory created and packages installed *again*
     assert staging_venv_dir.exists()
@@ -858,7 +851,7 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, emitter):
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
 
-def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
+def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output):
     """Dependencies are built again because previous hash file was not found."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -880,9 +873,9 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("Dependencies directory not found")
-    emitter.assert_progress("Installing dependencies")
+    assert_output(
+        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+    )
 
     # directory created and packages installed
     assert staging_venv_dir.exists()
@@ -895,12 +888,11 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
     (tmp_path / DEPENDENCIES_HASH_FILENAME).unlink()
 
     # second run!
-    emitter.interactions.clear()
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("Dependencies hash file not found")
-    emitter.assert_progress("Installing dependencies")
+    assert_output(
+        "Handling dependencies", "Dependencies hash file not found", "Installing dependencies"
+    )
 
     # directory created and packages installed *again*
     assert staging_venv_dir.exists()
@@ -910,7 +902,7 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, emitter):
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
 
-def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
+def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_output):
     """Dependencies are built again because having problems to read the previous hash file."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -932,9 +924,9 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("Dependencies directory not found")
-    emitter.assert_progress("Installing dependencies")
+    assert_output(
+        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+    )
 
     # directory created and packages installed
     assert staging_venv_dir.exists()
@@ -947,15 +939,14 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
     (tmp_path / DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
 
     # second run!
-    emitter.interactions.clear()
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug(
+    assert_output(
+        "Handling dependencies",
         "Problems reading the dependencies hash file: "
-        "'utf-8' codec can't decode byte 0xc3 in position 0: invalid continuation byte"
+        "'utf-8' codec can't decode byte 0xc3 in position 0: invalid continuation byte",
+        "Installing dependencies",
     )
-    emitter.assert_progress("Installing dependencies")
 
     # directory created and packages installed *again*
     assert staging_venv_dir.exists()
@@ -974,7 +965,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, emitter):
     ],
 )
 def test_build_dependencies_no_reused_different_dependencies(
-    tmp_path, emitter, new_reqs_content, new_pypackages, new_pybinaries
+    tmp_path, assert_output, new_reqs_content, new_pypackages, new_pybinaries
 ):
     """Dependencies are built again because changed from previous run."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -1004,9 +995,9 @@ def test_build_dependencies_no_reused_different_dependencies(
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("Dependencies directory not found")
-    emitter.assert_progress("Installing dependencies")
+    assert_output(
+        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+    )
 
     # directory created and packages installed
     assert staging_venv_dir.exists()
@@ -1024,13 +1015,11 @@ def test_build_dependencies_no_reused_different_dependencies(
         new_pybinaries = binary_python_packages
 
     # second run with other dependencies!
-    emitter.interactions.clear()
     builder.binary_python_packages = new_pybinaries
     builder.python_packages = new_pypackages
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_progress("Installing dependencies")
+    assert_output("Handling dependencies", "Installing dependencies")
 
     # directory created and packages installed *again*
     assert staging_venv_dir.exists()
@@ -1040,7 +1029,7 @@ def test_build_dependencies_no_reused_different_dependencies(
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
 
-def test_build_dependencies_reused(tmp_path, emitter):
+def test_build_dependencies_reused(tmp_path, assert_output):
     """Happy case to reuse dependencies from last run."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1066,9 +1055,9 @@ def test_build_dependencies_reused(tmp_path, emitter):
     # first run!
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("Dependencies directory not found")
-    emitter.assert_progress("Installing dependencies")
+    assert_output(
+        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+    )
 
     # directory created and packages installed
     assert staging_venv_dir.exists()
@@ -1078,11 +1067,11 @@ def test_build_dependencies_reused(tmp_path, emitter):
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
     # second run!
-    emitter.interactions.clear()
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
-    emitter.assert_debug("Handling dependencies")
-    emitter.assert_debug("Reusing installed dependencies, they are equal to last run ones")
+    assert_output(
+        "Handling dependencies", "Reusing installed dependencies, they are equal to last run ones"
+    )
 
     # installation directory copied *again* to the build directory (this is always done as
     # buildpath is cleaned)
@@ -1147,9 +1136,8 @@ def test_builder_arguments_defaults(tmp_path):
     fake_argv = ["cmd", "--builddir", "builddir", "--installdir", "installdir"]
     with patch.object(sys, "argv", fake_argv):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
-            with patch("charmcraft.charm_builder.emit.init"):
-                with pytest.raises(SystemExit) as raised:
-                    charm_builder.main()
+            with pytest.raises(SystemExit) as raised:
+                charm_builder.main()
         assert raised.value.code == 42
 
 
@@ -1167,9 +1155,8 @@ def test_builder_arguments_full(tmp_path):
     fake_argv += ["-r" "reqs1.txt", "--requirement", "reqs2.txt"]
     with patch.object(sys, "argv", fake_argv):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
-            with patch("charmcraft.charm_builder.emit.init"):
-                with pytest.raises(SystemExit) as raised:
-                    charm_builder.main()
+            with pytest.raises(SystemExit) as raised:
+                charm_builder.main()
         assert raised.value.code == 42
 
 
@@ -1177,57 +1164,58 @@ def test_builder_arguments_full(tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_processrun_base(emitter):
+def test_processrun_base(assert_output):
     """Basic execution."""
     cmd = ["echo", "HELO"]
     _process_run(cmd)
-    emitter.assert_interactions(
-        [
-            call("progress", "Running external command ['echo', 'HELO']"),
-        ]
+    assert_output(
+        "Running external command ['echo', 'HELO']",
     )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_processrun_stdout_logged(emitter):
+def test_processrun_stdout_logged(assert_output):
     """The standard output is logged in debug."""
     cmd = ["echo", "HELO"]
     _process_run(cmd)
-    emitter.assert_interactions(
-        [
-            call("progress", "Running external command ['echo', 'HELO']"),
-            call("debug", "   :: HELO"),
-        ]
+    assert_output(
+        "Running external command ['echo', 'HELO']",
+        "   :: HELO",
     )
 
 
-def test_processrun_stderr_logged(emitter):
+def test_processrun_stderr_logged(assert_output):
     """The standard error is logged in debug."""
     cmd = [sys.executable, "-c", "import sys; print('weird, huh?', file=sys.stderr)"]
     _process_run(cmd)
-    emitter.assert_interactions(
-        [
-            call("progress", "Running external command " + str(cmd)),
-            call("debug", "   :: weird, huh?"),
-        ]
+    assert_output(
+        "Running external command " + str(cmd),
+        "   :: weird, huh?",
     )
 
 
 def test_processrun_failed():
-    """It's logged in error if cmd fails."""
+    """It's logged in error if subprocess is run but ends with return code not zero."""
     cmd = [sys.executable, "-c", "exit(3)"]
-    with pytest.raises(CraftError) as cm:
+    with pytest.raises(RuntimeError) as cm:
         _process_run(cmd)
     assert str(cm.value) == f"Subprocess command {cmd} execution failed with retcode 3"
 
 
 def test_processrun_crashed(tmp_path):
-    """It's logged in error if cmd fails."""
+    """It's logged in error if the subprocess fails to even run."""
     nonexistent = tmp_path / "whatever"
     cmd = [str(nonexistent)]
-    with pytest.raises(CraftError) as cm:
+    with pytest.raises(RuntimeError) as cm:
         _process_run(cmd)
-    assert str(cm.value) == f"Subprocess execution crashed for command {cmd}"
+
+    # get a real exception to build the message as its internal text varies across OSes
+    try:
+        subprocess.run([nonexistent])
+    except Exception as exc:
+        exc_text = repr(exc)
+
+    assert str(cm.value) == f"Subprocess command {cmd} execution crashed: {exc_text}"
 
 
 # --- helper tests

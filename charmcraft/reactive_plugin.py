@@ -21,7 +21,6 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, cast
 
-from craft_cli import emit
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
@@ -76,7 +75,7 @@ class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentVali
                     reason=f"invalid charm tools version {version_data}",
                 )
             tools_version = f"{tool_name} {version_data[tool_name]['version']} ({version_data[tool_name]['git']})"
-            emit.debug(f"found {tools_version}")
+            print(f"found {tools_version}")
         except ValueError as err:
             raise PluginEnvironmentValidationError(
                 part_name=self._part_name,

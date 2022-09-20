@@ -44,7 +44,7 @@ from charmcraft.utils import (
 )
 
 from .store import Store
-from .registry import ImageHandler, OCIRegistry
+from .registry import ImageHandler, OCIRegistry, LocalDockerdInterface
 
 # some types
 EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
@@ -1704,8 +1704,8 @@ class UploadResourceCommand(BaseCommand):
 
         The resource can be a file from your computer (use the `--filepath`
         option) or an OCI Image (use the `--image` option to indicate the
-        image digest), which can be already in Canonical's registry and
-        used directly, or locally in your computer and will be uploaded
+        image digest or id), which can be already in Canonical's registry
+        and used directly, or locally in your computer and will be uploaded
         and used.
 
         Upload will take you through login if needed.
@@ -1731,7 +1731,7 @@ class UploadResourceCommand(BaseCommand):
         group.add_argument(
             "--image",
             type=SingleOptionEnsurer(str),
-            help="The digest of the OCI image",
+            help="The digest (remote or local) or id (local) of the OCI image",
         )
 
     def run(self, parsed_args):
@@ -1744,7 +1744,6 @@ class UploadResourceCommand(BaseCommand):
             resource_type = ResourceType.file
             emit.progress(f"Uploading resource directly from file {str(resource_filepath)!r}.")
         elif parsed_args.image:
-            image_digest = parsed_args.image
             credentials = store.get_oci_registry_credentials(
                 parsed_args.charm_name, parsed_args.resource_name
             )
@@ -1753,9 +1752,9 @@ class UploadResourceCommand(BaseCommand):
             # 'registry.jujucharms.com/charm/45kk8smbiyn2e/redis-image') to the image
             # name that we use internally (just remove the initial "server host" part)
             image_name = credentials.image_name.split("/", 1)[1]
-            emit.progress(f"Uploading resource from image {image_name} @ {image_digest}.")
+            emit.progress(f"Uploading resource from image {image_name} @ {parsed_args.image}.")
 
-            # build the image handler
+            # build the image handler and dockerd interface
             registry = OCIRegistry(
                 self.config.charmhub.registry_url,
                 image_name,
@@ -1763,31 +1762,40 @@ class UploadResourceCommand(BaseCommand):
                 password=credentials.password,
             )
             ih = ImageHandler(registry)
+            dockerd = LocalDockerdInterface()
 
-            # check if the specific image is already in Canonical's registry
-            already_uploaded = ih.check_in_registry(image_digest)
-            if already_uploaded:
-                emit.progress("Using OCI image from Canonical's registry.", permanent=True)
+            server_image_digest = None
+            if ":" in parsed_args.image:
+                # the user provided a digest; check if the specific image is
+                # already in Canonical's registry
+                already_uploaded = ih.check_in_registry(parsed_args.image)
+
+                if already_uploaded:
+                    emit.progress("Using OCI image from Canonical's registry.", permanent=True)
+                    server_image_digest = parsed_args.image
+                else:
+                    emit.progress("Remote image not found, getting its info from local registry.")
+                    image_info = dockerd.get_image_info_from_digest(parsed_args.image)
+
             else:
+                # the user provided an id, can't search remotely, just get its info locally
+                emit.progress("Getting image info from local registry.")
+                image_info = dockerd.get_image_info_from_id(parsed_args.image)
+
+            if server_image_digest is None:
+                if image_info is None:
+                    raise CraftError("Image not found locally.")
+
                 # upload it from local registry
+                emit.progress("Uploading from local registry.", permanent=True)
+                server_image_digest = ih.upload_from_local(image_info)
                 emit.progress(
-                    "Remote image not found, uploading from local registry.", permanent=True
-                )
-                image_digest = ih.upload_from_local(image_digest)
-                if image_digest is None:
-                    emit.progress(
-                        f"Image with digest {parsed_args.image} is not available in "
-                        "the Canonical's registry nor locally.",
-                        permanent=True,
-                    )
-                    return
-                emit.progress(
-                    f"Image uploaded, new remote digest: {image_digest}.", permanent=True
+                    f"Image uploaded, new remote digest: {server_image_digest}.", permanent=True
                 )
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(
-                parsed_args.charm_name, parsed_args.resource_name, image_digest
+                parsed_args.charm_name, parsed_args.resource_name, server_image_digest
             )
             tfd, tname = tempfile.mkstemp(prefix="image-resource", suffix=".json")
             with open(tfd, "wt", encoding="utf-8") as fh:  # reuse the file descriptor and close it

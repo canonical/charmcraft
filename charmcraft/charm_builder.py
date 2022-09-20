@@ -14,7 +14,10 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""The charm package builder."""
+"""The charm package builder.
+
+This is a standalone script run by the Charm Plugin.
+"""
 
 import argparse
 import errno
@@ -26,10 +29,8 @@ import sys
 import subprocess
 from typing import List
 
-from craft_cli import emit, EmitterMode, CraftError
-
 from charmcraft import instrum
-from charmcraft.env import get_managed_environment_log_path, get_charm_builder_metrics_path
+from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
 
@@ -87,7 +88,7 @@ class CharmBuilder:
 
     def build_charm(self) -> None:
         """Build the charm."""
-        emit.progress(f"Building charm in {str(self.installdir)!r}")
+        print(f"Building charm in {str(self.installdir)!r}")
 
         if self.installdir.exists():
             shutil.rmtree(str(self.installdir))
@@ -116,7 +117,7 @@ class CharmBuilder:
             dest_path.symlink_to(relative_link)
         else:
             rel_path = src_path.relative_to(self.builddir)
-            emit.debug(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
+            print(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
 
     @instrum.Timer("Handling generic paths")
     def handle_generic_paths(self):
@@ -128,7 +129,7 @@ class CharmBuilder:
         - symlinks: respected if are internal to the project
         - other types (blocks, mount points, etc): ignored
         """
-        emit.progress("Linking in generic paths")
+        print("Linking in generic paths")
 
         for basedir, dirnames, filenames in os.walk(str(self.builddir), followlinks=False):
             abs_basedir = pathlib.Path(basedir)
@@ -141,7 +142,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=True):
-                    emit.debug(f"Ignoring directory because of rules: {str(rel_path)!r}")
+                    print(f"Ignoring directory because of rules: {str(rel_path)!r}")
                     ignored.append(pos)
                 elif abs_path.is_symlink():
                     dest_path = self.installdir / rel_path
@@ -160,7 +161,7 @@ class CharmBuilder:
                 abs_path = abs_basedir / name
 
                 if self.ignore_rules.match(str(rel_path), is_dir=False):
-                    emit.debug(f"Ignoring file because of rules: {str(rel_path)!r}")
+                    print(f"Ignoring file because of rules: {str(rel_path)!r}")
                 elif abs_path.is_symlink():
                     dest_path = self.installdir / rel_path
                     self.create_symlink(abs_path, dest_path)
@@ -176,7 +177,7 @@ class CharmBuilder:
                             raise
                         shutil.copy2(str(abs_path), str(dest_path))
                 else:
-                    emit.debug(f"Ignoring file because of type: {str(rel_path)!r}")
+                    print(f"Ignoring file because of type: {str(rel_path)!r}")
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
         linked_entrypoint = self.installdir / self.entrypoint.relative_to(self.builddir)
@@ -189,7 +190,7 @@ class CharmBuilder:
         # dispatch mechanism, create one if wasn't provided by the project
         dispatch_path = self.installdir / DISPATCH_FILENAME
         if not dispatch_path.exists():
-            emit.progress("Creating the dispatch mechanism")
+            print("Creating the dispatch mechanism")
             dispatch_content = DISPATCH_CONTENT.format(
                 entrypoint_relative_path=linked_entrypoint.relative_to(self.installdir)
             )
@@ -211,14 +212,12 @@ class CharmBuilder:
             if node.resolve() == linked_entrypoint:
                 current_hooks_to_replace.append(node)
                 node.unlink()
-                emit.debug(
-                    f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint"
-                )
+                print(f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint")
 
         # include the mandatory ones and those we need to replace
         hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
         for hookname in hooknames:
-            emit.debug(f"Creating the {hookname!r} hook script pointing to dispatch")
+            print(f"Creating the {hookname!r} hook script pointing to dispatch")
             dest_hook = dest_hookpath / hookname
             if not dest_hook.exists():
                 relative_link = relativise(dest_hook, dispatch_path)
@@ -268,9 +267,9 @@ class CharmBuilder:
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
-        emit.debug("Handling dependencies")
+        print("Handling dependencies")
         if not (self.requirement_paths or self.binary_python_packages or self.python_packages):
-            emit.debug("No dependencies to handle")
+            print("No dependencies to handle")
             return
 
         staging_venv_dir = self.builddir / STAGING_VENV_DIRNAME
@@ -278,27 +277,27 @@ class CharmBuilder:
 
         # find out if current dependencies are the same than the last run.
         current_deps_hash = self._calculate_dependencies_hash()
-        emit.debug(f"Current dependencies hash: {current_deps_hash!r}")
+        print(f"Current dependencies hash: {current_deps_hash!r}")
         if not staging_venv_dir.exists():
-            emit.debug("Dependencies directory not found")
+            print("Dependencies directory not found")
             same_dependencies = False
         elif hash_file.exists():
             try:
                 previous_deps_hash = hash_file.read_text(encoding="utf8")
             except Exception as exc:
-                emit.debug(f"Problems reading the dependencies hash file: {exc}")
+                print(f"Problems reading the dependencies hash file: {exc}")
                 same_dependencies = False
             else:
-                emit.debug(f"Previous dependencies hash: {previous_deps_hash!r}")
+                print(f"Previous dependencies hash: {previous_deps_hash!r}")
                 same_dependencies = previous_deps_hash == current_deps_hash
         else:
-            emit.debug("Dependencies hash file not found")
+            print("Dependencies hash file not found")
             same_dependencies = False
 
         if same_dependencies:
-            emit.debug("Reusing installed dependencies, they are equal to last run ones")
+            print("Reusing installed dependencies, they are equal to last run ones")
         else:
-            emit.progress("Installing dependencies")
+            print("Installing dependencies")
             self._install_dependencies(staging_venv_dir)
 
             # save the hash file after all successful installations
@@ -337,7 +336,7 @@ def _process_run(cmd: List[str]) -> None:
 
     :raises CraftError: if execution crashes or ends with return code not zero.
     """
-    emit.progress(f"Running external command {cmd}")
+    print(f"Running external command {cmd}")
     try:
         proc = subprocess.Popen(
             cmd,
@@ -345,15 +344,15 @@ def _process_run(cmd: List[str]) -> None:
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
-    except Exception as err:
-        raise CraftError(f"Subprocess execution crashed for command {cmd}") from err
+    except Exception as exc:
+        raise RuntimeError(f"Subprocess command {cmd} execution crashed: {exc!r}")
 
     for line in proc.stdout:
-        emit.debug(f"   :: {line.rstrip()}")
+        print(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 
     if retcode:
-        raise CraftError(f"Subprocess command {cmd} execution failed with retcode {retcode}")
+        raise RuntimeError(f"Subprocess command {cmd} execution failed with retcode {retcode}")
 
 
 def _parse_arguments() -> argparse.Namespace:
@@ -403,9 +402,7 @@ def main():
     """Run the command-line interface."""
     options = _parse_arguments()
 
-    logpath = get_managed_environment_log_path()
-    emit.init(EmitterMode.TRACE, "charm-builder", "Starting charm builder", log_filepath=logpath)
-
+    print("Starting charm builder")
     builder = CharmBuilder(
         builddir=options.builddir,
         installdir=options.installdir,

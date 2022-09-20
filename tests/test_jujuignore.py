@@ -315,9 +315,9 @@ def test_from_file():
     assert not ignore.match("/foo/bar", is_dir=False)
 
 
-def test_log_matching_rule(emitter):
+def test_log_matching_rule(assert_output):
     jujuignore.JujuIgnore(["foo/bar\n"])
-    emitter.assert_debug(r"Translated .jujuignore 1 'foo/bar\n' => '.*/foo/bar\\Z'")
+    assert_output(r"Translated .jujuignore 1 'foo/bar\n' => '.*/foo/bar\\Z'")
 
 
 def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):

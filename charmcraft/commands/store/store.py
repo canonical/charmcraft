@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ UPLOAD_ENDING_STATUSES = {
     "approved": True,
     "rejected": False,
 }
-POLL_DELAY = 1
+POLL_DELAYS = [0.2, 0.3, 0.5, 1, 1, 1, 2] + [3] * 18  # total is 60 seconds
 
 # default restrictions to get auth credentials
 AUTH_DEFAULT_TTL = 3600 * 30
@@ -271,7 +271,7 @@ class Store:
         status_url = response["status-url"]
         emit.progress(f"Upload {upload_id} started, got status url {status_url}")
 
-        while True:
+        for poll_delay in POLL_DELAYS:
             response = self._client.request_urlpath_json("GET", status_url)
             emit.progress(f"Status checked: {response}")
 
@@ -287,9 +287,12 @@ class Store:
                     revision=revision["revision"],
                 )
 
-            # XXX Facundo 2020-06-30: Implement a slight backoff algorithm and fallout after
-            # N attempts (which should be big, as per snapcraft experience). Issue: #79.
-            time.sleep(POLL_DELAY)
+            time.sleep(poll_delay)
+
+        # no success in all the attempts to get an ending status
+        raise CraftError(
+            f"Timeout polling Charmhub for upload status (after {sum(POLL_DELAYS)}s)."
+        )
 
     @_store_client_wrapper()
     def upload(self, name, filepath):

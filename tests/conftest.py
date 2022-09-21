@@ -17,7 +17,7 @@
 import contextlib
 import datetime
 import json
-import imp
+import importlib
 import pathlib
 import tempfile
 import types
@@ -116,7 +116,7 @@ def intertests_cleanups():
 
     - unregister all Craft Parts plugins callbacks
     """
-    imp.reload(instrum)
+    importlib.reload(instrum)
     yield
     deprecations._ALREADY_NOTIFIED.clear()
     callbacks.unregister_all()

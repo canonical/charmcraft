@@ -778,7 +778,7 @@ def test_localdockerinterface_get_info_by_id_bad_response(responses, emitter):
     resp = ldi.get_image_info_from_id("test-id")
     assert resp is None
 
-    emitter.assert_debug("Bad response when validation local image: 500")
+    emitter.assert_debug("Bad response when validating local image: 500")
 
 
 def test_localdockerinterface_get_info_by_id_disconnected(emitter, responses):
@@ -838,7 +838,7 @@ def test_localdockerinterface_get_info_by_digest_bad_response(responses, emitter
     resp = ldi.get_image_info_from_digest("sha256:test-digest")
     assert resp is None
 
-    emitter.assert_debug("Bad response when validation local image: 500")
+    emitter.assert_debug("Bad response when validating local image: 500")
 
 
 def test_localdockerinterface_get_info_by_digest_disconnected(emitter, responses):

@@ -293,7 +293,7 @@ class LocalDockerdInterface:
     def get_image_info_from_id(self, image_id: str) -> Union[dict, None]:
         """Get the info for a specific image using its id.
 
-        Returns None to flag that the requested id was not found by any reason.
+        Returns None to flag that the requested id was not found for any reason.
         """
         url = self.dockerd_socket_baseurl + "/images/{}/json".format(image_id)
         try:
@@ -311,12 +311,12 @@ class LocalDockerdInterface:
         # 404 is the standard response to "not found", if not exactly that let's log
         # for proper debugging
         if response.status_code != 404:
-            emit.debug(f"Bad response when validation local image: {response.status_code}")
+            emit.debug(f"Bad response when validating local image: {response.status_code}")
 
     def get_image_info_from_digest(self, digest: str) -> Union[dict, None]:
         """Get the info for a specific image using its digest.
 
-        Returns None to flag that the requested digest was not found by any reason.
+        Returns None to flag that the requested digest was not found for any reason.
         """
         url = self.dockerd_socket_baseurl + "/images/json"
         try:
@@ -328,7 +328,7 @@ class LocalDockerdInterface:
             return
 
         if response.status_code != 200:
-            emit.debug(f"Bad response when validation local image: {response.status_code}")
+            emit.debug(f"Bad response when validating local image: {response.status_code}")
             return
 
         for image_info in response.json():

@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2020-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -577,7 +577,7 @@ def test_upload_straightforward(client_mock, emitter, config):
     )
 
 
-def test_upload_polls_status(client_mock, emitter, config):
+def test_upload_polls_status_ok(client_mock, emitter, config):
     """Upload polls status url until the end is indicated."""
     store = Store(config.charmhub)
 
@@ -608,7 +608,7 @@ def test_upload_polls_status(client_mock, emitter, config):
     test_status_resolution = "clean and crispy"
     fake_statuses = {test_status_ok: test_status_resolution}
     with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
-        with patch("charmcraft.commands.store.store.POLL_DELAY", 0.01):
+        with patch("charmcraft.commands.store.store.POLL_DELAYS", [0.1] * 5):
             result = store._upload("/test/endpoint/", "some-filepath")
 
     # check the status-checking client calls (kept going until third one)
@@ -635,6 +635,40 @@ def test_upload_polls_status(client_mock, emitter, config):
             call("progress", "Status checked: " + str(status_response_3)),
         ]
     )
+
+
+def test_upload_polls_status_timeout(client_mock, emitter, config):
+    """Upload polls status url until a timeout is achieved.
+
+    This is simulated patching a POLL_DELAYS structure shorter than the
+    number of "keep going" responses.
+    """
+    store = Store(config.charmhub)
+
+    # first and second response, for pushing bytes and let the store know about it
+    test_upload_id = "test-upload-id"
+    client_mock.push_file.return_value = test_upload_id
+    test_status_url = "https://store.c.c/status"
+
+    # the status checking response, will answer something not done yet twice, then ok
+    test_status_ok = "test-status"
+    status_response = {
+        "revisions": [{"status": "still-scanning", "revision": None, "errors": None}]
+    }
+    client_mock.request_urlpath_json.side_effect = [
+        {"status-url": test_status_url},
+        status_response,
+        status_response,
+        status_response,
+    ]
+
+    test_status_resolution = "clean and crispy"
+    fake_statuses = {test_status_ok: test_status_resolution}
+    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+        with patch("charmcraft.commands.store.store.POLL_DELAYS", [0.1] * 2):
+            with pytest.raises(CraftError) as cm:
+                store._upload("/test/endpoint/", "some-filepath")
+    assert str(cm.value) == "Timeout polling Charmhub for upload status (after 0.2s)."
 
 
 def test_upload_error(client_mock, config):

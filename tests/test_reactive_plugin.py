@@ -16,7 +16,7 @@
 
 import pathlib
 import sys
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError, CompletedProcess
 from unittest.mock import call, patch
 
 import craft_parts
@@ -173,6 +173,7 @@ def fake_run():
 
 
 def test_build(build_dir, install_dir, fake_run):
+    fake_run.return_value = CompletedProcess(("charm", "build"), 0)
     returncode = reactive_plugin.build(
         charm_name="test-charm",
         build_dir=build_dir,
@@ -248,7 +249,20 @@ def test_build_charm_proof_raises_warning_messages_does_not_raise(
 
 
 def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_run):
-    fake_run.side_effect = [None, CalledProcessError(200, "E: name missing")]
+    def _run_generator():
+        """Passing an iterable to `side_effect` pivots the mocks return_value,
+        and does not allow us to raise an actual exception.
+
+        Thus we need this helper to accomplish this.
+
+        Ref: https://docs.python.org/3/library/unittest.mock-examples.html#side-effect-functions-and-iterables
+        """
+        yield CompletedProcess(("charm", "proof"), 0)
+        yield CalledProcessError(200, "E: name missing")
+        yield CompletedProcess(("charm", "proof"), 0)
+        yield CalledProcessError(-1, "E: name missing")
+
+    fake_run.side_effect = _run_generator()
 
     returncode = reactive_plugin.build(
         charm_name="test-charm",
@@ -275,11 +289,31 @@ def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_ru
         ),
     ]
 
+    # Also ensure negative return codes raises error
+    returncode = reactive_plugin.build(
+        charm_name="test-charm",
+        build_dir=build_dir,
+        install_dir=install_dir,
+        charm_build_arguments=["--charm-argument", "--charm-argument-with", "argument"],
+    )
+    assert returncode == -1
+
 
 def test_build_charm_build_raises_warning_messages_does_not_raise(
     build_dir, install_dir, fake_run
 ):
-    fake_run.side_effect = [None, CalledProcessError(100, "W: Description is not pretty")]
+    def _run_generator():
+        """Passing an iterable to `side_effect` pivots the mocks return_value,
+        and does not allow us to raise an actual exception.
+
+        Thus we need this helper to accomplish this.
+
+        Ref: https://docs.python.org/3/library/unittest.mock-examples.html#side-effect-functions-and-iterables
+        """
+        yield CompletedProcess(("charm", "proof"), 0)
+        yield CalledProcessError(100, "W: Description is not pretty")
+
+    fake_run.side_effect = _run_generator()
 
     returncode = reactive_plugin.build(
         charm_name="test-charm",

@@ -4392,7 +4392,7 @@ def test_uploadresource_filepath_call_ok(emitter, store_mock, config, tmp_path, 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config, formatted):
+def test_uploadresource_image_digest_already_uploaded(emitter, store_mock, config, formatted):
     """Upload an oci-image resource, the image itself already being in the registry."""
     # fake credentials for the charm/resource, and the final json content
     store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
@@ -4401,7 +4401,7 @@ def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config,
         image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
     )
 
-    test_json_content = "from charmhub we came, from charmhub we shall return"
+    test_json_content = "from charmhub we came, to charmhub we shall return"
     store_mock.get_oci_image_blob.return_value = test_json_content
 
     # hack into the store mock to save for later the uploaded resource bytes
@@ -4423,7 +4423,7 @@ def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config,
     store_mock.upload_resource.side_effect = interceptor
 
     # test
-    original_image_digest = "test-digest-given-by-user"
+    original_image_digest = "sha256:test-digest-given-by-user"
     args = Namespace(
         charm_name="mycharm",
         resource_name="myresource",
@@ -4473,7 +4473,7 @@ def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config,
                 call(
                     "progress",
                     "Uploading resource from image "
-                    "charm/charm-id/test-image-name @ test-digest-given-by-user.",
+                    "charm/charm-id/test-image-name @ sha256:test-digest-given-by-user.",
                 ),
                 call("progress", "Using OCI image from Canonical's registry.", permanent=True),
                 call(
@@ -4484,8 +4484,8 @@ def test_uploadresource_image_call_already_uploaded(emitter, store_mock, config,
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config):
-    """Upload an oci-image resource, the image is upload from local to Canonical's registry."""
+def test_uploadresource_image_digest_upload_from_local(emitter, store_mock, config):
+    """Upload an oci-image resource, from local to Canonical's registry, specified by digest."""
     # fake credentials for the charm/resource, the final json content, and the upload result
     store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
         username="testusername",
@@ -4493,13 +4493,14 @@ def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config
         image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
     )
 
-    test_json_content = "from charmhub we came, from charmhub we shall return"
+    test_json_content = "from charmhub we came, to charmhub we shall return"
     store_mock.get_oci_image_blob.return_value = test_json_content
 
     store_mock.upload_resource.return_value = Uploaded(ok=True, status=200, revision=7, errors=[])
 
     # test
-    original_image_digest = "test-digest-given-by-user"
+    original_image_digest = "sha256:test-digest-given-by-user"
+    local_image_info = "local image info"
     args = Namespace(
         charm_name="mycharm",
         resource_name="myresource",
@@ -4508,22 +4509,24 @@ def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config
         format=False,
     )
     with patch("charmcraft.commands.store.ImageHandler", autospec=True) as im_class_mock:
-        with patch("charmcraft.commands.store.OCIRegistry", autospec=True) as reg_class_mock:
-            reg_class_mock.return_value = reg_mock = MagicMock()
+        with patch(
+            "charmcraft.commands.store.LocalDockerdInterface", autospec=True
+        ) as dockerd_class_mock:
             im_class_mock.return_value = im_mock = MagicMock()
+            dockerd_class_mock.return_value = dock_mock = MagicMock()
 
-            # not in the registry, and then uploaded ok
+            # not in the remote registry, found locally, then uploaded ok
             im_mock.check_in_registry.return_value = False
+            dock_mock.get_image_info_from_digest.return_value = local_image_info
             new_image_digest = "new-digest-after-upload"
             im_mock.upload_from_local.return_value = new_image_digest
 
             UploadResourceCommand(config).run(args)
 
     # validate how ImageHandler was used
-    assert im_class_mock.mock_calls == [
-        call(reg_mock),
-        call().check_in_registry(original_image_digest),
-        call().upload_from_local(original_image_digest),
+    assert im_mock.mock_calls == [
+        call.check_in_registry(original_image_digest),
+        call.upload_from_local(local_image_info),
     ]
 
     assert store_mock.mock_calls == [
@@ -4537,13 +4540,10 @@ def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config
             call(
                 "progress",
                 "Uploading resource from image "
-                "charm/charm-id/test-image-name @ test-digest-given-by-user.",
+                "charm/charm-id/test-image-name @ sha256:test-digest-given-by-user.",
             ),
-            call(
-                "progress",
-                "Remote image not found, uploading from local registry.",
-                permanent=True,
-            ),
+            call("progress", "Remote image not found, getting its info from local registry."),
+            call("progress", "Uploading from local registry.", permanent=True),
             call(
                 "progress",
                 "Image uploaded, new remote digest: new-digest-after-upload.",
@@ -4554,8 +4554,77 @@ def test_uploadresource_image_call_upload_from_local(emitter, store_mock, config
     )
 
 
-def test_uploadresource_image_call_missing_everywhere(emitter, store_mock, config):
-    """Upload an oci-image resource, but the image is not found remote nor locally."""
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_uploadresource_image_id_upload_from_local(emitter, store_mock, config):
+    """Upload an oci-image resource, from local to Canonical's registry, specified by id."""
+    # fake credentials for the charm/resource, the final json content, and the upload result
+    store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
+        username="testusername",
+        password="testpassword",
+        image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
+    )
+
+    test_json_content = "from charmhub we came, to charmhub we shall return"
+    store_mock.get_oci_image_blob.return_value = test_json_content
+
+    store_mock.upload_resource.return_value = Uploaded(ok=True, status=200, revision=7, errors=[])
+
+    # test
+    original_image_id = "test-id-given-by-user"
+    local_image_info = "local image info"
+    args = Namespace(
+        charm_name="mycharm",
+        resource_name="myresource",
+        filepath=None,
+        image=original_image_id,
+        format=False,
+    )
+    with patch("charmcraft.commands.store.ImageHandler", autospec=True) as im_class_mock:
+        with patch(
+            "charmcraft.commands.store.LocalDockerdInterface", autospec=True
+        ) as dockerd_class_mock:
+            im_class_mock.return_value = im_mock = MagicMock()
+            dockerd_class_mock.return_value = dock_mock = MagicMock()
+
+            # found locally, then uploaded ok
+            dock_mock.get_image_info_from_id.return_value = local_image_info
+            new_image_digest = "new-digest-after-upload"
+            im_mock.upload_from_local.return_value = new_image_digest
+
+            UploadResourceCommand(config).run(args)
+
+    # validate how ImageHandler was used
+    assert im_mock.mock_calls == [
+        call.upload_from_local(local_image_info),
+    ]
+
+    assert store_mock.mock_calls == [
+        call.get_oci_registry_credentials("mycharm", "myresource"),
+        call.get_oci_image_blob("mycharm", "myresource", new_image_digest),
+        call.upload_resource("mycharm", "myresource", "oci-image", ANY),
+    ]
+
+    emitter.assert_interactions(
+        [
+            call(
+                "progress",
+                "Uploading resource from image "
+                "charm/charm-id/test-image-name @ test-id-given-by-user.",
+            ),
+            call("progress", "Getting image info from local registry."),
+            call("progress", "Uploading from local registry.", permanent=True),
+            call(
+                "progress",
+                "Image uploaded, new remote digest: new-digest-after-upload.",
+                permanent=True,
+            ),
+            call("message", "Revision 7 created of resource 'myresource' for charm 'mycharm'."),
+        ]
+    )
+
+
+def test_uploadresource_image_digest_missing_everywhere(emitter, store_mock, config):
+    """Upload an oci-image resource by digest, but the image is not found remote nor locally."""
     # fake credentials for the charm/resource, the final json content, and the upload result
     store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
         username="testusername",
@@ -4564,7 +4633,7 @@ def test_uploadresource_image_call_missing_everywhere(emitter, store_mock, confi
     )
 
     # test
-    original_image_digest = "test-digest-given-by-user"
+    original_image_digest = "sha256:test-digest-given-by-user"
     args = Namespace(
         charm_name="mycharm",
         resource_name="myresource",
@@ -4573,23 +4642,28 @@ def test_uploadresource_image_call_missing_everywhere(emitter, store_mock, confi
         format=False,
     )
     with patch("charmcraft.commands.store.ImageHandler", autospec=True) as im_class_mock:
-        with patch("charmcraft.commands.store.OCIRegistry", autospec=True) as reg_class_mock:
-            reg_class_mock.return_value = reg_mock = MagicMock()
+        with patch(
+            "charmcraft.commands.store.LocalDockerdInterface", autospec=True
+        ) as dockerd_class_mock:
             im_class_mock.return_value = im_mock = MagicMock()
+            dockerd_class_mock.return_value = dock_mock = MagicMock()
 
             # not in the remote registry, not locally either
             im_mock.check_in_registry.return_value = False
-            im_mock.upload_from_local.return_value = None
+            dock_mock.get_image_info_from_digest.return_value = None
 
-            UploadResourceCommand(config).run(args)
+            with pytest.raises(CraftError) as cm:
+                UploadResourceCommand(config).run(args)
 
-    # validate how ImageHandler was used
-    assert im_class_mock.mock_calls == [
-        call(reg_mock),
-        call().check_in_registry(original_image_digest),
-        call().upload_from_local(original_image_digest),
+    assert str(cm.value) == "Image not found locally."
+
+    # validate how local interfaces and store was used
+    assert im_mock.mock_calls == [
+        call.check_in_registry(original_image_digest),
     ]
-
+    assert dock_mock.mock_calls == [
+        call.get_image_info_from_digest(original_image_digest),
+    ]
     assert store_mock.mock_calls == [
         call.get_oci_registry_credentials("mycharm", "myresource"),
     ]
@@ -4599,19 +4673,59 @@ def test_uploadresource_image_call_missing_everywhere(emitter, store_mock, confi
             call(
                 "progress",
                 "Uploading resource from "
-                "image charm/charm-id/test-image-name @ test-digest-given-by-user.",
+                "image charm/charm-id/test-image-name @ sha256:test-digest-given-by-user.",
             ),
+            call("progress", "Remote image not found, getting its info from local registry."),
+        ]
+    )
+
+
+def test_uploadresource_image_id_missing(emitter, store_mock, config):
+    """Upload an oci-image resource by id, but the image is not found locally."""
+    # fake credentials for the charm/resource, the final json content, and the upload result
+    store_mock.get_oci_registry_credentials.return_value = RegistryCredentials(
+        username="testusername",
+        password="testpassword",
+        image_name="registry.staging.jujucharms.com/charm/charm-id/test-image-name",
+    )
+
+    # test
+    original_image_id = "test-id-given-by-user"
+    args = Namespace(
+        charm_name="mycharm",
+        resource_name="myresource",
+        filepath=None,
+        image=original_image_id,
+        format=False,
+    )
+    with patch(
+        "charmcraft.commands.store.LocalDockerdInterface", autospec=True
+    ) as dockerd_class_mock:
+        dockerd_class_mock.return_value = dock_mock = MagicMock()
+
+        # not present locally
+        dock_mock.get_image_info_from_id.return_value = None
+
+        with pytest.raises(CraftError) as cm:
+            UploadResourceCommand(config).run(args)
+
+    assert str(cm.value) == "Image not found locally."
+
+    assert dock_mock.mock_calls == [
+        call.get_image_info_from_id(original_image_id),
+    ]
+    assert store_mock.mock_calls == [
+        call.get_oci_registry_credentials("mycharm", "myresource"),
+    ]
+
+    emitter.assert_interactions(
+        [
             call(
                 "progress",
-                "Remote image not found, uploading from local registry.",
-                permanent=True,
+                "Uploading resource from "
+                "image charm/charm-id/test-image-name @ test-id-given-by-user.",
             ),
-            call(
-                "progress",
-                "Image with digest test-digest-given-by-user is not available in "
-                "the Canonical's registry nor locally.",
-                permanent=True,
-            ),
+            call("progress", "Getting image info from local registry."),
         ]
     )
 

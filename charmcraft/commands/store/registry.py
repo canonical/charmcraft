@@ -290,12 +290,12 @@ class LocalDockerdInterface:
     def __init__(self):
         self.session = requests_unixsocket.Session()
 
-    def get_image_info(self, digest: str) -> Union[dict, None]:
-        """Get the info for a specific image.
+    def get_image_info_from_id(self, image_id: str) -> Union[dict, None]:
+        """Get the info for a specific image using its id.
 
-        Returns None to flag that the requested digest was not found by any reason.
+        Returns None to flag that the requested id was not found for any reason.
         """
-        url = self.dockerd_socket_baseurl + "/images/{}/json".format(digest)
+        url = self.dockerd_socket_baseurl + "/images/{}/json".format(image_id)
         try:
             response = self.session.get(url)
         except requests.exceptions.ConnectionError:
@@ -311,11 +311,33 @@ class LocalDockerdInterface:
         # 404 is the standard response to "not found", if not exactly that let's log
         # for proper debugging
         if response.status_code != 404:
-            emit.debug(f"Bad response when validation local image: {response.status_code}")
+            emit.debug(f"Bad response when validating local image: {response.status_code}")
 
-    def get_streamed_image_content(self, digest: str) -> requests.Response:
+    def get_image_info_from_digest(self, digest: str) -> Union[dict, None]:
+        """Get the info for a specific image using its digest.
+
+        Returns None to flag that the requested digest was not found for any reason.
+        """
+        url = self.dockerd_socket_baseurl + "/images/json"
+        try:
+            response = self.session.get(url)
+        except requests.exceptions.ConnectionError:
+            emit.debug(
+                "Cannot connect to /var/run/docker.sock , please ensure dockerd is running.",
+            )
+            return
+
+        if response.status_code != 200:
+            emit.debug(f"Bad response when validating local image: {response.status_code}")
+            return
+
+        for image_info in response.json():
+            if any(digest in repo_digest for repo_digest in image_info["RepoDigests"]):
+                return image_info
+
+    def get_streamed_image_content(self, image_id: str) -> requests.Response:
         """Stream the content of a specific image."""
-        url = self.dockerd_socket_baseurl + "/images/{}/get".format(digest)
+        url = self.dockerd_socket_baseurl + "/images/{}/get".format(image_id)
         return self.session.get(url, stream=True)
 
 
@@ -373,22 +395,17 @@ class ImageHandler:
         # finally remove the temp filepath
         os.unlink(filepath)
 
-    def upload_from_local(self, digest: str) -> Union[str, None]:
+    def upload_from_local(self, image_info: Dict[str, Any]) -> Union[str, None]:
         """Upload the image from the local registry.
 
-        Returns the new remote digest, or None if the image was not found locally.
+        Returns the new remote digest.
         """
         dockerd = LocalDockerdInterface()
-
-        # validate the image is present locally
-        emit.progress("Checking image is present locally")
-        image_info = dockerd.get_image_info(digest)
-        if image_info is None:
-            return
         local_image_size = image_info["Size"]
+        image_id = image_info["Id"]
 
         emit.progress(f"Getting the image from the local repo; size={local_image_size}")
-        response = dockerd.get_streamed_image_content(digest)
+        response = dockerd.get_streamed_image_content(image_id)
 
         tmp_exported = tempfile.NamedTemporaryFile(mode="wb", delete=False)
         with emit.progress_bar("Reading image...", local_image_size) as progress:

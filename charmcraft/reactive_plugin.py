@@ -21,7 +21,6 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, cast
 
-from craft_cli import emit
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
@@ -76,7 +75,7 @@ class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentVali
                     reason=f"invalid charm tools version {version_data}",
                 )
             tools_version = f"{tool_name} {version_data[tool_name]['version']} ({version_data[tool_name]['git']})"
-            emit.debug(f"found {tools_version}")
+            print(f"found {tools_version}")
         except ValueError as err:
             raise PluginEnvironmentValidationError(
                 part_name=self._part_name,
@@ -140,6 +139,26 @@ class ReactivePlugin(plugins.Plugin):
         return [" ".join(shlex.quote(i) for i in command)]
 
 
+def run_charm_tool(args: List[str]):
+    """Run the charm tool, log and check exit code."""
+    result_classification = "SUCCESS"
+    exc = None
+
+    print(f"charm tool execution command={args}")
+    try:
+        completed_process = subprocess.run(args, check=True)
+    except subprocess.CalledProcessError as call_error:
+        exc = call_error
+        if call_error.returncode < 100 or call_error.returncode >= 200:
+            result_classification = "ERROR"
+            raise
+        result_classification = "WARNING"
+    finally:
+        print(
+            f"charm tool execution {result_classification}: returncode={exc.returncode if exc else completed_process.returncode}"
+        )
+
+
 def build(
     *, charm_name: str, build_dir: Path, install_dir: Path, charm_build_arguments: List[str]
 ):
@@ -161,11 +180,11 @@ def build(
     string produced by `charm` would be misleading.
     """
     # Verify the charm is ok from a charm tool point of view.
+
     try:
-        subprocess.run(["charm", "proof"], check=True)
+        run_charm_tool(["charm", "proof"])
     except subprocess.CalledProcessError as call_error:
-        if call_error.returncode >= 200:
-            return call_error.returncode
+        return call_error.returncode
 
     # Link the installation directory to the place where charm creates
     # the charm.
@@ -179,10 +198,9 @@ def build(
     cmd.extend(["-o", build_dir])
 
     try:
-        subprocess.run(cmd, check=True)
+        run_charm_tool(cmd)
     except subprocess.CalledProcessError as call_error:
-        if call_error.returncode >= 200:
-            return call_error.returncode
+        return call_error.returncode
     finally:
         charm_build_dir.unlink()
 

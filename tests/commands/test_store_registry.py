@@ -736,55 +736,115 @@ def test_ociregistry_upload_blob_bad_final_digest(tmp_path, responses):
 # -- tests for the ImageHandler helpers and functionalities
 
 
-def test_localdockerinterface_get_info_ok(responses, emitter):
+def test_localdockerinterface_get_info_by_id_ok(responses, emitter):
     """Get image info ok."""
     test_image_info = {"some": "stuff"}
     responses.add(
         responses.GET,
-        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/json",
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-id/json",
         json=test_image_info,
     )
     ldi = LocalDockerdInterface()
-    resp = ldi.get_image_info("test-digest")
+    resp = ldi.get_image_info_from_id("test-id")
     assert resp == test_image_info
 
     emitter.assert_interactions(None)
 
 
-def test_localdockerinterface_get_info_not_found(responses, emitter):
+def test_localdockerinterface_get_info_by_id_not_found(responses, emitter):
     """Get image info for something that is not there."""
     # return 404, which means that the image was not found
     responses.add(
         responses.GET,
-        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/json",
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-id/json",
         status=404,
     )
     ldi = LocalDockerdInterface()
-    resp = ldi.get_image_info("test-digest")
+    resp = ldi.get_image_info_from_id("test-id")
     assert resp is None
 
     emitter.assert_interactions(None)
 
 
-def test_localdockerinterface_get_info_bad_response(responses, emitter):
+def test_localdockerinterface_get_info_by_id_bad_response(responses, emitter):
     """Docker answered badly when checking for the image."""
     # weird dockerd behaviour
     responses.add(
         responses.GET,
-        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/json",
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-id/json",
         status=500,
     )
     ldi = LocalDockerdInterface()
-    resp = ldi.get_image_info("test-digest")
+    resp = ldi.get_image_info_from_id("test-id")
     assert resp is None
 
-    emitter.assert_debug("Bad response when validation local image: 500")
+    emitter.assert_debug("Bad response when validating local image: 500")
 
 
-def test_localdockerinterface_get_info_disconnected(emitter, responses):
+def test_localdockerinterface_get_info_by_id_disconnected(emitter, responses):
     """No daemon to talk to (see responses used as fixture but no listening)."""
     ldi = LocalDockerdInterface()
-    resp = ldi.get_image_info("test-digest")
+    resp = ldi.get_image_info_from_id("test-id")
+    assert resp is None
+
+    emitter.assert_debug(
+        "Cannot connect to /var/run/docker.sock , please ensure dockerd is running."
+    )
+
+
+def test_localdockerinterface_get_info_by_digest_ok(responses, emitter):
+    """Get image info ok."""
+    test_image_info_1 = {"some": "stuff", "RepoDigests": ["name @ sha256:test-digest", "other"]}
+    test_image_info_2 = {"some": "stuff", "RepoDigests": ["foo", "bar"]}
+    test_search_respoonse = [test_image_info_1, test_image_info_2]
+    responses.add(
+        responses.GET,
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/json",
+        json=test_search_respoonse,
+    )
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info_from_digest("sha256:test-digest")
+    assert resp == test_image_info_1
+
+    emitter.assert_interactions(None)
+
+
+def test_localdockerinterface_get_info_by_digest_not_found(responses, emitter):
+    """Get image info for something that is not there."""
+    test_image_info_1 = {"some": "stuff", "RepoDigests": ["other"]}
+    test_image_info_2 = {"some": "stuff", "RepoDigests": ["foo", "bar"]}
+    test_search_respoonse = [test_image_info_1, test_image_info_2]
+    responses.add(
+        responses.GET,
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/json",
+        json=test_search_respoonse,
+    )
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info_from_digest("sha256:test-digest")
+    assert resp is None
+
+    emitter.assert_interactions(None)
+
+
+def test_localdockerinterface_get_info_by_digest_bad_response(responses, emitter):
+    """Docker answered badly when checking for the image."""
+    # weird dockerd behaviour
+    responses.add(
+        responses.GET,
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/json",
+        status=500,
+    )
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info_from_digest("sha256:test-digest")
+    assert resp is None
+
+    emitter.assert_debug("Bad response when validating local image: 500")
+
+
+def test_localdockerinterface_get_info_by_digest_disconnected(emitter, responses):
+    """No daemon to talk to (see responses used as fixture but no listening)."""
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info_from_digest("sha256:test-digest")
     assert resp is None
 
     emitter.assert_debug(
@@ -807,11 +867,11 @@ def test_localdockerinterface_get_streamed_content(responses):
     test_content = AuditableBufferedReader(io.BytesIO(b"123456789"))
     responses.add(
         responses.GET,
-        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-digest/get",
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/test-id/get",
         body=test_content,
     )
     ldi = LocalDockerdInterface()
-    resp = ldi.get_streamed_image_content("test-digest")
+    resp = ldi.get_streamed_image_content("test-id")
     assert test_content._test_read_chunks == []
 
     chunk_size = 5
@@ -851,17 +911,13 @@ class FakeRegistry:
 class FakeDockerd:
     """A fake dockerd interface to mimic behaviour of the real one."""
 
-    def __init__(self, image_info, image_content):
+    def __init__(self, image_id, image_info, image_content):
         self.image_info = image_info
         self.image_content = image_content
-        self.used_digest = None
+        self.used_id = image_id
 
-    def get_image_info(self, digest):
-        self.used_digest = digest
-        return self.image_info.get(digest)
-
-    def get_streamed_image_content(self, digest):
-        assert digest == self.used_digest
+    def get_streamed_image_content(self, image_id):
+        assert image_id == self.used_id
 
         class FakeResponse:
             def __init__(self, content):
@@ -1030,10 +1086,11 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
         tar_file.addfile(ti, fileobj=io.BytesIO(content))
     tar_file.close()
 
-    # return 200 with the image info
+    # prepare the image info
     image_size = test_tar_image.stat().st_size
-    image_info = {"Size": image_size, "foobar": "etc"}
-    fakedockerd = FakeDockerd({"test-digest": image_info}, test_tar_image.read_bytes())
+    image_id = "test-image-id"
+    image_info = {"Size": image_size, "Id": image_id, "foobar": "etc"}
+    fakedockerd = FakeDockerd(image_id, image_info, test_tar_image.read_bytes())
     monkeypatch.setattr(registry, "LocalDockerdInterface", lambda: fakedockerd)
 
     # ensure two reads from that image, so we can properly test progress
@@ -1043,7 +1100,7 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
 
     fake_registry = FakeRegistry()
     im = ImageHandler(fake_registry)
-    main_call_result = im.upload_from_local("test-digest")
+    main_call_result = im.upload_from_local(image_info)
 
     # check the uploaded blobs: first the config (as is), then the layers (compressed)
     (
@@ -1105,7 +1162,6 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
     # check the output logs
     emitter.assert_interactions(
         [
-            call("progress", "Checking image is present locally"),
             call("progress", "Getting the image from the local repo; size={}".format(image_size)),
             call("progress_bar", "Reading image...", image_size),
             call("advance", image_read_from_dockerd_size_1),
@@ -1131,19 +1187,6 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
             ),
         ]
     )
-
-
-def test_imagehandler_uploadfromlocal_not_found_locally(emitter, monkeypatch):
-    """The requested image is not presented locally."""
-    # will not find the image
-    fakedockerd = FakeDockerd({}, b"")
-    monkeypatch.setattr(registry, "LocalDockerdInterface", lambda: fakedockerd)
-
-    im = ImageHandler("a-registry")
-    result = im.upload_from_local("test-digest")
-    assert result is None
-
-    emitter.assert_progress("Checking image is present locally")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -1172,13 +1215,14 @@ def test_imagehandler_uploadfromlocal_no_config(emitter, tmp_path, monkeypatch):
 
     # return 200 with the image info
     image_size = test_tar_image.stat().st_size
-    image_info = {"Size": image_size, "foobar": "etc"}
-    fakedockerd = FakeDockerd({"test-digest": image_info}, test_tar_image.read_bytes())
+    image_id = "test-image-id"
+    image_info = {"Size": image_size, "Id": image_id, "foobar": "etc"}
+    fakedockerd = FakeDockerd(image_id, image_info, test_tar_image.read_bytes())
     monkeypatch.setattr(registry, "LocalDockerdInterface", lambda: fakedockerd)
 
     fake_registry = FakeRegistry()
     im = ImageHandler(fake_registry)
-    main_call_result = im.upload_from_local("test-digest")
+    main_call_result = im.upload_from_local(image_info)
 
     # check the uploaded blob: just the compressed layer
     (uploaded_layer,) = fake_registry.stored_blobs.items()
@@ -1216,7 +1260,6 @@ def test_imagehandler_uploadfromlocal_no_config(emitter, tmp_path, monkeypatch):
     # check the output logs
     emitter.assert_interactions(
         [
-            call("progress", "Checking image is present locally"),
             call("progress", "Getting the image from the local repo; size={}".format(image_size)),
             call("progress_bar", "Reading image...", image_size),
             call("advance", image_size),

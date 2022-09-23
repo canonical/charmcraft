@@ -31,7 +31,7 @@ packaging==21.3
 pathspec==0.10.0
 platformdirs==2.5.2
 pluggy==1.0.0
-protobuf==3.20.1
+protobuf==3.20.2
 py==1.11.0
 pycodestyle==2.9.1
 pycparser==2.21

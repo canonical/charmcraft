@@ -36,7 +36,8 @@ def charm_exe(tmp_path):
     charm_bin = pathlib.Path(tmp_path, "mock_bin", "charm")
     charm_bin.parent.mkdir(exist_ok=True)
     charm_bin.write_text(
-        '#!/bin/sh\necho \'{"charm-tools": {"version": "2.8.4", "git": "+git-7-6126e17", "gitn": 7, "gitsha": "6126e17", "pre_release": false, "snap": "+snap-x12"}}\''
+        '#!/bin/sh\necho \'{"charm-tools": {"version": "2.8.4", "git": "+git-7-6126e17", '
+        '"gitn": 7, "gitsha": "6126e17", "pre_release": false, "snap": "+snap-x12"}}\''
     )
     charm_bin.chmod(0o755)
     yield charm_bin
@@ -250,12 +251,10 @@ def test_build_charm_proof_raises_warning_messages_does_not_raise(
 
 def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_run):
     def _run_generator():
-        """Passing an iterable to `side_effect` pivots the mocks return_value,
-        and does not allow us to raise an actual exception.
+        """Generate return values and exceptions alternatively.
 
-        Thus we need this helper to accomplish this.
-
-        Ref: https://docs.python.org/3/library/unittest.mock-examples.html#side-effect-functions-and-iterables
+        This cannot be done directly because passing an iterable to `side_effect` pivots the
+        mocks return_value, and does not allow us to raise an actual exception.
         """
         yield CompletedProcess(("charm", "proof"), 0)
         yield CalledProcessError(200, "E: name missing")
@@ -303,12 +302,10 @@ def test_build_charm_build_raises_warning_messages_does_not_raise(
     build_dir, install_dir, fake_run
 ):
     def _run_generator():
-        """Passing an iterable to `side_effect` pivots the mocks return_value,
-        and does not allow us to raise an actual exception.
+        """Generate return values and exceptions alternatively.
 
-        Thus we need this helper to accomplish this.
-
-        Ref: https://docs.python.org/3/library/unittest.mock-examples.html#side-effect-functions-and-iterables
+        This cannot be done directly because passing an iterable to `side_effect` pivots the
+        mocks return_value, and does not allow us to raise an actual exception.
         """
         yield CompletedProcess(("charm", "proof"), 0)
         yield CalledProcessError(100, "W: Description is not pretty")

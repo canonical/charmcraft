@@ -174,38 +174,6 @@ def test_ensure_provider_is_available_errors_when_multipass_not_ready(
     assert exc_info.value.__cause__ is error
 
 
-def test_get_command_environment_minimal(monkeypatch):
-    monkeypatch.setenv("IGNORE_ME", "or-im-failing")
-    monkeypatch.setenv("PATH", "not-using-host-path")
-    provider = providers.MultipassProvider()
-
-    env = provider.get_command_environment()
-
-    assert env == {
-        "CHARMCRAFT_MANAGED_MODE": "1",
-        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
-    }
-
-
-def test_get_command_environment_all_opts(monkeypatch):
-    monkeypatch.setenv("IGNORE_ME", "or-im-failing")
-    monkeypatch.setenv("PATH", "not-using-host-path")
-    monkeypatch.setenv("http_proxy", "test-http-proxy")
-    monkeypatch.setenv("https_proxy", "test-https-proxy")
-    monkeypatch.setenv("no_proxy", "test-no-proxy")
-    provider = providers.MultipassProvider()
-
-    env = provider.get_command_environment()
-
-    assert env == {
-        "CHARMCRAFT_MANAGED_MODE": "1",
-        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
-        "http_proxy": "test-http-proxy",
-        "https_proxy": "test-https-proxy",
-        "no_proxy": "test-no-proxy",
-    }
-
-
 @pytest.mark.parametrize(
     "bases_index,build_on_index,project_name,target_arch,expected",
     [

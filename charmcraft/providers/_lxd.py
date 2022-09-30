@@ -30,6 +30,7 @@ from charmcraft.utils import confirm_with_user, get_host_architecture
 
 from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
 from ._provider import Provider
+from .providers import get_command_environment
 
 
 class LXDProvider(Provider):
@@ -98,7 +99,7 @@ class LXDProvider(Provider):
         """
         return lxd.LXDInstance(
             name=instance_name,
-            default_command_environment=self.get_command_environment(),
+            default_command_environment=get_command_environment(),
             project=self.lxd_project,
             remote=self.lxd_remote,
         )
@@ -132,7 +133,7 @@ class LXDProvider(Provider):
             target_arch=target_arch,
         )
 
-        environment = self.get_command_environment()
+        environment = get_command_environment()
         with instrum.Timer("LXD: Configure buildd image"):
             try:
                 image_remote = lxd.configure_buildd_image_remote()

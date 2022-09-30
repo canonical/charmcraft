@@ -19,7 +19,7 @@ from unittest.mock import Mock, patch, call
 import pytest
 
 from charmcraft.config import Base, BasesConfiguration
-from charmcraft.providers.providers import Plan, create_build_plan
+from charmcraft.providers.providers import Plan, create_build_plan, get_command_environment
 from craft_cli import CraftError
 
 
@@ -420,3 +420,33 @@ def test_create_build_plan_no_bases_error(mock_provider):
         )
 
     assert str(error.value) == "Cannot create build plan because no bases were provided."
+
+
+def test_get_command_environment_minimal(monkeypatch):
+    monkeypatch.setenv("IGNORE_ME", "or-im-failing")
+    monkeypatch.setenv("PATH", "not-using-host-path")
+
+    env = get_command_environment()
+
+    assert env == {
+        "CHARMCRAFT_MANAGED_MODE": "1",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+    }
+
+
+def test_get_command_environment_all_opts(monkeypatch):
+    monkeypatch.setenv("IGNORE_ME", "or-im-failing")
+    monkeypatch.setenv("PATH", "not-using-host-path")
+    monkeypatch.setenv("http_proxy", "test-http-proxy")
+    monkeypatch.setenv("https_proxy", "test-https-proxy")
+    monkeypatch.setenv("no_proxy", "test-no-proxy")
+
+    env = get_command_environment()
+
+    assert env == {
+        "CHARMCRAFT_MANAGED_MODE": "1",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+        "http_proxy": "test-http-proxy",
+        "https_proxy": "test-https-proxy",
+        "no_proxy": "test-no-proxy",
+    }

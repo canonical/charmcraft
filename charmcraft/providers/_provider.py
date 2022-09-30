@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,13 +17,12 @@
 """Build environment provider support for charmcraft."""
 
 import contextlib
-import os
 import pathlib
 from abc import ABC, abstractmethod
-from typing import Dict, Generator, Tuple, Union
+from typing import Generator, Tuple, Union
 
 from craft_cli import emit, CraftError
-from craft_providers import bases, Executor, ProviderError
+from craft_providers import Executor, ProviderError
 
 from charmcraft.config import Base
 from charmcraft.utils import get_host_architecture
@@ -78,18 +77,6 @@ class Provider(ABC):
 
         :raises CraftError: if provider is not available.
         """
-
-    def get_command_environment(self) -> Dict[str, str]:
-        """Construct the required environment."""
-        env = bases.buildd.default_command_environment()
-        env["CHARMCRAFT_MANAGED_MODE"] = "1"
-
-        # Pass-through host environment that target may need.
-        for env_key in ["http_proxy", "https_proxy", "no_proxy"]:
-            if env_key in os.environ:
-                env[env_key] = os.environ[env_key]
-
-        return env
 
     def get_instance_name(
         self,

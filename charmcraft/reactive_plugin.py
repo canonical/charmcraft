@@ -74,7 +74,10 @@ class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentVali
                     part_name=self._part_name,
                     reason=f"invalid charm tools version {version_data}",
                 )
-            tools_version = f"{tool_name} {version_data[tool_name]['version']} ({version_data[tool_name]['git']})"
+            tools_version = (
+                f"{tool_name} {version_data[tool_name]['version']} "
+                f"({version_data[tool_name]['git']})"
+            )
             print(f"found {tools_version}")
         except ValueError as err:
             raise PluginEnvironmentValidationError(
@@ -155,7 +158,8 @@ def run_charm_tool(args: List[str]):
         result_classification = "WARNING"
     finally:
         print(
-            f"charm tool execution {result_classification}: returncode={exc.returncode if exc else completed_process.returncode}"
+            f"charm tool execution {result_classification}: "
+            f"returncode={exc.returncode if exc else completed_process.returncode}"
         )
 
 

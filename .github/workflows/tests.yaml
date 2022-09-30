@@ -230,6 +230,9 @@ jobs:
               source: .
               plugin: reactive
               build-snaps: [charm]
+              build-packages:
+                - virtualenv
+                - git
           EOF
           sg lxd -c "charmcraft -v pack"
           popd

@@ -16,13 +16,17 @@
 
 """Charmcraft-specific code to interface with craft-providers."""
 
-from typing import NamedTuple, List, Optional
+import os
+from typing import NamedTuple, List, Optional, Dict, TYPE_CHECKING
 
 from craft_cli import emit, CraftError
+from craft_providers import bases
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
-from charmcraft.providers import Provider
+
+if TYPE_CHECKING:
+    from charmcraft.providers import Provider
 
 
 class Plan(NamedTuple):
@@ -48,7 +52,7 @@ def create_build_plan(
     bases_indices: Optional[List[int]],
     destructive_mode: bool,
     managed_mode: bool,
-    provider: Provider,
+    provider: "Provider",
 ) -> List[Plan]:
     """Determine the build plan based on user inputs and host environment.
 
@@ -102,3 +106,16 @@ def create_build_plan(
             )
 
     return build_plan
+
+
+def get_command_environment() -> Dict[str, str]:
+    """Construct the required environment."""
+    env = bases.buildd.default_command_environment()
+    env["CHARMCRAFT_MANAGED_MODE"] = "1"
+
+    # Pass-through host environment that target may need.
+    for env_key in ["http_proxy", "https_proxy", "no_proxy"]:
+        if env_key in os.environ:
+            env[env_key] = os.environ[env_key]
+
+    return env

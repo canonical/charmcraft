@@ -25,7 +25,6 @@ from craft_providers import bases, multipass, Executor
 from craft_providers.multipass.errors import MultipassError
 
 from charmcraft.config import Base
-from charmcraft.env import get_managed_environment_project_path
 from charmcraft.utils import confirm_with_user, get_host_architecture
 
 from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
@@ -138,12 +137,6 @@ class MultipassProvider(Provider):
                 auto_clean=True,
             )
         except (bases.BaseConfigurationError, MultipassError) as error:
-            raise CraftError(str(error)) from error
-
-        try:
-            # Mount project.
-            instance.mount(host_source=project_path, target=get_managed_environment_project_path())
-        except MultipassError as error:
             raise CraftError(str(error)) from error
 
         try:

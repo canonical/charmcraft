@@ -25,7 +25,6 @@ from craft_providers import Executor, bases, lxd
 
 from charmcraft import instrum
 from charmcraft.config import Base
-from charmcraft.env import get_managed_environment_project_path
 from charmcraft.utils import confirm_with_user, get_host_architecture
 
 from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
@@ -164,10 +163,6 @@ class LXDProvider(Provider):
                 )
             except (bases.BaseConfigurationError, lxd.LXDError) as error:
                 raise CraftError(str(error)) from error
-
-        # Mount project.
-        with instrum.Timer("LXD: Mount"):
-            instance.mount(host_source=project_path, target=get_managed_environment_project_path())
 
         try:
             yield instance

@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import pathlib
 import re
 from unittest import mock
 from unittest.mock import call
@@ -272,7 +271,6 @@ def test_launched_environment(
                 remote="local",
                 uid=tmp_path.stat().st_uid,
             ),
-            mock.call().mount(host_source=tmp_path, target=pathlib.Path("/root/project")),
         ]
         assert mock_buildd_base_configuration.mock_calls == [
             call(

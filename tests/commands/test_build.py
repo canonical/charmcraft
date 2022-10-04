@@ -453,6 +453,7 @@ def test_build_project_is_cwd(
         )
     )
     config = load(basic_project)
+    project_managed_path = pathlib.Path("/root/project")
     builder = get_builder(config)
 
     zipnames = builder.run([0])
@@ -474,10 +475,11 @@ def test_build_project_is_cwd(
         ),
     ]
     assert mock_instance.mock_calls == [
+        call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief"],
             check=True,
-            cwd=pathlib.Path("/root/project"),
+            cwd=project_managed_path,
         ),
     ]
 
@@ -506,6 +508,7 @@ def test_build_project_is_not_cwd(
         )
     )
     config = load(basic_project)
+    project_managed_path = pathlib.Path("/root")
     builder = get_builder(config)
 
     monkeypatch.chdir("/")  # make the working directory NOT the project's one
@@ -528,13 +531,14 @@ def test_build_project_is_not_cwd(
         ),
     ]
     assert mock_instance.mock_calls == [
+        call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief"],
             check=True,
-            cwd=pathlib.Path("/root"),
+            cwd=project_managed_path,
         ),
         call.pull_file(
-            source=pathlib.Path("/root") / zipnames[0],
+            source=project_managed_path / zipnames[0],
             destination=pathlib.Path.cwd() / zipnames[0],
         ),
     ]
@@ -564,6 +568,7 @@ def test_build_bases_index_scenarios_provider(
     emit.set_mode(mode)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
+    project_managed_path = pathlib.Path("/root/project")
     charmcraft_file = basic_project / "charmcraft.yaml"
     charmcraft_file.write_text(
         dedent(
@@ -604,10 +609,11 @@ def test_build_bases_index_scenarios_provider(
         ),
     ]
     assert mock_instance.mock_calls == [
+        call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
-            cwd=pathlib.Path("/root/project"),
+            cwd=project_managed_path,
         ),
     ]
     emitter.assert_progress(
@@ -637,10 +643,11 @@ def test_build_bases_index_scenarios_provider(
         ),
     ]
     assert mock_instance.mock_calls == [
+        call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
             check=True,
-            cwd=pathlib.Path("/root/project"),
+            cwd=project_managed_path,
         ),
     ]
     mock_provider.reset_mock()
@@ -675,15 +682,17 @@ def test_build_bases_index_scenarios_provider(
         ),
     ]
     assert mock_instance.mock_calls == [
+        call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
-            cwd=pathlib.Path("/root/project"),
+            cwd=project_managed_path,
         ),
+        call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
             check=True,
-            cwd=pathlib.Path("/root/project"),
+            cwd=project_managed_path,
         ),
     ]
     mock_provider.reset_mock()
@@ -712,10 +721,11 @@ def test_build_bases_index_scenarios_provider(
         builder.run([0])
 
     assert mock_instance.mock_calls == [
+        call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
             check=True,
-            cwd=pathlib.Path("/root/project"),
+            cwd=project_managed_path,
         ),
     ]
     # it was called five times, for success and errors
@@ -862,6 +872,7 @@ def test_build_arguments_managed_charmcraft_simples(
     emit.set_mode(EmitterMode.BRIEF)
     host_base = get_host_as_base()
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
+    project_managed_path = pathlib.Path("/root/project")
 
     kwargs = {builder_flag: True}
     builder = basic_project_builder(bases_config, **kwargs)
@@ -872,7 +883,8 @@ def test_build_arguments_managed_charmcraft_simples(
     )
     expected_cmd = ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief", cmd_flag]
     assert mock_instance.mock_calls == [
-        call.execute_run(expected_cmd, check=True, cwd=pathlib.Path("/root/project")),
+        call.mount(host_source=builder.config.project.dirpath, target=project_managed_path),
+        call.execute_run(expected_cmd, check=True, cwd=project_managed_path),
     ]
 
 
@@ -887,6 +899,7 @@ def test_build_arguments_managed_charmcraft_measure(
     emit.set_mode(EmitterMode.BRIEF)
     host_base = get_host_as_base()
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
+    project_managed_path = pathlib.Path("/root/project")
 
     # fake a dumped mesure to be pulled from the instance
     fake_local_m = tmp_path / "local.json"
@@ -907,7 +920,8 @@ def test_build_arguments_managed_charmcraft_measure(
     cmd_flag = f"--measure={str(fake_inst_m)}"
     expected_cmd = ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief", cmd_flag]
     assert mock_instance.mock_calls == [
-        call.execute_run(expected_cmd, check=True, cwd=pathlib.Path("/root/project")),
+        call.mount(host_source=builder.config.project.dirpath, target=project_managed_path),
+        call.execute_run(expected_cmd, check=True, cwd=project_managed_path),
         call.temporarily_pull_file(fake_inst_m),
     ]
 

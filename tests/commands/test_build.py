@@ -508,7 +508,6 @@ def test_build_project_is_not_cwd(
         )
     )
     config = load(basic_project)
-    project_managed_path = pathlib.Path("/root")
     builder = get_builder(config)
 
     monkeypatch.chdir("/")  # make the working directory NOT the project's one
@@ -531,14 +530,14 @@ def test_build_project_is_not_cwd(
         ),
     ]
     assert mock_instance.mock_calls == [
-        call.mount(host_source=basic_project, target=project_managed_path),
+        call.mount(host_source=basic_project, target=pathlib.Path("/root/project")),
         call.execute_run(
             ["charmcraft", "pack", "--bases-index", "0", "--verbosity=brief"],
             check=True,
-            cwd=project_managed_path,
+            cwd=pathlib.Path("/root"),
         ),
         call.pull_file(
-            source=project_managed_path / zipnames[0],
+            source=pathlib.Path("/root") / zipnames[0],
             destination=pathlib.Path.cwd() / zipnames[0],
         ),
     ]

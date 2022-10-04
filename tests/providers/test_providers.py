@@ -19,7 +19,12 @@ from unittest.mock import Mock, patch, call
 import pytest
 
 from charmcraft.config import Base, BasesConfiguration
-from charmcraft.providers.providers import Plan, create_build_plan, get_command_environment
+from charmcraft.providers.providers import (
+    Plan,
+    create_build_plan,
+    get_command_environment,
+    get_instance_name,
+)
 from craft_cli import CraftError
 
 
@@ -450,3 +455,28 @@ def test_get_command_environment_all_opts(monkeypatch):
         "https_proxy": "test-https-proxy",
         "no_proxy": "test-no-proxy",
     }
+
+
+@pytest.mark.parametrize(
+    "bases_index,build_on_index,project_name,target_arch,expected",
+    [
+        (0, 0, "mycharm", "test-arch1", "charmcraft-mycharm-{inode}-0-0-test-arch1"),
+        (
+            1,
+            2,
+            "my-other-charm",
+            "test-arch2",
+            "charmcraft-my-other-charm-{inode}-1-2-test-arch2",
+        ),
+    ],
+)
+def test_get_instance_name(
+    bases_index, build_on_index, project_name, target_arch, expected, mock_path
+):
+    assert get_instance_name(
+        bases_index=bases_index,
+        build_on_index=build_on_index,
+        project_name=project_name,
+        project_path=mock_path,
+        target_arch=target_arch,
+    ) == expected.format(inode="445566")

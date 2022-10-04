@@ -30,7 +30,7 @@ from charmcraft.utils import confirm_with_user, get_host_architecture
 
 from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
 from ._provider import Provider
-from .providers import get_command_environment
+from .providers import get_command_environment, get_instance_name
 
 
 class LXDProvider(Provider):
@@ -125,7 +125,7 @@ class LXDProvider(Provider):
         alias = BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS[base.channel]
         target_arch = get_host_architecture()
 
-        instance_name = self.get_instance_name(
+        instance_name = get_instance_name(
             bases_index=bases_index,
             build_on_index=build_on_index,
             project_name=charm_name,

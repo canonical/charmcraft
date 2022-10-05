@@ -20,10 +20,11 @@ import pytest
 
 from charmcraft.commands.clean import CleanCommand
 from charmcraft.config import Base, BasesConfiguration
+from charmcraft.utils import get_host_architecture
 
 
 @pytest.fixture(autouse=True)
-def mock_provider(mock_instance, fake_provider):
+def mock_provider(fake_provider):
     mock_provider = mock.Mock(wraps=fake_provider)
     with mock.patch("charmcraft.commands.clean.get_provider", return_value=mock_provider):
         yield mock_provider
@@ -38,8 +39,15 @@ def mock_is_base_available():
         yield mock_is_base_available
 
 
-def test_clean(config, emitter, mock_provider, tmp_path):
-    """Test clean with a complex list of bases."""
+@pytest.fixture(autouse=True)
+def mock_instance_name():
+    with mock.patch("charmcraft.commands.clean.get_instance_name") as mock_func:
+        mock_func.side_effect = [f"test-instance-name-{idx}" for idx in range(5)]
+        yield mock_func
+
+
+def test_clean_simple(config, emitter, mock_provider, tmp_path, mock_instance_name):
+    """Test clean with one base."""
     metadata_yaml = tmp_path / "metadata.yaml"
     metadata_yaml.write_text("name: foo")
 
@@ -64,15 +72,23 @@ def test_clean(config, emitter, mock_provider, tmp_path):
         mock.call.is_base_available(
             Base(name="x1name", channel="x1channel", architectures=["x1arch"])
         ),
-        mock.call.clean_project_environments(
-            charm_name="foo", project_path=mock.ANY, bases_index=0, build_on_index=0
+        mock.call.clean_project_environments(instance_name="test-instance-name-0"),
+    ]
+    assert mock_instance_name.mock_calls == [
+        mock.call(
+            bases_index=0,
+            build_on_index=0,
+            project_name="foo",
+            project_path=tmp_path,
+            target_arch=get_host_architecture(),
         ),
     ]
     emitter.assert_message("Cleaning project 'foo'.")
+    emitter.assert_debug("Cleaning environment 'test-instance-name-0'")
     emitter.assert_message("Cleaned project 'foo'.")
 
 
-def test_clean_complex(config, emitter, mock_provider, tmp_path):
+def test_clean_complex(config, emitter, mock_provider, tmp_path, mock_instance_name):
     """Test clean with a complex list of bases."""
     metadata_yaml = tmp_path / "metadata.yaml"
     metadata_yaml.write_text("name: foo")
@@ -131,15 +147,35 @@ def test_clean_complex(config, emitter, mock_provider, tmp_path):
         mock.call.is_base_available(
             Base(name="x5name", channel="x5channel", architectures=["x5arch"])
         ),
-        mock.call.clean_project_environments(
-            charm_name="foo", project_path=mock.ANY, bases_index=0, build_on_index=0
+        mock.call.clean_project_environments(instance_name="test-instance-name-0"),
+        mock.call.clean_project_environments(instance_name="test-instance-name-1"),
+        mock.call.clean_project_environments(instance_name="test-instance-name-2"),
+    ]
+    assert mock_instance_name.mock_calls == [
+        mock.call(
+            bases_index=0,
+            build_on_index=0,
+            project_name="foo",
+            project_path=tmp_path,
+            target_arch=get_host_architecture(),
         ),
-        mock.call.clean_project_environments(
-            charm_name="foo", project_path=mock.ANY, bases_index=1, build_on_index=0
+        mock.call(
+            bases_index=1,
+            build_on_index=0,
+            project_name="foo",
+            project_path=tmp_path,
+            target_arch=get_host_architecture(),
         ),
-        mock.call.clean_project_environments(
-            charm_name="foo", project_path=mock.ANY, bases_index=2, build_on_index=0
+        mock.call(
+            bases_index=2,
+            build_on_index=0,
+            project_name="foo",
+            project_path=tmp_path,
+            target_arch=get_host_architecture(),
         ),
     ]
     emitter.assert_message("Cleaning project 'foo'.")
+    emitter.assert_debug("Cleaning environment 'test-instance-name-0'")
+    emitter.assert_debug("Cleaning environment 'test-instance-name-1'")
+    emitter.assert_debug("Cleaning environment 'test-instance-name-2'")
     emitter.assert_message("Cleaned project 'foo'.")

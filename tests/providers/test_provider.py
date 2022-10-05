@@ -106,12 +106,7 @@ def test_clean_project_environments_provider_not_installed(
         lxc=mock_lxc, lxd_project="test-project", lxd_remote="test-remote"
     )
 
-    provider.clean_project_environments(
-        charm_name="my-charm",
-        project_path=mock_path,
-        bases_index=0,
-        build_on_index=0,
-    )
+    provider.clean_project_environments(instance_name="test-instance-name")
 
     assert mock_lxd_is_installed.mock_calls == [call()]
     assert mock_lxc.mock_calls == []
@@ -122,18 +117,9 @@ def test_clean_project_environments_exists(emitter, mock_path, mock_lxd_exists, 
     """Assert instance is deleted if it exists."""
     provider = providers.LXDProvider()
 
-    provider.clean_project_environments(
-        charm_name="my-charm-project",
-        project_path=mock_path,
-        bases_index=0,
-        build_on_index=0,
-    )
+    provider.clean_project_environments(instance_name="test-instance-name")
 
     assert mock_lxd_delete.mock_calls == [call()]
-    emitter.assert_debug(
-        "Cleaning environment 'charmcraft-my-charm-project-.*-0-0-host-arch'",
-        regex=True,
-    )
 
 
 def test_clean_project_environments_does_not_exist(mock_path, mock_lxd_exists, mock_lxd_delete):
@@ -141,12 +127,7 @@ def test_clean_project_environments_does_not_exist(mock_path, mock_lxd_exists, m
     mock_lxd_exists.return_value = False
     provider = providers.LXDProvider()
 
-    provider.clean_project_environments(
-        charm_name="my-charm-project",
-        project_path=mock_path,
-        bases_index=0,
-        build_on_index=0,
-    )
+    provider.clean_project_environments(instance_name="test-instance-name")
 
     assert mock_lxd_delete.mock_calls == []
 
@@ -158,12 +139,7 @@ def test_clean_project_environments_exists_failure(mock_lxd_delete, mock_lxd_exi
     provider = providers.LXDProvider()
 
     with pytest.raises(CraftError, match="fail") as exc_info:
-        provider.clean_project_environments(
-            charm_name="testcharm",
-            project_path=mock_path,
-            bases_index=0,
-            build_on_index=0,
-        )
+        provider.clean_project_environments(instance_name="test-instance-name")
 
     assert exc_info.value.__cause__ is error
 
@@ -175,11 +151,6 @@ def test_clean_project_environments_delete_failure(mock_lxd_delete, mock_lxd_exi
     provider = providers.LXDProvider()
 
     with pytest.raises(CraftError, match="fail") as exc_info:
-        provider.clean_project_environments(
-            charm_name="testcharm",
-            project_path=mock_path,
-            bases_index=0,
-            build_on_index=0,
-        )
+        provider.clean_project_environments(instance_name="test-instance-name")
 
     assert exc_info.value.__cause__ is error

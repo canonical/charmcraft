@@ -21,7 +21,8 @@ from craft_cli import emit
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.providers import get_provider
-from charmcraft.providers.providers import create_build_plan
+from charmcraft.providers.providers import create_build_plan, get_instance_name
+from charmcraft.utils import get_host_architecture
 
 _overview = """
 Purge Charmcraft project's artifacts, including:
@@ -58,11 +59,15 @@ class CleanCommand(BaseCommand):
         )
 
         for plan in build_plan:
-            provider.clean_project_environments(
-                charm_name=metadata.name,
+            instance_name = get_instance_name(
+                project_name=metadata.name,
                 project_path=project_path,
                 bases_index=plan.bases_index,
                 build_on_index=plan.build_on_index,
+                target_arch=get_host_architecture(),
             )
+
+            emit.debug(f"Cleaning environment {instance_name!r}")
+            provider.clean_project_environments(instance_name=instance_name)
 
         emit.message(f"Cleaned project {metadata.name!r}.")

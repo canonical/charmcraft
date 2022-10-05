@@ -140,14 +140,7 @@ def fake_provider(mock_instance, monkeypatch):
     """Provide a minimal/fake provider."""
 
     class FakeProvider(Provider):
-        def clean_project_environments(
-            self,
-            *,
-            charm_name: str,
-            project_path: pathlib.Path,
-            bases_index: int,
-            build_on_index: int,
-        ) -> None:
+        def clean_project_environments(self, *, instance_name: str) -> None:
             pass
 
         @classmethod
@@ -174,8 +167,8 @@ def fake_provider(mock_instance, monkeypatch):
             yield mock_instance
 
         @classmethod
-        def is_provider_available(cls) -> bool:
-            """Check if provider is installed and available for use.
+        def is_provider_installed(cls) -> bool:
+            """Check if provider is installed.
 
             :returns: True if installed.
             """

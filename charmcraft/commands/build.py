@@ -348,6 +348,13 @@ class Builder:
             bases_index=bases_index,
             build_on_index=build_on_index,
         ) as instance:
+            emit.debug("Mounting directory inside the instance")
+            with instrum.Timer("Mounting directory"):
+                instance.mount(
+                    host_source=self.charmdir,
+                    target=env.get_managed_environment_project_path(),
+                )
+
             emit.progress("Packing the charm")
             emit.debug(f"Running {cmd}")
             try:

@@ -215,11 +215,11 @@ def test_is_base_available(
 
 
 @pytest.mark.parametrize("is_installed", [True, False])
-def test_is_provider_available(is_installed, mock_multipass_is_installed):
+def test_is_provider_installed(is_installed, mock_multipass_is_installed):
     mock_multipass_is_installed.return_value = is_installed
     provider = providers.MultipassProvider()
 
-    assert provider.is_provider_available() == is_installed
+    assert provider.is_provider_installed() == is_installed
 
 
 @pytest.mark.parametrize(

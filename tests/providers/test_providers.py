@@ -537,7 +537,6 @@ def test_get_base_configuration(
 
 
 def test_capture_logs_from_instance_ok(emitter, mock_instance, tmp_path, mocker):
-
     @contextlib.contextmanager
     def fake_pull(source, missing_ok):
         assert source == pathlib.Path("/tmp/charmcraft.log")
@@ -560,7 +559,6 @@ def test_capture_logs_from_instance_ok(emitter, mock_instance, tmp_path, mocker)
 
 
 def test_capture_logs_from_instance_not_found(emitter, mock_instance, tmp_path, mocker):
-
     @contextlib.contextmanager
     def fake_pull(source, missing_ok):
         yield None  # didn't find the indicated file

@@ -18,6 +18,7 @@
 
 import os
 import pathlib
+import sys
 from typing import NamedTuple, List, Optional, Dict, TYPE_CHECKING
 
 from craft_cli import emit, CraftError
@@ -25,6 +26,7 @@ from craft_providers import bases
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
+from charmcraft.env import get_managed_environment_snap_channel
 from charmcraft.providers import CharmcraftBuilddBaseConfiguration
 
 if TYPE_CHECKING:
@@ -171,6 +173,17 @@ def get_base_configuration(
 ) -> bases.BuilddBase:
     """Create a BuilddBase configuration."""
     environment = get_command_environment()
+
+    # injecting a snap on a non-linux system is not supported, so default to
+    # install charmcraft from the store's stable channel
+    snap_channel = get_managed_environment_snap_channel()
+    if snap_channel is None and sys.platform != "linux":
+        snap_channel = "stable"
+
+    charmcraft_snap = bases.buildd.Snap(name="charmcraft", channel=snap_channel, classic=True)
     return CharmcraftBuilddBaseConfiguration(
-        alias=alias, environment=environment, hostname=instance_name
+        alias=alias,
+        environment=environment,
+        hostname=instance_name,
+        snaps=[charmcraft_snap],
     )

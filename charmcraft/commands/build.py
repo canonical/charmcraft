@@ -32,9 +32,10 @@ from charmcraft.config import Base, BasesConfiguration
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
-from charmcraft.providers import capture_logs_from_instance, get_provider
+from charmcraft.providers import get_provider
 from charmcraft.providers.providers import (
     BASE_CHANNEL_TO_PROVIDER_BASE,
+    capture_logs_from_instance,
     create_build_plan,
     get_base_configuration,
     get_instance_name,

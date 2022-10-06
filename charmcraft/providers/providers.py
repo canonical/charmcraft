@@ -22,11 +22,11 @@ import sys
 from typing import NamedTuple, List, Optional, Dict, TYPE_CHECKING
 
 from craft_cli import emit, CraftError
-from craft_providers import bases
+from craft_providers import bases, Executor
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
-from charmcraft.env import get_managed_environment_snap_channel
+from charmcraft.env import get_managed_environment_snap_channel, get_managed_environment_log_path
 
 if TYPE_CHECKING:
     from charmcraft.providers import Provider
@@ -187,3 +187,20 @@ def get_base_configuration(
         snaps=[charmcraft_snap],
         compatibility_tag=f"charmcraft-{bases.BuilddBase.compatibility_tag}.0",
     )
+
+
+def capture_logs_from_instance(instance: Executor) -> None:
+    """Retrieve logs from instance.
+
+    :param instance: Instance to retrieve logs from.
+    """
+    source_log_path = get_managed_environment_log_path()
+    with instance.temporarily_pull_file(source=source_log_path, missing_ok=True) as local_log_path:
+        if local_log_path:
+            emit.debug("Logs captured from managed instance:")
+            with open(local_log_path, "rt", encoding="utf8") as fh:
+                for line in fh:
+                    emit.debug(f":: {line.rstrip()}")
+        else:
+            emit.debug("No logs found in instance.")
+            return

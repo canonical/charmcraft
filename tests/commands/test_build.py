@@ -260,8 +260,9 @@ def test_build_with_charmcraft_yaml_managed_mode(
     emitter.assert_debug("Building for 'bases[0]' as host matches 'build-on[0]'.")
 
 
-def test_build_checks_provider(basic_project, mock_provider):
+def test_build_checks_provider(basic_project, mock_provider, mocker):
     """Test cases for base-index parameter."""
+    mocker.patch("charmcraft.commands.build.capture_logs_from_instance")
     config = load(basic_project)
     builder = get_builder(config)
 

@@ -14,6 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import contextlib
+import pathlib
 from unittest.mock import Mock, patch, call
 
 import pytest
@@ -23,6 +25,7 @@ from craft_providers import bases
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.providers.providers import (
     Plan,
+    capture_logs_from_instance,
     create_build_plan,
     get_command_environment,
     get_instance_name,
@@ -531,3 +534,36 @@ def test_get_base_configuration(
         snaps=[bases.buildd.Snap(name="charmcraft", channel=expected_snap_channel, classic=True)],
         compatibility_tag="charmcraft-buildd-base-v0.0",
     )
+
+
+def test_capture_logs_from_instance_ok(emitter, mock_instance, tmp_path, mocker):
+    @contextlib.contextmanager
+    def fake_pull(source, missing_ok):
+        assert source == pathlib.Path("/tmp/charmcraft.log")
+        assert missing_ok is True
+        fake_file = tmp_path / "fake.file"
+        fake_file.write_text("some\nlog data\nhere")
+        yield fake_file
+
+    mocker.patch.object(mock_instance, "temporarily_pull_file", fake_pull)
+    capture_logs_from_instance(mock_instance)
+
+    emitter.assert_interactions(
+        [
+            call("debug", "Logs captured from managed instance:"),
+            call("debug", ":: some"),
+            call("debug", ":: log data"),
+            call("debug", ":: here"),
+        ]
+    )
+
+
+def test_capture_logs_from_instance_not_found(emitter, mock_instance, tmp_path, mocker):
+    @contextlib.contextmanager
+    def fake_pull(source, missing_ok):
+        yield None  # didn't find the indicated file
+
+    mocker.patch.object(mock_instance, "temporarily_pull_file", fake_pull)
+    capture_logs_from_instance(mock_instance)
+
+    emitter.assert_debug("No logs found in instance.")

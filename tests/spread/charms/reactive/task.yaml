@@ -1,0 +1,22 @@
+summary: pack external reactive charms
+manual: true
+systems:
+  - ubuntu-22.04-64
+kill-timeout: 30m
+
+environment:
+  CHARM: https://git.launchpad.net/content-cache-charm
+
+prepare: |
+  git clone --depth=1 "${CHARM}" charm
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose

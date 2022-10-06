@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        charm: [k8s-operator, operator, magma, reactive]
+        charm: [k8s-operator, operator, magma]
 
     steps:
       - name: Cleanup job workspace

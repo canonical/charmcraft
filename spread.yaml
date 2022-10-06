@@ -65,3 +65,5 @@ prepare: |
 suites:
   tests/spread/commands/:
     summary: simple charmcraft commands
+  tests/spread/charms/:
+    summary: charm building tests

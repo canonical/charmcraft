@@ -1,0 +1,50 @@
+name: Large Manual Spread
+on:
+  schedule:
+    # At 00:00 on Wednesday and Sunday.
+    - cron: "0 0 * * WED,SUN"
+
+  workflow_dispatch:
+
+jobs:
+  snap-build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Build snap
+        uses: snapcore/action-build@v1
+        id: charmcraft
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: snap
+          path: ${{ steps.charmcraft.outputs.snap }}
+
+  pack-charm:
+    runs-on: self-hosted
+    needs: [snap-build]
+    strategy:
+      fail-fast: false
+      matrix:
+        charm: [k8s-operator, operator, magma, reactive]
+
+    steps:
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+      - name: Checkout charmcraft
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Download snap artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: snap
+      - name: Spread k8s operator
+        run: |
+          spread google:ubuntu-22.04-64:tests/spread/charms/${{ matrix.charm }}

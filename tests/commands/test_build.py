@@ -36,6 +36,7 @@ from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_
 from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.metadata import CHARM_METADATA
 from charmcraft.providers.providers import get_base_configuration
+from charmcraft.utils import get_host_architecture
 
 
 def get_builder(
@@ -905,7 +906,7 @@ def test_build_arguments_managed_charmcraft_simples(
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
     emit.set_mode(EmitterMode.BRIEF)
-    host_base = get_host_as_base()
+    host_base = Base(name="ubuntu", channel="18.04", architectures=[get_host_architecture()])
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 

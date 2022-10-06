@@ -27,7 +27,6 @@ from craft_providers import bases
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.env import get_managed_environment_snap_channel
-from charmcraft.providers import CharmcraftBuilddBaseConfiguration
 
 if TYPE_CHECKING:
     from charmcraft.providers import Provider
@@ -181,9 +180,10 @@ def get_base_configuration(
         snap_channel = "stable"
 
     charmcraft_snap = bases.buildd.Snap(name="charmcraft", channel=snap_channel, classic=True)
-    return CharmcraftBuilddBaseConfiguration(
+    return bases.BuilddBase(
         alias=alias,
         environment=environment,
         hostname=instance_name,
         snaps=[charmcraft_snap],
+        compatibility_tag=f"charmcraft-{bases.BuilddBase.compatibility_tag}.0",
     )

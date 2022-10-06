@@ -20,13 +20,14 @@ from unittest.mock import Mock, patch, call
 
 import pytest
 from craft_cli import CraftError
-from craft_providers import bases
+from craft_providers import bases, ProviderError
 
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.providers.providers import (
     Plan,
     capture_logs_from_instance,
     create_build_plan,
+    ensure_provider_is_available,
     get_command_environment,
     get_instance_name,
     get_base_configuration,
@@ -567,3 +568,43 @@ def test_capture_logs_from_instance_not_found(emitter, mock_instance, tmp_path, 
     capture_logs_from_instance(mock_instance)
 
     emitter.assert_debug("No logs found in instance.")
+
+
+def test_ensure_provider_is_available_installed_yes(mocker, fake_provider):
+    """Verify provider is ensured to be available when installed (fake_provider's default)."""
+    confirmation_mock = mocker.patch("charmcraft.providers.providers.confirm_with_user")
+    available_mock = mocker.patch.object(fake_provider, "ensure_provider_is_available")
+
+    ensure_provider_is_available(fake_provider)
+
+    confirmation_mock.assert_not_called()
+    available_mock.assert_called_once()
+
+
+def test_ensure_provider_is_available_installed_no_user_confirms_yes(mocker, fake_provider):
+    """Verify provider is ensured to be available, not installed but user chooses to install."""
+    confirmation_mock = mocker.patch(
+        "charmcraft.providers.providers.confirm_with_user", return_value=True
+    )
+    mocker.patch.object(fake_provider, "is_provider_installed", return_value=False)
+    available_mock = mocker.patch.object(fake_provider, "ensure_provider_is_available")
+
+    ensure_provider_is_available(fake_provider)
+
+    message = (
+        "TestProvider is required but not installed. Do you wish to "
+        "install TestProvider and configure it with the defaults?"
+    )
+    confirmation_mock.assert_called_with(message, default=False)
+    available_mock.assert_called_once()
+
+
+def test_ensure_provider_is_available_installed_no_user_confirms_no(mocker, fake_provider):
+    """Raise an error if not installed and the user does not choose to install it."""
+    mocker.patch("charmcraft.providers.providers.confirm_with_user", return_value=False)
+    mocker.patch.object(fake_provider, "is_provider_installed", return_value=False)
+
+    with pytest.raises(ProviderError) as error:
+        ensure_provider_is_available(fake_provider)
+
+    assert error.value.brief == "TestProvider is required, but not installed. Insert floppy disk."

@@ -22,11 +22,12 @@ import sys
 from typing import NamedTuple, List, Optional, Dict, TYPE_CHECKING
 
 from craft_cli import emit, CraftError
-from craft_providers import bases, Executor
+from craft_providers import bases, Executor, ProviderError
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.env import get_managed_environment_snap_channel, get_managed_environment_log_path
+from charmcraft.utils import confirm_with_user
 
 if TYPE_CHECKING:
     from charmcraft.providers import Provider
@@ -204,3 +205,23 @@ def capture_logs_from_instance(instance: Executor) -> None:
         else:
             emit.debug("No logs found in instance.")
             return
+
+
+def ensure_provider_is_available(provider: "Provider") -> None:
+    """Ensure provider is installed, running, and properly configured.
+
+    If the provider is not installed, the user is prompted to install it.
+
+    :param instance: the provider to ensure is available
+    :raises ProviderError: if provider is not available, or if the user
+    chooses not to install the provider.
+    """
+    confirm_msg = (
+        f"{provider.name} is required but not installed. Do you wish to "
+        f"install {provider.name} and configure it with the defaults?"
+    )
+    if not provider.is_provider_installed() and not confirm_with_user(confirm_msg, default=False):
+        raise ProviderError(
+            f"{provider.name} is required, but not installed. {provider.install_recommendation}"
+        )
+    provider.ensure_provider_is_available()

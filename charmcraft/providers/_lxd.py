@@ -25,7 +25,6 @@ from craft_providers import Executor, bases, lxd
 
 from charmcraft import instrum
 from charmcraft.config import Base
-from charmcraft.utils import confirm_with_user
 
 from ._provider import Provider
 from .providers import get_command_environment
@@ -45,6 +44,12 @@ class LXDProvider(Provider):
     :param lxd_remote: LXD remote to use (default is local).
     """
 
+    name = "LXD"
+    install_recommendation = (
+        "Visit https://snapcraft.io/lxd "
+        "for instructions on how to install the LXD snap for your distribution"
+    )
+
     def __init__(
         self,
         *,
@@ -58,28 +63,18 @@ class LXDProvider(Provider):
 
     @classmethod
     def ensure_provider_is_available(cls) -> None:
-        """Ensure provider is available, prompting the user to install it if required.
+        """Ensure provider is available and ready, installing if required.
 
         :raises CraftError: if provider is not available.
         """
         if not lxd.is_installed():
-            if confirm_with_user(
-                "LXD is required, but not installed. Do you wish to install LXD "
-                "and configure it with the defaults?",
-                default=False,
-            ):
-                try:
-                    lxd.install()
-                except lxd.LXDInstallationError as error:
-                    raise CraftError(
-                        "Failed to install LXD. Visit https://snapcraft.io/lxd for "
-                        "instructions on how to install the LXD snap for your distribution"
-                    ) from error
-            else:
+            try:
+                lxd.install()
+            except lxd.LXDInstallationError as error:
                 raise CraftError(
-                    "LXD is required, but not installed. Visit https://snapcraft.io/lxd for "
+                    "Failed to install LXD. Visit https://snapcraft.io/lxd for "
                     "instructions on how to install the LXD snap for your distribution"
-                )
+                ) from error
 
         try:
             lxd.ensure_lxd_is_ready()

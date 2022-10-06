@@ -27,6 +27,7 @@ from unittest.mock import call, patch, MagicMock
 import pytest
 import yaml
 from craft_cli import EmitterMode, emit, CraftError
+from craft_providers import bases
 
 from charmcraft import linters, instrum
 from charmcraft.charm_builder import relativise
@@ -34,6 +35,8 @@ from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
 from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.metadata import CHARM_METADATA
+from charmcraft.providers.providers import get_base_configuration
+from charmcraft.utils import get_host_architecture
 
 
 def get_builder(
@@ -182,6 +185,22 @@ def mock_provider(mock_instance, fake_provider):
     mock_provider = mock.Mock(wraps=fake_provider)
     with patch("charmcraft.commands.build.get_provider", return_value=mock_provider):
         yield mock_provider
+
+
+@pytest.fixture()
+def mock_buildd_base_configuration():
+    with mock.patch(
+        "charmcraft.providers.providers.CharmcraftBuilddBaseConfiguration", autospec=True
+    ) as mock_base_config:
+        yield mock_base_config
+
+
+@pytest.fixture()
+def mock_instance_name():
+    with mock.patch(
+        "charmcraft.commands.build.get_instance_name", return_value="test-instance-name"
+    ) as patched:
+        yield patched
 
 
 # --- (real) build tests
@@ -435,6 +454,8 @@ def test_build_project_is_cwd(
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
+    mock_instance_name,
+    mock_buildd_base_configuration,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -455,6 +476,9 @@ def test_build_project_is_cwd(
     config = load(basic_project)
     project_managed_path = pathlib.Path("/root/project")
     builder = get_builder(config)
+    base_configuration = get_base_configuration(
+        alias=bases.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
+    )
 
     zipnames = builder.run([0])
 
@@ -469,9 +493,9 @@ def test_build_project_is_cwd(
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
-            base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-            bases_index=0,
-            build_on_index=0,
+            base_configuration=base_configuration,
+            build_base="18.04",
+            instance_name=mock_instance_name(),
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -490,6 +514,8 @@ def test_build_project_is_not_cwd(
     mock_instance,
     mock_provider,
     monkeypatch,
+    mock_instance_name,
+    mock_buildd_base_configuration,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -509,6 +535,9 @@ def test_build_project_is_not_cwd(
     )
     config = load(basic_project)
     builder = get_builder(config)
+    base_configuration = get_base_configuration(
+        alias=bases.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
+    )
 
     monkeypatch.chdir("/")  # make the working directory NOT the project's one
     zipnames = builder.run([0])
@@ -524,9 +553,9 @@ def test_build_project_is_not_cwd(
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
-            base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-            bases_index=0,
-            build_on_index=0,
+            base_configuration=base_configuration,
+            build_base="18.04",
+            instance_name=mock_instance_name(),
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -562,6 +591,8 @@ def test_build_bases_index_scenarios_provider(
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
+    mock_instance_name,
+    mock_buildd_base_configuration,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(mode)
@@ -588,6 +619,9 @@ def test_build_bases_index_scenarios_provider(
     )
     config = load(basic_project)
     builder = get_builder(config)
+    base_bionic_configuration = get_base_configuration(
+        alias=bases.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
+    )
 
     zipnames = builder.run([0])
     assert zipnames == [
@@ -602,9 +636,9 @@ def test_build_bases_index_scenarios_provider(
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
-            base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-            bases_index=0,
-            build_on_index=0,
+            base_configuration=base_bionic_configuration,
+            build_base="18.04",
+            instance_name=mock_instance_name(),
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -624,6 +658,9 @@ def test_build_bases_index_scenarios_provider(
     mock_provider.reset_mock()
     mock_instance.reset_mock()
 
+    base_focal_configuration = get_base_configuration(
+        alias=bases.BuilddBaseAlias.FOCAL, instance_name=mock_instance_name()
+    )
     zipnames = builder.run([1])
     assert zipnames == [
         f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
@@ -636,9 +673,9 @@ def test_build_bases_index_scenarios_provider(
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
-            base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
-            bases_index=1,
-            build_on_index=0,
+            base_configuration=base_focal_configuration,
+            build_base="20.04",
+            instance_name=mock_instance_name(),
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -668,16 +705,16 @@ def test_build_bases_index_scenarios_provider(
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
-            base=Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-            bases_index=0,
-            build_on_index=0,
+            base_configuration=base_bionic_configuration,
+            build_base="18.04",
+            instance_name=mock_instance_name(),
         ),
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
-            base=Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
-            bases_index=1,
-            build_on_index=0,
+            base_configuration=base_focal_configuration,
+            build_base="20.04",
+            instance_name=mock_instance_name(),
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -869,7 +906,7 @@ def test_build_arguments_managed_charmcraft_simples(
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
     emit.set_mode(EmitterMode.BRIEF)
-    host_base = get_host_as_base()
+    host_base = Base(name="ubuntu", channel="18.04", architectures=[get_host_architecture()])
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 
@@ -896,7 +933,7 @@ def test_build_arguments_managed_charmcraft_measure(
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
     emit.set_mode(EmitterMode.BRIEF)
-    host_base = get_host_as_base()
+    host_base = Base(name="ubuntu", channel="18.04", architectures=[get_host_architecture()])
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 

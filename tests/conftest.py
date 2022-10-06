@@ -160,9 +160,9 @@ def fake_provider(mock_instance, monkeypatch):
             *,
             charm_name: str,
             project_path: pathlib.Path,
-            base: Base,
-            bases_index: int,
-            build_on_index: int,
+            base_configuration: Base,
+            build_base: str,
+            instance_name: str,
         ):
             yield mock_instance
 

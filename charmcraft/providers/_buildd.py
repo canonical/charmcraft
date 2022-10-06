@@ -25,13 +25,6 @@ from craft_providers.actions import snap_installer
 from charmcraft.env import get_managed_environment_snap_channel
 
 
-BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS = {
-    "18.04": bases.BuilddBaseAlias.BIONIC,
-    "20.04": bases.BuilddBaseAlias.FOCAL,
-    "22.04": bases.BuilddBaseAlias.JAMMY,
-}
-
-
 class CharmcraftBuilddBaseConfiguration(bases.BuilddBase):
     """Base configuration for Charmcraft.
 

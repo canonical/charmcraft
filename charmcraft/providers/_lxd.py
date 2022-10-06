@@ -25,11 +25,16 @@ from craft_providers import Executor, bases, lxd
 
 from charmcraft import instrum
 from charmcraft.config import Base
-from charmcraft.utils import confirm_with_user, get_host_architecture
+from charmcraft.utils import confirm_with_user
 
-from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
 from ._provider import Provider
-from .providers import get_command_environment, get_instance_name
+from .providers import get_command_environment
+
+PROVIDER_BASE_TO_LXD_BASE = {
+    bases.BuilddBaseAlias.BIONIC.value: "18.04",
+    bases.BuilddBaseAlias.FOCAL.value: "20.04",
+    bases.BuilddBaseAlias.JAMMY.value: "22.04",
+}
 
 
 class LXDProvider(Provider):
@@ -109,30 +114,18 @@ class LXDProvider(Provider):
         *,
         charm_name: str,
         project_path: pathlib.Path,
-        base: Base,
-        bases_index: int,
-        build_on_index: int,
+        base_configuration: Base,
+        build_base: str,
+        instance_name: str,
     ) -> Generator[Executor, None, None]:
         """Launch environment for specified base.
 
         :param charm_name: Name of project.
         :param project_path: Path to project.
-        :param base: Base to create.
-        :param bases_index: Index of `bases:` entry.
-        :param build_on_index: Index of `build-on` within bases entry.
+        :param base_configuration: Base configuration to apply to instance.
+        :param build_base: Base to build from.
+        :param instance_name: Name of the instance to launch.
         """
-        alias = BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS[base.channel]
-        target_arch = get_host_architecture()
-
-        instance_name = get_instance_name(
-            bases_index=bases_index,
-            build_on_index=build_on_index,
-            project_name=charm_name,
-            project_path=project_path,
-            target_arch=target_arch,
-        )
-
-        environment = get_command_environment()
         with instrum.Timer("LXD: Configure buildd image"):
             try:
                 image_remote = lxd.configure_buildd_image_remote()
@@ -143,15 +136,12 @@ class LXDProvider(Provider):
         # the project dir when the currently running user and project dir owner are different
         projectdir_owner_id = project_path.stat().st_uid
 
-        base_configuration = CharmcraftBuilddBaseConfiguration(
-            alias=alias, environment=environment, hostname=instance_name
-        )
         with instrum.Timer("LXD: Launch"):
             try:
                 instance = lxd.launch(
                     name=instance_name,
                     base_configuration=base_configuration,
-                    image_name=base.channel,
+                    image_name=PROVIDER_BASE_TO_LXD_BASE[build_base],
                     image_remote=image_remote,
                     auto_clean=True,
                     auto_create_project=True,

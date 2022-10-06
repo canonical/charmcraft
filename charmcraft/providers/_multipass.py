@@ -25,11 +25,16 @@ from craft_providers import bases, multipass, Executor
 from craft_providers.multipass.errors import MultipassError
 
 from charmcraft.config import Base
-from charmcraft.utils import confirm_with_user, get_host_architecture
+from charmcraft.utils import confirm_with_user
 
-from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS, CharmcraftBuilddBaseConfiguration
 from ._provider import Provider
-from .providers import get_command_environment, get_instance_name
+
+
+PROVIDER_BASE_TO_MULTIPASS_BASE = {
+    bases.BuilddBaseAlias.BIONIC.value: "snapcraft:18.04",
+    bases.BuilddBaseAlias.FOCAL.value: "snapcraft:20.04",
+    bases.BuilddBaseAlias.JAMMY.value: "snapcraft:22.04",
+}
 
 
 class MultipassProvider(Provider):
@@ -98,39 +103,23 @@ class MultipassProvider(Provider):
         *,
         charm_name: str,
         project_path: pathlib.Path,
-        base: Base,
-        bases_index: int,
-        build_on_index: int,
+        base_configuration: Base,
+        build_base: str,
+        instance_name: str,
     ) -> Generator[Executor, None, None]:
-        """Launch environment for specified base.
+        """Configure and launch environment for specified base.
 
         :param charm_name: Name of project.
         :param project_path: Path to project.
-        :param base: Base to create.
-        :param bases_index: Index of `bases:` entry.
-        :param build_on_index: Index of `build-on` within bases entry.
+        :param base_configuration: Base configuration to apply to instance.
+        :param build_base: Base to build from.
+        :param instance_name: Name of the instance to launch.
         """
-        alias = BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS[base.channel]
-        target_arch = get_host_architecture()
-
-        instance_name = get_instance_name(
-            bases_index=bases_index,
-            build_on_index=build_on_index,
-            project_name=charm_name,
-            project_path=project_path,
-            target_arch=target_arch,
-        )
-
-        environment = get_command_environment()
-        base_configuration = CharmcraftBuilddBaseConfiguration(
-            alias=alias, environment=environment, hostname=instance_name
-        )
-
         try:
             instance = multipass.launch(
                 name=instance_name,
                 base_configuration=base_configuration,
-                image_name=f"snapcraft:{base.channel}",
+                image_name=PROVIDER_BASE_TO_MULTIPASS_BASE[build_base],
                 cpus=2,
                 disk_gb=64,
                 mem_gb=2,

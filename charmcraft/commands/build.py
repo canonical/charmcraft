@@ -33,7 +33,13 @@ from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
 from charmcraft.providers import capture_logs_from_instance, get_provider
-from charmcraft.providers.providers import create_build_plan
+from charmcraft.providers.providers import (
+    BASE_CHANNEL_TO_PROVIDER_BASE,
+    create_build_plan,
+    get_base_configuration,
+    get_instance_name,
+)
+from charmcraft.utils import get_host_architecture
 
 # Some constants that are used through the code.
 BUILD_DIRNAME = "build"
@@ -341,12 +347,26 @@ class Builder:
             f"Launching environment to pack for base {build_on} "
             "(may take a while the first time but it's reusable)"
         )
+
+        build_base = BASE_CHANNEL_TO_PROVIDER_BASE[build_on.channel]
+        instance_name = get_instance_name(
+            bases_index=bases_index,
+            build_on_index=build_on_index,
+            project_name=self.metadata.name,
+            project_path=self.charmdir,
+            target_arch=get_host_architecture(),
+        )
+        base_configuration = get_base_configuration(
+            alias=build_base,
+            instance_name=instance_name,
+        )
+
         with self.provider.launched_environment(
             charm_name=self.metadata.name,
             project_path=self.charmdir,
-            base=build_on,
-            bases_index=bases_index,
-            build_on_index=build_on_index,
+            base_configuration=base_configuration,
+            build_base=build_base.value,
+            instance_name=instance_name,
         ) as instance:
             emit.debug("Mounting directory inside the instance")
             with instrum.Timer("Mounting directory"):

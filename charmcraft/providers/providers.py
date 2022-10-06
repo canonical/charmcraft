@@ -25,9 +25,17 @@ from craft_providers import bases
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
+from charmcraft.providers import CharmcraftBuilddBaseConfiguration
 
 if TYPE_CHECKING:
     from charmcraft.providers import Provider
+
+
+BASE_CHANNEL_TO_PROVIDER_BASE = {
+    "18.04": bases.BuilddBaseAlias.BIONIC,
+    "20.04": bases.BuilddBaseAlias.FOCAL,
+    "22.04": bases.BuilddBaseAlias.JAMMY,
+}
 
 
 class Plan(NamedTuple):
@@ -153,4 +161,16 @@ def get_instance_name(
             str(build_on_index),
             target_arch,
         ]
+    )
+
+
+def get_base_configuration(
+    *,
+    alias: bases.BuilddBaseAlias,
+    instance_name: str,
+) -> bases.BuilddBase:
+    """Create a BuilddBase configuration."""
+    environment = get_command_environment()
+    return CharmcraftBuilddBaseConfiguration(
+        alias=alias, environment=environment, hostname=instance_name
     )

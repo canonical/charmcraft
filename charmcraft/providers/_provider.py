@@ -26,7 +26,7 @@ from craft_providers import Executor, ProviderError
 
 from charmcraft.config import Base
 from charmcraft.utils import get_host_architecture
-from ._buildd import BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS
+from .providers import BASE_CHANNEL_TO_PROVIDER_BASE
 
 
 class Provider(ABC):
@@ -80,8 +80,8 @@ class Provider(ABC):
                 f"name {base.name!r} is not yet supported (must be 'ubuntu')",
             )
 
-        if base.channel not in BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS.keys():
-            *firsts, last = sorted(BASE_CHANNEL_TO_BUILDD_IMAGE_ALIAS.keys())
+        if base.channel not in BASE_CHANNEL_TO_PROVIDER_BASE:
+            *firsts, last = sorted(BASE_CHANNEL_TO_PROVIDER_BASE)
             allowed = f"{', '.join(map(repr, firsts))} or {last!r}"
             return (
                 False,
@@ -114,15 +114,15 @@ class Provider(ABC):
         *,
         charm_name: str,
         project_path: pathlib.Path,
-        base: Base,
-        bases_index: int,
-        build_on_index: int,
+        base_configuration: Base,
+        build_base: str,
+        instance_name: str,
     ) -> Generator[Executor, None, None]:
-        """Launch environment for specified base.
+        """Configure and launch environment for specified base.
 
         :param charm_name: Name of project.
         :param project_path: Path to project.
-        :param base: Base to create.
-        :param bases_index: Index of `bases:` entry.
-        :param build_on_index: Index of `build-on` within bases entry.
+        :param base_configuration: Base configuration to apply to instance.
+        :param build_base: Base to build from.
+        :param instance_name: Name of the instance to launch.
         """

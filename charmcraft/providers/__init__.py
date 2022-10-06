@@ -1,4 +1,4 @@
-# Copyright 2021 Canonical Ltd.
+# Copyright 2021-2022 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 """Provider support."""
 
-from ._buildd import CharmcraftBuilddBaseConfiguration  # noqa: F401
 from ._get_provider import get_provider  # noqa: F401
 from ._logs import capture_logs_from_instance  # noqa: F401
 from ._lxd import LXDProvider  # noqa: F401

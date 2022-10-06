@@ -519,9 +519,8 @@ def test_get_base_configuration(
     mocker.patch(
         "charmcraft.providers.providers.get_instance_name", return_value="test-instance-name"
     )
-    mock_buildd_base = mocker.patch(
-        "charmcraft.providers.providers.CharmcraftBuilddBaseConfiguration"
-    )
+    mock_buildd_base = mocker.patch("charmcraft.providers.providers.bases.BuilddBase")
+    mock_buildd_base.compatibility_tag = "buildd-base-v0"
 
     get_base_configuration(alias=alias, instance_name="test-instance-name")
 
@@ -530,4 +529,5 @@ def test_get_base_configuration(
         environment="test-env",
         hostname="test-instance-name",
         snaps=[bases.buildd.Snap(name="charmcraft", channel=expected_snap_channel, classic=True)],
+        compatibility_tag="charmcraft-buildd-base-v0.0",
     )

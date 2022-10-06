@@ -190,7 +190,7 @@ def mock_provider(mock_instance, fake_provider):
 @pytest.fixture()
 def mock_buildd_base_configuration():
     with mock.patch(
-        "charmcraft.providers.providers.CharmcraftBuilddBaseConfiguration", autospec=True
+        "charmcraft.providers.providers.bases.BuilddBase", autospec=True
     ) as mock_base_config:
         yield mock_base_config
 

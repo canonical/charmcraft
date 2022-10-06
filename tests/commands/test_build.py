@@ -933,7 +933,7 @@ def test_build_arguments_managed_charmcraft_measure(
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
     emit.set_mode(EmitterMode.BRIEF)
-    host_base = get_host_as_base()
+    host_base = Base(name="ubuntu", channel="18.04", architectures=[get_host_architecture()])
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 

@@ -44,7 +44,7 @@ class MultipassProvider(Provider):
 
     name = "LXD"
     install_recommendation = (
-        "Visit https://multipass.run/"
+        "Visit https://multipass.run/ "
         "for instructions on installing Multipass for your operating system."
     )
 
@@ -66,8 +66,7 @@ class MultipassProvider(Provider):
                 multipass.install()
             except multipass.MultipassInstallationError as error:
                 raise CraftError(
-                    "Failed to install Multipass. Visit https://multipass.run/ for "
-                    "instructions on installing Multipass for your operating system."
+                    f"Failed to install Multipass. {cls.install_recommendation}"
                 ) from error
 
         try:

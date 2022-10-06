@@ -71,10 +71,7 @@ class LXDProvider(Provider):
             try:
                 lxd.install()
             except lxd.LXDInstallationError as error:
-                raise CraftError(
-                    "Failed to install LXD. Visit https://snapcraft.io/lxd for "
-                    "instructions on how to install the LXD snap for your distribution"
-                ) from error
+                raise CraftError(f"Failed to install LXD. {cls.install_recommendation}") from error
 
         try:
             lxd.ensure_lxd_is_ready()

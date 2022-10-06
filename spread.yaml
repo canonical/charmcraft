@@ -12,16 +12,16 @@ backends:
     halt-timeout: 2h
     systems:
       - ubuntu-18.04-64:
-          workers: 1
+          workers: 2
           storage: 40G
       - ubuntu-20.04-64:
-          workers: 1
+          workers: 4
           storage: 40G
       - ubuntu-22.04-64:
-          workers: 1
+          workers: 4
           storage: 40G
       - fedora-35-64:
-          workers: 1
+          workers: 2
           storage: 40G
 
 prepare: |
@@ -65,3 +65,5 @@ prepare: |
 suites:
   tests/spread/commands/:
     summary: simple charmcraft commands
+  tests/spread/charms/:
+    summary: charm building tests

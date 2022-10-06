@@ -17,6 +17,8 @@
 from unittest.mock import Mock, patch, call
 
 import pytest
+from craft_cli import CraftError
+from craft_providers import bases
 
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.providers.providers import (
@@ -24,8 +26,8 @@ from charmcraft.providers.providers import (
     create_build_plan,
     get_command_environment,
     get_instance_name,
+    get_base_configuration,
 )
-from craft_cli import CraftError
 
 
 @pytest.fixture()
@@ -480,3 +482,52 @@ def test_get_instance_name(
         project_path=mock_path,
         target_arch=target_arch,
     ) == expected.format(inode="445566")
+
+
+@pytest.mark.parametrize(
+    "platform, snap_channel, expected_snap_channel",
+    [
+        ("linux", None, None),
+        ("linux", "edge", "edge"),
+        ("darwin", "edge", "edge"),
+        # default to stable on non-linux system
+        ("darwin", None, "stable"),
+    ],
+)
+@pytest.mark.parametrize(
+    "alias",
+    [
+        bases.BuilddBaseAlias.BIONIC,
+        bases.BuilddBaseAlias.FOCAL,
+        bases.BuilddBaseAlias.JAMMY,
+    ],
+)
+def test_get_base_configuration(
+    platform,
+    snap_channel,
+    expected_snap_channel,
+    alias,
+    mocker,
+):
+    """Verify the snapcraft snap is installed from the correct channel."""
+    mocker.patch("sys.platform", platform)
+    mocker.patch(
+        "charmcraft.providers.providers.get_managed_environment_snap_channel",
+        return_value=snap_channel,
+    )
+    mocker.patch("charmcraft.providers.providers.get_command_environment", return_value="test-env")
+    mocker.patch(
+        "charmcraft.providers.providers.get_instance_name", return_value="test-instance-name"
+    )
+    mock_buildd_base = mocker.patch(
+        "charmcraft.providers.providers.CharmcraftBuilddBaseConfiguration"
+    )
+
+    get_base_configuration(alias=alias, instance_name="test-instance-name")
+
+    mock_buildd_base.assert_called_with(
+        alias=alias,
+        environment="test-env",
+        hostname="test-instance-name",
+        snaps=[bases.buildd.Snap(name="charmcraft", channel=expected_snap_channel, classic=True)],
+    )

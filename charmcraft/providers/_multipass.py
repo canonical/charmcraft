@@ -42,7 +42,7 @@ class MultipassProvider(Provider):
     :param multipass: Optional Multipass client to use.
     """
 
-    name = "LXD"
+    name = "Multipass"
     install_recommendation = (
         "Visit https://multipass.run/ "
         "for instructions on installing Multipass for your operating system."

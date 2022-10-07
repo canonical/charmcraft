@@ -19,7 +19,7 @@
 import os
 import pathlib
 import sys
-from typing import NamedTuple, List, Optional, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from craft_cli import emit, CraftError
 from craft_providers import bases, Executor, ProviderError
@@ -27,7 +27,7 @@ from craft_providers import bases, Executor, ProviderError
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.env import get_managed_environment_snap_channel, get_managed_environment_log_path
-from charmcraft.utils import confirm_with_user
+from charmcraft.utils import confirm_with_user, get_host_architecture
 
 if TYPE_CHECKING:
     from charmcraft.providers import Provider
@@ -95,7 +95,7 @@ def create_build_plan(
             if managed_mode or destructive_mode:
                 matches, reason = check_if_base_matches_host(build_on)
             else:
-                matches, reason = provider.is_base_available(build_on)
+                matches, reason = is_base_available(build_on)
 
             if matches:
                 emit.debug(
@@ -225,3 +225,35 @@ def ensure_provider_is_available(provider: "Provider") -> None:
             f"{provider.name} is required, but not installed. {provider.install_recommendation}"
         )
     provider.ensure_provider_is_available()
+
+
+def is_base_available(base: Base) -> Tuple[bool, Union[str, None]]:
+    """Check if provider can provide an environment matching given base.
+
+    :param base: Base to check.
+
+    :returns: Tuple of bool indicating whether it is a match, with optional
+            reason if not a match.
+    """
+    arch = get_host_architecture()
+    if arch not in base.architectures:
+        return (
+            False,
+            f"host architecture {arch!r} not in base architectures {base.architectures!r}",
+        )
+
+    if base.name != "ubuntu":
+        return (
+            False,
+            f"name {base.name!r} is not yet supported (must be 'ubuntu')",
+        )
+
+    if base.channel not in BASE_CHANNEL_TO_PROVIDER_BASE:
+        *firsts, last = sorted(BASE_CHANNEL_TO_PROVIDER_BASE)
+        allowed = f"{', '.join(map(repr, firsts))} or {last!r}"
+        return (
+            False,
+            f"channel {base.channel!r} is not yet supported (must be {allowed})",
+        )
+
+    return True, None

@@ -19,14 +19,10 @@
 import contextlib
 import pathlib
 from abc import ABC, abstractmethod
-from typing import Generator, Tuple, Union
+from typing import Generator
 
 from craft_cli import emit, CraftError
-from craft_providers import Executor, ProviderError
-
-from charmcraft.config import Base
-from charmcraft.utils import get_host_architecture
-from .providers import BASE_CHANNEL_TO_PROVIDER_BASE
+from craft_providers import Executor, ProviderError, base
 
 
 class Provider(ABC):
@@ -59,38 +55,6 @@ class Provider(ABC):
         """
 
     @classmethod
-    def is_base_available(cls, base: Base) -> Tuple[bool, Union[str, None]]:
-        """Check if provider can provide an environment matching given base.
-
-        :param base: Base to check.
-
-        :returns: Tuple of bool indicating whether it is a match, with optional
-                reason if not a match.
-        """
-        arch = get_host_architecture()
-        if arch not in base.architectures:
-            return (
-                False,
-                f"host architecture {arch!r} not in base architectures {base.architectures!r}",
-            )
-
-        if base.name != "ubuntu":
-            return (
-                False,
-                f"name {base.name!r} is not yet supported (must be 'ubuntu')",
-            )
-
-        if base.channel not in BASE_CHANNEL_TO_PROVIDER_BASE:
-            *firsts, last = sorted(BASE_CHANNEL_TO_PROVIDER_BASE)
-            allowed = f"{', '.join(map(repr, firsts))} or {last!r}"
-            return (
-                False,
-                f"channel {base.channel!r} is not yet supported (must be {allowed})",
-            )
-
-        return True, None
-
-    @classmethod
     @abstractmethod
     def is_provider_installed(cls) -> bool:
         """Check if provider is installed.
@@ -114,7 +78,7 @@ class Provider(ABC):
         *,
         charm_name: str,
         project_path: pathlib.Path,
-        base_configuration: Base,
+        base_configuration: base.Base,
         build_base: str,
         instance_name: str,
     ) -> Generator[Executor, None, None]:

@@ -23,6 +23,7 @@ from craft_cli import CraftError
 from craft_providers import bases, ProviderError
 
 from charmcraft.config import Base, BasesConfiguration
+from charmcraft import providers
 from charmcraft.providers.providers import (
     Plan,
     capture_logs_from_instance,
@@ -44,7 +45,7 @@ def mock_provider(mock_instance, fake_provider):
 @pytest.fixture()
 def mock_is_base_available():
     with patch(
-        "charmcraft.providers._provider.Provider.is_base_available", return_value=(True, None)
+        "charmcraft.providers.providers.is_base_available", return_value=(True, None)
     ) as mock_is_base_available:
         yield mock_is_base_available
 
@@ -55,6 +56,14 @@ def mock_check_if_base_matches_host():
         "charmcraft.providers.providers.check_if_base_matches_host", return_value=(True, None)
     ) as mock_check_if_base_matches_host:
         yield mock_check_if_base_matches_host
+
+
+@pytest.fixture()
+def mock_get_host_architecture():
+    with patch(
+        "charmcraft.providers.providers.get_host_architecture", return_value="host-arch"
+    ) as mock_arch:
+        yield mock_arch
 
 
 @pytest.fixture()
@@ -608,3 +617,42 @@ def test_ensure_provider_is_available_installed_no_user_confirms_no(mocker, fake
         ensure_provider_is_available(fake_provider)
 
     assert error.value.brief == "TestProvider is required, but not installed. Insert floppy disk."
+
+
+@pytest.mark.parametrize(
+    "name,channel,architectures,expected_valid,expected_reason",
+    [
+        ("ubuntu", "18.04", ["host-arch"], True, None),
+        ("ubuntu", "20.04", ["host-arch"], True, None),
+        ("ubuntu", "22.04", ["host-arch"], True, None),
+        ("ubuntu", "20.04", ["extra-arch", "host-arch"], True, None),
+        (
+            "not-ubuntu",
+            "20.04",
+            ["host-arch"],
+            False,
+            "name 'not-ubuntu' is not yet supported (must be 'ubuntu')",
+        ),
+        (
+            "ubuntu",
+            "10.04",
+            ["host-arch"],
+            False,
+            "channel '10.04' is not yet supported (must be '18.04', '20.04' or '22.04')",
+        ),
+        (
+            "ubuntu",
+            "20.04",
+            ["other-arch"],
+            False,
+            "host architecture 'host-arch' not in base architectures ['other-arch']",
+        ),
+    ],
+)
+def test_is_base_available(
+    mock_get_host_architecture, name, channel, architectures, expected_valid, expected_reason
+):
+    base = Base(name=name, channel=channel, architectures=architectures)
+    valid, reason = providers.providers.is_base_available(base)
+
+    assert (valid, reason) == (expected_valid, expected_reason)

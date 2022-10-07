@@ -23,14 +23,13 @@ from craft_providers import bases
 from craft_providers.multipass import MultipassError, MultipassInstallationError
 
 from charmcraft import providers
-from charmcraft.config import Base
 from charmcraft.providers.providers import get_base_configuration
 
 
 @pytest.fixture(autouse=True)
 def mock_base_provider_get_host_architecture():
     with mock.patch(
-        "charmcraft.providers._provider.get_host_architecture", return_value="host-arch"
+        "charmcraft.providers.providers.get_host_architecture", return_value="host-arch"
     ) as mock_arch:
         yield mock_arch
 
@@ -113,45 +112,6 @@ def test_ensure_provider_is_available_errors_when_multipass_not_ready(
         provider.ensure_provider_is_available()
 
     assert exc_info.value.__cause__ is error
-
-
-@pytest.mark.parametrize(
-    "name,channel,architectures,expected_valid,expected_reason",
-    [
-        ("ubuntu", "18.04", ["host-arch"], True, None),
-        ("ubuntu", "20.04", ["host-arch"], True, None),
-        ("ubuntu", "22.04", ["host-arch"], True, None),
-        ("ubuntu", "20.04", ["extra-arch", "host-arch"], True, None),
-        (
-            "not-ubuntu",
-            "20.04",
-            ["host-arch"],
-            False,
-            "name 'not-ubuntu' is not yet supported (must be 'ubuntu')",
-        ),
-        (
-            "ubuntu",
-            "10.04",
-            ["host-arch"],
-            False,
-            "channel '10.04' is not yet supported (must be '18.04', '20.04' or '22.04')",
-        ),
-        (
-            "ubuntu",
-            "20.04",
-            ["other-arch"],
-            False,
-            "host architecture 'host-arch' not in base architectures ['other-arch']",
-        ),
-    ],
-)
-def test_is_base_available(name, channel, architectures, expected_valid, expected_reason):
-    base = Base(name=name, channel=channel, architectures=architectures)
-    provider = providers.MultipassProvider()
-
-    valid, reason = provider.is_base_available(base)
-
-    assert (valid, reason) == (expected_valid, expected_reason)
 
 
 @pytest.mark.parametrize("is_installed", [True, False])

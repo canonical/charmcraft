@@ -203,6 +203,15 @@ def mock_instance_name():
         yield patched
 
 
+@pytest.fixture()
+def mock_is_base_available():
+    with mock.patch(
+        "charmcraft.providers.providers.is_base_available",
+        return_value=(True, None),
+    ) as mock_is_base_available:
+        yield mock_is_base_available
+
+
 # --- (real) build tests
 
 
@@ -457,6 +466,7 @@ def test_build_project_is_cwd(
     mock_provider,
     mock_instance_name,
     mock_buildd_base_configuration,
+    mock_is_base_available,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -489,9 +499,6 @@ def test_build_project_is_cwd(
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
-        call.is_base_available(
-            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-        ),
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
@@ -508,6 +515,11 @@ def test_build_project_is_cwd(
             cwd=project_managed_path,
         ),
     ]
+    assert mock_is_base_available.mock_calls == [
+        call.is_base_available(
+            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+        )
+    ]
 
 
 def test_build_project_is_not_cwd(
@@ -518,6 +530,7 @@ def test_build_project_is_not_cwd(
     monkeypatch,
     mock_instance_name,
     mock_buildd_base_configuration,
+    mock_is_base_available,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -550,9 +563,6 @@ def test_build_project_is_not_cwd(
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
-        call.is_base_available(
-            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-        ),
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
@@ -572,6 +582,11 @@ def test_build_project_is_not_cwd(
             source=pathlib.Path("/root") / zipnames[0],
             destination=pathlib.Path.cwd() / zipnames[0],
         ),
+    ]
+    assert mock_is_base_available.mock_calls == [
+        call.is_base_available(
+            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
+        )
     ]
 
 
@@ -596,6 +611,7 @@ def test_build_bases_index_scenarios_provider(
     mock_provider,
     mock_instance_name,
     mock_buildd_base_configuration,
+    mock_is_base_available,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(mode)
@@ -634,9 +650,6 @@ def test_build_bases_index_scenarios_provider(
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
-        call.is_base_available(
-            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-        ),
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
@@ -653,6 +666,9 @@ def test_build_bases_index_scenarios_provider(
             cwd=project_managed_path,
         ),
     ]
+    assert mock_is_base_available.mock_calls == [
+        call(Base(name="ubuntu", channel="18.04", architectures=[host_arch]))
+    ]
     emitter.assert_progress(
         "Launching environment to pack for base "
         "name='ubuntu' channel='18.04' architectures=['amd64'] "
@@ -661,6 +677,7 @@ def test_build_bases_index_scenarios_provider(
     emitter.assert_progress("Packing the charm")
     mock_provider.reset_mock()
     mock_instance.reset_mock()
+    mock_is_base_available.reset_mock()
 
     base_focal_configuration = get_base_configuration(
         alias=bases.BuilddBaseAlias.FOCAL, instance_name=mock_instance_name()
@@ -672,9 +689,6 @@ def test_build_bases_index_scenarios_provider(
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
-        call.is_base_available(
-            Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
-        ),
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
@@ -691,8 +705,12 @@ def test_build_bases_index_scenarios_provider(
             cwd=project_managed_path,
         ),
     ]
+    assert mock_is_base_available.mock_calls == [
+        call(Base(name="ubuntu", channel="20.04", architectures=[host_arch]))
+    ]
     mock_provider.reset_mock()
     mock_instance.reset_mock()
+    mock_is_base_available.reset_mock()
 
     zipnames = builder.run([0, 1])
     assert zipnames == [
@@ -702,12 +720,6 @@ def test_build_bases_index_scenarios_provider(
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
-        call.is_base_available(
-            Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
-        ),
-        call.is_base_available(
-            Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
-        ),
         call.launched_environment(
             charm_name="name-from-metadata",
             project_path=basic_project,
@@ -737,8 +749,13 @@ def test_build_bases_index_scenarios_provider(
             cwd=project_managed_path,
         ),
     ]
+    assert mock_is_base_available.mock_calls == [
+        call(Base(name="ubuntu", channel="18.04", architectures=[host_arch])),
+        call(Base(name="ubuntu", channel="20.04", architectures=[host_arch])),
+    ]
     mock_provider.reset_mock()
     mock_instance.reset_mock()
+    mock_is_base_available.reset_mock()
 
     with pytest.raises(
         CraftError,
@@ -748,6 +765,7 @@ def test_build_bases_index_scenarios_provider(
 
     mock_provider.reset_mock()
     mock_instance.reset_mock()
+    mock_is_base_available.reset_mock()
 
     expected_msg = re.escape("Failed to build charm for bases index '0'.")
     with pytest.raises(

@@ -16,6 +16,7 @@
 
 import contextlib
 import pathlib
+import sys
 from unittest.mock import Mock, patch, call
 
 import pytest
@@ -23,7 +24,7 @@ from craft_cli import CraftError
 from craft_providers import bases, ProviderError
 
 from charmcraft.config import Base, BasesConfiguration
-from charmcraft import providers
+from charmcraft.providers import LXDProvider, MultipassProvider
 from charmcraft.providers.providers import (
     Plan,
     capture_logs_from_instance,
@@ -32,7 +33,10 @@ from charmcraft.providers.providers import (
     get_command_environment,
     get_instance_name,
     get_base_configuration,
+    get_provider,
+    is_base_available,
 )
+from charmcraft.snap import CharmcraftSnapConfiguration
 
 
 @pytest.fixture()
@@ -64,6 +68,31 @@ def mock_get_host_architecture():
         "charmcraft.providers.providers.get_host_architecture", return_value="host-arch"
     ) as mock_arch:
         yield mock_arch
+
+
+@pytest.fixture()
+def mock_snap_config():
+    with patch(
+        "charmcraft.providers.providers.get_snap_configuration", return_value=None
+    ) as mock_snap:
+        yield mock_snap
+
+
+@pytest.fixture()
+def mock_is_developer_mode():
+    with patch(
+        "charmcraft.providers.providers.is_charmcraft_running_in_developer_mode",
+        return_value=False,
+    ) as mock_is_dev_mode:
+        yield mock_is_dev_mode
+
+
+@pytest.fixture()
+def mock_is_snap():
+    with patch(
+        "charmcraft.providers.providers.is_charmcraft_running_from_snap", return_value=False
+    ) as mock_is_snap:
+        yield mock_is_snap
 
 
 @pytest.fixture()
@@ -653,6 +682,34 @@ def test_is_base_available(
     mock_get_host_architecture, name, channel, architectures, expected_valid, expected_reason
 ):
     base = Base(name=name, channel=channel, architectures=architectures)
-    valid, reason = providers.providers.is_base_available(base)
+    valid, reason = is_base_available(base)
 
     assert (valid, reason) == (expected_valid, expected_reason)
+
+
+def test_get_provider_default(mock_snap_config, mock_is_developer_mode, mock_is_snap):
+    if sys.platform == "linux":
+        assert isinstance(get_provider(), LXDProvider)
+    else:
+        assert isinstance(get_provider(), MultipassProvider)
+
+
+def test_get_provider_developer_mode_env(
+    mock_snap_config, mock_is_developer_mode, mock_is_snap, monkeypatch
+):
+    mock_is_developer_mode.return_value = True
+    monkeypatch.setenv("CHARMCRAFT_PROVIDER", "lxd")
+    assert isinstance(get_provider(), LXDProvider)
+
+    monkeypatch.setenv("CHARMCRAFT_PROVIDER", "multipass")
+    assert isinstance(get_provider(), MultipassProvider)
+
+
+def test_get_provider_snap_config(mock_is_snap, mock_is_developer_mode, mock_snap_config):
+    mock_is_snap.return_value = True
+
+    mock_snap_config.return_value = CharmcraftSnapConfiguration(provider="lxd")
+    assert isinstance(get_provider(), LXDProvider)
+
+    mock_snap_config.return_value = CharmcraftSnapConfiguration(provider="multipass")
+    assert isinstance(get_provider(), MultipassProvider)

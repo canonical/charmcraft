@@ -26,8 +26,16 @@ from craft_providers import bases, Executor, ProviderError
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
-from charmcraft.env import get_managed_environment_snap_channel, get_managed_environment_log_path
+from charmcraft.env import (
+    get_managed_environment_snap_channel,
+    get_managed_environment_log_path,
+    is_charmcraft_running_from_snap,
+    is_charmcraft_running_in_developer_mode,
+)
 from charmcraft.utils import confirm_with_user, get_host_architecture
+from charmcraft.snap import get_snap_configuration
+from ._lxd import LXDProvider
+from ._multipass import MultipassProvider
 
 if TYPE_CHECKING:
     from charmcraft.providers import Provider
@@ -257,3 +265,44 @@ def is_base_available(base: Base) -> Tuple[bool, Union[str, None]]:
         )
 
     return True, None
+
+
+def _get_platform_default_provider() -> str:
+    if sys.platform == "linux":
+        return "lxd"
+
+    return "multipass"
+
+
+def get_provider():
+    """Get the configured or appropriate provider for the host OS.
+
+    If platform is not Linux, use Multipass.
+
+    If platform is Linux:
+    (1) use provider specified with CHARMCRAFT_PROVIDER if running
+        in developer mode,
+    (2) use provider specified with snap configuration if running
+        as snap,
+    (3) default to platform default (LXD on Linux).
+
+    :return: Provider instance.
+    """
+    provider = None
+
+    if is_charmcraft_running_in_developer_mode():
+        provider = os.getenv("CHARMCRAFT_PROVIDER")
+
+    if provider is None and is_charmcraft_running_from_snap():
+        snap_config = get_snap_configuration()
+        provider = snap_config.provider if snap_config else None
+
+    if provider is None:
+        provider = _get_platform_default_provider()
+
+    if provider == "lxd":
+        return LXDProvider()
+    elif provider == "multipass":
+        return MultipassProvider()
+
+    raise CraftError(f"Unsupported provider specified {provider!r}.")

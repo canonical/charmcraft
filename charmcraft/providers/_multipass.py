@@ -21,10 +21,8 @@ import pathlib
 from typing import Generator
 
 from craft_cli import CraftError
-from craft_providers import bases, multipass, Executor
+from craft_providers import base, bases, multipass, Executor
 from craft_providers.multipass.errors import MultipassError
-
-from charmcraft.config import Base
 
 from ._provider import Provider
 
@@ -97,7 +95,7 @@ class MultipassProvider(Provider):
         *,
         charm_name: str,
         project_path: pathlib.Path,
-        base_configuration: Base,
+        base_configuration: base.Base,
         build_base: str,
         instance_name: str,
     ) -> Generator[Executor, None, None]:

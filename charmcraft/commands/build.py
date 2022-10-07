@@ -37,6 +37,7 @@ from charmcraft.providers.providers import (
     BASE_CHANNEL_TO_PROVIDER_BASE,
     capture_logs_from_instance,
     create_build_plan,
+    ensure_provider_is_available,
     get_base_configuration,
     get_instance_name,
 )
@@ -262,7 +263,7 @@ class Builder:
 
         managed_mode = env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
-            self.provider.ensure_provider_is_available()
+            ensure_provider_is_available(self.provider)
 
         build_plan = create_build_plan(
             bases=self.config.bases,

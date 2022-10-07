@@ -25,7 +25,6 @@ from craft_providers import bases, multipass, Executor
 from craft_providers.multipass.errors import MultipassError
 
 from charmcraft.config import Base
-from charmcraft.utils import confirm_with_user
 
 from ._provider import Provider
 
@@ -43,6 +42,12 @@ class MultipassProvider(Provider):
     :param multipass: Optional Multipass client to use.
     """
 
+    name = "Multipass"
+    install_recommendation = (
+        "Visit https://multipass.run/ "
+        "for instructions on installing Multipass for your operating system."
+    )
+
     def __init__(
         self,
         *,
@@ -52,28 +57,17 @@ class MultipassProvider(Provider):
 
     @classmethod
     def ensure_provider_is_available(cls) -> None:
-        """Ensure provider is available, prompting the user to install it if required.
+        """Ensure provider is available and ready, installing if required.
 
         :raises CraftError: if provider is not available.
         """
         if not multipass.is_installed():
-            if confirm_with_user(
-                "Multipass is required, but not installed. Do you wish to install Multipass "
-                "and configure it with the defaults?",
-                default=False,
-            ):
-                try:
-                    multipass.install()
-                except multipass.MultipassInstallationError as error:
-                    raise CraftError(
-                        "Failed to install Multipass. Visit https://multipass.run/ for "
-                        "instructions on installing Multipass for your operating system."
-                    ) from error
-            else:
+            try:
+                multipass.install()
+            except multipass.MultipassInstallationError as error:
                 raise CraftError(
-                    "Multipass is required, but not installed. Visit https://multipass.run/ for "
-                    "instructions on installing Multipass for your operating system."
-                )
+                    f"Failed to install Multipass. {cls.install_recommendation}"
+                ) from error
 
         try:
             multipass.ensure_multipass_is_ready()

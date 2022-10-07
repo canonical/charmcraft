@@ -36,15 +36,6 @@ def mock_base_provider_get_host_architecture():
 
 
 @pytest.fixture
-def mock_confirm_with_user():
-    with mock.patch(
-        "charmcraft.providers._multipass.confirm_with_user",
-        return_value=False,
-    ) as mock_confirm:
-        yield mock_confirm
-
-
-@pytest.fixture
 def mock_multipass(monkeypatch):
     with mock.patch("craft_providers.multipass.Multipass", autospec=True) as mock_client:
         yield mock_client.return_value
@@ -85,34 +76,10 @@ def test_ensure_provider_is_available_ok_when_installed(mock_multipass_is_instal
     provider.ensure_provider_is_available()
 
 
-def test_ensure_provider_is_available_errors_when_user_declines(
-    mock_confirm_with_user, mock_multipass_is_installed
-):
-    mock_confirm_with_user.return_value = False
-    mock_multipass_is_installed.return_value = False
-    provider = providers.MultipassProvider()
-
-    match = re.escape(
-        "Multipass is required, but not installed. Visit https://multipass.run/ for "
-        "instructions on installing Multipass for your operating system."
-    )
-    with pytest.raises(CraftError, match=match):
-        provider.ensure_provider_is_available()
-
-    assert mock_confirm_with_user.mock_calls == [
-        mock.call(
-            "Multipass is required, but not installed. "
-            "Do you wish to install Multipass and configure it with the defaults?",
-            default=False,
-        )
-    ]
-
-
 def test_ensure_provider_is_available_errors_when_multipass_install_fails(
-    mock_confirm_with_user, mock_multipass_is_installed, mock_multipass_install
+    mock_multipass_is_installed, mock_multipass_install
 ):
     error = MultipassInstallationError("foo")
-    mock_confirm_with_user.return_value = True
     mock_multipass_is_installed.return_value = False
     mock_multipass_install.side_effect = error
     provider = providers.MultipassProvider()
@@ -124,18 +91,10 @@ def test_ensure_provider_is_available_errors_when_multipass_install_fails(
     with pytest.raises(CraftError, match=match) as exc_info:
         provider.ensure_provider_is_available()
 
-    assert mock_confirm_with_user.mock_calls == [
-        mock.call(
-            "Multipass is required, but not installed. "
-            "Do you wish to install Multipass and configure it with the defaults?",
-            default=False,
-        )
-    ]
     assert exc_info.value.__cause__ is error
 
 
 def test_ensure_provider_is_available_errors_when_multipass_not_ready(
-    mock_confirm_with_user,
     mock_multipass_is_installed,
     mock_multipass_install,
     mock_multipass_ensure_multipass_is_ready,
@@ -143,7 +102,6 @@ def test_ensure_provider_is_available_errors_when_multipass_not_ready(
     error = MultipassError(
         brief="some error", details="some details", resolution="some resolution"
     )
-    mock_confirm_with_user.return_value = True
     mock_multipass_is_installed.return_value = True
     mock_multipass_ensure_multipass_is_ready.side_effect = error
     provider = providers.MultipassProvider()

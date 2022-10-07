@@ -487,6 +487,7 @@ def test_build_project_is_cwd(
         f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
+        call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.is_base_available(
             Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
@@ -547,6 +548,7 @@ def test_build_project_is_not_cwd(
         f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
+        call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.is_base_available(
             Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
@@ -630,6 +632,7 @@ def test_build_bases_index_scenarios_provider(
     ]
 
     assert mock_provider.mock_calls == [
+        call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.is_base_available(
             Base(name="ubuntu", channel="18.04", architectures=[host_arch]),
@@ -667,6 +670,7 @@ def test_build_bases_index_scenarios_provider(
         f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
+        call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.is_base_available(
             Base(name="ubuntu", channel="20.04", architectures=[host_arch]),
@@ -696,6 +700,7 @@ def test_build_bases_index_scenarios_provider(
         f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
+        call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.is_base_available(
             Base(name="ubuntu", channel="18.04", architectures=[host_arch]),

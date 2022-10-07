@@ -136,10 +136,14 @@ def mock_instance():
 
 
 @pytest.fixture(autouse=True)
-def fake_provider(mock_instance, monkeypatch):
+def fake_provider(mock_instance):
     """Provide a minimal/fake provider."""
 
     class FakeProvider(Provider):
+
+        name = "TestProvider"
+        install_recommendation = "Insert floppy disk."
+
         def clean_project_environments(self, *, instance_name: str) -> None:
             pass
 

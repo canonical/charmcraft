@@ -35,7 +35,7 @@ from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
 from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.metadata import CHARM_METADATA
-from charmcraft.providers.providers import get_base_configuration
+from charmcraft.providers import get_base_configuration
 from charmcraft.utils import get_host_architecture
 
 
@@ -157,7 +157,7 @@ def basic_project_builder(basic_project):
 
 @pytest.fixture
 def mock_capture_logs_from_instance():
-    with patch("charmcraft.commands.build.capture_logs_from_instance") as mock_capture:
+    with patch("charmcraft.commands.build.providers.capture_logs_from_instance") as mock_capture:
         yield mock_capture
 
 
@@ -183,22 +183,20 @@ def mock_parts():
 @pytest.fixture(autouse=True)
 def mock_provider(mock_instance, fake_provider):
     mock_provider = mock.Mock(wraps=fake_provider)
-    with patch("charmcraft.commands.build.get_provider", return_value=mock_provider):
+    with patch("charmcraft.commands.build.providers.get_provider", return_value=mock_provider):
         yield mock_provider
 
 
 @pytest.fixture()
 def mock_buildd_base_configuration():
-    with mock.patch(
-        "charmcraft.providers.providers.bases.BuilddBase", autospec=True
-    ) as mock_base_config:
+    with mock.patch("charmcraft.providers.bases.BuilddBase", autospec=True) as mock_base_config:
         yield mock_base_config
 
 
 @pytest.fixture()
 def mock_instance_name():
     with mock.patch(
-        "charmcraft.commands.build.get_instance_name", return_value="test-instance-name"
+        "charmcraft.commands.build.providers.get_instance_name", return_value="test-instance-name"
     ) as patched:
         yield patched
 
@@ -206,7 +204,7 @@ def mock_instance_name():
 @pytest.fixture()
 def mock_is_base_available():
     with mock.patch(
-        "charmcraft.providers.providers.is_base_available",
+        "charmcraft.providers.is_base_available",
         return_value=(True, None),
     ) as mock_is_base_available:
         yield mock_is_base_available
@@ -271,7 +269,7 @@ def test_build_with_charmcraft_yaml_managed_mode(
 
 def test_build_checks_provider(basic_project, mock_provider, mocker):
     """Test cases for base-index parameter."""
-    mocker.patch("charmcraft.commands.build.capture_logs_from_instance")
+    mocker.patch("charmcraft.commands.build.providers.capture_logs_from_instance")
     config = load(basic_project)
     builder = get_builder(config)
 
@@ -500,7 +498,7 @@ def test_build_project_is_cwd(
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            charm_name="name-from-metadata",
+            project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_configuration,
             build_base="18.04",
@@ -564,7 +562,7 @@ def test_build_project_is_not_cwd(
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            charm_name="name-from-metadata",
+            project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_configuration,
             build_base="18.04",
@@ -651,7 +649,7 @@ def test_build_bases_index_scenarios_provider(
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            charm_name="name-from-metadata",
+            project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_bionic_configuration,
             build_base="18.04",
@@ -690,7 +688,7 @@ def test_build_bases_index_scenarios_provider(
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            charm_name="name-from-metadata",
+            project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_focal_configuration,
             build_base="20.04",
@@ -721,14 +719,14 @@ def test_build_bases_index_scenarios_provider(
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            charm_name="name-from-metadata",
+            project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_bionic_configuration,
             build_base="18.04",
             instance_name=mock_instance_name(),
         ),
         call.launched_environment(
-            charm_name="name-from-metadata",
+            project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_focal_configuration,
             build_base="20.04",

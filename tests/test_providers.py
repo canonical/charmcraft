@@ -21,35 +21,24 @@ from unittest.mock import Mock, patch, call
 
 import pytest
 from craft_cli import CraftError
-from craft_providers import bases, ProviderError
+from craft_providers import ProviderError, bases, lxd, multipass
 
 from charmcraft.config import Base, BasesConfiguration
-from charmcraft.providers import LXDProvider, MultipassProvider
-from charmcraft.providers.providers import (
-    Plan,
-    capture_logs_from_instance,
-    create_build_plan,
-    ensure_provider_is_available,
-    get_command_environment,
-    get_instance_name,
-    get_base_configuration,
-    get_provider,
-    is_base_available,
-)
+from charmcraft import providers
 from charmcraft.snap import CharmcraftSnapConfiguration
 
 
 @pytest.fixture()
 def mock_provider(mock_instance, fake_provider):
     mock_provider = Mock(wraps=fake_provider)
-    with patch("charmcraft.commands.build.get_provider", return_value=mock_provider):
+    with patch("charmcraft.commands.build.providers.get_provider", return_value=mock_provider):
         yield mock_provider
 
 
 @pytest.fixture()
 def mock_is_base_available():
     with patch(
-        "charmcraft.providers.providers.is_base_available", return_value=(True, None)
+        "charmcraft.providers.is_base_available", return_value=(True, None)
     ) as mock_is_base_available:
         yield mock_is_base_available
 
@@ -57,7 +46,7 @@ def mock_is_base_available():
 @pytest.fixture()
 def mock_check_if_base_matches_host():
     with patch(
-        "charmcraft.providers.providers.check_if_base_matches_host", return_value=(True, None)
+        "charmcraft.providers.check_if_base_matches_host", return_value=(True, None)
     ) as mock_check_if_base_matches_host:
         yield mock_check_if_base_matches_host
 
@@ -65,23 +54,21 @@ def mock_check_if_base_matches_host():
 @pytest.fixture()
 def mock_get_host_architecture():
     with patch(
-        "charmcraft.providers.providers.get_host_architecture", return_value="host-arch"
+        "charmcraft.providers.get_host_architecture", return_value="host-arch"
     ) as mock_arch:
         yield mock_arch
 
 
 @pytest.fixture()
 def mock_snap_config():
-    with patch(
-        "charmcraft.providers.providers.get_snap_configuration", return_value=None
-    ) as mock_snap:
+    with patch("charmcraft.providers.get_snap_configuration", return_value=None) as mock_snap:
         yield mock_snap
 
 
 @pytest.fixture()
 def mock_is_developer_mode():
     with patch(
-        "charmcraft.providers.providers.is_charmcraft_running_in_developer_mode",
+        "charmcraft.providers.is_charmcraft_running_in_developer_mode",
         return_value=False,
     ) as mock_is_dev_mode:
         yield mock_is_dev_mode
@@ -90,7 +77,7 @@ def mock_is_developer_mode():
 @pytest.fixture()
 def mock_is_snap():
     with patch(
-        "charmcraft.providers.providers.is_charmcraft_running_from_snap", return_value=False
+        "charmcraft.providers.is_charmcraft_running_from_snap", return_value=False
     ) as mock_is_snap:
         yield mock_is_snap
 
@@ -162,7 +149,7 @@ def test_create_build_plan_simple(
     emitter, mock_provider, mock_is_base_available, simple_base_config
 ):
     """Verify creation of a simple build plan."""
-    build_plan = create_build_plan(
+    build_plan = providers.create_build_plan(
         bases=simple_base_config,
         bases_indices=None,
         destructive_mode=False,
@@ -171,7 +158,7 @@ def test_create_build_plan_simple(
     )
 
     assert build_plan == [
-        Plan(
+        providers.Plan(
             bases_config=BasesConfiguration(
                 **{
                     "build-on": [
@@ -199,7 +186,7 @@ def test_create_build_plan_complex(
 ):
     """Verify creation of a complex build plan."""
 
-    build_plan = create_build_plan(
+    build_plan = providers.create_build_plan(
         bases=complex_base_config,
         bases_indices=None,
         destructive_mode=False,
@@ -208,7 +195,7 @@ def test_create_build_plan_complex(
     )
 
     assert build_plan == [
-        Plan(
+        providers.Plan(
             bases_config=BasesConfiguration(
                 **{
                     "build-on": [
@@ -223,7 +210,7 @@ def test_create_build_plan_complex(
             bases_index=0,
             build_on_index=0,
         ),
-        Plan(
+        providers.Plan(
             bases_config=BasesConfiguration(
                 **{
                     "build-on": [
@@ -239,7 +226,7 @@ def test_create_build_plan_complex(
             bases_index=1,
             build_on_index=0,
         ),
-        Plan(
+        providers.Plan(
             bases_config=BasesConfiguration(
                 **{
                     "build-on": [
@@ -280,7 +267,7 @@ def test_create_build_plan_base_matches_host(
 ):
     """Verify the first `build_on` Base that matches the host is used for the build plan
     when building in managed mode or destructive mode."""
-    build_plan = create_build_plan(
+    build_plan = providers.create_build_plan(
         bases=simple_base_config,
         bases_indices=None,
         destructive_mode=destructive_mode,
@@ -289,7 +276,7 @@ def test_create_build_plan_base_matches_host(
     )
 
     assert build_plan == [
-        Plan(
+        providers.Plan(
             bases_config=BasesConfiguration(
                 **{
                     "build-on": [
@@ -331,7 +318,7 @@ def test_create_build_plan_is_base_available(emitter, mock_is_base_available, mo
     # the first Base is not available, but the second Base is available
     mock_is_base_available.side_effect = [(False, "test error message"), (True, None)]
 
-    build_plan = create_build_plan(
+    build_plan = providers.create_build_plan(
         bases=base,
         bases_indices=None,
         destructive_mode=False,
@@ -360,7 +347,7 @@ def test_create_build_plan_base_index_usage(
     mock_provider,
 ):
     """Verify `bases_indices` argument causes build plan to only contain matching bases."""
-    build_plan = create_build_plan(
+    build_plan = providers.create_build_plan(
         bases=complex_base_config,
         bases_indices=[1, 2],
         destructive_mode=False,
@@ -369,7 +356,7 @@ def test_create_build_plan_base_index_usage(
     )
 
     assert build_plan == [
-        Plan(
+        providers.Plan(
             bases_config=BasesConfiguration(
                 **{
                     "build-on": [
@@ -385,7 +372,7 @@ def test_create_build_plan_base_index_usage(
             bases_index=1,
             build_on_index=0,
         ),
-        Plan(
+        providers.Plan(
             bases_config=BasesConfiguration(
                 **{
                     "build-on": [
@@ -422,7 +409,7 @@ def test_create_build_plan_no_suitable_bases(
     """Verify an empty build plan is returned when no bases are available."""
     mock_is_base_available.return_value = (False, "test error message")
 
-    build_plan = create_build_plan(
+    build_plan = providers.create_build_plan(
         bases=complex_base_config,
         bases_indices=None,
         destructive_mode=False,
@@ -460,7 +447,7 @@ def test_create_build_plan_no_suitable_bases(
 def test_create_build_plan_no_bases_error(mock_provider):
     """Verify an error is raised when no bases are passed."""
     with pytest.raises(CraftError) as error:
-        create_build_plan(
+        providers.create_build_plan(
             bases=None,
             bases_indices=None,
             destructive_mode=False,
@@ -475,7 +462,7 @@ def test_get_command_environment_minimal(monkeypatch):
     monkeypatch.setenv("IGNORE_ME", "or-im-failing")
     monkeypatch.setenv("PATH", "not-using-host-path")
 
-    env = get_command_environment()
+    env = providers.get_command_environment()
 
     assert env == {
         "CHARMCRAFT_MANAGED_MODE": "1",
@@ -490,7 +477,7 @@ def test_get_command_environment_all_opts(monkeypatch):
     monkeypatch.setenv("https_proxy", "test-https-proxy")
     monkeypatch.setenv("no_proxy", "test-no-proxy")
 
-    env = get_command_environment()
+    env = providers.get_command_environment()
 
     assert env == {
         "CHARMCRAFT_MANAGED_MODE": "1",
@@ -515,15 +502,15 @@ def test_get_command_environment_all_opts(monkeypatch):
     ],
 )
 def test_get_instance_name(
-    bases_index, build_on_index, project_name, target_arch, expected, mock_path
+    bases_index, build_on_index, project_name, target_arch, expected, tmp_path
 ):
-    assert get_instance_name(
+    assert providers.get_instance_name(
         bases_index=bases_index,
         build_on_index=build_on_index,
         project_name=project_name,
-        project_path=mock_path,
+        project_path=tmp_path,
         target_arch=target_arch,
-    ) == expected.format(inode="445566")
+    ) == expected.format(inode=tmp_path.stat().st_ino)
 
 
 @pytest.mark.parametrize(
@@ -554,17 +541,15 @@ def test_get_base_configuration(
     """Verify the snapcraft snap is installed from the correct channel."""
     mocker.patch("sys.platform", platform)
     mocker.patch(
-        "charmcraft.providers.providers.get_managed_environment_snap_channel",
+        "charmcraft.providers.get_managed_environment_snap_channel",
         return_value=snap_channel,
     )
-    mocker.patch("charmcraft.providers.providers.get_command_environment", return_value="test-env")
-    mocker.patch(
-        "charmcraft.providers.providers.get_instance_name", return_value="test-instance-name"
-    )
-    mock_buildd_base = mocker.patch("charmcraft.providers.providers.bases.BuilddBase")
+    mocker.patch("charmcraft.providers.get_command_environment", return_value="test-env")
+    mocker.patch("charmcraft.providers.get_instance_name", return_value="test-instance-name")
+    mock_buildd_base = mocker.patch("charmcraft.providers.bases.BuilddBase")
     mock_buildd_base.compatibility_tag = "buildd-base-v0"
 
-    get_base_configuration(alias=alias, instance_name="test-instance-name")
+    providers.get_base_configuration(alias=alias, instance_name="test-instance-name")
 
     mock_buildd_base.assert_called_with(
         alias=alias,
@@ -585,7 +570,7 @@ def test_capture_logs_from_instance_ok(emitter, mock_instance, tmp_path, mocker)
         yield fake_file
 
     mocker.patch.object(mock_instance, "temporarily_pull_file", fake_pull)
-    capture_logs_from_instance(mock_instance)
+    providers.capture_logs_from_instance(mock_instance)
 
     emitter.assert_interactions(
         [
@@ -603,17 +588,17 @@ def test_capture_logs_from_instance_not_found(emitter, mock_instance, tmp_path, 
         yield None  # didn't find the indicated file
 
     mocker.patch.object(mock_instance, "temporarily_pull_file", fake_pull)
-    capture_logs_from_instance(mock_instance)
+    providers.capture_logs_from_instance(mock_instance)
 
     emitter.assert_debug("No logs found in instance.")
 
 
 def test_ensure_provider_is_available_installed_yes(mocker, fake_provider):
     """Verify provider is ensured to be available when installed (fake_provider's default)."""
-    confirmation_mock = mocker.patch("charmcraft.providers.providers.confirm_with_user")
+    confirmation_mock = mocker.patch("charmcraft.providers.confirm_with_user")
     available_mock = mocker.patch.object(fake_provider, "ensure_provider_is_available")
 
-    ensure_provider_is_available(fake_provider)
+    providers.ensure_provider_is_available(fake_provider)
 
     confirmation_mock.assert_not_called()
     available_mock.assert_called_once()
@@ -621,17 +606,15 @@ def test_ensure_provider_is_available_installed_yes(mocker, fake_provider):
 
 def test_ensure_provider_is_available_installed_no_user_confirms_yes(mocker, fake_provider):
     """Verify provider is ensured to be available, not installed but user chooses to install."""
-    confirmation_mock = mocker.patch(
-        "charmcraft.providers.providers.confirm_with_user", return_value=True
-    )
+    confirmation_mock = mocker.patch("charmcraft.providers.confirm_with_user", return_value=True)
     mocker.patch.object(fake_provider, "is_provider_installed", return_value=False)
     available_mock = mocker.patch.object(fake_provider, "ensure_provider_is_available")
 
-    ensure_provider_is_available(fake_provider)
+    providers.ensure_provider_is_available(fake_provider)
 
     message = (
-        "TestProvider is required but not installed. Do you wish to "
-        "install TestProvider and configure it with the defaults?"
+        "Provider is required but not installed. Do you wish to "
+        "install provider and configure it with the defaults?"
     )
     confirmation_mock.assert_called_with(message, default=False)
     available_mock.assert_called_once()
@@ -639,13 +622,13 @@ def test_ensure_provider_is_available_installed_no_user_confirms_yes(mocker, fak
 
 def test_ensure_provider_is_available_installed_no_user_confirms_no(mocker, fake_provider):
     """Raise an error if not installed and the user does not choose to install it."""
-    mocker.patch("charmcraft.providers.providers.confirm_with_user", return_value=False)
+    mocker.patch("charmcraft.providers.confirm_with_user", return_value=False)
     mocker.patch.object(fake_provider, "is_provider_installed", return_value=False)
 
     with pytest.raises(ProviderError) as error:
-        ensure_provider_is_available(fake_provider)
+        providers.ensure_provider_is_available(fake_provider)
 
-    assert error.value.brief == "TestProvider is required, but not installed. Insert floppy disk."
+    assert error.value.brief == "Provider is required, but not installed."
 
 
 @pytest.mark.parametrize(
@@ -682,16 +665,16 @@ def test_is_base_available(
     mock_get_host_architecture, name, channel, architectures, expected_valid, expected_reason
 ):
     base = Base(name=name, channel=channel, architectures=architectures)
-    valid, reason = is_base_available(base)
+    valid, reason = providers.is_base_available(base)
 
     assert (valid, reason) == (expected_valid, expected_reason)
 
 
 def test_get_provider_default(mock_snap_config, mock_is_developer_mode, mock_is_snap):
     if sys.platform == "linux":
-        assert isinstance(get_provider(), LXDProvider)
+        assert isinstance(providers.get_provider(), lxd.LXDProvider)
     else:
-        assert isinstance(get_provider(), MultipassProvider)
+        assert isinstance(providers.get_provider(), multipass.MultipassProvider)
 
 
 def test_get_provider_developer_mode_env(
@@ -699,17 +682,17 @@ def test_get_provider_developer_mode_env(
 ):
     mock_is_developer_mode.return_value = True
     monkeypatch.setenv("CHARMCRAFT_PROVIDER", "lxd")
-    assert isinstance(get_provider(), LXDProvider)
+    assert isinstance(providers.get_provider(), lxd.LXDProvider)
 
     monkeypatch.setenv("CHARMCRAFT_PROVIDER", "multipass")
-    assert isinstance(get_provider(), MultipassProvider)
+    assert isinstance(providers.get_provider(), multipass.MultipassProvider)
 
 
 def test_get_provider_snap_config(mock_is_snap, mock_is_developer_mode, mock_snap_config):
     mock_is_snap.return_value = True
 
     mock_snap_config.return_value = CharmcraftSnapConfiguration(provider="lxd")
-    assert isinstance(get_provider(), LXDProvider)
+    assert isinstance(providers.get_provider(), lxd.LXDProvider)
 
     mock_snap_config.return_value = CharmcraftSnapConfiguration(provider="multipass")
-    assert isinstance(get_provider(), MultipassProvider)
+    assert isinstance(providers.get_provider(), multipass.MultipassProvider)

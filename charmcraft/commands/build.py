@@ -26,21 +26,12 @@ from typing import List, Optional
 
 from craft_cli import emit, CraftError
 
-from charmcraft import env, linters, parts, instrum
+from charmcraft import env, linters, parts, providers, instrum
 from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.parts import Step
-from charmcraft.providers.providers import (
-    BASE_CHANNEL_TO_PROVIDER_BASE,
-    capture_logs_from_instance,
-    create_build_plan,
-    ensure_provider_is_available,
-    get_base_configuration,
-    get_instance_name,
-    get_provider,
-)
 from charmcraft.utils import get_host_architecture
 
 # Some constants that are used through the code.
@@ -123,7 +114,7 @@ class Builder:
         else:
             self._special_charm_part = None
 
-        self.provider = get_provider()
+        self.provider = providers.get_provider()
 
     def show_linting_results(self, linting_results):
         """Manage the linters results, show some in different conditions, decide if continue."""
@@ -263,9 +254,9 @@ class Builder:
 
         managed_mode = env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
-            ensure_provider_is_available(self.provider)
+            providers.ensure_provider_is_available(self.provider)
 
-        build_plan = create_build_plan(
+        build_plan = providers.create_build_plan(
             bases=self.config.bases,
             bases_indices=bases_indices,
             destructive_mode=destructive_mode,
@@ -350,21 +341,21 @@ class Builder:
             "(may take a while the first time but it's reusable)"
         )
 
-        build_base = BASE_CHANNEL_TO_PROVIDER_BASE[build_on.channel]
-        instance_name = get_instance_name(
+        build_base = providers.BASE_CHANNEL_TO_PROVIDER_BASE[build_on.channel]
+        instance_name = providers.get_instance_name(
             bases_index=bases_index,
             build_on_index=build_on_index,
             project_name=self.metadata.name,
             project_path=self.charmdir,
             target_arch=get_host_architecture(),
         )
-        base_configuration = get_base_configuration(
+        base_configuration = providers.get_base_configuration(
             alias=build_base,
             instance_name=instance_name,
         )
 
         with self.provider.launched_environment(
-            charm_name=self.metadata.name,
+            project_name=self.metadata.name,
             project_path=self.charmdir,
             base_configuration=base_configuration,
             build_base=build_base.value,
@@ -391,7 +382,7 @@ class Builder:
                     f"Failed to build charm for bases index '{bases_index}'."
                 ) from error
             finally:
-                capture_logs_from_instance(instance)
+                providers.capture_logs_from_instance(instance)
 
             if pull_charm:
                 try:

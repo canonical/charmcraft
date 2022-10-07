@@ -21,13 +21,12 @@ from craft_providers.lxd import LXDError
 import pytest
 
 from charmcraft import providers
-from charmcraft.config import Base
 
 
 @pytest.fixture(autouse=True)
 def mock_get_host_architecture():
     with patch(
-        "charmcraft.providers._provider.get_host_architecture", return_value="host-arch"
+        "charmcraft.providers.providers.get_host_architecture", return_value="host-arch"
     ) as mock_arch:
         yield mock_arch
 
@@ -54,47 +53,6 @@ def mock_lxd_is_installed():
 def mock_lxd_exists():
     with patch("craft_providers.lxd.LXDInstance.exists", return_value=True) as mock_exists:
         yield mock_exists
-
-
-@pytest.mark.parametrize(
-    "name,channel,architectures,expected_valid,expected_reason",
-    [
-        ("ubuntu", "18.04", ["host-arch"], True, None),
-        ("ubuntu", "20.04", ["host-arch"], True, None),
-        ("ubuntu", "22.04", ["host-arch"], True, None),
-        ("ubuntu", "20.04", ["extra-arch", "host-arch"], True, None),
-        (
-            "not-ubuntu",
-            "20.04",
-            ["host-arch"],
-            False,
-            "name 'not-ubuntu' is not yet supported (must be 'ubuntu')",
-        ),
-        (
-            "ubuntu",
-            "10.04",
-            ["host-arch"],
-            False,
-            "channel '10.04' is not yet supported (must be '18.04', '20.04' or '22.04')",
-        ),
-        (
-            "ubuntu",
-            "20.04",
-            ["other-arch"],
-            False,
-            "host architecture 'host-arch' not in base architectures ['other-arch']",
-        ),
-    ],
-)
-def test_is_base_available(
-    mock_get_host_architecture, name, channel, architectures, expected_valid, expected_reason
-):
-    base = Base(name=name, channel=channel, architectures=architectures)
-    provider = providers.LXDProvider()
-
-    valid, reason = provider.is_base_available(base)
-
-    assert (valid, reason) == (expected_valid, expected_reason)
 
 
 def test_clean_project_environments_provider_not_installed(

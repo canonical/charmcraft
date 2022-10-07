@@ -33,7 +33,7 @@ def mock_provider(fake_provider):
 @pytest.fixture(autouse=True)
 def mock_is_base_available():
     with mock.patch(
-        "charmcraft.providers._provider.Provider.is_base_available",
+        "charmcraft.providers.providers.is_base_available",
         return_value=(True, None),
     ) as mock_is_base_available:
         yield mock_is_base_available
@@ -46,7 +46,9 @@ def mock_instance_name():
         yield mock_func
 
 
-def test_clean_simple(config, emitter, mock_provider, tmp_path, mock_instance_name):
+def test_clean_simple(
+    config, emitter, mock_provider, tmp_path, mock_instance_name, mock_is_base_available
+):
     """Test clean with one base."""
     metadata_yaml = tmp_path / "metadata.yaml"
     metadata_yaml.write_text("name: foo")
@@ -69,9 +71,6 @@ def test_clean_simple(config, emitter, mock_provider, tmp_path, mock_instance_na
     cmd.run([])
 
     assert mock_provider.mock_calls == [
-        mock.call.is_base_available(
-            Base(name="x1name", channel="x1channel", architectures=["x1arch"])
-        ),
         mock.call.clean_project_environments(instance_name="test-instance-name-0"),
     ]
     assert mock_instance_name.mock_calls == [
@@ -83,12 +82,19 @@ def test_clean_simple(config, emitter, mock_provider, tmp_path, mock_instance_na
             target_arch=get_host_architecture(),
         ),
     ]
+    assert mock_is_base_available.mock_calls == [
+        mock.call.is_base_available(
+            Base(name="x1name", channel="x1channel", architectures=["x1arch"])
+        )
+    ]
     emitter.assert_message("Cleaning project 'foo'.")
     emitter.assert_debug("Cleaning environment 'test-instance-name-0'")
     emitter.assert_message("Cleaned project 'foo'.")
 
 
-def test_clean_complex(config, emitter, mock_provider, tmp_path, mock_instance_name):
+def test_clean_complex(
+    config, emitter, mock_provider, tmp_path, mock_instance_name, mock_is_base_available
+):
     """Test clean with a complex list of bases."""
     metadata_yaml = tmp_path / "metadata.yaml"
     metadata_yaml.write_text("name: foo")
@@ -138,15 +144,6 @@ def test_clean_complex(config, emitter, mock_provider, tmp_path, mock_instance_n
     cmd.run([])
 
     assert mock_provider.mock_calls == [
-        mock.call.is_base_available(
-            Base(name="x1name", channel="x1channel", architectures=["x1arch"])
-        ),
-        mock.call.is_base_available(
-            Base(name="x3name", channel="x3channel", architectures=["x3arch"])
-        ),
-        mock.call.is_base_available(
-            Base(name="x5name", channel="x5channel", architectures=["x5arch"])
-        ),
         mock.call.clean_project_environments(instance_name="test-instance-name-0"),
         mock.call.clean_project_environments(instance_name="test-instance-name-1"),
         mock.call.clean_project_environments(instance_name="test-instance-name-2"),
@@ -172,6 +169,17 @@ def test_clean_complex(config, emitter, mock_provider, tmp_path, mock_instance_n
             project_name="foo",
             project_path=tmp_path,
             target_arch=get_host_architecture(),
+        ),
+    ]
+    assert mock_is_base_available.mock_calls == [
+        mock.call.is_base_available(
+            Base(name="x1name", channel="x1channel", architectures=["x1arch"])
+        ),
+        mock.call.is_base_available(
+            Base(name="x3name", channel="x3channel", architectures=["x3arch"])
+        ),
+        mock.call.is_base_available(
+            Base(name="x5name", channel="x5channel", architectures=["x5arch"])
         ),
     ]
     emitter.assert_message("Cleaning project 'foo'.")

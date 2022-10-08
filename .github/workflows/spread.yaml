@@ -27,6 +27,12 @@ jobs:
   snap-tests:
     runs-on: self-hosted
     needs: [snap-build]
+    strategy:
+      fail-fast: false
+      matrix:
+        spread:
+          - "google:"
+          - "google:ubuntu-22.04-64:tests/spread/charms/k8s-operator:prometheus"
 
     steps:
       - name: Cleanup job workspace
@@ -43,4 +49,5 @@ jobs:
         with:
           name: snap
       - name: Run spread
-        run: spread
+        run: |
+          spread ${{ matrix.spread }}

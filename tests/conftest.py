@@ -26,13 +26,12 @@ from unittest.mock import Mock
 import pytest
 import responses as responses_module
 from craft_parts import callbacks
-from craft_providers import Executor
+from craft_providers import Executor, Provider
 
 from charmcraft import config as config_module, instrum
 from charmcraft import deprecations, parts
 from charmcraft.bases import get_host_as_base
 from charmcraft.config import Base, BasesConfiguration
-from charmcraft.providers import Provider
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -158,11 +157,14 @@ def fake_provider(mock_instance):
         ) -> Executor:
             return mock_instance
 
+        def create_environment(self, *, instance_name: str):
+            yield mock_instance
+
         @contextlib.contextmanager
         def launched_environment(
             self,
             *,
-            charm_name: str,
+            project_name: str,
             project_path: pathlib.Path,
             base_configuration: Base,
             build_base: str,

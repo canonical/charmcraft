@@ -19,10 +19,10 @@
 import os
 import pathlib
 import sys
-from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 from craft_cli import emit, CraftError
-from craft_providers import bases, Executor, ProviderError
+from craft_providers import Executor, Provider, ProviderError, bases, lxd, multipass
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
@@ -34,11 +34,6 @@ from charmcraft.env import (
 )
 from charmcraft.utils import confirm_with_user, get_host_architecture
 from charmcraft.snap import get_snap_configuration
-from ._lxd import LXDProvider
-from ._multipass import MultipassProvider
-
-if TYPE_CHECKING:
-    from charmcraft.providers import Provider
 
 
 BASE_CHANNEL_TO_PROVIDER_BASE = {
@@ -224,14 +219,13 @@ def ensure_provider_is_available(provider: "Provider") -> None:
     :raises ProviderError: if provider is not available, or if the user
     chooses not to install the provider.
     """
+    # TODO: add provider.name and provider.install_recommendations to craft-providers
     confirm_msg = (
-        f"{provider.name} is required but not installed. Do you wish to "
-        f"install {provider.name} and configure it with the defaults?"
+        "Provider is required but not installed. Do you wish to "
+        "install provider and configure it with the defaults?"
     )
     if not provider.is_provider_installed() and not confirm_with_user(confirm_msg, default=False):
-        raise ProviderError(
-            f"{provider.name} is required, but not installed. {provider.install_recommendation}"
-        )
+        raise ProviderError("Provider is required, but not installed.")
     provider.ensure_provider_is_available()
 
 
@@ -301,8 +295,8 @@ def get_provider():
         provider = _get_platform_default_provider()
 
     if provider == "lxd":
-        return LXDProvider()
+        return lxd.LXDProvider()
     elif provider == "multipass":
-        return MultipassProvider()
+        return multipass.MultipassProvider()
 
     raise CraftError(f"Unsupported provider specified {provider!r}.")

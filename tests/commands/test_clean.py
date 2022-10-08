@@ -26,14 +26,16 @@ from charmcraft.utils import get_host_architecture
 @pytest.fixture(autouse=True)
 def mock_provider(fake_provider):
     mock_provider = mock.Mock(wraps=fake_provider)
-    with mock.patch("charmcraft.commands.clean.get_provider", return_value=mock_provider):
+    with mock.patch(
+        "charmcraft.commands.clean.providers.get_provider", return_value=mock_provider
+    ):
         yield mock_provider
 
 
 @pytest.fixture(autouse=True)
 def mock_is_base_available():
     with mock.patch(
-        "charmcraft.providers.providers.is_base_available",
+        "charmcraft.providers.is_base_available",
         return_value=(True, None),
     ) as mock_is_base_available:
         yield mock_is_base_available
@@ -41,7 +43,7 @@ def mock_is_base_available():
 
 @pytest.fixture(autouse=True)
 def mock_instance_name():
-    with mock.patch("charmcraft.commands.clean.get_instance_name") as mock_func:
+    with mock.patch("charmcraft.commands.clean.providers.get_instance_name") as mock_func:
         mock_func.side_effect = [f"test-instance-name-{idx}" for idx in range(5)]
         yield mock_func
 

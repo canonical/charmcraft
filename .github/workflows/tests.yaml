@@ -52,6 +52,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: |
           pip install -U -r requirements-focal.txt
+      - name: Install Ubuntu 22.04-specific dependencies
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
           pip install -U -r requirements-jammy.txt

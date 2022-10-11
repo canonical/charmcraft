@@ -121,7 +121,7 @@ _charmcraft()
             COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
             ;;
         names)
-            COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )
+            COMPREPLY=( $(compgen -W "${globals[*]} --format --include-collaborations" -- "$cur") )
             ;;
         revisions)
             COMPREPLY=( $(compgen -W "${globals[*]} --format" -- "$cur") )

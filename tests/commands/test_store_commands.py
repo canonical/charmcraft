@@ -620,11 +620,11 @@ def test_list_registered_empty(emitter, store_mock, config, formatted):
     store_response = []
     store_mock.list_registered_names.return_value = store_response
 
-    args = Namespace(format=formatted)
+    args = Namespace(format=formatted, include_collaborations=None)
     ListNamesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
-        call.list_registered_names(),
+        call.list_registered_names(include_collaborations=None),
     ]
     if formatted:
         emitter.assert_json_output([])
@@ -637,15 +637,21 @@ def test_list_registered_empty(emitter, store_mock, config, formatted):
 def test_list_registered_one_private(emitter, store_mock, config, formatted):
     """List registered with one private item in the response."""
     store_response = [
-        Entity(entity_type="charm", name="charm", private=True, status="status"),
+        Entity(
+            entity_type="charm",
+            name="charm",
+            private=True,
+            status="status",
+            publisher_display_name="J. Doe",
+        ),
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    args = Namespace(format=formatted)
+    args = Namespace(format=formatted, include_collaborations=None)
     ListNamesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
-        call.list_registered_names(),
+        call.list_registered_names(include_collaborations=None),
     ]
     expected = [
         "Name    Type    Visibility    Status",
@@ -669,15 +675,21 @@ def test_list_registered_one_private(emitter, store_mock, config, formatted):
 def test_list_registered_one_public(emitter, store_mock, config, formatted):
     """List registered with one public item in the response."""
     store_response = [
-        Entity(entity_type="charm", name="charm", private=False, status="status"),
+        Entity(
+            entity_type="charm",
+            name="charm",
+            private=False,
+            status="status",
+            publisher_display_name="J. Doe",
+        ),
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    args = Namespace(format=formatted)
+    args = Namespace(format=formatted, include_collaborations=None)
     ListNamesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
-        call.list_registered_names(),
+        call.list_registered_names(include_collaborations=None),
     ]
     expected = [
         "Name    Type    Visibility    Status",
@@ -701,23 +713,42 @@ def test_list_registered_one_public(emitter, store_mock, config, formatted):
 def test_list_registered_several(emitter, store_mock, config, formatted):
     """List registered with several itemsssssssss in the response."""
     store_response = [
-        Entity(entity_type="charm", name="charm1", private=True, status="simple status"),
-        Entity(entity_type="charm", name="charm2-long-name", private=False, status="other"),
-        Entity(entity_type="charm", name="charm3", private=True, status="super long status"),
+        Entity(
+            entity_type="charm",
+            name="charm1",
+            private=True,
+            status="simple status",
+            publisher_display_name="J. Doe",
+        ),
+        Entity(
+            entity_type="charm",
+            name="charm2-long-name",
+            private=False,
+            status="other",
+            publisher_display_name="J. Doe",
+        ),
+        Entity(
+            entity_type="charm",
+            name="charm3",
+            private=True,
+            status="super long status",
+            publisher_display_name="J. Doe",
+        ),
         Entity(
             entity_type="bundle",
             name="somebundle",
             private=False,
             status="bundle status",
+            publisher_display_name="J. Doe",
         ),
     ]
     store_mock.list_registered_names.return_value = store_response
 
-    args = Namespace(format=formatted)
+    args = Namespace(format=formatted, include_collaborations=None)
     ListNamesCommand(config).run(args)
 
     assert store_mock.mock_calls == [
-        call.list_registered_names(),
+        call.list_registered_names(include_collaborations=None),
     ]
     if formatted:
         expected = [
@@ -754,6 +785,60 @@ def test_list_registered_several(emitter, store_mock, config, formatted):
             "charm2-long-name  charm   public        other",
             "charm3            charm   private       super long status",
             "somebundle        bundle  public        bundle status",
+        ]
+        emitter.assert_messages(expected)
+
+
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_list_registered_with_collaborations(emitter, store_mock, config, formatted):
+    """List registered with collaborations flag."""
+    store_response = [
+        Entity(
+            entity_type="charm",
+            name="charm1",
+            private=True,
+            status="simple status",
+            publisher_display_name="J. Doe",
+        ),
+        Entity(
+            entity_type="bundle",
+            name="somebundle",
+            private=False,
+            status="bundle status",
+            publisher_display_name="Ms. Bundle Publisher",
+        ),
+    ]
+    store_mock.list_registered_names.return_value = store_response
+
+    args = Namespace(format=formatted, include_collaborations=True)
+    ListNamesCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_registered_names(include_collaborations=True),
+    ]
+    if formatted:
+        expected = [
+            {
+                "name": "charm1",
+                "type": "charm",
+                "visibility": "private",
+                "status": "simple status",
+                "publisher": "J. Doe",
+            },
+            {
+                "name": "somebundle",
+                "type": "bundle",
+                "visibility": "public",
+                "status": "bundle status",
+                "publisher": "Ms. Bundle Publisher",
+            },
+        ]
+        emitter.assert_json_output(expected)
+    else:
+        expected = [
+            "Name        Type    Visibility    Status         Publisher",
+            "charm1      charm   private       simple status  J. Doe",
+            "somebundle  bundle  public        bundle status  Ms. Bundle Publisher",
         ]
         emitter.assert_messages(expected)
 

@@ -13,7 +13,7 @@ jobs:
   run-tests:
     strategy:
       matrix:
-        os: [macos-10.15, ubuntu-18.04, ubuntu-20.04, windows-2019]
+        os: [macos-11, macos-12, ubuntu-18.04, ubuntu-20.04, ubuntu-22.04, windows-2019, windows-2022]
         python-version: [3.8, 3.9, "3.10"]
         exclude:
           - os: ubuntu-18.04
@@ -38,7 +38,7 @@ jobs:
         run: |
           pip install -U wheel setuptools
       - name: Install Ubuntu-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-20.04' }}
+        if: ${{ matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
@@ -52,6 +52,10 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: |
           pip install -U -r requirements-focal.txt
+      - name: Install Ubuntu 22.04-specific dependencies
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        run: |
+          pip install -U -r requirements-jammy.txt
       - name: Install charmcraft and dependencies
         run: |
           pip install -U -r requirements-dev.txt

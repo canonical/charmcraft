@@ -488,7 +488,7 @@ def test_list_registered_names_empty(client_mock, config):
     auth_response = {"results": []}
     client_mock.request_urlpath_json.return_value = auth_response
 
-    result = store.list_registered_names()
+    result = store.list_registered_names(include_collaborations=False)
 
     assert client_mock.mock_calls == [call.request_urlpath_json("GET", "/v1/charm")]
     assert result == []
@@ -498,15 +498,28 @@ def test_list_registered_names_multiple(client_mock, config):
     """List registered names getting a multiple response."""
     store = Store(config.charmhub)
 
+    publisher = {"display-name": "J. Doe", "other-info": "a lot"}
     auth_response = {
         "results": [
-            {"name": "name1", "type": "charm", "private": False, "status": "status1"},
-            {"name": "name2", "type": "bundle", "private": True, "status": "status2"},
+            {
+                "name": "name1",
+                "type": "charm",
+                "private": False,
+                "status": "status1",
+                "publisher": publisher,
+            },
+            {
+                "name": "name2",
+                "type": "bundle",
+                "private": True,
+                "status": "status2",
+                "publisher": publisher,
+            },
         ]
     }
     client_mock.request_urlpath_json.return_value = auth_response
 
-    result = store.list_registered_names()
+    result = store.list_registered_names(include_collaborations=False)
 
     assert client_mock.mock_calls == [call.request_urlpath_json("GET", "/v1/charm")]
     item1, item2 = result
@@ -514,10 +527,54 @@ def test_list_registered_names_multiple(client_mock, config):
     assert item1.entity_type == "charm"
     assert not item1.private
     assert item1.status == "status1"
+    assert item1.publisher_display_name == "J. Doe"
     assert item2.name == "name2"
     assert item2.entity_type == "bundle"
     assert item2.private
     assert item2.status == "status2"
+    assert item2.publisher_display_name == "J. Doe"
+
+
+def test_list_registered_names_include_collaborations(client_mock, config):
+    """List registered names including collaborations."""
+    store = Store(config.charmhub)
+
+    auth_response = {
+        "results": [
+            {
+                "name": "name1",
+                "type": "charm",
+                "private": False,
+                "status": "status1",
+                "publisher": {"display-name": "J. Doe", "other-info": "a lot"},
+            },
+            {
+                "name": "name2",
+                "type": "bundle",
+                "private": True,
+                "status": "status2",
+                "publisher": {"display-name": "Anonymous", "other-info": "more"},
+            },
+        ]
+    }
+    client_mock.request_urlpath_json.return_value = auth_response
+
+    result = store.list_registered_names(include_collaborations=True)
+
+    assert client_mock.mock_calls == [
+        call.request_urlpath_json("GET", "/v1/charm?include-collaborations=true")
+    ]
+    item1, item2 = result
+    assert item1.name == "name1"
+    assert item1.entity_type == "charm"
+    assert not item1.private
+    assert item1.status == "status1"
+    assert item1.publisher_display_name == "J. Doe"
+    assert item2.name == "name2"
+    assert item2.entity_type == "bundle"
+    assert item2.private
+    assert item2.status == "status2"
+    assert item2.publisher_display_name == "Anonymous"
 
 
 # -- tests for the upload functionality (both for charm/bundles and resources)

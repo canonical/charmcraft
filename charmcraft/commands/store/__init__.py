@@ -416,7 +416,7 @@ class ListNamesCommand(BaseCommand):
         parser.add_argument(
             "--include-collaborations",
             action="store_true",
-            help="Include those names that you are a collaborator of",
+            help="Include the names you are a collaborator of",
         )
 
     def run(self, parsed_args):

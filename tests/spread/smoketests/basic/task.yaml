@@ -1,0 +1,20 @@
+summary: pack a simple init-created charm
+kill-timeout: 30m
+
+prepare: |
+  apt install --yes build-essential unzip
+  charmcraft init --project-dir=charm
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+  test -f charm*.charm
+  unzip -l charm*.charm | grep "venv/ops/charm.py"
+  test ! -d build

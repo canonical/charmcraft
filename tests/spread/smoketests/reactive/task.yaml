@@ -1,0 +1,41 @@
+summary: pack a simple reactive charm
+kill-timeout: 30m
+
+prepare: |
+  snap install charm --classic
+  charm create reactivecharm
+  cd reactivecharm
+  cat <<- EOF > metadata.yaml
+  name: reactive-test
+  summary: test
+  maintainer: maintainer <maintainer@maintenance.com>
+  description: Longer description that summary
+    #series: [focal]
+  EOF
+  cat <<- EOF >> charmcraft.yaml
+  type: "charm"
+  bases:
+    - build-on:
+        - name: "ubuntu"
+          channel: "22.04"
+      run-on:
+        - name: "ubuntu"
+          channel: "22.04"
+  parts:
+    charm:
+      source: .
+      plugin: reactive
+      build-snaps: [charm]
+  EOF
+
+restore: |
+  pushd reactivecharm
+  charmcraft clean
+  popd
+  
+  rm -rf reactivecharm
+
+execute: |
+  cd reactivecharm
+  charmcraft pack --verbose
+  test -f reactive-test*.charm

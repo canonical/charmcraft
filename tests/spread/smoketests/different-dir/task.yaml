@@ -1,0 +1,18 @@
+summary: pack a init-created charm from a different directory
+kill-timeout: 30m
+
+prepare: |
+  apt install --yes build-essential 
+  charmcraft init --project-dir=charm
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  charmcraft pack --verbose --project-dir=charm
+  test ! -f charm/charm*.charm
+  test -f charm*.charm

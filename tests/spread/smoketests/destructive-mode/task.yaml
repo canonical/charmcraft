@@ -1,0 +1,24 @@
+summary: pack a init-created charm in destructive mode
+systems:
+  - ubuntu-18.04-64
+  - ubuntu-20.04-64
+  - ubuntu-22.04-64
+kill-timeout: 30m
+
+prepare: |
+  apt install --yes build-essential
+  charmcraft init --project-dir=charm
+  cd charm
+  sed -i "s/22.04/$(echo $SPREAD_SYSTEM | cut -c 8-12)/g" charmcraft.yaml
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose --destructive-mode
+  test -f charm*.charm

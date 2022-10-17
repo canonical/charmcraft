@@ -30,11 +30,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install/update pip, wheel, and setuptools on non Windows
-        if: ${{ matrix.os != 'windows-2019' }}
+        if: ${{ matrix.os != 'windows-2019' && matrix.os != 'windows-2022' }}
         run: |
           pip install -U pip wheel setuptools
       - name: Install/update pip, wheel, and setuptools on Windows
-        if: ${{ matrix.os == 'windows-2019' }}
+        if: ${{ matrix.os == 'windows-2019' || matrix.os == 'windows-2022' }}
         run: |
           pip install -U wheel setuptools
       - name: Install Ubuntu-specific dependencies

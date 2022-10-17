@@ -120,6 +120,14 @@ jobs:
           sudo snap start lxd
           sudo lxd waitready --timeout=30
           sudo lxd init --auto
+      - name: Validate snap configuration
+          sudo snap set charmcraft provider=lxd
+          sudo snap set charmcraft provider=multipass
+          if sudo snap set charmcraft provider=invalid; then
+            echo "configure script failure"
+            exit 1
+          fi
+          sudo snap set charmcraft provider=lxd
 
   windows-build:
     runs-on: windows-2019

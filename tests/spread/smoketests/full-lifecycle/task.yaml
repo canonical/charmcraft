@@ -1,12 +1,16 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 kill-timeout: 30m
 
+include: 
+  - tests/
+
 prepare: |
-  apt install --yes build-essential unzip
+  tests.pkgs install unzip
   charmcraft init --project-dir=charm
   cd charm
   echo "ignore me" > secrets.txt
   touch extra_file.txt
+
   cat <<- EOF >> charmcraft.yaml
   parts:
     charm:

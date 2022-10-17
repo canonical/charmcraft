@@ -1,8 +1,11 @@
 summary: pack a simple init-created charm
 kill-timeout: 30m
 
+include: 
+  - tests/
+
 prepare: |
-  apt install --yes build-essential unzip
+  tests.pkgs install unzip
   charmcraft init --project-dir=charm
 
 restore: |

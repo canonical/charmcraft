@@ -1,11 +1,15 @@
 summary: pack a charm with different dependencies specified
 kill-timeout: 30m
 
+include: 
+  - tests/
+
 prepare: |
-  apt install --yes unzip
+  tests.pkgs install unzip
   charmcraft init --project-dir=charm
   cd charm
   echo "bump2version" > req.txt
+
   cat <<- EOF >> charmcraft.yaml
   parts:
     charm:

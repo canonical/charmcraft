@@ -2,7 +2,6 @@ summary: pack a init-created charm from a different directory
 kill-timeout: 30m
 
 prepare: |
-  apt install --yes build-essential 
   charmcraft init --project-dir=charm
 
 restore: |

@@ -5,13 +5,14 @@ prepare: |
   snap install charm --classic
   charm create reactivecharm
   cd reactivecharm
+
   cat <<- EOF > metadata.yaml
   name: reactive-test
   summary: test
   maintainer: maintainer <maintainer@maintenance.com>
   description: Longer description that summary
-    #series: [focal]
   EOF
+
   cat <<- EOF >> charmcraft.yaml
   type: "charm"
   bases:

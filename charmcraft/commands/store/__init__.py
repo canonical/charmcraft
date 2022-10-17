@@ -401,6 +401,10 @@ class ListNamesCommand(BaseCommand):
         seen by any user, while `private` items are only for you and the
         other accounts with permission to collaborate on that specific name.
 
+        The --include-collaborations option can be included to also list those
+        names you collaborate with; in that case the publisher will be included
+        in the output.
+
         Listing names will take you through login if needed.
     """
     )
@@ -409,26 +413,36 @@ class ListNamesCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         self.include_format_option(parser)
+        parser.add_argument(
+            "--include-collaborations",
+            action="store_true",
+            help="Include the names you are a collaborator of",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(self.config.charmhub)
-        result = store.list_registered_names()
+        with_collab = parsed_args.include_collaborations
+        result = store.list_registered_names(include_collaborations=with_collab)
 
         # build the structure that we need for both human and programmatic output
         headers = ["Name", "Type", "Visibility", "Status"]
         prog_keys = ["name", "type", "visibility", "status"]
+        if with_collab:
+            headers.append("Publisher")
+            prog_keys.append("publisher")
         data = []
         for item in result:
             visibility = "private" if item.private else "public"
-            data.append(
-                [
-                    item.name,
-                    item.entity_type,
-                    visibility,
-                    item.status,
-                ]
-            )
+            datum = [
+                item.name,
+                item.entity_type,
+                visibility,
+                item.status,
+            ]
+            if with_collab:
+                datum.append(item.publisher_display_name)
+            data.append(datum)
 
         if parsed_args.format:
             info = [dict(zip(prog_keys, item)) for item in data]

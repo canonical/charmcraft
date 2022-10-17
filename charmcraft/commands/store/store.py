@@ -33,7 +33,7 @@ from charmcraft.commands.store.client import Client, ALTERNATE_AUTH_ENV_VAR
 Account = namedtuple("Account", "name username id")
 Package = namedtuple("Package", "id name type")
 MacaroonInfo = namedtuple("MacaroonInfo", "account channels packages permissions")
-Entity = namedtuple("Charm", "entity_type name private status")
+Entity = namedtuple("Charm", "entity_type name private status publisher_display_name")
 Uploaded = namedtuple("Uploaded", "ok status revision errors")
 # XXX Facundo 2020-07-23: Need to do a massive rename to call `revno` to the "revision as
 # the number" inside the "revision as the structure", this gets super confusing in the code with
@@ -246,9 +246,12 @@ class Store:
         )
 
     @_store_client_wrapper()
-    def list_registered_names(self):
+    def list_registered_names(self, include_collaborations):
         """Return names registered by the authenticated user."""
-        response = self._client.request_urlpath_json("GET", "/v1/charm")
+        endpoint = "/v1/charm"
+        if include_collaborations:
+            endpoint += "?include-collaborations=true"
+        response = self._client.request_urlpath_json("GET", endpoint)
         result = []
         for item in response["results"]:
             result.append(
@@ -257,6 +260,7 @@ class Store:
                     private=item["private"],
                     status=item["status"],
                     entity_type=item["type"],
+                    publisher_display_name=item["publisher"]["display-name"],
                 )
             )
         return result

@@ -4,6 +4,7 @@ path: /charmcraft
 environment:
   PROJECT_PATH: /charmcraft
   PATH: /snap/bin:$PATH:$PROJECT_PATH/tools/external/tools
+  CHARMCRAFT_AUTH: "$(HOST: echo $CHARMCRAFT_AUTH)"
 
 backends:
   google:
@@ -127,3 +128,5 @@ suites:
     summary: real charm building tests
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
+  tests/spread/store/:
+    summary: sequence of commands for different store-related functionalities

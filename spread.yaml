@@ -5,6 +5,8 @@ environment:
   PROJECT_PATH: /charmcraft
   PATH: /snap/bin:$PATH:$PROJECT_PATH/tools/external/tools
   CHARMCRAFT_AUTH: "$(HOST: echo $CHARMCRAFT_AUTH)"
+  CHARM_DEFAULT_NAME: craft-spreadtests-charm
+  BUNDLE_DEFAULT_NAME: craft-spreadtests-bundle
 
 backends:
   google:
@@ -120,6 +122,11 @@ prepare: |
     echo "Expected a snap to exist in /charmcraft/"
     exit 1
   fi
+
+  # to not flood Charmhub with names the same two are always used in the Store related
+  # tests (except in the names registration tests, of course); ensure they are registered
+  charmcraft register $CHARM_DEFAULT_NAME || true
+  charmcraft register-bundle $BUNDLE_DEFAULT_NAME || true
 
 suites:
   tests/spread/commands/:

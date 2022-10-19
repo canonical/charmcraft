@@ -24,6 +24,64 @@ backends:
           workers: 2
           storage: 40G
 
+  multipass:
+    type: adhoc
+    allocate: |
+      if [ "$SPREAD_SYSTEM" = "ubuntu-18.04-64" ]; then
+        image="18.04"
+        instance_name="spread-18-04"
+      elif [ "$SPREAD_SYSTEM" = "ubuntu-20.04-64" ]; then
+        image="20.04"
+        instance_name="spread-20-04"
+      elif [ "$SPREAD_SYSTEM" = "ubuntu-22.04-64" ]; then
+        image="22.04"
+        instance_name="spread-22-04"
+      else
+        FATAL "$SPREAD_SYSTEM is not supported!"
+      fi
+
+      multipass launch --disk 20G --mem 2G --name "$instance_name" "$image"
+
+      # Get the IP from the instance
+      ip=$(multipass info --format csv "$instance_name" | tail -1 | cut -d\, -f3)
+      # Enable PasswordAuthertication for root over SSH.
+      multipass exec "$instance_name" -- \
+        sudo sh -c "echo root:ubuntu | sudo chpasswd"
+      multipass exec "$instance_name" -- \
+        sudo sh -c \
+        "sed -i /etc/ssh/sshd_config -e 's/^PasswordAuthentication.*/PasswordAuthentication yes/' -e 's/^#PermitRootLogin.*/PermitRootLogin yes/'"
+      multipass exec "$instance_name" -- \
+        sudo systemctl restart ssh
+
+      ADDRESS "$ip:22"
+
+    discard: |
+      if [ "$SPREAD_SYSTEM" = "ubuntu-18.04-64" ]; then
+        instance_name="spread-18-04"
+      elif [ "$SPREAD_SYSTEM" = "ubuntu-20.04-64" ]; then
+        instance_name="spread-20-04"
+      elif [ "$SPREAD_SYSTEM" = "ubuntu-22.04-64" ]; then
+        instance_name="spread-22-04"
+      else
+        FATAL "$SPREAD_SYSTEM is not supported!"
+      fi
+
+      multipass delete --purge "$instance_name"
+
+    systems:
+      - ubuntu-18.04-64:
+          workers: 1
+          username: root
+          password: ubuntu
+      - ubuntu-20.04-64:
+          workers: 1
+          username: root
+          password: ubuntu
+      - ubuntu-22.04-64:
+          workers: 1
+          username: root
+          password: ubuntu
+
 prepare: |
   set -e
   if os.query is-ubuntu; then
@@ -66,4 +124,8 @@ suites:
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:
-    summary: charm building tests
+    summary: real charm building tests
+  tests/spread/smoketests/:
+    summary: basic charm builds in different combinations
+    kill-timeout: 30m
+

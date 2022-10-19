@@ -1,0 +1,16 @@
+summary: pack a init-created charm from a different directory
+
+prepare: |
+  charmcraft init --project-dir=charm
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  charmcraft pack --verbose --project-dir=charm
+  test ! -f charm/charm*.charm
+  test -f charm*.charm

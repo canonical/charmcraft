@@ -1,0 +1,33 @@
+summary: pack a charm with different dependencies specified
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install unzip
+  charmcraft init --project-dir=charm
+  cd charm
+  echo "bump2version" > req.txt
+
+  cat <<- EOF >> charmcraft.yaml
+  parts:
+    charm:
+      charm-binary-python-packages: [pytest]
+      charm-python-packages: [fades]
+      charm-requirements: [req.txt]
+  EOF
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+  test -f charm*.charm
+  unzip -l charm*.charm | grep "venv/pytest/__init__.py"
+  unzip -l charm*.charm | grep "venv/bumpversion/__init__.py"
+  unzip -l charm*.charm | grep "venv/fades/__init__.py"

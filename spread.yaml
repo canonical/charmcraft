@@ -71,6 +71,8 @@ backends:
 
       multipass delete --purge "$instance_name"
 
+    kill-timeout: 30m
+
     systems:
       - ubuntu-18.04-64:
           workers: 1
@@ -101,6 +103,11 @@ prepare: |
 
   # The /snap directory does not exist in some environments
   [ ! -d /snap ] && ln -s /var/lib/snapd/snap /snap
+
+  # install docker before lxd, otherwise it will mess up with lxd networking
+  snap install docker
+  # make sure docker is working
+  retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
 
   snap install lxd
 

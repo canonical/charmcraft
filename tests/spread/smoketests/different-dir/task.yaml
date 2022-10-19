@@ -1,5 +1,4 @@
 summary: pack a init-created charm from a different directory
-kill-timeout: 30m
 
 prepare: |
   charmcraft init --project-dir=charm

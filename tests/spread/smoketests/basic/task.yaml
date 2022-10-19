@@ -1,5 +1,4 @@
 summary: pack a simple init-created charm
-kill-timeout: 30m
 
 include: 
   - tests/

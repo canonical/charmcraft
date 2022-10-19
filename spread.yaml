@@ -127,3 +127,5 @@ suites:
     summary: real charm building tests
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
+    kill-timeout: 30m
+

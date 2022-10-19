@@ -1,5 +1,4 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
-kill-timeout: 30m
 
 include: 
   - tests/

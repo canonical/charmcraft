@@ -67,5 +67,7 @@ jobs:
 
       - if: steps.decisions.outputs.RUN == 'true'
         name: Run spread
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
         run: |
           spread ${{ matrix.spread }}

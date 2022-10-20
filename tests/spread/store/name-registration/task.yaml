@@ -17,8 +17,8 @@ prepare: |
 
   cat <<- EOF > charmcraft.yaml
   charmhub:
-	api-url: https://api.staging.charmhub.io
-	storage-url: https://storage.staging.snapcraftcontent.com
+    api-url: https://api.staging.charmhub.io
+    storage-url: https://storage.staging.snapcraftcontent.com
   EOF
 
 restore: |

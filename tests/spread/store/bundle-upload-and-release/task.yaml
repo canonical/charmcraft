@@ -9,8 +9,14 @@ prepare: |
   mkdir bundle
   cd bundle
 
-  echo "type: bundle"  > charmcraft.yaml
   echo "Read me."  > README.md
+
+  cat <<- EOF > charmcraft.yaml
+  type: bundle
+  charmhub:
+	api-url: https://api.staging.charmhub.io
+	storage-url: https://storage.staging.snapcraftcontent.com
+  EOF
 
   cat <<- EOF > bundle.yaml
   name: $BUNDLE_DEFAULT_NAME

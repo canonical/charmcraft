@@ -8,6 +8,12 @@ prepare: |
   charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME --profile=machine
   cd charm
 
+  cat <<- EOF >> charmcraft.yaml
+  charmhub:
+	api-url: https://api.staging.charmhub.io
+	storage-url: https://storage.staging.snapcraftcontent.com
+  EOF
+
 restore: |
   pushd charm
   charmcraft clean

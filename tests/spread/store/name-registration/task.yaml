@@ -12,7 +12,21 @@ include:
 prepare: |
   tests.pkgs install jq
 
+  mkdir charm
+  cd charm
+
+  cat <<- EOF > charmcraft.yaml
+  charmhub:
+	api-url: https://api.staging.charmhub.io
+	storage-url: https://storage.staging.snapcraftcontent.com
+  EOF
+
+restore: |
+  rm -rf charm
+
 execute: |
+  cd charm 
+
   charmcraft register $CHARM_NAME
   package_type=$(charmcraft names --format=json | jq -r --arg charm_name $CHARM_NAME '.[] | select(.name==$charm_name) | .type') 
   echo $package_type

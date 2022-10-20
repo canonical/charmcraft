@@ -9,6 +9,12 @@ prepare: |
   charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME
   cd charm
 
+  cat <<- EOF >> charmcraft.yaml
+  charmhub:
+	api-url: https://api.staging.charmhub.io
+	storage-url: https://storage.staging.snapcraftcontent.com
+  EOF
+
   # fix the metadata to have control on the resources we need to test
   cat <<- EOF > metadata.yaml
   name: $CHARM_DEFAULT_NAME

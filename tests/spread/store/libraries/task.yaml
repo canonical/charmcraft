@@ -14,6 +14,13 @@ prepare: |
   # to pack and upload (which takes a lot of time) because other zillion tests already
   # do that and we can be sure that $CHARM_DEFAULT_NAME already exists in Charmhub
   charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME
+  cd charm
+
+  cat <<- EOF >> charmcraft.yaml
+  charmhub:
+	api-url: https://api.staging.charmhub.io
+	storage-url: https://storage.staging.snapcraftcontent.com
+  EOF
 
 restore: |
   rm -rf charm

@@ -1,0 +1,24 @@
+summary: register charm and bundle names, verify list
+systems:
+  - ubuntu-22.04-64
+
+environment:
+  CHARM_NAME: spreadtests-charm-$(uuidgen)
+  BUNDLE_NAME: spreadtests-bundle-$(uuidgen)
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install jq
+
+execute: |
+  charmcraft register $CHARM_NAME
+  package_type=$(charmcraft names --format=json | jq -r --arg charm_name $CHARM_NAME '.[] | select(.name==$charm_name) | .type') 
+  echo $package_type
+  test $package_type == "charm"
+
+  charmcraft register-bundle $BUNDLE_NAME
+  package_type=$(charmcraft names --format=json | jq -r --arg bundle_name $BUNDLE_NAME '.[] | select(.name==$bundle_name) | .type') 
+  echo $package_type
+  test $package_type == "bundle"

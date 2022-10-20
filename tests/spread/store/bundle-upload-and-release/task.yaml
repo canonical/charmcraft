@@ -1,0 +1,46 @@
+summary: full bundle cycle -- pack, upload, check revisions, release, check channel map
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install jq
+
+  mkdir bundle
+  cd bundle
+
+  echo "type: bundle"  > charmcraft.yaml
+  echo "Read me."  > README.md
+
+  cat <<- EOF > bundle.yaml
+  name: $BUNDLE_DEFAULT_NAME
+  series: focal
+  EOF
+
+restore: |
+  rm -rf bundle
+
+execute: |
+  cd bundle
+  start_datetime=$(date -u --iso-8601=seconds)
+
+  # pack
+  charmcraft pack --verbose
+  test -f $BUNDLE_DEFAULT_NAME.zip
+
+  # upload
+  charmcraft upload $BUNDLE_DEFAULT_NAME.zip
+
+  # check that latest revision is newer than start datetime
+  last_revision=$(charmcraft revisions $BUNDLE_DEFAULT_NAME --format=json | jq -r .[0])
+  last_revision_created=$(echo $last_revision | jq -r .created_at)
+  [[ $start_datetime < $last_revision_created ]]
+
+  # release that last revision to edge
+  last_revision_revno=$(echo $last_revision | jq -r .revision)
+  charmcraft release $BUNDLE_DEFAULT_NAME -r $last_revision_revno -c edge
+
+  # validate the channel map
+  edge_release=$(charmcraft status $BUNDLE_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
+  edge_revision=$(echo $edge_release | jq -r .revision)
+  test $edge_revision == $last_revision_revno

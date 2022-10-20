@@ -144,3 +144,4 @@ suites:
     summary: basic charm builds in different combinations
   tests/spread/store/:
     summary: sequence of commands for different store-related functionalities
+    kill-timeout: 30m

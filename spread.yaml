@@ -71,8 +71,6 @@ backends:
 
       multipass delete --purge "$instance_name"
 
-    kill-timeout: 30m
-
     systems:
       - ubuntu-18.04-64:
           workers: 1
@@ -142,6 +140,8 @@ suites:
     summary: real charm building tests
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
+    kill-timeout: 30m
   tests/spread/store/:
     summary: sequence of commands for different store-related functionalities
     kill-timeout: 30m
+

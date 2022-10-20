@@ -121,6 +121,7 @@ jobs:
           sudo lxd waitready --timeout=30
           sudo lxd init --auto
       - name: Validate snap configuration
+        run: |
           sudo snap set charmcraft provider=lxd
           sudo snap set charmcraft provider=multipass
           if sudo snap set charmcraft provider=invalid; then

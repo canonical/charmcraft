@@ -1,5 +1,4 @@
 summary: pack a charm with different dependencies specified
-kill-timeout: 30m
 
 include: 
   - tests/

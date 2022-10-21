@@ -21,13 +21,13 @@ prepare: |
   description: Example charm for spread testing.
   summary: Example.
 
-   resources:
-    example-image:
-      type: oci-image
-      description: Example OCI image resource
-    example-file:
-      type: file
-      description: Example file resource
+  resources:
+   example-image:
+     type: oci-image
+     description: Example OCI image resource
+   example-file:
+     type: file
+     description: Example file resource
   EOF
 
   # a file resource

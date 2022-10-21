@@ -13,6 +13,7 @@ prepare: |
   charmhub:
     api-url: https://api.staging.charmhub.io
     storage-url: https://storage.staging.snapcraftcontent.com
+    registry-url: https://registry.staging.jujucharms.com
   EOF
 
   # fix the metadata to have control on the resources we need to test

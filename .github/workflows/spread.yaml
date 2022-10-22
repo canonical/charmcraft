@@ -35,19 +35,39 @@ jobs:
           - "google:ubuntu-22.04-64:tests/spread/charms/k8s-operator:prometheus"
 
     steps:
-      - name: Cleanup job workspace
+      - name: Decision to Run
+        id: decisions
+        run: |
+          # Secrets cannot be used in conditionals, so this is our dance:
+          # https://github.com/actions/runner/issues/520
+          if [[ -n "${{ secrets.CHARMCRAFT_AUTH }}" ]]; then
+            echo "::set-output name=RUN::true"
+          else
+            echo "::set-output name=RUN::"
+          fi
+
+      - if: steps.decisions.outputs.RUN == 'true'
+        name: Cleanup job workspace
         run: |
           rm -rf "${{ github.workspace }}"
           mkdir "${{ github.workspace }}"
-      - name: Checkout charmcraft
+
+      - if: steps.decisions.outputs.RUN == 'true'
+        name: Checkout charmcraft
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: true
-      - name: Download snap artifact
+
+      - if: steps.decisions.outputs.RUN == 'true'
+        name: Download snap artifact
         uses: actions/download-artifact@v2
         with:
           name: snap
-      - name: Run spread
+
+      - if: steps.decisions.outputs.RUN == 'true'
+        name: Run spread
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
         run: |
           spread ${{ matrix.spread }}

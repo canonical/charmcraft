@@ -2624,6 +2624,56 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
     emitter.assert_messages(expected)
 
 
+def test_status_multiplebases_multiplebranches(emitter, store_mock, config):
+    """Validate specific mix between bases and branches.
+
+    This exposes a bug in Charmhub: https://bugs.launchpad.net/snapstore-server/+bug/1994613
+    """
+    other_base = Base(architecture="i386", channel="20.04", name="ubuntu")
+    tstamp = dateutil.parser.parse("2020-07-03T20:30:40Z")
+    channel_map = [
+        _build_release(revision=1, channel="latest/edge"),
+        _build_release(revision=1, channel="latest/edge/fix", expires_at=tstamp),
+        _build_release(revision=1, channel="latest/edge", base=other_base),
+        _build_release(revision=1, channel="latest/edge/fix", expires_at=tstamp, base=other_base),
+    ]
+    channels = _build_channels()
+    extra_channel = Channel(
+        name="latest/edge/fix",
+        fallback="latest/edge",
+        track="latest",
+        risk="edge",
+        branch="fix",
+    )
+    channels.extend([extra_channel, extra_channel])  # twice!! this is the reported bug in Charmhub
+    revisions = [
+        _build_revision(revno=1, version="v1"),
+    ]
+    store_mock.list_releases.return_value = (channel_map, channels, revisions)
+
+    args = Namespace(name="testcharm", format=False)
+    StatusCommand(config).run(args)
+
+    assert store_mock.mock_calls == [
+        call.list_releases("testcharm"),
+    ]
+
+    expected = [
+        "Track    Base                  Channel    Version    Revision    Expires at",
+        "latest   ubuntu 20.04 (amd64)  stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v1         1",
+        "                               edge/fix   v1         1           2020-07-03T20:30:40Z",
+        "         ubuntu 20.04 (i386)   stable     -          -",
+        "                               candidate  -          -",
+        "                               beta       -          -",
+        "                               edge       v1         1",
+        "                               edge/fix   v1         1           2020-07-03T20:30:40Z",
+    ]
+    emitter.assert_messages(expected)
+
+
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_status_with_base_in_none(emitter, store_mock, config, formatted):
     """Support the case of base being None."""

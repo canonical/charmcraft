@@ -1,0 +1,78 @@
+summary: upload resources, list their revisions, release them
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install jq
+
+  charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME
+  cd charm
+
+  cat <<- EOF >> charmcraft.yaml
+  charmhub:
+    api-url: https://api.staging.charmhub.io
+    storage-url: https://storage.staging.snapcraftcontent.com
+    registry-url: https://registry.staging.jujucharms.com
+  EOF
+
+  # fix the metadata to have control on the resources we need to test
+  cat <<- EOF > metadata.yaml
+  name: $CHARM_DEFAULT_NAME
+  description: Example charm for spread testing.
+  summary: Example.
+
+  resources:
+   example-image:
+     type: oci-image
+     description: Example OCI image resource
+   example-file:
+     type: file
+     description: Example file resource
+  EOF
+
+  # a file resource
+  echo "Super complex file resource" > resourcefile.txt
+
+  # an oci image resource
+  docker pull hellow-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  start_datetime=$(date -u --iso-8601=seconds)
+
+  # pack and upload
+  charmcraft pack --verbose
+  last_charm_revno=$(charmcraft upload $(ls $CHARM_DEFAULT_NAME*.charm) --format=json | jq .revision)
+
+  # check the resources in the last upload
+  last_charm_resources=$(charmcraft resources $CHARM_DEFAULT_NAME --format=json | jq -r --arg revno $last_charm_revno '.[] | select(.charm_revision|tostring==$revno) | .name' | sort | paste -sd, -)
+  test $last_charm_resources = "example-file,example-image"
+
+  # upload and verify the file resource
+  charmcraft upload-resource $CHARM_DEFAULT_NAME example-file --file=resourcefile.txt
+  last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-file --format=json | jq -r .[0])
+  last_file_revno=$(echo $last_revision | jq .revision)
+  last_revision_created=$(echo $last_revision | jq -r .created_at)
+  [[ $start_datetime < $last_revision_created ]]
+
+  # upload and verify the OCI image resource
+  charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
+  last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-image --format=json | jq -r .[0])
+  last_image_revno=$(echo $last_revision | jq .revision)
+  last_revision_created=$(echo $last_revision | jq -r .created_at)
+  [[ $start_datetime < $last_revision_created ]]
+
+  # release and check full status
+  charmcraft release $CHARM_DEFAULT_NAME -r $last_charm_revno -c edge --resource=example-file:$last_file_revno --resource=example-image:$last_image_revno
+  edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
+  test $last_charm_revno == $(echo $edge_release | jq -r .revision)
+  test $last_file_revno == $(echo $edge_release | jq '.resources | .[] | select(.name=="example-file").revision')
+  test $last_image_revno == $(echo $edge_release | jq '.resources | .[] | select(.name=="example-image").revision')

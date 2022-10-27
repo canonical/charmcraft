@@ -4,6 +4,13 @@ path: /charmcraft
 environment:
   PROJECT_PATH: /charmcraft
   PATH: /snap/bin:$PATH:$PROJECT_PATH/tools/external/tools
+  CHARMCRAFT_AUTH: "$(HOST: echo $CHARMCRAFT_AUTH)"
+
+  # to not flood Charmhub with names the same two are always used in the Store related
+  # tests (except in the names registration tests, of course); register them manually
+  # in staging Charmhub authenticating with the configured credentials
+  CHARM_DEFAULT_NAME: craft-spreadtests-charm
+  BUNDLE_DEFAULT_NAME: craft-spreadtests-bundle
 
 backends:
   google:
@@ -99,6 +106,11 @@ prepare: |
   # The /snap directory does not exist in some environments
   [ ! -d /snap ] && ln -s /var/lib/snapd/snap /snap
 
+  # install docker before lxd, otherwise it will mess up with lxd networking
+  snap install docker
+  # make sure docker is working
+  retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
+
   snap install lxd
 
   # Hold snap refreshes for 24h.
@@ -127,5 +139,8 @@ suites:
     summary: real charm building tests
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
+    kill-timeout: 30m
+  tests/spread/store/:
+    summary: sequence of commands for different store-related functionalities
     kill-timeout: 30m
 

@@ -1,0 +1,57 @@
+summary: create, list, publish and fetch libraries
+
+environment:
+  LIB_NAME: lib_$(uuidgen | sed -e 's/-//g')
+  CHARM_UNDERSCORE_NAME: $(echo $CHARM_DEFAULT_NAME | sed -e 's/-/_/g')
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install jq
+
+  # init the project so we have a proper place to work with the library, but no need
+  # to pack and upload (which takes a lot of time) because other zillion tests already
+  # do that and we can be sure that $CHARM_DEFAULT_NAME already exists in Charmhub
+  charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME
+  cd charm
+
+  cat <<- EOF >> charmcraft.yaml
+  charmhub:
+    api-url: https://api.staging.charmhub.io
+    storage-url: https://storage.staging.snapcraftcontent.com
+  EOF
+
+restore: |
+  rm -rf charm
+
+execute: |
+  cd charm
+
+  # create a library
+  charmcraft create-lib $LIB_NAME
+  lib_filepath=lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py
+  test -f $lib_filepath
+
+  # publish it
+  lib_fqdn=charms.$CHARM_UNDERSCORE_NAME.v0.$LIB_NAME
+  publish_result=$(charmcraft publish-lib $lib_fqdn --format=json)
+  published_patch=$(echo $publish_result | jq .[0].published.patch)
+  test $published_patch = 1
+
+  # change and publish again
+  echo "# more code" >> $lib_filepath
+  sed -i 's/LIBPATCH = 1/LIBPATCH = 2/' $lib_filepath
+  publish_result=$(charmcraft publish-lib $lib_fqdn --format=json)
+  published_patch=$(echo $publish_result | jq .[0].published.patch)
+  test $published_patch = 2
+
+  # list it
+  list_result=$(charmcraft list-lib $CHARM_DEFAULT_NAME --format=json)
+  listed_patch=$(echo $list_result | jq --arg libname $LIB_NAME '.[] | select(.library_name == $libname) | .patch')
+  test $listed_patch = 2
+
+  # clean the lib directory and fetch it again
+  rm -rf lib/
+  charmcraft fetch-lib $lib_fqdn
+  test -f $lib_filepath

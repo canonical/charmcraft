@@ -878,7 +878,10 @@ class StatusCommand(BaseCommand):
         per_track = {}
         branch_present = False
         for channel in channels:
-            nonbranches_list, branches_list = per_track.setdefault(channel.track, ([], []))
+            # the branches list is really a dict just to deduplicate them (sometimes they come
+            # repeated because of a Charmhub bug) without losing their order (that's why
+            # a set is not used)
+            nonbranches_list, branches = per_track.setdefault(channel.track, ([], {}))
             if channel.branch is None:
                 # insert branch right after its fallback
                 for idx, stored in enumerate(nonbranches_list, 1):
@@ -888,7 +891,7 @@ class StatusCommand(BaseCommand):
                 else:
                     nonbranches_list.append(channel)
             else:
-                branches_list.append(channel)
+                branches[channel] = None
                 branch_present = True
 
         headers = ["Track", "Base", "Channel", "Version", "Revision"]
@@ -1745,7 +1748,9 @@ class UploadResourceCommand(BaseCommand):
         group.add_argument(
             "--image",
             type=SingleOptionEnsurer(str),
-            help="The digest (remote or local) or id (local) of the OCI image",
+            help=(
+                'The digest (remote or local) or id (local, exclude "sha256:") of the OCI image'
+            ),
         )
 
     def run(self, parsed_args):

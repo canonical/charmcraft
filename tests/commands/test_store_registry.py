@@ -826,6 +826,22 @@ def test_localdockerinterface_get_info_by_digest_not_found(responses, emitter):
     emitter.assert_interactions(None)
 
 
+def test_localdockerinterface_get_info_by_digest_none_digest(responses, emitter):
+    """Get image info for something that is not there."""
+    test_image_info_1 = {"some": "stuff", "RepoDigests": None}
+    test_search_respoonse = [test_image_info_1]
+    responses.add(
+        responses.GET,
+        LocalDockerdInterface.dockerd_socket_baseurl + "/images/json",
+        json=test_search_respoonse,
+    )
+    ldi = LocalDockerdInterface()
+    resp = ldi.get_image_info_from_digest("sha256:test-digest")
+    assert resp is None
+
+    emitter.assert_interactions(None)
+
+
 def test_localdockerinterface_get_info_by_digest_bad_response(responses, emitter):
     """Docker answered badly when checking for the image."""
     # weird dockerd behaviour

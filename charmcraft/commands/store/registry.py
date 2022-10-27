@@ -332,6 +332,8 @@ class LocalDockerdInterface:
             return
 
         for image_info in response.json():
+            if image_info["RepoDigests"] is None:
+                continue
             if any(digest in repo_digest for repo_digest in image_info["RepoDigests"]):
                 return image_info
 

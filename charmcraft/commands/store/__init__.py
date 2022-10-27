@@ -1748,7 +1748,9 @@ class UploadResourceCommand(BaseCommand):
         group.add_argument(
             "--image",
             type=SingleOptionEnsurer(str),
-            help="The digest (remote or local) or id (local) of the OCI image",
+            help=(
+                'The digest (remote or local) or id (local, exclude "sha256:") of the OCI image'
+            ),
         )
 
     def run(self, parsed_args):

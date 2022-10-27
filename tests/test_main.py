@@ -335,7 +335,7 @@ def test_systemdetails_charmcraft_environment():
 
 
 def test_systemdetails_hidden_auth():
-    """System details specifically hidding secrets."""
+    """System details specifically hiding secrets."""
     with patch("os.environ", {ALTERNATE_AUTH_ENV_VAR: "supersecret"}):
         with patch("charmcraft.utils.get_os_platform") as platform_mock:
             platform_mock.return_value = utils.OSPlatform(

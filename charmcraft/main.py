@@ -102,7 +102,7 @@ EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP")
 
 def _get_system_details():
     """Produce details about the system."""
-    # prepare the useful environment variables: all CHARMCRAFT* (hidding AUTH keys)
+    # prepare the useful environment variables: all CHARMCRAFT* (hiding AUTH keys)
     # and desktop/session
     useful_env = {
         name: value

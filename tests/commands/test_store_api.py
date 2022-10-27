@@ -26,7 +26,12 @@ from dateutil import parser
 from craft_cli import CraftError
 from craft_store import attenuations
 from craft_store.endpoints import Package
-from craft_store.errors import NetworkError, CredentialsUnavailable, StoreServerError
+from craft_store.errors import (
+    CredentialsAlreadyAvailable,
+    CredentialsUnavailable,
+    NetworkError,
+    StoreServerError,
+)
 
 from charmcraft.commands.store.client import Client
 from charmcraft.utils import ResourceOption
@@ -294,6 +299,24 @@ def test_login(client_mock, config):
         )
     ]
     assert result == acquired_credentials
+
+
+def test_login_having_credentials(client_mock, config):
+    """Login attempt when already having credentials.."""
+    # client raises a specific exception for this case
+    original_exception = CredentialsAlreadyAvailable("app", "host")
+    client_mock.login.side_effect = original_exception
+
+    store = Store(config.charmhub)
+    with pytest.raises(CraftError) as cm:
+        store.login()
+    error = cm.value
+    assert str(error) == (
+        "Cannot login because credentials were found in your system (which may be "
+        "no longer valid, though)."
+    )
+    assert error.resolution == "Please logout first, then login again."
+    assert error.__cause__ is original_exception
 
 
 def test_login_attenuating_ttl(client_mock, config):

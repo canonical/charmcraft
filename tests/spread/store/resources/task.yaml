@@ -35,7 +35,7 @@ prepare: |
   echo "Super complex file resource" > resourcefile.txt
 
   # an oci image resource
-  docker pull hellow-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
+  docker pull hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
 
 restore: |
   pushd charm

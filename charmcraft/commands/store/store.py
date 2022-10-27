@@ -25,6 +25,7 @@ from functools import wraps
 import craft_store
 from craft_cli import emit, CraftError
 from craft_store import attenuations, endpoints
+from craft_store.errors import CredentialsAlreadyAvailable
 from dateutil import parser
 
 from charmcraft.commands.store.client import Client, ALTERNATE_AUTH_ENV_VAR
@@ -207,7 +208,15 @@ class Store:
         if packages:
             kwargs["packages"] = packages
 
-        return self._client.login(**kwargs)
+        try:
+            credentials = self._client.login(**kwargs)
+        except CredentialsAlreadyAvailable as exc:
+            raise CraftError(
+                "Cannot login because credentials were found in your system "
+                "(which may be no longer valid, though).",
+                resolution="Please logout before login again.",
+            ) from exc
+        return credentials
 
     def logout(self):
         """Logout from the store.

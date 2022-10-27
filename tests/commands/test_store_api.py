@@ -315,7 +315,7 @@ def test_login_having_credentials(client_mock, config):
         "Cannot login because credentials were found in your system (which may be "
         "no longer valid, though)."
     )
-    assert error.resolution == "Please logout before login again."
+    assert error.resolution == "Please logout first, then login again."
     assert error.__cause__ is original_exception
 
 

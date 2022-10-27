@@ -214,7 +214,7 @@ class Store:
             raise CraftError(
                 "Cannot login because credentials were found in your system "
                 "(which may be no longer valid, though).",
-                resolution="Please logout before login again.",
+                resolution="Please logout first, then login again.",
             ) from exc
         return credentials
 

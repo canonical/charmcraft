@@ -334,8 +334,8 @@ def test_systemdetails_charmcraft_environment():
     )
 
 
-def test_systemdetails_no_auth():
-    """System details specifically excluding secrets."""
+def test_systemdetails_hidden_auth():
+    """System details specifically hidding secrets."""
     with patch("os.environ", {ALTERNATE_AUTH_ENV_VAR: "supersecret"}):
         with patch("charmcraft.utils.get_os_platform") as platform_mock:
             platform_mock.return_value = utils.OSPlatform(
@@ -344,7 +344,7 @@ def test_systemdetails_no_auth():
             result = _get_system_details()
     assert result == (
         "System details: OSPlatform(system='test-system', release='test-release', "
-        "machine='test-machine'); Environment: None"
+        f"machine='test-machine'); Environment: {ALTERNATE_AUTH_ENV_VAR}='<hidden>'"
     )
 
 

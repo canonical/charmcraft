@@ -102,16 +102,20 @@ EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP")
 
 def _get_system_details():
     """Produce details about the system."""
-    # prepare the useful environment variables: all CHARMCRAFT* (except AUTH keys)
+    # prepare the useful environment variables: all CHARMCRAFT* (hidding AUTH keys)
     # and desktop/session
-    useful_env = {name for name in os.environ if name.startswith("CHARMCRAFT")}
-    useful_env.discard(ALTERNATE_AUTH_ENV_VAR)
-    useful_env.update(EXTRA_ENVIRONMENT)
-
-    os_platform = utils.get_os_platform()
-    env_string = ", ".join(f"{k}={v!r}" for k, v in sorted(os.environ.items()) if k in useful_env)
+    useful_env = {
+        name: value
+        for name, value in os.environ.items()
+        if name.startswith("CHARMCRAFT") or name in EXTRA_ENVIRONMENT
+    }
+    if ALTERNATE_AUTH_ENV_VAR in useful_env:
+        useful_env[ALTERNATE_AUTH_ENV_VAR] = "<hidden>"
+    env_string = ", ".join(f"{name}={value!r}" for name, value in sorted(useful_env.items()))
     if not env_string:
         env_string = "None"
+
+    os_platform = utils.get_os_platform()
     return f"System details: {os_platform}; Environment: {env_string}"
 
 

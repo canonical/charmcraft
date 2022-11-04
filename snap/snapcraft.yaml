@@ -50,7 +50,10 @@ architectures:
 
 apps:
   charmcraft:
-    command: bin/python3 $SNAP/bin/charmcraft
+    # run Python in unbuffered mode so when it's running internally in the instance it will output
+    # all the information promptly and the external Charmcraft will get all lines quickly and show
+    # proper timestamps on them
+    command: bin/python3 -u $SNAP/bin/charmcraft
     completer: completion.bash
     environment:
       # have the cache outside of the version dirs (avoids keeping N copies)

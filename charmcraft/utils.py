@@ -21,7 +21,6 @@ import os
 import pathlib
 import platform
 import sys
-import time
 from collections import namedtuple
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
@@ -241,8 +240,12 @@ def format_timestamp(dt: datetime.datetime) -> str:
 
     Always in UTC.
     """
-    # convert to UTC from whatever timezone `dt` has
-    dtz = datetime.datetime.fromtimestamp(time.mktime(dt.utctimetuple()))
+    if dt.tzinfo is not None and dt.tzinfo.utcoffset(None) is not None:
+        # timezone aware
+        dtz = dt.astimezone(datetime.timezone.utc)
+    else:
+        # timezone naive, assume it's UTC
+        dtz = dt
     return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 

@@ -672,7 +672,9 @@ def test_is_base_available(
 
 def test_get_provider_default(mock_snap_config, mock_is_developer_mode, mock_is_snap):
     if sys.platform == "linux":
-        assert isinstance(providers.get_provider(), lxd.LXDProvider)
+        provider = providers.get_provider()
+        assert isinstance(provider, lxd.LXDProvider)
+        assert provider.lxd_project == "charmcraft"
     else:
         assert isinstance(providers.get_provider(), multipass.MultipassProvider)
 
@@ -682,7 +684,9 @@ def test_get_provider_developer_mode_env(
 ):
     mock_is_developer_mode.return_value = True
     monkeypatch.setenv("CHARMCRAFT_PROVIDER", "lxd")
-    assert isinstance(providers.get_provider(), lxd.LXDProvider)
+    provider = providers.get_provider()
+    assert isinstance(provider, lxd.LXDProvider)
+    assert provider.lxd_project == "charmcraft"
 
     monkeypatch.setenv("CHARMCRAFT_PROVIDER", "multipass")
     assert isinstance(providers.get_provider(), multipass.MultipassProvider)
@@ -692,7 +696,9 @@ def test_get_provider_snap_config(mock_is_snap, mock_is_developer_mode, mock_sna
     mock_is_snap.return_value = True
 
     mock_snap_config.return_value = CharmcraftSnapConfiguration(provider="lxd")
-    assert isinstance(providers.get_provider(), lxd.LXDProvider)
+    provider = providers.get_provider()
+    assert isinstance(provider, lxd.LXDProvider)
+    assert provider.lxd_project == "charmcraft"
 
     mock_snap_config.return_value = CharmcraftSnapConfiguration(provider="multipass")
     assert isinstance(providers.get_provider(), multipass.MultipassProvider)

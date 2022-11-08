@@ -295,7 +295,7 @@ def get_provider():
         provider = _get_platform_default_provider()
 
     if provider == "lxd":
-        return lxd.LXDProvider()
+        return lxd.LXDProvider(lxd_project="charmcraft")
     elif provider == "multipass":
         return multipass.MultipassProvider()
 

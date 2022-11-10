@@ -50,4 +50,8 @@ execute: |
   # validate the channel map
   edge_release=$(charmcraft status $BUNDLE_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
   edge_revision=$(echo $edge_release | jq -r .revision)
-  test $edge_revision == $uploaded_revno
+  # check that the current release greater or equal than what was 
+  # uploaded, because other tests running concurrently may have
+  # also released (but for sure cannot be a previous revision)
+  test $edge_revision -ge $uploaded_revno  
+

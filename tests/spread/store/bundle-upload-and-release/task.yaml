@@ -34,7 +34,7 @@ execute: |
   charmcraft pack --verbose
   test -f $BUNDLE_DEFAULT_NAME.zip
 
-  # upload
+  # upload and get uploaded revision
   uploaded_revno=$(charmcraft upload $BUNDLE_DEFAULT_NAME.zip --format=json | jq .revision)
 
   # check the uploaded revision is newer than start datetime (note we're 

@@ -40,9 +40,14 @@ deps =
 commands =
     # uncomment the following line if this charm owns a lib
     # codespell {[vars]lib_path}
-    codespell {toxinidir}/. --skip {toxinidir}/.git --skip {toxinidir}/.tox \
-      --skip {toxinidir}/build --skip {toxinidir}/lib --skip {toxinidir}/venv \
-      --skip {toxinidir}/.mypy_cache --skip {toxinidir}/icon.svg
+    codespell {toxinidir}/. \
+              --skip {toxinidir}/.git \
+              --skip {toxinidir}/.tox \
+              --skip {toxinidir}/build \
+              --skip {toxinidir}/lib \
+              --skip {toxinidir}/venv \
+              --skip {toxinidir}/.mypy_cache \
+              --skip {toxinidir}/icon.svg
     
     ruff {[vars]all_path}
     black --check --diff {[vars]all_path}
@@ -55,7 +60,12 @@ deps =
     -r{toxinidir}/requirements.txt
 commands =
     coverage run --source={[vars]src_path} \
-        -m pytest --ignore={[vars]tst_path}integration -v --tb native -s {posargs}
+                 -m pytest \
+                 --ignore={[vars]tst_path}integration \
+                 --tb native \
+                 -v \
+                 -s \
+                 {posargs}
     coverage report
 
 [testenv:integration]
@@ -66,4 +76,9 @@ deps =
     pytest-operator
     -r{toxinidir}/requirements.txt
 commands =
-    pytest -v --tb native --ignore={[vars]tst_path}unit --log-cli-level=INFO -s {posargs}
+    pytest -v \
+           -s \
+           --tb native \
+           --ignore={[vars]tst_path}unit \
+           --log-cli-level=INFO \
+           {posargs}

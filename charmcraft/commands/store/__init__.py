@@ -1377,7 +1377,7 @@ class PublishLibCommand(BaseCommand):
             else:
                 error_message = (
                     f"Library {lib_data.full_name} has a wrong LIBPATCH number, it's too high "
-                    "and need to be consecutive, Charmhub "
+                    "and needs to be consecutive, Charmhub "
                     f"highest version is {tip.api:d}.{tip.patch:d}."
                 )
             analysis.append((lib_data, error_message))

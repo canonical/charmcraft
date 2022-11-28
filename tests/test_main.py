@@ -34,7 +34,7 @@ from craft_cli import (
 from craft_store.errors import CraftStoreError
 
 from charmcraft import __version__, env, utils
-from charmcraft.cmdbase import BaseCommand, JSON_FORMAT
+from charmcraft.cmdbase import BaseCommand, JSON_FORMAT, FORMAT_HELP_STR
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.main import COMMAND_GROUPS, main, _get_system_details
 
@@ -484,7 +484,7 @@ def test_basecommand_include_format_option(config):
     assert action.dest == "format"
     assert action.default is None
     assert action.choices == [JSON_FORMAT]
-    assert action.help == "Produce the result formatted as a JSON string"
+    assert action.help == FORMAT_HELP_STR
 
 
 def test_basecommand_format_content_json(config):

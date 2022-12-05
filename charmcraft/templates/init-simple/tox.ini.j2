@@ -4,7 +4,7 @@
 [tox]
 skipsdist=True
 skip_missing_interpreters = True
-envlist = lint, unit
+envlist = fmt, lint, unit
 
 [vars]
 src_path = {toxinidir}/src/
@@ -26,30 +26,30 @@ passenv =
 description = Apply coding style standards to code
 deps =
     black
-    isort
+    ruff
 commands =
-    isort {[vars]all_path}
     black {[vars]all_path}
+    ruff --fix {[vars]all_path}
 
 [testenv:lint]
 description = Check code against coding style standards
 deps =
     black
-    flake8-docstrings
-    flake8-builtins
-    pyproject-flake8
-    pep8-naming
-    isort
+    ruff
     codespell
 commands =
     # uncomment the following line if this charm owns a lib
     # codespell {[vars]lib_path}
-    codespell {toxinidir}/. --skip {toxinidir}/.git --skip {toxinidir}/.tox \
-      --skip {toxinidir}/build --skip {toxinidir}/lib --skip {toxinidir}/venv \
-      --skip {toxinidir}/.mypy_cache --skip {toxinidir}/icon.svg
-    # pflake8 wrapper supports config from pyproject.toml
-    pflake8 {[vars]all_path}
-    isort --check-only --diff {[vars]all_path}
+    codespell {toxinidir}/. \
+              --skip {toxinidir}/.git \
+              --skip {toxinidir}/.tox \
+              --skip {toxinidir}/build \
+              --skip {toxinidir}/lib \
+              --skip {toxinidir}/venv \
+              --skip {toxinidir}/.mypy_cache \
+              --skip {toxinidir}/icon.svg
+    
+    ruff {[vars]all_path}
     black --check --diff {[vars]all_path}
 
 [testenv:unit]
@@ -60,7 +60,12 @@ deps =
     -r{toxinidir}/requirements.txt
 commands =
     coverage run --source={[vars]src_path} \
-        -m pytest --ignore={[vars]tst_path}integration -v --tb native -s {posargs}
+                 -m pytest \
+                 --ignore={[vars]tst_path}integration \
+                 --tb native \
+                 -v \
+                 -s \
+                 {posargs}
     coverage report
 
 [testenv:integration]
@@ -71,4 +76,9 @@ deps =
     pytest-operator
     -r{toxinidir}/requirements.txt
 commands =
-    pytest -v --tb native --ignore={[vars]tst_path}unit --log-cli-level=INFO -s {posargs}
+    pytest -v \
+           -s \
+           --tb native \
+           --ignore={[vars]tst_path}unit \
+           --log-cli-level=INFO \
+           {posargs}

@@ -3281,8 +3281,8 @@ def test_publishlib_store_is_too_behind(
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     error_message = (
-        "Library charms.testcharm.v0.testlib has a wrong LIBPATCH number, it's too high, Charmhub "
-        "highest version is 0.2."
+        "Library charms.testcharm.v0.testlib has a wrong LIBPATCH number, it's too high and needs "
+        "to be consecutive, Charmhub highest version is 0.2."
     )
     if formatted:
         expected = [

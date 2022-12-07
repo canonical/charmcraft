@@ -2,14 +2,11 @@
 name: Renovate
 on:
   schedule:
-    - cron: "0 12 * * *"
+    - cron: "0 */2 * * *"
   workflow_dispatch:
   workflow_call:
+  # TODO: Remove this once we're correctly configured.
   push:
-    branches: [main]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [main]
 
 jobs:
   renovate:

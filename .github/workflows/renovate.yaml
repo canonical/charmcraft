@@ -1,12 +1,9 @@
-# workflow for checking package versions and opening PRs to bump
-name: Renovate
+name: Renovate dependency maintenance
 on:
   schedule:
     - cron: "0 */2 * * *"
   workflow_dispatch:
   workflow_call:
-  # TODO: Remove this once we're correctly configured.
-  push:
 
 jobs:
   renovate:

@@ -10,8 +10,7 @@ on:
 
 jobs:
   renovate:
-    permissions:
-      actions: write
+    permissions: write-all
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout

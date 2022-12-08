@@ -44,3 +44,4 @@
   prHourlyLimit: 4, // No more than 4 PRs per hour.
   stabilityDays: 2 // Wait 2 days from release before updating.
 }
+

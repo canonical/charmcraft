@@ -6,4 +6,4 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Check if CLA signed
-        uses: canonical/has-signed-canonical-cla@v1
+        uses: lengau/has-signed-canonical-cla@refs/heads/generic-bots

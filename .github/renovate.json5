@@ -17,7 +17,7 @@
       // Minor changes can be automerged for dev dependencies, but are also deprioritised.
       groupName: "development dependencies (minor and patch)",
       groupSlug: "minor-dev-dependencies",
-      matchDepTypes: ["devDependencies"],
+      matchDepTypes: ["devDependencies", "requirements-dev"],
       matchUpdateTypes: ["minor", "patch", "pin", "digest"],
       prPriority: -1,
       automerge: true
@@ -48,7 +48,7 @@
       fileMatch: ["requirements-dev.txt"],
       datasourceTemplate: "pypi",
       matchStrings: ["(?<depName>.*?)==(?<currentValue>.*?)"],
-      depTypeTemplate: "devDependencies"
+      depTypeTemplate: "requirements-dev"
     }
   ],
   timezone: "Etc/UTC",

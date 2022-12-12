@@ -2,18 +2,31 @@
   // Configuration file for RenovateBot: https://docs.renovatebot.com/configuration-options
   extends: ["config:base"],
   labels: ["dependencies"],  // For convenient searching in GitHub
+  pip_requirements: {
+    fileMatch: ["(^|/)requirements([\\w-]*)\\.txt$"]
+  },
   packageRules: [
     {
       // Automerge patches, pin changes and digest changes.
       // Also groups these changes together.
-      groupName: "Default rules",
+      groupName: "patch updates",
       matchUpdateTypes: ["patch", "pin", "digest"],
       automerge: true
     },
     {
       // Minor changes can be automerged for dev dependencies, but are also deprioritised.
-      groupName: "Development dependencies",
+      groupName: "development dependencies (minor and patch)",
+      groupSlug: "minor-dev-dependencies",
       matchDepTypes: ["devDependencies"],
+      matchUpdateTypes: ["minor", "patch", "pin", "digest"],
+      prPriority: -1,
+      automerge: true
+    },
+    {
+      // Replica of above to turn `requirements-dev.txt` into dev dependencies.
+      groupName: "development dependencies (minor and patch)",
+      groupSlug: "minor-dev-dependencies",
+      matchFiles: ["requirements-dev.txt"],
       matchUpdateTypes: ["minor", "patch", "pin", "digest"],
       prPriority: -1,
       automerge: true
@@ -24,6 +37,11 @@
       matchPackagePrefixes: ["craft-"],
       matchLanguages: ["python"],
       prPriority: 10,
+    },
+    {
+      // GitHub actions are higher priority to update than most dependencies.
+      matchManagers: ["github-actions"],
+      prPriority: 5
     }
   ],
   regexManagers: [

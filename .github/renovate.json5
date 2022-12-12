@@ -47,7 +47,7 @@
       // Make everything in requirements-dev.txt a dev dependency.
       fileMatch: ["requirements-dev.txt"],
       datasourceTemplate: "pypi",
-      matchStrings: ["(?<depName>.*?)==(?<currentValue>.*?)"],
+      matchStrings: ["^(?<depName>.*?)==(?<currentValue>.*?)$"],
       depTypeTemplate: "requirements-dev"
     }
   ],

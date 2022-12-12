@@ -23,15 +23,6 @@
       automerge: true
     },
     {
-      // Replica of above to turn `requirements-dev.txt` into dev dependencies.
-      groupName: "development dependencies (minor and patch)",
-      groupSlug: "minor-dev-dependencies",
-      matchFiles: ["requirements-dev.txt"],
-      matchUpdateTypes: ["minor", "patch", "pin", "digest"],
-      prPriority: -1,
-      automerge: true
-    },
-    {
       // Update all craft-* packages in one higher-priority PR
       groupName: "Craft packages",
       matchPackagePrefixes: ["craft-"],
@@ -51,6 +42,13 @@
       matchStrings: [
         "# renovate: datasource=(?<datasource>\\S+)\n\\s+(?<depName>.*?)==(?<currentValue>.*?)\\n"
       ]
+    },
+    {
+      // Make everything in requirements-dev.txt a dev dependency.
+      fileMatch: ["requirements-dev.txt"],
+      datasourceTemplate: "pypi",
+      matchStrings: ["(?<depName>.*?)==(?<currentValue>.*?)"],
+      depTypeTemplate: "devDependencies"
     }
   ],
   timezone: "Etc/UTC",

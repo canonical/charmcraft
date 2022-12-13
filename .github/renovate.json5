@@ -3,31 +3,51 @@
   extends: ["config:base"],
   labels: ["dependencies"],  // For convenient searching in GitHub
   pip_requirements: {
-    fileMatch: ["(^|/)requirements([\\w-]*)\\.txt$"]
+    // Match every requirements file except requirements-dev.txt, which is handled with a regex manager below.
+    fileMatch: ["(^|\\/)requirements(-(d|[^d].*|de|d[^e].*|de[^v].*|dev\\w+|))?\\.txt$"]
   },
   packageRules: [
     {
       // Automerge patches, pin changes and digest changes.
       // Also groups these changes together.
-      groupName: "Default rules",
+      groupName: "patch updates",
       matchUpdateTypes: ["patch", "pin", "digest"],
+      prPriority: 3, // Patches should go first!
       automerge: true
     },
     {
-      // Minor changes can be automerged for dev dependencies, but are also deprioritised.
-      groupName: "Development dependencies",
+      // Update all internal packages in one higher-priority PR
+      groupName: "internal packages",
+      matchPackagePrefixes: ["craft-", "snap-"],
+      matchLanguages: ["python"],
+      prPriority: 2,
+    },
+    {
+      // GitHub actions are higher priority to update than most dependencies.
+      matchManagers: ["github-actions"],
+      prPriority: 1
+    },
+    // Everything not in one of these rules gets priority 0 and falls here.
+    {
+      // Minor changes can be grouped and automerged for dev dependencies, but are also deprioritised.
+      groupName: "development dependencies (minor and patch)",
+      groupSlug: "dev-dependencies",
       matchDepTypes: ["devDependencies"],
       matchUpdateTypes: ["minor", "patch", "pin", "digest"],
       prPriority: -1,
       automerge: true
     },
     {
-      // Update all craft-* packages in one higher-priority PR
-      groupName: "Craft packages",
-      matchPackagePrefixes: ["craft-"],
-      matchLanguages: ["python"],
-      prPriority: 10,
-    }
+      // Other major dependencies get deprioritised below minor dev dependencies.
+      matchUpdateTypes: ["major"],
+      prPriority: -2
+    },
+    {
+      // Major dev dependencies are stone last.
+      matchDepTypes: ["devDependencies"],
+      matchUpdateTypes: ["major"],
+      prPriority: -3
+    },
   ],
   regexManagers: [
     {
@@ -36,6 +56,14 @@
       matchStrings: [
         "# renovate: datasource=(?<datasource>\\S+)\n\\s+(?<depName>.*?)==(?<currentValue>.*?)\\n"
       ]
+    },
+    {
+      // Make everything in requirements-dev.txt a dev dependency.
+      fileMatch: ["requirements-dev.txt"],
+      datasourceTemplate: "pypi",
+      versioningTemplate: "pep440",
+      matchStrings: ["\n(?<depName>[A-z0-9_-]+)[<=>]=(?<currentValue>[^\\n]+)"],
+      depTypeTemplate: "devDependencies"
     }
   ],
   timezone: "Etc/UTC",

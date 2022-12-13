@@ -3,8 +3,7 @@
   extends: ["config:base"],
   labels: ["dependencies"],  // For convenient searching in GitHub
   pip_requirements: {
-    // Match every requirements file except requirements-dev.txt, which is handled with a regex manager below.
-    fileMatch: ["(^|\\/)requirements(-(d|[^d].*|de|d[^e].*|de[^v].*|dev\\w+|))?\\.txt$"]
+         fileMatch: ["(^|/)requirements([\\w-]*)\\.txt$"]
   },
   packageRules: [
     {
@@ -56,14 +55,6 @@
       matchStrings: [
         "# renovate: datasource=(?<datasource>\\S+)\n\\s+(?<depName>.*?)==(?<currentValue>.*?)\\n"
       ]
-    },
-    {
-      // Make everything in requirements-dev.txt a dev dependency.
-      fileMatch: ["requirements-dev.txt"],
-      datasourceTemplate: "pypi",
-      versioningTemplate: "pep440",
-      matchStrings: ["\n(?<depName>[A-z0-9_-]+)[<=>]=(?<currentValue>[^\\n]+)"],
-      depTypeTemplate: "devDependencies"
     }
   ],
   timezone: "Etc/UTC",

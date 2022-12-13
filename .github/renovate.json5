@@ -2,6 +2,9 @@
   // Configuration file for RenovateBot: https://docs.renovatebot.com/configuration-options
   extends: ["config:base"],
   labels: ["dependencies"],  // For convenient searching in GitHub
+  pip_requirements: {
+    fileMatch: ["(^|/)requirements([\\w-]*)\\.txt$"]
+  },
   packageRules: [
     {
       // Automerge patches, pin changes and digest changes.

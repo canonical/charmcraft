@@ -21,6 +21,7 @@ import json
 import craft_cli
 
 JSON_FORMAT = "json"
+FORMAT_HELP_STR = "Produce the result in the specified format (currently only 'json')"
 
 
 class BaseCommand(craft_cli.BaseCommand):
@@ -50,5 +51,5 @@ class BaseCommand(craft_cli.BaseCommand):
         parser.add_argument(
             "--format",
             choices=[JSON_FORMAT],
-            help="Produce the result formatted as a JSON string",
+            help=FORMAT_HELP_STR,
         )

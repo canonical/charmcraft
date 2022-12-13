@@ -87,7 +87,12 @@ class FakeResponse(requests.Response):
         return self.status_code == 200
 
     def json(self):
-        return json.loads(self._content)  # type: ignore
+        try:
+            return json.loads(self._content)  # type: ignore
+        except json.JSONDecodeError as exc:
+            # the craft-store lib expects the error from requests, as what we're
+            # faking here normally is a "real response"
+            raise requests.exceptions.JSONDecodeError(exc.msg, exc.doc, exc.pos)
 
     @property
     def reason(self):

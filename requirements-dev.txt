@@ -14,7 +14,7 @@ Deprecated==1.2.13
 distlib==0.3.6
 filelock==3.8.0
 flake8==5.0.4
-humanize==4.3.0
+humanize==4.4.0
 idna==3.3
 iniconfig==1.1.1
 jeepney==0.8.0

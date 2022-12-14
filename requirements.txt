@@ -8,7 +8,7 @@ craft-providers==1.6.2
 craft-store==2.3.0
 cryptography==3.4
 Deprecated==1.2.13
-humanize==4.3.0
+humanize==4.4.0
 idna==3.3
 jeepney==0.8.0
 Jinja2==3.1.2

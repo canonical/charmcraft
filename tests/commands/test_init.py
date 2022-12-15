@@ -192,7 +192,7 @@ def test_tests(tmp_path, config, profile):
     cmd = InitCommand(config)
     cmd.run(create_namespace(profile=profile))
 
-    subprocess.run(["tox"], cwd=str(tmp_path), check=True, env=env)
+    subprocess.run(["tox", "-v"], cwd=str(tmp_path), check=True, env=env)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")

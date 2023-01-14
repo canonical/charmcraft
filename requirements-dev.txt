@@ -1,6 +1,6 @@
 attrs==22.1.0
 black==22.12.0
-cachetools==5.2.0
+cachetools==5.2.1
 certifi==2022.12.7
 cffi==1.15.1
 chardet==5.1.0
@@ -74,7 +74,7 @@ tox==4.0.19
 types-Deprecated==1.2.9
 types-toml==0.10.8.1
 typing_extensions==4.4.0
-urllib3==1.26.13
+urllib3==1.26.14
 virtualenv==20.17.1
 wrapt==1.14.1
 zipp==3.11.0

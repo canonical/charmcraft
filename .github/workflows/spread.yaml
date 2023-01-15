@@ -61,7 +61,7 @@ jobs:
 
       - if: steps.decisions.outputs.RUN == 'true'
         name: Download snap artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: snap
 

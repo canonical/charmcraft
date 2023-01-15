@@ -42,7 +42,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - name: Download snap artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: snap
       - name: Spread k8s operator

@@ -19,7 +19,7 @@
 import pathlib
 import textwrap
 
-from charmcraft.commands.store import _get_lib_info, create_importable_name
+from charmcraft.commands.store import create_importable_name, get_lib_info
 
 
 def create_lib_filepath(charm_name, lib_name, api=0, patch=1, lib_id="test-lib-id"):
@@ -43,7 +43,7 @@ def create_lib_filepath(charm_name, lib_name, api=0, patch=1, lib_id="test-lib-i
     content = template.format(lib_id=lib_id, api=api, patch=patch)
     lib_file.write_text(content)
 
-    # use _get_lib_info to get the hash of the file, as the used hash is WITHOUT the metadata
+    # use get_lib_info to get the hash of the file, as the used hash is WITHOUT the metadata
     # files (no point in duplicating that logic here)
-    libdata = _get_lib_info(lib_path=lib_file)
+    libdata = get_lib_info(lib_path=lib_file)
     return content, libdata.content_hash

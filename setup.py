@@ -57,6 +57,7 @@ dev_requires = [
     "ops>=1.4.0",
     "pydocstyle",
     "pytest",
+    "pytest-check>=2.0",
     "pytest-mock",
     "responses",
     "tox",

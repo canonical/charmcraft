@@ -12,7 +12,7 @@ craft-cli==1.2.0
 craft-parts==1.17.1
 craft-providers==1.6.2
 craft-store==2.3.0
-cryptography==3.4.8
+cryptography==39.0.0
 Deprecated==1.2.13
 distlib==0.3.6
 exceptiongroup==1.0.4

@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 """Commands related to Charmhub."""
 
-import ast
-import hashlib
 import pathlib
 import string
 import tempfile
@@ -43,6 +41,12 @@ from charmcraft.utils import (
     useful_filepath,
 )
 
+from .charmlibs import (
+    create_importable_name,
+    get_name_from_metadata,
+    get_lib_info,
+    get_libs_from_tree,
+)
 from .store import Store
 from .registry import ImageHandler, OCIRegistry, LocalDockerdInterface
 
@@ -50,38 +54,11 @@ from .registry import ImageHandler, OCIRegistry, LocalDockerdInterface
 EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
 ResourceType = namedtuple("ResourceType", "file oci_image")(file="file", oci_image="oci-image")
 
-LibData = namedtuple(
-    "LibData",
-    "lib_id api patch content content_hash full_name path lib_name charm_name",
-)
-
 # The token used in the 'init' command (as bytes for easier comparison)
 INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
 
 # the list of valid attenuations to restrict login credentials
 VALID_ATTENUATIONS = {getattr(attenuations, x) for x in dir(attenuations) if x.isupper()}
-
-
-def get_name_from_metadata():
-    """Return the name if present and plausible in metadata.yaml."""
-    try:
-        with open("metadata.yaml", "rb") as fh:
-            metadata = yaml.safe_load(fh)
-        charm_name = metadata["name"]
-    except (yaml.error.YAMLError, OSError, KeyError):
-        return
-    return charm_name
-
-
-def create_importable_name(charm_name):
-    """Convert a charm name to something that is importable in python."""
-    return charm_name.replace("-", "_")
-
-
-def create_charm_name_from_importable(charm_name):
-    """Convert a charm name from the importable form to the real form."""
-    # _ is invalid in charm names, so we know it's intended to be '-'
-    return charm_name.replace("_", "-")
 
 
 class LoginCommand(BaseCommand):
@@ -1006,191 +983,6 @@ class StatusCommand(BaseCommand):
                 emit.message(line)
 
 
-class _BadLibraryPathError(CraftError):
-    """Subclass to provide a specific error for a bad library path."""
-
-    def __init__(self, path):
-        super().__init__(
-            "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
-            "".format(path)
-        )
-
-
-class _BadLibraryNameError(CraftError):
-    """Subclass to provide a specific error for a bad library name."""
-
-    def __init__(self, name):
-        super().__init__(
-            "Charm library name {!r} must conform to charms.<charm>.vN.<libname>".format(name)
-        )
-
-
-def _get_positive_int(raw_value):
-    """Convert the raw value for api/patch into a positive integer."""
-    value = int(raw_value)
-    if value < 0:
-        raise ValueError("negative")
-    return value
-
-
-def _get_lib_info(*, full_name=None, lib_path=None):
-    """Get the whole lib info from the path/file.
-
-    This will perform mutation of the charm name to create importable paths.
-    * `charm_name` and `libdata.charm_name`: `foo-bar`
-    * `full_name` and `libdata.full_name`: `charms.foo_bar.v0.somelib`
-    * paths, including `libdata.path`: `lib/charms/foo_bar/v0/somelib`
-
-    """
-    if full_name is None:
-        # get it from the lib_path
-        try:
-            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
-        except ValueError:
-            raise _BadLibraryPathError(lib_path)
-        if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":
-            raise _BadLibraryPathError(lib_path)
-        full_name = ".".join((charmsdir, importable_charm_name, v_api, lib_path.stem))
-
-    else:
-        # build the path! convert a lib name with dots to the full path, including lib
-        # dir and Python extension.
-        #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
-        try:
-            charmsdir, charm_name, v_api, libfile = full_name.split(".")
-        except ValueError:
-            raise _BadLibraryNameError(full_name)
-
-        # the lib full_name includes the charm_name which might not be importable (dashes)
-        importable_charm_name = create_importable_name(charm_name)
-
-        if charmsdir != "charms":
-            raise _BadLibraryNameError(full_name)
-        path = pathlib.Path("lib")
-        lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + ".py")
-
-    # charm names in the path can contain '_' to be importable
-    # these should be '-', so change them back
-    charm_name = create_charm_name_from_importable(importable_charm_name)
-
-    if v_api[0] != "v" or not v_api[1:].isdigit():
-        raise CraftError("The API version in the library path must be 'vN' where N is an integer.")
-    api_from_path = int(v_api[1:])
-
-    lib_name = lib_path.stem
-    if not lib_path.exists():
-        return LibData(
-            lib_id=None,
-            api=api_from_path,
-            patch=-1,
-            content_hash=None,
-            content=None,
-            full_name=full_name,
-            path=lib_path,
-            lib_name=lib_name,
-            charm_name=charm_name,
-        )
-
-    # parse the file and extract metadata from it, while hashing
-    metadata_fields = (b"LIBAPI", b"LIBPATCH", b"LIBID")
-    metadata = dict.fromkeys(metadata_fields)
-    hasher = hashlib.sha256()
-    with lib_path.open("rb") as fh:
-        for line in fh:
-            if line.startswith(metadata_fields):
-                try:
-                    field, value = [x.strip() for x in line.split(b"=")]
-                except ValueError:
-                    raise CraftError("Bad metadata line in {!r}: {!r}".format(str(lib_path), line))
-                metadata[field] = value
-            else:
-                hasher.update(line)
-
-    missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
-    if missing:
-        raise CraftError(
-            "Library {!r} is missing the mandatory metadata fields: {}.".format(
-                str(lib_path), ", ".join(sorted(missing))
-            )
-        )
-
-    bad_api_patch_msg = "Library {!r} metadata field {} is not zero or a positive integer."
-    try:
-        libapi = _get_positive_int(metadata[b"LIBAPI"])
-    except ValueError:
-        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
-    try:
-        libpatch = _get_positive_int(metadata[b"LIBPATCH"])
-    except ValueError:
-        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
-
-    if libapi == 0 and libpatch == 0:
-        raise CraftError(
-            "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-                str(lib_path)
-            )
-        )
-
-    if libapi != api_from_path:
-        raise CraftError(
-            "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
-                str(lib_path)
-            )
-        )
-
-    bad_libid_msg = "Library {!r} metadata field LIBID must be a non-empty ASCII string."
-    try:
-        libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
-    except (ValueError, UnicodeDecodeError):
-        raise CraftError(bad_libid_msg.format(str(lib_path)))
-    if not libid or not isinstance(libid, str):
-        raise CraftError(bad_libid_msg.format(str(lib_path)))
-
-    content_hash = hasher.hexdigest()
-    content = lib_path.read_text()
-
-    return LibData(
-        lib_id=libid,
-        api=libapi,
-        patch=libpatch,
-        content_hash=content_hash,
-        content=content,
-        full_name=full_name,
-        path=lib_path,
-        lib_name=lib_name,
-        charm_name=charm_name,
-    )
-
-
-def _get_libs_from_tree(charm_name=None):
-    """Get library info from the directories tree (for a specific charm if specified).
-
-    It only follows/uses the the directories/files for a correct charmlibs
-    disk structure.
-
-    This can take charm_name as both importable and normal form.
-    """
-    local_libs_data = []
-
-    if charm_name is None:
-        base_dir = pathlib.Path("lib") / "charms"
-        charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
-    else:
-        importable_charm_name = create_importable_name(charm_name)
-        base_dir = pathlib.Path("lib") / "charms" / importable_charm_name
-        charm_dirs = [base_dir] if base_dir.is_dir() else []
-
-    for charm_dir in charm_dirs:
-        for v_dir in sorted(charm_dir.iterdir()):
-            if v_dir.is_dir() and v_dir.name[0] == "v" and v_dir.name[1:].isdigit():
-                for libfile in sorted(v_dir.glob("*.py")):
-                    local_libs_data.append(_get_lib_info(lib_path=libfile))
-
-    found_libs = [lib_data.full_name for lib_data in local_libs_data]
-    emit.debug(f"Libraries found under {str(base_dir)!r}: {found_libs}")
-    return local_libs_data
-
-
 class CreateLibCommand(BaseCommand):
     """Create a charm library."""
 
@@ -1248,7 +1040,7 @@ class CreateLibCommand(BaseCommand):
 
         # all libraries born with API version 0
         full_name = "charms.{}.v0.{}".format(importable_charm_name, lib_name)
-        lib_data = _get_lib_info(full_name=full_name)
+        lib_data = get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
             raise CraftError("This library already exists: {!r}.".format(str(lib_path)))
@@ -1317,7 +1109,7 @@ class PublishLibCommand(BaseCommand):
             )
 
         if parsed_args.library:
-            lib_data = _get_lib_info(full_name=parsed_args.library)
+            lib_data = get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
                 raise CraftError(
                     "The specified library was not found at path {!r}.".format(str(lib_data.path))
@@ -1330,7 +1122,7 @@ class PublishLibCommand(BaseCommand):
                 )
             local_libs_data = [lib_data]
         else:
-            local_libs_data = _get_libs_from_tree(charm_name)
+            local_libs_data = get_libs_from_tree(charm_name)
 
         # check if something needs to be done
         store = Store(self.config.charmhub)
@@ -1459,9 +1251,9 @@ class FetchLibCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         if parsed_args.library:
-            local_libs_data = [_get_lib_info(full_name=parsed_args.library)]
+            local_libs_data = [get_lib_info(full_name=parsed_args.library)]
         else:
-            local_libs_data = _get_libs_from_tree()
+            local_libs_data = get_libs_from_tree()
 
         # get tips from the Store
         store = Store(self.config.charmhub)

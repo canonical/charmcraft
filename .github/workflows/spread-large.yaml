@@ -18,7 +18,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}

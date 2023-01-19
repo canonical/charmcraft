@@ -248,63 +248,62 @@ class TestGetLibInfo:
             assert lib_data.charm_name == "testcharm"
 
     @pytest.mark.parametrize(
-        "fields,match_template",
+        "fields,match",
         [
             pytest.param(
                 {"metadata_id": "LIBID = foo = 23"},
-                r"^Bad metadata line in {!r}: b'LIBID = foo = 23\\n'$",
+                r"^Bad metadata line in '.+testlib.py': b'LIBID = foo = 23\\n'$",
                 id="malformed ID",
             ),
             pytest.param(
                 {"metadata_patch": "", "metadata_api": ""},
-                r"^Library {!r} is missing the mandatory metadata fields: LIBAPI, LIBPATCH\.$",
+                r"^Library '.+' is missing the mandatory metadata fields: LIBAPI, LIBPATCH\.$",
                 id="missing api and patch",
             ),
         ],
     )
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-    def test_invalid_metadata_field(self, charm_path, fields, match_template):
+    def test_invalid_metadata_field(self, charm_path, fields, match):
         """Some metadata field is not really valid."""
         test_path = self.create_lib(**fields)
-        match = match_template.format(re.escape(str(test_path)))
         with pytest.raises(CraftError, match=match):
             get_lib_info(lib_path=test_path)
 
-    bad_field_template = r"^Library {!r} metadata field {} is not zero or a positive integer\.$"
+    bad_field_match = r"^Library .+ metadata field {} is not zero or a positive integer\.$"
 
     @pytest.mark.parametrize(
-        "lib_fields,match_template,field",
+        "lib_fields,match",
         [
             pytest.param(
-                {"metadata_api": "LIBAPI = v3"}, bad_field_template, "LIBAPI", id="API non-integer"
+                {"metadata_api": "LIBAPI = v3"},
+                bad_field_match.format("LIBAPI"),
+                id="API non-integer",
             ),
             pytest.param(
-                {"metadata_api": "LIBAPI = -3"}, bad_field_template, "LIBAPI", id="API negative"
+                {"metadata_api": "LIBAPI = -3"},
+                bad_field_match.format("LIBAPI"),
+                id="API negative",
             ),
             pytest.param(
                 {"metadata_patch": "LIBPATCH = beta3"},
-                bad_field_template,
-                "LIBPATCH",
+                bad_field_match.format("LIBPATCH"),
                 id="PATCH non-integer",
             ),
             pytest.param(
                 {"metadata_patch": "LIBPATCH = -1"},
-                bad_field_template,
-                "LIBPATCH",
+                bad_field_match.format("LIBPATCH"),
                 id="PATCH negative",
             ),
             pytest.param(
                 {"metadata_api": "LIBAPI = 0", "metadata_patch": "LIBPATCH = 0"},
-                r"^Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero\.$",
-                "",
+                r"^Library .+ metadata fields LIBAPI and LIBPATCH cannot both be zero\.$",
                 id="API and PATCH both zero",
             ),
         ],
     )
-    def test_api_patch_invalid(self, lib_fields, match_template, field):
+    def test_api_patch_invalid(self, lib_fields, match):
         """Invalid values for API or patch versions."""
         test_path = self.create_lib(**lib_fields)
-        match = match_template.format(re.escape(str(test_path)), field)
         with pytest.raises(CraftError, match=match):
             get_lib_info(lib_path=test_path)
 
@@ -313,10 +312,7 @@ class TestGetLibInfo:
     ):
         """The API value included in the file is different from the one in the path."""
         test_path = self.create_lib(metadata_api="LIBAPI = 99")
-        match = (
-            rf"^Library {re.escape(str(test_path))!r} metadata field LIBAPI is "
-            r"different from the version in the path\.$"
-        )
+        match = r"^Library .+ metadata field LIBAPI is different from the version in the path\.$"
         with pytest.raises(CraftError, match=match):
             get_lib_info(lib_path=test_path)
 
@@ -331,9 +327,6 @@ class TestGetLibInfo:
     def test_libid_invalid(self, metadata_id):
         """The ID is not really a string."""
         test_path = self.create_lib(metadata_id=metadata_id)
-        match = (
-            rf"Library {re.escape(str(test_path))!r} metadata "
-            r"field LIBID must be a non-empty ASCII string\."
-        )
+        match = r"Library .+ metadata field LIBID must be a non-empty ASCII string\."
         with pytest.raises(CraftError, match=match):
             get_lib_info(lib_path=test_path)

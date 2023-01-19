@@ -17,6 +17,7 @@
 """Tests for store helpers commands (code in store/charmlibs.py)."""
 import hashlib
 import pathlib
+import re
 import sys
 
 import pytest
@@ -265,7 +266,7 @@ class TestGetLibInfo:
     def test_invalid_metadata_field(self, charm_path, fields, match_template):
         """Some metadata field is not really valid."""
         test_path = self.create_lib(**fields)
-        match = match_template.format(str(test_path))
+        match = match_template.format(re.escape(str(test_path)))
         with pytest.raises(CraftError, match=match):
             get_lib_info(lib_path=test_path)
 
@@ -303,7 +304,7 @@ class TestGetLibInfo:
     def test_api_patch_invalid(self, lib_fields, match_template, field):
         """Invalid values for API or patch versions."""
         test_path = self.create_lib(**lib_fields)
-        match = match_template.format(str(test_path), field)
+        match = match_template.format(re.escape(str(test_path)), field)
         with pytest.raises(CraftError, match=match):
             get_lib_info(lib_path=test_path)
 
@@ -313,7 +314,7 @@ class TestGetLibInfo:
         """The API value included in the file is different from the one in the path."""
         test_path = self.create_lib(metadata_api="LIBAPI = 99")
         match = (
-            rf"^Library {str(test_path)!r} metadata field LIBAPI is "
+            rf"^Library {re.escape(str(test_path))!r} metadata field LIBAPI is "
             r"different from the version in the path\.$"
         )
         with pytest.raises(CraftError, match=match):
@@ -331,7 +332,8 @@ class TestGetLibInfo:
         """The ID is not really a string."""
         test_path = self.create_lib(metadata_id=metadata_id)
         match = (
-            rf"Library {str(test_path)!r} metadata field LIBID must be a non-empty ASCII string\."
+            rf"Library {re.escape(str(test_path))!r} metadata "
+            r"field LIBID must be a non-empty ASCII string\."
         )
         with pytest.raises(CraftError, match=match):
             get_lib_info(lib_path=test_path)

@@ -17,7 +17,6 @@
 """Tests for store helpers commands (code in store/charmlibs.py)."""
 import hashlib
 import pathlib
-import re
 import sys
 
 import pytest

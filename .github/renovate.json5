@@ -2,6 +2,7 @@
   // Configuration file for RenovateBot: https://docs.renovatebot.com/configuration-options
   extends: ["config:base"],
   labels: ["dependencies"],  // For convenient searching in GitHub
+  ignoreDeps: ["cryptography"], // https://github.com/canonical/charmcraft/issues/991
   pip_requirements: {
     fileMatch: ["(^|/)requirements([\\w-]*)\\.txt$"]
   },

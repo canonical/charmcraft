@@ -16,7 +16,7 @@ cryptography==3.4.8
 Deprecated==1.2.13
 distlib==0.3.6
 exceptiongroup==1.1.0
-filelock==3.8.2
+filelock==3.9.0
 flake8==6.0.0
 humanize==4.4.0
 idna==3.4

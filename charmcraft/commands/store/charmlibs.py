@@ -17,6 +17,7 @@
 import ast
 import hashlib
 import pathlib
+from dataclasses import dataclass
 from collections import namedtuple
 from typing import AnyStr, Optional
 
@@ -29,6 +30,17 @@ LibData = namedtuple(
     "LibData",
     "lib_id api patch content content_hash full_name path lib_name charm_name",
 )
+
+
+@dataclass
+class LibInternals:
+    """All internals from a lib: the metadata fields, the hash and the content itself."""
+
+    lib_id: str
+    api: int
+    patch: int
+    content_hash: str
+    content: bytes
 
 
 def get_positive_int(raw_value: AnyStr) -> int:
@@ -59,6 +71,69 @@ def create_charm_name_from_importable(charm_name: str) -> str:
     """Convert a charm name from the importable form to the real form."""
     # _ is invalid in charm names, so we know it's intended to be '-'
     return charm_name.replace("_", "-")
+
+
+def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
+    """Get content, its hash, and all the metadata fields from a library."""
+    metadata_fields = (b"LIBAPI", b"LIBPATCH", b"LIBID")
+    metadata = dict.fromkeys(metadata_fields)
+    hasher = hashlib.sha256()
+    with lib_path.open("rb") as fh:
+        for line in fh:
+            if line.startswith(metadata_fields):
+                try:
+                    field, value = [x.strip() for x in line.split(b"=")]
+                except ValueError:
+                    raise CraftError(
+                        "Bad metadata line in {!r}: {!r}".format(str(lib_path), line)
+                    ) from None
+                metadata[field] = value
+            else:
+                hasher.update(line)
+    content_hash = hasher.hexdigest()
+
+    missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
+    if missing:
+        raise CraftError(
+            "Library {!r} is missing the mandatory metadata fields: {}.".format(
+                str(lib_path), ", ".join(sorted(missing))
+            )
+        )
+
+    bad_api_patch_msg = "Library {!r} metadata field {} is not zero or a positive integer."
+    try:
+        libapi = get_positive_int(metadata[b"LIBAPI"])
+    except ValueError:
+        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
+    try:
+        libpatch = get_positive_int(metadata[b"LIBPATCH"])
+    except ValueError:
+        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
+
+    if libapi == 0 and libpatch == 0:
+        raise CraftError(
+            "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
+                str(lib_path)
+            )
+        )
+
+    bad_libid_msg = "Library {!r} metadata field LIBID must be a non-empty ASCII string."
+    try:
+        libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
+    except (ValueError, UnicodeDecodeError):
+        raise CraftError(bad_libid_msg.format(str(lib_path)))
+    if not libid or not isinstance(libid, str):
+        raise CraftError(bad_libid_msg.format(str(lib_path)))
+
+    content = lib_path.read_text()
+
+    return LibInternals(
+        lib_id=libid,
+        api=libapi,
+        patch=libpatch,
+        content_hash=content_hash,
+        content=content,
+    )
 
 
 def get_lib_info(*, full_name=None, lib_path=None):
@@ -119,72 +194,22 @@ def get_lib_info(*, full_name=None, lib_path=None):
             charm_name=charm_name,
         )
 
-    # parse the file and extract metadata from it, while hashing
-    metadata_fields = (b"LIBAPI", b"LIBPATCH", b"LIBID")
-    metadata = dict.fromkeys(metadata_fields)
-    hasher = hashlib.sha256()
-    with lib_path.open("rb") as fh:
-        for line in fh:
-            if line.startswith(metadata_fields):
-                try:
-                    field, value = [x.strip() for x in line.split(b"=")]
-                except ValueError:
-                    raise CraftError(
-                        "Bad metadata line in {!r}: {!r}".format(str(lib_path), line)
-                    ) from None
-                metadata[field] = value
-            else:
-                hasher.update(line)
+    internals = get_lib_internals(lib_path)
 
-    missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
-    if missing:
-        raise CraftError(
-            "Library {!r} is missing the mandatory metadata fields: {}.".format(
-                str(lib_path), ", ".join(sorted(missing))
-            )
-        )
-
-    bad_api_patch_msg = "Library {!r} metadata field {} is not zero or a positive integer."
-    try:
-        libapi = get_positive_int(metadata[b"LIBAPI"])
-    except ValueError:
-        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
-    try:
-        libpatch = get_positive_int(metadata[b"LIBPATCH"])
-    except ValueError:
-        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
-
-    if libapi == 0 and libpatch == 0:
-        raise CraftError(
-            "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-                str(lib_path)
-            )
-        )
-
-    if libapi != api_from_path:
+    # validate internal API matches with what was used in the path
+    if internals.api != api_from_path:
         raise CraftError(
             "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
                 str(lib_path)
             )
         )
 
-    bad_libid_msg = "Library {!r} metadata field LIBID must be a non-empty ASCII string."
-    try:
-        libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
-    except (ValueError, UnicodeDecodeError):
-        raise CraftError(bad_libid_msg.format(str(lib_path)))
-    if not libid or not isinstance(libid, str):
-        raise CraftError(bad_libid_msg.format(str(lib_path)))
-
-    content_hash = hasher.hexdigest()
-    content = lib_path.read_text()
-
     return LibData(
-        lib_id=libid,
-        api=libapi,
-        patch=libpatch,
-        content_hash=content_hash,
-        content=content,
+        lib_id=internals.lib_id,
+        api=internals.api,
+        patch=internals.patch,
+        content_hash=internals.content_hash,
+        content=internals.content,
         full_name=full_name,
         path=lib_path,
         lib_name=lib_name,

@@ -252,6 +252,7 @@ def test_getlibinternals_success_simple(tmp_path, monkeypatch):
     assert internals.content_hash is not None
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_getlibinternals_success_content(tmp_path, monkeypatch):
     """Check that content and its hash are ok."""
     extra_content = """
@@ -268,6 +269,7 @@ def test_getlibinternals_success_content(tmp_path, monkeypatch):
     assert internals.content_hash == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_getlibinternals_malformed_internals_field(tmp_path, monkeypatch):
     """Some internals field is not really valid."""
     monkeypatch.chdir(tmp_path)

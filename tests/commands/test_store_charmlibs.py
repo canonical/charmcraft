@@ -22,7 +22,11 @@ import sys
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.commands.store.charmlibs import get_lib_info, get_name_from_metadata
+from charmcraft.commands.store.charmlibs import (
+    get_lib_info,
+    get_lib_internals,
+    get_name_from_metadata,
+)
 
 
 # region Name-related tests
@@ -78,6 +82,7 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 
 def _create_lib(extra_content=None, metadata_id=None, metadata_api=None, metadata_patch=None):
     """Helper to create the structures on disk for a given lib.
+
     WARNING: this function has the capability of creating INCORRECT structures on disk.
     This is specific for the _get_lib_info tests below, other tests should use the
     functionality provided by the factory.
@@ -120,23 +125,6 @@ def test_getlibinfo_success_simple(tmp_path, monkeypatch):
     assert lib_data.path == test_path
     assert lib_data.lib_name == "testlib"
     assert lib_data.charm_name == "testcharm"
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_getlibinfo_success_content(tmp_path, monkeypatch):
-    """Check that content and its hash are ok."""
-    monkeypatch.chdir(tmp_path)
-    extra_content = """
-        extra lines for the file
-        extra non-ascii: ñáéíóú
-        the content is everything, this plus metadata
-        the hash should be of this, excluding metadata
-    """
-    test_path = _create_lib(extra_content=extra_content)
-
-    lib_data = get_lib_info(lib_path=test_path)
-    assert lib_data.content == test_path.read_text()
-    assert lib_data.content_hash == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
 
 
 @pytest.mark.parametrize(
@@ -235,96 +223,6 @@ def test_getlibinfo_missing_library_from_path():
     assert lib_data.charm_name == "testcharm"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_getlibinfo_malformed_metadata_field(tmp_path, monkeypatch):
-    """Some metadata field is not really valid."""
-    monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_id="LIBID = foo = 23")
-    with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
-    assert str(err.value) == r"Bad metadata line in {!r}: b'LIBID = foo = 23\n'".format(
-        str(test_path)
-    )
-
-
-def test_getlibinfo_missing_metadata_field(tmp_path, monkeypatch):
-    """Some metadata field is not present."""
-    monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_patch="", metadata_api="")
-    with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
-    assert str(err.value) == (
-        "Library {!r} is missing the mandatory metadata fields: LIBAPI, LIBPATCH.".format(
-            str(test_path)
-        )
-    )
-
-
-def test_getlibinfo_api_not_int(tmp_path, monkeypatch):
-    """The API is not an integer."""
-    monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_api="LIBAPI = v3")
-    with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
-    assert str(err.value) == (
-        "Library {!r} metadata field LIBAPI is not zero or a positive integer.".format(
-            str(test_path)
-        )
-    )
-
-
-def test_getlibinfo_api_negative(tmp_path, monkeypatch):
-    """The API is not negative."""
-    monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_api="LIBAPI = -3")
-    with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
-    assert str(err.value) == (
-        "Library {!r} metadata field LIBAPI is not zero or a positive integer.".format(
-            str(test_path)
-        )
-    )
-
-
-def test_getlibinfo_patch_not_int(tmp_path, monkeypatch):
-    """The PATCH is not an integer."""
-    monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_patch="LIBPATCH = beta3")
-    with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
-    assert str(err.value) == (
-        "Library {!r} metadata field LIBPATCH is not zero or a positive integer.".format(
-            str(test_path)
-        )
-    )
-
-
-def test_getlibinfo_patch_negative(tmp_path, monkeypatch):
-    """The PATCH is not negative."""
-    monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_patch="LIBPATCH = -1")
-    with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
-    assert str(err.value) == (
-        "Library {!r} metadata field LIBPATCH is not zero or a positive integer.".format(
-            str(test_path)
-        )
-    )
-
-
-def test_getlibinfo_api_patch_both_zero(tmp_path, monkeypatch):
-    """Invalid combination of both API and PATCH being 0."""
-    monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_patch="LIBPATCH = 0", metadata_api="LIBAPI = 0")
-    with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
-    assert str(err.value) == (
-        "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-            str(test_path)
-        )
-    )
-
-
 def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     """The API value included in the file is different than the one in the path."""
     monkeypatch.chdir(tmp_path)
@@ -338,38 +236,116 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     )
 
 
-def test_getlibinfo_libid_non_string(tmp_path, monkeypatch):
-    """The ID is not really a string."""
+# endregion
+# region tests for get_lib_internals
+
+
+def test_getlibinternals_success_simple(tmp_path, monkeypatch):
+    """Simple basic case of success getting internals from the library."""
     monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_id="LIBID = 99")
+    test_path = _create_lib()
+    internals = get_lib_internals(test_path)
+    assert internals.lib_id == "test-lib-id"
+    assert internals.api == 3
+    assert internals.patch == 14
+    assert internals.content is not None
+    assert internals.content_hash is not None
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_getlibinternals_success_content(tmp_path, monkeypatch):
+    """Check that content and its hash are ok."""
+    extra_content = """
+        extra lines for the file
+        extra non-ascii: ñáéíóú
+        the content is everything, this plus metadata
+        the hash should be of this, excluding metadata
+    """
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(extra_content=extra_content)
+
+    internals = get_lib_internals(test_path)
+    assert internals.content == test_path.read_text()
+    assert internals.content_hash == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+def test_getlibinternals_malformed_internals_field(tmp_path, monkeypatch):
+    """Some internals field is not really valid."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(metadata_id="LIBID = foo = 23")
     with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
-    assert str(err.value) == (
-        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
-            str(test_path)
-        )
+        get_lib_internals(lib_path=test_path)
+    assert str(err.value) == r"Bad metadata line in {!r}: b'LIBID = foo = 23\n'".format(
+        str(test_path)
     )
 
 
-def test_getlibinfo_libid_non_ascii(tmp_path, monkeypatch):
-    """The ID is not ASCII."""
+@pytest.mark.parametrize(
+    "empty_args, missing",
+    [
+        (["metadata_id"], "LIBID"),
+        (["metadata_api"], "LIBAPI"),
+        (["metadata_patch"], "LIBPATCH"),
+        (["metadata_id", "metadata_api"], "LIBAPI, LIBID"),
+        (["metadata_patch", "metadata_api"], "LIBAPI, LIBPATCH"),
+        (["metadata_patch", "metadata_id"], "LIBID, LIBPATCH"),
+    ],
+)
+def test_getlibinternals_missing_internals_field(tmp_path, empty_args, missing, monkeypatch):
+    """Some internals field is not present."""
     monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_id="LIBID = 'moño'")
+    kwargs = {arg: "" for arg in empty_args}
+    test_path = _create_lib(**kwargs)
     with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
+        get_lib_internals(lib_path=test_path)
     assert str(err.value) == (
-        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
-            str(test_path)
-        )
+        f"Library {str(test_path)!r} is missing the mandatory metadata fields: {missing}."
     )
 
 
-def test_getlibinfo_libid_empty(tmp_path, monkeypatch):
-    """The ID is empty."""
+@pytest.mark.parametrize("value", ["v3", "-3"])
+def test_getlibinternals_api_bad_value(tmp_path, value, monkeypatch):
+    """The API is not a positive integer."""
     monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_id="LIBID = ''")
+    test_path = _create_lib(metadata_api=f"LIBAPI = {value}")
     with pytest.raises(CraftError) as err:
-        get_lib_info(lib_path=test_path)
+        get_lib_internals(lib_path=test_path)
+    assert str(err.value) == (
+        f"Library {str(test_path)!r} metadata field LIBAPI is not zero or a positive integer."
+    )
+
+
+@pytest.mark.parametrize("value", ["beta3", "-1"])
+def test_getlibinternals_patch_bad_value(tmp_path, value, monkeypatch):
+    """The PATCH is not a positive integer."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(metadata_patch="LIBPATCH = {value}")
+    with pytest.raises(CraftError) as err:
+        get_lib_internals(lib_path=test_path)
+    assert str(err.value) == (
+        f"Library {str(test_path)!r} metadata field LIBPATCH is not zero or a positive integer."
+    )
+
+
+def test_getlibinternals_api_patch_both_zero(tmp_path, monkeypatch):
+    """Invalid combination of both API and PATCH being 0."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(metadata_patch="LIBPATCH = 0", metadata_api="LIBAPI = 0")
+    with pytest.raises(CraftError) as err:
+        get_lib_internals(lib_path=test_path)
+    assert str(err.value) == (
+        f"Library {str(test_path)!r} metadata fields LIBAPI and LIBPATCH cannot both be zero."
+    )
+
+
+@pytest.mark.parametrize("value", [99, "moño", ""])
+def test_getlibinternals_libid_bad_value(tmp_path, value, monkeypatch):
+    """The ID is not really a ASCII nonempty string."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(metadata_id=f"LIBID = {value!r}")
+    with pytest.raises(CraftError) as err:
+        get_lib_internals(lib_path=test_path)
     assert str(err.value) == (
         "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
             str(test_path)

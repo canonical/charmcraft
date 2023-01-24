@@ -252,14 +252,13 @@ def test_getlibinternals_success_simple(tmp_path, monkeypatch):
     assert internals.content_hash is not None
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_getlibinternals_success_content(tmp_path, monkeypatch):
     """Check that content and its hash are ok."""
     extra_content = """
-        extra lines for the file
-        extra non-ascii: ñáéíóú
-        the content is everything, this plus metadata
-        the hash should be of this, excluding metadata
+        # extra lines for the file
+        # extra non-ascii: ñáéíóú
+        # the content is everything, this plus metadata
+        # the hash should be of this, excluding metadata
     """
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(extra_content=extra_content)
@@ -269,16 +268,13 @@ def test_getlibinternals_success_content(tmp_path, monkeypatch):
     assert internals.content_hash == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_getlibinternals_malformed_internals_field(tmp_path, monkeypatch):
+def test_getlibinternals_malformed_content(tmp_path, monkeypatch):
     """Some internals field is not really valid."""
     monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(metadata_id="LIBID = foo = 23")
+    test_path = _create_lib(extra_content="  broken \n    python  ")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
-    assert str(err.value) == r"Bad metadata line in {!r}: b'LIBID = foo = 23\n'".format(
-        str(test_path)
-    )
+    assert str(err.value) == r"Failed to parse Python library {!r}".format(str(test_path))
 
 
 @pytest.mark.parametrize(

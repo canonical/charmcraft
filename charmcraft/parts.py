@@ -187,6 +187,7 @@ class CharmPlugin(plugins.Plugin):
             "-i",
             *env_flags,
             sys.executable,
+            "-u",
             "-I",
             charm_builder.__file__,
             "--builddir",

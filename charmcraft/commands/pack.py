@@ -106,7 +106,7 @@ class PackCommand(BaseCommand):
             action="append",
             type=int,
             help="Index of 'bases' configuration to build (can be used multiple "
-            "times); defaults to all",
+            "times); zero-based, defaults to all",
         )
         parser.add_argument(
             "--force",

@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ class TestCharmPlugin:
                 "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
                 "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
                 "https_proxy=https_proxy_value no_proxy=no_proxy_value "
-                "{python} -I "
+                "{python} -u -I "
                 "{charm_builder} "
                 "--builddir {work_dir}/parts/foo/build "
                 "--installdir {work_dir}/parts/foo/install "

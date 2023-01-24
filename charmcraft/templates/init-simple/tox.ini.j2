@@ -40,15 +40,7 @@ deps =
 commands =
     # uncomment the following line if this charm owns a lib
     # codespell {[vars]lib_path}
-    codespell {toxinidir}/. \
-              --skip {toxinidir}/.git \
-              --skip {toxinidir}/.tox \
-              --skip {toxinidir}/build \
-              --skip {toxinidir}/lib \
-              --skip {toxinidir}/venv \
-              --skip {toxinidir}/.mypy_cache \
-              --skip {toxinidir}/icon.svg
-    
+    codespell {toxinidir}
     ruff {[vars]all_path}
     black --check --diff {[vars]all_path}
 

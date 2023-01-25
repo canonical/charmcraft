@@ -19,7 +19,7 @@ import hashlib
 import pathlib
 from dataclasses import dataclass
 from collections import namedtuple
-from typing import AnyStr, Optional
+from typing import Optional
 
 import yaml
 from craft_cli import CraftError, emit
@@ -41,14 +41,6 @@ class LibInternals:
     patch: int
     content_hash: str
     content: bytes
-
-
-def get_positive_int(raw_value: AnyStr) -> int:
-    """Convert the raw value for api/patch into a positive integer."""
-    value = int(raw_value)
-    if value < 0:
-        raise ValueError("Version numbers cannot be negative.")
-    return value
 
 
 def get_name_from_metadata() -> Optional[str]:
@@ -75,62 +67,73 @@ def create_charm_name_from_importable(charm_name: str) -> str:
 
 def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     """Get content, its hash, and all the metadata fields from a library."""
-    metadata_fields = (b"LIBAPI", b"LIBPATCH", b"LIBID")
-    metadata = dict.fromkeys(metadata_fields)
+    content = lib_path.read_text()
+    try:
+        tree = ast.parse(content)
+    except Exception:
+        raise CraftError(f"Failed to parse Python library {str(lib_path)!r}")
+
+    def _api_patch_validator(value):
+        return isinstance(value, int) and value >= 0
+
+    _msg_prefix = f"Library {str(lib_path)!r} metadata field "
+    FIELDS = {
+        "LIBAPI": (
+            _api_patch_validator,
+            _msg_prefix + "LIBAPI must be a constant assignment of zero or a positive integer.",
+        ),
+        "LIBPATCH": (
+            _api_patch_validator,
+            _msg_prefix + "LIBPATCH must be a constant assignment of zero or a positive integer.",
+        ),
+        "LIBID": (
+            lambda value: isinstance(value, str) and value and value.isascii(),
+            _msg_prefix + "LIBID must be a constant assignment of a non-empty ASCII string.",
+        ),
+    }
+
+    # walk the AST "first layer", find assignments to the key fields and validate them
+    metadata = {}
+    for node in ast.iter_child_nodes(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if target.id in FIELDS:
+                    validator, error_msg = FIELDS[target.id]
+                    if not isinstance(node.value, ast.Constant):
+                        raise CraftError(error_msg)
+                    real_value = node.value.value
+                    if not validator(real_value):
+                        raise CraftError(error_msg)
+                    metadata[target.id] = real_value
+
+    # extra verifications for cases that need to consider more than the individual fields
+    missing = set(FIELDS) - set(metadata)
+    if missing:
+        joined = ", ".join(sorted(missing))
+        raise CraftError(
+            f"Library {str(lib_path)!r} is missing the mandatory metadata fields: {joined}."
+        )
+    if metadata["LIBAPI"] == 0 and metadata["LIBPATCH"] == 0:
+        raise CraftError(
+            f"Library {str(lib_path)!r} metadata fields LIBAPI and LIBPATCH cannot both be zero."
+        )
+
+    # hash the file excluding those lines where appear keys used for version control
+    metadata_vcs_fields = (b"LIBAPI", b"LIBPATCH", b"LIBID")
     hasher = hashlib.sha256()
     with lib_path.open("rb") as fh:
         for line in fh:
-            if line.startswith(metadata_fields):
-                try:
-                    field, value = [x.strip() for x in line.split(b"=")]
-                except ValueError:
-                    raise CraftError(
-                        "Bad metadata line in {!r}: {!r}".format(str(lib_path), line)
-                    ) from None
-                metadata[field] = value
-            else:
+            # always use \n as newline for users to have the same
+            # file hash both in Linux and Windows
+            line = line.replace(b"\r\n", b"\n")
+            if not line.startswith(metadata_vcs_fields):
                 hasher.update(line)
     content_hash = hasher.hexdigest()
 
-    missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
-    if missing:
-        raise CraftError(
-            "Library {!r} is missing the mandatory metadata fields: {}.".format(
-                str(lib_path), ", ".join(sorted(missing))
-            )
-        )
-
-    bad_api_patch_msg = "Library {!r} metadata field {} is not zero or a positive integer."
-    try:
-        libapi = get_positive_int(metadata[b"LIBAPI"])
-    except ValueError:
-        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
-    try:
-        libpatch = get_positive_int(metadata[b"LIBPATCH"])
-    except ValueError:
-        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
-
-    if libapi == 0 and libpatch == 0:
-        raise CraftError(
-            "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-                str(lib_path)
-            )
-        )
-
-    bad_libid_msg = "Library {!r} metadata field LIBID must be a non-empty ASCII string."
-    try:
-        libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
-    except (ValueError, UnicodeDecodeError):
-        raise CraftError(bad_libid_msg.format(str(lib_path)))
-    if not libid or not isinstance(libid, str):
-        raise CraftError(bad_libid_msg.format(str(lib_path)))
-
-    content = lib_path.read_text()
-
     return LibInternals(
-        lib_id=libid,
-        api=libapi,
-        patch=libpatch,
+        lib_id=metadata["LIBID"],
+        api=metadata["LIBAPI"],
+        patch=metadata["LIBPATCH"],
         content_hash=content_hash,
         content=content,
     )

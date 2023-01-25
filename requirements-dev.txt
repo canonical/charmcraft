@@ -34,7 +34,7 @@ more-itertools==9.0.0
 mypy-extensions==0.4.3
 ops==1.5.4
 overrides==7.3.1
-packaging==22.0
+packaging==23.0
 pathspec==0.10.3
 platformdirs==2.6.2
 pluggy==1.0.0
@@ -70,7 +70,7 @@ snowballstemmer==2.2.0
 tabulate==0.9.0
 toml==0.10.2
 tomli==2.0.1
-tox==4.0.19
+tox==4.3.5
 types-Deprecated==1.2.9
 types-toml==0.10.8.1
 typing_extensions==4.4.0

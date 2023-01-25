@@ -308,7 +308,8 @@ def test_getlibinternals_api_bad_value(tmp_path, value, monkeypatch):
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
     assert str(err.value) == (
-        f"Library {str(test_path)!r} metadata field LIBAPI is not zero or a positive integer."
+        f"Library {str(test_path)!r} metadata field LIBAPI "
+        "must be a constant assignment of zero or a positive integer."
     )
 
 
@@ -320,7 +321,8 @@ def test_getlibinternals_patch_bad_value(tmp_path, value, monkeypatch):
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
     assert str(err.value) == (
-        f"Library {str(test_path)!r} metadata field LIBPATCH is not zero or a positive integer."
+        f"Library {str(test_path)!r} metadata field LIBPATCH "
+        "must be a constant assignment of zero or a positive integer."
     )
 
 
@@ -343,9 +345,8 @@ def test_getlibinternals_libid_bad_value(tmp_path, value, monkeypatch):
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
     assert str(err.value) == (
-        "Library {!r} metadata field LIBID must be a non-empty ASCII string.".format(
-            str(test_path)
-        )
+        f"Library {str(test_path)!r} metadata field LIBID "
+        "must be a constant assignment of a non-empty ASCII string."
     )
 
 

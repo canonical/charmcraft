@@ -76,18 +76,19 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     def _api_patch_validator(value):
         return isinstance(value, int) and value >= 0
 
+    _msg_prefix = f"Library {str(lib_path)!r} metadata field "
     FIELDS = {
         "LIBAPI": (
             _api_patch_validator,
-            "Library {!r} metadata field LIBAPI is not zero or a positive integer.",
+            _msg_prefix + "LIBAPI must be a constant assignment of zero or a positive integer.",
         ),
         "LIBPATCH": (
             _api_patch_validator,
-            "Library {!r} metadata field LIBPATCH is not zero or a positive integer.",
+            _msg_prefix + "LIBPATCH must be a constant assignment of zero or a positive integer.",
         ),
         "LIBID": (
             lambda value: isinstance(value, str) and value and value.isascii(),
-            "Library {!r} metadata field LIBID must be a non-empty ASCII string.",
+            _msg_prefix + "LIBID must be a constant assignment of a non-empty ASCII string.",
         ),
     }
 
@@ -99,10 +100,10 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
                 if target.id in FIELDS:
                     validator, error_msg = FIELDS[target.id]
                     if not isinstance(node.value, ast.Constant):
-                        raise CraftError(error_msg.format(str(lib_path)))
+                        raise CraftError(error_msg)
                     real_value = node.value.value
                     if not validator(real_value):
-                        raise CraftError(error_msg.format(str(lib_path)))
+                        raise CraftError(error_msg)
                     metadata[target.id] = real_value
 
     # extra verifications for cases that need to consider more than the individual fields

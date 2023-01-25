@@ -122,6 +122,9 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     hasher = hashlib.sha256()
     with lib_path.open("rb") as fh:
         for line in fh:
+            # always use \n as newline for users to have the same
+            # file hash both in Linux and Windows
+            line = line.replace(b"\r\n", b"\n")
             if not line.startswith(metadata_vcs_fields):
                 hasher.update(line)
     content_hash = hasher.hexdigest()

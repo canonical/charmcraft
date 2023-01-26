@@ -1181,6 +1181,81 @@ def test_build_part_from_config(basic_project, monkeypatch):
     )
 
 
+def test_build_part_include_venv_pydeps(basic_project, monkeypatch):
+    """Include the venv directory even if only charmlib python dependencies exist."""
+    host_base = get_host_as_base()
+    charmcraft_file = basic_project / "charmcraft.yaml"
+    charmcraft_file.write_text(
+        dedent(
+            f"""\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+                    run-on:
+                      - name: {host_base.name!r}
+                        channel: {host_base.channel!r}
+
+                parts:
+                  charm:
+                    charm-entrypoint: src/charm.py
+                """
+        )
+    )
+    charmlib = basic_project / "lib" / "charms" / "somecharm" / "v1" / "somelib.py"
+    charmlib.parent.mkdir(parents=True)
+    charmlib.write_text(
+        dedent(
+            """
+            LIBID = "asdasds"
+            LIBAPI = 1
+            LIBPATCH = 1
+            PYDEPS = ["foo"]
+            """
+        )
+    )
+    config = load(basic_project)
+    builder = get_builder(config, force=True)
+
+    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
+        mock_lifecycle.side_effect = SystemExit()
+        with pytest.raises(SystemExit):
+            builder.run([0])
+    mock_lifecycle.assert_has_calls(
+        [
+            call(
+                {
+                    "charm": {
+                        "plugin": "charm",
+                        "prime": [
+                            "src",
+                            "venv",
+                            "metadata.yaml",
+                            "dispatch",
+                            "hooks",
+                            "lib",
+                            "LICENSE",
+                            "icon.svg",
+                            "README.md",
+                        ],
+                        "charm-entrypoint": "src/charm.py",
+                        "charm-python-packages": [],
+                        "charm-binary-python-packages": [],
+                        "source": str(basic_project),
+                        "charm-requirements": [],
+                    }
+                },
+                work_dir=pathlib.Path("/root"),
+                project_dir=basic_project,
+                project_name="name-from-metadata",
+                ignore_local_sources=["*.charm"],
+            )
+        ]
+    )
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_path):
     """Generic use of linters, pass them ok to their proceessor and save them in the manifest."""

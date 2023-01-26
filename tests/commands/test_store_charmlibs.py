@@ -23,8 +23,10 @@ import pytest
 from craft_cli import CraftError
 
 from charmcraft.commands.store.charmlibs import (
+    collect_charmlib_pydeps,
     get_lib_info,
     get_lib_internals,
+    get_libs_from_tree,
     get_name_from_metadata,
 )
 
@@ -80,7 +82,15 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 # region getlibinfo tests
 
 
-def _create_lib(extra_content=None, metadata_id=None, metadata_api=None, metadata_patch=None):
+def _create_lib(
+    extra_content=None,
+    metadata_id=None,
+    metadata_api=None,
+    metadata_patch=None,
+    pydeps=None,
+    charm_name="testcharm",
+    lib_name="testlib.py",
+):
     """Helper to create the structures on disk for a given lib.
 
     WARNING: this function has the capability of creating INCORRECT structures on disk.
@@ -88,7 +98,7 @@ def _create_lib(extra_content=None, metadata_id=None, metadata_api=None, metadat
     functionality provided by the factory.
     """
     base_dir = pathlib.Path("lib")
-    lib_file = base_dir / "charms" / "testcharm" / "v3" / "testlib.py"
+    lib_file = base_dir / "charms" / charm_name / "v3" / lib_name
     lib_file.parent.mkdir(parents=True, exist_ok=True)
 
     # save the content to that specific file under custom structure
@@ -100,6 +110,8 @@ def _create_lib(extra_content=None, metadata_id=None, metadata_api=None, metadat
         metadata_patch = "LIBPATCH = 14"
 
     fields = [metadata_id, metadata_api, metadata_patch]
+    if pydeps is not None:
+        fields.append(pydeps)
     with lib_file.open("wt", encoding="utf8") as fh:
         for f in fields:
             if f:
@@ -248,6 +260,20 @@ def test_getlibinternals_success_simple(tmp_path, monkeypatch):
     assert internals.lib_id == "test-lib-id"
     assert internals.api == 3
     assert internals.patch == 14
+    assert internals.pydeps == []
+    assert internals.content is not None
+    assert internals.content_hash is not None
+
+
+def test_getlibinternals_success_with_pydeps(tmp_path, monkeypatch):
+    """Simple basic succesful case that includes pydeps."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(pydeps="PYDEPS = ['foo', 'bar']")
+    internals = get_lib_internals(test_path)
+    assert internals.lib_id == "test-lib-id"
+    assert internals.api == 3
+    assert internals.patch == 14
+    assert internals.pydeps == ["foo", "bar"]
     assert internals.content is not None
     assert internals.content_hash is not None
 
@@ -348,6 +374,116 @@ def test_getlibinternals_libid_bad_value(tmp_path, value, monkeypatch):
         f"Library {str(test_path)!r} metadata field LIBID "
         "must be a constant assignment of a non-empty ASCII string."
     )
+
+
+def test_getlibinternals_pydeps_complex(tmp_path, monkeypatch):
+    """The PYDEPS field can be multiline, unicode, different quotes."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(
+        pydeps="""PYDEPS = [
+        'foo',
+        "bar",
+        "moño",
+    ]"""
+    )
+    internals = get_lib_internals(test_path)
+    assert internals.lib_id == "test-lib-id"
+    assert internals.api == 3
+    assert internals.patch == 14
+    assert internals.pydeps == ["foo", "bar", "moño"]
+    assert internals.content is not None
+    assert internals.content_hash is not None
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "'foo'",  # a string
+        "33",  # other object
+        "open()",  # generic code
+        "('foo', 'bar')",  # a tuple
+        "['foo', 33]",  # a list with wrong fields inside
+        "['foo', otherdep]",  # a list with wrong fields inside
+    ],
+)
+def test_getlibinternals_pydeps_bad_value(tmp_path, value, monkeypatch):
+    """Different cases with invalid PYDEPS."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(metadata_id=f"PYDEPS = {value}")
+    with pytest.raises(CraftError) as err:
+        get_lib_internals(lib_path=test_path)
+    assert str(err.value) == (
+        f"Library {str(test_path)!r} metadata field PYDEPS "
+        "must be a constant list of non-empty strings"
+    )
+
+
+# endregion
+# region get libs from tree tests
+
+
+def test_getlibsfromtree_named_currentdir(tmp_path, monkeypatch):
+    """Get libs for a specific charm in the current directory."""
+    monkeypatch.chdir(tmp_path)
+    test_path_1 = _create_lib(charm_name="charm1", lib_name="testlib1.py")
+    test_path_2 = _create_lib(charm_name="charm1", lib_name="testlib2.py")
+    _create_lib(charm_name="charm2", lib_name="testlib3.py")
+    libs_data = get_libs_from_tree(charm_name="charm1")
+    assert {data.path for data in libs_data} == {test_path_1, test_path_2}
+
+
+def test_getlibsfromtree_everything_currentdir(tmp_path, monkeypatch):
+    """Get libs for a specific charm in the current directory."""
+    monkeypatch.chdir(tmp_path)
+    test_path_1 = _create_lib(charm_name="charm1", lib_name="testlib1.py")
+    test_path_2 = _create_lib(charm_name="charm1", lib_name="testlib2.py")
+    test_path_3 = _create_lib(charm_name="charm2", lib_name="testlib3.py")
+    libs_data = get_libs_from_tree()
+    assert {data.path for data in libs_data} == {test_path_1, test_path_2, test_path_3}
+
+
+def test_getlibsfromtree_named_otherdir(tmp_path, monkeypatch):
+    """Get libs for a specific charm in other directory."""
+    otherdir = tmp_path / "otherdir"
+    otherdir.mkdir()
+    monkeypatch.chdir(otherdir)
+    test_path_1 = _create_lib(charm_name="charm1", lib_name="testlib1.py")
+    test_path_2 = _create_lib(charm_name="charm1", lib_name="testlib2.py")
+    monkeypatch.chdir(tmp_path)
+    _create_lib(charm_name="charm2", lib_name="testlib3.py")
+    libs_data = get_libs_from_tree(charm_name="charm1", root=otherdir)
+    assert {data.path for data in libs_data} == {test_path_1, test_path_2}
+
+
+def test_getlibsfromtree_everything_otherdir(tmp_path, monkeypatch):
+    """Get libs for a specific charm in other directory."""
+    otherdir = tmp_path / "otherdir"
+    otherdir.mkdir()
+    monkeypatch.chdir(otherdir)
+    test_path_1 = _create_lib(charm_name="charm1", lib_name="testlib1.py")
+    test_path_2 = _create_lib(charm_name="charm1", lib_name="testlib2.py")
+    test_path_3 = _create_lib(charm_name="charm2", lib_name="testlib3.py")
+    monkeypatch.chdir(tmp_path)
+    libs_data = get_libs_from_tree(root=otherdir)
+    assert {data.path for data in libs_data} == {test_path_1, test_path_2, test_path_3}
+
+
+# endregion
+# region pydeps collection tests
+
+
+def test_collectpydeps_generic(tmp_path, monkeypatch):
+    """Collect the PYDEPS from all libs from all charms."""
+    otherdir = tmp_path / "otherdir"
+    otherdir.mkdir()
+    monkeypatch.chdir(otherdir)
+    _create_lib(charm_name="charm1", lib_name="lib1.py", pydeps="PYDEPS = ['foo', 'bar']")
+    _create_lib(charm_name="charm1", lib_name="lib2.py", pydeps="PYDEPS = ['bar']")
+    _create_lib(charm_name="charm2", lib_name="lib3.py")
+    _create_lib(charm_name="charm2", lib_name="lib3.py", pydeps="PYDEPS = ['baz']")
+    monkeypatch.chdir(tmp_path)
+    charmlib_deps = collect_charmlib_pydeps(otherdir)
+    assert charmlib_deps == {"foo", "bar", "baz"}
 
 
 # endregion

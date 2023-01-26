@@ -22,7 +22,7 @@ import os
 import pathlib
 from dataclasses import dataclass
 from collections import namedtuple
-from typing import Optional
+from typing import Optional, Set, List
 
 import yaml
 from craft_cli import CraftError
@@ -242,7 +242,9 @@ def get_lib_info(*, full_name=None, lib_path=None):
     )
 
 
-def get_libs_from_tree(charm_name: Optional[str] = None, root: Optional[pathlib.Path] = None):
+def get_libs_from_tree(
+    charm_name: Optional[str] = None, root: Optional[pathlib.Path] = None
+) -> List[LibData]:
     """Get library info from the directories tree (for a specific charm if specified).
 
     It only follows/uses the directories/files for a correct charmlibs
@@ -255,26 +257,26 @@ def get_libs_from_tree(charm_name: Optional[str] = None, root: Optional[pathlib.
     current_directory = os.getcwd()
     if root is not None:
         os.chdir(root)
+    try:
+        if charm_name is None:
+            base_dir = pathlib.Path("lib") / "charms"
+            charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
+        else:
+            importable_charm_name = create_importable_name(charm_name)
+            base_dir = pathlib.Path("lib") / "charms" / importable_charm_name
+            charm_dirs = [base_dir] if base_dir.is_dir() else []
 
-    if charm_name is None:
-        base_dir = pathlib.Path("lib") / "charms"
-        charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
-    else:
-        importable_charm_name = create_importable_name(charm_name)
-        base_dir = pathlib.Path("lib") / "charms" / importable_charm_name
-        charm_dirs = [base_dir] if base_dir.is_dir() else []
-
-    for charm_dir in charm_dirs:
-        for v_dir in sorted(charm_dir.iterdir()):
-            if v_dir.is_dir() and v_dir.name[0] == "v" and v_dir.name[1:].isdigit():
-                for libfile in sorted(v_dir.glob("*.py")):
-                    local_libs_data.append(get_lib_info(lib_path=libfile))
-
-    os.chdir(current_directory)
+        for charm_dir in charm_dirs:
+            for v_dir in sorted(charm_dir.iterdir()):
+                if v_dir.is_dir() and v_dir.name[0] == "v" and v_dir.name[1:].isdigit():
+                    for libfile in sorted(v_dir.glob("*.py")):
+                        local_libs_data.append(get_lib_info(lib_path=libfile))
+    finally:
+        os.chdir(current_directory)
     return local_libs_data
 
 
-def collect_charmlib_pydeps(basedir: pathlib.Path):
+def collect_charmlib_pydeps(basedir: pathlib.Path) -> Set[str]:
     """Collect the Python dependencies from all the project's charm libraries."""
     all_libs_data = get_libs_from_tree(root=basedir)
     charmlib_deps = set()

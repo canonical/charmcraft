@@ -75,7 +75,7 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     There are two kind of metadata fields, simple constant fields and PYDEPS. The simple
     constant fields are also the mandatory ones: LIBAPI, LIBPATCH and LIBID.
     """
-    content = lib_path.read_text()
+    content = lib_path.read_text(encoding="utf8")
     try:
         tree = ast.parse(content)
     except Exception:

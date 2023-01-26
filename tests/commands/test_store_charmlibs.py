@@ -290,7 +290,7 @@ def test_getlibinternals_success_content(tmp_path, monkeypatch):
     test_path = _create_lib(extra_content=extra_content)
 
     internals = get_lib_internals(test_path)
-    assert internals.content == test_path.read_text()
+    assert internals.content == test_path.read_text(encoding="utf8")
     assert internals.content_hash == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
 
 

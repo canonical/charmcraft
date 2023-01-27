@@ -1123,6 +1123,9 @@ class PublishLibCommand(BaseCommand):
             local_libs_data = [lib_data]
         else:
             local_libs_data = get_libs_from_tree(charm_name)
+            found_libs = [lib_data.full_name for lib_data in local_libs_data]
+            (charmlib_path,) = {lib_data.path.parent.parent for lib_data in local_libs_data}
+            emit.debug(f"Libraries found under {str(charmlib_path)!r}: {found_libs}")
 
         # check if something needs to be done
         store = Store(self.config.charmhub)
@@ -1254,6 +1257,8 @@ class FetchLibCommand(BaseCommand):
             local_libs_data = [get_lib_info(full_name=parsed_args.library)]
         else:
             local_libs_data = get_libs_from_tree()
+            found_libs = [lib_data.full_name for lib_data in local_libs_data]
+            emit.debug(f"Libraries found under 'lib/charms': {found_libs}")
 
         # get tips from the Store
         store = Store(self.config.charmhub)

@@ -39,7 +39,8 @@ deps =
     ruff
     codespell
 commands =
-    # uncomment the following line if this charm owns a lib
+    # if this charm owns a lib, uncomment "lib_path" variable
+    # and uncomment the following line
     # codespell {[vars]lib_path}
     codespell {tox_root}
     ruff {[vars]all_path}

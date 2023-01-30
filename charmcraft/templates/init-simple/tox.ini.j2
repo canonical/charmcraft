@@ -14,7 +14,7 @@ all_path = {[vars]src_path} {[vars]tests_path}
 
 [testenv]
 set_env =
-    PYTHONPATH = {tox_root}:{tox_root}/lib:{[vars]src_path}
+    PYTHONPATH = {tox_root}/lib:{[vars]src_path}
     PYTHONBREAKPOINT=pdb.set_trace
     PY_COLORS=1
 pass_env =

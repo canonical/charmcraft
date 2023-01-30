@@ -4,13 +4,13 @@
 [tox]
 no_package = True
 skip_missing_interpreters = True
-env_list = fmt, lint, unit
+env_list = format, lint, unit
 
 [vars]
 src_path = {tox_root}/src/
-tst_path = {tox_root}/tests/
+tests_path = {tox_root}/tests/
 ;lib_path = {tox_root}/lib/charms/operator_name_with_underscores
-all_path = {[vars]src_path} {[vars]tst_path}
+all_path = {[vars]src_path} {[vars]tests_path}
 
 [testenv]
 set_env =
@@ -22,7 +22,7 @@ pass_env =
     CHARM_BUILD_DIR
     MODEL_SETTINGS
 
-[testenv:fmt]
+[testenv:format]
 description = Apply coding style standards to code
 deps =
     black
@@ -53,7 +53,7 @@ deps =
 commands =
     coverage run --source={[vars]src_path} \
                  -m pytest \
-                 --ignore={[vars]tst_path}integration \
+                 --ignore={[vars]tests_path}integration \
                  --tb native \
                  -v \
                  -s \
@@ -71,6 +71,6 @@ commands =
     pytest -v \
            -s \
            --tb native \
-           --ignore={[vars]tst_path}unit \
+           --ignore={[vars]tests_path}unit \
            --log-cli-level=INFO \
            {posargs}

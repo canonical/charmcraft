@@ -2,11 +2,11 @@
 
 To make contributions to this charm, you'll need a working [development setup](https://juju.is/docs/sdk/dev-setup).
 
-You can use the environments created by `tox` for development:
+You can create an environment for development with `tox`:
 
 ```shell
-tox run --notest -e unit
-source .tox/unit/bin/activate
+tox run --devenv venv -e integration
+source venv/bin/activate
 ```
 
 ## Testing

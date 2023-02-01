@@ -30,6 +30,7 @@ import subprocess
 from typing import List
 
 from charmcraft import instrum
+from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
@@ -85,6 +86,9 @@ class CharmBuilder:
         self.requirement_paths = requirements
         self.ignore_rules = self._load_juju_ignore()
         self.ignore_rules.extend_patterns([f"/{STAGING_VENV_DIRNAME}"])
+
+        self.charmlib_deps = collect_charmlib_pydeps(builddir)
+        print("Collected charmlib dependencies:", self.charmlib_deps)
 
     def build_charm(self) -> None:
         """Build the charm."""
@@ -230,6 +234,7 @@ class CharmBuilder:
             all_deps.append(req_file.read_text())
         all_deps.extend(self.binary_python_packages)
         all_deps.extend(self.python_packages)
+        all_deps.extend(self.charmlib_deps)
         deps_mashup = "".join(map(repr, all_deps))
         deps_hash = hashlib.sha1(deps_mashup.encode("utf8")).hexdigest()
         return deps_hash
@@ -265,10 +270,21 @@ class CharmBuilder:
                     cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
                 _process_run(cmd)
 
+            if self.charmlib_deps:
+                # install charmlibs python dependencies
+                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                cmd.extend(self.charmlib_deps)  # the python packages to install
+                _process_run(cmd)
+
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
         print("Handling dependencies")
-        if not (self.requirement_paths or self.binary_python_packages or self.python_packages):
+        if not (
+            self.requirement_paths
+            or self.binary_python_packages
+            or self.python_packages
+            or self.charmlib_deps
+        ):
             print("No dependencies to handle")
             return
 

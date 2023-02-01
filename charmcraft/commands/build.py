@@ -28,6 +28,7 @@ from craft_cli import emit, CraftError
 
 from charmcraft import env, linters, parts, providers, instrum
 from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
+from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.manifest import create_manifest
 from charmcraft.metadata import parse_metadata_yaml
@@ -223,10 +224,12 @@ class Builder:
             charm_part_prime.append(str(entrypoint.parts[0]))
 
         # add venv if there are requirements
+        charmlib_pydeps = collect_charmlib_pydeps(self.charmdir)
         if (
             self._special_charm_part.get("charm-requirements")
             or self._special_charm_part.get("charm-binary-python-packages")
             or self._special_charm_part.get("charm-python-packages")
+            or charmlib_pydeps
         ):
             charm_part_prime.append(VENV_DIRNAME)
 

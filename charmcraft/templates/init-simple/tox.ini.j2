@@ -2,27 +2,28 @@
 # See LICENSE file for licensing details.
 
 [tox]
-skipsdist=True
+no_package = True
 skip_missing_interpreters = True
-envlist = fmt, lint, unit
+env_list = format, lint, unit
+min_version = 4.0.0
 
 [vars]
-src_path = {toxinidir}/src/
-tst_path = {toxinidir}/tests/
-;lib_path = {toxinidir}/lib/charms/operator_name_with_underscores
-all_path = {[vars]src_path} {[vars]tst_path} 
+src_path = {tox_root}/src
+tests_path = {tox_root}/tests
+;lib_path = {tox_root}/lib/charms/operator_name_with_underscores
+all_path = {[vars]src_path} {[vars]tests_path}
 
 [testenv]
-setenv =
-  PYTHONPATH = {toxinidir}:{toxinidir}/lib:{[vars]src_path}
-  PYTHONBREAKPOINT=pdb.set_trace
-  PY_COLORS=1
-passenv =
-  PYTHONPATH
-  CHARM_BUILD_DIR
-  MODEL_SETTINGS
+set_env =
+    PYTHONPATH = {tox_root}/lib:{[vars]src_path}
+    PYTHONBREAKPOINT=pdb.set_trace
+    PY_COLORS=1
+pass_env =
+    PYTHONPATH
+    CHARM_BUILD_DIR
+    MODEL_SETTINGS
 
-[testenv:fmt]
+[testenv:format]
 description = Apply coding style standards to code
 deps =
     black
@@ -38,17 +39,10 @@ deps =
     ruff
     codespell
 commands =
-    # uncomment the following line if this charm owns a lib
+    # if this charm owns a lib, uncomment "lib_path" variable
+    # and uncomment the following line
     # codespell {[vars]lib_path}
-    codespell {toxinidir} \
-              --skip {toxinidir}/.git \
-              --skip {toxinidir}/.tox \
-              --skip {toxinidir}/build \
-              --skip {toxinidir}/lib \
-              --skip {toxinidir}/venv \
-              --skip {toxinidir}/.mypy_cache \
-              --skip {toxinidir}/icon.svg
-    
+    codespell {tox_root}
     ruff {[vars]all_path}
     black --check --diff {[vars]all_path}
 
@@ -57,15 +51,15 @@ description = Run unit tests
 deps =
     pytest
     coverage[toml]
-    -r{toxinidir}/requirements.txt
+    -r {tox_root}/requirements.txt
 commands =
     coverage run --source={[vars]src_path} \
                  -m pytest \
-                 --ignore={[vars]tst_path}integration \
                  --tb native \
                  -v \
                  -s \
-                 {posargs}
+                 {posargs} \
+                 {[vars]tests_path}/unit
     coverage report
 
 [testenv:integration]
@@ -74,11 +68,11 @@ deps =
     pytest
     juju
     pytest-operator
-    -r{toxinidir}/requirements.txt
+    -r {tox_root}/requirements.txt
 commands =
     pytest -v \
            -s \
            --tb native \
-           --ignore={[vars]tst_path}unit \
            --log-cli-level=INFO \
-           {posargs}
+           {posargs} \
+           {[vars]tests_path}/integration

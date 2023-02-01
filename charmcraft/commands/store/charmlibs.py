@@ -13,16 +13,19 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+
 """General purpose library functions for charmcraft."""
+
 import ast
 import hashlib
+import os
 import pathlib
 from dataclasses import dataclass
 from collections import namedtuple
-from typing import AnyStr, Optional
+from typing import Optional, Set, List
 
 import yaml
-from craft_cli import CraftError, emit
+from craft_cli import CraftError
 
 from charmcraft.errors import BadLibraryPathError, BadLibraryNameError
 
@@ -39,16 +42,9 @@ class LibInternals:
     lib_id: str
     api: int
     patch: int
+    pydeps: list
     content_hash: str
     content: bytes
-
-
-def get_positive_int(raw_value: AnyStr) -> int:
-    """Convert the raw value for api/patch into a positive integer."""
-    value = int(raw_value)
-    if value < 0:
-        raise ValueError("Version numbers cannot be negative.")
-    return value
 
 
 def get_name_from_metadata() -> Optional[str]:
@@ -74,63 +70,91 @@ def create_charm_name_from_importable(charm_name: str) -> str:
 
 
 def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
-    """Get content, its hash, and all the metadata fields from a library."""
-    metadata_fields = (b"LIBAPI", b"LIBPATCH", b"LIBID")
-    metadata = dict.fromkeys(metadata_fields)
+    """Get content, its hash, and all the metadata fields from a library.
+
+    There are two kind of metadata fields, simple constant fields and PYDEPS. The simple
+    constant fields are also the mandatory ones: LIBAPI, LIBPATCH and LIBID.
+    """
+    content = lib_path.read_text(encoding="utf8")
+    try:
+        tree = ast.parse(content)
+    except Exception:
+        raise CraftError(f"Failed to parse Python library {str(lib_path)!r}")
+
+    def _api_patch_validator(value):
+        return isinstance(value, int) and value >= 0
+
+    _msg_prefix = f"Library {str(lib_path)!r} metadata field "
+    simple_fields = {
+        "LIBAPI": (
+            _api_patch_validator,
+            _msg_prefix + "LIBAPI must be a constant assignment of zero or a positive integer.",
+        ),
+        "LIBPATCH": (
+            _api_patch_validator,
+            _msg_prefix + "LIBPATCH must be a constant assignment of zero or a positive integer.",
+        ),
+        "LIBID": (
+            lambda value: isinstance(value, str) and value and value.isascii(),
+            _msg_prefix + "LIBID must be a constant assignment of a non-empty ASCII string.",
+        ),
+    }
+    pydeps_error = _msg_prefix + "PYDEPS must be a constant list of non-empty strings"
+
+    # walk the AST "first layer", find assignments to the key fields and validate them
+    metadata = {}
+    for node in ast.iter_child_nodes(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if target.id in simple_fields:
+                    validator, error_msg = simple_fields[target.id]
+                    if not isinstance(node.value, ast.Constant):
+                        raise CraftError(error_msg)
+                    real_value = node.value.value
+                    if not validator(real_value):
+                        raise CraftError(error_msg)
+                    metadata[target.id] = real_value
+                elif target.id == "PYDEPS":
+                    if not isinstance(node.value, ast.List):
+                        raise CraftError(pydeps_error)
+                    metadata["PYDEPS"] = pydeps = []
+                    for item in node.value.elts:
+                        if not isinstance(item, ast.Constant):
+                            raise CraftError(pydeps_error)
+                        value = item.value
+                        if not isinstance(value, str) or not value:
+                            raise CraftError(pydeps_error)
+                        pydeps.append(value)
+
+    # extra verifications for cases that need to consider more than the individual fields
+    mandatory_missing = set(simple_fields) - set(metadata)
+    if mandatory_missing:
+        joined = ", ".join(sorted(mandatory_missing))
+        raise CraftError(
+            f"Library {str(lib_path)!r} is missing the mandatory metadata fields: {joined}."
+        )
+    if metadata["LIBAPI"] == 0 and metadata["LIBPATCH"] == 0:
+        raise CraftError(
+            f"Library {str(lib_path)!r} metadata fields LIBAPI and LIBPATCH cannot both be zero."
+        )
+
+    # hash the file excluding those lines where appear keys used for version control
+    metadata_vcs_fields = (b"LIBAPI", b"LIBPATCH", b"LIBID")
     hasher = hashlib.sha256()
     with lib_path.open("rb") as fh:
         for line in fh:
-            if line.startswith(metadata_fields):
-                try:
-                    field, value = [x.strip() for x in line.split(b"=")]
-                except ValueError:
-                    raise CraftError(
-                        "Bad metadata line in {!r}: {!r}".format(str(lib_path), line)
-                    ) from None
-                metadata[field] = value
-            else:
+            # always use \n as newline for users to have the same
+            # file hash both in Linux and Windows
+            line = line.replace(b"\r\n", b"\n")
+            if not line.startswith(metadata_vcs_fields):
                 hasher.update(line)
     content_hash = hasher.hexdigest()
 
-    missing = [k.decode("ascii") for k, v in metadata.items() if v is None]
-    if missing:
-        raise CraftError(
-            "Library {!r} is missing the mandatory metadata fields: {}.".format(
-                str(lib_path), ", ".join(sorted(missing))
-            )
-        )
-
-    bad_api_patch_msg = "Library {!r} metadata field {} is not zero or a positive integer."
-    try:
-        libapi = get_positive_int(metadata[b"LIBAPI"])
-    except ValueError:
-        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBAPI"))
-    try:
-        libpatch = get_positive_int(metadata[b"LIBPATCH"])
-    except ValueError:
-        raise CraftError(bad_api_patch_msg.format(str(lib_path), "LIBPATCH"))
-
-    if libapi == 0 and libpatch == 0:
-        raise CraftError(
-            "Library {!r} metadata fields LIBAPI and LIBPATCH cannot both be zero.".format(
-                str(lib_path)
-            )
-        )
-
-    bad_libid_msg = "Library {!r} metadata field LIBID must be a non-empty ASCII string."
-    try:
-        libid = ast.literal_eval(metadata[b"LIBID"].decode("ascii"))
-    except (ValueError, UnicodeDecodeError):
-        raise CraftError(bad_libid_msg.format(str(lib_path)))
-    if not libid or not isinstance(libid, str):
-        raise CraftError(bad_libid_msg.format(str(lib_path)))
-
-    content = lib_path.read_text()
-
     return LibInternals(
-        lib_id=libid,
-        api=libapi,
-        patch=libpatch,
+        lib_id=metadata["LIBID"],
+        api=metadata["LIBAPI"],
+        patch=metadata["LIBPATCH"],
+        pydeps=metadata.get("PYDEPS", []),
         content_hash=content_hash,
         content=content,
     )
@@ -144,6 +168,7 @@ def get_lib_info(*, full_name=None, lib_path=None):
     * `full_name` and `libdata.full_name`: `charms.foo_bar.v0.somelib`
     * paths, including `libdata.path`: `lib/charms/foo_bar/v0/somelib`
 
+    This function needs to be called standing on the root directory of the project.
     """
     if full_name is None:
         # get it from the lib_path
@@ -217,7 +242,9 @@ def get_lib_info(*, full_name=None, lib_path=None):
     )
 
 
-def get_libs_from_tree(charm_name=None):
+def get_libs_from_tree(
+    charm_name: Optional[str] = None, root: Optional[pathlib.Path] = None
+) -> List[LibData]:
     """Get library info from the directories tree (for a specific charm if specified).
 
     It only follows/uses the directories/files for a correct charmlibs
@@ -227,20 +254,33 @@ def get_libs_from_tree(charm_name=None):
     """
     local_libs_data = []
 
-    if charm_name is None:
-        base_dir = pathlib.Path("lib") / "charms"
-        charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
-    else:
-        importable_charm_name = create_importable_name(charm_name)
-        base_dir = pathlib.Path("lib") / "charms" / importable_charm_name
-        charm_dirs = [base_dir] if base_dir.is_dir() else []
+    current_directory = os.getcwd()
+    if root is not None:
+        os.chdir(root)
+    try:
+        if charm_name is None:
+            base_dir = pathlib.Path("lib") / "charms"
+            charm_dirs = sorted(base_dir.iterdir()) if base_dir.is_dir() else []
+        else:
+            importable_charm_name = create_importable_name(charm_name)
+            base_dir = pathlib.Path("lib") / "charms" / importable_charm_name
+            charm_dirs = [base_dir] if base_dir.is_dir() else []
 
-    for charm_dir in charm_dirs:
-        for v_dir in sorted(charm_dir.iterdir()):
-            if v_dir.is_dir() and v_dir.name[0] == "v" and v_dir.name[1:].isdigit():
-                for libfile in sorted(v_dir.glob("*.py")):
-                    local_libs_data.append(get_lib_info(lib_path=libfile))
-
-    found_libs = [lib_data.full_name for lib_data in local_libs_data]
-    emit.debug(f"Libraries found under {str(base_dir)!r}: {found_libs}")
+        for charm_dir in charm_dirs:
+            for v_dir in sorted(charm_dir.iterdir()):
+                if v_dir.is_dir() and v_dir.name[0] == "v" and v_dir.name[1:].isdigit():
+                    for libfile in sorted(v_dir.glob("*.py")):
+                        local_libs_data.append(get_lib_info(lib_path=libfile))
+    finally:
+        os.chdir(current_directory)
     return local_libs_data
+
+
+def collect_charmlib_pydeps(basedir: pathlib.Path) -> Set[str]:
+    """Collect the Python dependencies from all the project's charm libraries."""
+    all_libs_data = get_libs_from_tree(root=basedir)
+    charmlib_deps = set()
+    for libdata in all_libs_data:
+        internals = get_lib_internals(basedir / libdata.path)
+        charmlib_deps.update(internals.pydeps)
+    return charmlib_deps

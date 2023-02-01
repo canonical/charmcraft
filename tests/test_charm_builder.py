@@ -770,6 +770,7 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
         python_packages=["pkg3", "pkg4"],
         requirements=[reqs_file_1, reqs_file_2],
     )
+    builder.charmlib_deps = ["pkg5", "pkg6"]
 
     with patch("charmcraft.charm_builder._process_run") as mock:
         with patch("shutil.copytree") as mock_copytree:
@@ -793,6 +794,7 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
                 f"--requirement={reqs_file_2}",
             ]
         ),
+        call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg5", "pkg6"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
@@ -957,15 +959,16 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
 
 
 @pytest.mark.parametrize(
-    "new_reqs_content, new_pypackages, new_pybinaries",
+    "new_reqs_content, new_pypackages, new_pybinaries, new_charmlibdeps",
     [
-        ("ops==2", None, None),
-        (None, ["foo2", "bar"], None),
-        (None, None, ["otherbinthing"]),
+        ("ops==2", None, None, None),
+        (None, ["foo2", "bar"], None, None),
+        (None, None, ["otherbinthing"], None),
+        (None, None, None, {"bazooka"}),
     ],
 )
 def test_build_dependencies_no_reused_different_dependencies(
-    tmp_path, assert_output, new_reqs_content, new_pypackages, new_pybinaries
+    tmp_path, assert_output, new_reqs_content, new_pypackages, new_pybinaries, new_charmlibdeps
 ):
     """Dependencies are built again because changed from previous run."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -977,6 +980,7 @@ def test_build_dependencies_no_reused_different_dependencies(
     requirements = [reqs_file]
     python_packages = ["foo", "bar"]
     binary_python_packages = ["binthing"]
+    charmlib_deps = {"baz"}
 
     builder = CharmBuilder(
         builddir=tmp_path,
@@ -986,6 +990,7 @@ def test_build_dependencies_no_reused_different_dependencies(
         python_packages=python_packages,
         requirements=requirements,
     )
+    builder.charmlib_deps = charmlib_deps
     staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
 
     # patch the dependencies installation method so it skips all subprocessing but actually
@@ -1013,10 +1018,13 @@ def test_build_dependencies_no_reused_different_dependencies(
         new_pypackages = python_packages
     if new_pybinaries is None:
         new_pybinaries = binary_python_packages
+    if new_charmlibdeps is None:
+        new_charmlibdeps = charmlib_deps
 
     # second run with other dependencies!
     builder.binary_python_packages = new_pybinaries
     builder.python_packages = new_pypackages
+    builder.charmlib_deps = new_charmlibdeps
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output("Handling dependencies", "Installing dependencies")
@@ -1136,9 +1144,11 @@ def test_builder_arguments_defaults(tmp_path):
     fake_argv = ["cmd", "--builddir", "builddir", "--installdir", "installdir"]
     with patch.object(sys, "argv", fake_argv):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
-            with pytest.raises(SystemExit) as raised:
-                charm_builder.main()
+            with patch("charmcraft.charm_builder.collect_charmlib_pydeps") as mock_collect_pydeps:
+                with pytest.raises(SystemExit) as raised:
+                    charm_builder.main()
         assert raised.value.code == 42
+    mock_collect_pydeps.assert_called_with(pathlib.Path("builddir"))
 
 
 def test_builder_arguments_full(tmp_path):
@@ -1155,9 +1165,11 @@ def test_builder_arguments_full(tmp_path):
     fake_argv += ["-r" "reqs1.txt", "--requirement", "reqs2.txt"]
     with patch.object(sys, "argv", fake_argv):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
-            with pytest.raises(SystemExit) as raised:
-                charm_builder.main()
+            with patch("charmcraft.charm_builder.collect_charmlib_pydeps") as mock_collect_pydeps:
+                with pytest.raises(SystemExit) as raised:
+                    charm_builder.main()
         assert raised.value.code == 42
+    mock_collect_pydeps.assert_called_with(pathlib.Path("builddir"))
 
 
 # --- subprocess runner tests

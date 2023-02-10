@@ -3,7 +3,7 @@ certifi==2022.12.7
 cffi==1.15.1
 charset-normalizer==3.0.1
 craft-cli==1.2.0
-craft-parts==1.18.0
+craft-parts==1.18.1
 craft-providers==1.7.1
 craft-store==2.3.0
 cryptography==3.4.8

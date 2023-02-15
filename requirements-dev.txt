@@ -12,7 +12,7 @@ craft-cli==1.2.0
 craft-parts==1.18.1
 craft-providers==1.7.2
 craft-store==2.3.0
-cryptography==3.4.8
+cryptography==39.0.1
 Deprecated==1.2.13
 distlib==0.3.6
 exceptiongroup==1.1.0
@@ -61,9 +61,7 @@ requests-toolbelt==0.10.1
 requests-unixsocket==0.3.0
 responses==0.22.0
 SecretStorage==3.3.3
-semantic-version==2.10.0
 semver==2.13.0
-setuptools-rust==1.5.2
 six==1.16.0
 snap-helpers==0.3.2
 snowballstemmer==2.2.0

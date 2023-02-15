@@ -92,8 +92,17 @@ parts:
       snapcraftctl build
       install -D -m 0755 $SNAPCRAFT_PROJECT_DIR/snap/local/sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
 
+  # The cryptography library requires rust, but only ships wheels for amd64 and arm64.
+  # As of cryptography 39, it requires rust v1.48.0 or newer, which is available
+  # from the focal-updates pocket.
+  rust-deps:
+    plugin: nil
+    build-packages:
+      - cargo
+      - rustc
+
   charmcraft:
-    after: [python3]
+    after: [python3, rust-deps]
     source: .
     plugin: python
     requirements:
@@ -114,7 +123,6 @@ parts:
     build-environment:
       - LDFLAGS: -L/usr/lib/python3.8
       - CPPFLAGS: -I/usr/include/python3.8
-      - CRYPTOGRAPHY_DONT_BUILD_RUST: "1"  # for cryptography to not use a Rust compiler (fails on some archs)
     override-pull: |
       # do the usual pull stuff
       snapcraftctl pull

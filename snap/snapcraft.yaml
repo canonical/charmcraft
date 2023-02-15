@@ -94,7 +94,7 @@ parts:
 
   # The cryptography library requires rust, but only ships wheels for amd64 and arm64.
   # As of cryptography 39, it requires rust v1.48.0 or newer, which is available
-  # from the focal-updates pocket.
+  # from focal-updates.
   rust-deps:
     plugin: nil
     build-packages:

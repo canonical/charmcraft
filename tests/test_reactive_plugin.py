@@ -53,101 +53,114 @@ def broken_charm_exe(tmp_path):
     yield charm_bin
 
 
-class TestReactivePlugin:
-    """Ensure plugin methods return expected data."""
+@pytest.fixture()
+def plugin_properties(tmp_path):
+    spec = {
+        "plugin": "reactive",
+        "source": str(tmp_path),
+        "reactive-charm-build-arguments": [
+            "--charm-argument",
+            "--charm-argument-with argument",
+        ],
+    }
+    plugin_properties = reactive_plugin.ReactivePluginProperties.unmarshal(spec)
+    return plugin_properties
 
-    @pytest.fixture(autouse=True)
-    def setup_method_fixture(self, tmp_path):
-        project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
-        spec = {
-            "plugin": "reactive",
-            "source": str(tmp_path),
-            "reactive-charm-build-arguments": [
-                "--charm-argument",
-                "--charm-argument-with argument",
-            ],
-        }
-        self.plugin_properties = reactive_plugin.ReactivePluginProperties.unmarshal(spec)
-        part_spec = plugins.extract_part_properties(spec, plugin_name="reactive")
-        part = craft_parts.Part(
-            "foo", part_spec, project_dirs=project_dirs, plugin_properties=self.plugin_properties
-        )
-        project_info = craft_parts.ProjectInfo(
-            application_name="test",
-            project_dirs=project_dirs,
-            cache_dir=tmp_path,
-            project_name="fake-project",
-        )
-        part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-        self._plugin = plugins.get_plugin(
-            part=part,
-            part_info=part_info,
-            properties=self.plugin_properties,
-        )
+@pytest.fixture()
+def plugin(tmp_path, plugin_properties):
+    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+    spec = {
+        "plugin": "reactive",
+        "source": str(tmp_path),
+        "reactive-charm-build-arguments": [
+            "--charm-argument",
+            "--charm-argument-with argument",
+        ],
+    }
+    part_spec = plugins.extract_part_properties(spec, plugin_name="reactive")
+    part = craft_parts.Part(
+        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+    )
+    project_info = craft_parts.ProjectInfo(
+        application_name="test",
+        project_dirs=project_dirs,
+        cache_dir=tmp_path,
+        project_name="fake-project",
+    )
+    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    def test_get_build_package(self):
-        assert self._plugin.get_build_packages() == set()
+    plugin = plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
+    return plugin
 
-    def test_get_build_snaps(self):
-        assert self._plugin.get_build_snaps() == set()
 
-    def test_get_build_environment(self):
-        assert self._plugin.get_build_environment() == {}
+def test_get_build_package(plugin):
+    assert plugin.get_build_packages() == set()
 
-    def test_get_build_commands(self, tmp_path):
-        assert self._plugin.get_build_commands() == [
-            f"{sys.executable} -I {reactive_plugin.__file__} fake-project "
-            f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
-            "--charm-argument --charm-argument-with argument"
-        ]
 
-    def test_invalid_properties(self):
-        with pytest.raises(pydantic.ValidationError) as raised:
-            reactive_plugin.ReactivePlugin.properties_class.unmarshal(
-                {"source": ".", "reactive-invalid": True}
-            )
-        err = raised.value.errors()
-        assert len(err) == 1
-        assert err[0]["loc"] == ("reactive-invalid",)
-        assert err[0]["type"] == "value_error.extra"
+def test_get_build_snaps(plugin):
+    assert plugin.get_build_snaps() == set()
 
-    def test_validate_environment(self, charm_exe):
-        validator = self._plugin.validator_class(
-            part_name="my-part",
-            env=f"PATH={str(charm_exe.parent)}",
-            properties=self.plugin_properties,
-        )
+
+def test_get_build_environment(plugin):
+    assert plugin.get_build_environment() == {}
+
+
+def test_get_build_commands(plugin, tmp_path):
+    assert plugin.get_build_commands() == [
+        f"{sys.executable} -I {reactive_plugin.__file__} fake-project "
+        f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
+        "--charm-argument --charm-argument-with argument"
+    ]
+
+
+def test_invalid_properties(plugin):
+    with pytest.raises(pydantic.ValidationError) as raised:
+        plugin.properties_class.unmarshal({"source": ".", "reactive-invalid": True})
+    err = raised.value.errors()
+    assert len(err) == 1
+    assert err[0]["loc"] == ("reactive-invalid",)
+    assert err[0]["type"] == "value_error.extra"
+
+
+def test_validate_environment(plugin, plugin_properties, charm_exe):
+    validator = plugin.validator_class(
+        part_name="my-part",
+        env=f"PATH={str(charm_exe.parent)}",
+        properties=plugin_properties,
+    )
+    validator.validate_environment()
+
+
+def test_validate_environment_with_charm_part(plugin, plugin_properties):
+    validator = plugin.validator_class(
+        part_name="my-part", env="PATH=/foo", properties=plugin_properties
+    )
+    validator.validate_environment(part_dependencies=["charm-tools"])
+
+
+def test_validate_missing_charm(plugin, plugin_properties):
+    validator = plugin.validator_class(
+        part_name="my-part", env="/foo", properties=plugin_properties
+    )
+    with pytest.raises(PluginEnvironmentValidationError) as raised:
         validator.validate_environment()
 
-    def test_validate_environment_with_charm_part(self):
-        validator = self._plugin.validator_class(
-            part_name="my-part", env="PATH=/foo", properties=self.plugin_properties
-        )
-        validator.validate_environment(part_dependencies=["charm-tools"])
+    assert raised.value.reason == (
+        "charm tool not found and part 'my-part' does " "not depend on a part named 'charm-tools'"
+    )
 
-    def test_validate_missing_charm(self):
-        validator = self._plugin.validator_class(
-            part_name="my-part", env="/foo", properties=self.plugin_properties
-        )
-        with pytest.raises(PluginEnvironmentValidationError) as raised:
-            validator.validate_environment()
 
-        assert raised.value.reason == (
-            "charm tool not found and part 'my-part' does "
-            "not depend on a part named 'charm-tools'"
-        )
+def test_validate_broken_charm(plugin, plugin_properties, broken_charm_exe):
+    validator = plugin.validator_class(
+        part_name="my-part",
+        env=f"PATH={str(broken_charm_exe.parent)}",
+        properties=plugin_properties,
+    )
+    with pytest.raises(PluginEnvironmentValidationError) as raised:
+        validator.validate_environment()
 
-    def test_validate_broken_charm(self, broken_charm_exe):
-        validator = self._plugin.validator_class(
-            part_name="my-part",
-            env=f"PATH={str(broken_charm_exe.parent)}",
-            properties=self.plugin_properties,
-        )
-        with pytest.raises(PluginEnvironmentValidationError) as raised:
-            validator.validate_environment()
-
-        assert raised.value.reason == "charm tools failed with error code 2"
+    assert raised.value.reason == "charm tools failed with error code 2"
 
 
 @pytest.fixture

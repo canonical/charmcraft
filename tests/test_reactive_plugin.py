@@ -54,7 +54,8 @@ def broken_charm_exe(tmp_path):
 
 
 @pytest.fixture()
-def plugin_properties(tmp_path):
+def spec(tmp_path):
+    """Provide a common spec to build the different artifacts."""
     spec = {
         "plugin": "reactive",
         "source": str(tmp_path),
@@ -63,21 +64,18 @@ def plugin_properties(tmp_path):
             "--charm-argument-with argument",
         ],
     }
+    return spec
+
+
+@pytest.fixture()
+def plugin_properties(spec):
     plugin_properties = reactive_plugin.ReactivePluginProperties.unmarshal(spec)
     return plugin_properties
 
 
 @pytest.fixture()
-def plugin(tmp_path, plugin_properties):
+def plugin(tmp_path, plugin_properties, spec):
     project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
-    spec = {
-        "plugin": "reactive",
-        "source": str(tmp_path),
-        "reactive-charm-build-arguments": [
-            "--charm-argument",
-            "--charm-argument-with argument",
-        ],
-    }
     part_spec = plugins.extract_part_properties(spec, plugin_name="reactive")
     part = craft_parts.Part(
         "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties

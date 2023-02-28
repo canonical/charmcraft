@@ -33,7 +33,6 @@ install_requires = [
     "craft-parts",
     "craft-providers",
     "craft-store",
-    "cryptography==39.0",
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",

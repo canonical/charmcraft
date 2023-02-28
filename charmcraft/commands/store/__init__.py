@@ -54,9 +54,6 @@ from .registry import ImageHandler, OCIRegistry, LocalDockerdInterface
 EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
 ResourceType = namedtuple("ResourceType", "file oci_image")(file="file", oci_image="oci-image")
 
-# The token used in the 'init' command (as bytes for easier comparison)
-INIT_TEMPLATE_TOKEN = b"TEMPLATE-TODO"
-
 # the list of valid attenuations to restrict login credentials
 VALID_ATTENUATIONS = {getattr(attenuations, x) for x in dir(attenuations) if x.isupper()}
 
@@ -517,35 +514,12 @@ class UploadCommand(BaseCommand):
             ),
         )
 
-    def _validate_template_is_handled(self, filepath):
-        """Verify the zip does not have any file with the 'init' template TODO marker.
-
-        This is important to avoid uploading low-quality charms that are just
-        bootstrapped and not corrected.
-        """
-        # we're already sure we can open it ok
-        zf = zipfile.ZipFile(str(filepath))
-
-        tainted_filenames = []
-        for name in zf.namelist():
-            content = zf.read(name)
-            if INIT_TEMPLATE_TOKEN in content:
-                tainted_filenames.append(name)
-
-        if tainted_filenames:
-            raise CraftError(
-                "Cannot upload the charm as it include the following files with a leftover "
-                "TEMPLATE-TODO token from when the project was created using the 'init' "
-                "command: {}".format(", ".join(tainted_filenames))
-            )
-
     def run(self, parsed_args):
         """Run the command."""
         if parsed_args.name:
             name = parsed_args.name
         else:
             name = get_name_from_zip(parsed_args.filepath)
-        self._validate_template_is_handled(parsed_args.filepath)
         store = Store(self.config.charmhub)
         result = store.upload(name, parsed_args.filepath)
 

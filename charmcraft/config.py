@@ -400,29 +400,11 @@ class Config(ModelConfigDefaults, validate_all=False):
         :raises CraftError: On failure to unmarshal object.
         """
         try:
-            # Ensure short-form bases are expanded into long-form
-            # base configurations.  Doing it here rather than a Union
-            # type will simplify user facing errors.
-            bases = obj.get("bases")
-            if bases is None:
-                # "type" is accessed with get because this code happens before
-                # pydantic actually validating that the key is present
-                if obj.get("type") == "charm":
-                    raise CraftError("The field 'bases' is mandatory when type=charm")
-                # Set default bases to Ubuntu 20.04 to match strict snap's
-                # effective behavior.
-                bases = [
-                    {
-                        "name": "ubuntu",
-                        "channel": "20.04",
-                        "architectures": [get_host_architecture()],
-                    }
-                ]
 
             # Expand short-form bases if only the bases is a valid list. If it
             # is not a valid list, parse_obj() will properly handle the error.
-            if isinstance(bases, list):
-                cls.expand_short_form_bases(bases)
+            if isinstance(obj.get("bases"), list):
+                cls.expand_short_form_bases(obj["bases"])
 
             return cls.parse_obj({"project": project, **obj})
         except pydantic.error_wrappers.ValidationError as error:

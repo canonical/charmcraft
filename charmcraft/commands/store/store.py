@@ -29,7 +29,7 @@ from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
 from dateutil import parser
 
-from charmcraft.commands.store.client import Client, ALTERNATE_AUTH_ENV_VAR
+from charmcraft.commands.store.client import AnonymousClient, Client, ALTERNATE_AUTH_ENV_VAR
 
 # helpers to build responses from this layer
 Account = namedtuple("Account", "name username id")
@@ -176,13 +176,16 @@ def _store_client_wrapper(auto_login=True):
 class Store:
     """The main interface to the Store's API."""
 
-    def __init__(self, charmhub_config, ephemeral=False):
-        try:
-            self._client = Client(
-                charmhub_config.api_url, charmhub_config.storage_url, ephemeral=ephemeral
-            )
-        except craft_store.errors.NoKeyringError as error:
-            raise CraftError(str(error)) from error
+    def __init__(self, charmhub_config, ephemeral=False, needs_auth=True):
+        if needs_auth:
+            try:
+                self._client = Client(
+                    charmhub_config.api_url, charmhub_config.storage_url, ephemeral=ephemeral
+                )
+            except craft_store.errors.NoKeyringError as error:
+                raise CraftError(str(error)) from error
+        else:
+            self._client = AnonymousClient(charmhub_config.api_url, charmhub_config.storage_url)
 
     def login(self, permissions=None, ttl=None, charms=None, bundles=None, channels=None):
         """Login into the store."""

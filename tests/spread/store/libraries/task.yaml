@@ -51,7 +51,8 @@ execute: |
   listed_patch=$(echo $list_result | jq --arg libname $LIB_NAME '.[] | select(.library_name == $libname) | .patch')
   test $listed_patch = 2
 
-  # clean the lib directory and fetch it again
+  # clean the lib directory and fetch it again without auth
+  unset CHARMCRAFT_AUTH
   rm -rf lib/
   charmcraft fetch-lib $lib_fqdn
   test -f $lib_filepath

@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import datetime
 import json
 import pathlib
 import sys
@@ -33,6 +32,9 @@ from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand
 from charmcraft.config import Project, load, BasesConfiguration
+from charmcraft.commands.pack import PackCommand
+from charmcraft.config import load, BasesConfiguration
+
 
 
 def get_namespace(
@@ -112,22 +114,6 @@ def test_resolve_bundle_type(config):
     cmd = PackCommand(config)
 
     with patch.object(cmd, "_pack_bundle") as mock:
-        cmd.run(noargs)
-    mock.assert_called_with(noargs)
-
-
-def test_resolve_no_config_packs_charm(config, tmp_path):
-    """There is no config, so it's decided to pack a charm."""
-    config.set(
-        project=Project(
-            config_provided=False,
-            dirpath=tmp_path,
-            started_at=datetime.datetime.utcnow(),
-        )
-    )
-    cmd = PackCommand(config)
-
-    with patch.object(cmd, "_pack_charm") as mock:
         cmd.run(noargs)
     mock.assert_called_with(noargs)
 

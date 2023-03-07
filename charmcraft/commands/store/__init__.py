@@ -1235,7 +1235,7 @@ class FetchLibCommand(BaseCommand):
             emit.debug(f"Libraries found under 'lib/charms': {found_libs}")
 
         # get tips from the Store
-        store = Store(self.config.charmhub)
+        store = Store(self.config.charmhub, needs_auth=False)
         to_query = []
         for lib in local_libs_data:
             if lib.lib_id is None:
@@ -1388,7 +1388,7 @@ class ListLibCommand(BaseCommand):
                 )
 
         # get tips from the Store
-        store = Store(self.config.charmhub)
+        store = Store(self.config.charmhub, needs_auth=False)
         to_query = [{"charm_name": charm_name}]
         libs_tips = store.get_libraries_tips(to_query)
 

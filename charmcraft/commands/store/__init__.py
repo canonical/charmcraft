@@ -39,11 +39,14 @@ from tabulate import tabulate
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import (
     ResourceOption,
-    Risk,
     SingleOptionEnsurer,
     format_timestamp,
     get_templates_environment,
-    useful_filepath, ChannelData, load_yaml, humanize_list,
+    useful_filepath,
+    ChannelData,
+    load_yaml,
+    humanize_list,
+    build_zip,
 )
 
 from .charmlibs import (
@@ -57,10 +60,7 @@ from .registry import ImageHandler, OCIRegistry, LocalDockerdInterface
 
 import typing
 
-from .. import build
-from ..pack import build_zip
-from ... import utils, parts
-from ...manifest import create_manifest
+from charmcraft import utils, parts
 
 if typing.TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
@@ -748,7 +748,7 @@ class PromoteBundleCommand(BaseCommand):
         Promote a bundle to another channel in the Store.
 
 
-        """#TODO (amlowe): complete this description.
+        """  # TODO (amlowe): complete this description.
     )
 
     def fill_parser(self, parser: "ArgumentParser") -> None:
@@ -756,12 +756,14 @@ class PromoteBundleCommand(BaseCommand):
         parser.add_argument("source_channel", help="The channel from which to promote the bundle")
         parser.add_argument("target_channel", help="The target channel for the promoted bundle")
         parser.add_argument(
-            "-o", "--output-bundle",
+            "-o",
+            "--output-bundle",
             type=pathlib.Path,
             help="A path where the created bundle.yaml file can be written",
         )
         parser.add_argument(
-            "-e", "--exclude",
+            "-e",
+            "--exclude",
             action="append",
             default=[],
             help="Any charms to exclude from the promotion process",
@@ -779,7 +781,12 @@ class PromoteBundleCommand(BaseCommand):
         if target_channel == source_channel:
             raise CraftError("Cannot promote from a channel to the same channel.")
         if target_channel.risk > source_channel.risk:
-            command_parts = ["charmcraft", "promote-bundle", target_channel.name, source_channel.name]
+            command_parts = [
+                "charmcraft",
+                "promote-bundle",
+                target_channel.name,
+                source_channel.name,
+            ]
             if parsed_args.output_bundle:
                 command_parts.extend(["--output-bundle", parsed_args.output_bundle])
             for exclusion in parsed_args.exclude:
@@ -791,7 +798,10 @@ class PromoteBundleCommand(BaseCommand):
                 f"Did you mean: {command}"
             )
         if target_channel.track != source_channel.track:
-            emit.message(f"Promoting to a different track (from {source_channel.track} to {target_channel.track}")
+            emit.message(
+                "Promoting to a different track (from "
+                f"{source_channel.track} to {target_channel.track})"
+            )
 
         output_bundle: typing.Optional[pathlib.Path] = parsed_args.output_bundle
         if output_bundle is not None and output_bundle.exists():
@@ -847,9 +857,7 @@ class PromoteBundleCommand(BaseCommand):
             )
         elif name_map[bundle_name].entity_type != EntityType.bundle:
             entity_type = name_map[bundle_name].entity_type
-            raise CraftError(
-                f"Store Entity {bundle_name} is a {entity_type}, not a bundle."
-            )
+            raise CraftError(f"Store Entity {bundle_name} is a {entity_type}, not a bundle.")
 
         invalid_charms = []
         non_charms = []
@@ -861,13 +869,12 @@ class PromoteBundleCommand(BaseCommand):
         if invalid_charms:
             charm_list = utils.humanize_list(invalid_charms, "and")
             raise CraftError(
-                f"The following entities do not exist or you are not a collaborator on them: {charm_list}"
+                "The following entities do not exist or you are not a collaborator on them: "
+                f"{charm_list}"
             )
         if non_charms:
             non_charm_list = utils.humanize_list(non_charms, "and")
-            raise CraftError(
-                f"The following store entities are not charms: {non_charm_list}"
-            )
+            raise CraftError(f"The following store entities are not charms: {non_charm_list}")
 
         # Revision in the source channel
         channel_map, *_ = store.list_releases(bundle_name)
@@ -924,7 +931,7 @@ class PromoteBundleCommand(BaseCommand):
             emit.verbose(f"Packing temporary bundle in {bundle_dir}...")
             lifecycle = parts.PartsLifecycle(
                 bundle_config,
-                work_dir=bundle_dir_path / build.BUILD_DIRNAME,
+                work_dir=bundle_dir_path / "build",
                 project_dir=bundle_dir_path,
                 project_name=bundle_name,
                 ignore_local_sources=[bundle_name + ".zip"],
@@ -932,10 +939,10 @@ class PromoteBundleCommand(BaseCommand):
             try:
                 lifecycle.run(Step.PRIME)
             except (RuntimeError, CraftError) as error:
-                if parsed_args.debug:
-                    emit.debug(f"Error when running PRIME step: {error}")
-                    build.launch_shell()
+                emit.debug(f"Error when running PRIME step: {error}")
                 raise
+
+            from charmcraft.manifest import create_manifest
 
             create_manifest(lifecycle.prime_dir, self.config.project.started_at, None, [])
             zipname = self.config.project.dirpath / (bundle_name + ".zip")
@@ -943,7 +950,7 @@ class PromoteBundleCommand(BaseCommand):
 
             # Upload the bundle and release it to the target channel.
             store.upload(self.config.name, bundle_path)
-        store.release(self.config.name, bundle_revision, parsed_args.to_channel, [])
+        store.release(self.config.name, bundle_revision, parsed_args.target_channel, [])
 
 
 class CloseCommand(BaseCommand):

@@ -473,10 +473,3 @@ class Store:
         content = self._client.request_urlpath_text("POST", endpoint, json=payload)
         # the response here is returned as is, because it's opaque to charmcraft
         return content
-
-    @_store_client_wrapper()
-    def get_package_metadata(self, package_name: str):
-        """Get the metadata of a package."""
-        endpoint = f"/v1/charm/{package_name}"
-        content = self._client.request_urlpath_json("GET", endpoint)
-        breakpoint()

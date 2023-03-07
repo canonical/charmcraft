@@ -36,7 +36,6 @@ from charmcraft.commands.pack import PackCommand
 from charmcraft.config import load, BasesConfiguration
 
 
-
 def get_namespace(
     *,
     bases_index=None,

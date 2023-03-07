@@ -400,7 +400,6 @@ class Config(ModelConfigDefaults, validate_all=False):
         :raises CraftError: On failure to unmarshal object.
         """
         try:
-
             # Expand short-form bases if only the bases is a valid list. If it
             # is not a valid list, parse_obj() will properly handle the error.
             if isinstance(obj.get("bases"), list):

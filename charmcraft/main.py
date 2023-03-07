@@ -173,13 +173,7 @@ def main(argv=None):
         )
         global_args = dispatcher.pre_parse_args(argv[1:])
         loaded_config = config.load(global_args["project_dir"])
-        command = dispatcher.load_command(loaded_config)
-        if command.needs_config and not loaded_config.project.config_provided:
-            raise ArgumentParsingError(
-                "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
-                "the current directory or where specified with --project-dir option); see "
-                "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
-            )
+        dispatcher.load_command(loaded_config)
         emit.debug(_get_system_details())
         retcode = dispatcher.run()
 

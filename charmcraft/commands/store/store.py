@@ -21,6 +21,7 @@ import platform
 import time
 from collections import namedtuple
 from functools import wraps
+from typing import List, Any, Dict, Tuple
 
 import craft_store
 from craft_cli import emit, CraftError
@@ -71,7 +72,7 @@ def _build_errors(item):
     return [Error(message=e["message"], code=e["code"]) for e in (item["errors"] or [])]
 
 
-def _build_revision(item):
+def _build_revision(item: Dict[str, Any]) -> Revision:
     """Build a Revision from a response item."""
     bases = [(None if base is None else Base(**base)) for base in item["bases"]]
     rev = Revision(
@@ -255,7 +256,7 @@ class Store:
         )
 
     @_store_client_wrapper()
-    def list_registered_names(self, include_collaborations):
+    def list_registered_names(self, include_collaborations: bool) -> List[Entity]:
         """Return names registered by the authenticated user."""
         endpoint = "/v1/charm"
         if include_collaborations:
@@ -338,7 +339,7 @@ class Store:
         self._client.request_urlpath_json("POST", endpoint, json=items)
 
     @_store_client_wrapper()
-    def list_releases(self, name):
+    def list_releases(self, name: str) -> Tuple[List[Release], List[Channel], List[Revision]]:
         """List current releases for a package."""
         endpoint = "/v1/charm/{}/releases".format(name)
         response = self._client.request_urlpath_json("GET", endpoint)
@@ -472,3 +473,10 @@ class Store:
         content = self._client.request_urlpath_text("POST", endpoint, json=payload)
         # the response here is returned as is, because it's opaque to charmcraft
         return content
+
+    @_store_client_wrapper()
+    def get_package_metadata(self, package_name: str):
+        """Get the metadata of a package."""
+        endpoint = f"/v1/charm/{package_name}"
+        content = self._client.request_urlpath_json("GET", endpoint)
+        breakpoint()

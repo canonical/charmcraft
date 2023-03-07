@@ -17,10 +17,13 @@
 """Collection of utilities for charmcraft."""
 
 import datetime
+import enum
+import functools
 import os
 import pathlib
 import platform
 import sys
+import typing
 from collections import namedtuple
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
@@ -49,6 +52,69 @@ ARCH_TRANSLATIONS = {
     "x86_64": "amd64",
     "AMD64": "amd64",  # Windows support
 }
+
+
+@functools.total_ordering
+@enum.unique
+class Risk(enum.Enum):
+    """Standard risk tracks for a channel, orderable but not comparable to an int."""
+    STABLE = 0
+    CANDIDATE = 1
+    BETA = 2
+    EDGE = 3
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+
+    def __eq__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value == other.value
+        return NotImplemented
+
+
+@dataclass(frozen=True)
+class ChannelData:
+    track: typing.Optional[str]
+    risk: Risk
+    branch: typing.Optional[str]
+
+    @classmethod
+    def from_str(cls, name: str):
+        invalid_channel_error = CraftError(f"Invalid channel name: {name!r}")
+        parts = name.split("/")
+        if len(parts) == 1:
+            try:
+                risk = Risk[parts[0].upper()]
+            except KeyError:
+                raise invalid_channel_error from None
+            else:
+                parts = [None, risk, None]
+        elif len(parts) == 2:
+            try:
+                risk = Risk[parts[0].upper()]
+                parts.insert(0, None)
+            except KeyError:
+                try:
+                    risk = Risk[parts[1].upper()]
+                    parts.append(None)
+                except KeyError:
+                    raise invalid_channel_error from None
+        elif len(parts) == 3:
+            try:
+                risk = Risk[parts[1].upper()]
+            except KeyError:
+                raise invalid_channel_error from None
+        else:
+            raise invalid_channel_error
+        return cls(parts[0], risk, parts[2])
+
+    @property
+    def name(self):
+        risk = self.risk.name.lower()
+        parts = (i for i in (self.track, risk, self.branch) if i is not None)
+        return "/".join(parts)
 
 
 def make_executable(fh):

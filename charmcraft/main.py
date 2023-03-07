@@ -79,6 +79,7 @@ _charmhub_commands = [
     store.ListRevisionsCommand,
     # release process, and show status
     store.ReleaseCommand,
+    store.PromoteBundleCommand,
     store.StatusCommand,
     store.CloseCommand,
     # libraries support

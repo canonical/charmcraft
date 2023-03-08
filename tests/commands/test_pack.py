@@ -31,8 +31,6 @@ from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand
-from charmcraft.config import Project, load, BasesConfiguration
-from charmcraft.commands.pack import PackCommand
 from charmcraft.config import load, BasesConfiguration
 
 

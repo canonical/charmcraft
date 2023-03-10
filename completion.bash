@@ -23,25 +23,26 @@ _charmcraft()
         analyze
         clean
         close
-        create-lib 
-        fetch-lib 
-        init 
-        list-lib 
-        login 
-        logout 
-        names 
-        pack 
-        publish-lib 
-        register 
+        create-lib
+        fetch-lib
+        init
+        list-lib
+        login
+        logout
+        names
+        pack
+        promote-bundle
+        publish-lib
+        register
         register-bundle
-        release 
+        release
         resource-revisions
         resources
-        revisions 
-        status 
-        upload 
+        revisions
+        status
+        upload
         upload-resource
-        version 
+        version
         whoami
     )
     _init_completion || return
@@ -56,7 +57,7 @@ _charmcraft()
         return
     fi
 
-    # check if any of the words is a command: if yes, offer the options for that 
+    # check if any of the words is a command: if yes, offer the options for that
     # command (and the global ones), else offer the commands and global options
     local w c
     for w in "${words[@]}"; do
@@ -94,6 +95,28 @@ _charmcraft()
             ;;
         pack)
             COMPREPLY=( $(compgen -W "${globals[*]} --force --format" -- "$cur") )
+            ;;
+        promote-bundle)
+            case "$prev" in
+                --output-bundle)
+                    _filedir
+                    ;;
+                --exclude)
+                    # TODO: This should contain a list of charms in the appropriate bundle.yaml file
+                    ;;
+                *edge*)
+                    COMPREPLY=( $(compgen -W "$(echo $prev | sed s/edge/beta/) $(echo $prev | sed s/edge/candidate/) $(echo $prev | sed s/edge/stable/)" -- "$cur") )
+                    ;;
+                *beta*)
+                    COMPREPLY=( $(compgen -W "$(echo $prev | sed s/beta/candidate/) $(echo $prev | sed s/beta/stable/)" -- "$cur") )
+                    ;;
+                *candidate*)
+                    COMPREPLY=( $(compgen -W "$(echo $prev | sed s/candidate/stable/)" -- "$cur") )
+                    ;;
+                *)
+                    COMPREPLY=( $(compgen -W "${globals[*]} --output-bundle --exclude latest/edge latest/beta latest/candidate latest/stable" -- "$cur") )
+                    ;;
+            esac
             ;;
         release)
             COMPREPLY=( $(compgen -W "${globals[*]} --revision --channel --resource" -- "$cur") )

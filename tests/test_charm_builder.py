@@ -222,7 +222,7 @@ def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
     assert not (build_dir / "dir2" / "dir4").exists()
     assert (build_dir / "dir2" / "dir5").exists()
 
-    for (p1, p2) in [
+    for p1, p2 in [
         (build_dir / "crazycharm.py", entrypoint),
         (build_dir / "file1.txt", file1),
         (build_dir / "dir2" / "file2.txt", file2),

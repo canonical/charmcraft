@@ -30,7 +30,7 @@ from craft_cli import CraftError
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
-from charmcraft.commands.pack import PackCommand, build_zip
+from charmcraft.commands.pack import PackCommand
 from charmcraft.config import load, BasesConfiguration
 
 
@@ -620,71 +620,6 @@ def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_confi
     zipped_files = [x.filename for x in zf.infolist()]
     for srcpath, expected in srcpaths:
         assert (srcpath in zipped_files) == expected
-
-
-# -- tests for zip builder
-
-
-def test_zipbuild_simple(tmp_path):
-    """Build a bunch of files in the zip."""
-    build_dir = tmp_path / "somedir"
-    build_dir.mkdir()
-
-    testfile1 = build_dir / "foo.txt"
-    testfile1.write_bytes(b"123\x00456")
-    subdir = build_dir / "bar"
-    subdir.mkdir()
-    testfile2 = subdir / "baz.txt"
-    testfile2.write_bytes(b"mo\xc3\xb1o")
-
-    zip_filepath = tmp_path / "testresult.zip"
-    build_zip(zip_filepath, build_dir)
-
-    zf = zipfile.ZipFile(zip_filepath)
-    assert sorted(x.filename for x in zf.infolist()) == ["bar/baz.txt", "foo.txt"]
-    assert zf.read("foo.txt") == b"123\x00456"
-    assert zf.read("bar/baz.txt") == b"mo\xc3\xb1o"
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_zipbuild_symlink_simple(tmp_path):
-    """Symlinks are supported."""
-    build_dir = tmp_path / "somedir"
-    build_dir.mkdir()
-
-    testfile1 = build_dir / "real.txt"
-    testfile1.write_bytes(b"123\x00456")
-    testfile2 = build_dir / "link.txt"
-    testfile2.symlink_to(testfile1)
-
-    zip_filepath = tmp_path / "testresult.zip"
-    build_zip(zip_filepath, build_dir)
-
-    zf = zipfile.ZipFile(zip_filepath)
-    assert sorted(x.filename for x in zf.infolist()) == ["link.txt", "real.txt"]
-    assert zf.read("real.txt") == b"123\x00456"
-    assert zf.read("link.txt") == b"123\x00456"
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_zipbuild_symlink_outside(tmp_path):
-    """No matter where the symlink points to."""
-    # outside the build dir
-    testfile1 = tmp_path / "real.txt"
-    testfile1.write_bytes(b"123\x00456")
-
-    # inside the build dir
-    build_dir = tmp_path / "somedir"
-    build_dir.mkdir()
-    testfile2 = build_dir / "link.txt"
-    testfile2.symlink_to(testfile1)
-
-    zip_filepath = tmp_path / "testresult.zip"
-    build_zip(zip_filepath, build_dir)
-
-    zf = zipfile.ZipFile(zip_filepath)
-    assert sorted(x.filename for x in zf.infolist()) == ["link.txt"]
-    assert zf.read("link.txt") == b"123\x00456"
 
 
 # tests for the main charm building process

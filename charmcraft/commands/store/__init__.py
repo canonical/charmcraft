@@ -741,7 +741,6 @@ class PromoteBundleCommand(BaseCommand):
     """Promote a bundle in the Store."""
 
     name = "promote-bundle"
-    needs_config = True
     help_msg = "Promote a bundle to another channel in the Store"
     overview = textwrap.dedent(
         """
@@ -753,16 +752,14 @@ class PromoteBundleCommand(BaseCommand):
 
     def fill_parser(self, parser: "ArgumentParser") -> None:
         """Add promote-bundle parameters to the general parser."""
-        parser.add_argument("source_channel", help="The channel from which to promote the bundle")
-        parser.add_argument("target_channel", help="The target channel for the promoted bundle")
+        parser.add_argument("from_channel", help="The channel from which to promote the bundle")
+        parser.add_argument("to_channel", help="The target channel for the promoted bundle")
         parser.add_argument(
-            "-o",
             "--output-bundle",
             type=pathlib.Path,
             help="A path where the created bundle.yaml file can be written",
         )
         parser.add_argument(
-            "-e",
             "--exclude",
             action="append",
             default=[],
@@ -771,21 +768,23 @@ class PromoteBundleCommand(BaseCommand):
 
     def run(self, parsed_args: "Namespace") -> None:
         """Run the command."""
+        self._check_config(config_file=True)
         # Validation...
         if self.config.type != EntityType.bundle:
             raise CraftError("promote-bundle must be run on a bundle.")
 
-        source_channel = ChannelData.from_str(parsed_args.source_channel)
-        target_channel = ChannelData.from_str(parsed_args.target_channel)
+        # Check snapcraft for equiv logic
+        from_channel = ChannelData.from_str(parsed_args.from_channel)
+        to_channel = ChannelData.from_str(parsed_args.to_channel)
 
-        if target_channel == source_channel:
+        if to_channel == from_channel:
             raise CraftError("Cannot promote from a channel to the same channel.")
-        if target_channel.risk > source_channel.risk:
+        if to_channel.risk > from_channel.risk:
             command_parts = [
                 "charmcraft",
                 "promote-bundle",
-                target_channel.name,
-                source_channel.name,
+                to_channel.name,
+                from_channel.name,
             ]
             if parsed_args.output_bundle:
                 command_parts.extend(["--output-bundle", parsed_args.output_bundle])
@@ -793,14 +792,14 @@ class PromoteBundleCommand(BaseCommand):
                 command_parts.extend(["--exclude"], exclusion)
             command = " ".join(command_parts)
             raise CraftError(
-                f"Target channel ({target_channel.name}) must be lower risk "
-                f"than the source channel ({source_channel.name}).\n"
+                f"Target channel ({to_channel.name}) must be lower risk "
+                f"than the source channel ({from_channel.name}).\n"
                 f"Did you mean: {command}"
             )
-        if target_channel.track != source_channel.track:
+        if to_channel.track != from_channel.track:
             emit.message(
                 "Promoting to a different track (from "
-                f"{source_channel.track} to {target_channel.track})"
+                f"{from_channel.track} to {to_channel.track})"
             )
 
         output_bundle: typing.Optional[pathlib.Path] = parsed_args.output_bundle
@@ -848,7 +847,7 @@ class PromoteBundleCommand(BaseCommand):
 
         store = Store(self.config.charmhub)
         registered_names: List[Entity] = store.list_registered_names(include_collaborations=True)
-        name_map = {name.name: name for name in registered_names}
+        name_map = {entity.name: entity for entity in registered_names}
 
         if bundle_name not in name_map:
             raise CraftError(
@@ -880,7 +879,7 @@ class PromoteBundleCommand(BaseCommand):
         channel_map, *_ = store.list_releases(bundle_name)
         bundle_revision = None
         for release in channel_map:
-            if release.channel == source_channel.name:
+            if release.channel == from_channel.name:
                 bundle_revision = release.revision
                 break
         if bundle_revision is None:
@@ -893,7 +892,7 @@ class PromoteBundleCommand(BaseCommand):
         for charm_name in charms:
             channel_map, *_ = store.list_releases(charm_name)
             for release in channel_map:
-                if release.channel == source_channel.name:
+                if release.channel == from_channel.name:
                     charm_revisions[charm_name] = release.revision
                     if release.resources:
                         charm_resources[charm_name] = release.resources
@@ -902,10 +901,10 @@ class PromoteBundleCommand(BaseCommand):
                 error_charms.append(charm_name)
         if error_charms:
             charm_list = humanize_list(error_charms, "and")
-            raise CraftError(f"Not found in channel {source_channel.name}: {charm_list}")
+            raise CraftError(f"Not found in channel {from_channel.name}: {charm_list}")
 
         for application in bundle_config["applications"].values():
-            application["channel"] = target_channel.name
+            application["channel"] = to_channel.name
 
         if parsed_args.output_bundle:
             with parsed_args.output_bundle.open("w+") as output_bundle:
@@ -915,7 +914,7 @@ class PromoteBundleCommand(BaseCommand):
             store.release(
                 charm_name,
                 charm_revision,
-                channels=[target_channel.name],
+                channels=[to_channel.name],
                 resources=charm_resources[charm_name],
             )
 
@@ -950,7 +949,7 @@ class PromoteBundleCommand(BaseCommand):
 
             # Upload the bundle and release it to the target channel.
             store.upload(self.config.name, bundle_path)
-        store.release(self.config.name, bundle_revision, parsed_args.target_channel, [])
+        store.release(self.config.name, bundle_revision, parsed_args.to_channel, [])
 
 
 class CloseCommand(BaseCommand):

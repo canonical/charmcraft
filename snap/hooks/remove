@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+
+"""Remove all related LXD images and instances when removing the snap."""
+
+import json
+import subprocess
+import sys
+
+PROJECT_NAME = "charmcraft"
+
+
+def remove_hook_main():
+    # Remove all images in LXD related project
+    try:
+        lxd_images_json = subprocess.check_output(
+            ["lxc", "--format", "json", "--project", PROJECT_NAME, "image", "list"]
+        ).decode()
+    except FileNotFoundError:
+        print("LXD is not installed.", file=sys.stderr)
+        return
+    except subprocess.CalledProcessError:
+        print(f"Project {PROJECT_NAME} does not exist in LXD.", file=sys.stderr)
+        return
+
+    lxd_images = json.loads(lxd_images_json)
+
+    for image in lxd_images:
+        print(f"Removing image {image['fingerprint']} in LXD {PROJECT_NAME} project...")
+        try:
+            subprocess.check_output(
+                ["lxc", "--project", PROJECT_NAME, "image", "delete", image["fingerprint"]]
+            )
+        except subprocess.CalledProcessError:
+            print(f"Failed to remove LXD image {image['fingerprint']}.", file=sys.stderr)
+
+    # Remove all instances in LXD related project
+    try:
+        lxd_instances_json = subprocess.check_output(
+            ["lxc", "--format", "json", "--project", PROJECT_NAME, "list"]
+        ).decode()
+    except FileNotFoundError:
+        print("LXD is not installed.", file=sys.stderr)
+        return
+    except subprocess.CalledProcessError:
+        print(f"Project {PROJECT_NAME} does not exist in LXD.", file=sys.stderr)
+        return
+
+    lxd_instances = json.loads(lxd_instances_json)
+
+    for instance in lxd_instances:
+        print(f"Removing instance {instance['name']} in LXD {PROJECT_NAME} project...")
+        try:
+            subprocess.check_output(
+                ["lxc", "--project", PROJECT_NAME, "delete", "--force", instance["name"]]
+            )
+        except subprocess.CalledProcessError:
+            print(f"Failed to remove LXD instance {instance['name']}.", file=sys.stderr)
+
+    # Remove project in LXD
+    print(f"Removing {PROJECT_NAME} project in LXD...")
+    try:
+        subprocess.check_output(["lxc", "project", "delete", PROJECT_NAME])
+    except FileNotFoundError:
+        print("LXD is not installed.", file=sys.stderr)
+        return
+    except subprocess.CalledProcessError:
+        print(f"Project {PROJECT_NAME} does not exist in the LXD.", file=sys.stderr)
+        return
+
+
+if __name__ == "__main__":
+    remove_hook_main()

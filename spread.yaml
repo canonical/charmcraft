@@ -134,12 +134,17 @@ prepare: |
   lxd waitready --timeout=30
   lxd init --auto
 
-  if stat /charmcraft/charmcraft_*.snap 2>/dev/null; then
-    snap install --classic --dangerous /charmcraft/charmcraft_*.snap
-  else
-    echo "Expected a snap to exist in /charmcraft/"
-    exit 1
-  fi
+  install_charmcraft()
+  {
+    if stat /charmcraft/charmcraft_*.snap 2>/dev/null; then
+      snap install --classic --dangerous /charmcraft/charmcraft_*.snap
+    else
+      echo "Expected a snap to exist in /charmcraft/"
+      exit 1
+    fi
+  }
+
+  install_charmcraft
 
 suites:
   tests/spread/commands/:
@@ -148,6 +153,9 @@ suites:
     summary: real charm building tests
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
+    kill-timeout: 30m
+  tests/spread/hooks/:
+    summary: snap hook tests
     kill-timeout: 30m
   tests/spread/store/:
     summary: sequence of commands for different store-related functionalities

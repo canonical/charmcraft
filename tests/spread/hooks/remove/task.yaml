@@ -1,0 +1,26 @@
+summary: test snap remove hook of charmcraft
+
+systems:
+  - ubuntu-22.04-64
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install unzip
+  charmcraft init --project-dir=charm
+
+restore: |
+  install_charmcraft
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+  lxc --project=charmcraft list --format=csv | grep -q "charmcraft-buildd-base" || { echo "base instance not exists"; exit 1; }
+  snap remove charmcraft
+  lxc --project=charmcraft list && { echo "charmcraft project exists but should not"; exit 1; }

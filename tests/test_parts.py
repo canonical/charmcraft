@@ -63,14 +63,43 @@ def charm_plugin(tmp_path):
     return plugin
 
 
-def test_charmplugin_get_build_package(charm_plugin):
-    assert charm_plugin.get_build_packages() == {
-        "python3-pip",
-        "python3-setuptools",
-        "python3-wheel",
-        "python3-venv",
-        "python3-dev",
-    }
+def test_charmplugin_get_build_package_deb_based(charm_plugin):
+    with patch("craft_parts.utils.os_utils.OsRelease.id") as mock_id:
+        mock_id.return_value = "ubuntu"
+
+        assert charm_plugin.get_build_packages() == {
+            "python3-pip",
+            "python3-setuptools",
+            "python3-wheel",
+            "python3-venv",
+            "python3-dev",
+        }
+
+
+def test_charmplugin_get_build_package_yum_based(charm_plugin):
+    with patch("craft_parts.utils.os_utils.OsRelease.id") as mock_id:
+        mock_id.return_value = "centos"
+
+        assert charm_plugin.get_build_packages() == {
+            "python3-devel",
+            "python3-pip",
+            "python3-setuptools",
+            "python3-wheel",
+        }
+
+
+def test_charmplugin_get_build_package_centos7(charm_plugin):
+    with patch("craft_parts.utils.os_utils.OsRelease.id") as mock_id:
+        with patch("craft_parts.utils.os_utils.OsRelease.version_id") as mock_version:
+            mock_id.return_value = "centos"
+            mock_version.return_value = "7"
+
+            assert charm_plugin.get_build_packages() == {
+                "rh-python38-python-devel",
+                "rh-python38-python-pip",
+                "rh-python38-python-setuptools",
+                "rh-python38-python-wheel",
+            }
 
 
 def test_charmplugin_get_build_snaps(charm_plugin):

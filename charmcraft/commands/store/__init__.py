@@ -103,7 +103,17 @@ class LoginCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            "--export", type=pathlib.Path, help="The file to save the credentials to"
+            "--export",
+            type=pathlib.Path,
+            help=(
+                "Export the Charmhub unencrypted secret credentials to a file. "
+                "Then the secret credentials can be used to set 'CHARMCRAFT_AUTH' "
+                "environment variable. "
+                "e.g. export CHARMCRAFT_AUTH=$(cat secret). "
+                "This is suitable for Linux environments without a Vault, such "
+                "as remote servers and CI/CD pipelines. Please ensure the secret "
+                "file and environment variable are secured"
+            ),
         )
         parser.add_argument(
             "--charm",

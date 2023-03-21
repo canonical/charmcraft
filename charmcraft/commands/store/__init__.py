@@ -1799,7 +1799,7 @@ class UploadResourceCommand(BaseCommand):
             dockerd = LocalDockerdInterface()
 
             server_image_digest = None
-            if ":" in parsed_args.image:
+            if "@" in parsed_args.image:
                 # the user provided a digest; check if the specific image is
                 # already in Canonical's registry
                 already_uploaded = ih.check_in_registry(parsed_args.image)

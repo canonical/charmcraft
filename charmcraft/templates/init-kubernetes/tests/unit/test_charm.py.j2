@@ -1,22 +1,18 @@
 # Copyright {{ year }} {{ author }}
 # See LICENSE file for licensing details.
+#
+# Learn more about testing at: https://juju.is/docs/sdk/testing
 
 import unittest
 
+import ops
 import ops.testing
 from charm import {{ class_name }}
-from ops.model import ActiveStatus
-from ops.testing import Harness
 
 
 class TestCharm(unittest.TestCase):
     def setUp(self):
-        # Enable more accurate simulation of container networking.
-        # For more information, see https://juju.is/docs/sdk/testing#heading--simulate-can-connect
-        ops.testing.SIMULATE_CAN_CONNECT = True
-        self.addCleanup(setattr, ops.testing, "SIMULATE_CAN_CONNECT", False)
-
-        self.harness = Harness({{ class_name }})
+        self.harness = ops.testing.Harness({{ class_name }})
         self.addCleanup(self.harness.cleanup)
         self.harness.begin()
 
@@ -24,4 +20,4 @@ class TestCharm(unittest.TestCase):
         # Simulate the container coming up and emission of pebble-ready event
         self.harness.container_pebble_ready("some-container")
         # Ensure we set an ActiveStatus with no message
-        self.assertEqual(self.harness.model.unit.status, ActiveStatus())
+        self.assertEqual(self.harness.model.unit.status, ops.ActiveStatus())

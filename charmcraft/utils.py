@@ -17,14 +17,17 @@
 """Collection of utilities for charmcraft."""
 
 import datetime
+import enum
+import functools
 import os
 import pathlib
 import platform
 import sys
+import typing
+import zipfile
 from collections import namedtuple
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
-from typing import Iterable
 
 import yaml
 from craft_cli import emit, CraftError
@@ -49,6 +52,78 @@ ARCH_TRANSLATIONS = {
     "x86_64": "amd64",
     "AMD64": "amd64",  # Windows support
 }
+
+PathOrString = typing.Union[os.PathLike, str]
+
+
+@functools.total_ordering
+@enum.unique
+class Risk(enum.Enum):
+    """Standard risk tracks for a channel, orderable but not comparable to an int."""
+
+    STABLE = 0
+    CANDIDATE = 1
+    BETA = 2
+    EDGE = 3
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+
+    def __eq__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value == other.value
+        return NotImplemented
+
+
+@dataclass(frozen=True)
+class ChannelData:
+    """Data class for a craft store channel."""
+
+    track: typing.Optional[str]
+    risk: Risk
+    branch: typing.Optional[str]
+
+    @classmethod
+    def from_str(cls, name: str):
+        """Parse a channel name from a string using the standard store semantics.
+
+        https://snapcraft.io/docs/channels
+        """
+        invalid_channel_error = CraftError(f"Invalid channel name: {name!r}")
+        parts = name.split("/")
+        if len(parts) == 1:
+            try:
+                risk = Risk[parts[0].upper()]
+            except KeyError:
+                raise invalid_channel_error from None
+            else:
+                parts = [None, risk, None]
+        elif len(parts) == 2:
+            try:
+                risk = Risk[parts[0].upper()]
+                parts.insert(0, None)
+            except KeyError:
+                try:
+                    risk = Risk[parts[1].upper()]
+                    parts.append(None)
+                except KeyError:
+                    raise invalid_channel_error from None
+        elif len(parts) == 3:
+            try:
+                risk = Risk[parts[1].upper()]
+            except KeyError:
+                raise invalid_channel_error from None
+        else:
+            raise invalid_channel_error
+        return cls(parts[0], risk, parts[2])
+
+    @property
+    def name(self) -> str:
+        """Get the channel name as a string."""
+        risk = self.risk.name.lower()
+        return "/".join(i for i in (self.track, risk, self.branch) if i is not None)
 
 
 def make_executable(fh):
@@ -249,7 +324,7 @@ def format_timestamp(dt: datetime.datetime) -> str:
     return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def humanize_list(items: Iterable[str], conjunction: str) -> str:
+def humanize_list(items: typing.Iterable[str], conjunction: str) -> str:
     """Format a list into a human-readable string.
 
     :param items: list to humanize, must not be empty
@@ -262,3 +337,14 @@ def humanize_list(items: Iterable[str], conjunction: str) -> str:
     if not initials:
         return final
     return f"{', '.join(initials)} {conjunction} {final}"
+
+
+def build_zip(zip_path: PathOrString, prime_dir: PathOrString) -> None:
+    """Build the final file."""
+    zip_path = pathlib.Path(zip_path).resolve()
+    prime_dir = pathlib.Path(prime_dir).resolve()
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as file:
+        for file_path in prime_dir.rglob("*"):
+            if not file_path.is_file():
+                continue
+            file.write(file_path, file_path.relative_to(prime_dir))

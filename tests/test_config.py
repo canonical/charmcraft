@@ -683,15 +683,6 @@ def test_charmhub_underscore_in_names(create_config, check_schema_error):
 # -- tests for bases
 
 
-def test_no_bases_for_charms(create_config, check_schema_error):
-    create_config(
-        """
-        type: charm
-    """
-    )
-    check_schema_error("The field 'bases' is mandatory when type=charm")
-
-
 def test_no_bases_is_ok_for_bundles(emitter, create_config, tmp_path):
     """Do not send a deprecation message if it is a bundle."""
     create_config(

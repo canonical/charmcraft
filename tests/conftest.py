@@ -139,7 +139,6 @@ def fake_provider(mock_instance):
     """Provide a minimal/fake provider."""
 
     class FakeProvider(Provider):
-
         name = "TestProvider"
         install_recommendation = "Insert floppy disk."
 

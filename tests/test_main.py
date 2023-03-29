@@ -151,6 +151,7 @@ def test_main_load_config_not_present_ok():
 
         def run(self, parsed_args):
             assert not self.config.project.config_provided
+            self._check_config()
 
     with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
         retcode = main(["charmcraft", "cmdname", "--project-dir=/whatever"])
@@ -164,10 +165,10 @@ def test_main_load_config_not_present_but_needed(capsys):
         help_msg = "some help"
         name = "cmdname"
         overview = "test overview"
-        needs_config = True
 
         def run(self, parsed_args):
-            pass
+            assert not self.config.project.config_provided
+            self._check_config(config_file=True)
 
     with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
         retcode = main(["charmcraft", "cmdname", "--project-dir=/whatever"])
@@ -179,6 +180,59 @@ def test_main_load_config_not_present_but_needed(capsys):
         "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
         "the current directory or where specified with --project-dir option); see "
         "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138\n"
+    )
+
+
+def test_main_load_config_bases_not_present_but_not_needed(capsys, create_config):
+    """Config bases is not present and the command does not need it."""
+
+    tmp_path = create_config(
+        """
+        type: charm
+    """
+    )
+
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = "cmdname"
+        overview = "test overview"
+
+        def run(self, parsed_args):
+            self._check_config(config_file=True, bases=False)
+            assert self.config.type == "charm"
+
+    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
+        retcode = main(["charmcraft", "cmdname", f"--project-dir={tmp_path}"])
+    assert retcode == 0
+
+
+def test_main_load_config_bases_not_present_but_needed(capsys, create_config):
+    """Config bases is not present and the command needs it."""
+
+    tmp_path = create_config(
+        """
+        type: charm
+    """
+    )
+
+    class MyCommand(BaseCommand):
+        help_msg = "some help"
+        name = "cmdname"
+        overview = "test overview"
+
+        def run(self, parsed_args):
+            assert self.config.type == "charm"
+            self._check_config(config_file=True, bases=True)
+
+    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
+        retcode = main(["charmcraft", "cmdname", f"--project-dir={tmp_path}"])
+    assert retcode == 1
+
+    out, err = capsys.readouterr()
+    assert not out
+    assert err.startswith(
+        "The specified command needs a valid 'bases' in 'charmcraft.yaml' configuration "
+        "file (in the current directory or where specified with --project-dir option)."
     )
 
 
@@ -466,11 +520,6 @@ class MySimpleCommand(BaseCommand):
     help_msg = "some help"
     name = "cmdname"
     overview = "test overview"
-
-
-def test_basecommand_needs_config_default():
-    """A command by default does not needs config."""
-    assert MySimpleCommand.needs_config is False
 
 
 def test_basecommand_include_format_option(config):

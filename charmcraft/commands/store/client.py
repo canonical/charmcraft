@@ -47,10 +47,34 @@ def build_user_agent():
     )
 
 
+class AnonymousClient:
+    """Lightweight layer that access public store data."""
+
+    def __init__(self, api_base_url: str, storage_base_url: str):
+        self.api_base_url = api_base_url.rstrip("/")
+        self.storage_base_url = storage_base_url.rstrip("/")
+        self._http_client = craft_store.http_client.HTTPClient(user_agent=build_user_agent())
+
+    def request_urlpath_text(self, method: str, urlpath: str, *args, **kwargs) -> str:
+        """Return a request.Response to a urlpath."""
+        return self._http_client.request(method, self.api_base_url + urlpath, *args, **kwargs).text
+
+    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> Dict[str, Any]:
+        """Return .json() from a request.Response to a urlpath."""
+        response = self._http_client.request(method, self.api_base_url + urlpath, *args, **kwargs)
+
+        try:
+            return response.json()
+        except JSONDecodeError as json_error:
+            raise CraftError(
+                f"Could not retrieve json response ({response.status_code} from request"
+            ) from json_error
+
+
 class Client(craft_store.StoreClient):
     """Lightweight layer above StoreClient."""
 
-    def __init__(self, api_base_url, storage_base_url, ephemeral=False):
+    def __init__(self, api_base_url: str, storage_base_url: str, ephemeral: bool = False):
         self.api_base_url = api_base_url.rstrip("/")
         self.storage_base_url = storage_base_url.rstrip("/")
 

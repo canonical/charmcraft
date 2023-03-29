@@ -45,6 +45,7 @@ class CleanCommand(BaseCommand):
         First, a build plan is created.
         Then each item in the build plan is cleaned.
         """
+        self._check_config(config_file=True, bases=True)
         project_path = self.config.project.dirpath
         metadata = parse_metadata_yaml(project_path)
         emit.message(f"Cleaning project {metadata.name!r}.")

@@ -13,11 +13,8 @@ jobs:
   run-tests:
     strategy:
       matrix:
-        os: [macos-11, macos-12, ubuntu-18.04, ubuntu-20.04, ubuntu-22.04, windows-2019, windows-2022]
+        os: [macos-11, macos-12, ubuntu-20.04, ubuntu-22.04, windows-2019, windows-2022]
         python-version: [3.8, 3.9, "3.10"]
-        exclude:
-          - os: ubuntu-18.04
-            python-version: "3.10"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -38,16 +35,10 @@ jobs:
         run: |
           pip install -U wheel setuptools
       - name: Install Ubuntu-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
-      - name: Install Ubuntu 18.04-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-18.04' }}
-        run: |
-          # pip 20.2 breaks python3-apt, so pin the version before building
-          pip install -U pip==20.1
-          pip install -U -r requirements-bionic.txt
       - name: Install Ubuntu 20.04-specific dependencies
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: |
@@ -84,7 +75,7 @@ jobs:
     needs: [snap-build]
     strategy:
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
+        os: [ubuntu-20.04]
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -102,12 +93,6 @@ jobs:
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-distutils
           sudo snap install charm --classic
-      - name: Install LXD dependency on 18.04
-        if: ${{ matrix.os == 'ubuntu-18.04' }}
-        run: |
-          sudo apt remove -y lxd
-          sudo snap install lxd
-          snap list lxd
       - name: Refresh LXD dependency on 20.04
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: |

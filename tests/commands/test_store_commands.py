@@ -89,10 +89,11 @@ def store_mock():
     """The fixture to fake the store layer in all the tests."""
     store_mock = MagicMock()
 
-    def validate_params(config, ephemeral=False):
+    def validate_params(config, ephemeral=False, needs_auth=True):
         """Check that the store received the Charmhub configuration and ephemeral flag."""
         assert config == CharmhubConfig()
         assert isinstance(ephemeral, bool)
+        assert isinstance(needs_auth, bool)
         return store_mock
 
     with patch("charmcraft.commands.store.Store", validate_params):

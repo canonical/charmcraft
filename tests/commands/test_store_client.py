@@ -28,6 +28,7 @@ from craft_cli import CraftError
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft.commands.store.client import (
+    AnonymousClient,
     Client,
     build_user_agent,
 )
@@ -354,3 +355,99 @@ def test_alternate_auth_logout_forbidden(client_class, monkeypatch):
         "Cannot logout when using alternative auth through CHARMCRAFT_AUTH environment variable."
     )
     assert str(cm.value) == expected_error
+
+
+def test_anonymous_client_init():
+    """Check how craft-store's HTTPClient is initiated."""
+    api_url = "http://api.test"
+    storage_url = "http://storage.test"
+    user_agent = "Super User Agent"
+    with patch("craft_store.http_client.HTTPClient.__init__") as mock_client_init:
+        with patch("charmcraft.commands.store.client.build_user_agent") as mock_ua:
+            mock_ua.return_value = user_agent
+            mock_client_init.return_value = None
+            AnonymousClient(api_url, storage_url)
+
+    mock_client_init.assert_called_with(
+        user_agent=user_agent,
+    )
+
+
+def test_anonymous_client_request_success_simple():
+    """Hits the server, all ok."""
+    response_value = {"foo": "bar"}
+    fake_response = FakeResponse(content=json.dumps(response_value), status_code=200)
+    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+        mock_http_client_request.return_value = fake_response
+        client = AnonymousClient("http://api.test", "http://storage.test")
+        result = client.request_urlpath_json("GET", "/somepath")
+
+    assert mock_http_client_request.mock_calls == [call("GET", "http://api.test/somepath")]
+    assert result == response_value
+
+
+def test_anonymous_client_request_success_without_json_parsing():
+    """Hits the server, all ok, return the raw response without parsing the json."""
+    response_value = "whatever test response"
+    fake_response = FakeResponse(content=response_value, status_code=200)
+    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+        client = AnonymousClient("http://api.test", "http://storage.test")
+        mock_http_client_request.return_value = fake_response
+        result = client.request_urlpath_text("GET", "/somepath")
+
+    assert mock_http_client_request.mock_calls == [call("GET", "http://api.test/somepath")]
+    assert result == response_value
+
+
+def test_anonymous_client_request_text_error():
+    """Hits the server in text mode, getting an error."""
+    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+        original_error_text = "bad bad server"
+        mock_http_client_request.side_effect = craft_store.errors.CraftStoreError(
+            original_error_text
+        )
+        client = AnonymousClient("http://api.test", "http://storage.test")
+
+        with pytest.raises(craft_store.errors.CraftStoreError) as cm:
+            client.request_urlpath_text("GET", "/somepath")
+
+    assert str(cm.value) == original_error_text
+
+
+def test_anonymous_client_request_json_error():
+    """Hits the server in json mode, getting an error."""
+    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+        original_error_text = "bad bad server"
+        mock_http_client_request.side_effect = craft_store.errors.CraftStoreError(
+            original_error_text
+        )
+        client = AnonymousClient("http://api.test", "http://storage.test")
+
+        with pytest.raises(craft_store.errors.CraftStoreError) as cm:
+            client.request_urlpath_json("GET", "/somepath")
+
+    assert str(cm.value) == original_error_text
+
+
+def test_anonymous_client_hit_success_withbody():
+    """Hits the server including a body, all ok."""
+    response_value = {"foo": "bar"}
+    fake_response = FakeResponse(content=response_value, status_code=200)
+    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+        mock_http_client_request.return_value = fake_response
+        client = AnonymousClient("http://api.test", "http://storage.test")
+
+        result = client.request_urlpath_text("GET", "/somepath", "somebody")
+
+    assert mock_http_client_request.mock_calls == [
+        call("GET", "http://api.test/somepath", "somebody")
+    ]
+    assert result == response_value
+
+
+def test_anonymous_client_init_removes_trailing_slashes():
+    """The configured api url is ok even with an extra slash."""
+    client = AnonymousClient("https://local.test:1234/", "http://storage.test/")
+
+    assert client.api_base_url == "https://local.test:1234"
+    assert client.storage_base_url == "http://storage.test"

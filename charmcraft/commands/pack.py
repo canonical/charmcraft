@@ -16,9 +16,7 @@
 
 """Infrastructure for the 'pack' command."""
 
-import os
 import pathlib
-import zipfile
 from typing import List
 
 from craft_cli import emit, CraftError
@@ -28,23 +26,10 @@ from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
-from charmcraft.utils import load_yaml
+from charmcraft.utils import load_yaml, build_zip
 
 # the minimum set of files in a bundle
 MANDATORY_FILES = ["bundle.yaml", "README.md"]
-
-
-def build_zip(zippath, prime_dir):
-    """Build the final file."""
-    zipfh = zipfile.ZipFile(zippath, "w", zipfile.ZIP_DEFLATED)
-    for dirpath, dirnames, filenames in os.walk(prime_dir, followlinks=True):
-        dirpath = pathlib.Path(dirpath)
-        for filename in filenames:
-            filepath = dirpath / filename
-            zipfh.write(str(filepath), str(filepath.relative_to(prime_dir)))
-
-    zipfh.close()
-
 
 _overview = """
 Build and pack a charm operator package or a bundle.
@@ -72,7 +57,6 @@ class PackCommand(BaseCommand):
     name = "pack"
     help_msg = "Build the charm or bundle"
     overview = _overview
-    needs_config = True
     common = True
 
     def fill_parser(self, parser):
@@ -121,8 +105,10 @@ class PackCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        self._check_config(config_file=True)
         # decide if this will work on a charm or a bundle
         if self.config.type == "charm":
+            self._check_config(bases=True)
             pack_method = self._pack_charm
         elif self.config.type == "bundle":
             pack_method = self._pack_bundle

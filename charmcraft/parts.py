@@ -25,8 +25,10 @@ from typing import Any, Dict, List, Set, cast
 import pydantic
 from craft_cli import emit, CraftError
 from craft_parts import LifecycleManager, Step, plugins, callbacks
-from craft_parts.errors import PartsError
+from craft_parts.errors import OsReleaseIdError, OsReleaseVersionIdError, PartsError
+from craft_parts.packages import platform
 from craft_parts.parts import PartSpec
+from craft_parts.utils import os_utils
 from xdg import BaseDirectory  # type: ignore
 
 from charmcraft import charm_builder, instrum, env
@@ -149,13 +151,36 @@ class CharmPlugin(plugins.Plugin):
 
     def get_build_packages(self) -> Set[str]:
         """Return a set of required packages to install in the build environment."""
-        return {
-            "python3-pip",
-            "python3-setuptools",
-            "python3-wheel",
-            "python3-venv",
-            "python3-dev",
-        }
+        if platform.is_deb_based():
+            return {
+                "python3-dev",
+                "python3-pip",
+                "python3-setuptools",
+                "python3-venv",
+                "python3-wheel",
+            }
+        elif platform.is_yum_based():
+            try:
+                os_release = os_utils.OsRelease()
+                if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
+                    # CentOS 7 Python 3.8 from SCL repo
+                    return {
+                        "rh-python38-python-devel",
+                        "rh-python38-python-pip",
+                        "rh-python38-python-setuptools",
+                        "rh-python38-python-wheel",
+                    }
+            except (OsReleaseIdError, OsReleaseVersionIdError):
+                pass
+
+            return {
+                "python3-devel",
+                "python3-pip",
+                "python3-setuptools",
+                "python3-wheel",
+            }
+        else:
+            return {}
 
     def get_build_environment(self) -> Dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
@@ -199,6 +224,18 @@ class CharmPlugin(plugins.Plugin):
         if options.charm_entrypoint:
             entrypoint = self._part_info.part_build_dir / options.charm_entrypoint
             build_cmd.extend(["--entrypoint", str(entrypoint)])
+
+        try:
+            if (
+                options.charm_python_packages or options.charm_requirements
+            ) and platform.is_yum_based():
+                os_release = os_utils.OsRelease()
+                if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
+                    # CentOS 7 compatibility
+                    for pkg in ["pip", "setuptools", "wheel"]:
+                        build_cmd.extend(["-b", pkg])
+        except (OsReleaseIdError, OsReleaseVersionIdError):
+            pass
 
         for pkg in options.charm_binary_python_packages:
             build_cmd.extend(["-b", pkg])

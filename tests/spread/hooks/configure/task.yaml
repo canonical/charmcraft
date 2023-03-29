@@ -1,0 +1,53 @@
+summary: test snap configure hook of charmcraft
+
+systems:
+  - ubuntu-22.04-64
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install unzip
+  charmcraft init --project-dir=charm
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+  snap remove charmcraft
+  install_charmcraft
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+
+  # Get current instance to fake versions
+  CURRENT_INSTANCE="$(lxc --project=charmcraft list --format=csv -c n | head -n 1)"
+
+  # Create an obsolete base instance v0.0 format 1
+  lxc --project=charmcraft copy "${CURRENT_INSTANCE}" snapshot-craft-com.ubuntu.cloud-buildd-core22-charmcraft-buildd-base-v0.0
+
+  # Create an obsolete base instance v0.0 format 2
+  lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-XXXOLDMETAXXX
+  lxc --project=charmcraft config set base-instance-charmcraft-buildd-XXXOLDMETAXXX "image.description" "base-instance-charmcraft-buildd-base-v0.0-craft-com.ubuntu.cloud-buildd-core22"
+
+  # Create an obsolete base instance v0.0
+  lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-base-v00-XXXOLDBASEXXX
+
+  # Create a older base instance when newer one exists
+  lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-base-v10-XXXOLDVERSIONXXX
+  lxc --project=charmcraft config set base-instance-charmcraft-buildd-base-v10-XXXOLDVERSIONXXX "image.description" "base-instance-charmcraft-buildd-base-v10-XXXOLDVERSIONXXX"
+
+  # Create a newer base version instance
+  lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-base-v9999-XXXNEWVERSIONXXX
+  lxc --project=charmcraft config set base-instance-charmcraft-buildd-base-v9999-XXXNEWVERSIONXXX "image.description" "base-instance-charmcraft-buildd-base-v99.0-craft-com.ubuntu.cloud-buildd-core22"
+
+  install_charmcraft
+
+  lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-XXXOLDMETAXXX" && { echo "old base instance exists but should not"; exit 1; }
+  lxc --project=charmcraft list --format=csv | grep -q "snapshot-craft-com.ubuntu.cloud-buildd-core22-charmcraft-buildd-base-v0.0" && { echo "old base instance exists but should not"; exit 1; }
+  lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-base-v00-XXXOLDBASEXXX" && { echo "old base instance exists but should not"; exit 1; }
+  lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-base-v10-XXXOLDVERSIONXXX" && { echo "old base instance exists but should not"; exit 1; }
+  lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-base-v9999-XXXNEWVERSIONXXX" || { echo "new base instance not exist but should"; exit 1; }

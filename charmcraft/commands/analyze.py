@@ -41,7 +41,6 @@ class AnalyzeCommand(BaseCommand):
         `--force` to run even those configured to be ignored.
     """
     )
-    needs_config = False  # optional until we fully support charms here
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

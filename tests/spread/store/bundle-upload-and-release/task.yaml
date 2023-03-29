@@ -1,6 +1,6 @@
-summary: full bundle cycle -- pack, upload, check revisions, release, check channel map
+summary: full bundle cycle -- pack, upload, check revisions, release, check channel map, promote-bundle
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -37,8 +37,8 @@ execute: |
   # upload and get uploaded revision
   uploaded_revno=$(charmcraft upload $BUNDLE_DEFAULT_NAME.zip --format=json | jq .revision)
 
-  # check the uploaded revision is newer than start datetime (note we're 
-  # not using latest, as it may not be the one we uploaded here, because 
+  # check the uploaded revision is newer than start datetime (note we're
+  # not using latest, as it may not be the one we uploaded here, because
   # multiple tests running concurrently)
   up_revision=$(charmcraft revisions $BUNDLE_DEFAULT_NAME --format=json | jq -r --arg revno $uploaded_revno '.[] | select(.revision|tostring==$revno)')
   up_revision_created=$(echo $up_revision | jq -r .created_at)
@@ -50,8 +50,16 @@ execute: |
   # validate the channel map
   edge_release=$(charmcraft status $BUNDLE_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
   edge_revision=$(echo $edge_release | jq -r .revision)
-  # check that the current release greater or equal than what was 
+  # check that the current release greater or equal than what was
   # uploaded, because other tests running concurrently may have
   # also released (but for sure cannot be a previous revision)
-  test $edge_revision -ge $uploaded_revno  
+  test $edge_revision -ge $uploaded_revno
 
+  # Test promotion to beta
+  beta_release=$(charmcraft status $BUNDLE_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/beta")')
+  old_beta_revision=$(echo $beta_release | jq -r .revision)
+  test $old_beta_revision -le $edge_revision
+  charmcraft promote-bundle latest/edge latest/beta
+  beta_release=$(charmcraft status $BUNDLE_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/beta")')
+  beta_revision=$(echo $beta_release | jq -r .revision)
+  test $beta_revision -ge $edge_revision

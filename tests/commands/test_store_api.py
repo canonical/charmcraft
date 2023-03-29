@@ -33,7 +33,7 @@ from craft_store.errors import (
     StoreServerError,
 )
 
-from charmcraft.commands.store.client import Client
+from charmcraft.commands.store.client import AnonymousClient, Client
 from charmcraft.utils import ResourceOption
 from charmcraft.commands.store.store import (
     AUTH_DEFAULT_PERMISSIONS,
@@ -57,6 +57,17 @@ def client_mock(monkeypatch):
         yield client_mock
 
 
+@pytest.fixture
+def anonymous_client_mock(monkeypatch):
+    """Fixture to provide a mocked anonymous client."""
+    anonymous_client_mock = MagicMock(spec=AnonymousClient)
+    with patch(
+        "charmcraft.commands.store.store.AnonymousClient",
+        lambda api, storage: anonymous_client_mock,
+    ):
+        yield anonymous_client_mock
+
+
 # -- tests for client usage
 
 
@@ -75,6 +86,18 @@ def test_client_init_ephemeral(config):
         Store(config.charmhub, ephemeral=True)
     assert client_mock.mock_calls == [
         call(config.charmhub.api_url, config.charmhub.storage_url, ephemeral=True),
+    ]
+
+
+# -- tests for anonymous client usage
+
+
+def test_anonymous_client_init(config):
+    """Check that the client is initiated ok even without config."""
+    with patch("charmcraft.commands.store.store.AnonymousClient") as anonymous_client_mock:
+        Store(config.charmhub, needs_auth=False)
+    assert anonymous_client_mock.mock_calls == [
+        call(config.charmhub.api_url, config.charmhub.storage_url),
     ]
 
 
@@ -1404,7 +1427,7 @@ def test_create_library_revision(client_mock, config):
     assert result_lib.patch == test_patch
 
 
-def test_get_library(client_mock, config):
+def test_get_library(anonymous_client_mock, config):
     """Get all the information (including content) for a library revision."""
     test_charm_name = "test-charm-name"
     test_lib_name = "test-lib-name"
@@ -1414,8 +1437,8 @@ def test_get_library(client_mock, config):
     test_content = "test content with quite a lot of funny Python code :p"
     test_hash = "1234"
 
-    store = Store(config.charmhub)
-    client_mock.request_urlpath_json.return_value = {
+    store = Store(config.charmhub, needs_auth=False)
+    anonymous_client_mock.request_urlpath_json.return_value = {
         "api": test_api,
         "content": test_content,
         "hash": test_hash,
@@ -1427,7 +1450,7 @@ def test_get_library(client_mock, config):
 
     result_lib = store.get_library(test_charm_name, test_lib_id, test_api)
 
-    assert client_mock.mock_calls == [
+    assert anonymous_client_mock.mock_calls == [
         call.request_urlpath_json(
             "GET", "/v1/charm/libraries/test-charm-name/{}?api={}".format(test_lib_id, test_api)
         ),
@@ -1441,7 +1464,7 @@ def test_get_library(client_mock, config):
     assert result_lib.patch == test_patch
 
 
-def test_get_tips_simple(client_mock, config):
+def test_get_tips_simple(anonymous_client_mock, config):
     """Get info for a lib, simple case with successful result."""
     test_charm_name = "test-charm-name"
     test_lib_name = "test-lib-name"
@@ -1451,8 +1474,8 @@ def test_get_tips_simple(client_mock, config):
     test_content = "test content with quite a lot of funny Python code :p"
     test_hash = "1234"
 
-    store = Store(config.charmhub)
-    client_mock.request_urlpath_json.return_value = {
+    store = Store(config.charmhub, needs_auth=False)
+    anonymous_client_mock.request_urlpath_json.return_value = {
         "libraries": [
             {
                 "api": test_api,
@@ -1474,7 +1497,7 @@ def test_get_tips_simple(client_mock, config):
     payload = [
         {"library-id": test_lib_id},
     ]
-    assert client_mock.mock_calls == [
+    assert anonymous_client_mock.mock_calls == [
         call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
     ]
     expected = {
@@ -1491,12 +1514,12 @@ def test_get_tips_simple(client_mock, config):
     assert result == expected
 
 
-def test_get_tips_empty(client_mock, config):
+def test_get_tips_empty(anonymous_client_mock, config):
     """Get info for a lib, with an empty response."""
     test_lib_id = "test-lib-id"
 
-    store = Store(config.charmhub)
-    client_mock.request_urlpath_json.return_value = {"libraries": []}
+    store = Store(config.charmhub, needs_auth=False)
+    anonymous_client_mock.request_urlpath_json.return_value = {"libraries": []}
 
     query_info = [
         {"lib_id": test_lib_id},
@@ -1506,13 +1529,13 @@ def test_get_tips_empty(client_mock, config):
     payload = [
         {"library-id": test_lib_id},
     ]
-    assert client_mock.mock_calls == [
+    assert anonymous_client_mock.mock_calls == [
         call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
     ]
     assert result == {}
 
 
-def test_get_tips_several(client_mock, config):
+def test_get_tips_several(anonymous_client_mock, config):
     """Get info for multiple libs at once."""
     test_charm_name_1 = "test-charm-name-1"
     test_lib_name_1 = "test-lib-name-1"
@@ -1530,8 +1553,8 @@ def test_get_tips_several(client_mock, config):
     test_content_2 = "more awesome Python code :)"
     test_hash_2 = "5678"
 
-    store = Store(config.charmhub)
-    client_mock.request_urlpath_json.return_value = {
+    store = Store(config.charmhub, needs_auth=False)
+    anonymous_client_mock.request_urlpath_json.return_value = {
         "libraries": [
             {
                 "api": test_api_1,
@@ -1564,7 +1587,7 @@ def test_get_tips_several(client_mock, config):
         {"library-id": test_lib_id_1},
         {"library-id": test_lib_id_2},
     ]
-    assert client_mock.mock_calls == [
+    assert anonymous_client_mock.mock_calls == [
         call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
     ]
     expected = {
@@ -1590,10 +1613,10 @@ def test_get_tips_several(client_mock, config):
     assert result == expected
 
 
-def test_get_tips_query_combinations(client_mock, config):
+def test_get_tips_query_combinations(anonymous_client_mock, config):
     """Use all the combinations to specify what's queried."""
-    store = Store(config.charmhub)
-    client_mock.request_urlpath_json.return_value = {"libraries": []}
+    store = Store(config.charmhub, needs_auth=False)
+    anonymous_client_mock.request_urlpath_json.return_value = {"libraries": []}
 
     query_info = [
         {"lib_id": "test-lib-id-1"},
@@ -1617,7 +1640,7 @@ def test_get_tips_query_combinations(client_mock, config):
             "api": 6,
         },
     ]
-    assert client_mock.mock_calls == [
+    assert anonymous_client_mock.mock_calls == [
         call.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=payload),
     ]
 

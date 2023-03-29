@@ -20,6 +20,8 @@ import json
 
 import craft_cli
 
+from craft_cli import ArgumentParsingError, CraftError
+
 JSON_FORMAT = "json"
 FORMAT_HELP_STR = "Produce the result in the specified format (currently only 'json')"
 
@@ -29,16 +31,12 @@ class BaseCommand(craft_cli.BaseCommand):
 
     The following default attribute is provided beyond craft-cli ones:
 
-    - needs_config: will ensure a config is provided when executing the command
-
     The subclass must be declared in the corresponding section of main.COMMAND_GROUPS.
 
     If the command may produce the result in a programmatic-friendly format, it
     should call the 'include_format_option' method to properly affect the parser and
     then emit only one message with the result of the 'format_content' method.
     """
-
-    needs_config = False
 
     def format_content(self, fmt, content):
         """Format the content."""
@@ -53,3 +51,25 @@ class BaseCommand(craft_cli.BaseCommand):
             choices=[JSON_FORMAT],
             help=FORMAT_HELP_STR,
         )
+
+    def _check_config(self, config_file: bool = False, bases: bool = False) -> None:
+        """Check if vaild config contents exists.
+
+        - config_file: if True, check if a valid "charmcraft.yaml" file exists.
+        - bases: if True, check if a valid "bases" in "charmcraft.yaml" exists.
+
+        :raises ArgumentParsingError: if 'charmcraft.yaml' file is missing.
+        :raises CraftError: if any specified config are missing or invaild.
+        """
+        if config_file and not self.config.project.config_provided:
+            raise ArgumentParsingError(
+                "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
+                "the current directory or where specified with --project-dir option); see "
+                "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
+            )
+
+        if bases and self.config.bases is None:
+            raise CraftError(
+                "The specified command needs a valid 'bases' in 'charmcraft.yaml' configuration "
+                "file (in the current directory or where specified with --project-dir option)."
+            )

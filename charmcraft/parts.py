@@ -20,7 +20,7 @@ import os
 import pathlib
 import shlex
 import sys
-from typing import Any, Dict, List, Set, Optional, cast
+from typing import Any, Dict, List, Optional, Set, cast
 from contextlib import suppress
 
 import pydantic

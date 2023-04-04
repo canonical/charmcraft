@@ -80,8 +80,7 @@ def bundle_yaml(tmp_path):
 
     def func(*, name, base_content: Optional[Dict[str, Any]] = None):
         if base_content:
-            for key, value in base_content.items():
-                content[key] = value
+            content.update(base_content)
         content["name"] = name
         encoded = yaml.dump(content)
         bundle_path.write_text(encoded)

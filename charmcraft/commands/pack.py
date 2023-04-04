@@ -157,7 +157,7 @@ class PackCommand(BaseCommand):
             self._check_config(bases=True)
             pack_method = self._pack_charm
         elif self.config.type == "bundle":
-            bundle = load_yaml(self.config.project.dirpath / "bundle.yaml")
+            bundle = load_yaml(self.config.project.dirpath / "bundle.yaml") or {}
             if parsed_args.include_all_charms:
                 charm_names = bundle.get("applications", {}).keys()
                 charms = find_charm_sources(self.config.project.dirpath, charm_names)
@@ -333,7 +333,7 @@ class PackCommand(BaseCommand):
     def _recursive_pack_bundle(
         self,
         parsed_args: argparse.Namespace,
-        bundle_config: Optional[Dict[str, Any]],
+        bundle_config: Dict[str, Any],
         charms: Mapping[str, pathlib.Path],
     ) -> List[pathlib.Path]:
         bundle_charms = bundle_config.get("applications", {})
@@ -382,28 +382,30 @@ def _subprocess_pack_charms(
     generated_charms = {}
     with tempfile.TemporaryDirectory(prefix="charmcraft-bundle-", dir=cwd) as temp_dir:
         temp_dir = pathlib.Path(temp_dir)
-        # Put all the charms in this temporary directory.
-        os.chdir(temp_dir)
-        for charm, project_dir in charms.items():
-            full_command = [*command_args, f"--project-dir={project_dir}"]
-            with emit.open_stream(f"Packing charm {charm}...") as stream:
-                subprocess.check_call(full_command, stdout=stream, stderr=stream)
-        duplicate_charms = {}
-        for charm_file in temp_dir.glob("*.charm"):
-            charm_name = charm_file.name.partition("_")[0]
-            if charm_name not in charms:
-                emit.debug(f"Unknown charm file generated: {charm_file.name}")
-                continue
-            if charm_name in generated_charms:
-                if charm_name not in duplicate_charms:
-                    duplicate_charms[charm_name] = temp_dir.glob(f"{charm_name}_*.charm")
-                continue
-            generated_charms[charm_name] = charm_file
-        if duplicate_charms:
-            raise DuplicateCharmsError(duplicate_charms)
-        for charm, charm_file in generated_charms.items():
-            destination = cwd / charm_file.name
-            destination.unlink(missing_ok=True)
-            generated_charms[charm] = shutil.move(charm_file, destination)
-    os.chdir(cwd)
+        try:
+            # Put all the charms in this temporary directory.
+            os.chdir(temp_dir)
+            for charm, project_dir in charms.items():
+                full_command = [*command_args, f"--project-dir={project_dir}"]
+                with emit.open_stream(f"Packing charm {charm}...") as stream:
+                    subprocess.check_call(full_command, stdout=stream, stderr=stream)
+            duplicate_charms = {}
+            for charm_file in temp_dir.glob("*.charm"):
+                charm_name = charm_file.name.partition("_")[0]
+                if charm_name not in charms:
+                    emit.debug(f"Unknown charm file generated: {charm_file.name}")
+                    continue
+                if charm_name in generated_charms:
+                    if charm_name not in duplicate_charms:
+                        duplicate_charms[charm_name] = temp_dir.glob(f"{charm_name}_*.charm")
+                    continue
+                generated_charms[charm_name] = charm_file
+            if duplicate_charms:
+                raise DuplicateCharmsError(duplicate_charms)
+            for charm, charm_file in generated_charms.items():
+                destination = cwd / charm_file.name
+                destination.unlink(missing_ok=True)
+                generated_charms[charm] = shutil.move(charm_file, destination)
+        finally:
+            os.chdir(cwd)
     return generated_charms

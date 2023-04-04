@@ -1352,7 +1352,7 @@ def test_revisions_errors_multiple(emitter, store_mock, config, formatted):
     else:
         expected = [
             "Revision    Version    Created at            Status",
-            "1                      2020-07-03T20:30:40Z  rejected: text 1 [missing-stuff]; other long error text [broken]",
+            "1                      2020-07-03T20:30:40Z  rejected: text 1 [missing-stuff]; other long error text [broken]",  # noqa: E501
         ]
         emitter.assert_messages(expected)
 
@@ -2095,7 +2095,7 @@ def test_status_with_one_branch(emitter, store_mock, config, formatted):
             "                               candidate      -          -",
             "                               beta           5.1        5",
             "                               edge           ↑          ↑",
-            "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40Z",
+            "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40Z",  # noqa: E501
         ]
         emitter.assert_messages(expected)
 
@@ -2147,8 +2147,8 @@ def test_status_with_multiple_branches(emitter, store_mock, config):
         "                               candidate      -          -",
         "                               beta           5.1        5",
         "                               edge           ↑          ↑",
-        "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40Z",
-        "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40Z",
+        "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40Z",  # noqa: E501
+        "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40Z",  # noqa: E501
     ]
     emitter.assert_messages(expected)
 
@@ -2228,7 +2228,7 @@ def test_status_with_resources(emitter, store_mock, config, formatted):
         expected = [
             "Track    Base                  Channel    Version    Revision    Resources",
             "latest   ubuntu 20.04 (amd64)  stable     -          -           -",
-            "                               candidate  5.1        5           resource1 (r1), resource2 (r54)",
+            "                               candidate  5.1        5           resource1 (r1), resource2 (r54)",  # noqa: E501
             "                               beta       5.1        5           resource1 (r1)",
             "                               edge       ↑          ↑           ↑",
         ]
@@ -2296,12 +2296,12 @@ def test_status_with_resources_and_branches(emitter, store_mock, config):
     StatusCommand(config).run(args)
 
     expected = [
-        "Track    Base                  Channel        Version    Revision    Resources      Expires at",
+        "Track    Base                  Channel        Version    Revision    Resources      Expires at",  # noqa: E501
         "latest   ubuntu 20.04 (amd64)  stable         -          -           -",
         "                               candidate      -          -           -",
         "                               beta           7.0.0      23          testres (r14)",
         "                               edge           ↑          ↑           ↑",
-        "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40Z",
+        "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40Z",  # noqa: E501
     ]
     emitter.assert_messages(expected)
 
@@ -2558,17 +2558,17 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
     ]
 
     expected = [
-        "Track    Base                  Channel        Version       Revision    Resources     Expires at",
+        "Track    Base                  Channel        Version       Revision    Resources     Expires at",  # noqa: E501
         "latest   ubuntu 20.04 (amd64)  stable         -             -           -",
         "                               candidate      v7            7           -",
         "                               beta           ↑             ↑           ↑",
         "                               edge           git-0db35ea1  156         -",
-        "                               candidate/br1  v7            7           -             2020-07-03T20:30:40Z",
+        "                               candidate/br1  v7            7           -             2020-07-03T20:30:40Z",  # noqa: E501
         "         xz 1 (16b)            stable         v7            7           -",
         "                               candidate      ↑             ↑           ↑",
         "                               beta           2.0           80          -",
         "                               edge           ↑             ↑           ↑",
-        "                               beta/br2       weird         99          testres (r1)  2020-07-03T20:30:40Z",
+        "                               beta/br2       weird         99          testres (r1)  2020-07-03T20:30:40Z",  # noqa: E501
         "2.0      ubuntu 20.04 (amd64)  stable         -             -           -",
         "                               candidate      v7            7           -",
         "                               beta           2.0           80          -",
@@ -2577,7 +2577,7 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
         "                               candidate      ↑             ↑           ↑",
         "                               beta           ↑             ↑           ↑",
         "                               edge           2.0           80          -",
-        "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40Z",
+        "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40Z",  # noqa: E501
     ]
     emitter.assert_messages(expected)
 

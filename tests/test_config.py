@@ -438,7 +438,7 @@ def test_schema_other_charm_part_no_source(create_config, check_schema_error):
         """\
         Bad charmcraft.yaml content:
         - field 'source' required in 'parts.other-part' configuration
-        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""
+        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""  # noqa: E501
     )
 
 

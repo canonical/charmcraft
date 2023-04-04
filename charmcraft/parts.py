@@ -57,9 +57,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
         # check that the entrypoint is inside the project
         filepath = (project_dirpath / charm_entrypoint).resolve()
         if project_dirpath not in filepath.parents:
-            raise ValueError(
-                f"charm entry point must be inside the project: {str(filepath)!r}"
-            )
+            raise ValueError(f"charm entry point must be inside the project: {str(filepath)!r}")
 
         # store the entrypoint always relative to the project's path (no matter if the origin
         # was relative or absolute)

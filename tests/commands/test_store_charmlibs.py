@@ -299,7 +299,7 @@ def test_getlibinternals_malformed_content(tmp_path, monkeypatch):
     test_path = _create_lib(extra_content="  broken \n    python  ")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
-    assert str(err.value) == fr"Failed to parse Python library {str(test_path)!r}"
+    assert str(err.value) == rf"Failed to parse Python library {str(test_path)!r}"
 
 
 @pytest.mark.parametrize(

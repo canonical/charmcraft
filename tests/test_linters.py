@@ -594,7 +594,13 @@ def create_fake_checker(**kwargs):
     Receive generic kwargs and process them as a dict for the defaults, as we can't declare
     the name in the function definition and then use it in the class definition.
     """
-    params = {"check_type": "type", "name": "name", "url": "url", "text": "text", "result": "result"}
+    params = {
+        "check_type": "type",
+        "name": "name",
+        "url": "url",
+        "text": "text",
+        "result": "result",
+    }
     params.update(kwargs)
 
     class FakeChecker:

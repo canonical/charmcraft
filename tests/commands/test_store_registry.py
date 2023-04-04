@@ -146,7 +146,11 @@ def test_auth_simple(responses):
     )
 
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
-    auth_info = {"realm": "https://auth.fakereg.com", "service": "test-service", "scope": "test-scope"}
+    auth_info = {
+        "realm": "https://auth.fakereg.com",
+        "service": "test-service",
+        "scope": "test-scope",
+    }
     token = ocireg._authenticate(auth_info)
     assert token == "test-token"
     sent_auth_header = responses.calls[0].request.headers.get("Authorization")
@@ -167,7 +171,11 @@ def test_auth_with_credentials(emitter, responses):
         username="test-user",
         password="test-password",
     )
-    auth_info = {"realm": "https://auth.fakereg.com", "service": "test-service", "scope": "test-scope"}
+    auth_info = {
+        "realm": "https://auth.fakereg.com",
+        "service": "test-service",
+        "scope": "test-scope",
+    }
     token = ocireg._authenticate(auth_info)
     assert token == "test-token"
     sent_auth_header = responses.calls[0].request.headers.get("Authorization")
@@ -188,7 +196,11 @@ def test_auth_with_just_username(responses):
     )
 
     ocireg = OCIRegistry("https://fakereg.com", "test-image", username="test-user")
-    auth_info = {"realm": "https://auth.fakereg.com", "service": "test-service", "scope": "test-scope"}
+    auth_info = {
+        "realm": "https://auth.fakereg.com",
+        "service": "test-service",
+        "scope": "test-scope",
+    }
     token = ocireg._authenticate(auth_info)
     assert token == "test-token"
     sent_auth_header = responses.calls[0].request.headers.get("Authorization")

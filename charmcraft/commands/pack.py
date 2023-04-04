@@ -193,9 +193,7 @@ class PackCommand(BaseCommand):
         bundle_filepath = project.dirpath / "bundle.yaml"
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
-            raise CraftError(
-                f"Missing or invalid main bundle file: {str(bundle_filepath)!r}."
-            )
+            raise CraftError(f"Missing or invalid main bundle file: {str(bundle_filepath)!r}.")
         bundle_name = bundle_config.get("name")
         if not bundle_name:
             raise CraftError(

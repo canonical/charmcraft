@@ -135,9 +135,7 @@ class OCIRegistry:
             try:
                 auth_info = self._get_auth_info(response)
             except (ValueError, KeyError) as exc:
-                raise CraftError(
-                    f"Bad 401 response: {exc}; headers: {response.headers!r}"
-                )
+                raise CraftError(f"Bad 401 response: {exc}; headers: {response.headers!r}")
             self.auth_token = self._authenticate(auth_info)
             headers["Authorization"] = f"Bearer {self.auth_token}"
             response = requests.request(method, url, headers=headers, **kwargs)

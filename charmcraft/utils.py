@@ -19,21 +19,23 @@
 import datetime
 import enum
 import functools
+import itertools
 import os
 import pathlib
 import platform
 import sys
-import typing
 import zipfile
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
+from typing import Any, Dict, Optional, Iterable, Container, Union
 
 import yaml
 from craft_cli import emit, CraftError
 from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
 from charmcraft.env import is_charmcraft_running_in_managed_mode
+from charmcraft.errors import DuplicateCharmsError, InvalidCharmPathError
 
 OSPlatform = namedtuple("OSPlatform", "system release machine")
 
@@ -53,7 +55,7 @@ ARCH_TRANSLATIONS = {
     "AMD64": "amd64",  # Windows support
 }
 
-PathOrString = typing.Union[os.PathLike, str]
+PathOrString = Union[os.PathLike, str]
 
 
 @functools.total_ordering
@@ -81,9 +83,9 @@ class Risk(enum.Enum):
 class ChannelData:
     """Data class for a craft store channel."""
 
-    track: typing.Optional[str]
+    track: Optional[str]
     risk: Risk
-    branch: typing.Optional[str]
+    branch: Optional[str]
 
     @classmethod
     def from_str(cls, name: str):
@@ -136,7 +138,7 @@ def make_executable(fh):
     os.fchmod(fileno, mode)
 
 
-def load_yaml(fpath):
+def load_yaml(fpath) -> Optional[Dict[str, Any]]:
     """Return the content of a YAML file."""
     if not fpath.is_file():
         emit.debug(f"Couldn't find config file {str(fpath)!r}")
@@ -324,7 +326,7 @@ def format_timestamp(dt: datetime.datetime) -> str:
     return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def humanize_list(items: typing.Iterable[str], conjunction: str) -> str:
+def humanize_list(items: Iterable[str], conjunction: str) -> str:
     """Format a list into a human-readable string.
 
     :param items: list to humanize, must not be empty
@@ -348,3 +350,58 @@ def build_zip(zip_path: PathOrString, prime_dir: PathOrString) -> None:
             if not file_path.is_file():
                 continue
             file.write(file_path, file_path.relative_to(prime_dir))
+
+
+def find_charm_sources(
+    base_path: pathlib.Path, charm_names: Container[str]
+) -> Dict[str, pathlib.Path]:
+    """Find all charm directories matching the given names under a base path.
+
+    :param base_path: The base directory under which to look.
+    :param charm_names: A container with charm names to find.
+    :returns: A dictionary mapping charm names to their paths.
+    :raises: DuplicateCharmsError if a charm is found in multiple directories.
+    """
+    duplicate_charms = defaultdict(list)
+    charm_paths = {}
+    potential_paths = itertools.chain(
+        (p.parent.resolve() for p in base_path.glob("charms/*/metadata.yaml")),
+        (p.parent.resolve() for p in base_path.glob("operators/*/metadata.yaml")),
+        (p.parent.resolve() for p in base_path.glob("*/metadata.yaml")),
+    )
+    potential_paths = filter(lambda p: (p / "charmcraft.yaml").exists(), potential_paths)
+    for path in potential_paths:
+        if path in charm_paths.values():  # Symlinks can cause ignorable duplicate paths.
+            continue
+        try:
+            charm_name = get_charm_name_from_path(path)
+        except InvalidCharmPathError:
+            continue
+        if charm_name not in charm_names:  # We only care if the charm is listed for finding
+            continue
+        if charm_name != path.name:
+            emit.verbose(f"Charm {charm_name!r} found in non-matching path {path}")
+            continue
+        if charm_name in charm_paths:
+            duplicate_charms[charm_name].append(path)
+        else:
+            charm_paths[charm_name] = path
+    if duplicate_charms:
+        raise DuplicateCharmsError(duplicate_charms)
+    return charm_paths
+
+
+def get_charm_name_from_path(path: pathlib.Path) -> str:
+    """Get a charm's name from a given path.
+
+    :param path: The path to investigate.
+    :returns: The name of the charm in this path
+    :raises: InvalidCharmPathError if the path given is not a valid charm source.
+    """
+    charmcraft_yaml = load_yaml(path / "charmcraft.yaml")
+    if charmcraft_yaml is None or charmcraft_yaml.get("type") != "charm":
+        raise InvalidCharmPathError(path)
+    metadata_yaml = load_yaml(path / "metadata.yaml")
+    if metadata_yaml is None or "name" not in metadata_yaml:
+        raise InvalidCharmPathError(path)
+    return metadata_yaml["name"]

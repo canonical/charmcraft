@@ -1,0 +1,23 @@
+summary: Recursively pack a bundle with all charms on
+manual: true
+systems:
+  - ubuntu-22.04-64
+kill-timeout: 30m
+
+environment:
+  BUNDLE/notebook_operators: https://github.com/canonical/notebook-operators
+
+prepare: |
+  git clone --depth=1 "${BUNDLE}" bundle
+
+restore: |
+  pushd bundle
+  charmcraft clean
+  popd
+
+  rm -rf bundle
+
+execute: |
+  cd bundle
+  charmcraft pack --verbose --include-all-charms
+  juju deploy --dry-run *.zip

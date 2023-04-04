@@ -14,8 +14,13 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Charmcraft error classes."""
+import io
+import pathlib
+from typing import Iterable, Mapping
 
 from craft_cli import CraftError
+
+from charmcraft import utils
 
 
 class BadLibraryPathError(CraftError):
@@ -35,3 +40,57 @@ class BadLibraryNameError(CraftError):
         super().__init__(
             "Charm library name {!r} must conform to charms.<charm>.vN.<libname>".format(name)
         )
+
+
+class InvalidCharmPathError(CraftError):
+    """The path provided is not the source directory for a valid charm."""
+
+    def __init__(self, path: pathlib.Path):
+        super().__init__(
+            f"Path does not contain source for a valid charm: {path}",
+            resolution=(
+                "Ensure the given path is a directory containing valid charmcraft.yaml "
+                "and metadata.yaml files."
+            ),
+        )
+
+
+class DuplicateCharmsError(CraftError):
+    """Duplicate charms were found on disk for the same name.
+
+    If source is True, this refers to charm sources. Otherwise, it refers to files.
+    """
+
+    _sources_resolution = (
+        "Remove duplicate charms or specify directories with --include-charm. "
+        "These can be seen with --verbosity=debug"
+    )
+    _files_resolution = (
+        "Ensure each charm generates only one output file. "
+        "Files can be seen with --verbosity=debug"
+    )
+
+    def __init__(self, charms: Mapping[str, Iterable[pathlib.Path]], source: bool = True):
+        charm_names = utils.humanize_list(charms.keys(), "and")
+        super().__init__(
+            f"Duplicate charms found: {charm_names}",
+            details=self._format_details(charms),
+            resolution=self._sources_resolution if source else self._files_resolution,
+            logpath_report=False,
+            reportable=False,
+        )
+
+    @staticmethod
+    def _format_details(charms: Mapping[str, Iterable[pathlib.Path]]) -> str:
+        # 6 is the length of "CHARM", the left side of the header.
+        longest_name = max([max(len(k) for k in charms.keys()), 5])
+        path_tree_line_format = "{name:>" + str(longest_name) + "} : {path}"
+        details = io.StringIO()
+        print("Charms with duplicate paths:", file=details)
+        print(path_tree_line_format.format(name="CHARM", path="PATHS"), file=details)
+        for charm, paths in charms.items():
+            path_iter = iter(paths)
+            print(path_tree_line_format.format(name=charm, path=next(path_iter)), file=details)
+            for path in path_iter:
+                print(path_tree_line_format.format(name="", path=path), file=details)
+        return details.getvalue()

@@ -23,7 +23,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from typing import List, Dict, Mapping, Optional, Any, Collection
+from typing import Any, Collection, Dict, List, Mapping
 
 import yaml
 from craft_cli import emit, CraftError, ArgumentParsingError
@@ -157,7 +157,10 @@ class PackCommand(BaseCommand):
             self._check_config(bases=True)
             pack_method = self._pack_charm
         elif self.config.type == "bundle":
-            bundle = load_yaml(self.config.project.dirpath / "bundle.yaml") or {}
+            bundle_filepath = self.config.project.dirpath / "bundle.yaml"
+            bundle = load_yaml(bundle_filepath)
+            if bundle is None:
+                raise CraftError(f"Missing or invalid main bundle file: {str(bundle_filepath)!r}.")
             if parsed_args.include_all_charms:
                 charm_names = bundle.get("applications", {}).keys()
                 charms = find_charm_sources(self.config.project.dirpath, charm_names)
@@ -264,10 +267,6 @@ class PackCommand(BaseCommand):
 
         # get the config files
         bundle_filepath = project.dirpath / "bundle.yaml"
-        if bundle_config is None:
-            raise CraftError(
-                "Missing or invalid main bundle file: {!r}.".format(str(bundle_filepath))
-            )
         bundle_name = bundle_config.get("name")
         if not bundle_name:
             raise CraftError(

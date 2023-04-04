@@ -154,9 +154,11 @@ def test_resolve_bundle_type(config):
     config.set(type="bundle")
     cmd = PackCommand(config)
 
-    with patch.object(cmd, "_pack_bundle") as mock:
-        cmd.run(noargs)
-    mock.assert_called_with(noargs, bundle_config=None)
+    with patch.object(pack, "load_yaml") as mock_yaml:
+        mock_yaml.return_value = {}
+        with patch.object(cmd, "_pack_bundle") as mock:
+            cmd.run(noargs)
+    mock.assert_called_with(noargs, bundle_config={})
 
 
 def test_resolve_dump_measure_if_indicated(config, tmp_path):

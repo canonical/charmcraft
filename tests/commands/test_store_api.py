@@ -658,6 +658,7 @@ def test_upload_straightforward(client_mock, emitter, config):
 
     # check all client calls
     assert client_mock.mock_calls == [
+        call.whoami(),
         call.push_file(test_filepath),
         call.request_urlpath_json("POST", test_endpoint, json={"upload-id": test_upload_id}),
         call.request_urlpath_json("GET", test_status_url),
@@ -715,7 +716,7 @@ def test_upload_polls_status_ok(client_mock, emitter, config):
             result = store._upload("/test/endpoint/", "some-filepath")
 
     # check the status-checking client calls (kept going until third one)
-    assert client_mock.mock_calls[2:] == [
+    assert client_mock.mock_calls[3:] == [
         call.request_urlpath_json("GET", test_status_url),
         call.request_urlpath_json("GET", test_status_url),
         call.request_urlpath_json("GET", test_status_url),
@@ -885,6 +886,7 @@ def test_upload_including_extra_parameters(client_mock, emitter, config):
 
     # check all client calls
     assert client_mock.mock_calls == [
+        call.whoami(),
         call.push_file(test_filepath),
         call.request_urlpath_json(
             "POST",

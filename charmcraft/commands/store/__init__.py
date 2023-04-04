@@ -87,6 +87,17 @@ class LoginCommand(BaseCommand):
         access to Charmhub at the CLI (if `--export` option was not used
         otherwise it will only save the credentials in the indicated file).
 
+        If `--export <file>` option is used, a secret credentials file will
+        be created. And the file can be used to set `CHARMCRAFT_AUTH`
+        environment variable.
+
+            export CHARMCRAFT_AUTH=$(cat secret)
+
+        This is suitable for Linux environments without a Vault, such as
+        remote servers and CI/CD pipelines.
+
+        Please ensure the secret file and environment variable are secured.
+
         Remember to `charmcraft logout` if you want to remove that token
         from your local system, especially in a shared environment.
 
@@ -103,7 +114,9 @@ class LoginCommand(BaseCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         parser.add_argument(
-            "--export", type=pathlib.Path, help="The file to save the credentials to"
+            "--export",
+            type=pathlib.Path,
+            help=("Export the Charmhub unencrypted secret credentials to a file"),
         )
         parser.add_argument(
             "--charm",

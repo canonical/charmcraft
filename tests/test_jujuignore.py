@@ -274,9 +274,9 @@ def test_jujuignore_star_match():
 def test_jujuignore_paths_with_newlines():
     ignore = jujuignore.JujuIgnore([r"bar/**/*.py"])
     assert ignore.match("/bar/foo.py", is_dir=False)
-    assert ignore.match("/bar/f\noo.py", is_dir=False)
-    assert ignore.match("/bar/baz/f\noo.py", is_dir=False)
-    assert ignore.match("/bar/b\nz/f\noo.py", is_dir=False)
+    assert ignore.match("/bar/f\no.py", is_dir=False)
+    assert ignore.match("/bar/baz/f\no.py", is_dir=False)
+    assert ignore.match("/bar/b\nz/f\no.py", is_dir=False)
 
 
 def test_rstrip_unescaped():

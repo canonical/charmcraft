@@ -963,7 +963,7 @@ def test_build_arguments_managed_charmcraft_measure(
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 
-    # fake a dumped mesure to be pulled from the instance
+    # fake a dumped measure to be pulled from the instance
     fake_local_m = tmp_path / "local.json"
     instrum._Measurements().dump(fake_local_m)
 

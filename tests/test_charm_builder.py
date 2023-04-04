@@ -936,7 +936,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
-    # avoid the file to be read succesfully
+    # avoid the file to be read successfully
     (tmp_path / DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
 
     # second run!

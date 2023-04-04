@@ -460,7 +460,7 @@ def test_schema_other_bundle_part_no_source(create_config, check_schema_error):
 
 
 # -- tests to check the double layer schema loading; using the 'charm' plugin
-#    because it is the default (and has good default properties to be overriden and )
+#    because it is the default (and has good default properties to be overridden and )
 #    the 'dump' one because it's a special case of no having a model
 
 
@@ -607,7 +607,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_different(create_config):
 
 
 def test_schema_doublelayer_parts_with_charm_overriding_properties(create_config):
-    """A charm plugin is used and its default properties are overriden."""
+    """A charm plugin is used and its default properties are overridden."""
     tmp_path = create_config(
         """
         type: charm
@@ -642,7 +642,7 @@ def test_schema_doublelayer_parts_with_charm_validating_props(create_config, che
             channel: "30.04"
         parts:
           charm:
-            charm-point: different.py  # mispelled!
+            charm-point: different.py  # misspelled!
     """
     )
     check_schema_error(

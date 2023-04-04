@@ -58,6 +58,7 @@ dev_requires = [
     "pydocstyle",
     "pytest",
     "pytest-mock",
+    "pytest-check",
     "responses",
     "tox",
 ]

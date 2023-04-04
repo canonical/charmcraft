@@ -923,6 +923,7 @@ def test_get_charm_pack_args(base_args, parsed_args, expected):
     assert _get_charm_pack_args(base_args, parsed_args) == expected
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
     "charms,command_args,charm_files,expected_calls,expected",
     [

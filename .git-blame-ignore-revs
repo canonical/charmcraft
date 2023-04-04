@@ -1,0 +1,18 @@
+# Revisions to ignore in the git blame layer
+# Change your local git configuration to use this file automatically with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# Or for one--time use:
+#   git blame --ignore-revs-file .git-blame-ignore-revs
+
+# legacy code auto-fixes from ruff
+e2f2a464e75a9b0e8b4e0e845956fe54fcbb90ea
+# legacy code auto-fixes from codespell
+5ddd969564255fc6d7c1e0805bf3da6ddf01f959
+# legacy code auto-fixes from black
+fc182d83a61db83e1f30dcbe795b9b4b59dd91f6
+# legacy code codespell manual fixes
+7388fff9455ec382484a86d6d3a085e09db57735
+# legacy code shellcheck manual fix
+793f5e0160eed44d55e9be4026bbb90419e76d25
+# legacy code yamllint manual fixes
+6cbffc235b103e3fb7b6c94dcfa2323abe8ab4f8

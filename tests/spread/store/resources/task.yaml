@@ -1,6 +1,6 @@
 summary: upload resources, list their revisions, release them
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -41,7 +41,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

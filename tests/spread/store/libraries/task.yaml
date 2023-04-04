@@ -4,7 +4,7 @@ environment:
   LIB_NAME: lib_$(uuidgen | sed -e 's/-//g')
   CHARM_UNDERSCORE_NAME: $(echo $CHARM_DEFAULT_NAME | sed -e 's/-/_/g')
 
-include: 
+include:
   - tests/
 
 prepare: |

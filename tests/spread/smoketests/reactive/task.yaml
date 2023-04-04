@@ -32,7 +32,7 @@ restore: |
   pushd reactivecharm
   charmcraft clean
   popd
-  
+
   rm -rf reactivecharm
 
 execute: |

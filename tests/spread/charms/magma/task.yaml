@@ -15,7 +15,7 @@ restore: |
   pushd charm/"${CHARM_DIR}"
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

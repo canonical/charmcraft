@@ -1,6 +1,6 @@
 summary: pack a simple init-created charm
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -11,7 +11,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

@@ -4,11 +4,11 @@ path: /charmcraft
 environment:
   PROJECT_PATH: /charmcraft
   PATH: /snap/bin:$PATH:$PROJECT_PATH/tools/external/tools
-    # the content for this key is the content of FILE after running
-    #     charmcraft login --export=FILE --ttl=5184000#
-    # (as the owner of CHARM_DEFAULT_NAME and BUNDLE_DEFAULT_NAME below), and it
-    # should be part of the environment (when running spread locally just define it,
-    # for GH actions set it in Settings -> Security -> Actions -> Repository secrets)
+  # the content for this key is the content of FILE after running
+  #     charmcraft login --export=FILE --ttl=5184000#
+  # (as the owner of CHARM_DEFAULT_NAME and BUNDLE_DEFAULT_NAME below), and it
+  # should be part of the environment (when running spread locally just define it,
+  # for GH actions set it in Settings -> Security -> Actions -> Repository secrets)
   CHARMCRAFT_AUTH: "$(HOST: echo $CHARMCRAFT_AUTH)"
 
   # to not flood Charmhub with names the same two are always used in the Store related
@@ -160,4 +160,3 @@ suites:
   tests/spread/store/:
     summary: sequence of commands for different store-related functionalities
     kill-timeout: 30m
-

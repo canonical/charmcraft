@@ -1,6 +1,6 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -29,7 +29,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

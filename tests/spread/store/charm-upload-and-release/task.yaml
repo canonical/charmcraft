@@ -1,6 +1,6 @@
 summary: full charm cycle -- pack, upload, check revisions, release, check channel map
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -18,7 +18,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |
@@ -33,7 +33,7 @@ execute: |
   # upload and get uploaded revision
   uploaded_revno=$(charmcraft upload $charm_filepath --format=json | jq .revision)
 
-  # check the uploaded revision is newer than start datetime (note we're not using latest, as 
+  # check the uploaded revision is newer than start datetime (note we're not using latest, as
   # it may not be the one we uploaded here, because multiple tests running concurrently)
   up_revision=$(charmcraft revisions $CHARM_DEFAULT_NAME --format=json | jq -r --arg revno $uploaded_revno '.[] | select(.revision|tostring==$revno)')
   up_revision_created=$(echo $up_revision | jq -r .created_at)
@@ -45,7 +45,7 @@ execute: |
   # validate the channel map
   edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
   edge_revision=$(echo $edge_release | jq -r .revision)
-  # check that the current release greater or equal than what was 
+  # check that the current release greater or equal than what was
   # uploaded, because other tests running concurrently may have
   # also released (but for sure cannot be a previous revision)
-  test $edge_revision -ge $uploaded_revno  
+  test $edge_revision -ge $uploaded_revno

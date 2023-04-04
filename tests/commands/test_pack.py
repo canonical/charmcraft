@@ -25,7 +25,6 @@ from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
 import pytest
-from pytest_check import check
 import yaml
 from craft_cli import CraftError, ArgumentParsingError
 

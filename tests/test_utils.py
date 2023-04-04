@@ -24,7 +24,6 @@ from unittest.mock import call, patch
 
 import dateutil.parser
 import pytest
-from pytest_check import check
 import yaml
 from craft_cli import CraftError
 

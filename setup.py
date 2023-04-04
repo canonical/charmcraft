@@ -21,11 +21,10 @@
 from pathlib import Path
 from textwrap import dedent
 
+import charmcraft
 from setuptools import find_packages, setup
 
-import charmcraft
-
-with open("README.md", "rt", encoding="utf8") as fh:
+with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [

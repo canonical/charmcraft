@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 
 import yaml
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
 from charmcraft.env import is_charmcraft_running_in_managed_mode
@@ -140,13 +140,13 @@ def load_yaml(fpath):
     """Return the content of a YAML file."""
     if not fpath.is_file():
         emit.debug(f"Couldn't find config file {str(fpath)!r}")
-        return
+        return None
     try:
         with fpath.open("rb") as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
         emit.debug(f"Failed to read/parse config file {str(fpath)!r}: {err!r}")
-        return
+        return None
     return content
 
 
@@ -185,7 +185,7 @@ class SingleOptionEnsurer:
     No lower limit is checked, that is verified with required=True in the argparse definition.
     """
 
-    def __init__(self, converter):
+    def __init__(self, converter) -> None:
         self.converter = converter
         self.count = 0
 
@@ -237,9 +237,9 @@ def useful_filepath(filepath):
     """
     filepath = pathlib.Path(filepath).expanduser()
     if not os.access(filepath, os.R_OK):
-        raise CraftError("Cannot access {!r}.".format(str(filepath)))
+        raise CraftError(f"Cannot access {str(filepath)!r}.")
     if not filepath.is_file():
-        raise CraftError("{!r} is not a file.".format(str(filepath)))
+        raise CraftError(f"{str(filepath)!r} is not a file.")
     return filepath
 
 

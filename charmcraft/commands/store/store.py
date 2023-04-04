@@ -21,15 +21,19 @@ import platform
 import time
 from collections import namedtuple
 from functools import wraps
-from typing import List, Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import craft_store
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
 from dateutil import parser
 
-from charmcraft.commands.store.client import AnonymousClient, Client, ALTERNATE_AUTH_ENV_VAR
+from charmcraft.commands.store.client import (
+    ALTERNATE_AUTH_ENV_VAR,
+    AnonymousClient,
+    Client,
+)
 
 # helpers to build responses from this layer
 Account = namedtuple("Account", "name username id")
@@ -176,7 +180,7 @@ def _store_client_wrapper(auto_login=True):
 class Store:
     """The main interface to the Store's API."""
 
-    def __init__(self, charmhub_config, ephemeral=False, needs_auth=True):
+    def __init__(self, charmhub_config, ephemeral=False, needs_auth=True) -> None:
         if needs_auth:
             try:
                 self._client = Client(
@@ -339,7 +343,7 @@ class Store:
     @_store_client_wrapper()
     def release(self, name, revision, channels, resources):
         """Release one or more revisions for a package."""
-        endpoint = "/v1/charm/{}/releases".format(name)
+        endpoint = f"/v1/charm/{name}/releases"
         resources = [{"name": res.name, "revision": res.revision} for res in resources]
         items = [
             {"revision": revision, "channel": channel, "resources": resources}
@@ -350,7 +354,7 @@ class Store:
     @_store_client_wrapper()
     def list_releases(self, name: str) -> Tuple[List[Release], List[Channel], List[Revision]]:
         """List current releases for a package."""
-        endpoint = "/v1/charm/{}/releases".format(name)
+        endpoint = f"/v1/charm/{name}/releases"
         response = self._client.request_urlpath_json("GET", endpoint)
 
         channel_map = []

@@ -24,11 +24,10 @@ from unittest.mock import call, patch
 
 import dateutil.parser
 import pytest
-from craft_cli import CraftError
-
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
+    build_zip,
     confirm_with_user,
     format_timestamp,
     get_host_architecture,
@@ -37,8 +36,8 @@ from charmcraft.utils import (
     load_yaml,
     make_executable,
     useful_filepath,
-    build_zip,
 )
+from craft_cli import CraftError
 
 
 @pytest.fixture
@@ -89,7 +88,7 @@ def test_load_yaml_no_file(tmp_path, emitter):
     content = load_yaml(test_file)
     assert content is None
 
-    expected = "Couldn't find config file {!r}".format(str(test_file))
+    expected = f"Couldn't find config file {str(test_file)!r}"
     emitter.assert_debug(expected)
 
 
@@ -99,7 +98,7 @@ def test_load_yaml_directory(tmp_path, emitter):
     content = load_yaml(test_file)
     assert content is None
 
-    expected = "Couldn't find config file {!r}".format(str(test_file))
+    expected = f"Couldn't find config file {str(test_file)!r}"
     emitter.assert_debug(expected)
 
 
@@ -221,14 +220,14 @@ def test_usefulfilepath_inaccessible(tmp_path):
     test_file.touch(mode=0o000)
     with pytest.raises(CraftError) as cm:
         useful_filepath(str(test_file))
-    assert str(cm.value) == "Cannot access {!r}.".format(str(test_file))
+    assert str(cm.value) == f"Cannot access {str(test_file)!r}."
 
 
 def test_usefulfilepath_not_a_file(tmp_path):
     """The indicated path is not a file."""
     with pytest.raises(CraftError) as cm:
         useful_filepath(str(tmp_path))
-    assert str(cm.value) == "{!r} is not a file.".format(str(tmp_path))
+    assert str(cm.value) == f"{str(tmp_path)!r} is not a file."
 
 
 # -- tests for the OS platform getter

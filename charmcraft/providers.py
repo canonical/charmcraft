@@ -21,20 +21,19 @@ import pathlib
 import sys
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from craft_providers import Executor, Provider, ProviderError, bases, lxd, multipass
 
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft.env import (
-    get_managed_environment_snap_channel,
     get_managed_environment_log_path,
+    get_managed_environment_snap_channel,
     is_charmcraft_running_from_snap,
     is_charmcraft_running_in_developer_mode,
 )
-from charmcraft.utils import confirm_with_user, get_host_architecture
 from charmcraft.snap import get_snap_configuration
-
+from charmcraft.utils import confirm_with_user, get_host_architecture
 
 BASE_CHANNEL_TO_PROVIDER_BASE = {
     "18.04": bases.BuilddBaseAlias.BIONIC,
@@ -202,7 +201,7 @@ def capture_logs_from_instance(instance: Executor) -> None:
     with instance.temporarily_pull_file(source=source_log_path, missing_ok=True) as local_log_path:
         if local_log_path:
             emit.debug("Logs captured from managed instance:")
-            with open(local_log_path, "rt", encoding="utf8") as fh:
+            with open(local_log_path, encoding="utf8") as fh:
                 for line in fh:
                     emit.debug(f":: {line.rstrip()}")
         else:

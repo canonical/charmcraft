@@ -128,7 +128,7 @@ class _Matcher:
         invert: bool,
         only_dirs: bool,
         regex: typing.Pattern,
-    ):
+    ) -> None:
         self.line_num = line_num
         self.orig_rule = orig_rule
         self.invert = invert
@@ -138,7 +138,8 @@ class _Matcher:
     def match(self, path: str, is_dir: bool) -> str:
         """Check if a path matches.
 
-        Returns:
+        Returns
+        -------
             Can return one of KEEP, SKIP, FORCEKEEP
         """
         if self.only_dirs and not is_dir:
@@ -153,7 +154,7 @@ class _Matcher:
 class JujuIgnore:
     """Track a set of ignore patterns from a .jujuignore file."""
 
-    def __init__(self, patterns: typing.Iterable[str]):
+    def __init__(self, patterns: typing.Iterable[str]) -> None:
         self._matchers = []
         self._compile_from(patterns)
 
@@ -195,10 +196,13 @@ class JujuIgnore:
         """Check if the given path should be ignored.
 
         Args:
+        ----
             path: A local path (eg /foo/bar or foo/bar) from the root directory of the project.
             is_dir: Indicate whether the given path is a directory (because of special handling
             from ignore files when the path ends with a '/')
+
         Return:
+        ------
             A boolean indicating whether the ignore rules matched the given path (thus the path
             should be ignored).
         """

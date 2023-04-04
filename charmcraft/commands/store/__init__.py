@@ -1037,7 +1037,7 @@ class StatusCommand(BaseCommand):
     def _build_resources_repr(self, resources):
         """Build a representation of a list of resources."""
         if resources:
-            result = ", ".join("{} (r{})".format(r.name, r.revision) for r in resources)
+            result = ", ".join(f"{r.name} (r{r.revision})" for r in resources)
         else:
             result = "-"
         return result
@@ -1256,11 +1256,11 @@ class CreateLibCommand(BaseCommand):
         importable_charm_name = create_importable_name(charm_name)
 
         # all libraries born with API version 0
-        full_name = "charms.{}.v0.{}".format(importable_charm_name, lib_name)
+        full_name = f"charms.{importable_charm_name}.v0.{lib_name}"
         lib_data = get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CraftError("This library already exists: {!r}.".format(str(lib_path)))
+            raise CraftError(f"This library already exists: {str(lib_path)!r}.")
 
         emit.progress(f"Creating library {lib_name}.")
         store = Store(self.config.charmhub)
@@ -1269,12 +1269,12 @@ class CreateLibCommand(BaseCommand):
         # create the new library file from the template
         env = get_templates_environment("charmlibs")
         template = env.get_template("new_library.py.j2")
-        context = dict(lib_id=lib_id)
+        context = {"lib_id": lib_id}
         try:
             lib_path.parent.mkdir(parents=True, exist_ok=True)
             lib_path.write_text(template.render(context))
         except OSError as exc:
-            raise CraftError("Error writing the library in {!r}: {!r}.".format(str(lib_path), exc))
+            raise CraftError(f"Error writing the library in {str(lib_path)!r}: {exc!r}.")
 
         if parsed_args.format:
             info = {"library_id": lib_id}
@@ -1329,7 +1329,7 @@ class PublishLibCommand(BaseCommand):
             lib_data = get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
                 raise CraftError(
-                    "The specified library was not found at path {!r}.".format(str(lib_data.path))
+                    f"The specified library was not found at path {str(lib_data.path)!r}."
                 )
             if lib_data.charm_name != charm_name:
                 raise CraftError(
@@ -1346,7 +1346,7 @@ class PublishLibCommand(BaseCommand):
 
         # check if something needs to be done
         store = Store(self.config.charmhub)
-        to_query = [dict(lib_id=lib.lib_id, api=lib.api) for lib in local_libs_data]
+        to_query = [{"lib_id": lib.lib_id, "api": lib.api} for lib in local_libs_data]
         libs_tips = store.get_libraries_tips(to_query)
         analysis = []
         for lib_data in local_libs_data:
@@ -1482,9 +1482,9 @@ class FetchLibCommand(BaseCommand):
         to_query = []
         for lib in local_libs_data:
             if lib.lib_id is None:
-                item = dict(charm_name=lib.charm_name, lib_name=lib.lib_name)
+                item = {"charm_name": lib.charm_name, "lib_name": lib.lib_name}
             else:
-                item = dict(lib_id=lib.lib_id)
+                item = {"lib_id": lib.lib_id}
             item["api"] = lib.api
             to_query.append(item)
         libs_tips = store.get_libraries_tips(to_query)
@@ -1832,7 +1832,7 @@ class UploadResourceCommand(BaseCommand):
                 parsed_args.charm_name, parsed_args.resource_name, server_image_digest
             )
             tfd, tname = tempfile.mkstemp(prefix="image-resource", suffix=".json")
-            with open(tfd, "wt", encoding="utf-8") as fh:  # reuse the file descriptor and close it
+            with open(tfd, "w", encoding="utf-8") as fh:  # reuse the file descriptor and close it
                 fh.write(content)
             resource_filepath = pathlib.Path(tname)
             resource_filepath_is_temp = True

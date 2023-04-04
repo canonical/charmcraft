@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import pathlib
-from typing import Optional, List
+from typing import List, Optional
 
 import yaml
 from craft_cli import CraftError

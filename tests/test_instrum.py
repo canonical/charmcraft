@@ -20,9 +20,8 @@ import json
 from unittest.mock import patch
 
 import pytest
-
 from charmcraft import instrum
-from charmcraft.instrum import _Measurements, Timer
+from charmcraft.instrum import Timer, _Measurements
 
 
 @pytest.fixture

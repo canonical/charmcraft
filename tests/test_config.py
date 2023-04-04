@@ -22,12 +22,10 @@ from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
-from craft_cli import CraftError
-
 from charmcraft import linters
 from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, load
 from charmcraft.utils import get_host_architecture
-
+from craft_cli import CraftError
 
 # -- tests for the config loading
 
@@ -440,7 +438,7 @@ def test_schema_other_charm_part_no_source(create_config, check_schema_error):
         """\
         Bad charmcraft.yaml content:
         - field 'source' required in 'parts.other-part' configuration
-        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""  # NOQA
+        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""
     )
 
 

@@ -16,8 +16,8 @@
 
 import contextlib
 import datetime
-import json
 import importlib
+import json
 import pathlib
 import tempfile
 import types
@@ -25,13 +25,12 @@ from unittest.mock import Mock
 
 import pytest
 import responses as responses_module
-from craft_parts import callbacks
-from craft_providers import Executor, Provider
-
-from charmcraft import config as config_module, instrum
-from charmcraft import deprecations, parts
+from charmcraft import config as config_module
+from charmcraft import deprecations, instrum, parts
 from charmcraft.bases import get_host_as_base
 from charmcraft.config import Base, BasesConfiguration
+from craft_parts import callbacks
+from craft_providers import Executor, Provider
 
 
 @pytest.fixture(autouse=True, scope="session")

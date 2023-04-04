@@ -17,16 +17,15 @@
 import json
 import sys
 import zipfile
-from argparse import Namespace, ArgumentParser
-from unittest.mock import patch, ANY
+from argparse import ArgumentParser, Namespace
+from unittest.mock import ANY, patch
 
 import pytest
-from craft_cli import CraftError
-
 from charmcraft import linters
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands.analyze import AnalyzeCommand
 from charmcraft.utils import useful_filepath
+from craft_cli import CraftError
 
 
 def test_options_filepath_type(config):
@@ -34,7 +33,7 @@ def test_options_filepath_type(config):
     cmd = AnalyzeCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "filepath"]
+    (action,) = (action for action in parser._actions if action.dest == "filepath")
     assert action.type is useful_filepath
 
 
@@ -43,7 +42,7 @@ def test_options_format_possible_values(config):
     cmd = AnalyzeCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "format"]
+    (action,) = (action for action in parser._actions if action.dest == "format")
     assert action.choices == ["json"]
 
 
@@ -111,7 +110,7 @@ def test_corrupt_charm(tmp_path, config):
     with pytest.raises(CraftError) as cm:
         AnalyzeCommand(config).run(args)
     assert str(cm.value) == (
-        "Cannot open charm file '{}': BadZipFile('File is not a zip file').".format(charm_file)
+        f"Cannot open charm file '{charm_file}': BadZipFile('File is not a zip file')."
     )
 
 

@@ -21,7 +21,7 @@ from typing import Any, Dict
 
 import pydantic
 import yaml
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 
 from charmcraft.config import format_pydantic_errors
 

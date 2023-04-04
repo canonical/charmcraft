@@ -23,12 +23,11 @@ from typing import Any, Dict
 
 import craft_store
 import requests
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from craft_store import endpoints
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft import __version__, utils
-
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
@@ -50,7 +49,7 @@ def build_user_agent():
 class AnonymousClient:
     """Lightweight layer that access public store data."""
 
-    def __init__(self, api_base_url: str, storage_base_url: str):
+    def __init__(self, api_base_url: str, storage_base_url: str) -> None:
         self.api_base_url = api_base_url.rstrip("/")
         self.storage_base_url = storage_base_url.rstrip("/")
         self._http_client = craft_store.http_client.HTTPClient(user_agent=build_user_agent())
@@ -74,7 +73,7 @@ class AnonymousClient:
 class Client(craft_store.StoreClient):
     """Lightweight layer above StoreClient."""
 
-    def __init__(self, api_base_url: str, storage_base_url: str, ephemeral: bool = False):
+    def __init__(self, api_base_url: str, storage_base_url: str, ephemeral: bool = False) -> None:
         self.api_base_url = api_base_url.rstrip("/")
         self.storage_base_url = storage_base_url.rstrip("/")
 
@@ -138,7 +137,7 @@ class Client(craft_store.StoreClient):
 
         result = response.json()
         if not result["successful"]:
-            raise CraftError("Server error while pushing file: {}".format(result))
+            raise CraftError(f"Server error while pushing file: {result}")
 
         upload_id = result["upload_id"]
         emit.progress(f"Uploading bytes ended, id {upload_id}")

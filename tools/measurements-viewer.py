@@ -27,8 +27,8 @@ import itertools
 import json
 import time
 
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 
 Y_STEPS = 10
 COLORS = itertools.cycle(mcolors.TABLEAU_COLORS)
@@ -36,8 +36,7 @@ COLORS = itertools.cycle(mcolors.TABLEAU_COLORS)
 
 def main(filepath):
     """Main entry point."""
-
-    with open(filepath, "rt") as fh:
+    with open(filepath) as fh:
         results = json.load(fh)
 
     baseline = results.pop("__meta__")["baseline"]

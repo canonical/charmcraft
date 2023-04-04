@@ -19,7 +19,6 @@ from unittest import mock
 
 import pytest
 import snaphelpers
-
 from charmcraft.snap import (
     CharmcraftSnapConfiguration,
     get_snap_configuration,

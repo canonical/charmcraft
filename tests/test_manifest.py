@@ -20,11 +20,10 @@ from unittest.mock import patch
 
 import pytest
 import yaml
-from craft_cli import CraftError
-
 from charmcraft import __version__, config, linters
-from charmcraft.manifest import create_manifest, IMAGE_INFO_ENV_VAR
+from charmcraft.manifest import IMAGE_INFO_ENV_VAR, create_manifest
 from charmcraft.utils import OSPlatform
+from craft_cli import CraftError
 
 
 def test_manifest_simple_ok(tmp_path):

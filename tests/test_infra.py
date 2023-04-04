@@ -26,9 +26,8 @@ import black
 import click.testing
 import pydocstyle
 import pytest
-from flake8.api.legacy import get_style_guide
-
 from charmcraft import __version__, main
+from flake8.api.legacy import get_style_guide
 
 
 def get_python_filepaths(*, roots=None, python_paths=None):
@@ -38,7 +37,7 @@ def get_python_filepaths(*, roots=None, python_paths=None):
     if roots is None:
         roots = ["charmcraft", "tests"]
     for root in roots:
-        for dirpath, dirnames, filenames in os.walk(root):
+        for dirpath, _dirnames, filenames in os.walk(root):
             for filename in filenames:
                 if filename.endswith(".py"):
                     python_paths.append(os.path.join(dirpath, filename))
@@ -85,7 +84,7 @@ def pep257_test(python_filepaths):
     errors = list(pydocstyle.check(python_filepaths, select=to_include))
 
     if errors:
-        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
+        report = [f"Please fix files as suggested by pydocstyle ({len(errors):d} issues):"]
         report.extend(str(e) for e in errors)
         msg = "\n".join(report)
         pytest.fail(msg, pytrace=False)
@@ -99,7 +98,7 @@ def test_ensure_copyright():
         if os.stat(filepath).st_size == 0:
             continue
 
-        with open(filepath, "rt", encoding="utf8") as fh:
+        with open(filepath, encoding="utf8") as fh:
             for line in itertools.islice(fh, 5):
                 if regex.match(line):
                     break
@@ -124,7 +123,7 @@ def test_bashcompletion_all_commands():
     # get the line where all commands are specified in the completion file; this is custom
     # to our file, but simple and good enough
     completed_commands = None
-    with open("completion.bash", "rt", encoding="utf8") as fh:
+    with open("completion.bash", encoding="utf8") as fh:
         completion_text = fh.read()
     m = re.search(r"cmds=\((.*?)\)", completion_text, re.DOTALL)
     if m:
@@ -143,7 +142,7 @@ def test_black():
     runner = click.testing.CliRunner()
     result = runner.invoke(
         black.main,
-        ["--check"] + get_python_filepaths(),
+        ["--check", *get_python_filepaths()],
     )
 
     if result.exit_code != 0:

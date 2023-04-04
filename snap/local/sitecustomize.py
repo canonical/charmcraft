@@ -1,5 +1,5 @@
-import site
 import os
+import site
 
 snap_dir = os.getenv("SNAP")
 if snap_dir:

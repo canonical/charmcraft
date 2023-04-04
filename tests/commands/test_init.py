@@ -22,12 +22,11 @@ from argparse import Namespace
 from unittest.mock import patch
 
 import pytest
-from craft_cli import CraftError
-
-from charmcraft.commands.init import InitCommand, DEFAULT_PROFILE, PROFILES
+from charmcraft.commands.init import DEFAULT_PROFILE, PROFILES, InitCommand
 from charmcraft.config import Project
 from charmcraft.utils import S_IXALL
-from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
+from craft_cli import CraftError
+from tests.test_infra import get_python_filepaths, pep8_test, pep257_test
 
 
 @pytest.fixture
@@ -61,7 +60,7 @@ def test_init_pep8(tmp_path, config, *, author="J Doe", profile):
 
 
 def test_init_non_ascii_author(tmp_path, config):
-    test_init_pep8(tmp_path, config, author="فلانة الفلانية", profile=DEFAULT_PROFILE)
+    test_init_pep8(tmp_path, config, author="فلlنة lلفلlنية", profile=DEFAULT_PROFILE)
 
 
 def test_all_the_files_simple(tmp_path, config):

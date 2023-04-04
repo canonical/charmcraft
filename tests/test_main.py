@@ -24,6 +24,10 @@ from argparse import ArgumentParser
 from unittest.mock import patch
 
 import pytest
+from charmcraft import __version__, env, utils
+from charmcraft.cmdbase import FORMAT_HELP_STR, JSON_FORMAT, BaseCommand
+from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
+from charmcraft.main import COMMAND_GROUPS, _get_system_details, main
 from craft_cli import (
     ArgumentParsingError,
     CommandGroup,
@@ -32,11 +36,6 @@ from craft_cli import (
     ProvideHelpException,
 )
 from craft_store.errors import CraftStoreError
-
-from charmcraft import __version__, env, utils
-from charmcraft.cmdbase import BaseCommand, JSON_FORMAT, FORMAT_HELP_STR
-from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
-from charmcraft.main import COMMAND_GROUPS, main, _get_system_details
 
 
 @pytest.fixture
@@ -473,7 +472,7 @@ def test_usage_of_parsed_args(command_class, config):
 
     # build the abstract source tree for the command
     filepath = sys.modules[command_class.__module__].__file__
-    tree = ast.parse(open(filepath, "rt").read())
+    tree = ast.parse(open(filepath).read())
 
     # get the node for the command
     for node in ast.walk(tree):
@@ -528,7 +527,7 @@ def test_basecommand_include_format_option(config):
     cmd = MySimpleCommand(config)
     cmd.include_format_option(parser)
 
-    (action,) = [action for action in parser._actions if action.dest == "format"]
+    (action,) = (action for action in parser._actions if action.dest == "format")
     assert action.option_strings == ["--format"]
     assert action.dest == "format"
     assert action.default is None

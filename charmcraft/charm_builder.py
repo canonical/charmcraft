@@ -25,8 +25,8 @@ import hashlib
 import os
 import pathlib
 import shutil
-import sys
 import subprocess
+import sys
 from typing import List
 
 from charmcraft import instrum
@@ -34,7 +34,6 @@ from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
-
 
 # Some constants that are used through the code.
 WORK_DIRNAME = "work_dir"
@@ -76,7 +75,7 @@ class CharmBuilder:
         binary_python_packages: List[str] = None,
         python_packages: List[str] = None,
         requirements: List[pathlib.Path] = None,
-    ):
+    ) -> None:
         self.builddir = builddir
         self.installdir = installdir
         self.entrypoint = entrypoint
@@ -267,7 +266,7 @@ class CharmBuilder:
                 # install dependencies from requirement files
                 cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
                 for reqspath in self.requirement_paths:
-                    cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
+                    cmd.append(f"--requirement={reqspath}")  # the dependencies file(s)
                 _process_run(cmd)
 
             if self.charmlib_deps:

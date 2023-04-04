@@ -22,21 +22,25 @@ import zipfile
 from textwrap import dedent
 from typing import List
 from unittest import mock
-from unittest.mock import call, patch, MagicMock
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 import yaml
-from craft_cli import EmitterMode, emit, CraftError
-from craft_providers import bases
-
-from charmcraft import linters, instrum
-from charmcraft.charm_builder import relativise
+from charmcraft import instrum, linters
 from charmcraft.bases import get_host_as_base
-from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
+from charmcraft.charm_builder import relativise
+from charmcraft.commands.build import (
+    BUILD_DIRNAME,
+    Builder,
+    format_charm_file_name,
+    launch_shell,
+)
 from charmcraft.config import Base, BasesConfiguration, load
 from charmcraft.metadata import CHARM_METADATA
 from charmcraft.providers import get_base_configuration
 from charmcraft.utils import get_host_architecture
+from craft_cli import CraftError, EmitterMode, emit
+from craft_providers import bases
 
 
 def get_builder(
@@ -659,7 +663,7 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "0", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
@@ -698,7 +702,7 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "1", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
@@ -736,13 +740,13 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "0", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "1", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
@@ -781,7 +785,7 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "0", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),

@@ -21,7 +21,7 @@ from craft_cli import CraftError
 class BadLibraryPathError(CraftError):
     """Subclass to provide a specific error for a bad library path."""
 
-    def __init__(self, path):
+    def __init__(self, path) -> None:
         super().__init__(
             "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
             "".format(path)
@@ -31,7 +31,7 @@ class BadLibraryPathError(CraftError):
 class BadLibraryNameError(CraftError):
     """Subclass to provide a specific error for a bad library name."""
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         super().__init__(
-            "Charm library name {!r} must conform to charms.<charm>.vN.<libname>".format(name)
+            f"Charm library name {name!r} must conform to charms.<charm>.vN.<libname>"
         )

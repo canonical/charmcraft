@@ -17,15 +17,14 @@
 import contextlib
 import pathlib
 import sys
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
 import pytest
+from charmcraft import providers
+from charmcraft.config import Base, BasesConfiguration
+from charmcraft.snap import CharmcraftSnapConfiguration
 from craft_cli import CraftError
 from craft_providers import ProviderError, bases, lxd, multipass
-
-from charmcraft.config import Base, BasesConfiguration
-from charmcraft import providers
-from charmcraft.snap import CharmcraftSnapConfiguration
 
 
 @pytest.fixture()

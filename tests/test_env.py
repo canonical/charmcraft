@@ -17,7 +17,6 @@
 import pathlib
 
 import pytest
-
 from charmcraft import env
 
 

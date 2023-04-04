@@ -24,9 +24,9 @@ import subprocess
 import zipfile
 from typing import List, Optional
 
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 
-from charmcraft import env, linters, parts, providers, instrum
+from charmcraft import env, instrum, linters, parts, providers
 from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
 from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.config import Base, BasesConfiguration
@@ -94,7 +94,7 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 class Builder:
     """The package builder."""
 
-    def __init__(self, *, config, force, debug, shell, shell_after, measure):
+    def __init__(self, *, config, force, debug, shell, shell_after, measure) -> None:
         self.force_packing = force
         self.debug = debug
         self.shell = shell
@@ -404,7 +404,7 @@ class Builder:
         emit.progress("Creating the package itself")
         zipname = format_charm_file_name(self.metadata.name, bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
-        for dirpath, dirnames, filenames in os.walk(prime_dir, followlinks=True):
+        for dirpath, _dirnames, filenames in os.walk(prime_dir, followlinks=True):
             dirpath = pathlib.Path(dirpath)
             for filename in filenames:
                 filepath = dirpath / filename

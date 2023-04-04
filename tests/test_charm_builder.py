@@ -24,14 +24,13 @@ import sys
 from unittest.mock import call, patch
 
 import pytest
-
 from charmcraft import charm_builder
 from charmcraft.charm_builder import (
-    CharmBuilder,
     DEPENDENCIES_HASH_FILENAME,
     DISPATCH_CONTENT,
     STAGING_VENV_DIRNAME,
     VENV_DIRNAME,
+    CharmBuilder,
     _process_run,
 )
 from charmcraft.commands.build import BUILD_DIRNAME, DISPATCH_FILENAME

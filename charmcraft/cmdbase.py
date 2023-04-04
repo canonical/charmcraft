@@ -19,7 +19,6 @@
 import json
 
 import craft_cli
-
 from craft_cli import ArgumentParsingError, CraftError
 
 JSON_FORMAT = "json"

@@ -18,10 +18,8 @@ import re
 from textwrap import dedent
 
 import pytest
-from craft_cli import CraftError
-
 from charmcraft.metadata import parse_metadata_yaml, read_metadata_yaml
-
+from craft_cli import CraftError
 
 # tests for parsing metadata
 

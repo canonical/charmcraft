@@ -187,7 +187,8 @@ def printable_field_location_split(location: str) -> Tuple[str, str]:
     If top-level, location is returned as unquoted "top-level".
     If not top-level, location is returned as quoted location.
 
-    Examples:
+    Examples
+    --------
     (1) field1[idx].foo => 'foo', 'field1[idx]'
     (2) field2 => 'field2', top-level
 
@@ -319,7 +320,7 @@ class Config(ModelConfigDefaults, validate_all=False):
             # we need 'type' to be set in this validator; if not there it's an error in
             # the schema anyway, so the whole loading will fail (no need to raise an
             # extra error here, it gets confusing to the user)
-            return
+            return None
 
         if parts is None:
             # no parts indicated, default to the type of package

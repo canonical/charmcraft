@@ -19,14 +19,14 @@
 import pathlib
 from typing import List
 
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 
-from charmcraft import env, parts, instrum
+from charmcraft import env, instrum, parts
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
-from charmcraft.utils import load_yaml, build_zip
+from charmcraft.utils import build_zip, load_yaml
 
 # the minimum set of files in a bundle
 MANDATORY_FILES = ["bundle.yaml", "README.md"]
@@ -113,7 +113,7 @@ class PackCommand(BaseCommand):
         elif self.config.type == "bundle":
             pack_method = self._pack_bundle
         else:
-            raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
+            raise CraftError(f"Unknown type {self.config.type!r} in charmcraft.yaml")
 
         with instrum.Timer("Whole pack run"):
             pack_method(parsed_args)
@@ -194,7 +194,7 @@ class PackCommand(BaseCommand):
         bundle_config = load_yaml(bundle_filepath)
         if bundle_config is None:
             raise CraftError(
-                "Missing or invalid main bundle file: {!r}.".format(str(bundle_filepath))
+                f"Missing or invalid main bundle file: {str(bundle_filepath)!r}."
             )
         bundle_name = bundle_config.get("name")
         if not bundle_name:
@@ -208,7 +208,7 @@ class PackCommand(BaseCommand):
             for fname in MANDATORY_FILES:
                 fpath = project.dirpath / fname
                 if not fpath.exists():
-                    raise CraftError("Missing mandatory file: {!r}.".format(str(fpath)))
+                    raise CraftError(f"Missing mandatory file: {str(fpath)!r}.")
             prime = special_bundle_part.setdefault("prime", [])
             prime.extend(MANDATORY_FILES)
 

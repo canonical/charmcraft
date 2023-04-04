@@ -22,10 +22,9 @@ from unittest.mock import call, patch
 import craft_parts
 import pydantic
 import pytest
+from charmcraft import reactive_plugin
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
-
-from charmcraft import reactive_plugin
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 

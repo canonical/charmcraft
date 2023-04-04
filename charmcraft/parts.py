@@ -23,15 +23,15 @@ import sys
 from typing import Any, Dict, List, Set, cast
 
 import pydantic
-from craft_cli import emit, CraftError
-from craft_parts import LifecycleManager, Step, plugins, callbacks
+from craft_cli import CraftError, emit
+from craft_parts import LifecycleManager, Step, callbacks, plugins
 from craft_parts.errors import OsReleaseIdError, OsReleaseVersionIdError, PartsError
 from craft_parts.packages import platform
 from craft_parts.parts import PartSpec
 from craft_parts.utils import os_utils
 from xdg import BaseDirectory  # type: ignore
 
-from charmcraft import charm_builder, instrum, env
+from charmcraft import charm_builder, env, instrum
 from charmcraft.reactive_plugin import ReactivePlugin
 
 
@@ -58,7 +58,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
         filepath = (project_dirpath / charm_entrypoint).resolve()
         if project_dirpath not in filepath.parents:
             raise ValueError(
-                "charm entry point must be inside the project: {!r}".format(str(filepath))
+                f"charm entry point must be inside the project: {str(filepath)!r}"
             )
 
         # store the entrypoint always relative to the project's path (no matter if the origin
@@ -190,7 +190,7 @@ class CharmPlugin(plugins.Plugin):
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
 
-        build_env = dict(LANG="C.UTF-8", LC_ALL="C.UTF-8")
+        build_env = {"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
         for key in [
             "PATH",
             "SNAP",
@@ -310,8 +310,8 @@ class BundlePlugin(plugins.Plugin):
             cp_cmd = "cp -R -p -P"
 
         commands = [
-            'mkdir -p "{}"'.format(install_dir),
-            '{} * "{}"'.format(cp_cmd, install_dir),
+            f'mkdir -p "{install_dir}"',
+            f'{cp_cmd} * "{install_dir}"',
         ]
         return commands
 
@@ -376,7 +376,7 @@ class PartsLifecycle:
         project_dir: pathlib.Path,
         project_name: str,
         ignore_local_sources: List[str],
-    ):
+    ) -> None:
         self._all_parts = all_parts.copy()
         self._project_dir = project_dir
 
@@ -460,7 +460,7 @@ def _get_dispatch_entrypoint(dirname: pathlib.Path) -> str:
                     last_line = line
             if last_line:
                 entrypoint_str = shlex.split(last_line)[-1]
-    except (IOError, UnicodeDecodeError):
+    except (OSError, UnicodeDecodeError):
         return ""
 
     return entrypoint_str

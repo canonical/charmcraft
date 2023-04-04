@@ -25,13 +25,12 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 import yaml
-from craft_cli import CraftError
-
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand
-from charmcraft.config import load, BasesConfiguration
+from charmcraft.config import BasesConfiguration, load
+from craft_cli import CraftError
 
 
 def get_namespace(
@@ -129,11 +128,11 @@ def test_resolve_dump_measure_if_indicated(config, tmp_path):
     # is the whole pack run
     assert measure_filepath.exists()
     dumped = json.loads(measure_filepath.read_text())
-    (root_measurement,) = [
+    (root_measurement,) = (
         measurement
         for measurement in dumped.values()
         if "parent" in measurement and measurement["parent"] is None
-    ]
+    )
     assert root_measurement["msg"] == "Whole pack run"
 
 
@@ -163,7 +162,7 @@ def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_co
     if formatted:
         emitter.assert_json_output({"bundles": [str(zipname)]})
     else:
-        expected = "Created '{}'.".format(zipname)
+        expected = f"Created '{zipname}'."
         emitter.assert_message(expected)
 
     # check the manifest is present and with particular values that depend on given info
@@ -576,7 +575,7 @@ def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config):
         ("libs/fs.txt", False),
     )
 
-    for srcpath, expected in srcpaths:
+    for srcpath, _expected in srcpaths:
         testfile = tmp_path / pathlib.Path(srcpath)
         testfile.parent.mkdir(parents=True, exist_ok=True)
         testfile.touch()
@@ -608,7 +607,7 @@ def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_confi
         ("libs/fs.nop", False),
     )
 
-    for srcpath, expected in srcpaths:
+    for srcpath, _expected in srcpaths:
         testfile = tmp_path / pathlib.Path(srcpath)
         testfile.parent.mkdir(parents=True, exist_ok=True)
         testfile.touch()

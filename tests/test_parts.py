@@ -16,16 +16,15 @@
 
 import pathlib
 import sys
-from unittest.mock import ANY, patch, call
+from unittest.mock import ANY, call, patch
 
 import craft_parts
 import pydantic
 import pytest
+from charmcraft import charm_builder, env, parts
 from craft_cli import CraftError
-from craft_parts import Step, plugins, Action, ActionType
+from craft_parts import Action, ActionType, Step, plugins
 from craft_parts.errors import PartsError
-
-from charmcraft import charm_builder, parts, env
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 

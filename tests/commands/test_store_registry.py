@@ -23,24 +23,22 @@ import io
 import json
 import sys
 import tarfile
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 import pytest
 import requests
-from craft_cli import CraftError
-
 from charmcraft.commands.store import registry
 from charmcraft.commands.store.registry import (
     CONFIG_MIMETYPE,
-    ImageHandler,
     LAYER_MIMETYPE,
-    LocalDockerdInterface,
     MANIFEST_V2_MIMETYPE,
-    OCIRegistry,
     OCTET_STREAM_MIMETYPE,
+    ImageHandler,
+    LocalDockerdInterface,
+    OCIRegistry,
     assert_response_ok,
 )
-
+from craft_cli import CraftError
 
 # -- tests for response verifications
 
@@ -95,7 +93,7 @@ def test_assert_response_errors_in_result():
     response = create_response(json_content=test_content)
     with pytest.raises(CraftError) as cm:
         assert_response_ok(response)
-    assert str(cm.value) == "Response with errors from server: {}".format(errors)
+    assert str(cm.value) == f"Response with errors from server: {errors}"
 
 
 def test_assert_response_bad_status_code_with_json_errors():
@@ -148,7 +146,7 @@ def test_auth_simple(responses):
     )
 
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
-    auth_info = dict(realm="https://auth.fakereg.com", service="test-service", scope="test-scope")
+    auth_info = {"realm": "https://auth.fakereg.com", "service": "test-service", "scope": "test-scope"}
     token = ocireg._authenticate(auth_info)
     assert token == "test-token"
     sent_auth_header = responses.calls[0].request.headers.get("Authorization")
@@ -169,7 +167,7 @@ def test_auth_with_credentials(emitter, responses):
         username="test-user",
         password="test-password",
     )
-    auth_info = dict(realm="https://auth.fakereg.com", service="test-service", scope="test-scope")
+    auth_info = {"realm": "https://auth.fakereg.com", "service": "test-service", "scope": "test-scope"}
     token = ocireg._authenticate(auth_info)
     assert token == "test-token"
     sent_auth_header = responses.calls[0].request.headers.get("Authorization")
@@ -177,7 +175,7 @@ def test_auth_with_credentials(emitter, responses):
     assert sent_auth_header == "Basic " + expected_encoded.decode("ascii")
 
     # generic auth indication is logged but NOT the credentials
-    expected = "Authenticating! {}".format(auth_info)
+    expected = f"Authenticating! {auth_info}"
     emitter.assert_trace(expected)
 
 
@@ -190,7 +188,7 @@ def test_auth_with_just_username(responses):
     )
 
     ocireg = OCIRegistry("https://fakereg.com", "test-image", username="test-user")
-    auth_info = dict(realm="https://auth.fakereg.com", service="test-service", scope="test-scope")
+    auth_info = {"realm": "https://auth.fakereg.com", "service": "test-service", "scope": "test-scope"}
     token = ocireg._authenticate(auth_info)
     assert token == "test-token"
     sent_auth_header = responses.calls[0].request.headers.get("Authorization")
@@ -1178,14 +1176,14 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
     # check the output logs
     emitter.assert_interactions(
         [
-            call("progress", "Getting the image from the local repo; size={}".format(image_size)),
+            call("progress", f"Getting the image from the local repo; size={image_size}"),
             call("progress_bar", "Reading image...", image_size),
             call("advance", image_read_from_dockerd_size_1),
             call("advance", image_read_from_dockerd_size_2),
             call("progress", "Extracting file 'config.yaml' from local tar (compress=False)"),
             call(
                 "progress",
-                "Uploading config blob, size={}, digest={}".format(u_config_size, u_config_digest),
+                f"Uploading config blob, size={u_config_size}, digest={u_config_digest}",
             ),
             call("progress", "Extracting file 'layer1.bin' from local tar (compress=True)"),
             call(
@@ -1276,7 +1274,7 @@ def test_imagehandler_uploadfromlocal_no_config(emitter, tmp_path, monkeypatch):
     # check the output logs
     emitter.assert_interactions(
         [
-            call("progress", "Getting the image from the local repo; size={}".format(image_size)),
+            call("progress", f"Getting the image from the local repo; size={image_size}"),
             call("progress_bar", "Reading image...", image_size),
             call("advance", image_size),
             call("progress", "Extracting file 'layer.bin' from local tar (compress=True)"),

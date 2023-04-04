@@ -16,13 +16,22 @@
 
 """Tests for the Store API layer (code in store/store.py)."""
 
-import platform
-from unittest.mock import patch, call, MagicMock
-import craft_store
-
 import base64
+import platform
+from unittest.mock import MagicMock, call, patch
+
+import craft_store
 import pytest
-from dateutil import parser
+from charmcraft.commands.store.client import AnonymousClient, Client
+from charmcraft.commands.store.store import (
+    AUTH_DEFAULT_PERMISSIONS,
+    AUTH_DEFAULT_TTL,
+    Base,
+    Library,
+    Store,
+    _store_client_wrapper,
+)
+from charmcraft.utils import ResourceOption
 from craft_cli import CraftError
 from craft_store import attenuations
 from craft_store.endpoints import Package
@@ -32,17 +41,7 @@ from craft_store.errors import (
     NetworkError,
     StoreServerError,
 )
-
-from charmcraft.commands.store.client import AnonymousClient, Client
-from charmcraft.utils import ResourceOption
-from charmcraft.commands.store.store import (
-    AUTH_DEFAULT_PERMISSIONS,
-    AUTH_DEFAULT_TTL,
-    Base,
-    Library,
-    Store,
-    _store_client_wrapper,
-)
+from dateutil import parser
 from tests.commands.test_store_client import FakeResponse
 
 
@@ -275,7 +274,7 @@ def test_not_logged_in_alternate_auth_disable_auto_login(monkeypatch):
 
 def test_auth_valid_credentials(config, monkeypatch):
     """No errors raised when initializing Store with valid credentials."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode("good_credentials".encode()).decode())
+    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode(b"good_credentials").decode())
     Store(config.charmhub)
 
 
@@ -1454,7 +1453,7 @@ def test_get_library(anonymous_client_mock, config):
 
     assert anonymous_client_mock.mock_calls == [
         call.request_urlpath_json(
-            "GET", "/v1/charm/libraries/test-charm-name/{}?api={}".format(test_lib_id, test_api)
+            "GET", f"/v1/charm/libraries/test-charm-name/{test_lib_id}?api={test_api}"
         ),
     ]
     assert result_lib.api == test_api

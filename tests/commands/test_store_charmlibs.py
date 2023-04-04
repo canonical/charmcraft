@@ -20,8 +20,6 @@ import pathlib
 import sys
 
 import pytest
-from craft_cli import CraftError
-
 from charmcraft.commands.store.charmlibs import (
     collect_charmlib_pydeps,
     get_lib_info,
@@ -29,6 +27,7 @@ from charmcraft.commands.store.charmlibs import (
     get_libs_from_tree,
     get_name_from_metadata,
 )
+from craft_cli import CraftError
 
 
 # region Name-related tests
@@ -153,7 +152,7 @@ def test_getlibinfo_bad_name(name):
     with pytest.raises(CraftError) as err:
         get_lib_info(full_name=name)
     assert str(err.value) == (
-        "Charm library name {!r} must conform to charms.<charm>.vN.<libname>".format(name)
+        f"Charm library name {name!r} must conform to charms.<charm>.vN.<libname>"
     )
 
 
@@ -181,7 +180,7 @@ def test_getlibinfo_bad_path(path):
     with pytest.raises(CraftError) as err:
         get_lib_info(lib_path=pathlib.Path(path))
     assert str(err.value) == (
-        "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py".format(path)
+        f"Charm library path {path} must conform to lib/charms/<charm>/vN/<libname>.py"
     )
 
 
@@ -300,7 +299,7 @@ def test_getlibinternals_malformed_content(tmp_path, monkeypatch):
     test_path = _create_lib(extra_content="  broken \n    python  ")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
-    assert str(err.value) == r"Failed to parse Python library {!r}".format(str(test_path))
+    assert str(err.value) == fr"Failed to parse Python library {str(test_path)!r}"
 
 
 @pytest.mark.parametrize(

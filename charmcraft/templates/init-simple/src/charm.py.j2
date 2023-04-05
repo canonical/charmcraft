@@ -14,9 +14,7 @@ https://discourse.charmhub.io/t/4208
 
 import logging
 
-from ops.charm import CharmBase
-from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
+import ops
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
@@ -24,7 +22,7 @@ logger = logging.getLogger(__name__)
 VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
 
 
-class {{ class_name }}(CharmBase):
+class {{ class_name }}(ops.CharmBase):
     """Charm the service."""
 
     def __init__(self, *args):
@@ -32,7 +30,7 @@ class {{ class_name }}(CharmBase):
         self.framework.observe(self.on.httpbin_pebble_ready, self._on_httpbin_pebble_ready)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
-    def _on_httpbin_pebble_ready(self, event):
+    def _on_httpbin_pebble_ready(self, event: ops.PebbleReadyEvent):
         """Define and start a workload using the Pebble API.
 
         Change this example to suit your needs. You'll need to specify the right entrypoint and
@@ -48,9 +46,9 @@ class {{ class_name }}(CharmBase):
         container.replan()
         # Learn more about statuses in the SDK docs:
         # https://juju.is/docs/sdk/constructs#heading--statuses
-        self.unit.status = ActiveStatus()
+        self.unit.status = ops.ActiveStatus()
 
-    def _on_config_changed(self, event):
+    def _on_config_changed(self, event: ops.ConfigChangedEvent):
         """Handle changed configuration.
 
         Change this example to suit your needs. If you don't need to handle config, you can remove
@@ -72,14 +70,14 @@ class {{ class_name }}(CharmBase):
                 container.replan()
 
                 logger.debug("Log level for gunicorn changed to '%s'", log_level)
-                self.unit.status = ActiveStatus()
+                self.unit.status = ops.ActiveStatus()
             else:
                 # We were unable to connect to the Pebble API, so we defer this event
                 event.defer()
-                self.unit.status = WaitingStatus("waiting for Pebble API")
+                self.unit.status = ops.WaitingStatus("waiting for Pebble API")
         else:
             # In this case, the config option is bad, so block the charm and notify the operator.
-            self.unit.status = BlockedStatus("invalid log level: '{log_level}'")
+            self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
 
     @property
     def _pebble_layer(self):
@@ -102,4 +100,4 @@ class {{ class_name }}(CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    main({{ class_name }})
+    ops.main({{ class_name }})

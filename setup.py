@@ -50,7 +50,7 @@ dev_requires = [
     "black",
     "coverage",
     "flake8",
-    "ops>=1.4.0",
+    "ops>=1.4.0,<2.0",  # *1
     "pydocstyle",
     "pytest",
     "pytest-cov",
@@ -59,6 +59,9 @@ dev_requires = [
     "responses",
     "tox",
 ]
+
+# *1: Ops 2.0 requires Python 3.8, so we can only upgrade once we can
+# guarantee we'll have it. Currently, spread tests on bionic use Python 3.6.
 
 extras_require = {
     "dev": dev_requires,

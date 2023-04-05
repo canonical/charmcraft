@@ -15,18 +15,32 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for the 'pack' command."""
-
+import argparse
+import functools
+import os
 import pathlib
-from typing import List
+import shutil
+import subprocess
+import sys
+import tempfile
+from typing import Any, Collection, Dict, List, Mapping
 
-from craft_cli import emit, CraftError
+import yaml
+from craft_cli import emit, CraftError, ArgumentParsingError
 
 from charmcraft import env, parts, instrum
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
+from charmcraft.errors import DuplicateCharmsError
 from charmcraft.manifest import create_manifest
 from charmcraft.parts import Step
-from charmcraft.utils import load_yaml, build_zip
+from charmcraft.utils import (
+    load_yaml,
+    build_zip,
+    find_charm_sources,
+    get_charm_name_from_path,
+    humanize_list,
+)
 
 # the minimum set of files in a bundle
 MANDATORY_FILES = ["bundle.yaml", "README.md"]
@@ -102,21 +116,78 @@ class PackCommand(BaseCommand):
             type=pathlib.Path,
             help="Dump measurements to the specified file",
         )
+        include_charm_group = parser.add_mutually_exclusive_group()
+        include_charm_group.add_argument(
+            "--include-all-charms",
+            action="store_true",
+            help="For bundles, pack all charms whose source is inside the bundle directory",
+        )
+        include_charm_group.add_argument(
+            "--include-charm",
+            action="append",
+            type=pathlib.Path,
+            help="For bundles, pack the charm in the referenced path. Can be used multiple times",
+        )
+        parser.add_argument(
+            "--output-bundle",
+            type=pathlib.Path,
+            help="Write the bundle configuration to this path",
+        )
 
-    def run(self, parsed_args):
+    def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
         self._check_config(config_file=True)
         # decide if this will work on a charm or a bundle
         if self.config.type == "charm":
+            if parsed_args.include_all_charms:
+                raise ArgumentParsingError(
+                    "--include-all-charms can only be used when packing a bundle. "
+                    f"Currently trying to pack: {self.config.project.dirpath}"
+                )
+            if parsed_args.include_charm:
+                raise ArgumentParsingError(
+                    "--include-charm can only be used when packing a bundle. "
+                    f"Currently trying to pack: {self.config.project.dirpath}"
+                )
+            if parsed_args.output_bundle:
+                raise ArgumentParsingError(
+                    "--output-bundle can only be used when packing a bundle. "
+                    f"Currently trying to pack: {self.config.project.dirpath}"
+                )
             self._check_config(bases=True)
             pack_method = self._pack_charm
         elif self.config.type == "bundle":
-            pack_method = self._pack_bundle
+            bundle_filepath = self.config.project.dirpath / "bundle.yaml"
+            bundle = load_yaml(bundle_filepath)
+            if bundle is None:
+                raise CraftError(f"Missing or invalid main bundle file: {str(bundle_filepath)!r}.")
+            if parsed_args.include_all_charms:
+                charm_names = bundle.get("applications", {}).keys()
+                charms = find_charm_sources(self.config.project.dirpath, charm_names)
+            elif parsed_args.include_charm:
+                charms: Dict[str, pathlib.Path] = {}
+                for path in parsed_args.include_charm:
+                    if not path.is_absolute():
+                        path = self.config.project.dirpath / path
+                    name = get_charm_name_from_path(path)
+                    charms[name] = path
+            else:
+                charms = {}
+            if charms:
+                pack_method = functools.partial(
+                    self._recursive_pack_bundle, bundle_config=bundle, charms=charms
+                )
+            else:
+                pack_method = functools.partial(self._pack_bundle, bundle_config=bundle)
         else:
             raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
 
         with instrum.Timer("Whole pack run"):
             pack_method(parsed_args)
+
+        if parsed_args.output_bundle:
+            with parsed_args.output_bundle.open("wt") as file:
+                yaml.safe_dump(bundle, file)
 
         if parsed_args.measure:
             instrum.dump(parsed_args.measure)
@@ -166,7 +237,12 @@ class PackCommand(BaseCommand):
             for charm in charms:
                 emit.message(f"    {charm}")
 
-    def _pack_bundle(self, parsed_args) -> List[pathlib.Path]:
+    def _pack_bundle(
+        self,
+        parsed_args: argparse.Namespace,
+        bundle_config: Dict[str, Any],
+        overwrite_bundle: bool = False,
+    ) -> List[pathlib.Path]:
         """Pack a bundle."""
         emit.progress("Packing the bundle.")
         if parsed_args.shell:
@@ -191,11 +267,6 @@ class PackCommand(BaseCommand):
 
         # get the config files
         bundle_filepath = project.dirpath / "bundle.yaml"
-        bundle_config = load_yaml(bundle_filepath)
-        if bundle_config is None:
-            raise CraftError(
-                "Missing or invalid main bundle file: {!r}.".format(str(bundle_filepath))
-            )
         bundle_name = bundle_config.get("name")
         if not bundle_name:
             raise CraftError(
@@ -241,6 +312,10 @@ class PackCommand(BaseCommand):
         # pack everything
         create_manifest(lifecycle.prime_dir, project.started_at, None, [])
         zipname = project.dirpath / (bundle_name + ".zip")
+        if overwrite_bundle:
+            primed_bundle_path = lifecycle.prime_dir / "bundle.yaml"
+            with primed_bundle_path.open("w") as bundle_file:
+                yaml.safe_dump(bundle_config, bundle_file)
         build_zip(zipname, lifecycle.prime_dir)
 
         if parsed_args.format:
@@ -253,3 +328,83 @@ class PackCommand(BaseCommand):
             build.launch_shell()
 
         return [zipname]
+
+    def _recursive_pack_bundle(
+        self,
+        parsed_args: argparse.Namespace,
+        bundle_config: Dict[str, Any],
+        charms: Mapping[str, pathlib.Path],
+    ) -> List[pathlib.Path]:
+        bundle_charms = bundle_config.get("applications", {})
+        command_args = _get_charm_pack_args([sys.argv[0], "pack", "--verbose"], parsed_args)
+        charms = _subprocess_pack_charms(charms, command_args)
+        for name, value in bundle_charms.items():
+            if name in charms:
+                value["charm"] = charms[name]
+        bundle_path = self._pack_bundle(
+            parsed_args, bundle_config=bundle_config, overwrite_bundle=True
+        )
+        return [*bundle_charms.values(), bundle_path]
+
+
+def _get_charm_pack_args(base_args: List[str], parsed_args: argparse.Namespace) -> List[str]:
+    """Get the parameters for packing a child charm from the current process parameters.
+
+    :param base_args: The base arguments, including the executable, to use.
+    :param parsed_args: The parsed arguments for this process.
+    """
+    command_args = base_args.copy()
+    if parsed_args.destructive_mode:
+        command_args.append("--destructive-mode")
+    if parsed_args.bases_index:
+        for base in parsed_args.bases_index:
+            command_args.append(f"--bases-index={base}")
+    if parsed_args.force:
+        command_args.append("--force")
+    return command_args
+
+
+def _subprocess_pack_charms(
+    charms: Mapping[str, pathlib.Path],
+    command_args: Collection[str],
+) -> Dict[str, pathlib.Path]:
+    """Pack the given charms for a bundle in subprocesses.
+
+    :param command_args: The initial arguments
+    :param charms: A mapping of charm name to charm path
+    :returns: A mapping of charm names to the generated charm.
+    """
+    if charms:
+        charm_str = humanize_list(charms.keys(), "and")
+        emit.progress(f"Packing charms: {charm_str}...")
+    cwd = pathlib.Path(os.getcwd()).resolve()
+    generated_charms = {}
+    with tempfile.TemporaryDirectory(prefix="charmcraft-bundle-", dir=cwd) as temp_dir:
+        temp_dir = pathlib.Path(temp_dir)
+        try:
+            # Put all the charms in this temporary directory.
+            os.chdir(temp_dir)
+            for charm, project_dir in charms.items():
+                full_command = [*command_args, f"--project-dir={project_dir}"]
+                with emit.open_stream(f"Packing charm {charm}...") as stream:
+                    subprocess.check_call(full_command, stdout=stream, stderr=stream)
+            duplicate_charms = {}
+            for charm_file in temp_dir.glob("*.charm"):
+                charm_name = charm_file.name.partition("_")[0]
+                if charm_name not in charms:
+                    emit.debug(f"Unknown charm file generated: {charm_file.name}")
+                    continue
+                if charm_name in generated_charms:
+                    if charm_name not in duplicate_charms:
+                        duplicate_charms[charm_name] = temp_dir.glob(f"{charm_name}_*.charm")
+                    continue
+                generated_charms[charm_name] = charm_file
+            if duplicate_charms:
+                raise DuplicateCharmsError(duplicate_charms)
+            for charm, charm_file in generated_charms.items():
+                destination = cwd / charm_file.name
+                destination.unlink(missing_ok=True)
+                generated_charms[charm] = shutil.move(charm_file, destination)
+        finally:
+            os.chdir(cwd)
+    return generated_charms

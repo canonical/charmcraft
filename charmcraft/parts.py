@@ -340,7 +340,7 @@ def setup_parts():
     plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
 
 
-def process_part_config(data: Dict[str, Any]) -> None:
+def process_part_config(data: Dict[str, Any]) -> Dict[str, Any]:
     """Validate and fill the given part data against/with common and plugin models.
 
     :param data: The part data to use.

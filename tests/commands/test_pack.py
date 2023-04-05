@@ -20,17 +20,18 @@ import sys
 import zipfile
 from argparse import Namespace
 from textwrap import dedent
+from typing import List, Optional, Dict, Any
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
 import pytest
 import yaml
-from craft_cli import CraftError
+from craft_cli import CraftError, ArgumentParsingError
 
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
-from charmcraft.commands.pack import PackCommand
+from charmcraft.commands.pack import PackCommand, _get_charm_pack_args, _subprocess_pack_charms
 from charmcraft.config import load, BasesConfiguration
 
 
@@ -44,6 +45,9 @@ def get_namespace(
     shell_after=False,
     format=None,
     measure=None,
+    include_all_charms: bool = False,
+    include_charm: Optional[List[pathlib.Path]] = None,
+    output_bundle: Optional[pathlib.Path] = None,
 ):
     if bases_index is None:
         bases_index = []
@@ -57,6 +61,9 @@ def get_namespace(
         shell_after=shell_after,
         format=format,
         measure=measure,
+        include_all_charms=include_all_charms,
+        include_charm=include_charm,
+        output_bundle=output_bundle,
     )
 
 
@@ -71,7 +78,9 @@ def bundle_yaml(tmp_path):
     bundle_path.write_text("{}")
     content = {}
 
-    def func(*, name):
+    def func(*, name, base_content: Optional[Dict[str, Any]] = None):
+        if base_content:
+            content.update(base_content)
         content["name"] = name
         encoded = yaml.dump(content)
         bundle_path.write_text(encoded)
@@ -92,6 +101,41 @@ def mock_launch_shell():
         yield mock_shell
 
 
+# region Tests for bad CLI parameters
+@pytest.mark.parametrize(
+    "namespace,message_start,project_type",
+    [
+        pytest.param(
+            get_namespace(include_all_charms=True),
+            "--include-all-charms can only be used when packing a bundle. Currently trying ",
+            "charm",
+            id="include_all_charms_on_charm",
+        ),
+        pytest.param(
+            get_namespace(include_charm=[pathlib.Path("a")]),
+            "--include-charm can only be used when packing a bundle. Currently trying to pack: ",
+            "charm",
+            id="include_charm_on_charm",
+        ),
+        pytest.param(
+            get_namespace(output_bundle=pathlib.Path("output.yaml")),
+            "--output-bundle can only be used when packing a bundle. Currently trying to pack: ",
+            "charm",
+            id="output_bundle_on_charm",
+        ),
+    ],
+)
+def test_invalid_arguments(config, namespace, message_start, project_type):
+    config.set(type=project_type)
+    cmd = PackCommand(config)
+
+    with pytest.raises(ArgumentParsingError) as exc_info:
+        cmd.run(namespace)
+
+    assert exc_info.value.args[0].startswith(message_start)
+
+
+# endregion
 # -- tests for the project type decissor
 
 
@@ -110,9 +154,11 @@ def test_resolve_bundle_type(config):
     config.set(type="bundle")
     cmd = PackCommand(config)
 
-    with patch.object(cmd, "_pack_bundle") as mock:
-        cmd.run(noargs)
-    mock.assert_called_with(noargs)
+    with patch.object(pack, "load_yaml") as mock_yaml:
+        mock_yaml.return_value = {}
+        with patch.object(cmd, "_pack_bundle") as mock:
+            cmd.run(noargs)
+    mock.assert_called_with(noargs, bundle_config={})
 
 
 def test_resolve_dump_measure_if_indicated(config, tmp_path):
@@ -142,7 +188,16 @@ def test_resolve_dump_measure_if_indicated(config, tmp_path):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_config, formatted):
+@pytest.mark.parametrize(
+    "namespace_kwargs",
+    [
+        {},
+        {"include_all_charms": True},
+    ],
+)
+def test_bundle_simple_successful_build(
+    tmp_path, emitter, bundle_yaml, bundle_config, formatted, namespace_kwargs
+):
     """A simple happy story."""
     # mandatory files (other than the automatically provided manifest)
     content = bundle_yaml(name="testbundle")
@@ -150,7 +205,7 @@ def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_co
     (tmp_path / "README.md").write_text("test readme")
 
     # build!
-    args = get_namespace(format=formatted)
+    args = get_namespace(format=formatted, **namespace_kwargs)
     PackCommand(bundle_config).run(args)
 
     # check
@@ -172,6 +227,72 @@ def test_bundle_simple_succesful_build(tmp_path, emitter, bundle_yaml, bundle_co
 
     # verify that the manifest was not leftover in user's project
     assert not (tmp_path / "manifest.yaml").exists()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+@pytest.mark.parametrize(
+    "parsed_args,charms",
+    [
+        pytest.param(
+            get_namespace(include_all_charms=True),
+            {"test": "charms/test"},
+            id="include_all_charms",
+        ),
+        pytest.param(
+            get_namespace(include_charm=[pathlib.Path("charms/test")]),
+            {"test": "charms/test"},
+            id="include_all_charms",
+        ),
+    ],
+)
+def test_bundle_recursive_pack_setup(
+    tmp_path,
+    mocker,
+    build_charm_directory,
+    emitter,
+    bundle_yaml,
+    bundle_config,
+    parsed_args,
+    charms,
+):
+    charms_content = {"applications": charms, "name": "testbundle"}
+    bundle_yaml(name="testbundle", base_content=charms_content)
+    (tmp_path / "README.md").touch()
+    packer = PackCommand(bundle_config)
+    mock_pack = mocker.patch.object(packer, "_recursive_pack_bundle")
+    expected_charms = build_charm_directory(tmp_path, fake_charms=charms)
+
+    packer.run(parsed_args)
+
+    mock_pack.assert_called_once_with(
+        parsed_args, bundle_config=charms_content, charms=expected_charms
+    )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+@pytest.mark.parametrize(
+    "parsed_args,charms",
+    [
+        pytest.param(
+            get_namespace(include_all_charms=True),
+            {"test": "charms/test"},
+            id="include_all_charms",
+        ),
+        pytest.param(get_namespace(), {"test": "charms/test"}, id="include_all_charms"),
+    ],
+)
+def test_bundle_non_recursive_pack_setup(
+    tmp_path, mocker, emitter, bundle_yaml, bundle_config, parsed_args, charms
+):
+    charms_content = {"applications": charms, "name": "testbundle"}
+    bundle_yaml(name="testbundle", base_content=charms_content)
+    (tmp_path / "README.md").touch()
+    packer = PackCommand(bundle_config)
+    mock_pack = mocker.patch.object(packer, "_pack_bundle")
+
+    packer.run(parsed_args)
+
+    mock_pack.assert_called_once_with(parsed_args, bundle_config=charms_content)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -628,14 +749,13 @@ def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_confi
 def test_charm_builder_infrastructure_called(config, tmp_path):
     """Check that build.Builder is properly called."""
     measure_filepath = tmp_path / "measurements.json"
-    args = Namespace(
+    args = get_namespace(
         bases_index=[],
         debug=True,
         destructive_mode=True,
         force=True,
         shell=True,
         shell_after=True,
-        format=None,
         measure=measure_filepath,
     )
     config.set(type="charm")
@@ -755,3 +875,108 @@ def test_validator_bases_index_invalid(bases_indices, bad_index, config):
             f"Bases index '{bad_index}' is invalid (must be >= 0 and fit in configured bases)."
         )
         assert str(exc_cm.value) == expected_msg
+
+
+# region Unit tests for private functions
+@pytest.mark.parametrize(
+    "base_args,parsed_args,expected",
+    [
+        pytest.param([], get_namespace(), [], id="empty"),
+        pytest.param(["cmd", "--option"], get_namespace(), ["cmd", "--option"], id="base_only"),
+        pytest.param(
+            [], get_namespace(destructive_mode=True), ["--destructive-mode"], id="destructive_mode"
+        ),
+        pytest.param([], get_namespace(bases_index=[1]), ["--bases-index=1"], id="bases_index"),
+        pytest.param([], get_namespace(force=True), ["--force"], id="force"),
+        pytest.param(
+            ["charmcraft", "pack", "--verbose"],
+            get_namespace(destructive_mode=True, bases_index=[1, 2, 3], force=True),
+            [
+                "charmcraft",
+                "pack",
+                "--verbose",
+                "--destructive-mode",
+                "--bases-index=1",
+                "--bases-index=2",
+                "--bases-index=3",
+                "--force",
+            ],
+            id="all_on",
+        ),
+        pytest.param(
+            [],
+            get_namespace(
+                debug=True,
+                shell=True,
+                shell_after=True,
+                format="json",
+                measure="file",
+                include_all_charms=True,
+                include_charm=[pathlib.Path("/dev/null")],
+                output_bundle=pathlib.Path("/dev/null"),
+            ),
+            [],
+            id="unforwarded_params",
+        ),
+    ],
+)
+def test_get_charm_pack_args(base_args, parsed_args, expected):
+    assert _get_charm_pack_args(base_args, parsed_args) == expected
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+@pytest.mark.parametrize(
+    "charms,command_args,charm_files,expected_calls,expected",
+    [
+        pytest.param({}, [], [], [], {}, id="empty"),
+        pytest.param(
+            {"test": pathlib.Path("charms/test")},
+            ["pack_cmd"],
+            [],
+            [
+                mock.call(
+                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
+                )
+            ],
+            {},
+            id="no_outputs",
+        ),
+        pytest.param(
+            {"test": pathlib.Path("charms/test")},
+            ["pack_cmd"],
+            ["test_amd64.charm"],
+            [
+                mock.call(
+                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
+                )
+            ],
+            {"test": pathlib.Path("test_amd64.charm").resolve()},
+            id="one_correct_charm",
+        ),
+        pytest.param(
+            {"test": pathlib.Path("charms/test")},
+            ["pack_cmd"],
+            ["test_amd64.charm", "where-did-this-come-from_riscv.charm"],
+            [
+                mock.call(
+                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
+                )
+            ],
+            {"test": pathlib.Path("test_amd64.charm").resolve()},
+            id="one_correct_charm",
+        ),
+    ],
+)
+def test_subprocess_pack_charms_success(
+    mocker, check, charms, charm_files, command_args, expected_calls, expected
+):
+    mock_check_call = mocker.patch("subprocess.check_call")
+    mock_check_call.side_effect = lambda *_, **__: [pathlib.Path(f).touch() for f in charm_files]
+
+    actual = _subprocess_pack_charms(charms, command_args)
+
+    check.equal(actual, expected)
+    check.equal(mock_check_call.mock_calls, expected_calls)
+
+
+# endregion

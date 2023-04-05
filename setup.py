@@ -55,6 +55,7 @@ dev_requires = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
+    "pytest-check",
     "responses",
     "tox",
 ]

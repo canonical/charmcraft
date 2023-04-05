@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ from unittest.mock import Mock
 
 import pytest
 import responses as responses_module
+import yaml
 from craft_parts import callbacks
 from craft_providers import Executor, Provider
 
@@ -244,5 +245,24 @@ def assert_output(capsys):
             if match_line not in printed_lines:
                 printed_repr = "\n".join(map(repr, printed_lines))
                 pytest.fail(f"Line {match_line!r} not found in the output found:\n{printed_repr}")
+
+    return helper
+
+
+@pytest.fixture
+def build_charm_directory():
+    def helper(tmp_path, fake_charms, file_type="charm"):
+        expected = {}
+        charmcraft_yaml = {"type": file_type}
+        for name, path in fake_charms.items():
+            full_path = tmp_path / path
+            expected[name] = full_path
+            full_path.mkdir(parents=True)
+            metadata_yaml = {"name": name}
+            with (full_path / "charmcraft.yaml").open("w") as yaml_file:
+                yaml.safe_dump(charmcraft_yaml, yaml_file)
+            with (full_path / "metadata.yaml").open("w") as yaml_file:
+                yaml.safe_dump(metadata_yaml, yaml_file)
+        return expected
 
     return helper

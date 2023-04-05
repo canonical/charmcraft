@@ -106,11 +106,26 @@ def test_charmplugin_get_build_snaps(charm_plugin):
     assert charm_plugin.get_build_snaps() == set()
 
 
-def test_charmplugin_get_build_environment(charm_plugin):
+def test_charmplugin_get_build_environment_ubuntu(charm_plugin, mocker):
+    mock_id = mocker.patch("craft_parts.utils.os_utils.OsRelease.id")
+    mock_version = mocker.patch("craft_parts.utils.os_utils.OsRelease.version_id")
+    mock_id.return_value = "ubuntu"
+    mock_version.return_value = "22.04"
     assert charm_plugin.get_build_environment() == {}
 
 
-def test_charmplugin_get_build_commands(charm_plugin, tmp_path, monkeypatch):
+def test_charmplugin_get_build_environment_centos_7(charm_plugin, mocker, monkeypatch):
+    monkeypatch.setenv("PATH", "/some/path")
+    mock_id = mocker.patch("craft_parts.utils.os_utils.OsRelease.id")
+    mock_version = mocker.patch("craft_parts.utils.os_utils.OsRelease.version_id")
+    mock_id.return_value = "centos"
+    mock_version.return_value = "7"
+    assert charm_plugin.get_build_environment() == {
+        "PATH": "/opt/rh/rh-python38/root/usr/bin:${PATH}"
+    }
+
+
+def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, monkeypatch):
     monkeypatch.setenv("PATH", "/some/path")
     monkeypatch.setenv("SNAP", "snap_value")
     monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
@@ -120,28 +135,80 @@ def test_charmplugin_get_build_commands(charm_plugin, tmp_path, monkeypatch):
     monkeypatch.setenv("https_proxy", "https_proxy_value")
     monkeypatch.setenv("no_proxy", "no_proxy_value")
 
-    with patch("craft_parts.callbacks.register_post_step") as mock_register:
-        assert charm_plugin.get_build_commands() == [
-            "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
-            "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
-            "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
-            "https_proxy=https_proxy_value no_proxy=no_proxy_value "
-            "{python} -u -I "
-            "{charm_builder} "
-            "--builddir {work_dir}/parts/foo/build "
-            "--installdir {work_dir}/parts/foo/install "
-            "--entrypoint {work_dir}/parts/foo/build/entrypoint "
-            "-b pkg1 "
-            "-b pkg2 "
-            "-p pkg3 "
-            "-p pkg4 "
-            "-r reqs1.txt "
-            "-r reqs2.txt".format(
-                python=sys.executable,
-                charm_builder=charm_builder.__file__,
-                work_dir=str(tmp_path),
-            )
-        ]
+    mock_id = mocker.patch("craft_parts.utils.os_utils.OsRelease.id")
+    mock_version = mocker.patch("craft_parts.utils.os_utils.OsRelease.version_id")
+    mock_register = mocker.patch("craft_parts.callbacks.register_post_step")
+
+    mock_id.return_value = "ubuntu"
+    mock_version.return_value = "22.04"
+
+    assert charm_plugin.get_build_commands() == [
+        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
+        "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
+        "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
+        "https_proxy=https_proxy_value no_proxy=no_proxy_value "
+        "{python} -u -I "
+        "{charm_builder} "
+        "--builddir {work_dir}/parts/foo/build "
+        "--installdir {work_dir}/parts/foo/install "
+        "--entrypoint {work_dir}/parts/foo/build/entrypoint "
+        "-b pkg1 "
+        "-b pkg2 "
+        "-p pkg3 "
+        "-p pkg4 "
+        "-r reqs1.txt "
+        "-r reqs2.txt".format(
+            python=sys.executable,
+            charm_builder=charm_builder.__file__,
+            work_dir=str(tmp_path),
+        )
+    ]
+
+    # check the callback is properly registered for running own method after build
+    mock_register.assert_called_with(charm_plugin.post_build_callback, step_list=[Step.BUILD])
+
+
+def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker, monkeypatch):
+    monkeypatch.setenv("PATH", "/some/path")
+    monkeypatch.setenv("SNAP", "snap_value")
+    monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
+    monkeypatch.setenv("SNAP_NAME", "snap_name_value")
+    monkeypatch.setenv("SNAP_VERSION", "snap_version_value")
+    monkeypatch.setenv("http_proxy", "http_proxy_value")
+    monkeypatch.setenv("https_proxy", "https_proxy_value")
+    monkeypatch.setenv("no_proxy", "no_proxy_value")
+
+    mock_id = mocker.patch("craft_parts.utils.os_utils.OsRelease.id")
+    mock_version = mocker.patch("craft_parts.utils.os_utils.OsRelease.version_id")
+    mock_register = mocker.patch("craft_parts.callbacks.register_post_step")
+
+    mock_id.return_value = "centos"
+    mock_version.return_value = "7"
+
+    assert charm_plugin.get_build_commands() == [
+        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/opt/rh/rh-python38/root/usr/bin:/some/path "
+        "SNAP=snap_value SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
+        "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
+        "https_proxy=https_proxy_value no_proxy=no_proxy_value "
+        "{python} -u -I "
+        "{charm_builder} "
+        "--builddir {work_dir}/parts/foo/build "
+        "--installdir {work_dir}/parts/foo/install "
+        "--entrypoint {work_dir}/parts/foo/build/entrypoint "
+        "-b pip "
+        "-b setuptools "
+        "-b wheel "
+        "-b pkg1 "
+        "-b pkg2 "
+        "-p pkg3 "
+        "-p pkg4 "
+        "-r reqs1.txt "
+        "-r reqs2.txt".format(
+            python=sys.executable,
+            charm_builder=charm_builder.__file__,
+            work_dir=str(tmp_path),
+        )
+    ]
 
     # check the callback is properly registered for running own method after build
     mock_register.assert_called_with(charm_plugin.post_build_callback, step_list=[Step.BUILD])

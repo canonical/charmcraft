@@ -46,6 +46,7 @@ from charmcraft.commands.store import (
     PublishLibCommand,
     RegisterBundleNameCommand,
     RegisterCharmNameCommand,
+    UnregisterNameCommand,
     ReleaseCommand,
     StatusCommand,
     UploadCommand,
@@ -571,6 +572,15 @@ def test_register_bundle_name(emitter, store_mock, config):
     ]
     expected = "You are now the publisher of bundle 'testname' in Charmhub."
     emitter.assert_message(expected)
+
+
+def test_unregister_name(emitter, store_mock, config):
+    """Simple name unregsitration name."""
+    args = Namespace(name="testname")
+    UnregisterNameCommand(config).run(args)
+
+    assert store_mock.mock_calls == [call.unregister_name("testname")]
+    emitter.assert_message("Name 'testname' has been removed from Charmhub.")
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])

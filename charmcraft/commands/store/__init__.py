@@ -386,6 +386,40 @@ class RegisterBundleNameCommand(BaseCommand):
         emit.message(f"You are now the publisher of bundle {parsed_args.name!r} in Charmhub.")
 
 
+class UnregisterNameCommand(BaseCommand):
+    """Register a bundle name in the Store."""
+
+    name = "unregister"
+    help_msg = "Unregister a name in the Store"
+    overview = textwrap.dedent(
+        """
+        Unregister a name in the Store.
+
+        Unregister a name from CharmHub if no revisions have been uploaded.
+
+        A package cannot be unregistered if something has been uploaded to
+        the name. This command is only for unregistering names that have
+        never been used. Unregistering must be done by the publisher.
+        Attempting to unregister a charm or bundle as a collaborator will
+        fail.
+
+        We discuss registrations on Charmhub's Discourse:
+
+           https://discourse.charmhub.io/c/charm
+    """
+    )
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("name", help="The name to unregister from Charmhub")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub, needs_auth=True)
+        store.unregister_name(parsed_args.name)
+        emit.message(f"Name {parsed_args.name!r} has been removed from Charmhub.")
+
+
 class ListNamesCommand(BaseCommand):
     """List the entities registered in Charmhub."""
 

@@ -16,4 +16,18 @@
 
 """Expose needed names at main package level."""
 
-from .version import version as __version__  # noqa: F401 (imported but unused)
+import os
+
+import pkg_resources
+
+
+def _get_version():
+    if os.getenv("SNAP_NAME") == "charmcraft":
+        return os.getenv("SNAP_VERSION")
+    try:
+        return pkg_resources.require("charmcraft")[0].version
+    except pkg_resources.DistributionNotFound:
+        return "devel"
+
+
+__version__ = _get_version()

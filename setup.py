@@ -33,7 +33,6 @@ install_requires = [
     "craft-parts",
     "craft-providers",
     "craft-store",
-    "cryptography==3.4.8",  # *1
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
@@ -46,18 +45,16 @@ install_requires = [
     "snap-helpers",
     "tabulate",
 ]
-# *1: cryptography is not needed as a direct dependency, but it will be brought in
-# newer versions from other dependencies, and the new ones need a Rust compiler
-# which is not present in armhf, ppc64el and s390x architectures.
 
 dev_requires = [
     "black",
     "coverage",
     "flake8",
-    "ops>=1.4.0",
     "pydocstyle",
     "pytest",
+    "pytest-cov",
     "pytest-mock",
+    "pytest-check",
     "responses",
     "tox",
 ]

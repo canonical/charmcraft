@@ -20,7 +20,8 @@ import os
 import pathlib
 import shlex
 import sys
-from typing import Any, Dict, List, Set, cast
+from typing import Any, Dict, List, Set, Optional, cast
+from contextlib import suppress
 
 import pydantic
 from craft_cli import emit, CraftError
@@ -184,6 +185,10 @@ class CharmPlugin(plugins.Plugin):
 
     def get_build_environment(self) -> Dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
+        os_special_paths = self._get_os_special_priority_paths()
+        if os_special_paths:
+            return {"PATH": os_special_paths + ":${PATH}"}
+
         return {}
 
     def get_build_commands(self) -> List[str]:
@@ -203,6 +208,10 @@ class CharmPlugin(plugins.Plugin):
         ]:
             if key in os.environ:
                 build_env[key] = os.environ[key]
+
+        os_special_paths = self._get_os_special_priority_paths()
+        if os_special_paths:
+            build_env["PATH"] = os_special_paths + ":" + build_env["PATH"]
 
         env_flags = [f"{key}={value}" for key, value in build_env.items()]
 
@@ -256,6 +265,16 @@ class CharmPlugin(plugins.Plugin):
     def post_build_callback(self, step_info):
         """Collect metrics left by charm_builder.py."""
         instrum.merge_from(env.get_charm_builder_metrics_path())
+
+    def _get_os_special_priority_paths(self) -> Optional[str]:
+        """Return a str of PATH for special OS."""
+        with suppress(OsReleaseIdError, OsReleaseVersionIdError):
+            os_release = os_utils.OsRelease()
+            if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
+                # CentOS 7 Python 3.8 from SCL repo
+                return "/opt/rh/rh-python38/root/usr/bin"
+
+        return None
 
 
 class BundlePluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -321,7 +340,7 @@ def setup_parts():
     plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
 
 
-def process_part_config(data: Dict[str, Any]) -> None:
+def process_part_config(data: Dict[str, Any]) -> Dict[str, Any]:
     """Validate and fill the given part data against/with common and plugin models.
 
     :param data: The part data to use.

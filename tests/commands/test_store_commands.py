@@ -16,17 +16,18 @@
 
 """Tests for the Store commands (code in store/__init__.py)."""
 
+import base64
 import datetime
 import sys
 import zipfile
 from argparse import Namespace, ArgumentParser
-from unittest.mock import patch, call, MagicMock, ANY
+from unittest.mock import patch, call, MagicMock, Mock, ANY
 
 import dateutil.parser
 import pytest
 import yaml
 from craft_cli import CraftError
-from craft_store.errors import CredentialsUnavailable
+from craft_store.errors import CredentialsUnavailable, StoreServerError
 
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.config import CharmhubConfig
@@ -82,6 +83,16 @@ noargs = Namespace()
 
 # used to flag defaults when None is a real option
 DEFAULT = object()
+
+
+def _fake_response(status_code, reason=None, json=None):
+    response = Mock(spec="requests.Response")
+    response.status_code = status_code
+    response.ok = status_code == 200
+    response.reason = reason
+    if json is not None:
+        response.json = Mock(return_value=json)
+    return response
 
 
 @pytest.fixture
@@ -953,6 +964,27 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path, formatted):
             "- broken: other long error text",
         ]
         emitter.assert_messages(expected)
+
+
+@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+def test_upload_call_login_expired(mocker, monkeypatch, config, tmp_path, formatted):
+    """Simple upload but login expired."""
+    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode("credentials".encode()).decode())
+    mock_whoami = mocker.patch("craft_store.base_client.HTTPClient.request")
+    push_file_mock = mocker.patch("charmcraft.commands.store.store.Client.push_file")
+
+    mock_whoami.side_effect = StoreServerError(_fake_response(401, json={}))
+
+    test_charm = tmp_path / "mystuff.charm"
+    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
+
+    with pytest.raises(CraftError) as cm:
+        UploadCommand(config).run(args)
+    assert str(cm.value) == (
+        "Provided credentials are no longer valid for Charmhub. Regenerate them and try again."
+    )
+    assert not push_file_mock.called
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])

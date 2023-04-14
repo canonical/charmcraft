@@ -173,6 +173,7 @@ def test_executables(tmp_path, config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+@pytest.mark.skipif(os.getenv("RUNNING_TOX"), reason="does not work inside tox")
 @pytest.mark.parametrize("profile", list(PROFILES))
 def test_tests(tmp_path, config, profile):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own

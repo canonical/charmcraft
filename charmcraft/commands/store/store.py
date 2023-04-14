@@ -251,6 +251,10 @@ class Store:
         )
         return result
 
+    def _check_authorized(self) -> None:
+        """Check if current credentials authenticated."""
+        self._client.whoami()
+
     @_store_client_wrapper()
     def register_name(self, name, entity_type):
         """Register the specified name for the authenticated user."""
@@ -280,6 +284,8 @@ class Store:
 
     def _upload(self, endpoint, filepath, *, extra_fields=None):
         """Upload for all charms, bundles and resources (generic process)."""
+        self._check_authorized()
+
         upload_id = self._client.push_file(filepath)
         payload = {"upload-id": upload_id}
         if extra_fields is not None:

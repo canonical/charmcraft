@@ -1328,7 +1328,8 @@ class PublishLibCommand(BaseCommand):
         Publish charm libraries.
 
         Upload and release in Charmhub the new api/patch version of the
-        indicated library, or all the charm libraries if `--all` is used.
+        indicated library, or all the charm libraries if <library> is not
+        provided.
 
         It will automatically take you through the login process if
         your credentials are missing or too old.

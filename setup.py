@@ -30,7 +30,7 @@ with open("README.md", "rt", encoding="utf8") as fh:
 
 install_requires = [
     "craft-cli",
-    "craft-parts",
+    "craft-parts>=1.18",
     "craft-providers",
     "craft-store>=2.4",
     "humanize>=2.6.0",

@@ -48,8 +48,14 @@ execute: |
   lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-base-v9999-XXXNEWVERSIONXXX
   lxc --project=charmcraft config set base-instance-charmcraft-buildd-base-v9999-XXXNEWVERSIONXXX "image.description" "base-instance-charmcraft-buildd-base-v99.0-craft-com.ubuntu.cloud-buildd-core22"
 
+  lxc --project=charmcraft image list
+  lxc --project=charmcraft list
+
   . "/charmcraft/tests/spread/tools/prepare.sh"
   install_charmcraft
+
+  lxc --project=charmcraft image list
+  lxc --project=charmcraft list
 
   lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-XXXOLDMETAXXX" && { echo "old base instance exists but should not"; exit 1; }
   lxc --project=charmcraft image list --format=csv | grep -q "snapshot-craft-com.ubuntu.cloud-buildd-core22-charmcraft-buildd-base-v0.0" && { echo "old base instance exists but should not"; exit 1; }

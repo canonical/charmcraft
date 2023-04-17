@@ -17,6 +17,9 @@ restore: |
   
   rm -rf charm
   snap remove charmcraft
+
+  #shellcheck source=tests/spread/tools/prepare.sh
+  . "/charmcraft/tests/spread/tools/prepare.sh"
   install_charmcraft
 
 execute: |
@@ -45,6 +48,7 @@ execute: |
   lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-base-v9999-XXXNEWVERSIONXXX
   lxc --project=charmcraft config set base-instance-charmcraft-buildd-base-v9999-XXXNEWVERSIONXXX "image.description" "base-instance-charmcraft-buildd-base-v99.0-craft-com.ubuntu.cloud-buildd-core22"
 
+  . "/charmcraft/tests/spread/tools/prepare.sh"
   install_charmcraft
 
   lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-XXXOLDMETAXXX" && { echo "old base instance exists but should not"; exit 1; }

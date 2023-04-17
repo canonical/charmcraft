@@ -35,6 +35,31 @@ jobs:
           - "google:ubuntu-22.04-64:tests/spread/charms/k8s-operator:prometheus"
 
     steps:
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+
+      - name: Checkout charmcraft
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Download snap artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: snap
+
+      - name: Run spread
+        run: |
+          spread ${{ matrix.spread }}
+
+  snap-store-tests:
+    runs-on: self-hosted
+    needs: [snap-build]
+
+    steps:
       - name: Decision to Run
         id: decisions
         run: |
@@ -70,4 +95,5 @@ jobs:
         env:
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
         run: |
-          spread ${{ matrix.spread }}
+          spread google:ubuntu-22.04-64:tests/spread/store/
+

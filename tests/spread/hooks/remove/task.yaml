@@ -11,6 +11,8 @@ prepare: |
   charmcraft init --project-dir=charm
 
 restore: |
+  #shellcheck source=tests/spread/tools/prepare.sh
+  . "/charmcraft/tests/spread/tools/prepare.sh"
   install_charmcraft
   pushd charm
   charmcraft clean

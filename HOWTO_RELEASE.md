@@ -125,7 +125,3 @@ paste, but do please pay attention to details!
 - write a new post in Discourse about the release:
 
     https://discourse.juju.is/c/charmcraft
-
-- finally change the version number in `charmcraft/version.py`
-
-- commit, push, create a PR for the branch

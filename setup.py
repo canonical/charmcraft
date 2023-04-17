@@ -36,7 +36,7 @@ install_requires = [
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
-    "pydantic>=1.10",
+    "pydantic>=1.9",
     "python-dateutil",
     "pyyaml",
     "requests",

@@ -2,7 +2,7 @@ summary: pack external k8s operator charms
 manual: true
 systems:
   - ubuntu-22.04-64
-kill-timeout: 30m
+kill-timeout: 60m
 
 environment:
   CHARM/alertmanager: https://github.com/canonical/alertmanager-k8s-operator

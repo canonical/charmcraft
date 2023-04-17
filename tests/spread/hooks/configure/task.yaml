@@ -27,7 +27,8 @@ execute: |
   CURRENT_INSTANCE="$(lxc --project=charmcraft list --format=csv -c n | head -n 1)"
 
   # Create an obsolete base instance v0.0 format 1
-  lxc --project=charmcraft copy "${CURRENT_INSTANCE}" snapshot-craft-com.ubuntu.cloud-buildd-core22-charmcraft-buildd-base-v0.0
+  lxc --project=charmcraft snapshot "${CURRENT_INSTANCE}" "ss"
+  lxc --project=charmcraft publish "${CURRENT_INSTANCE}/ss" --alias snapshot-craft-com.ubuntu.cloud-buildd-core22-charmcraft-buildd-base-v0.0
 
   # Create an obsolete base instance v0.0 format 2
   lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-XXXOLDMETAXXX
@@ -47,7 +48,7 @@ execute: |
   install_charmcraft
 
   lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-XXXOLDMETAXXX" && { echo "old base instance exists but should not"; exit 1; }
-  lxc --project=charmcraft list --format=csv | grep -q "snapshot-craft-com.ubuntu.cloud-buildd-core22-charmcraft-buildd-base-v0.0" && { echo "old base instance exists but should not"; exit 1; }
+  lxc --project=charmcraft image list --format=csv | grep -q "snapshot-craft-com.ubuntu.cloud-buildd-core22-charmcraft-buildd-base-v0.0" && { echo "old base instance exists but should not"; exit 1; }
   lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-base-v00-XXXOLDBASEXXX" && { echo "old base instance exists but should not"; exit 1; }
   lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-base-v10-XXXOLDVERSIONXXX" && { echo "old base instance exists but should not"; exit 1; }
   lxc --project=charmcraft list --format=csv | grep -q "base-instance-charmcraft-buildd-base-v9999-XXXNEWVERSIONXXX" || { echo "new base instance not exist but should"; exit 1; }

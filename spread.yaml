@@ -162,6 +162,6 @@ suites:
       # to not flood Charmhub with names the same two are always used in the Store related
       # tests (except in the names registration tests, of course); register them manually
       # in staging Charmhub authenticating with the configured credentials
-      CHARM_DEFAULT_NAME: craft-spreadtests-charm-2
-      BUNDLE_DEFAULT_NAME: craft-spreadtests-bundle-2
+      CHARM_DEFAULT_NAME: "$(HOST: echo ${SPREAD_CHARM_NAME:-$USER-test-charm})"
+      BUNDLE_DEFAULT_NAME: "$(HOST: echo ${SPREAD_BUNDLE_NAME:-$USER-test-bundle})"
 

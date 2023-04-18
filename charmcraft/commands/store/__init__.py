@@ -879,7 +879,7 @@ class PromoteBundleCommand(BaseCommand):
                 f"file {str(bundle_path)!r}."
             )
         emit.progress("Determining charms to promote")
-        charms = [c["charm"] for c in bundle_config["applications"].values()]
+        charms = [c["charm"] for c in bundle_config.get("applications", {}).values()]
         errant_excludes = []
         for excluded in parsed_args.exclude:
             try:
@@ -950,7 +950,7 @@ class PromoteBundleCommand(BaseCommand):
             charm_list = humanize_list(error_charms, "and")
             raise CraftError(f"Not found in channel {from_channel.name}: {charm_list}")
 
-        for application in bundle_config["applications"].values():
+        for application in bundle_config.get("applications", {}).values():
             application["channel"] = to_channel.name
 
         if parsed_args.output_bundle:

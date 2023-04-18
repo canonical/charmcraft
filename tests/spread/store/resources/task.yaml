@@ -1,6 +1,6 @@
 summary: upload resources, list their revisions, release them
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -37,11 +37,18 @@ prepare: |
   # an oci image resource
   docker pull hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
 
+  # If necessary, try to register the charm.
+  if ! charmcraft status $CHARM_DEFAULT_NAME; then
+    if ! charmcraft register $CHARM_DEFAULT_NAME; then
+      ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
+    fi
+  fi
+
 restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

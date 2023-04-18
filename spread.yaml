@@ -4,18 +4,6 @@ path: /charmcraft
 environment:
   PROJECT_PATH: /charmcraft
   PATH: /snap/bin:$PATH:$PROJECT_PATH/tools/external/tools
-    # the content for this key is the content of FILE after running
-    #     charmcraft login --export=FILE --ttl=5184000#
-    # (as the owner of CHARM_DEFAULT_NAME and BUNDLE_DEFAULT_NAME below), and it
-    # should be part of the environment (when running spread locally just define it,
-    # for GH actions set it in Settings -> Security -> Actions -> Repository secrets)
-  CHARMCRAFT_AUTH: "$(HOST: echo $CHARMCRAFT_AUTH)"
-
-  # to not flood Charmhub with names the same two are always used in the Store related
-  # tests (except in the names registration tests, of course); register them manually
-  # in staging Charmhub authenticating with the configured credentials
-  CHARM_DEFAULT_NAME: craft-spreadtests-charm-2
-  BUNDLE_DEFAULT_NAME: craft-spreadtests-bundle-2
 
 backends:
   google:
@@ -134,15 +122,8 @@ prepare: |
   lxd waitready --timeout=30
   lxd init --auto
 
-  install_charmcraft()
-  {
-    if stat /charmcraft/charmcraft_*.snap 2>/dev/null; then
-      snap install --classic --dangerous /charmcraft/charmcraft_*.snap
-    else
-      echo "Expected a snap to exist in /charmcraft/"
-      exit 1
-    fi
-  }
+  #shellcheck source=tests/spread/tools/prepare.sh
+  . "/charmcraft/tests/spread/tools/prepare.sh"
 
   install_charmcraft
 
@@ -160,4 +141,20 @@ suites:
   tests/spread/store/:
     summary: sequence of commands for different store-related functionalities
     kill-timeout: 30m
+    manual: true
+    systems:
+      - ubuntu-22.04-64
+    environment:
+      # the content for this key is the content of FILE after running
+      #     charmcraft login --export=FILE --ttl=5184000#
+      # (as the owner of CHARM_DEFAULT_NAME and BUNDLE_DEFAULT_NAME below), and it
+      # should be part of the environment (when running spread locally just define it,
+      # for GH actions set it in Settings -> Security -> Actions -> Repository secrets)
+      CHARMCRAFT_AUTH: "$(HOST: echo $CHARMCRAFT_AUTH)"
+
+      # to not flood Charmhub with names the same two are always used in the Store related
+      # tests (except in the names registration tests, of course); register them manually
+      # in staging Charmhub authenticating with the configured credentials
+      CHARM_DEFAULT_NAME: craft-spreadtests-charm-2
+      BUNDLE_DEFAULT_NAME: craft-spreadtests-bundle-2
 

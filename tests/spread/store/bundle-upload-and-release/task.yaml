@@ -23,6 +23,11 @@ prepare: |
   series: focal
   EOF
 
+  cat <<- EOF > metadata.yaml
+  name: $BUNDLE_DEFAULT_NAME
+  summary: Test bundle for charmcraft
+  EOF
+
   # If necessary, try to register the bundle.
   if ! charmcraft status $BUNDLE_DEFAULT_NAME; then
     if ! charmcraft register $BUNDLE_DEFAULT_NAME; then

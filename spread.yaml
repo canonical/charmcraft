@@ -137,7 +137,9 @@ suites:
     summary: real charm building tests
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
-    kill-timeout: 30m
+    systems:
+      - ubuntu-20.04-64
+      - ubuntu-22.04-64
   tests/spread/hooks/:
     summary: snap hook tests
     kill-timeout: 30m

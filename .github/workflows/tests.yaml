@@ -144,6 +144,9 @@ jobs:
           ..\dist\charmcraft.exe version
           ..\dist\charmcraft.exe init --author "Charmcraft Team"
           ..\dist\charmcraft.exe clean
+      - name: Update Installer Version
+        run: |
+          python -m tools.version set-charmcraft-iss
       - name: Build installer(s)
         env:
           INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe

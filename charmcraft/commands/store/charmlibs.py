@@ -105,7 +105,7 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     metadata = {}
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.Assign):
-            for target in node.targets:
+            for target in (n for n in node.targets if isinstance(n, ast.Name)):
                 if target.id in simple_fields:
                     validator, error_msg = simple_fields[target.id]
                     if not isinstance(node.value, ast.Constant):

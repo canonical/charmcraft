@@ -294,6 +294,20 @@ def test_getlibinternals_success_content(tmp_path, monkeypatch):
     assert internals.content_hash == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
 
 
+def test_getlibinternals_non_toplevel_names(tmp_path, monkeypatch):
+    """Test non direct assignments."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib(extra_content="logging.getLogger('kazoo.client').disabled = True")
+    internals = get_lib_internals(test_path)
+
+    assert internals.lib_id == "test-lib-id"
+    assert internals.api == 3
+    assert internals.patch == 14
+    assert internals.pydeps == []
+    assert internals.content is not None
+    assert internals.content_hash is not None
+
+
 def test_getlibinternals_malformed_content(tmp_path, monkeypatch):
     """Some internals field is not really valid."""
     monkeypatch.chdir(tmp_path)

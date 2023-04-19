@@ -109,11 +109,6 @@ prepare: |
   # The /snap directory does not exist in some environments
   [ ! -d /snap ] && ln -s /var/lib/snapd/snap /snap
 
-  # install docker before lxd, otherwise it will mess up with lxd networking
-  snap install docker
-  # make sure docker is working
-  retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
-
   # install lxd (previously removing the APT version, if there)
   [ -e /usr/bin/lxd ] && apt-get remove --purge --yes lxd lxd-client lxcfs liblxc1
   snap install lxd
@@ -142,11 +137,22 @@ suites:
     summary: real charm building tests
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
-    kill-timeout: 30m
+    systems:
+      - ubuntu-20.04-64
+      - ubuntu-22.04-64
   tests/spread/hooks/:
     summary: snap hook tests
     kill-timeout: 30m
   tests/spread/store/:
+    prepare: |
+      snap install docker
+      # make sure docker is working
+      retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
+      # https://linuxcontainers.org/lxd/docs/master/howto/network_bridge_firewalld/#prevent-issues-with-lxd-and-docker
+      # https://github.com/canonical/lxd-cloud/blob/f20a64a8af42485440dcbfd370faf14137d2f349/test/includes/lxd.sh#L13-L23
+      iptables -P FORWARD ACCEPT
+    restore: |
+      snap remove docker --purge
     summary: sequence of commands for different store-related functionalities
     kill-timeout: 30m
     manual: true

@@ -151,4 +151,4 @@ hooks:
   configure:
     passthrough:
       environment:
-        PATH: "$SNAP/bin"
+        PATH: "$SNAP/bin:$PATH"

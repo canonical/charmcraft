@@ -123,7 +123,7 @@ def configure_hook_main():
     for instance in lxd_instances:
         # Try match image.description for instance full name
         match_result = re.fullmatch(
-            SUPPORTED_VERSIONS[0], instance["expanded_config"]["image.description"]
+            SUPPORTED_VERSIONS[0], instance.get("expanded_config", {}).get("image.description", "")
         )
         if match_result:
             # (craft base metadata version, image provider, image os, image version)

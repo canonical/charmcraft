@@ -387,7 +387,7 @@ class RegisterBundleNameCommand(BaseCommand):
 
 
 class UnregisterNameCommand(BaseCommand):
-    """Register a bundle name in the Store."""
+    """Unregister a name in the Store."""
 
     name = "unregister"
     help_msg = "Unregister a name in the Store"
@@ -395,7 +395,7 @@ class UnregisterNameCommand(BaseCommand):
         """
         Unregister a name in the Store.
 
-        Unregister a name from CharmHub if no revisions have been uploaded.
+        Unregister a name from Charmhub if no revisions have been uploaded.
 
         A package cannot be unregistered if something has been uploaded to
         the name. This command is only for unregistering names that have

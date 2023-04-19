@@ -1,8 +1,4 @@
 summary: pack a init-created charm in destructive mode
-systems:
-  - ubuntu-18.04-64
-  - ubuntu-20.04-64
-  - ubuntu-22.04-64
 
 prepare: |
   apt install --yes build-essential

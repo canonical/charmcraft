@@ -3,7 +3,8 @@ project: charmcraft
 path: /charmcraft
 environment:
   PROJECT_PATH: /charmcraft
-  PATH: /snap/bin:$PATH:$PROJECT_PATH/tools/external/tools
+  SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
+  PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
 
 backends:
   google:
@@ -86,6 +87,13 @@ backends:
 
 prepare: |
   set -e
+
+  # if the 'tools' directory inside the submodule does not exist, then assume the submodule is empty
+  if [[ ! -d "$SNAPD_TESTING_TOOLS" ]]; then
+    echo "Cannot run spread because submodule 'snapd-testing-tools' is empty. Fetch with 'git submodule update --init' and rerun spread."
+    exit 1
+  fi
+
   if os.query is-ubuntu; then
     tempfile="$(mktemp)"
     if ! apt-get update > "$tempfile" 2>&1; then
@@ -122,15 +130,8 @@ prepare: |
   lxd waitready --timeout=30
   lxd init --auto
 
-  install_charmcraft()
-  {
-    if stat /charmcraft/charmcraft_*.snap 2>/dev/null; then
-      snap install --classic --dangerous /charmcraft/charmcraft_*.snap
-    else
-      echo "Expected a snap to exist in /charmcraft/"
-      exit 1
-    fi
-  }
+  #shellcheck source=tests/spread/tools/prepare.sh
+  . "/charmcraft/tests/spread/tools/prepare.sh"
 
   install_charmcraft
 

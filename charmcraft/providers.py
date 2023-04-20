@@ -16,16 +16,20 @@
 
 """Charmcraft-specific code to interface with craft-providers."""
 
+import enum
 import os
 import pathlib
 import sys
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 from craft_cli import emit, CraftError
-from craft_providers import Executor, Provider, ProviderError, bases, lxd, multipass
+from craft_providers import Base, Executor, Provider, ProviderError, lxd, multipass
+from craft_providers.bases import get_base_alias, get_base_from_alias, BASE_NAME_TO_BASE_ALIAS
+from craft_providers.errors import BaseConfigurationError
+from craft_providers.actions.snap_installer import Snap
 
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.config import Base, BasesConfiguration
+from charmcraft.config import BasesConfiguration
 from charmcraft.env import (
     get_managed_environment_snap_channel,
     get_managed_environment_log_path,
@@ -34,13 +38,6 @@ from charmcraft.env import (
 )
 from charmcraft.utils import confirm_with_user, get_host_architecture
 from charmcraft.snap import get_snap_configuration
-
-
-BASE_CHANNEL_TO_PROVIDER_BASE = {
-    "18.04": bases.BuilddBaseAlias.BIONIC,
-    "20.04": bases.BuilddBaseAlias.FOCAL,
-    "22.04": bases.BuilddBaseAlias.JAMMY,
-}
 
 
 class Plan(NamedTuple):
@@ -122,9 +119,9 @@ def create_build_plan(
     return build_plan
 
 
-def get_command_environment() -> Dict[str, str]:
+def get_command_environment(base: Base) -> Dict[str, str]:
     """Construct the required environment."""
-    env = bases.buildd.default_command_environment()
+    env = base.default_command_environment()
     env["CHARMCRAFT_MANAGED_MODE"] = "1"
 
     # Pass-through host environment that target may need.
@@ -171,25 +168,25 @@ def get_instance_name(
 
 def get_base_configuration(
     *,
-    alias: bases.BuilddBaseAlias,
+    alias: enum.Enum,
     instance_name: str,
-) -> bases.BuilddBase:
-    """Create a BuilddBase configuration."""
-    environment = get_command_environment()
-
+) -> Base:
+    """Create a Base configuration."""
     # injecting a snap on a non-linux system is not supported, so default to
     # install charmcraft from the store's stable channel
     snap_channel = get_managed_environment_snap_channel()
     if snap_channel is None and sys.platform != "linux":
         snap_channel = "stable"
 
-    charmcraft_snap = bases.buildd.Snap(name="charmcraft", channel=snap_channel, classic=True)
-    return bases.BuilddBase(
+    base = get_base_from_alias(alias)
+    charmcraft_snap = Snap(name="charmcraft", channel=snap_channel, classic=True)
+    environment = get_command_environment(base)
+    return base(
         alias=alias,
         environment=environment,
         hostname=instance_name,
         snaps=[charmcraft_snap],
-        compatibility_tag=f"charmcraft-{bases.BuilddBase.compatibility_tag}.0",
+        compatibility_tag=f"charmcraft-{base.compatibility_tag}.0",
     )
 
 
@@ -244,18 +241,21 @@ def is_base_available(base: Base) -> Tuple[bool, Union[str, None]]:
             f"host architecture {arch!r} not in base architectures {base.architectures!r}",
         )
 
-    if base.name != "ubuntu":
+    if base.name not in ("ubuntu", "centos"):
         return (
             False,
-            f"name {base.name!r} is not yet supported (must be 'ubuntu')",
+            f"name {base.name!r} is not yet supported (must be 'ubuntu' or 'centos')",
         )
 
-    if base.channel not in BASE_CHANNEL_TO_PROVIDER_BASE:
-        *firsts, last = sorted(BASE_CHANNEL_TO_PROVIDER_BASE)
+    try:
+        get_base_alias((base.name, base.channel))
+    except BaseConfigurationError:
+        *firsts, last = sorted((" ".join(s) for s in BASE_NAME_TO_BASE_ALIAS))
         allowed = f"{', '.join(map(repr, firsts))} or {last!r}"
         return (
             False,
-            f"channel {base.channel!r} is not yet supported (must be {allowed})",
+            f"base {base.name!r} channel {base.channel!r} is not yet supported "
+            f"(must be {allowed})",
         )
 
     return True, None

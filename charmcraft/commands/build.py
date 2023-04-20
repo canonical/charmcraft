@@ -25,6 +25,7 @@ import zipfile
 from typing import List, Optional
 
 from craft_cli import emit, CraftError
+from craft_providers.bases import get_base_alias
 
 from charmcraft import env, linters, parts, providers, instrum
 from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
@@ -344,7 +345,7 @@ class Builder:
             "(may take a while the first time but it's reusable)"
         )
 
-        build_base = providers.BASE_CHANNEL_TO_PROVIDER_BASE[build_on.channel]
+        build_base_alias = get_base_alias((build_on.name, build_on.channel))
         instance_name = providers.get_instance_name(
             bases_index=bases_index,
             build_on_index=build_on_index,
@@ -353,16 +354,24 @@ class Builder:
             target_arch=get_host_architecture(),
         )
         base_configuration = providers.get_base_configuration(
-            alias=build_base,
+            alias=build_base_alias,
             instance_name=instance_name,
         )
+
+        if build_on.name != "ubuntu":
+            allow_unstable = True
+            emit.message(
+                f"Warning: Base {build_on.name} {build_on.channel} daily image may be unstable."
+            )
+        else:
+            allow_unstable = False
 
         with self.provider.launched_environment(
             project_name=self.metadata.name,
             project_path=self.charmdir,
             base_configuration=base_configuration,
-            build_base=build_base.value,
             instance_name=instance_name,
+            allow_unstable=allow_unstable,
         ) as instance:
             emit.debug("Mounting directory inside the instance")
             with instrum.Timer("Mounting directory"):

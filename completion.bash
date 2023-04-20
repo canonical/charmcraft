@@ -35,6 +35,7 @@ _charmcraft()
         publish-lib
         register
         register-bundle
+        unregister
         release
         resource-revisions
         resources

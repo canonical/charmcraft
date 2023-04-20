@@ -27,7 +27,7 @@ prepare: |
   name: $BUNDLE_DEFAULT_NAME
   summary: Test bundle for charmcraft
   EOF
-  
+
   # Ungregister bundle if it was accidentally registered as a charm because of my own mistakes.
   if charmcraft names | grep $BUNDLE_DEFAULT_NAME | grep -q ' charm '; then
     charmcraft unregister $BUNDLE_DEFAULT_NAME
@@ -75,7 +75,9 @@ execute: |
   # Test promotion to beta
   beta_release=$(charmcraft status $BUNDLE_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/beta")')
   old_beta_revision=$(echo $beta_release | jq -r .revision)
-  test $old_beta_revision -le $edge_revision
+  if [[ $old_beta_revision != null ]]; then  # If there's no beta revision, skip this check.
+    test $old_beta_revision -le $edge_revision
+  fi
   charmcraft promote-bundle latest/edge latest/beta
   beta_release=$(charmcraft status $BUNDLE_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/beta")')
   beta_revision=$(echo $beta_release | jq -r .revision)

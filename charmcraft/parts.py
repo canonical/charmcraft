@@ -166,6 +166,13 @@ class CharmPlugin(plugins.Plugin):
                 if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
                     # CentOS 7 Python 3.8 from SCL repo
                     return {
+                        "autoconf",
+                        "automake",
+                        "gcc",
+                        "gcc-c++",
+                        "git",
+                        "make",
+                        "patch",
                         "rh-python38-python-devel",
                         "rh-python38-python-pip",
                         "rh-python38-python-setuptools",
@@ -175,6 +182,13 @@ class CharmPlugin(plugins.Plugin):
                 pass
 
             return {
+                "autoconf",
+                "automake",
+                "gcc",
+                "gcc-c++",
+                "git",
+                "make",
+                "patch",
                 "python3-devel",
                 "python3-pip",
                 "python3-setuptools",

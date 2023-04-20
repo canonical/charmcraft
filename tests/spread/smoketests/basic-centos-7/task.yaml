@@ -1,0 +1,33 @@
+summary: pack a simple init-created charm for CentOS 7
+systems:
+  # CentOS 7 only works in 18.04 because it needs cgroup v1
+  - ubuntu-18.04-64
+kill-timeout: 30m
+
+prepare: |
+  charmcraft init --project-dir=charm
+  pushd charm
+
+  cat <<- EOF >> charmcraft.yaml
+  type: charm
+  bases:
+    - build-on:
+      - name: centos
+        channel: "7"
+      run-on:
+      - name: centos
+        channel: "7"
+  EOF
+
+  popd
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose

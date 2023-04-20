@@ -22,6 +22,7 @@ from unittest.mock import Mock, patch, call
 import pytest
 from craft_cli import CraftError
 from craft_providers import ProviderError, bases, lxd, multipass
+from craft_providers.actions.snap_installer import Snap
 
 from charmcraft.config import Base, BasesConfiguration
 from charmcraft import providers
@@ -462,7 +463,7 @@ def test_get_command_environment_minimal(monkeypatch):
     monkeypatch.setenv("IGNORE_ME", "or-im-failing")
     monkeypatch.setenv("PATH", "not-using-host-path")
 
-    env = providers.get_command_environment()
+    env = providers.get_command_environment(bases.ubuntu.BuilddBase)
 
     assert env == {
         "CHARMCRAFT_MANAGED_MODE": "1",
@@ -477,7 +478,7 @@ def test_get_command_environment_all_opts(monkeypatch):
     monkeypatch.setenv("https_proxy", "test-https-proxy")
     monkeypatch.setenv("no_proxy", "test-no-proxy")
 
-    env = providers.get_command_environment()
+    env = providers.get_command_environment(bases.ubuntu.BuilddBase)
 
     assert env == {
         "CHARMCRAFT_MANAGED_MODE": "1",
@@ -524,18 +525,18 @@ def test_get_instance_name(
     ],
 )
 @pytest.mark.parametrize(
-    "alias",
+    "alias_ubuntu",
     [
-        bases.BuilddBaseAlias.BIONIC,
-        bases.BuilddBaseAlias.FOCAL,
-        bases.BuilddBaseAlias.JAMMY,
+        bases.ubuntu.BuilddBaseAlias.BIONIC,
+        bases.ubuntu.BuilddBaseAlias.FOCAL,
+        bases.ubuntu.BuilddBaseAlias.JAMMY,
     ],
 )
-def test_get_base_configuration(
+def test_get_base_configuration_ubuntu(
     platform,
     snap_channel,
     expected_snap_channel,
-    alias,
+    alias_ubuntu,
     mocker,
 ):
     """Verify the snapcraft snap is installed from the correct channel."""
@@ -546,17 +547,57 @@ def test_get_base_configuration(
     )
     mocker.patch("charmcraft.providers.get_command_environment", return_value="test-env")
     mocker.patch("charmcraft.providers.get_instance_name", return_value="test-instance-name")
-    mock_buildd_base = mocker.patch("charmcraft.providers.bases.BuilddBase")
+    mock_buildd_base = mocker.patch("craft_providers.bases.ubuntu.BuilddBase")
     mock_buildd_base.compatibility_tag = "buildd-base-v0"
 
-    providers.get_base_configuration(alias=alias, instance_name="test-instance-name")
+    providers.get_base_configuration(alias=alias_ubuntu, instance_name="test-instance-name")
 
     mock_buildd_base.assert_called_with(
-        alias=alias,
+        alias=alias_ubuntu,
         environment="test-env",
         hostname="test-instance-name",
-        snaps=[bases.buildd.Snap(name="charmcraft", channel=expected_snap_channel, classic=True)],
+        snaps=[Snap(name="charmcraft", channel=expected_snap_channel, classic=True)],
         compatibility_tag="charmcraft-buildd-base-v0.0",
+    )
+
+
+@pytest.mark.parametrize(
+    "platform, snap_channel, expected_snap_channel",
+    [
+        ("linux", None, None),
+        ("linux", "edge", "edge"),
+        ("darwin", "edge", "edge"),
+        # default to stable on non-linux system
+        ("darwin", None, "stable"),
+    ],
+)
+def test_get_base_configuration_centos(
+    platform,
+    snap_channel,
+    expected_snap_channel,
+    mocker,
+):
+    """Verify the snapcraft snap is installed from the correct channel."""
+    mocker.patch("sys.platform", platform)
+    mocker.patch(
+        "charmcraft.providers.get_managed_environment_snap_channel",
+        return_value=snap_channel,
+    )
+    mocker.patch("charmcraft.providers.get_command_environment", return_value="test-env")
+    mocker.patch("charmcraft.providers.get_instance_name", return_value="test-instance-name")
+    mock_centos_base = mocker.patch("craft_providers.bases.centos.CentOSBase")
+    mock_centos_base.compatibility_tag = "centos-base-v0"
+
+    providers.get_base_configuration(
+        alias=bases.centos.CentOSBaseAlias.SEVEN, instance_name="test-instance-name"
+    )
+
+    mock_centos_base.assert_called_with(
+        alias=bases.centos.CentOSBaseAlias.SEVEN,
+        environment="test-env",
+        hostname="test-instance-name",
+        snaps=[Snap(name="charmcraft", channel=expected_snap_channel, classic=True)],
+        compatibility_tag="charmcraft-centos-base-v0.0",
     )
 
 
@@ -643,14 +684,16 @@ def test_ensure_provider_is_available_installed_no_user_confirms_no(mocker, fake
             "20.04",
             ["host-arch"],
             False,
-            "name 'not-ubuntu' is not yet supported (must be 'ubuntu')",
+            "name 'not-ubuntu' is not yet supported (must be 'ubuntu' or 'centos')",
         ),
         (
             "ubuntu",
             "10.04",
             ["host-arch"],
             False,
-            "channel '10.04' is not yet supported (must be '18.04', '20.04' or '22.04')",
+            "base 'ubuntu' channel '10.04' is not yet supported (must be 'centos 7', "
+            "'ubuntu 16.04', 'ubuntu 18.04', 'ubuntu 20.04', 'ubuntu 22.04', "
+            "'ubuntu 22.10', 'ubuntu 23.04' or 'ubuntu devel')",
         ),
         (
             "ubuntu",

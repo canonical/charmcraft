@@ -188,8 +188,14 @@ def mock_provider(mock_instance, fake_provider):
 
 
 @pytest.fixture()
-def mock_buildd_base_configuration():
-    with mock.patch("charmcraft.providers.bases.BuilddBase", autospec=True) as mock_base_config:
+def mock_ubuntu_buildd_base_configuration():
+    with mock.patch("craft_providers.bases.ubuntu.BuilddBase", autospec=True) as mock_base_config:
+        yield mock_base_config
+
+
+@pytest.fixture()
+def mock_centos_base_configuration():
+    with mock.patch("craft_providers.bases.centos.CentOSBase", autospec=True) as mock_base_config:
         yield mock_base_config
 
 
@@ -463,8 +469,9 @@ def test_build_project_is_cwd(
     mock_instance,
     mock_provider,
     mock_instance_name,
-    mock_buildd_base_configuration,
+    mock_ubuntu_buildd_base_configuration,
     mock_is_base_available,
+    mocker,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -486,8 +493,10 @@ def test_build_project_is_cwd(
     project_managed_path = pathlib.Path("/root/project")
     builder = get_builder(config)
     base_configuration = get_base_configuration(
-        alias=bases.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
+        alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
+    mock_base_get_base_configuration = mocker.patch("charmcraft.providers.get_base_configuration")
+    mock_base_get_base_configuration.return_value = base_configuration
 
     zipnames = builder.run([0])
 
@@ -501,8 +510,8 @@ def test_build_project_is_cwd(
             project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_configuration,
-            build_base="18.04",
             instance_name=mock_instance_name(),
+            allow_unstable=False,
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -527,8 +536,9 @@ def test_build_project_is_not_cwd(
     mock_provider,
     monkeypatch,
     mock_instance_name,
-    mock_buildd_base_configuration,
+    mock_ubuntu_buildd_base_configuration,
     mock_is_base_available,
+    mocker,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -549,8 +559,10 @@ def test_build_project_is_not_cwd(
     config = load(basic_project)
     builder = get_builder(config)
     base_configuration = get_base_configuration(
-        alias=bases.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
+        alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
+    mock_base_get_base_configuration = mocker.patch("charmcraft.providers.get_base_configuration")
+    mock_base_get_base_configuration.return_value = base_configuration
 
     monkeypatch.chdir("/")  # make the working directory NOT the project's one
     zipnames = builder.run([0])
@@ -565,8 +577,8 @@ def test_build_project_is_not_cwd(
             project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_configuration,
-            build_base="18.04",
             instance_name=mock_instance_name(),
+            allow_unstable=False,
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -608,8 +620,10 @@ def test_build_bases_index_scenarios_provider(
     mock_instance,
     mock_provider,
     mock_instance_name,
-    mock_buildd_base_configuration,
+    mock_ubuntu_buildd_base_configuration,
+    mock_centos_base_configuration,
     mock_is_base_available,
+    mocker,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(mode)
@@ -628,6 +642,9 @@ def test_build_bases_index_scenarios_provider(
                   - name: ubuntu
                     channel: "20.04"
                     architectures: {host_base.architectures!r}
+                  - name: centos
+                    channel: "7"
+                    architectures: {host_base.architectures!r}
                   - name: ubuntu
                     channel: "unsupported-channel"
                     architectures: {host_base.architectures!r}
@@ -637,8 +654,20 @@ def test_build_bases_index_scenarios_provider(
     config = load(basic_project)
     builder = get_builder(config)
     base_bionic_configuration = get_base_configuration(
-        alias=bases.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
+        alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
+    base_focal_configuration = get_base_configuration(
+        alias=bases.ubuntu.BuilddBaseAlias.FOCAL, instance_name=mock_instance_name()
+    )
+    base_centos_configuration = get_base_configuration(
+        alias=bases.centos.CentOSBaseAlias.SEVEN, instance_name=mock_instance_name()
+    )
+    mock_base_get_base_configuration = mocker.patch("charmcraft.providers.get_base_configuration")
+    mock_base_get_base_configuration.side_effect = [
+        base_bionic_configuration,
+        base_focal_configuration,
+        base_centos_configuration,
+    ]
 
     zipnames = builder.run([0])
     assert zipnames == [
@@ -652,8 +681,8 @@ def test_build_bases_index_scenarios_provider(
             project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_bionic_configuration,
-            build_base="18.04",
             instance_name=mock_instance_name(),
+            allow_unstable=False,
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -676,10 +705,13 @@ def test_build_bases_index_scenarios_provider(
     mock_provider.reset_mock()
     mock_instance.reset_mock()
     mock_is_base_available.reset_mock()
+    mock_base_get_base_configuration.reset_mock()
+    mock_base_get_base_configuration.side_effect = [
+        base_bionic_configuration,
+        base_focal_configuration,
+        base_centos_configuration,
+    ]
 
-    base_focal_configuration = get_base_configuration(
-        alias=bases.BuilddBaseAlias.FOCAL, instance_name=mock_instance_name()
-    )
     zipnames = builder.run([1])
     assert zipnames == [
         f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
@@ -691,8 +723,8 @@ def test_build_bases_index_scenarios_provider(
             project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_focal_configuration,
-            build_base="20.04",
             instance_name=mock_instance_name(),
+            allow_unstable=False,
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -709,6 +741,12 @@ def test_build_bases_index_scenarios_provider(
     mock_provider.reset_mock()
     mock_instance.reset_mock()
     mock_is_base_available.reset_mock()
+    mock_base_get_base_configuration.reset_mock()
+    mock_base_get_base_configuration.side_effect = [
+        base_bionic_configuration,
+        base_focal_configuration,
+        base_centos_configuration,
+    ]
 
     zipnames = builder.run([0, 1])
     assert zipnames == [
@@ -722,15 +760,15 @@ def test_build_bases_index_scenarios_provider(
             project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_bionic_configuration,
-            build_base="18.04",
             instance_name=mock_instance_name(),
+            allow_unstable=False,
         ),
         call.launched_environment(
             project_name="name-from-metadata",
             project_path=basic_project,
             base_configuration=base_focal_configuration,
-            build_base="20.04",
             instance_name=mock_instance_name(),
+            allow_unstable=False,
         ),
     ]
     assert mock_instance.mock_calls == [
@@ -751,19 +789,81 @@ def test_build_bases_index_scenarios_provider(
         call(Base(name="ubuntu", channel="18.04", architectures=[host_arch])),
         call(Base(name="ubuntu", channel="20.04", architectures=[host_arch])),
     ]
+
     mock_provider.reset_mock()
     mock_instance.reset_mock()
     mock_is_base_available.reset_mock()
+    mock_base_get_base_configuration.reset_mock()
+    mock_base_get_base_configuration.side_effect = [
+        base_focal_configuration,
+        base_centos_configuration,
+    ]
+
+    zipnames = builder.run([1, 2])
+    assert zipnames == [
+        f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+        f"name-from-metadata_centos-7-{host_arch}.charm",
+    ]
+    assert mock_provider.mock_calls == [
+        call.is_provider_installed(),
+        call.ensure_provider_is_available(),
+        call.launched_environment(
+            project_name="name-from-metadata",
+            project_path=basic_project,
+            base_configuration=base_focal_configuration,
+            instance_name=mock_instance_name(),
+            allow_unstable=False,
+        ),
+        call.launched_environment(
+            project_name="name-from-metadata",
+            project_path=basic_project,
+            base_configuration=base_centos_configuration,
+            instance_name=mock_instance_name(),
+            allow_unstable=True,
+        ),
+    ]
+    assert mock_instance.mock_calls == [
+        call.mount(host_source=basic_project, target=project_managed_path),
+        call.execute_run(
+            ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+            check=True,
+            cwd=project_managed_path,
+        ),
+        call.mount(host_source=basic_project, target=project_managed_path),
+        call.execute_run(
+            ["charmcraft", "pack", "--bases-index", "2"] + cmd_flags,
+            check=True,
+            cwd=project_managed_path,
+        ),
+    ]
+    assert mock_is_base_available.mock_calls == [
+        call(Base(name="ubuntu", channel="20.04", architectures=[host_arch])),
+        call(Base(name="centos", channel="7", architectures=[host_arch])),
+    ]
+    mock_provider.reset_mock()
+    mock_instance.reset_mock()
+    mock_is_base_available.reset_mock()
+    mock_base_get_base_configuration.reset_mock()
+    mock_base_get_base_configuration.side_effect = [
+        base_bionic_configuration,
+        base_focal_configuration,
+        base_centos_configuration,
+    ]
 
     with pytest.raises(
         CraftError,
         match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
     ):
-        builder.run([3])
+        builder.run([4])
 
     mock_provider.reset_mock()
     mock_instance.reset_mock()
     mock_is_base_available.reset_mock()
+    mock_base_get_base_configuration.reset_mock()
+    mock_base_get_base_configuration.side_effect = [
+        base_bionic_configuration,
+        base_focal_configuration,
+    ]
 
     expected_msg = re.escape("Failed to build charm for bases index '0'.")
     with pytest.raises(
@@ -786,8 +886,8 @@ def test_build_bases_index_scenarios_provider(
             cwd=project_managed_path,
         ),
     ]
-    # it was called five times, for success and errors
-    assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)] * 5
+    # it was called seven times, for success and errors
+    assert mock_capture_logs_from_instance.mock_calls == [call(mock_instance)] * 7
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

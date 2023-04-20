@@ -39,6 +39,7 @@ execute: |
 
   # Create an obsolete base instance v0.0
   lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-base-v00-XXXOLDBASEXXX
+  lxc --project=charmcraft config set base-instance-charmcraft-buildd-base-v00-XXXOLDBASEXXX "image.description" ""
 
   # Create a older base instance when newer one exists
   lxc --project=charmcraft copy "${CURRENT_INSTANCE}" base-instance-charmcraft-buildd-base-v10-XXXOLDVERSIONXXX

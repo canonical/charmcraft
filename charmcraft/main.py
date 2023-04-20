@@ -73,6 +73,7 @@ _charmhub_commands = [
     # name handling
     store.RegisterCharmNameCommand,
     store.RegisterBundleNameCommand,
+    store.UnregisterNameCommand,
     store.ListNamesCommand,
     # pushing files and checking revisions
     store.UploadCommand,

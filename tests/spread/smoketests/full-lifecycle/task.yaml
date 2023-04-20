@@ -3,6 +3,8 @@ summary: pack a charm that uses several lifecycle mechanisms and extra files
 include: 
   - tests/
 
+kill-timeout: 30m
+
 prepare: |
   tests.pkgs install unzip
   charmcraft init --project-dir=charm

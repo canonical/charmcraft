@@ -143,7 +143,8 @@ parts:
       # do the usual pull stuff
       snapcraftctl pull
       # set the version
-      snapcraftctl set-version "$( python3 -c 'import charmcraft; print(charmcraft.__version__)' )"
+      version="$(python3 setup.py --version)"
+      snapcraftctl set-version "$version"
     override-build: |
       snapcraftctl build
       # why is this needed?
@@ -167,4 +168,4 @@ hooks:
   configure:
     passthrough:
       environment:
-        PATH: "$SNAP/bin"
+        PATH: "$SNAP/bin:$PATH"

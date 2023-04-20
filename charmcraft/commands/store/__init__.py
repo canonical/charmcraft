@@ -386,6 +386,40 @@ class RegisterBundleNameCommand(BaseCommand):
         emit.message(f"You are now the publisher of bundle {parsed_args.name!r} in Charmhub.")
 
 
+class UnregisterNameCommand(BaseCommand):
+    """Unregister a name in the Store."""
+
+    name = "unregister"
+    help_msg = "Unregister a name in the Store"
+    overview = textwrap.dedent(
+        """
+        Unregister a name in the Store.
+
+        Unregister a name from Charmhub if no revisions have been uploaded.
+
+        A package cannot be unregistered if something has been uploaded to
+        the name. This command is only for unregistering names that have
+        never been used. Unregistering must be done by the publisher.
+        Attempting to unregister a charm or bundle as a collaborator will
+        fail.
+
+        We discuss registrations on Charmhub's Discourse:
+
+           https://discourse.charmhub.io/c/charm
+    """
+    )
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("name", help="The name to unregister from Charmhub")
+
+    def run(self, parsed_args):
+        """Run the command."""
+        store = Store(self.config.charmhub, needs_auth=True)
+        store.unregister_name(parsed_args.name)
+        emit.message(f"Name {parsed_args.name!r} has been removed from Charmhub.")
+
+
 class ListNamesCommand(BaseCommand):
     """List the entities registered in Charmhub."""
 
@@ -932,9 +966,9 @@ class PromoteBundleCommand(BaseCommand):
             )
 
         # Export a temporary bundle file with the charms in the target channel
-        with tempfile.TemporaryDirectory() as bundle_dir:
-            bundle_dir_path = pathlib.Path(bundle_dir)
-            shutil.copy(self.config.project_dir, bundle_dir_path)
+        with tempfile.TemporaryDirectory(prefix="charmcraft-") as bundle_dir:
+            bundle_dir_path = pathlib.Path(bundle_dir) / bundle_name
+            shutil.copytree(self.config.project.dirpath, bundle_dir_path)
             bundle_path = bundle_dir_path / "bundle.yaml"
             with bundle_path.open("w+") as bundle_file:
                 yaml.dump(bundle_config, bundle_file)
@@ -942,7 +976,7 @@ class PromoteBundleCommand(BaseCommand):
             # Pack the bundle using the modified bundle file
             emit.verbose(f"Packing temporary bundle in {bundle_dir}...")
             lifecycle = parts.PartsLifecycle(
-                bundle_config,
+                {},
                 work_dir=bundle_dir_path / "build",
                 project_dir=bundle_dir_path,
                 project_name=bundle_name,
@@ -957,12 +991,12 @@ class PromoteBundleCommand(BaseCommand):
             from charmcraft.manifest import create_manifest
 
             create_manifest(lifecycle.prime_dir, self.config.project.started_at, None, [])
-            zipname = self.config.project.dirpath / (bundle_name + ".zip")
+            zipname = bundle_dir_path / (bundle_name + ".zip")
             build_zip(zipname, lifecycle.prime_dir)
 
             # Upload the bundle and release it to the target channel.
-            store.upload(self.config.name, bundle_path)
-        store.release(self.config.name, bundle_revision, parsed_args.to_channel, [])
+            store.upload(bundle_name, zipname)
+        store.release(bundle_name, bundle_revision, [parsed_args.to_channel], [])
 
 
 class CloseCommand(BaseCommand):

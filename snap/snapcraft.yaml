@@ -71,8 +71,33 @@ grade: stable
 confinement: classic
 
 parts:
+  # The cryptography library (indirect dependency via craft-store) requires rust, but only ships wheels for amd64 and arm64.
+  # As of cryptography 39, it requires rust v1.48.0 or newer, which is available from focal-updates.
+  # This part contains the full set of build dependencies for cryptography.
+  # NOTE: cryptography requires at least pip version 22 for building.
+  cryptography-deps:
+    plugin: nil
+    build-packages:
+      - cargo
+      - rustc
+      - pkg-config
+      - python3.8-dev
+      - libpython3.8-dev
+      - libssl-dev
+      - libffi-dev
+      - python3-wheel
+      - python3-pip
+      - python3-setuptools-scm
+    override-build: |
+      pip install 'pip>=22.0' 'setuptools>=61.0.0'
+      # Dirty workaround - builds the cryptography wheel for later installation.
+      # This must be exactly the version referenced in requirements.txt, so this is fragile.
+      pip wheel cryptography==40.0.2
+      snapcraftctl build
+
   # Classic core20 snaps require staged python.
   python3:
+    after: [cryptography-deps]
     plugin: nil
     build-packages:
       - python3-dev
@@ -92,16 +117,8 @@ parts:
       snapcraftctl build
       install -D -m 0755 $SNAPCRAFT_PROJECT_DIR/snap/local/sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
 
-  # The cryptography library (indirect dependency via craft-store) requires rust, but only ships wheels for amd64 and arm64.
-  # As of cryptography 39, it requires rust v1.48.0 or newer, which is available from focal-updates.
-  rust-deps:
-    plugin: nil
-    build-packages:
-      - cargo
-      - rustc
-
   charmcraft:
-    after: [python3, rust-deps]
+    after: [python3, cryptography-deps]
     source: .
     plugin: python
     requirements:

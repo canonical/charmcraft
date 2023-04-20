@@ -28,11 +28,6 @@ prepare: |
   summary: Test bundle for charmcraft
   EOF
 
-  # Ungregister bundle if it was accidentally registered as a charm because of my own mistakes.
-  if charmcraft names | grep $BUNDLE_DEFAULT_NAME | grep -q ' charm '; then
-    charmcraft unregister $BUNDLE_DEFAULT_NAME
-  fi
-
   # If necessary, try to register the bundle.
   if ! charmcraft status $BUNDLE_DEFAULT_NAME; then
     if ! charmcraft register-bundle $BUNDLE_DEFAULT_NAME; then

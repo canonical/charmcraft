@@ -94,8 +94,8 @@ jobs:
         name: Run spread
         env:
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
-          CHARM_DEFAULT_NAME: charmcraft-ci-test-charm
-          BUNDLE_DEFAULT_NAME: charmcraft-ci-test-bundle
+          CHARM_DEFAULT_NAME: test-ci-charmcraft-charm
+          BUNDLE_DEFAULT_NAME: test-ci-charmcraft-bundle
         run: |
           spread google:ubuntu-22.04-64:tests/spread/store/
 

@@ -347,7 +347,7 @@ class Store:
         return result
 
     @_store_client_wrapper()
-    def release(self, name, revision, channels, resources):
+    def release(self, name: str, revision: int, channels: List[str], resources):
         """Release one or more revisions for a package."""
         endpoint = "/v1/charm/{}/releases".format(name)
         resources = [{"name": res.name, "revision": res.revision} for res in resources]

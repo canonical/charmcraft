@@ -966,9 +966,9 @@ class PromoteBundleCommand(BaseCommand):
             )
 
         # Export a temporary bundle file with the charms in the target channel
-        with tempfile.TemporaryDirectory() as bundle_dir:
-            bundle_dir_path = pathlib.Path(bundle_dir)
-            shutil.copy(self.config.project_dir, bundle_dir_path)
+        with tempfile.TemporaryDirectory(prefix="charmcraft-") as bundle_dir:
+            bundle_dir_path = pathlib.Path(bundle_dir) / bundle_name
+            shutil.copytree(self.config.project.dirpath, bundle_dir_path)
             bundle_path = bundle_dir_path / "bundle.yaml"
             with bundle_path.open("w+") as bundle_file:
                 yaml.dump(bundle_config, bundle_file)
@@ -976,7 +976,7 @@ class PromoteBundleCommand(BaseCommand):
             # Pack the bundle using the modified bundle file
             emit.verbose(f"Packing temporary bundle in {bundle_dir}...")
             lifecycle = parts.PartsLifecycle(
-                bundle_config,
+                {},
                 work_dir=bundle_dir_path / "build",
                 project_dir=bundle_dir_path,
                 project_name=bundle_name,
@@ -991,12 +991,12 @@ class PromoteBundleCommand(BaseCommand):
             from charmcraft.manifest import create_manifest
 
             create_manifest(lifecycle.prime_dir, self.config.project.started_at, None, [])
-            zipname = self.config.project.dirpath / (bundle_name + ".zip")
+            zipname = bundle_dir_path / (bundle_name + ".zip")
             build_zip(zipname, lifecycle.prime_dir)
 
             # Upload the bundle and release it to the target channel.
-            store.upload(self.config.name, bundle_path)
-        store.release(self.config.name, bundle_revision, parsed_args.to_channel, [])
+            store.upload(bundle_name, zipname)
+        store.release(bundle_name, bundle_revision, [parsed_args.to_channel], [])
 
 
 class CloseCommand(BaseCommand):

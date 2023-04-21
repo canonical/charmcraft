@@ -71,26 +71,27 @@ jobs:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
 
-  snap-remote-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Start installing snapcraft
-        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
-        id: install
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Remote-build snap
-        id: snapcraft
-        run: |
-          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
-          snapcraft remote-build --launchpad-accept-public-upload
-      - name: Upload snap artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: snap
-          path: ./*.snap
+# Commented out until we can provide the necessary launchpad credentials.
+#  snap-remote-build:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Start installing snapcraft
+#        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
+#        id: install
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+#      - name: Remote-build snap
+#        id: snapcraft
+#        run: |
+#          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
+#          snapcraft remote-build --launchpad-accept-public-upload
+#      - name: Upload snap artifacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: snap
+#          path: ./*.snap
 
   snap-tests:
     needs: [snap-build]

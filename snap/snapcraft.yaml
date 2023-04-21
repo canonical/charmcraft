@@ -141,6 +141,8 @@ parts:
     override-pull: |
       # do the usual pull stuff
       snapcraftctl pull
+      # Ensure we don't have a dubious ownership error from git with a remote build.
+      git config --global --add safe.directory $SNAPCRAFT_PART_SRC
       # set the version
       version="$(python3 setup.py --version)"
       snapcraftctl set-version "$version"

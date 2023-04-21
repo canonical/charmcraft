@@ -81,6 +81,13 @@ def test_charmplugin_get_build_package_yum_based(charm_plugin):
         mock_id.return_value = "centos"
 
         assert charm_plugin.get_build_packages() == {
+            "autoconf",
+            "automake",
+            "gcc",
+            "gcc-c++",
+            "git",
+            "make",
+            "patch",
             "python3-devel",
             "python3-pip",
             "python3-setuptools",
@@ -95,6 +102,13 @@ def test_charmplugin_get_build_package_centos7(charm_plugin):
             mock_version.return_value = "7"
 
             assert charm_plugin.get_build_packages() == {
+                "autoconf",
+                "automake",
+                "gcc",
+                "gcc-c++",
+                "git",
+                "make",
+                "patch",
                 "rh-python38-python-devel",
                 "rh-python38-python-pip",
                 "rh-python38-python-setuptools",

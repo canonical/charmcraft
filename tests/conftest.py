@@ -167,8 +167,8 @@ def fake_provider(mock_instance):
             project_name: str,
             project_path: pathlib.Path,
             base_configuration: Base,
-            build_base: str,
             instance_name: str,
+            allow_unstable: bool = False,
         ):
             yield mock_instance
 

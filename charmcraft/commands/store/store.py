@@ -263,6 +263,16 @@ class Store:
         )
 
     @_store_client_wrapper()
+    def unregister_name(self, name: str) -> None:
+        """Unregister a package that hasn't been published.
+
+        :param name: the package name to unregister.
+
+        :raises: error messages from craft-store
+        """
+        self._client.unregister_name(name)
+
+    @_store_client_wrapper()
     def list_registered_names(self, include_collaborations: bool) -> List[Entity]:
         """Return names registered by the authenticated user."""
         endpoint = "/v1/charm"
@@ -337,7 +347,7 @@ class Store:
         return result
 
     @_store_client_wrapper()
-    def release(self, name, revision, channels, resources):
+    def release(self, name: str, revision: int, channels: List[str], resources):
         """Release one or more revisions for a package."""
         endpoint = "/v1/charm/{}/releases".format(name)
         resources = [{"name": res.name, "revision": res.revision} for res in resources]

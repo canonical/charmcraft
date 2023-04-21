@@ -527,6 +527,75 @@ def test_register_name_unauthorized_logs_in(client_mock, config):
     ]
 
 
+# region Unit tests for unregister_name
+def test_unregister_name_success(client_mock, config):
+    """Simple unregistration."""
+    store = Store(config.charmhub)
+    store.unregister_name("testname")
+
+    assert client_mock.mock_calls == [call.unregister_name("testname")]
+
+
+@pytest.mark.parametrize(
+    "http_response,error_cls",
+    [
+        pytest.param(
+            FakeResponse("Name testname not found in the charm namespace", 404),
+            CraftError,
+            id="unknown_name",
+        ),
+        pytest.param(
+            FakeResponse("discharge required", 401), StoreServerError, id="discharge_required"
+        ),
+        pytest.param(FakeResponse("Unauthorized", 401), StoreServerError, id="Unauthorized"),
+        pytest.param(
+            FakeResponse("Cannot unregister a package with existing revisions", 403),
+            CraftError,
+            id="exsting_revision",
+        ),
+        pytest.param(
+            FakeResponse("Charms can only be unregistered by their publisher", 401),
+            StoreServerError,
+            id="collaborator",
+        ),
+    ],
+)
+def test_unregister_name_errors(client_mock, config, http_response: FakeResponse, error_cls):
+    """Errors on unregistering a name."""
+    client_mock.unregister_name.side_effect = StoreServerError(http_response)
+
+    store = Store(config.charmhub)
+    with pytest.raises(error_cls) as exc_info:
+        store.unregister_name("testname")
+
+    assert exc_info.value.args[0] == (
+        "Issue encountered while processing your request: "
+        f"[{http_response.status_code}] {http_response.content}."
+    )
+
+
+@pytest.mark.parametrize(
+    "http_response",
+    [
+        pytest.param(FakeResponse("discharge required", 401), id="discharge_required"),
+        pytest.param(FakeResponse("Unauthorized", 401), id="Unauthorized"),
+        pytest.param(
+            FakeResponse("Charms can only be unregistered by their publisher", 401),
+            id="collaborator",
+        ),
+    ],
+)
+def test_unregister_name_login(client_mock, config, http_response: FakeResponse):
+    """Retry login when registering a name."""
+    client_mock.unregister_name.side_effect = [StoreServerError(http_response), None]
+
+    store = Store(config.charmhub)
+    store.unregister_name("testname")
+
+
+# endregion
+
+
 def test_list_registered_names_empty(client_mock, config):
     """List registered names getting an empty response."""
     store = Store(config.charmhub)

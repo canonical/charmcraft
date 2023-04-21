@@ -73,10 +73,10 @@ confinement: classic
 parts:
   # The cryptography library (indirect dependency via craft-store) requires rust, but only ships wheels for amd64 and arm64.
   # As of cryptography 39, it requires rust v1.48.0 or newer, which is available from focal-updates.
-  # This part contains the full set of build dependencies for cryptography.
-  # NOTE: cryptography requires at least pip version 22 for building.
+  # This part builds the wheel for cryptography.
   cryptography-deps:
-    plugin: nil
+    plugin: dump
+    source: .
     build-packages:
       - cargo
       - rustc
@@ -89,10 +89,9 @@ parts:
       - python3-pip
       - python3-setuptools-scm
     override-build: |
-      pip install 'pip>=22.0' 'setuptools>=61.0.0'
       # Dirty workaround - builds the cryptography wheel for later installation.
       # This must be exactly the version referenced in requirements.txt, so this is fragile.
-      pip wheel cryptography==40.0.2
+      pip wheel $(grep '^cryptography[<=>]' requirements.txt)
 
   # Classic core20 snaps require staged python.
   python3:

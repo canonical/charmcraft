@@ -93,7 +93,6 @@ parts:
       # Dirty workaround - builds the cryptography wheel for later installation.
       # This must be exactly the version referenced in requirements.txt, so this is fragile.
       pip wheel cryptography==40.0.2
-      snapcraftctl build
 
   # Classic core20 snaps require staged python.
   python3:

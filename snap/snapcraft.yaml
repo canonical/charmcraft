@@ -71,8 +71,31 @@ grade: stable
 confinement: classic
 
 parts:
+  # The cryptography library (indirect dependency via craft-store) requires rust, but only ships wheels for amd64 and arm64.
+  # As of cryptography 39, it requires rust v1.48.0 or newer, which is available from focal-updates.
+  # This part builds the wheel for cryptography.
+  cryptography-deps:
+    plugin: dump
+    source: .
+    build-packages:
+      - cargo
+      - rustc
+      - pkg-config
+      - python3.8-dev
+      - libpython3.8-dev
+      - libssl-dev
+      - libffi-dev
+      - python3-wheel
+      - python3-pip
+      - python3-setuptools-scm
+    override-build: |
+      # Dirty workaround - builds the cryptography wheel for later installation.
+      # This must be exactly the version referenced in requirements.txt, so this is fragile.
+      pip wheel $(grep '^cryptography[<=>]' requirements.txt)
+
   # Classic core20 snaps require staged python.
   python3:
+    after: [cryptography-deps]
     plugin: nil
     build-packages:
       - python3-dev
@@ -92,16 +115,8 @@ parts:
       snapcraftctl build
       install -D -m 0755 $SNAPCRAFT_PROJECT_DIR/snap/local/sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
 
-  # The cryptography library (indirect dependency via craft-store) requires rust, but only ships wheels for amd64 and arm64.
-  # As of cryptography 39, it requires rust v1.48.0 or newer, which is available from focal-updates.
-  rust-deps:
-    plugin: nil
-    build-packages:
-      - cargo
-      - rustc
-
   charmcraft:
-    after: [python3, rust-deps]
+    after: [python3, cryptography-deps]
     source: .
     plugin: python
     requirements:
@@ -125,6 +140,8 @@ parts:
     override-pull: |
       # do the usual pull stuff
       snapcraftctl pull
+      # Ensure we don't have a dubious ownership error from git with a remote build.
+      git config --global --add safe.directory $SNAPCRAFT_PART_SRC
       # set the version
       version="$(python3 setup.py --version)"
       snapcraftctl set-version "$version"

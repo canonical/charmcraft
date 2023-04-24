@@ -793,14 +793,25 @@ class PromoteBundleCommand(BaseCommand):
         """
         Promote a bundle to another channel in the Store.
 
-
-        """  # TODO (amlowe): complete this description.
+        This command must be run from the bundle project directory to be
+        promoted.
+        """
     )
 
     def fill_parser(self, parser: "ArgumentParser") -> None:
         """Add promote-bundle parameters to the general parser."""
-        parser.add_argument("from_channel", help="The channel from which to promote the bundle")
-        parser.add_argument("to_channel", help="The target channel for the promoted bundle")
+        parser.add_argument(
+            "--from-channel",
+            type=SingleOptionEnsurer(str),
+            required=True,
+            help="The channel from which to promote the bundle",
+        )
+        parser.add_argument(
+            "--to-channel",
+            type=SingleOptionEnsurer(str),
+            required=True,
+            help="The target channel for the promoted bundle",
+        )
         parser.add_argument(
             "--output-bundle",
             type=pathlib.Path,
@@ -996,7 +1007,14 @@ class PromoteBundleCommand(BaseCommand):
 
             # Upload the bundle and release it to the target channel.
             store.upload(bundle_name, zipname)
-        store.release(bundle_name, bundle_revision, [parsed_args.to_channel], [])
+        release_info = store.release(bundle_name, bundle_revision, [parsed_args.to_channel], [])
+
+        # There should only be one revision.
+        release_info = release_info["released"][0]
+        emit.message(
+            f"Created revision {release_info['revision']!r} and "
+            f"released it to the {release_info['channel']!r} channel"
+        )
 
 
 class CloseCommand(BaseCommand):

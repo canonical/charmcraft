@@ -26,11 +26,6 @@ jobs:
   pack-charm:
     runs-on: self-hosted
     needs: [snap-build]
-    strategy:
-      fail-fast: false
-      matrix:
-        charm: [k8s-operator, operator, magma]
-
     steps:
       - name: Cleanup job workspace
         run: |
@@ -47,4 +42,4 @@ jobs:
           name: snap
       - name: Spread k8s operator
         run: |
-          spread google:ubuntu-22.04-64:tests/spread/charms/${{ matrix.charm }}
+          spread google tests/spread/charms/*

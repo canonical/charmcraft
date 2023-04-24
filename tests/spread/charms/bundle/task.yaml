@@ -30,4 +30,5 @@ execute: |
   grep "charm: ${PWD}" output_bundle.yaml | cut -d: -f2 | xargs file -E
 
   # Test deploying the bundle.
-  juju deploy --dry-run *.zip
+  # TODO: install juju on the runner and re-enable this.
+  # juju deploy --dry-run *.zip

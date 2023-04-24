@@ -11,7 +11,10 @@ prepare: |
   git clone --depth=1 "${BUNDLE}" bundle
 
 restore: |
-  pushd bundle
+  pushd bundle/charms/jupyter-controller
+  charmcraft clean
+  popd
+  pushd bundle/charms/jupyter-ui
   charmcraft clean
   popd
 

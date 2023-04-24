@@ -73,7 +73,7 @@ execute: |
   if [[ $old_beta_revision != null ]]; then  # If there's no beta revision, skip this check.
     test $old_beta_revision -le $edge_revision
   fi
-  charmcraft promote-bundle latest/edge latest/beta
+  charmcraft promote-bundle --from-channel latest/edge --to-channel latest/beta
   beta_release=$(charmcraft status $BUNDLE_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/beta")')
   beta_revision=$(echo $beta_release | jq -r .revision)
   test $beta_revision -ge $edge_revision

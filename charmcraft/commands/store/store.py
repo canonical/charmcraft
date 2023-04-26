@@ -347,7 +347,7 @@ class Store:
         return result
 
     @_store_client_wrapper()
-    def release(self, name: str, revision: int, channels: List[str], resources):
+    def release(self, name: str, revision: int, channels: List[str], resources) -> Dict[str, Any]:
         """Release one or more revisions for a package."""
         endpoint = "/v1/charm/{}/releases".format(name)
         resources = [{"name": res.name, "revision": res.revision} for res in resources]
@@ -355,7 +355,8 @@ class Store:
             {"revision": revision, "channel": channel, "resources": resources}
             for channel in channels
         ]
-        self._client.request_urlpath_json("POST", endpoint, json=items)
+
+        return self._client.request_urlpath_json("POST", endpoint, json=items)
 
     @_store_client_wrapper()
     def list_releases(self, name: str) -> Tuple[List[Release], List[Channel], List[Revision]]:

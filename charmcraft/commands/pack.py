@@ -21,7 +21,6 @@ import os
 import pathlib
 import shutil
 import subprocess
-import sys
 import tempfile
 from typing import Any, Collection, Dict, List, Mapping
 
@@ -336,7 +335,7 @@ class PackCommand(BaseCommand):
         charms: Mapping[str, pathlib.Path],
     ) -> List[pathlib.Path]:
         bundle_charms = bundle_config.get("applications", {})
-        command_args = _get_charm_pack_args([sys.argv[0], "pack", "--verbose"], parsed_args)
+        command_args = _get_charm_pack_args(["charmcraft", "pack", "--verbose"], parsed_args)
         charms = _subprocess_pack_charms(charms, command_args)
         for name, value in bundle_charms.items():
             if name in charms:

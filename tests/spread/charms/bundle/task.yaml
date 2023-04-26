@@ -1,5 +1,4 @@
 summary: Recursively pack a bundle with all charms on
-manual: true
 systems:
   - ubuntu-22.04-64
 kill-timeout: 30m
@@ -11,7 +10,10 @@ prepare: |
   git clone --depth=1 "${BUNDLE}" bundle
 
 restore: |
-  pushd bundle
+  pushd bundle/charms/jupyter-controller
+  charmcraft clean
+  popd
+  pushd bundle/charms/jupyter-ui
   charmcraft clean
   popd
 
@@ -30,4 +32,5 @@ execute: |
   grep "charm: ${PWD}" output_bundle.yaml | cut -d: -f2 | xargs file -E
 
   # Test deploying the bundle.
-  juju deploy --dry-run *.zip
+  # TODO: install juju on the runner and re-enable this.
+  # juju deploy --dry-run *.zip

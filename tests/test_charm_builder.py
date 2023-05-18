@@ -619,8 +619,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
         ),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -664,8 +663,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
         ),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -716,8 +714,7 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
         call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg1", "pkg2"]),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -747,8 +744,7 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
         call([pip_cmd, "install", "--upgrade", "pkg1", "pkg2"]),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -797,8 +793,7 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
         call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg5", "pkg6"]),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -832,8 +827,7 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
     # remove the site venv directory
     staging_venv_dir.rmdir()
@@ -849,8 +843,7 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     assert staging_venv_dir.exists()
 
     # installation directory copied *again* to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
 
 def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output):
@@ -883,8 +876,7 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
     # remove the hash file
     (tmp_path / DEPENDENCIES_HASH_FILENAME).unlink()
@@ -900,8 +892,7 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
     assert staging_venv_dir.exists()
 
     # installation directory copied *again* to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
 
 def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_output):
@@ -934,8 +925,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
     # avoid the file to be read succesfully
     (tmp_path / DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
@@ -954,8 +944,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     assert staging_venv_dir.exists()
 
     # installation directory copied *again* to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
 
 @pytest.mark.parametrize(
@@ -1008,8 +997,7 @@ def test_build_dependencies_no_reused_different_dependencies(
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
     # for the second call, default new dependencies to first ones so only one is changed at a time
     if new_reqs_content is not None:
@@ -1033,8 +1021,7 @@ def test_build_dependencies_no_reused_different_dependencies(
     assert staging_venv_dir.exists()
 
     # installation directory copied *again* to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
 
 def test_build_dependencies_reused(tmp_path, assert_output):
@@ -1071,8 +1058,7 @@ def test_build_dependencies_reused(tmp_path, assert_output):
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
     # second run!
     with patch("shutil.copytree") as mock_copytree:
@@ -1083,8 +1069,7 @@ def test_build_dependencies_reused(tmp_path, assert_output):
 
     # installation directory copied *again* to the build directory (this is always done as
     # buildpath is cleaned)
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    assert mock_copytree.mock_calls == [call(pathlib.Path(STAGING_VENV_DIRNAME), build_dir / VENV_DIRNAME)]
 
 
 # -- tests about juju ignore

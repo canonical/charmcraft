@@ -684,14 +684,15 @@ def test_ensure_provider_is_available_installed_no_user_confirms_no(mocker, fake
             "20.04",
             ["host-arch"],
             False,
-            "name 'not-ubuntu' is not yet supported (must be 'ubuntu' or 'centos')",
+            "name 'not-ubuntu' is not yet supported (must be 'ubuntu', 'almalinux', or 'centos')",
         ),
         (
             "ubuntu",
             "10.04",
             ["host-arch"],
             False,
-            "base 'ubuntu' channel '10.04' is not yet supported (must be 'centos 7', "
+            "base 'ubuntu' channel '10.04' is not yet supported (must be "
+            "'almalinux 9', 'centos 7', "
             "'ubuntu 16.04', 'ubuntu 18.04', 'ubuntu 20.04', 'ubuntu 22.04', "
             "'ubuntu 22.10', 'ubuntu 23.04' or 'ubuntu devel')",
         ),

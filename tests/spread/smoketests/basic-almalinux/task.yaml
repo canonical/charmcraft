@@ -1,0 +1,31 @@
+summary: pack a simple init-created charm for AlmaLinux 9
+systems:
+  - ubuntu-22.04-64
+
+prepare: |
+  charmcraft init --project-dir=charm
+  pushd charm
+
+  cat <<- EOF >> charmcraft.yaml
+  type: charm
+  bases:
+    - build-on:
+      - name: almalinux
+        channel: "9"
+      run-on:
+      - name: almalinux
+        channel: "9"
+  EOF
+
+  popd
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose

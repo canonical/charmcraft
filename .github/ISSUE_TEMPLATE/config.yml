@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Charmcraft Discourse
+    url: https://discourse.charmhub.io/c/charmcraft/3
+    about: Issues creating charms
+  - name: Documentation Issues
+    url: https://discourse.charmhub.io/c/doc/22
+    about: Documentation Improvements

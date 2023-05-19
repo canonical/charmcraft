@@ -38,9 +38,9 @@ body:
     validations:
       required: true
   - type: textarea
-    id: snapcraft_yaml
+    id: charmcraft_yaml
     attributes:
-      label: snapcraft.yaml
+      label: charmcraft.yaml
       description: >
         If possible, please paste your charmcraft.yaml contents. This
         will be automatically formatted into code, so no need for

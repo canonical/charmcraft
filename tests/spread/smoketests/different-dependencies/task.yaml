@@ -28,6 +28,6 @@ execute: |
   cd charm
   charmcraft pack --verbose
   test -f charm*.charm
-  unzip -l charm*.charm | grep "venv/pytest/__init__.py"
-  unzip -l charm*.charm | grep "venv/bumpversion/__init__.py"
-  unzip -l charm*.charm | grep "venv/fades/__init__.py"
+  unzip -l charm*.charm | grep "site-packages/pytest/__init__.py"
+  unzip -l charm*.charm | grep "site-packages/bumpversion/__init__.py"
+  unzip -l charm*.charm | grep "site-packages/fades/__init__.py"

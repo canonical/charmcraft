@@ -321,8 +321,7 @@ class CharmBuilder:
             hash_file.write_text(current_deps_hash, encoding="utf8")
 
         # copy the virtual environment directory to /venv in charm
-        venv_dir = self.installdir / VENV_DIRNAME
-        shutil.copytree(staging_venv_dir, venv_dir)
+        shutil.copytree(staging_venv_dir, self.installdir / VENV_DIRNAME)
         # symlink /site-packages directory in charm to virtual environment site-packages directory
         # (backwards compatability for charms that do not use the full virtual environment)
         site_packages_symlink_path = self.installdir / SITE_PACKAGES_SYMLINK_NAME

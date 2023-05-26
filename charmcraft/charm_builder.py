@@ -39,6 +39,7 @@ from charmcraft.utils import make_executable
 # Some constants that are used through the code.
 WORK_DIRNAME = "work_dir"
 VENV_DIRNAME = "venv"
+SITE_PACKAGES_SYMLINK_NAME = "site-packages"
 STAGING_VENV_DIRNAME = "staging-venv"
 DEPENDENCIES_HASH_FILENAME = "charmcraft-dependencies-hash.txt"
 
@@ -50,7 +51,7 @@ DISPATCH_FILENAME = "dispatch"
 # to be the value it would've otherwise been.
 DISPATCH_CONTENT = """#!/bin/sh
 
-JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv \\
+JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:site-packages \\
   exec ./{entrypoint_relative_path}
 """
 
@@ -319,10 +320,13 @@ class CharmBuilder:
             # save the hash file after all successful installations
             hash_file.write_text(current_deps_hash, encoding="utf8")
 
-        # always copy the virtualvenv site-packages directory to /venv in charm
-        basedir = pathlib.Path(STAGING_VENV_DIRNAME)
-        site_packages_dir = _find_venv_site_packages(basedir)
-        shutil.copytree(site_packages_dir, self.installdir / VENV_DIRNAME)
+        # copy the virtual environment directory to /venv in charm
+        shutil.copytree(pathlib.Path(STAGING_VENV_DIRNAME), self.installdir / VENV_DIRNAME)
+        # symlink /site-packages directory in charm to virtual environment site-packages directory
+        # (backwards compatability for charms that do not use the full virtual environment)
+        site_packages_symlink_path = self.installdir / SITE_PACKAGES_SYMLINK_NAME
+        site_packages_symlink_path.unlink(missing_ok=True)
+        site_packages_symlink_path.symlink_to(_find_venv_site_packages(pathlib.Path(VENV_DIRNAME)))
 
 
 def _find_venv_bin(basedir, exec_base):

@@ -1257,6 +1257,7 @@ def test_build_part_from_config(basic_project, monkeypatch):
                         "prime": [
                             "src",
                             "venv",
+                            "site-packages",
                             "metadata.yaml",
                             "dispatch",
                             "hooks",
@@ -1332,6 +1333,7 @@ def test_build_part_include_venv_pydeps(basic_project, monkeypatch):
                         "prime": [
                             "src",
                             "venv",
+                            "site-packages",
                             "metadata.yaml",
                             "dispatch",
                             "hooks",

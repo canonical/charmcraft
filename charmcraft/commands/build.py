@@ -39,6 +39,7 @@ from charmcraft.utils import get_host_architecture
 # Some constants that are used through the code.
 BUILD_DIRNAME = "build"
 VENV_DIRNAME = "venv"
+SITE_PACKAGES_SYMLINK_NAME = "site-packages"
 
 CHARM_FILES = [
     "metadata.yaml",
@@ -233,6 +234,7 @@ class Builder:
             or charmlib_pydeps
         ):
             charm_part_prime.append(VENV_DIRNAME)
+            charm_part_prime.append(SITE_PACKAGES_SYMLINK_NAME)
 
         # add mandatory and optional charm files
         charm_part_prime.extend(CHARM_FILES)

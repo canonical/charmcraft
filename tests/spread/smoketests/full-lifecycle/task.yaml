@@ -39,6 +39,6 @@ execute: |
   charmcraft pack --verbose
   test -f charm*.charm
   unzip -c charm*.charm hello.txt | grep "^Hello, world!"
-  unzip -l charm*.charm | grep "venv/ops/charm.py"
+  unzip -l charm*.charm | grep "site-packages/ops/charm.py"
   unzip -l charm*.charm | grep extra_file.txt
   ! unzip -l charm*.charm | grep secrets.txt

@@ -117,7 +117,8 @@ class InitCommand(BaseCommand):
             "--profile",
             choices=list(PROFILES),
             default=DEFAULT_PROFILE,
-            help=f"Use the specified project profile (defaults to '{DEFAULT_PROFILE}')",
+            help=f"""Use the specified project profile (defaults to '{DEFAULT_PROFILE}', """
+            f"""could be one of {', '.join(f"'{p}'" for p in PROFILES)})""",
         )
 
     def run(self, args):

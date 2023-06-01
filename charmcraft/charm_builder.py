@@ -31,32 +31,18 @@ from typing import List
 
 from charmcraft import instrum
 from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
+from charmcraft.const import (
+    DEPENDENCIES_HASH_FILENAME,
+    DISPATCH_CONTENT,
+    DISPATCH_FILENAME,
+    HOOKS_DIRNAME,
+    MANDATORY_HOOK_NAMES,
+    STAGING_VENV_DIRNAME,
+    VENV_DIRNAME,
+)
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
-
-
-# Some constants that are used through the code.
-WORK_DIRNAME = "work_dir"
-VENV_DIRNAME = "venv"
-STAGING_VENV_DIRNAME = "staging-venv"
-DEPENDENCIES_HASH_FILENAME = "charmcraft-dependencies-hash.txt"
-
-# The file name and template for the dispatch script
-DISPATCH_FILENAME = "dispatch"
-# If Juju doesn't support the dispatch mechanism, it will execute the
-# hook, and we'd need sys.argv[0] to be the name of the hook but it's
-# getting lost by calling this dispatch, so we fake JUJU_DISPATCH_PATH
-# to be the value it would've otherwise been.
-DISPATCH_CONTENT = """#!/bin/sh
-
-JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv \\
-  exec ./{entrypoint_relative_path}
-"""
-
-# The minimum set of hooks to be provided for compatibility with old Juju
-MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
-HOOKS_DIR = "hooks"
 
 
 def relativise(src, dst):
@@ -205,7 +191,7 @@ class CharmBuilder:
         # bunch of symlinks, to support old juju: verify that any of the already included hooks
         # in the directory is not linking directly to the entrypoint, and also check all the
         # mandatory ones are present
-        dest_hookpath = self.installdir / HOOKS_DIR
+        dest_hookpath = self.installdir / HOOKS_DIRNAME
         if not dest_hookpath.exists():
             dest_hookpath.mkdir()
 

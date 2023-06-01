@@ -26,7 +26,7 @@ from typing import List, Generator, Union
 import yaml
 
 from charmcraft import config, utils
-from charmcraft.metadata import parse_metadata_yaml, read_metadata_yaml
+from charmcraft.metafiles.metadata import parse_metadata_yaml, read_metadata_yaml
 
 CheckType = namedtuple("CheckType", "attribute lint")(attribute="attribute", lint="lint")
 

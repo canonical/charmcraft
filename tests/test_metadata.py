@@ -20,7 +20,7 @@ from textwrap import dedent
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.metadata import parse_metadata_yaml, read_metadata_yaml
+from charmcraft.metafiles.metadata import parse_metadata_yaml, read_metadata_yaml
 
 
 # tests for parsing metadata

@@ -25,7 +25,8 @@ import pytest
 from craft_cli import CraftError
 
 from charmcraft import linters
-from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, load
+from charmcraft.models.config import Base, BasesConfiguration, CharmhubConfig
+from charmcraft.config import load
 from charmcraft.utils import get_host_architecture
 
 

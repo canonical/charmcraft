@@ -16,4 +16,4 @@
 
 """Submodule for handling the all extra yaml files."""
 
-__all__ = ["manifest", "metadata"]
+__all__ = ["actions", "manifest", "metadata"]

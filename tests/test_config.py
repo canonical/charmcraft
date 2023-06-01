@@ -1199,3 +1199,148 @@ def test_schema_analysis_ignore_linter_missing(
         Bad charmcraft.yaml content:
         - Bad lint name 'check_missing' in field 'analysis.ignore.linters[1]'"""
     )
+
+
+def test_actions_defined_in_charmcraft_yaml(create_config, tmp_path):
+    """test actions defined in charmcraft.yaml"""
+    create_config(
+        """
+        type: charm
+        bases:
+          - name: test-name
+            channel: test-channel
+        actions:
+          pause:
+            description: Pause the database.
+          resume:
+            description: Resume a paused database.
+          snapshot:
+            description: Take a snapshot of the database.
+            params:
+              filename:
+                type: string
+                description: The name of the snapshot file.
+              compression:
+                type: object
+                description: The type of compression to use.
+                properties:
+                  kind:
+                    type: string
+                    enum: [gzip, bzip2, xz]
+                  quality:
+                    description: Compression quality
+                    type: integer
+                    minimum: 0
+                    maximum: 9
+            required: [filename]
+            additionalProperties: false
+
+    """
+    )
+    config = load(tmp_path)
+
+    assert config.actions == {
+        "pause": {"description": "Pause the database."},
+        "resume": {"description": "Resume a paused database."},
+        "snapshot": {
+            "description": "Take a snapshot of the database.",
+            "params": {
+                "filename": {"type": "string", "description": "The name of the snapshot file."},
+                "compression": {
+                    "type": "object",
+                    "description": "The type of compression to use.",
+                    "properties": {
+                        "kind": {"type": "string", "enum": ["gzip", "bzip2", "xz"]},
+                        "quality": {
+                            "description": "Compression quality",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9,
+                        },
+                    },
+                },
+            },
+            "required": ["filename"],
+            "additionalProperties": False,
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "bad_name",
+    [
+        "is",
+        "-snapshot",
+        "111snapshot",
+    ],
+)
+def test_actions_badly_defined_in_charmcraft_yaml(create_config, tmp_path, bad_name):
+    """test actions badly defined in charmcraft.yaml"""
+    create_config(
+        f"""
+        type: charm
+        bases:
+          - name: test-name
+            channel: test-channel
+        actions:
+          pause:
+            description: Pause the database.
+          resume:
+            description: Resume a paused database.
+          {bad_name}:
+            description: Take a snapshot of the database.
+    """
+    )
+
+    with pytest.raises(CraftError):
+        load(tmp_path)
+
+
+def test_actions_defined_in_charmcraft_yaml_and_actions_yaml(
+    create_config, check_schema_error, tmp_path, create_checker
+):
+    """actions section cannot be used when actions.yaml file is present."""
+    create_config(
+        """
+        type: charm
+        bases:
+          - name: test-name
+            channel: test-channel
+        actions:
+          pause:
+            description: Pause the database.
+          resume:
+            description: Resume a paused database.
+          snapshot:
+            description: Take a snapshot of the database.
+            params:
+              filename:
+                type: string
+                description: The name of the snapshot file.
+              compression:
+                type: object
+                description: The type of compression to use.
+                properties:
+                  kind:
+                    type: string
+                    enum: [gzip, bzip2, xz]
+                  quality:
+                    description: Compression quality
+                    type: integer
+                    minimum: 0
+                    maximum: 9
+            required: [filename]
+            additionalProperties: false
+    """
+    )
+    msg = (
+        "Bad charmcraft.yaml content:\n"
+        "- 'actions.yaml' file not allowed when an 'actions' section is "
+        "defined in 'charmcraft.yaml' in field 'actions'"
+    )
+
+    test_actions_file = tmp_path / "actions.yaml"
+    test_actions_file.write_text("test")
+
+    with pytest.raises(CraftError, match=msg):
+        load(tmp_path)

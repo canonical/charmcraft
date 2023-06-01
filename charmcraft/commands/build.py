@@ -33,6 +33,7 @@ import charmcraft.parts
 import charmcraft.providers
 import charmcraft.instrum
 from charmcraft.metafiles.metadata import parse_metadata_yaml
+from charmcraft.metafiles.actions import create_actions
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.const import BUILD_DIRNAME, CHARM_FILES, CHARM_OPTIONAL, VENV_DIRNAME
 from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
@@ -173,6 +174,7 @@ class Builder:
         linting_results = charmcraft.linters.analyze(self.config, lifecycle.prime_dir)
         self.show_linting_results(linting_results)
 
+        create_actions(lifecycle.prime_dir, self.config.actions)
         create_manifest(
             lifecycle.prime_dir,
             self.config.project.started_at,

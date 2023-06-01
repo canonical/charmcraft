@@ -20,7 +20,7 @@ from craft_cli import emit
 
 from charmcraft import providers
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.metadata import parse_metadata_yaml
+from charmcraft.metafiles.metadata import parse_metadata_yaml
 from charmcraft.utils import get_host_architecture
 
 _overview = """

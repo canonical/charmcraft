@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,31 +14,32 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Charmcraft manifest.yaml related functionality."""
+"""Handlers for manifest.yaml file."""
 
 import datetime
 import json
-import logging
 import os
 import pathlib
+import logging
 from typing import Optional, List
 
 import yaml
 from craft_cli import CraftError
 
-from charmcraft import __version__, config, linters
+
+import charmcraft.models.config
+import charmcraft.linters
+from charmcraft.const import IMAGE_INFO_ENV_VAR
 
 logger = logging.getLogger(__name__)
-
-IMAGE_INFO_ENV_VAR = "CHARMCRAFT_IMAGE_INFO"
 
 
 def create_manifest(
     basedir: pathlib.Path,
     started_at: datetime.datetime,
-    bases_config: Optional[config.BasesConfiguration],
-    linting_results: List[linters.CheckResult],
-):
+    bases_config: Optional[charmcraft.models.config.BasesConfiguration],
+    linting_results: List[charmcraft.linters.CheckResult],
+) -> pathlib.Path:
     """Create manifest.yaml in basedir for given base configuration.
 
     For packing bundles, `bases` will be skipped when bases_config is None.
@@ -51,7 +52,7 @@ def create_manifest(
     :returns: Path to created manifest.yaml.
     """
     content = {
-        "charmcraft-version": __version__,
+        "charmcraft-version": charmcraft.__version__,
         "charmcraft-started-at": started_at.isoformat() + "Z",
     }
 
@@ -71,7 +72,7 @@ def create_manifest(
     attributes_info = [
         {"name": result.name, "result": result.result}
         for result in linting_results
-        if result.check_type == linters.CheckType.attribute
+        if result.check_type == charmcraft.linters.CheckType.attribute
     ]
     content["analysis"] = {"attributes": attributes_info}
 

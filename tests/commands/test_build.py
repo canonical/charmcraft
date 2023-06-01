@@ -33,8 +33,9 @@ from charmcraft import linters, instrum
 from charmcraft.charm_builder import relativise
 from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
-from charmcraft.config import Base, BasesConfiguration, load
-from charmcraft.metadata import CHARM_METADATA
+from charmcraft.models.config import Base, BasesConfiguration
+from charmcraft.config import load
+from charmcraft.const import METADATA_FILENAME
 from charmcraft.providers import get_base_configuration
 from charmcraft.utils import get_host_architecture
 
@@ -157,7 +158,7 @@ def basic_project_builder(basic_project):
 
 @pytest.fixture
 def mock_capture_logs_from_instance():
-    with patch("charmcraft.commands.build.providers.capture_logs_from_instance") as mock_capture:
+    with patch("charmcraft.providers.capture_logs_from_instance") as mock_capture:
         yield mock_capture
 
 
@@ -169,21 +170,21 @@ def mock_launch_shell():
 
 @pytest.fixture
 def mock_linters():
-    with patch("charmcraft.commands.build.linters") as mock_linters:
+    with patch("charmcraft.linters") as mock_linters:
         mock_linters.analyze.return_value = []
         yield mock_linters
 
 
 @pytest.fixture
 def mock_parts():
-    with patch("charmcraft.commands.build.parts") as mock_parts:
+    with patch("charmcraft.parts") as mock_parts:
         yield mock_parts
 
 
 @pytest.fixture(autouse=True)
 def mock_provider(mock_instance, fake_provider):
     mock_provider = mock.Mock(wraps=fake_provider)
-    with patch("charmcraft.commands.build.providers.get_provider", return_value=mock_provider):
+    with patch("charmcraft.providers.get_provider", return_value=mock_provider):
         yield mock_provider
 
 
@@ -202,7 +203,7 @@ def mock_centos_base_configuration():
 @pytest.fixture()
 def mock_instance_name():
     with mock.patch(
-        "charmcraft.commands.build.providers.get_instance_name", return_value="test-instance-name"
+        "charmcraft.providers.get_instance_name", return_value="test-instance-name"
     ) as patched:
         yield patched
 
@@ -221,7 +222,7 @@ def mock_is_base_available():
 
 def test_build_error_without_metadata_yaml(basic_project):
     """Validate error if trying to build project without metadata.yaml."""
-    metadata = basic_project / CHARM_METADATA
+    metadata = basic_project / METADATA_FILENAME
     metadata.unlink()
 
     config = load(basic_project)
@@ -273,9 +274,8 @@ def test_build_with_charmcraft_yaml_managed_mode(
     emitter.assert_debug("Building for 'bases[0]' as host matches 'build-on[0]'.")
 
 
-def test_build_checks_provider(basic_project, mock_provider, mocker):
+def test_build_checks_provider(basic_project, mock_provider, mock_capture_logs_from_instance):
     """Test cases for base-index parameter."""
-    mocker.patch("charmcraft.commands.build.providers.capture_logs_from_instance")
     config = load(basic_project)
     builder = get_builder(config)
 

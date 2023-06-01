@@ -19,7 +19,7 @@ from unittest import mock
 import pytest
 
 from charmcraft.commands.clean import CleanCommand
-from charmcraft.config import Base, BasesConfiguration
+from charmcraft.models.config import Base, BasesConfiguration
 from charmcraft.utils import get_host_architecture
 
 

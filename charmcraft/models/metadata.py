@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,18 +14,15 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Logic related to metadata.yaml."""
+"""Charmcraft metadata pydantic model."""
 
-import pathlib
 from typing import Any, Dict
 
 import pydantic
-import yaml
-from craft_cli import emit, CraftError
 
-from charmcraft.config import format_pydantic_errors
-
-CHARM_METADATA = "metadata.yaml"
+from craft_cli import CraftError
+from charmcraft.format import format_pydantic_errors
+from charmcraft.const import METADATA_FILENAME
 
 
 class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
@@ -46,31 +43,4 @@ class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
         try:
             return cls.parse_obj(obj)
         except pydantic.error_wrappers.ValidationError as error:
-            raise CraftError(format_pydantic_errors(error.errors(), file_name=CHARM_METADATA))
-
-
-def read_metadata_yaml(charm_dir: pathlib.Path) -> Any:
-    """Parse project's metadata.yaml.
-
-    :returns: the YAML decoded metadata.yaml content
-    """
-    metadata_path = charm_dir / CHARM_METADATA
-    emit.debug(f"Reading {str(metadata_path)!r}")
-    with metadata_path.open("rt", encoding="utf8") as fh:
-        return yaml.safe_load(fh)
-
-
-def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
-    """Parse project's metadata.yaml.
-
-    :returns: a CharmMetadata object.
-
-    :raises: CraftError if metadata does not exist.
-    """
-    try:
-        metadata = read_metadata_yaml(charm_dir)
-    except OSError as exc:
-        raise CraftError(f"Cannot read the metadata.yaml file: {exc!r}") from exc
-
-    emit.debug("Validating metadata format")
-    return CharmMetadata.unmarshal(metadata)
+            raise CraftError(format_pydantic_errors(error.errors(), file_name=METADATA_FILENAME))

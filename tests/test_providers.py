@@ -24,7 +24,7 @@ from craft_cli import CraftError
 from craft_providers import ProviderError, bases, lxd, multipass
 from craft_providers.actions.snap_installer import Snap
 
-from charmcraft.config import Base, BasesConfiguration
+from charmcraft.models.config import Base, BasesConfiguration
 from charmcraft import providers
 from charmcraft.snap import CharmcraftSnapConfiguration
 
@@ -32,7 +32,7 @@ from charmcraft.snap import CharmcraftSnapConfiguration
 @pytest.fixture()
 def mock_provider(mock_instance, fake_provider):
     mock_provider = Mock(wraps=fake_provider)
-    with patch("charmcraft.commands.build.providers.get_provider", return_value=mock_provider):
+    with patch("charmcraft.providers.get_provider", return_value=mock_provider):
         yield mock_provider
 
 

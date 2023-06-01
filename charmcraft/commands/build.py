@@ -27,39 +27,20 @@ from typing import List, Optional
 from craft_cli import emit, CraftError
 from craft_providers.bases import get_base_alias
 
-from charmcraft import env, linters, parts, providers, instrum
-from charmcraft.charm_builder import DISPATCH_FILENAME, HOOKS_DIR
+import charmcraft.env
+import charmcraft.linters
+import charmcraft.parts
+import charmcraft.providers
+import charmcraft.instrum
+from charmcraft.metafiles.metadata import parse_metadata_yaml
+from charmcraft.metafiles.manifest import create_manifest
+from charmcraft.const import BUILD_DIRNAME, CHARM_FILES, CHARM_OPTIONAL, VENV_DIRNAME
 from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
-from charmcraft.config import Base, BasesConfiguration
-from charmcraft.manifest import create_manifest
-from charmcraft.metadata import parse_metadata_yaml
+from charmcraft.models.config import Base, BasesConfiguration
 from charmcraft.parts import Step
 from charmcraft.utils import get_host_architecture
 
 # Some constants that are used through the code.
-BUILD_DIRNAME = "build"
-VENV_DIRNAME = "venv"
-
-CHARM_FILES = [
-    "metadata.yaml",
-    DISPATCH_FILENAME,
-    HOOKS_DIR,
-]
-
-CHARM_OPTIONAL = [
-    "config.yaml",
-    "metrics.yaml",
-    "actions.yaml",
-    "lxd-profile.yaml",
-    "templates",
-    "version",
-    "lib",
-    "mod",
-    "LICENSE",
-    "icon.svg",
-    "README.md",
-    "actions",
-]
 
 
 def _format_run_on_base(base: Base) -> str:
@@ -116,16 +97,16 @@ class Builder:
         else:
             self._special_charm_part = None
 
-        self.provider = providers.get_provider()
+        self.provider = charmcraft.providers.get_provider()
 
     def show_linting_results(self, linting_results):
         """Manage the linters results, show some in different conditions, decide if continue."""
         attribute_results = []
         lint_results_by_outcome = {}
         for result in linting_results:
-            if result.result == linters.IGNORED:
+            if result.result == charmcraft.linters.IGNORED:
                 continue
-            if result.check_type == linters.CheckType.attribute:
+            if result.check_type == charmcraft.linters.CheckType.attribute:
                 attribute_results.append(result)
             else:
                 lint_results_by_outcome.setdefault(result.result, []).append(result)
@@ -139,13 +120,13 @@ class Builder:
 
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
-        if linters.WARNINGS in lint_results_by_outcome:
+        if charmcraft.linters.WARNINGS in lint_results_by_outcome:
             emit.progress("Lint Warnings:", permanent=True)
-            for result in lint_results_by_outcome[linters.WARNINGS]:
+            for result in lint_results_by_outcome[charmcraft.linters.WARNINGS]:
                 emit.progress(template.format(result), permanent=True)
-        if linters.ERRORS in lint_results_by_outcome:
+        if charmcraft.linters.ERRORS in lint_results_by_outcome:
             emit.progress("Lint Errors:", permanent=True)
-            for result in lint_results_by_outcome[linters.ERRORS]:
+            for result in lint_results_by_outcome[charmcraft.linters.ERRORS]:
                 emit.progress(template.format(result), permanent=True)
             if self.force_packing:
                 emit.progress("Packing anyway as requested.", permanent=True)
@@ -164,8 +145,8 @@ class Builder:
         :raises CraftError: on lifecycle exception.
         :raises RuntimeError: on unexpected lifecycle exception.
         """
-        if env.is_charmcraft_running_in_managed_mode():
-            work_dir = env.get_managed_environment_home_path()
+        if charmcraft.env.is_charmcraft_running_in_managed_mode():
+            work_dir = charmcraft.env.get_managed_environment_home_path()
         else:
             work_dir = self.buildpath
 
@@ -178,18 +159,18 @@ class Builder:
 
         # run the parts lifecycle
         emit.debug(f"Parts definition: {self._parts}")
-        lifecycle = parts.PartsLifecycle(
+        lifecycle = charmcraft.parts.PartsLifecycle(
             self._parts,
             work_dir=work_dir,
             project_dir=self.charmdir,
             project_name=self.metadata.name,
             ignore_local_sources=["*.charm"],
         )
-        with instrum.Timer("Lifecycle run"):
+        with charmcraft.instrum.Timer("Lifecycle run"):
             lifecycle.run(Step.PRIME)
 
         # run linters and show the results
-        linting_results = linters.analyze(self.config, lifecycle.prime_dir)
+        linting_results = charmcraft.linters.analyze(self.config, lifecycle.prime_dir)
         self.show_linting_results(linting_results)
 
         create_manifest(
@@ -241,7 +222,7 @@ class Builder:
             if path.exists():
                 charm_part_prime.append(fn)
 
-    @instrum.Timer("Builder run")
+    @charmcraft.instrum.Timer("Builder run")
     def run(
         self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
     ) -> List[str]:
@@ -256,11 +237,11 @@ class Builder:
         """
         charms: List[str] = []
 
-        managed_mode = env.is_charmcraft_running_in_managed_mode()
+        managed_mode = charmcraft.env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
-            providers.ensure_provider_is_available(self.provider)
+            charmcraft.providers.ensure_provider_is_available(self.provider)
 
-        build_plan = providers.create_build_plan(
+        build_plan = charmcraft.providers.create_build_plan(
             bases=self.config.bases,
             bases_indices=bases_indices,
             destructive_mode=destructive_mode,
@@ -282,7 +263,7 @@ class Builder:
                     continue
 
                 try:
-                    with instrum.Timer("Building the charm"):
+                    with charmcraft.instrum.Timer("Building the charm"):
                         charm_name = self.build_charm(plan.bases_config)
                 except (CraftError, RuntimeError) as error:
                     if self.debug:
@@ -315,10 +296,10 @@ class Builder:
         # project directory and can retrieve it when complete.
         cwd = pathlib.Path.cwd()
         if cwd == self.charmdir:
-            instance_output_dir = env.get_managed_environment_project_path()
+            instance_output_dir = charmcraft.env.get_managed_environment_project_path()
             pull_charm = False
         else:
-            instance_output_dir = env.get_managed_environment_home_path()
+            instance_output_dir = charmcraft.env.get_managed_environment_home_path()
             pull_charm = True
 
         mode = emit.get_mode().name.lower()
@@ -337,7 +318,7 @@ class Builder:
             cmd.append("--force")
 
         if self.measure:
-            instance_metrics = env.get_managed_environment_metrics_path()
+            instance_metrics = charmcraft.env.get_managed_environment_metrics_path()
             cmd.append(f"--measure={str(instance_metrics)}")
 
         emit.progress(
@@ -346,14 +327,14 @@ class Builder:
         )
 
         build_base_alias = get_base_alias((build_on.name, build_on.channel))
-        instance_name = providers.get_instance_name(
+        instance_name = charmcraft.providers.get_instance_name(
             bases_index=bases_index,
             build_on_index=build_on_index,
             project_name=self.metadata.name,
             project_path=self.charmdir,
             target_arch=get_host_architecture(),
         )
-        base_configuration = providers.get_base_configuration(
+        base_configuration = charmcraft.providers.get_base_configuration(
             alias=build_base_alias,
             instance_name=instance_name,
         )
@@ -374,27 +355,27 @@ class Builder:
             allow_unstable=allow_unstable,
         ) as instance:
             emit.debug("Mounting directory inside the instance")
-            with instrum.Timer("Mounting directory"):
+            with charmcraft.instrum.Timer("Mounting directory"):
                 instance.mount(
                     host_source=self.charmdir,
-                    target=env.get_managed_environment_project_path(),
+                    target=charmcraft.env.get_managed_environment_project_path(),
                 )
 
             emit.progress("Packing the charm")
             emit.debug(f"Running {cmd}")
             try:
-                with instrum.Timer("Execution inside instance"):
+                with charmcraft.instrum.Timer("Execution inside instance"):
                     with emit.pause():
                         instance.execute_run(cmd, check=True, cwd=instance_output_dir)
                     if self.measure:
                         with instance.temporarily_pull_file(instance_metrics) as local_filepath:
-                            instrum.merge_from(local_filepath)
+                            charmcraft.instrum.merge_from(local_filepath)
             except subprocess.CalledProcessError as error:
                 raise CraftError(
                     f"Failed to build charm for bases index '{bases_index}'."
                 ) from error
             finally:
-                providers.capture_logs_from_instance(instance)
+                charmcraft.providers.capture_logs_from_instance(instance)
 
             if pull_charm:
                 try:

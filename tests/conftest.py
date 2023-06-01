@@ -32,7 +32,7 @@ from craft_providers import Executor, Provider
 from charmcraft import config as config_module, instrum
 from charmcraft import deprecations, parts
 from charmcraft.bases import get_host_as_base
-from charmcraft.config import Base, BasesConfiguration
+from charmcraft.models.config import Base, BasesConfiguration
 
 
 @pytest.fixture(autouse=True, scope="session")

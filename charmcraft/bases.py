@@ -18,7 +18,7 @@
 
 from typing import Tuple, Union
 
-from charmcraft.config import Base
+from charmcraft.models.config import Base
 from charmcraft.utils import get_host_architecture, get_os_platform
 
 

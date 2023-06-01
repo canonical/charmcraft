@@ -45,6 +45,10 @@ analysis:
     attributes: [list of attribute names to ignore]
     linting: [list of linter names to ignore]
 
+actions:
+  my-action:
+    description: Action as defined at https://juju.is/docs/sdk/actions
+
 
 Object Definitions
 ==================

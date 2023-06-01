@@ -18,6 +18,9 @@
 
 import datetime
 import pathlib
+import os
+import re
+import keyword
 from typing import Optional, List, Dict, Any
 
 import pydantic
@@ -224,6 +227,36 @@ class Config(ModelConfigDefaults, validate_all=False):
         if values.get("type") == "bundle":
             raise ValueError("Field not allowed when type=bundle")
         return bases
+
+    @pydantic.validator("actions", pre=True)
+    def validate_actions(cls, actions, values):
+        """Verify 'actions' in charms.
+
+        Currently, actions will be passed through to the charms.
+        And individual "actions.yaml" should not exists when actions
+        is defined in charmcraft.yaml.
+        """
+        if actions is None:
+            return None
+
+        actions_yaml_file_path = values["project"].dirpath / "actions.yaml"
+        if os.path.isfile(actions_yaml_file_path):
+            raise ValueError(
+                "'actions.yaml' file not allowed when an 'actions' section is "
+                "defined in 'charmcraft.yaml'"
+            )
+
+        # https://juju.is/docs/sdk/actions
+        action_name_regex = re.compile(r"^[a-zA-Z_][a-zA-Z0-9-_]*$")
+        for action in actions.keys():
+            if keyword.iskeyword(action):
+                raise ValueError(
+                    f"'{action}' is a reserved keyword and cannot be used as an action name"
+                )
+            if action_name_regex.match(action) is None:
+                raise ValueError(f"'{action}' is not a valid action name")
+
+        return actions
 
     @classmethod
     def expand_short_form_bases(cls, bases: List[Dict[str, Any]]) -> None:

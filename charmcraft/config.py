@@ -105,6 +105,7 @@ def load(dirpath: Optional[str]) -> Config:
                 config_provided=False,
                 started_at=now,
             ),
+            name="missing-charm-name",
         )
 
     return Config.unmarshal(

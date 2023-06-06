@@ -18,18 +18,17 @@
 
 import pathlib
 import logging
-from typing import Any
+from typing import Any, Dict
 
 import yaml
 from craft_cli import emit, CraftError
 
-from charmcraft.const import METADATA_FILENAME
-from charmcraft.models.metadata import CharmMetadata
+from charmcraft.const import METADATA_FILENAME, CHARM_METADATA_KEYS
 
 logger = logging.getLogger(__name__)
 
 
-def read_metadata_yaml(charm_dir: pathlib.Path) -> Any:
+def read_metadata_yaml(charm_dir: pathlib.Path) -> Dict[str, Any]:
     """Parse project's metadata.yaml.
 
     :returns: the YAML decoded metadata.yaml content
@@ -40,10 +39,10 @@ def read_metadata_yaml(charm_dir: pathlib.Path) -> Any:
         return yaml.safe_load(fh)
 
 
-def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
+def parse_metadata_yaml(charm_dir: pathlib.Path) -> Dict[str, Any]:
     """Parse project's metadata.yaml.
 
-    :returns: a CharmMetadata object.
+    :returns: a metadata dict.
 
     :raises: CraftError if metadata does not exist.
     """
@@ -51,6 +50,32 @@ def parse_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadata:
         metadata = read_metadata_yaml(charm_dir)
     except OSError as exc:
         raise CraftError(f"Cannot read the metadata.yaml file: {exc!r}") from exc
+    if not isinstance(metadata, dict):
+        raise CraftError(f"The {charm_dir / METADATA_FILENAME} file is not valid YAML.")
 
-    emit.debug("Validating metadata format")
-    return CharmMetadata.unmarshal(metadata)
+    emit.debug("Validating metadata keys")
+    for metadata_key in metadata:
+        if metadata_key not in CHARM_METADATA_KEYS:
+            raise CraftError(f"Unknown metadata key {metadata_key!r}")
+
+    return metadata
+
+
+def create_metadata(
+    charm_dir: pathlib.Path,
+    config: Dict[str, Any],
+) -> pathlib.Path:
+    """Create metadata.yaml in charm_dir for given project configuration.
+
+    Use CHARM_METADATA_KEYS to filter config.
+
+    :param charm_dir: Directory to create Charm in.
+    :param config: Charm config dictionary.
+
+    :returns: Path to created metadata.yaml.
+    """
+    metadata = {k: v for k, v in dict(config).items() if k in CHARM_METADATA_KEYS}
+
+    filepath = charm_dir / "metadata.yaml"
+    filepath.write_text(yaml.dump(metadata))
+    return filepath

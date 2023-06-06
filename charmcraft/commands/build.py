@@ -32,9 +32,9 @@ import charmcraft.linters
 import charmcraft.parts
 import charmcraft.providers
 import charmcraft.instrum
-from charmcraft.metafiles.metadata import parse_metadata_yaml
 from charmcraft.metafiles.actions import create_actions
 from charmcraft.metafiles.manifest import create_manifest
+from charmcraft.metafiles.metadata import create_metadata
 from charmcraft.const import BUILD_DIRNAME, CHARM_FILES, CHARM_OPTIONAL, VENV_DIRNAME
 from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.models.config import Base, BasesConfiguration
@@ -87,7 +87,6 @@ class Builder:
         self.charmdir = config.project.dirpath
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.config = config
-        self.metadata = parse_metadata_yaml(self.charmdir)
         self._parts = self.config.parts.copy()
 
         # a part named "charm" using plugin "charm" is special and has
@@ -164,17 +163,19 @@ class Builder:
             self._parts,
             work_dir=work_dir,
             project_dir=self.charmdir,
-            project_name=self.metadata.name,
+            project_name=self.config.name,
             ignore_local_sources=["*.charm"],
         )
         with charmcraft.instrum.Timer("Lifecycle run"):
             lifecycle.run(Step.PRIME)
 
+        create_actions(lifecycle.prime_dir, self.config.actions)
+        create_metadata(lifecycle.prime_dir, self.config)
+
         # run linters and show the results
         linting_results = charmcraft.linters.analyze(self.config, lifecycle.prime_dir)
         self.show_linting_results(linting_results)
 
-        create_actions(lifecycle.prime_dir, self.config.actions)
         create_manifest(
             lifecycle.prime_dir,
             self.config.project.started_at,
@@ -289,7 +290,7 @@ class Builder:
         self, *, bases_index: int, build_on: Base, build_on_index: int
     ) -> str:
         """Pack instance in Charm."""
-        charm_name = format_charm_file_name(self.metadata.name, self.config.bases[bases_index])
+        charm_name = format_charm_file_name(self.config.name, self.config.bases[bases_index])
 
         # If building in project directory, use the project path as the working
         # directory. The output charms will be placed in the correct directory
@@ -332,7 +333,7 @@ class Builder:
         instance_name = charmcraft.providers.get_instance_name(
             bases_index=bases_index,
             build_on_index=build_on_index,
-            project_name=self.metadata.name,
+            project_name=self.config.name,
             project_path=self.charmdir,
             target_arch=get_host_architecture(),
         )
@@ -350,7 +351,7 @@ class Builder:
             allow_unstable = False
 
         with self.provider.launched_environment(
-            project_name=self.metadata.name,
+            project_name=self.config.name,
             project_path=self.charmdir,
             base_configuration=base_configuration,
             instance_name=instance_name,
@@ -394,7 +395,7 @@ class Builder:
     def handle_package(self, prime_dir, bases_config: BasesConfiguration):
         """Handle the final package creation."""
         emit.progress("Creating the package itself")
-        zipname = format_charm_file_name(self.metadata.name, bases_config)
+        zipname = format_charm_file_name(self.config.name, bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
         for dirpath, dirnames, filenames in os.walk(prime_dir, followlinks=True):
             dirpath = pathlib.Path(dirpath)

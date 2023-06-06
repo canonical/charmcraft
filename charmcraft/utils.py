@@ -25,6 +25,7 @@ import pathlib
 import platform
 import sys
 import zipfile
+from pathlib import Path
 from collections import namedtuple, defaultdict
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
@@ -138,7 +139,7 @@ def make_executable(fh):
     os.fchmod(fileno, mode)
 
 
-def load_yaml(fpath) -> Optional[Dict[str, Any]]:
+def load_yaml(fpath: Path) -> Optional[Dict[str, Any]]:
     """Return the content of a YAML file."""
     if not fpath.is_file():
         emit.debug(f"Couldn't find config file {str(fpath)!r}")

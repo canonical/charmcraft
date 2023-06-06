@@ -1151,15 +1151,11 @@ def test_build_package_tree_structure(tmp_path, config):
 
 
 def test_build_package_name(tmp_path, config):
-    """The zip file name comes from the metadata."""
+    """The zip file name comes from the config."""
     to_be_zipped_dir = tmp_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
-    # the metadata
-    metadata_data = {"name": "name-from-metadata"}
-    metadata_file = tmp_path / "metadata.yaml"
-    with metadata_file.open("wt", encoding="ascii") as fh:
-        yaml.dump(metadata_data, fh)
+    config.name = "name-from-config"
 
     # zip it
     bases_config = BasesConfiguration(
@@ -1171,7 +1167,7 @@ def test_build_package_name(tmp_path, config):
     builder = get_builder(config)
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
-    assert zipname == "name-from-metadata_xname-xchannel-xarch1.charm"
+    assert zipname == "name-from-config_xname-xchannel-xarch1.charm"
 
 
 def test_build_postlifecycle_validation_is_properly_called(basic_project, monkeypatch):
@@ -1255,9 +1251,9 @@ def test_build_part_from_config(basic_project, monkeypatch):
                         "prime": [
                             "src",
                             "venv",
-                            "metadata.yaml",
                             "dispatch",
                             "hooks",
+                            "metadata.yaml",
                             "lib",
                             "LICENSE",
                             "icon.svg",
@@ -1330,9 +1326,9 @@ def test_build_part_include_venv_pydeps(basic_project, monkeypatch):
                         "prime": [
                             "src",
                             "venv",
-                            "metadata.yaml",
                             "dispatch",
                             "hooks",
+                            "metadata.yaml",
                             "lib",
                             "LICENSE",
                             "icon.svg",

@@ -28,6 +28,7 @@ from charmcraft import linters
 from charmcraft.models.config import Base, BasesConfiguration, CharmhubConfig
 from charmcraft.config import load
 from charmcraft.utils import get_host_architecture
+from charmcraft.const import METADATA_FILENAME
 
 
 # -- tests for the config loading
@@ -109,6 +110,69 @@ def test_load_specific_directory_expanded(create_config, monkeypatch):
     assert config.project.dirpath == tmp_path
 
 
+def test_load_metadata_keys_exists_both(create_config):
+    """Cannot define metadata keys in both charmcraft.yaml and metadata.yaml."""
+    tmp_path = create_config(
+        dedent(
+            """
+            name: test-charm-name
+            type: charm
+            """
+        ),
+        metadata=dedent(
+            """
+            name: test-charm-name
+            summary: test-summary
+            description: test-description
+            """
+        ),
+    )
+    with pytest.raises(
+        CraftError, match="Cannot specify 'name' in charmcraft.yaml when 'metadata.yaml' exists"
+    ):
+        load(tmp_path)
+
+
+def test_load_invaild_metadata_keys_from_metadata_yaml(create_config):
+    """Check metadata.yaml file when load config."""
+    tmp_path = create_config(
+        dedent(
+            """
+            type: charm
+            """
+        ),
+        metadata=dedent(
+            """
+            name1: test-charm-name
+            summary: test-summary
+            description: test-description
+            """
+        ),
+    )
+    with pytest.raises(CraftError, match="Unknown metadata key 'name1'"):
+        load(tmp_path)
+
+
+def test_load_invaild_metadata_from_metadata_yaml(create_config):
+    """Check metadata.yaml file when load config."""
+    tmp_path = create_config(
+        dedent(
+            """
+            type: charm
+            """
+        ),
+        metadata=dedent(
+            """
+            name test-charm-name
+            """
+        ),
+    )
+    with pytest.raises(
+        CraftError, match=f"The { tmp_path / METADATA_FILENAME } file is not valid YAML."
+    ):
+        load(tmp_path)
+
+
 # -- tests for schema restrictions
 
 
@@ -131,6 +195,7 @@ def test_schema_top_level_no_extra_properties(create_config, check_schema_error)
     create_config(
         dedent(
             """\
+            name: test-charm-name
             type: bundle
             whatever: new-stuff
             """
@@ -150,6 +215,7 @@ def test_schema_type_missing(create_config, check_schema_error):
     create_config(
         dedent(
             """\
+            name: test-charm-name
             charmhub:
               api-url: https://www.canonical.com
             bases:
@@ -176,6 +242,7 @@ def test_schema_type_bad_type(create_config, check_schema_error):
     create_config(
         dedent(
             """\
+            name: test-charm-name
             type: 33
             """
         )
@@ -194,6 +261,7 @@ def test_schema_type_limited_values(create_config, check_schema_error):
     create_config(
         dedent(
             """\
+            name: test-charm-name
             type: whatever
             """
         )
@@ -212,6 +280,7 @@ def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
     create_config(
         dedent(
             """\
+            name: test-charm-name
             type: bundle  # mandatory
             charmhub:
               api-url: 33
@@ -232,6 +301,7 @@ def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             charmhub:
                 api-url: stuff.com
@@ -252,6 +322,7 @@ def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error)
     create_config(
         dedent(
             """\
+            name: test-charm-name
             type: bundle  # mandatory
             charmhub:
               storage-url: 33
@@ -272,6 +343,7 @@ def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_erro
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             charmhub:
               storage-url: stuff.com
@@ -292,6 +364,7 @@ def test_schema_charmhub_registry_url_bad_type(create_config, check_schema_error
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             charmhub:
                 registry-url: 33
@@ -312,6 +385,7 @@ def test_schema_charmhub_registry_url_bad_format(create_config, check_schema_err
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             charmhub:
               registry-url: stuff.com
@@ -332,6 +406,7 @@ def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle
             charmhub:
               storage-url: https://some.server.com
@@ -353,6 +428,7 @@ def test_schema_basicprime_bad_init_structure(create_config, check_schema_error)
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             parts: ['foo', 'bar']
             """
@@ -373,6 +449,7 @@ def test_schema_basicprime_bad_bundle_structure(create_config, check_schema_erro
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             parts:
               charm: ['foo', 'bar']
@@ -393,6 +470,7 @@ def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             parts:
               charm:
@@ -414,6 +492,7 @@ def test_schema_basicprime_bad_prime_type(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             parts:
               charm:
@@ -435,6 +514,7 @@ def test_schema_basicprime_bad_prime_type_empty(create_config, check_schema_erro
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             parts:
               charm:
@@ -456,6 +536,7 @@ def test_schema_basicprime_bad_content_format(create_config, check_schema_error)
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             parts:
               charm:
@@ -477,6 +558,7 @@ def test_schema_additional_part(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             parts:
               other-part: 1
@@ -497,6 +579,7 @@ def test_schema_other_charm_part_no_source(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm  # mandatory
             bases:  # mandatory
             - build-on:
@@ -526,6 +609,7 @@ def test_schema_other_bundle_part_no_source(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             parts:
               other-part:
@@ -552,6 +636,7 @@ def test_schema_doublelayer_no_parts_type_charm(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: somebase
@@ -577,6 +662,7 @@ def test_schema_doublelayer_no_parts_type_bundle(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle
             """
         )
@@ -595,6 +681,7 @@ def test_schema_doublelayer_parts_no_charm(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: somebase
@@ -622,6 +709,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_missing(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: somebase
@@ -651,6 +739,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_charm(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: somebase
@@ -679,6 +768,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_different(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: somebase
@@ -706,6 +796,7 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(create_config
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: somebase
@@ -734,6 +825,7 @@ def test_schema_doublelayer_parts_with_charm_validating_props(create_config, che
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: somebase
@@ -768,6 +860,7 @@ def test_charmhub_underscore_in_names(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             charmhub:
               storage_url: https://server1.com
@@ -791,6 +884,7 @@ def test_no_bases_is_ok_for_bundles(emitter, create_config, tmp_path):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle
             """
         )
@@ -805,6 +899,7 @@ def test_bases_forbidden_for_bundles(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle
             bases:
               - build-on:
@@ -827,6 +922,7 @@ def test_bases_minimal_long_form(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - build-on:
@@ -866,6 +962,7 @@ def test_bases_extra_field_error(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - build-on:
@@ -892,6 +989,7 @@ def test_bases_underscores_error(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - build_on:
@@ -920,6 +1018,7 @@ def test_channel_is_yaml_number(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - build-on:
@@ -945,6 +1044,7 @@ def test_minimal_long_form_bases(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - build-on:
@@ -984,6 +1084,7 @@ def test_complex_long_form_bases(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - build-on:
@@ -1055,6 +1156,7 @@ def test_multiple_long_form_bases(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - build-on:
@@ -1120,6 +1222,7 @@ def test_bases_minimal_short_form(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: test-name
@@ -1155,6 +1258,7 @@ def test_bases_short_form_extra_field_error(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: test-name
@@ -1177,6 +1281,7 @@ def test_bases_short_form_missing_field_error(create_config, check_schema_error)
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: test-name
@@ -1198,6 +1303,7 @@ def test_bases_mixed_form_errors(create_config, check_schema_error):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: test-name
@@ -1242,6 +1348,7 @@ def test_schema_analysis_missing(create_config, tmp_path):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             """
         )
@@ -1256,6 +1363,7 @@ def test_schema_analysis_full_struct_just_empty(create_config, tmp_path):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             analysis:
               ignore:
@@ -1276,6 +1384,7 @@ def test_schema_analysis_ignore_attributes(create_config, tmp_path, create_check
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             analysis:
               ignore:
@@ -1295,6 +1404,7 @@ def test_schema_analysis_ignore_linters(create_config, tmp_path, create_checker)
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             analysis:
               ignore:
@@ -1316,6 +1426,7 @@ def test_schema_analysis_ignore_attribute_missing(
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             analysis:
               ignore:
@@ -1340,6 +1451,7 @@ def test_schema_analysis_ignore_linter_missing(
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: bundle  # mandatory
             analysis:
               ignore:
@@ -1362,6 +1474,7 @@ def test_actions_defined_in_charmcraft_yaml(create_config, tmp_path):
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: test-name
@@ -1436,6 +1549,7 @@ def test_actions_badly_defined_in_charmcraft_yaml(create_config, tmp_path, bad_n
     create_config(
         dedent(
             f"""
+            name: test-charm-name
             type: charm
             bases:
               - name: test-name
@@ -1462,6 +1576,7 @@ def test_actions_defined_in_charmcraft_yaml_and_actions_yaml(
     create_config(
         dedent(
             """
+            name: test-charm-name
             type: charm
             bases:
               - name: test-name

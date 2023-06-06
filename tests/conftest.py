@@ -34,6 +34,7 @@ from charmcraft import config as config_module, instrum
 from charmcraft import deprecations, parts
 from charmcraft.bases import get_host_as_base
 from charmcraft.models.config import Base, BasesConfiguration
+from charmcraft.const import METADATA_FILENAME
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -71,7 +72,8 @@ def config(tmp_path):
     )
 
     base = BasesConfiguration(**{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]})
-    return TestConfig(type="charm", bases=[base], project=project)
+
+    return TestConfig(type="charm", bases=[base], project=project, name="name-from-config")
 
 
 @pytest.fixture
@@ -98,7 +100,7 @@ def bundle_config(tmp_path):
         config_provided=True,
     )
 
-    return TestConfig(type="bundle", project=project)
+    return TestConfig(type="bundle", project=project, name="name-from-config")
 
 
 @pytest.fixture(autouse=True)
@@ -191,10 +193,11 @@ def create_config(tmp_path: pathlib.Path):
     If content is not given, create a minimum valid file.
     """
 
-    def create_config(text=None):
+    def create_config(text=None, metadata=None):
         if text is None:
             text = dedent(
                 """\
+                name: test-charm-name
                 type: charm
                 bases:
                   - build-on:
@@ -208,6 +211,10 @@ def create_config(tmp_path: pathlib.Path):
 
         test_file = tmp_path / "charmcraft.yaml"
         test_file.write_text(text)
+
+        if metadata is not None:
+            metadata_file = tmp_path / METADATA_FILENAME
+            metadata_file.write_text(metadata)
         return tmp_path
 
     return create_config

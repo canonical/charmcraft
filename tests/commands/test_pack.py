@@ -394,7 +394,7 @@ def test_bundle_parts_not_defined(tmp_path, monkeypatch, bundle_yaml):
     (tmp_path / "README.md").write_text("test readme")
 
     charmcraft_file = tmp_path / "charmcraft.yaml"
-    charmcraft_file.write_text("type: bundle")
+    charmcraft_file.write_text("name: test-bundle\ntype: bundle")
 
     config = load(tmp_path)
 
@@ -440,6 +440,7 @@ def test_bundle_parts_with_bundle_part(tmp_path, monkeypatch, bundle_yaml):
     charmcraft_file.write_text(
         dedent(
             """
+            name: test-bundle
             type: bundle
             parts:
               bundle:
@@ -493,6 +494,7 @@ def test_bundle_parts_without_bundle_part(tmp_path, monkeypatch, bundle_yaml):
     charmcraft_file.write_text(
         dedent(
             """
+            name: test-bundle
             type: bundle
             parts:
               foo:
@@ -540,6 +542,7 @@ def test_bundle_parts_with_bundle_part_with_plugin(tmp_path, monkeypatch, bundle
     charmcraft_file.write_text(
         dedent(
             """
+            name: test-bundle
             type: bundle
             parts:
               bundle:

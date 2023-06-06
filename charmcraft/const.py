@@ -45,13 +45,13 @@ HOOKS_DIRNAME = "hooks"
 
 # The minimum set of files for a charm to be considered valid
 CHARM_FILES = [
-    METADATA_FILENAME,
     DISPATCH_FILENAME,
     HOOKS_DIRNAME,
 ]
 
 # Optional files that can be present in a charm
 CHARM_OPTIONAL = [
+    METADATA_FILENAME,
     "config.yaml",
     "metrics.yaml",
     "actions.yaml",
@@ -65,3 +65,26 @@ CHARM_OPTIONAL = [
     "README.md",
     "actions",
 ]
+
+CHARM_METADATA_KEYS = {
+    "assumes",
+    "containers",
+    "description",
+    "devices",
+    "display-name",
+    "docs",
+    "extra-bindings",
+    "issues",
+    "maintainers",
+    "name",
+    "peers",
+    "provides",
+    "requires",
+    "resources",
+    "series",
+    "storage",
+    "subordinate",
+    "summary",
+    "terms",
+    "website",
+}

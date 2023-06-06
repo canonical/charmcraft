@@ -29,6 +29,8 @@ from craft_cli import CraftError
 from charmcraft.parts import process_part_config
 from charmcraft.utils import get_host_architecture
 from charmcraft.format import format_pydantic_errors
+from charmcraft.const import METADATA_FILENAME, CHARM_METADATA_KEYS
+from charmcraft.metafiles.metadata import parse_metadata_yaml
 
 
 class ModelConfigDefaults(
@@ -164,6 +166,9 @@ class Config(ModelConfigDefaults, validate_all=False):
     project: Project
 
     type: str
+    name: pydantic.StrictStr
+    summary: Optional[pydantic.StrictStr]
+    description: Optional[pydantic.StrictStr]
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Optional[Dict[str, Any]]
     bases: Optional[List[BasesConfiguration]]
@@ -239,6 +244,9 @@ class Config(ModelConfigDefaults, validate_all=False):
         if actions is None:
             return None
 
+        if values.get("type") == "bundle":
+            return None
+
         actions_yaml_file_path = values["project"].dirpath / "actions.yaml"
         if os.path.isfile(actions_yaml_file_path):
             raise ValueError(
@@ -299,6 +307,19 @@ class Config(ModelConfigDefaults, validate_all=False):
             # is not a valid list, parse_obj() will properly handle the error.
             if isinstance(obj.get("bases"), list):
                 cls.expand_short_form_bases(obj["bases"])
+
+            # If metadata.yaml exists, try merge it into config.
+            if os.path.isfile(project.dirpath / METADATA_FILENAME):
+                # metadata.yaml exists, so we can't specify metadata keys in charmcraft.yaml.
+                for key in CHARM_METADATA_KEYS:
+                    if key in obj:
+                        raise CraftError(
+                            f"Cannot specify '{key}' in charmcraft.yaml when "
+                            f"'{METADATA_FILENAME}' exists"
+                        )
+
+                metadata: Dict[str, Any] = parse_metadata_yaml(project.dirpath)
+                obj.update(metadata)
 
             return cls.parse_obj({"project": project, **obj})
         except pydantic.error_wrappers.ValidationError as error:

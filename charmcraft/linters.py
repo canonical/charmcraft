@@ -195,7 +195,7 @@ class Framework:
         if not any(f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()):
             return False
 
-        module_basename = metadata.name.replace("-", "_")
+        module_basename = metadata["name"].replace("-", "_")
         entrypoint = basedir / "reactive" / f"{module_basename}.py"
         for import_parts in self._get_imports(entrypoint):
             if import_parts[0] == "charms" and import_parts[1] == "reactive":

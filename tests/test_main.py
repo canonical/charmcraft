@@ -44,6 +44,7 @@ def base_config_present(create_config, monkeypatch):
     tmp_path = create_config(
         dedent(
             """
+            name: test
             type: charm
             bases:
               - name: ubuntu
@@ -127,6 +128,7 @@ def test_main_load_config_ok(create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test
             type: bundle
             """
         )
@@ -193,6 +195,7 @@ def test_main_load_config_bases_not_present_but_not_needed(capsys, create_config
     tmp_path = create_config(
         dedent(
             """
+            name: test
             type: charm
             """
         )
@@ -218,6 +221,7 @@ def test_main_load_config_bases_not_present_but_needed(capsys, create_config):
     tmp_path = create_config(
         dedent(
             """
+            name: test
             type: charm
             """
         )

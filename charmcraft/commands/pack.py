@@ -33,6 +33,7 @@ from charmcraft.commands import build
 from charmcraft.errors import DuplicateCharmsError
 from charmcraft.metafiles.actions import create_actions
 from charmcraft.metafiles.manifest import create_manifest
+from charmcraft.metafiles.metadata import create_metadata
 from charmcraft.parts import Step
 from charmcraft.utils import (
     load_yaml,
@@ -310,7 +311,9 @@ class PackCommand(BaseCommand):
             raise
 
         # pack everything
-        create_actions(lifecycle.prime_dir, self.config.actions)
+        if self.config.type == "charm":
+            create_actions(lifecycle.prime_dir, self.config.actions)
+            create_metadata(lifecycle.prime_dir, self.config)
         create_manifest(lifecycle.prime_dir, project.started_at, None, [])
         zipname = project.dirpath / (bundle_name + ".zip")
         if overwrite_bundle:

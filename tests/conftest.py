@@ -22,6 +22,7 @@ import pathlib
 import tempfile
 import types
 from unittest.mock import Mock
+from textwrap import dedent
 
 import pytest
 import responses as responses_module
@@ -184,7 +185,7 @@ def fake_provider(mock_instance):
 
 
 @pytest.fixture
-def create_config(tmp_path):
+def create_config(tmp_path: pathlib.Path):
     """Helper to create a config file in disk.
 
     If content is not given, create a minimum valid file.
@@ -192,7 +193,8 @@ def create_config(tmp_path):
 
     def create_config(text=None):
         if text is None:
-            text = """
+            text = dedent(
+                """\
                 type: charm
                 bases:
                   - build-on:
@@ -201,7 +203,9 @@ def create_config(tmp_path):
                     run-on:
                     - name: test-build-name
                       channel: test-build-channel
-            """
+                """
+            )
+
         test_file = tmp_path / "charmcraft.yaml"
         test_file.write_text(text)
         return tmp_path

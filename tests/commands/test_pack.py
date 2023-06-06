@@ -445,7 +445,7 @@ def test_bundle_parts_with_bundle_part(tmp_path, monkeypatch, bundle_yaml):
               bundle:
                 prime:
                   - my_extra_file.txt
-        """
+            """
         )
     )
 
@@ -497,7 +497,7 @@ def test_bundle_parts_without_bundle_part(tmp_path, monkeypatch, bundle_yaml):
             parts:
               foo:
                 plugin: nil
-        """
+            """
         )
     )
 
@@ -544,7 +544,7 @@ def test_bundle_parts_with_bundle_part_with_plugin(tmp_path, monkeypatch, bundle
             parts:
               bundle:
                 plugin: nil
-        """
+            """
         )
     )
 

@@ -19,7 +19,7 @@ import ast
 import os
 import subprocess
 import sys
-import textwrap
+from textwrap import dedent
 from argparse import ArgumentParser
 from unittest.mock import patch
 
@@ -42,12 +42,14 @@ from charmcraft.main import COMMAND_GROUPS, main, _get_system_details
 @pytest.fixture
 def base_config_present(create_config, monkeypatch):
     tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - name: ubuntu
-            channel: "20.04"
-    """
+        dedent(
+            """
+            type: charm
+            bases:
+              - name: ubuntu
+                channel: "20.04"
+            """
+        )
     )
     monkeypatch.chdir(tmp_path)
 
@@ -123,9 +125,11 @@ def test_main_managed_instance_error(monkeypatch, side_effect, config):
 def test_main_load_config_ok(create_config):
     """Command is properly executed, after loading and receiving the config."""
     tmp_path = create_config(
-        """
-        type: bundle
-    """
+        dedent(
+            """
+            type: bundle
+            """
+        )
     )
 
     class MyCommand(BaseCommand):
@@ -187,9 +191,11 @@ def test_main_load_config_bases_not_present_but_not_needed(capsys, create_config
     """Config bases is not present and the command does not need it."""
 
     tmp_path = create_config(
-        """
-        type: charm
-    """
+        dedent(
+            """
+            type: charm
+            """
+        )
     )
 
     class MyCommand(BaseCommand):
@@ -210,9 +216,11 @@ def test_main_load_config_bases_not_present_but_needed(capsys, create_config):
     """Config bases is not present and the command needs it."""
 
     tmp_path = create_config(
-        """
-        type: charm
-    """
+        dedent(
+            """
+            type: charm
+            """
+        )
     )
 
     class MyCommand(BaseCommand):
@@ -541,7 +549,7 @@ def test_basecommand_format_content_json(config):
     data = ["foo", "bar"]
     cmd = MySimpleCommand(config)
     result = cmd.format_content(JSON_FORMAT, data)
-    assert result == textwrap.dedent(
+    assert result == dedent(
         """\
         [
             "foo",

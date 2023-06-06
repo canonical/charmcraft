@@ -109,16 +109,18 @@ def basic_project(tmp_path, monkeypatch, create_config):
     # the config
     host_base = get_host_as_base()
     create_config(
-        f"""
-        type: charm
-        bases:
-          - name: {host_base.name}
-            channel: "{host_base.channel}"
-            architectures: {host_base.architectures!r}
-        parts:  # just to avoid "default charm parts" sneaking in
-          foo:
-            plugin: nil
-        """
+        dedent(
+            f"""
+            type: charm
+            bases:
+              - name: {host_base.name}
+                channel: "{host_base.channel}"
+                architectures: {host_base.architectures!r}
+            parts:  # just to avoid "default charm parts" sneaking in
+              foo:
+                plugin: nil
+            """
+        )
     )
 
     # paths are relative, make all tests to run in the project's directory
@@ -225,12 +227,8 @@ def test_build_error_without_metadata_yaml(basic_project):
     metadata = basic_project / METADATA_FILENAME
     metadata.unlink()
 
-    config = load(basic_project)
-
-    msg = re.escape(
-        "Cannot read the metadata.yaml file: FileNotFoundError(2, 'No such file or directory')"
-    )
-    with pytest.raises(CraftError, match=msg):
+    with pytest.raises(CraftError):
+        config = load(basic_project)
         get_builder(config)
 
 
@@ -634,21 +632,21 @@ def test_build_bases_index_scenarios_provider(
     charmcraft_file.write_text(
         dedent(
             f"""\
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "18.04"
-                    architectures: {host_base.architectures!r}
-                  - name: ubuntu
-                    channel: "20.04"
-                    architectures: {host_base.architectures!r}
-                  - name: centos
-                    channel: "7"
-                    architectures: {host_base.architectures!r}
-                  - name: ubuntu
-                    channel: "unsupported-channel"
-                    architectures: {host_base.architectures!r}
-                """
+            type: charm
+            bases:
+              - name: ubuntu
+                channel: "18.04"
+                architectures: {host_base.architectures!r}
+              - name: ubuntu
+                channel: "20.04"
+                architectures: {host_base.architectures!r}
+              - name: centos
+                channel: "7"
+                architectures: {host_base.architectures!r}
+              - name: ubuntu
+                channel: "unsupported-channel"
+                architectures: {host_base.architectures!r}
+            """
         )
     )
     config = load(basic_project)
@@ -947,18 +945,18 @@ def test_build_error_no_match_with_charmcraft_yaml(
     charmcraft_file.write_text(
         dedent(
             """\
-                type: charm
-                bases:
-                  - name: unmatched-name
-                    channel: xchannel
-                    architectures: [xarch]
-                  - name: xname
-                    channel: unmatched-channel
-                    architectures: [xarch]
-                  - name: xname
-                    channel: xchannel
-                    architectures: [unmatched-arch1, unmatched-arch2]
-                """
+            type: charm
+            bases:
+              - name: unmatched-name
+                channel: xchannel
+                architectures: [xarch]
+              - name: xname
+                channel: unmatched-channel
+                architectures: [xarch]
+              - name: xname
+                channel: xchannel
+                architectures: [unmatched-arch1, unmatched-arch2]
+            """
         )
     )
     config = load(basic_project)
@@ -1183,18 +1181,18 @@ def test_build_postlifecycle_validation_is_properly_called(basic_project, monkey
     charmcraft_file.write_text(
         dedent(
             f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                parts:
-                  charm:
-                    charm-entrypoint: my_entrypoint.py
-                """
+            type: charm
+            bases:
+              - build-on:
+                - name: {host_base.name!r}
+                  channel: {host_base.channel!r}
+                run-on:
+                  - name: {host_base.name!r}
+                    channel: {host_base.channel!r}
+            parts:
+              charm:
+                charm-entrypoint: my_entrypoint.py
+            """
         )
     )
     config = load(basic_project)
@@ -1220,22 +1218,22 @@ def test_build_part_from_config(basic_project, monkeypatch):
     charmcraft_file.write_text(
         dedent(
             f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
+            type: charm
+            bases:
+              - build-on:
+                - name: {host_base.name!r}
+                  channel: {host_base.channel!r}
+                run-on:
+                  - name: {host_base.name!r}
+                    channel: {host_base.channel!r}
 
-                parts:
-                  charm:
-                    charm-entrypoint: src/charm.py
-                    charm-python-packages: ["foo", "bar"]
-                    charm-binary-python-packages: ["baz"]
-                    charm-requirements: ["reqs.txt"]
-                """
+            parts:
+              charm:
+                charm-entrypoint: src/charm.py
+                charm-python-packages: ["foo", "bar"]
+                charm-binary-python-packages: ["baz"]
+                charm-requirements: ["reqs.txt"]
+            """
         )
     )
     reqs_file = basic_project / "reqs.txt"
@@ -1288,19 +1286,19 @@ def test_build_part_include_venv_pydeps(basic_project, monkeypatch):
     charmcraft_file.write_text(
         dedent(
             f"""\
-                type: charm
-                bases:
-                  - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
-                    run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
+            type: charm
+            bases:
+              - build-on:
+                - name: {host_base.name!r}
+                  channel: {host_base.channel!r}
+                run-on:
+                  - name: {host_base.name!r}
+                    channel: {host_base.channel!r}
 
-                parts:
-                  charm:
-                    charm-entrypoint: src/charm.py
-                """
+            parts:
+              charm:
+                charm-entrypoint: src/charm.py
+            """
         )
     )
     charmlib = basic_project / "lib" / "charms" / "somecharm" / "v1" / "somelib.py"

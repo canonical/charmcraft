@@ -111,8 +111,8 @@ def test_load_yaml_corrupted_format(tmp_path, emitter):
     test_file = tmp_path / "testfile.yaml"
     test_file.write_text(
         """
-        foo: [1, 2
-    """
+foo: [1, 2
+"""
     )
     content = load_yaml(test_file)
     assert content is None

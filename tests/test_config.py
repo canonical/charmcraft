@@ -216,6 +216,35 @@ def test_load_specific_directory_expanded(
     assert config.project.dirpath == tmp_path
 
 
+def test_load_metadata_keys_exists_both(tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml):
+    """Cannot define metadata keys in both charmcraft.yaml and metadata.yaml."""
+    prepare_charmcraft_yaml(
+        dedent(
+            """\
+            name: test-charm-name
+            type: charm
+            """
+        )
+    )
+    prepare_metadata_yaml(
+        dedent(
+            """\
+            name: test-charm-name
+            summary: test-summary
+            description: test-description
+            """
+        )
+    )
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    
+    assert str(cm.value) == dedent(
+        """\
+        Bad charmcraft.yaml content:
+        - Cannot specify 'name' in charmcraft.yaml when 'metadata.yaml' exists"""
+    )
+
 # -- tests for schema restrictions
 
 

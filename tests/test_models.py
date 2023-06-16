@@ -1,0 +1,775 @@
+# Copyright 2023 Canonical Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# For further info, check https://github.com/canonical/charmcraft
+
+from textwrap import dedent
+
+import pytest
+from craft_cli import CraftError
+from pydantic import AnyHttpUrl
+from pydantic.tools import parse_obj_as
+
+from charmcraft.models.charmcraft import (
+    Base,
+    BasesConfiguration,
+    Links,
+)
+from charmcraft.config import load
+from charmcraft.utils import get_host_architecture
+from charmcraft.metafiles.metadata import parse_charm_metadata_yaml
+
+
+def test_load_minimal_metadata_from_charmcraft_yaml(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with full metadata. (Spec ST087)"""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                name: test-charm-name
+                type: charm
+                summary: test-summary
+                description: test-description
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": None,
+        }
+    )
+
+    config = load(tmp_path)
+
+    assert config.name == "test-charm-name"
+    assert config.type == "charm"
+    assert config.summary == "test-summary"
+    assert config.description == "test-description"
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[get_host_architecture()],
+                    )
+                ],
+                "run-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[get_host_architecture()],
+                    )
+                ],
+            }
+        )
+    ]
+    assert not config.metadata_legacy
+
+
+def test_load_minimal_metadata_from_charmcraft_yaml_missing_name(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with metadata. But missing name."""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                type: charm
+                summary: test-summary
+                description: test-description
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+        }
+    )
+
+    with pytest.raises(CraftError, match="needs value in field 'name'"):
+        load(tmp_path)
+
+
+def test_load_minimal_metadata_from_charmcraft_yaml_missing_type(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with metadata. But missing type."""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                name: test-charm-name
+                summary: test-summary
+                description: test-description
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": None,
+        }
+    )
+
+    with pytest.raises(CraftError, match="field 'type' required in top-level configuration"):
+        load(tmp_path)
+
+
+def test_load_minimal_metadata_from_charmcraft_yaml_missing_summary(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with metadata. But missing summary."""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                name: test-charm-name
+                type: charm
+                description: test-description
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+        }
+    )
+
+    with pytest.raises(CraftError, match="needs value in field 'summary'"):
+        load(tmp_path)
+
+
+def test_load_minimal_metadata_from_charmcraft_yaml_missing_description(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with metadata. But missing description."""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                name: test-charm-name
+                type: charm
+                summary: test-summary
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": None,
+        }
+    )
+
+    with pytest.raises(CraftError, match="needs value in field 'description'"):
+        load(tmp_path)
+
+
+def test_load_minimal_metadata_from_metadata_yaml(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with full metadata. (Spec ST087)"""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                type: charm
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": dedent(
+                """
+                name: test-charm-name
+                summary: test-summary
+                description: test-description
+                """
+            ),
+        }
+    )
+
+    config = load(tmp_path)
+
+    assert config.name == "test-charm-name"
+    assert config.type == "charm"
+    assert config.summary == "test-summary"
+    assert config.description == "test-description"
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[get_host_architecture()],
+                    )
+                ],
+                "run-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[get_host_architecture()],
+                    )
+                ],
+            }
+        )
+    ]
+    assert config.metadata_legacy
+
+
+def test_load_minimal_metadata_from_metadata_yaml_missing_name(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with metadata.yaml. But missing name."""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                type: charm
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": dedent(
+                """
+                summary: test-summary
+                description: test-description
+                """
+            ),
+        }
+    )
+
+    with pytest.raises(CraftError, match="field 'name' required in top-level configuration"):
+        load(tmp_path)
+
+
+def test_load_minimal_metadata_from_metadata_yaml_missing_type(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with metadata.yaml. But missing type."""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": dedent(
+                """
+                name: test-charm-name
+                summary: test-summary
+                description: test-description
+                """
+            ),
+        }
+    )
+
+    with pytest.raises(CraftError, match="field 'type' required in top-level configuration"):
+        load(tmp_path)
+
+
+def test_load_minimal_metadata_from_metadata_yaml_missing_summary(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with metadata.yaml. But missing summary."""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                type: charm
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": dedent(
+                """
+                name: test-charm-name
+                description: test-description
+                """
+            ),
+        }
+    )
+
+    with pytest.raises(CraftError, match="field 'summary' required in top-level configuration"):
+        load(tmp_path)
+
+
+def test_load_minimal_metadata_from_metadata_yaml_missing_description(create_config, tmp_path):
+    """Load a mimimal charmcraft.yaml with metadata.yaml. But missing description."""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                type: charm
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": dedent(
+                """
+                name: test-charm-name
+                summary: test-summary
+                """
+            ),
+        }
+    )
+
+    with pytest.raises(
+        CraftError, match="field 'description' required in top-level configuration"
+    ):
+        load(tmp_path)
+
+
+def test_load_full_metadata_from_charmcraft_yaml(create_config, tmp_path):
+    """Load a charmcraft.yaml with full metadata. (Spec ST087)"""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                name: test-charm-name
+                type: charm
+                summary: test-summary
+                description: test-description
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+
+                assumes:
+                  - test-feature
+                  - any-of:
+                      - extra-feature-1
+                      - extra-feature-2
+                  - all-of:
+                      - test-feature-1
+                      - test-feature-2
+
+                containers:
+                  container-1:
+                    resource: resource-1
+                    bases:
+                      - name: ubuntu
+                        channel: 22.04
+                        architectures:
+                          - x86_64
+                    mounts:
+                      - storage: storage-1
+                        location: /var/lib/storage-1
+                  container-2:
+                    resource: resource-2
+                    bases:
+                      - name: ubuntu
+                        channel: 22.04
+                        architectures:
+                          - x86_64
+                    mounts:
+                      - storage: storage-2
+                        location: /var/lib/storage-2
+
+                devices:
+                  test-device-1:
+                      type: gpu
+                      description: gpu
+                      countmin: 1
+                      countmax: 10
+
+                title: test-title
+
+                extra-bindings:
+                  test-binding-1: binding-1
+
+                links:
+                  issues: https://example.com/issues
+                  contact:
+                    - https://example.com/contact
+                    - contact@example.com
+                    - "IRC #example"
+                  documentation: https://example.com/docs
+                  source:
+                    - https://example.com/source
+                    - https://example.com/source2
+                    - https://example.com/source3
+                  website:
+                    - https://example.com/
+
+                peers:
+                  peer-1:
+                    interface: eth0
+                    limit: 1
+                    optional: true
+                    scope: global
+
+                provides:
+                  provide-1:
+                    interface: eht1
+                    limit: 1
+                    optional: true
+                    scope: global
+
+                requires:
+                  peer-1:
+                    interface: eth0
+                    limit: 1
+                    optional: true
+                    scope: global
+
+                resources:
+                    resource-1:
+                    type: file
+                    description: resource-1
+                    filename: /path/to/resource-1
+
+                storage:
+                  storage-1:
+                    type: filesystem
+                    description: storage-1
+                    location: /var/lib/storage-1
+                    shared: true
+                    read-only: false
+                    multiple: 5G
+                    minimum-size: 5G
+                    properties:
+                      - transient
+
+                subordinate: true
+
+                terms:
+                  - https://example.com/terms
+                  - https://example.com/terms2
+                """
+            ),
+            "metadata.yaml": None,
+        }
+    )
+
+    config = load(tmp_path)
+    config_dict = config.dict()
+
+    # remove unrelated keys. but they should exist in the config
+
+    del config_dict["actions"]
+    del config_dict["analysis"]
+    del config_dict["charmhub"]
+    del config_dict["config"]
+    del config_dict["project"]
+    del config_dict["parts"]
+
+    assert config_dict == {
+        "name": "test-charm-name",
+        "type": "charm",
+        "summary": "test-summary",
+        "description": "test-description",
+        "bases": [
+            BasesConfiguration(
+                **{
+                    "build-on": [
+                        Base(
+                            name="test-name",
+                            channel="test-channel",
+                            architectures=[get_host_architecture()],
+                        )
+                    ],
+                    "run-on": [
+                        Base(
+                            name="test-name",
+                            channel="test-channel",
+                            architectures=[get_host_architecture()],
+                        )
+                    ],
+                }
+            )
+        ],
+        "assumes": [
+            "test-feature",
+            {"any-of": ["extra-feature-1", "extra-feature-2"]},
+            {"all-of": ["test-feature-1", "test-feature-2"]},
+        ],
+        "containers": {
+            "container-1": {
+                "resource": "resource-1",
+                "bases": [{"name": "ubuntu", "channel": 22.04, "architectures": ["x86_64"]}],
+                "mounts": [{"storage": "storage-1", "location": "/var/lib/storage-1"}],
+            },
+            "container-2": {
+                "resource": "resource-2",
+                "bases": [{"name": "ubuntu", "channel": 22.04, "architectures": ["x86_64"]}],
+                "mounts": [{"storage": "storage-2", "location": "/var/lib/storage-2"}],
+            },
+        },
+        "devices": {
+            "test-device-1": {"type": "gpu", "description": "gpu", "countmin": 1, "countmax": 10}
+        },
+        "title": "test-title",
+        "peers": {
+            "peer-1": {"interface": "eth0", "limit": 1, "optional": True, "scope": "global"}
+        },
+        "provides": {
+            "provide-1": {"interface": "eht1", "limit": 1, "optional": True, "scope": "global"}
+        },
+        "requires": {
+            "peer-1": {"interface": "eth0", "limit": 1, "optional": True, "scope": "global"}
+        },
+        "resources": {
+            "resource-1": None,
+            "type": "file",
+            "description": "resource-1",
+            "filename": "/path/to/resource-1",
+        },
+        "storage": {
+            "storage-1": {
+                "type": "filesystem",
+                "description": "storage-1",
+                "location": "/var/lib/storage-1",
+                "shared": True,
+                "read-only": False,
+                "multiple": "5G",
+                "minimum-size": "5G",
+                "properties": ["transient"],
+            }
+        },
+        "subordinate": True,
+        "terms": ["https://example.com/terms", "https://example.com/terms2"],
+        "extra_bindings": {"test-binding-1": "binding-1"},
+        "links": Links(
+            contact=["https://example.com/contact", "contact@example.com", "IRC #example"],
+            documentation=parse_obj_as(AnyHttpUrl, "https://example.com/docs"),
+            issues=parse_obj_as(AnyHttpUrl, "https://example.com/issues"),
+            source=[
+                parse_obj_as(AnyHttpUrl, "https://example.com/source"),
+                parse_obj_as(AnyHttpUrl, "https://example.com/source2"),
+                parse_obj_as(AnyHttpUrl, "https://example.com/source3"),
+            ],
+            website=[parse_obj_as(AnyHttpUrl, "https://example.com/")],
+        ),
+        "metadata_legacy": False,
+    }
+
+
+def test_load_full_metadata_from_metadata_yaml(create_config, tmp_path):
+    """Load a charmcraft.yaml with full metadata.yaml. (Legacy)"""
+    create_config(
+        {
+            "charmcraft.yaml": dedent(
+                """
+                type: charm
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            "metadata.yaml": dedent(
+                """
+                name: test-charm-name
+                summary: test-summary
+                description: test-description
+                assumes:
+                  - test-feature
+                  - any-of:
+                      - extra-feature-1
+                      - extra-feature-2
+                  - all-of:
+                      - test-feature-1
+                      - test-feature-2
+
+                containers:
+                  container-1:
+                    resource: resource-1
+                    bases:
+                      - name: ubuntu
+                        channel: 22.04
+                        architectures:
+                          - x86_64
+                    mounts:
+                      - storage: storage-1
+                        location: /var/lib/storage-1
+                  container-2:
+                    resource: resource-2
+                    bases:
+                      - name: ubuntu
+                        channel: 22.04
+                        architectures:
+                          - x86_64
+                    mounts:
+                      - storage: storage-2
+                        location: /var/lib/storage-2
+
+                devices:
+                  test-device-1:
+                      type: gpu
+                      description: gpu
+                      countmin: 1
+                      countmax: 10
+
+                display-name: test-title
+
+                docs: https://example.com/docs
+
+                extra-bindings:
+                  test-binding-1:
+
+                issues: https://example.com/issues
+
+                maintainers:
+                  - https://example.com/contact
+                  - contact@example.com
+                  - "IRC #example"
+
+                peers:
+                  peer-1:
+                    interface: eth0
+                    limit: 1
+                    optional: true
+                    scope: global
+
+                provides:
+                  provide-1:
+                    interface: eht1
+                    limit: 1
+                    optional: true
+                    scope: global
+
+                requires:
+                  peer-1:
+                    interface: eth0
+                    limit: 1
+                    optional: true
+                    scope: global
+
+                resources:
+                    resource-1:
+                    type: file
+                    description: resource-1
+                    filename: /path/to/resource-1
+
+                source:
+                  - https://example.com/source
+                  - https://example.com/source2
+                  - https://example.com/source3
+
+                storage:
+                  storage-1:
+                    type: filesystem
+                    description: storage-1
+                    location: /var/lib/storage-1
+                    shared: true
+                    read-only: false
+                    multiple: 5G
+                    minimum-size: 5G
+                    properties:
+                      - transient
+
+                subordinate: true
+
+                terms:
+                  - https://example.com/terms
+                  - https://example.com/terms2
+
+                website:
+                  - https://example.com/
+                """
+            ),
+        }
+    )
+
+    config = load(tmp_path)
+    metadata = parse_charm_metadata_yaml(tmp_path)
+
+    assert config.name == "test-charm-name"
+    assert config.type == "charm"
+    assert config.summary == "test-summary"
+    assert config.description == "test-description"
+    assert config.bases == [
+        BasesConfiguration(
+            **{
+                "build-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[get_host_architecture()],
+                    )
+                ],
+                "run-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[get_host_architecture()],
+                    )
+                ],
+            }
+        )
+    ]
+    assert config.metadata_legacy
+
+    metadata_dict = metadata.dict()
+    assert metadata_dict == {
+        "name": "test-charm-name",
+        "summary": "test-summary",
+        "description": "test-description",
+        "assumes": [
+            "test-feature",
+            {"any-of": ["extra-feature-1", "extra-feature-2"]},
+            {"all-of": ["test-feature-1", "test-feature-2"]},
+        ],
+        "containers": {
+            "container-1": {
+                "resource": "resource-1",
+                "bases": [{"name": "ubuntu", "channel": 22.04, "architectures": ["x86_64"]}],
+                "mounts": [{"storage": "storage-1", "location": "/var/lib/storage-1"}],
+            },
+            "container-2": {
+                "resource": "resource-2",
+                "bases": [{"name": "ubuntu", "channel": 22.04, "architectures": ["x86_64"]}],
+                "mounts": [{"storage": "storage-2", "location": "/var/lib/storage-2"}],
+            },
+        },
+        "devices": {
+            "test-device-1": {"type": "gpu", "description": "gpu", "countmin": 1, "countmax": 10}
+        },
+        "display_name": "test-title",
+        "peers": {
+            "peer-1": {"interface": "eth0", "limit": 1, "optional": True, "scope": "global"}
+        },
+        "provides": {
+            "provide-1": {"interface": "eht1", "limit": 1, "optional": True, "scope": "global"}
+        },
+        "requires": {
+            "peer-1": {"interface": "eth0", "limit": 1, "optional": True, "scope": "global"}
+        },
+        "resources": {
+            "resource-1": None,
+            "type": "file",
+            "description": "resource-1",
+            "filename": "/path/to/resource-1",
+        },
+        "storage": {
+            "storage-1": {
+                "type": "filesystem",
+                "description": "storage-1",
+                "location": "/var/lib/storage-1",
+                "shared": True,
+                "read-only": False,
+                "multiple": "5G",
+                "minimum-size": "5G",
+                "properties": ["transient"],
+            }
+        },
+        "subordinate": True,
+        "terms": ["https://example.com/terms", "https://example.com/terms2"],
+        "extra_bindings": {"test-binding-1": None},
+        "docs": parse_obj_as(AnyHttpUrl, "https://example.com/docs"),
+        "issues": parse_obj_as(AnyHttpUrl, "https://example.com/issues"),
+        "maintainers": ["https://example.com/contact", "contact@example.com", "IRC #example"],
+        "source": [
+            parse_obj_as(AnyHttpUrl, "https://example.com/source"),
+            parse_obj_as(AnyHttpUrl, "https://example.com/source2"),
+            parse_obj_as(AnyHttpUrl, "https://example.com/source3"),
+        ],
+        "website": [parse_obj_as(AnyHttpUrl, "https://example.com/")],
+    }

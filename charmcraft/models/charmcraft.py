@@ -98,11 +98,28 @@ class CharmcraftConfig(
     project: Project
 
     type: str
+    name: Optional[pydantic.StrictStr]
+    summary: Optional[pydantic.StrictStr]
+    description: Optional[pydantic.StrictStr]
     charmhub: CharmhubConfig = CharmhubConfig()
     parts: Optional[Dict[str, Any]]
     bases: Optional[List[BasesConfiguration]]
     analysis: AnalysisConfig = AnalysisConfig()
-    actions: Optional[Dict[str, Any]]
+    actions: Optional[JujuActions]
+    assumes: Optional[List[Union[str, Dict[str, List[str]]]]]
+    containers: Optional[Dict[str, Any]]
+    devices: Optional[Dict[str, Any]]
+    title: Optional[pydantic.StrictStr]
+    extra_bindings: Optional[Dict[str, Any]]
+    peers: Optional[Dict[str, Any]]
+    provides: Optional[Dict[str, Any]]
+    requires: Optional[Dict[str, Any]]
+    resources: Optional[Dict[str, Any]]
+    storage: Optional[Dict[str, Any]]
+    subordinate: Optional[bool]
+    terms: Optional[List[str]]
+    links: Optional[Links]
+    config: Optional[JujuConfig]
 
     @pydantic.validator("type")
     def validate_charm_type(cls, charm_type):
@@ -110,6 +127,30 @@ class CharmcraftConfig(
         if charm_type not in ["bundle", "charm"]:
             raise ValueError("must be either 'charm' or 'bundle'")
         return charm_type
+
+    @pydantic.validator("name", pre=True, always=True)
+    def validate_name(cls, name, values):
+        """Verify charm name is valid with exception when instantiated without YAML."""
+        if values.get("type") == "charm" and not name:
+            raise ValueError("needs value")
+
+        return name
+
+    @pydantic.validator("summary", pre=True, always=True)
+    def validate_summary(cls, summary, values):
+        """Verify charm summary is valid with exception when instantiated without YAML."""
+        if values.get("type") == "charm" and not summary:
+            raise ValueError("needs value")
+
+        return summary
+
+    @pydantic.validator("description", pre=True, always=True)
+    def validate_description(cls, description, values):
+        """Verify charm name is valid with exception when instantiated without YAML."""
+        if values.get("type") == "charm" and not description:
+            raise ValueError("needs value")
+
+        return description
 
     @pydantic.validator("parts", pre=True, always=True)
     def validate_special_parts(cls, parts, values):
@@ -233,6 +274,48 @@ class CharmcraftConfig(
             # is not a valid list, parse_obj() will properly handle the error.
             if isinstance(obj.get("bases"), list):
                 cls.expand_short_form_bases(obj["bases"])
+
+            # If metadata.yaml exists, try merge it into config.
+            if os.path.isfile(project.dirpath / METADATA_FILENAME):
+                # metadata.yaml exists, so we can't specify metadata keys in charmcraft.yaml.
+                for key in CHARM_METADATA_KEYS.union(CHARM_METADATA_LEGACY_KEYS):
+                    if key in obj:
+                        raise CraftError(
+                            f"Cannot specify '{key}' in charmcraft.yaml when "
+                            f"'{METADATA_FILENAME}' exists"
+                        )
+
+                if obj.get("type") == "charm":
+                    metadata_legacy = parse_charm_metadata_yaml(project.dirpath)
+
+                    # need to copy 3 fields from metadata_legacy to charmcraft config
+                    return cls.parse_obj(
+                        {
+                            "project": project,
+                            "name": metadata_legacy.name,
+                            "summary": metadata_legacy.summary,
+                            "description": metadata_legacy.description,
+                            "metadata-legacy": True,
+                            **obj,
+                        }
+                    )
+                elif obj.get("type") == "bundle":
+                    # bundle may not have metadata.yaml.
+                    # but if it does, it should have name and optional description
+                    # metadata.yaml will be copied without validation if it exists
+                    metadata_legacy = parse_bundle_metadata_yaml(project.dirpath)
+                    return cls.parse_obj(
+                        {
+                            "project": project,
+                            "name": metadata_legacy.name,
+                            "description": metadata_legacy.description,
+                            "metadata-legacy": True,
+                            **obj,
+                        }
+                    )
+                else:
+                    # fallthrough for pydantic to handle
+                    pass
 
             return cls.parse_obj({"project": project, **obj})
         except pydantic.error_wrappers.ValidationError as error:

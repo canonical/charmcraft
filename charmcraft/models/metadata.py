@@ -16,7 +16,7 @@
 
 """Charmcraft metadata pydantic model."""
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional, List, Union
 
 import pydantic
 
@@ -25,18 +25,88 @@ from charmcraft.format import format_pydantic_errors
 from charmcraft.const import METADATA_FILENAME
 
 
-class CharmMetadata(pydantic.BaseModel, frozen=True, validate_all=True):
-    """Object representing metadata.yaml contents."""
+class CharmMetadataLegacy(
+    pydantic.BaseModel,
+    extra=pydantic.Extra.forbid,
+    frozen=True,
+    validate_all=True,
+    alias_generator=lambda s: s.replace("_", "-"),
+):
+    """Object representing LEGACY charm metadata.yaml contents.
+
+    This model only supports the legacy charm metadata.yaml format for compatibility.
+    New metadata defined in charmcraft.yaml is handled by the CharmcraftConfig model.
+
+    specs: https://juju.is/docs/sdk/metadata-yaml
+    """
 
     name: pydantic.StrictStr
-    summary: pydantic.StrictStr = ""
-    description: pydantic.StrictStr = ""
+    summary: pydantic.StrictStr
+    description: pydantic.StrictStr
+    assumes: Optional[List[Union[str, Dict[str, List[str]]]]]
+    containers: Optional[Dict[str, Any]]
+    devices: Optional[Dict[str, Any]]
+    display_name: Optional[pydantic.StrictStr]
+    docs: Optional[pydantic.AnyHttpUrl]
+    extra_bindings: Optional[Dict[str, Any]]
+    issues: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+    maintainers: Optional[List[pydantic.StrictStr]]
+    peers: Optional[Dict[str, Any]]
+    provides: Optional[Dict[str, Any]]
+    requires: Optional[Dict[str, Any]]
+    resources: Optional[Dict[str, Any]]
+    source: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+    storage: Optional[Dict[str, Any]]
+    subordinate: Optional[bool]
+    terms: Optional[List[pydantic.StrictStr]]
+    website: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
 
     @classmethod
     def unmarshal(cls, obj: Dict[str, Any]):
         """Unmarshal object with necessary translations and error handling.
 
-        :returns: valid CharmMetadata.
+        :returns: valid CharmMetadataLegacy object.
+
+        :raises CraftError: On failure to unmarshal object.
+        """
+        # convert undocumented "maintainer" to documented "maintainers"
+        if "maintainer" in obj and "maintainers" in obj:
+            raise CraftError(
+                f"Cannot specify both 'maintainer' and 'maintainers' in {METADATA_FILENAME}"
+            )
+
+        if "maintainer" in obj:
+            obj["maintainers"] = [obj["maintainer"]]
+            del obj["maintainer"]
+
+        try:
+            return cls.parse_obj(obj)
+        except pydantic.error_wrappers.ValidationError as error:
+            raise CraftError(format_pydantic_errors(error.errors(), file_name=METADATA_FILENAME))
+
+
+class BundleMetadataLegacy(
+    pydantic.BaseModel,
+    extra=pydantic.Extra.allow,
+    frozen=True,
+    validate_all=True,
+    alias_generator=lambda s: s.replace("_", "-"),
+):
+    """Object representing LEGACY bundle metadata.yaml contents.
+
+    This model only supports the legacy bundle metadata.yaml format.
+
+    specs: https://juju.is/docs/sdk/metadata-yaml
+    """
+
+    name: pydantic.StrictStr
+    description: Optional[pydantic.StrictStr]
+
+    @classmethod
+    def unmarshal(cls, obj: Dict[str, Any]):
+        """Unmarshal object with necessary translations and error handling.
+
+        :returns: valid BundleMetadataLegacy.
 
         :raises CraftError: On failure to unmarshal object.
         """

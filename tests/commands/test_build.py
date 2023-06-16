@@ -242,8 +242,12 @@ def test_build_error_without_metadata_yaml(basic_project):
 
         get_builder(config)
 
-    assert exc_info.value.args[0] == (
-        "Cannot read the metadata.yaml file: FileNotFoundError(2, 'No such file or directory')"
+    assert str(exc_info.value) == dedent(
+        """\
+        Bad charmcraft.yaml content:
+        - needs value in field 'name'
+        - needs value in field 'summary'
+        - needs value in field 'description'"""
     )
 
 

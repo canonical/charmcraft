@@ -26,7 +26,7 @@ from typing import List, Generator, Union
 import yaml
 
 from charmcraft import config, utils
-from charmcraft.metafiles.metadata import parse_metadata_yaml, read_metadata_yaml
+from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
 
 CheckType = namedtuple("CheckType", "attribute lint")(attribute="attribute", lint="lint")
 
@@ -184,7 +184,7 @@ class Framework:
     def _check_reactive(self, basedir: pathlib.Path) -> bool:
         """Detect if the Reactive Framework is used."""
         try:
-            metadata = parse_metadata_yaml(basedir)
+            metadata = parse_charm_metadata_yaml(basedir)
         except Exception:
             # file not found, corrupted, or mandatory "name" not present
             return False

@@ -22,7 +22,7 @@ import zipfile
 from textwrap import dedent
 from typing import List
 from unittest import mock
-from unittest.mock import call, patch, MagicMock
+from unittest.mock import call, patch, MagicMock, ANY
 
 import pytest
 import yaml
@@ -1389,17 +1389,7 @@ def test_build_part_from_config(
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
+                        "prime": ANY,
                         "charm-entrypoint": "src/charm.py",
                         "charm-python-packages": ["foo", "bar"],
                         "charm-binary-python-packages": ["baz"],
@@ -1414,6 +1404,17 @@ def test_build_part_from_config(
             )
         ]
     )
+    assert set(mock_lifecycle.call_args_list[0][0][0]["charm"]["prime"]) == {
+        "src",
+        "venv",
+        "hooks",
+        "dispatch",
+        "LICENSE",
+        "README.md",
+        "icon.svg",
+        "lib",
+        "metadata.yaml",
+    }
 
 
 @pytest.mark.parametrize(
@@ -1487,17 +1488,7 @@ def test_build_part_include_venv_pydeps(
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
+                        "prime": ANY,
                         "charm-entrypoint": "src/charm.py",
                         "charm-python-packages": [],
                         "charm-binary-python-packages": [],
@@ -1512,6 +1503,18 @@ def test_build_part_include_venv_pydeps(
             )
         ]
     )
+
+    assert set(mock_lifecycle.call_args_list[0][0][0]["charm"]["prime"]) == {
+        "src",
+        "venv",
+        "hooks",
+        "dispatch",
+        "LICENSE",
+        "README.md",
+        "icon.svg",
+        "lib",
+        "metadata.yaml",
+    }
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

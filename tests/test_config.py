@@ -238,12 +238,13 @@ def test_load_metadata_keys_exists_both(tmp_path, prepare_charmcraft_yaml, prepa
 
     with pytest.raises(CraftError) as cm:
         load(tmp_path)
-    
+
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - Cannot specify 'name' in charmcraft.yaml when 'metadata.yaml' exists"""
     )
+
 
 # -- tests for schema restrictions
 

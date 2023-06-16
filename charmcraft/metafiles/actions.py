@@ -18,27 +18,70 @@
 
 import pathlib
 import logging
-from typing import Any, Dict, Optional
+import shutil
+from typing import Optional, TYPE_CHECKING
 
 import yaml
+
+from craft_cli import emit, CraftError
+from charmcraft.const import JUJU_ACTIONS_FILENAME
+from charmcraft.models.actions import JujuActions
+from charmcraft.metafiles import read_yaml
+
+if TYPE_CHECKING:
+    from charmcraft.models.charmcraft import CharmcraftConfig
 
 logger = logging.getLogger(__name__)
 
 
-def create_actions(
+def parse_actions_yaml(charm_dir: pathlib.Path) -> Optional[JujuActions]:
+    """Parse project's actions.yaml.
+
+    :param charm_dir: Directory to read actions.yaml from.
+
+    :returns: a JujuActions object or None if actions.yaml does not exist.
+
+    :raises: CraftError if actions.yaml is not valid.
+    """
+    try:
+        actions = read_yaml(charm_dir / JUJU_ACTIONS_FILENAME)
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise CraftError(f"Cannot read the {JUJU_ACTIONS_FILENAME} file: {exc!r}") from exc
+
+    emit.debug(f"Validating {JUJU_ACTIONS_FILENAME}")
+    return JujuActions.parse_obj({"actions": actions, "legacy": True})
+
+
+def create_actions_yaml(
     basedir: pathlib.Path,
-    actions: Optional[Dict[str, Any]] = None,
+    charmcraft_config: "CharmcraftConfig",
 ) -> Optional[pathlib.Path]:
     """Create actions.yaml in basedir for given project configuration.
 
     :param basedir: Directory to create Charm in.
-    :param actions: Relevant bases configuration, if any.
+    :param charmcraft_config: Charmcraft configuration object.
 
     :returns: Path to created actions.yaml.
     """
-    if actions is None:
+    if charmcraft_config.actions is None or charmcraft_config.actions.actions is None:
         return None
 
-    filepath = basedir / "actions.yaml"
-    filepath.write_text(yaml.dump(actions))
-    return filepath
+    file_path = basedir / JUJU_ACTIONS_FILENAME
+
+    if charmcraft_config.actions.legacy:
+        try:
+            shutil.copyfile(charmcraft_config.project.dirpath / JUJU_ACTIONS_FILENAME, file_path)
+        except shutil.SameFileError:
+            pass
+    else:
+        file_path.write_text(
+            yaml.dump(
+                charmcraft_config.actions.dict(
+                    include={"actions"}, exclude_none=True, by_alias=True
+                )["actions"]
+            )
+        )
+
+    return file_path

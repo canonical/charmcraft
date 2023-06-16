@@ -773,3 +773,270 @@ def test_load_full_metadata_from_metadata_yaml(create_config, tmp_path):
         ],
         "website": [parse_obj_as(AnyHttpUrl, "https://example.com/")],
     }
+
+
+def test_load_full_actions_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
+    """Load a charmcraft.yaml with full actions."""
+    prepare_charmcraft_yaml(
+        dedent(
+            """
+            name: test-charm-name
+            type: charm
+            summary: test-summary
+            description: test-description
+
+            bases:
+              - name: test-name
+                channel: test-channel
+
+            actions:
+              pause:
+                description: Pause the database.
+              resume:
+                description: Resume a paused database.
+              snapshot:
+                description: Take a snapshot of the database.
+                params:
+                  filename:
+                    type: string
+                    description: The name of the snapshot file.
+                  compression:
+                    type: object
+                    description: The type of compression to use.
+                    properties:
+                      kind:
+                        type: string
+                        enum: [gzip, bzip2, xz]
+                      quality:
+                        description: Compression quality
+                        type: integer
+                        minimum: 0
+                        maximum: 9
+              required: [filename]
+              additionalProperties: false
+            """
+        )
+    )
+
+    config = load(tmp_path)
+
+    assert config.actions.dict(include={"actions"}, exclude_none=True, by_alias=True)[
+        "actions"
+    ] == {
+        "pause": {"description": "Pause the database."},
+        "resume": {"description": "Resume a paused database."},
+        "snapshot": {
+            "description": "Take a snapshot of the database.",
+            "params": {
+                "filename": {
+                    "type": "string",
+                    "description": "The name of the snapshot file.",
+                },
+                "compression": {
+                    "type": "object",
+                    "description": "The type of compression to use.",
+                    "properties": {
+                        "kind": {"type": "string", "enum": ["gzip", "bzip2", "xz"]},
+                        "quality": {
+                            "description": "Compression quality",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9,
+                        },
+                    },
+                },
+            },
+            "required": ["filename"],
+            "additionalProperties": False,
+        },
+    }
+
+
+def test_load_full_actions_in_actions_yaml(create_config, tmp_path):
+    """Load a charmcraft.yaml with full actions."""
+    create_config(
+        {
+            "charmcraft.yaml_ext": dedent(
+                """
+                type: charm
+                """
+            ),
+            "actions.yaml": dedent(
+                """
+                pause:
+                  description: Pause the database.
+                resume:
+                  description: Resume a paused database.
+                snapshot:
+                  description: Take a snapshot of the database.
+                  params:
+                    filename:
+                      type: string
+                      description: The name of the snapshot file.
+                    compression:
+                      type: object
+                      description: The type of compression to use.
+                      properties:
+                        kind:
+                          type: string
+                          enum: [gzip, bzip2, xz]
+                        quality:
+                          description: Compression quality
+                          type: integer
+                          minimum: 0
+                          maximum: 9
+                  required: [filename]
+                  additionalProperties: false
+                """
+            ),
+        }
+    )
+
+    config = load(tmp_path)
+
+    assert config.actions.dict(include={"actions"}, exclude_none=True, by_alias=True)[
+        "actions"
+    ] == {
+        "pause": {"description": "Pause the database."},
+        "resume": {"description": "Resume a paused database."},
+        "snapshot": {
+            "description": "Take a snapshot of the database.",
+            "params": {
+                "filename": {
+                    "type": "string",
+                    "description": "The name of the snapshot file.",
+                },
+                "compression": {
+                    "type": "object",
+                    "description": "The type of compression to use.",
+                    "properties": {
+                        "kind": {"type": "string", "enum": ["gzip", "bzip2", "xz"]},
+                        "quality": {
+                            "description": "Compression quality",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9,
+                        },
+                    },
+                },
+            },
+            "required": ["filename"],
+            "additionalProperties": False,
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "bad_name",
+    [
+        "is",
+        "-snapshot",
+        "111snapshot",
+    ],
+)
+def test_load_bad_actions_in_charmcraft_yaml(create_config, tmp_path, bad_name):
+    """Load a bad actions in charmcraft.yaml."""
+    create_config(
+        dedent(
+            f"""
+            name: test-charm-name
+            type: charm
+            bases:
+              - name: test-name
+                channel: test-channel
+            actions:
+              pause:
+                description: Pause the database.
+              resume:
+                description: Resume a paused database.
+              {bad_name}:
+                description: Take a snapshot of the database.
+            """
+        )
+    )
+
+    with pytest.raises(CraftError):
+        load(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "bad_name",
+    [
+        "is",
+        "-snapshot",
+        "111snapshot",
+    ],
+)
+def test_load_bad_actions_in_actions_yaml(create_config, tmp_path, bad_name):
+    """Load a bad actions in actions.yaml."""
+    create_config(
+        {
+            "actions.yaml": dedent(
+                f"""\
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  {bad_name}:
+                    description: Take a snapshot of the database.
+                """
+            )
+        }
+    )
+
+    with pytest.raises(CraftError):
+        load(tmp_path)
+
+
+def test_load_actions_in_charmcraft_yaml_and_actions_yaml(create_config, tmp_path):
+    """Load actions in charmcraft.yaml and actions.yaml at the same time."""
+    create_config(
+        {
+            "charmcraft.yaml_ext": dedent(
+                """
+                type: charm
+
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  snapshot:
+                    description: Take a snapshot of the database.
+                    params:
+                      filename:
+                        type: string
+                        description: The name of the snapshot file.
+                      compression:
+                        type: object
+                        description: The type of compression to use.
+                        properties:
+                          kind:
+                            type: string
+                            enum: [gzip, bzip2, xz]
+                          quality:
+                            description: Compression quality
+                            type: integer
+                            minimum: 0
+                            maximum: 9
+                    required: [filename]
+                    additionalProperties: false
+                """
+            ),
+            "actions.yaml": dedent(
+                """
+                pause:
+                  description: Pause the database.
+                """
+            ),
+        }
+    )
+
+    msg = (
+        "'actions.yaml' file not allowed when an 'actions' section "
+        "is defined in 'charmcraft.yaml' in field 'actions'"
+    )
+
+    with pytest.raises(CraftError, match=msg):
+        load(tmp_path)

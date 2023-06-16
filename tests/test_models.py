@@ -1040,3 +1040,118 @@ def test_load_actions_in_charmcraft_yaml_and_actions_yaml(create_config, tmp_pat
 
     with pytest.raises(CraftError, match=msg):
         load(tmp_path)
+
+
+def test_load_config_in_charmcraft_yaml(create_config, tmp_path):
+    """Load a config in charmcraft.yaml."""
+    create_config(
+        {
+            "charmcraft.yaml_ext": dedent(
+                """
+                type: charm
+
+                config:
+                  options:
+                    test-int:
+                      default: 123
+                      description: test-1
+                      type: int
+                    test-string:
+                      description: test-2
+                      type: string
+                    test-float:
+                      default: 1.23
+                      type: float
+                    test-bool:
+                      default: true
+                      type: boolean
+                """
+            )
+        }
+    )
+    config = load(tmp_path)
+
+    assert config.config.dict(include={"options"}, by_alias=True) == {
+        "options": {
+            "test-int": {"default": 123, "description": "test-1", "type": "int"},
+            "test-string": {"description": "test-2", "type": "string"},
+            "test-float": {"default": 1.23, "type": "float"},
+            "test-bool": {"default": True, "type": "boolean"},
+        },
+    }
+
+
+def test_load_config_in_config_yaml(create_config, tmp_path):
+    """Load a config in config.yaml."""
+    create_config(
+        {
+            "charmcraft.yaml_ext": dedent(
+                """
+                type: charm
+                """
+            ),
+            "config.yaml": dedent(
+                """
+                options:
+                  test-int:
+                    default: 123
+                    description: test-1
+                    type: int
+                  test-string:
+                    description: test-2
+                    type: string
+                  test-float:
+                    default: 1.23
+                    type: float
+                  test-bool:
+                    default: true
+                    type: boolean
+                """
+            ),
+        }
+    )
+    config = load(tmp_path)
+
+    assert config.config.dict(include={"options"}, by_alias=True) == {
+        "options": {
+            "test-int": {"default": 123, "description": "test-1", "type": "int"},
+            "test-string": {"description": "test-2", "type": "string"},
+            "test-float": {"default": 1.23, "type": "float"},
+            "test-bool": {"default": True, "type": "boolean"},
+        },
+    }
+
+
+def test_load_bad_config_in_charmcraft_yaml(create_config, tmp_path):
+    """Load a config in charmcraft.yaml."""
+    create_config(
+        {
+            "charmcraft.yaml_ext": dedent(
+                """
+                type: charm
+
+                config:
+                  options:
+                    test-int:
+                      default: 123
+                      descriptionn: test-1
+                      type: int
+                    test-string:
+                      description: test-2
+                      type: string
+                    test-float:
+                      default: 1.23
+                      type: float
+                    test-bool:
+                      default: true
+                      type: boolean
+                """
+            )
+        }
+    )
+
+    with pytest.raises(
+        CraftError,
+        match=r"'test-int' has an invalid key\(s\): {'descriptionn'} in field 'config.options'",
+    ):
+        load(tmp_path)

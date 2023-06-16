@@ -32,6 +32,7 @@ import charmcraft.linters
 import charmcraft.parts
 import charmcraft.providers
 import charmcraft.instrum
+from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.actions import create_actions_yaml
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.const import (
@@ -176,6 +177,7 @@ class Builder:
             lifecycle.run(Step.PRIME)
 
         create_actions_yaml(lifecycle.prime_dir, self.config)
+        create_config_yaml(lifecycle.prime_dir, self.config)
         create_metadata_yaml(lifecycle.prime_dir, self.config)
 
         # run linters and show the results

@@ -31,7 +31,6 @@ from charmcraft import env, parts, instrum
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.commands import build
 from charmcraft.errors import DuplicateCharmsError
-from charmcraft.metafiles.actions import create_actions_yaml
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.parts import Step
 from charmcraft.utils import (

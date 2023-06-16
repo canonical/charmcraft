@@ -27,7 +27,7 @@ from charmcraft.const import METADATA_FILENAME
 
 class CharmMetadataLegacy(
     pydantic.BaseModel,
-    extra=pydantic.Extra.forbid,
+    extra=pydantic.Extra.allow,
     frozen=True,
     validate_all=True,
     alias_generator=lambda s: s.replace("_", "-"),

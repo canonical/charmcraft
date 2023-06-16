@@ -18,10 +18,7 @@
 import datetime
 import pathlib
 import os
-import re
-import keyword
-
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 
 import pydantic
 
@@ -29,7 +26,17 @@ from craft_cli import CraftError
 from charmcraft.parts import process_part_config
 from charmcraft.utils import get_host_architecture
 from charmcraft.format import format_pydantic_errors
+from charmcraft.const import (
+    METADATA_FILENAME,
+    CHARM_METADATA_KEYS,
+    CHARM_METADATA_LEGACY_KEYS,
+)
+from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, parse_bundle_metadata_yaml
+from charmcraft.metafiles.actions import parse_actions_yaml
+from charmcraft.metafiles.config import parse_config_yaml
 from charmcraft.models.basic import ModelConfigDefaults, AttributeName, LinterName
+from charmcraft.models.actions import JujuActions
+from charmcraft.models.config import JujuConfig
 
 
 class CharmhubConfig(
@@ -87,6 +94,16 @@ class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
     ignore: Ignore = Ignore()
 
 
+class Links(ModelConfigDefaults):
+    """Definition of `links` in metadata."""
+
+    contact: Optional[Union[pydantic.StrictStr, List[pydantic.StrictStr]]]
+    documentation: Optional[pydantic.AnyHttpUrl]
+    issues: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+    source: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+    website: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+
+
 class CharmcraftConfig(
     ModelConfigDefaults,
     validate_all=False,
@@ -96,6 +113,8 @@ class CharmcraftConfig(
 
     # this needs to go before 'parts', as it used by the validator
     project: Project
+
+    metadata_legacy: bool = False
 
     type: str
     name: Optional[pydantic.StrictStr]
@@ -203,7 +222,7 @@ class CharmcraftConfig(
             raise ValueError("Field not allowed when type=bundle")
         return bases
 
-    @pydantic.validator("actions", pre=True)
+    @pydantic.validator("actions", pre=True, always=True)
     def validate_actions(cls, actions, values):
         """Verify 'actions' in charms.
 
@@ -211,27 +230,37 @@ class CharmcraftConfig(
         And individual "actions.yaml" should not exists when actions
         is defined in charmcraft.yaml.
         """
+        actions_yaml = parse_actions_yaml(values["project"].dirpath)
         if actions is None:
-            return None
-
-        actions_yaml_file_path = values["project"].dirpath / "actions.yaml"
-        if os.path.isfile(actions_yaml_file_path):
-            raise ValueError(
-                "'actions.yaml' file not allowed when an 'actions' section is "
-                "defined in 'charmcraft.yaml'"
-            )
-
-        # https://juju.is/docs/sdk/actions
-        action_name_regex = re.compile(r"^[a-zA-Z_][a-zA-Z0-9-_]*$")
-        for action in actions.keys():
-            if keyword.iskeyword(action):
+            return actions_yaml
+        else:
+            if actions_yaml is not None:
                 raise ValueError(
-                    f"'{action}' is a reserved keyword and cannot be used as an action name"
+                    "'actions.yaml' file not allowed when an 'actions' section is "
+                    "defined in 'charmcraft.yaml'"
                 )
-            if action_name_regex.match(action) is None:
-                raise ValueError(f"'{action}' is not a valid action name")
 
-        return actions
+            return JujuActions.parse_obj({"actions": actions, "legacy": False})
+
+    @pydantic.validator("config", pre=True, always=True)
+    def validate_config(cls, config, values):
+        """Verify 'actions' in charms.
+
+        Currently, actions will be passed through to the charms.
+        And individual "actions.yaml" should not exists when actions
+        is defined in charmcraft.yaml.
+        """
+        config_yaml = parse_config_yaml(values["project"].dirpath)
+        if config is None:
+            return config_yaml
+        else:
+            if config_yaml is not None:
+                raise ValueError(
+                    "'config.yaml' file not allowed when an 'config' section is "
+                    "defined in 'charmcraft.yaml'"
+                )
+
+            return JujuConfig.parse_obj({"legacy": False, **config})
 
     @classmethod
     def expand_short_form_bases(cls, bases: List[Dict[str, Any]]) -> None:

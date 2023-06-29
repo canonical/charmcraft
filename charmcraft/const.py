@@ -65,3 +65,9 @@ CHARM_OPTIONAL = [
     "README.md",
     "actions",
 ]
+
+UBUNTU_LTS_STABLE = {
+    "18.04",
+    "20.04",
+    "22.04",
+}

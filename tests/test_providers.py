@@ -16,6 +16,7 @@
 
 import contextlib
 import pathlib
+import re
 import sys
 from unittest.mock import Mock, patch, call
 
@@ -684,24 +685,21 @@ def test_ensure_provider_is_available_installed_no_user_confirms_no(mocker, fake
             "20.04",
             ["host-arch"],
             False,
-            "name 'not-ubuntu' is not yet supported (must be 'ubuntu', 'almalinux', or 'centos')",
+            r"name 'not-ubuntu' is not yet supported \(must be 'ubuntu', .*\)",
         ),
         (
             "ubuntu",
             "10.04",
             ["host-arch"],
             False,
-            "base 'ubuntu' channel '10.04' is not yet supported (must be "
-            "'almalinux 9', 'centos 7', "
-            "'ubuntu 16.04', 'ubuntu 18.04', 'ubuntu 20.04', 'ubuntu 22.04', "
-            "'ubuntu 22.10', 'ubuntu 23.04' or 'ubuntu devel')",
+            r"base 'ubuntu' channel '10.04' is not yet supported \(must be .*\)",
         ),
         (
             "ubuntu",
             "20.04",
             ["other-arch"],
             False,
-            "host architecture 'host-arch' not in base architectures ['other-arch']",
+            r"host architecture 'host-arch' not in base architectures \['other-arch'\]",
         ),
     ],
 )
@@ -711,7 +709,11 @@ def test_is_base_available(
     base = Base(name=name, channel=channel, architectures=architectures)
     valid, reason = providers.is_base_available(base)
 
-    assert (valid, reason) == (expected_valid, expected_reason)
+    assert valid == expected_valid
+    if reason is None:
+        assert expected_reason == reason
+    else:
+        assert re.fullmatch(expected_reason, reason)
 
 
 def test_get_provider_default(mock_snap_config, mock_is_developer_mode, mock_is_snap):

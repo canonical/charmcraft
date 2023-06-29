@@ -35,7 +35,13 @@ import charmcraft.instrum
 from charmcraft.metafiles.metadata import parse_metadata_yaml
 from charmcraft.metafiles.actions import create_actions
 from charmcraft.metafiles.manifest import create_manifest
-from charmcraft.const import BUILD_DIRNAME, CHARM_FILES, CHARM_OPTIONAL, VENV_DIRNAME
+from charmcraft.const import (
+    BUILD_DIRNAME,
+    CHARM_FILES,
+    CHARM_OPTIONAL,
+    VENV_DIRNAME,
+    UBUNTU_LTS_STABLE,
+)
 from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.models.config import Base, BasesConfiguration
 from charmcraft.parts import Step
@@ -341,13 +347,20 @@ class Builder:
             instance_name=instance_name,
         )
 
-        if build_on.name != "ubuntu":
+        if build_on.name == "ubuntu":
+            if build_on.channel in UBUNTU_LTS_STABLE:
+                allow_unstable = False
+            else:
+                allow_unstable = True
+                emit.message(
+                    f"Warning: non-LTS Ubuntu releases {build_on.channel} are "
+                    "intended for experimental use only."
+                )
+        else:
             allow_unstable = True
             emit.message(
                 f"Warning: Base {build_on.name} {build_on.channel} daily image may be unstable."
             )
-        else:
-            allow_unstable = False
 
         with self.provider.launched_environment(
             project_name=self.metadata.name,

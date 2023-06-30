@@ -18,6 +18,7 @@
 
 import sys
 import pathlib
+from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
@@ -339,17 +340,58 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     ],
 )
 @pytest.mark.parametrize(
-    "charm_name, charm_module", [("foobar", "foobar.py"), ("foo-bar", "foo_bar.py")]
+    "charm_module, charmcraft_yaml, metadata_yaml",
+    [
+        (
+            "foobar.py",
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: foobar
+                summary: Small text.
+                description: Lot of text.
+                """
+            ),
+        ),
+        (
+            "foo_bar.py",
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: foo-bar
+                summary: Small text.
+                description: Lot of text.
+                """
+            ),
+        ),
+        ("foobar.py", None, "name: foobar"),
+        ("foo_bar.py", None, "name: foo-bar"),
+    ],
 )
-def test_framework_reactive_used_ok(tmp_path, import_line, charm_name, charm_module):
+def test_framework_reactive_used_ok(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+    import_line,
+    charm_module,
+):
     """The reactive framework was used.
 
     Parametrized args:
     - import_line: different ways to express the import
     """
-    # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
-    metadata_file.write_text(f"name: {charm_name}")
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     # a Python file that imports charms.reactive
     entrypoint = tmp_path / "reactive" / charm_module

@@ -18,10 +18,12 @@ import contextlib
 import datetime
 import json
 import importlib
+import os
 import pathlib
 import tempfile
 import types
 from unittest.mock import Mock
+from typing import Optional
 
 import pytest
 import responses as responses_module
@@ -70,7 +72,12 @@ def config(tmp_path):
     )
 
     base = BasesConfiguration(**{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]})
-    return TestConfig(type="charm", bases=[base], project=project)
+
+    return TestConfig(
+        type="charm",
+        bases=[base],
+        project=project,
+    )
 
 
 @pytest.fixture
@@ -97,7 +104,10 @@ def bundle_config(tmp_path):
         config_provided=True,
     )
 
-    return TestConfig(type="bundle", project=project)
+    return TestConfig(
+        type="bundle",
+        project=project,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -184,29 +194,91 @@ def fake_provider(mock_instance):
 
 
 @pytest.fixture
-def create_config(tmp_path):
-    """Helper to create a config file in disk.
+def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
+    """Helper to create a charmcraft.yaml file in disk.
 
-    If content is not given, create a minimum valid file.
+    If content is not given, remove charmcraft.yaml if exists.
     """
 
-    def create_config(text=None):
-        if text is None:
-            text = """
-                type: charm
-                bases:
-                  - build-on:
-                    - name: test-build-name
-                      channel: test-build-channel
-                    run-on:
-                    - name: test-build-name
-                      channel: test-build-channel
-            """
-        test_file = tmp_path / "charmcraft.yaml"
-        test_file.write_text(text)
+    def prepare_charmcraft_yaml(content: Optional[str] = None):
+        if content is None:
+            try:
+                os.remove(tmp_path / "charmcraft.yaml")
+            except OSError:
+                pass
+        else:
+            charmcraft_yaml_file = tmp_path / "charmcraft.yaml"
+            charmcraft_yaml_file.write_text(content)
+
         return tmp_path
 
-    return create_config
+    return prepare_charmcraft_yaml
+
+
+@pytest.fixture
+def prepare_metadata_yaml(tmp_path: pathlib.Path):
+    """Helper to create a metadata.yaml file in disk.
+
+    If content is not given, remove metadata.yaml if exists.
+    """
+
+    def prepare_metadata_yaml(content: Optional[str] = None, remove: bool = False):
+        if content is None:
+            try:
+                os.remove(tmp_path / "metadata.yaml")
+            except OSError:
+                pass
+        else:
+            metadata_yaml_file = tmp_path / "metadata.yaml"
+            metadata_yaml_file.write_text(content)
+
+        return tmp_path
+
+    return prepare_metadata_yaml
+
+
+@pytest.fixture
+def prepare_actions_yaml(tmp_path: pathlib.Path):
+    """Helper to create a actions.yaml file in disk.
+
+    If content is not given, remove actions.yaml if exists.
+    """
+
+    def prepare_actions_yaml(content: Optional[str] = None):
+        if content is None:
+            try:
+                os.remove(tmp_path / "actions.yaml")
+            except OSError:
+                pass
+        else:
+            actions_yaml_file = tmp_path / "actions.yaml"
+            actions_yaml_file.write_text(content)
+
+        return tmp_path
+
+    return prepare_actions_yaml
+
+
+@pytest.fixture
+def prepare_config_yaml(tmp_path: pathlib.Path):
+    """Helper to create a config.yaml file in disk.
+
+    If content is not given, remove config.yaml if exists.
+    """
+
+    def prepare_config_yaml(content: Optional[str] = None):
+        if content is None:
+            try:
+                os.remove(tmp_path / "config.yaml")
+            except OSError:
+                pass
+        else:
+            config_yaml_file = tmp_path / "config.yaml"
+            config_yaml_file.write_text(content)
+
+        return tmp_path
+
+    return prepare_config_yaml
 
 
 @pytest.fixture

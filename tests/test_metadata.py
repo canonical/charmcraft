@@ -44,28 +44,55 @@ def test_parse_metadata_yaml_complete(tmp_path):
     assert metadata.description == "Lot of text."
 
 
+@pytest.mark.parametrize(
+    "metadata_yaml_template",
+    [
+        dedent(
+            """\
+            name: {name}
+            summary: Test summary
+            description: Lot of text.
+            """
+        ),
+    ],
+)
 @pytest.mark.parametrize("name", ["name1", "my-charm-foo"])
-def test_parse_metadata_yaml_valid_names(tmp_path, name):
-    metadata_file = tmp_path / "metadata.yaml"
-    metadata_file.write_text(f"name: {name}")
+def test_parse_metadata_yaml_valid_names(
+    tmp_path, name, prepare_metadata_yaml, metadata_yaml_template
+):
+    prepare_metadata_yaml(metadata_yaml_template.format(name=name))
 
     metadata = parse_metadata_yaml(tmp_path)
 
     assert metadata.name == name
 
 
+@pytest.mark.parametrize(
+    "metadata_yaml_template",
+    [
+        dedent(
+            """\
+            name: {name}
+            summary: Test summary
+            description: Lot of text.
+            """
+        ),
+    ],
+)
 @pytest.mark.parametrize("name", [1, "false", "[]"])
-def test_parse_metadata_yaml_error_invalid_names(tmp_path, name):
-    metadata_file = tmp_path / "metadata.yaml"
-    metadata_file.write_text(f"name: {name}")
+def test_parse_metadata_yaml_error_invalid_names(
+    tmp_path, prepare_metadata_yaml, metadata_yaml_template, name
+):
+    prepare_metadata_yaml(metadata_yaml_template.format(name=name))
 
-    expected_error_msg = dedent(
+    with pytest.raises(CraftError) as cm:
+        parse_metadata_yaml(tmp_path)
+
+    assert str(cm.value) == dedent(
         """\
         Bad metadata.yaml content:
         - string type expected in field 'name'"""
     )
-    with pytest.raises(CraftError, match=re.escape(expected_error_msg)):
-        parse_metadata_yaml(tmp_path)
 
 
 def test_parse_metadata_yaml_error_missing(tmp_path):

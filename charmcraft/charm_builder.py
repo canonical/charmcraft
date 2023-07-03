@@ -239,26 +239,26 @@ class CharmBuilder:
         with instrum.Timer("Installing all dependencies"):
             if self.binary_python_packages:
                 # install python packages, allowing binary packages
-                cmd = [pip_cmd, "install", "--upgrade"]  # base command
+                cmd = [pip_cmd, "install"]  # base command
                 cmd.extend(self.binary_python_packages)  # the python packages to install
                 _process_run(cmd)
 
             if self.python_packages:
                 # install python packages from source
-                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                cmd = [pip_cmd, "install", "--no-binary", ":all:"]  # base command
                 cmd.extend(self.python_packages)  # the python packages to install
                 _process_run(cmd)
 
             if self.requirement_paths:
                 # install dependencies from requirement files
-                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                cmd = [pip_cmd, "install", "--no-binary", ":all:"]  # base command
                 for reqspath in self.requirement_paths:
                     cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
                 _process_run(cmd)
 
             if self.charmlib_deps:
                 # install charmlibs python dependencies
-                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                cmd = [pip_cmd, "install", "--no-binary", ":all:"]  # base command
                 cmd.extend(self.charmlib_deps)  # the python packages to install
                 _process_run(cmd)
 

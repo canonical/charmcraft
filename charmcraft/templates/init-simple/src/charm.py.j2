@@ -27,7 +27,7 @@ class {{ class_name }}(ops.CharmBase):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.framework.observe(self.on.httpbin_pebble_ready, self._on_httpbin_pebble_ready)
+        self.framework.observe(self.on['httpbin'].pebble_ready, self._on_httpbin_pebble_ready)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
     def _on_httpbin_pebble_ready(self, event: ops.PebbleReadyEvent):
@@ -80,7 +80,7 @@ class {{ class_name }}(ops.CharmBase):
             self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
 
     @property
-    def _pebble_layer(self):
+    def _pebble_layer(self) -> ops.pebble.LayerDict:
         """Return a dictionary representing a Pebble layer."""
         return {
             "summary": "httpbin layer",
@@ -100,4 +100,4 @@ class {{ class_name }}(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main({{ class_name }})
+    ops.main({{ class_name }})  # type: ignore

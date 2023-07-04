@@ -50,6 +50,17 @@ from charmcraft.utils import get_host_architecture
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_load_current_directory(
@@ -106,6 +117,17 @@ def test_load_managed_mode_directory(monkeypatch, tmp_path):
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_load_specific_directory_ok(
@@ -152,6 +174,17 @@ def test_load_optional_charmcraft_bad_directory(tmp_path):
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_load_specific_directory_resolved(
@@ -192,6 +225,17 @@ def test_load_specific_directory_resolved(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -240,9 +284,7 @@ def test_load_metadata_keys_exists_both(tmp_path, prepare_charmcraft_yaml, prepa
         load(tmp_path)
 
     assert str(cm.value) == dedent(
-        """\
-        Bad charmcraft.yaml content:
-        - Cannot specify 'name' in charmcraft.yaml when 'metadata.yaml' exists"""
+        """Cannot specify 'name' in charmcraft.yaml when 'metadata.yaml' exists"""
     )
 
 
@@ -266,6 +308,18 @@ def test_load_metadata_keys_exists_both(tmp_path, prepare_charmcraft_yaml, prepa
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                whatever: new-stuff
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -314,6 +368,25 @@ def test_schema_top_level_no_extra_properties(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  api-url: https://www.canonical.com
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_type_missing(
@@ -353,6 +426,17 @@ def test_schema_type_missing(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: 33
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_type_bad_type(
@@ -387,6 +471,17 @@ def test_schema_type_bad_type(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: whatever
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -425,6 +520,19 @@ def test_schema_type_limited_values(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  api-url: 33
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_charmhub_api_url_bad_type(
@@ -461,6 +569,19 @@ def test_schema_charmhub_api_url_bad_type(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  api-url: stuff.com
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -499,6 +620,19 @@ def test_schema_charmhub_api_url_bad_format(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  storage-url: 33
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_charmhub_storage_url_bad_type(
@@ -535,6 +669,19 @@ def test_schema_charmhub_storage_url_bad_type(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  storage-url: stuff.com
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -573,6 +720,19 @@ def test_schema_charmhub_storage_url_bad_format(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  registry-url: 33
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_charmhub_registry_url_bad_type(
@@ -609,6 +769,19 @@ def test_schema_charmhub_registry_url_bad_type(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  registry-url: stuff.com
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -648,6 +821,20 @@ def test_schema_charmhub_registry_url_bad_format(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  storage-url: https://some.server.com
+                  crazy: false
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_charmhub_no_extra_properties(
@@ -683,6 +870,18 @@ def test_schema_charmhub_no_extra_properties(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts: ['foo', 'bar']
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -720,6 +919,19 @@ def test_schema_basicprime_bad_init_structure(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  charm: ['foo', 'bar']
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -759,6 +971,20 @@ def test_schema_basicprime_bad_bundle_structure(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  charm:
+                    prime: foo
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_basicprime_bad_prime_structure(
@@ -796,6 +1022,20 @@ def test_schema_basicprime_bad_prime_structure(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  charm:
+                    prime: [{}, 'foo']
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -835,6 +1075,21 @@ def test_schema_basicprime_bad_prime_type(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+
+                parts:
+                  charm:
+                    prime: ['', 'foo']
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_basicprime_bad_prime_type_empty(
@@ -860,18 +1115,15 @@ def test_schema_basicprime_bad_prime_type_empty(
             dedent(
                 """\
                 type: bundle
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
                 parts:
                   charm:
                     prime: ['/bar/foo', 'foo']
                 """
             ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
+            None,
         ],
     ],
 )
@@ -911,6 +1163,21 @@ def test_schema_basicprime_bad_content_format(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  other-part: 1
+                  charm:
+                    prime: ['/bar/foo', 'foo']
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -957,6 +1224,27 @@ def test_schema_additional_part(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:  # mandatory
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                parts:
+                  other-part:
+                    plugin: charm
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_other_charm_part_no_source(
@@ -995,6 +1283,20 @@ def test_schema_other_charm_part_no_source(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  other-part:
+                    plugin: bundle
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1039,6 +1341,20 @@ def test_schema_other_bundle_part_no_source(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_doublelayer_no_parts_type_charm(
@@ -1077,6 +1393,17 @@ def test_schema_doublelayer_no_parts_type_charm(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1121,6 +1448,25 @@ def test_schema_doublelayer_no_parts_type_bundle(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  mycharm:
+                    plugin: dump
+                    source: https://the.net/whatever.tar.gz
+                    source-type: tar
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_doublelayer_parts_no_charm(
@@ -1162,6 +1508,23 @@ def test_schema_doublelayer_parts_no_charm(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    prime: [to_be_included.*]  # random key to have a valid yaml
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1208,6 +1571,23 @@ def test_schema_doublelayer_parts_with_charm_plugin_missing(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    plugin: charm
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1256,6 +1636,25 @@ def test_schema_doublelayer_parts_with_charm_plugin_charm(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    plugin: dump
+                    source: https://the.net/whatever.tar.gz
+                    source-type: tar
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_doublelayer_parts_with_charm_plugin_different(
@@ -1297,6 +1696,23 @@ def test_schema_doublelayer_parts_with_charm_plugin_different(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    charm-entrypoint: different.py
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1342,6 +1758,23 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    charm-point: different.py  # mispelled!
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1390,6 +1823,19 @@ def test_charmhub_frozen():
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  storage_url: https://server1.com
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_charmhub_underscore_in_names(
@@ -1428,6 +1874,17 @@ def test_charmhub_underscore_in_names(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_no_bases_is_ok_for_bundles(
@@ -1448,19 +1905,16 @@ def test_no_bases_is_ok_for_bundles(
             dedent(
                 """\
                 type: bundle
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
                 bases:
                   - build-on:
                       - name: test-build-name
                         channel: test-build-channel
                 """
             ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
+            None,
         ],
     ],
 )
@@ -1503,6 +1957,24 @@ def test_bases_forbidden_for_bundles(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1561,6 +2033,25 @@ def test_bases_minimal_long_form(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-name
+                        channel: test-build-channel
+                        extra-extra: read all about it
+                    run-on:
+                      - name: test-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_bases_extra_field_error(
@@ -1586,6 +2077,9 @@ def test_bases_extra_field_error(
             dedent(
                 """\
                 type: charm
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
                 bases:
                   - build_on:
                       - name: test-name
@@ -1595,13 +2089,7 @@ def test_bases_extra_field_error(
                         channel: test-run-channel
                 """
             ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
+            None,
         ],
     ],
 )
@@ -1647,6 +2135,24 @@ def test_bases_underscores_error(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: 20.10
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_channel_is_yaml_number(
@@ -1687,6 +2193,24 @@ def test_channel_is_yaml_number(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1754,6 +2278,36 @@ def test_minimal_long_form_bases(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name-1
+                        channel: test-build-channel-1
+                      - name: test-build-name-2
+                        channel: test-build-channel-2
+                      - name: test-build-name-3
+                        channel: test-build-channel-3
+                        architectures: [riscVI]
+                    run-on:
+                      - name: test-run-name-1
+                        channel: test-run-channel-1
+                        architectures: [amd64]
+                      - name: test-run-name-2
+                        channel: test-run-channel-2
+                        architectures: [amd64, arm64]
+                      - name: test-run-name-3
+                        channel: test-run-channel-3
+                        architectures: [amd64, arm64, riscVI]
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1838,6 +2392,32 @@ def test_complex_long_form_bases(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name-1
+                        channel: test-build-channel-1
+                    run-on:
+                      - name: test-run-name-1
+                        channel: test-run-channel-1
+                        architectures: [amd64, arm64]
+                  - build-on:
+                      - name: test-build-name-2
+                        channel: test-build-channel-2
+                    run-on:
+                      - name: test-run-name-2
+                        channel: test-run-channel-2
+                        architectures: [amd64, arm64]
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_multiple_long_form_bases(
@@ -1906,6 +2486,20 @@ def test_multiple_long_form_bases(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -1995,6 +2589,19 @@ def test_bases_short_form_extra_field_error(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_bases_short_form_missing_field_error(
@@ -2019,6 +2626,9 @@ def test_bases_short_form_missing_field_error(
             dedent(
                 """\
                 type: charm
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
                 bases:
                   - name: test-name
                   - build-on:
@@ -2027,13 +2637,7 @@ def test_bases_short_form_missing_field_error(
                       - name: test-run-name
                 """
             ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
+            None,
         ],
     ],
 )
@@ -2089,6 +2693,17 @@ def create_checker(monkeypatch):
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_analysis_missing(
@@ -2124,6 +2739,21 @@ def test_schema_analysis_missing(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    attributes: []
+                    linters: []
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_analysis_full_struct_just_empty(
@@ -2157,6 +2787,20 @@ def test_schema_analysis_full_struct_just_empty(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1, check_ok_2]
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -2199,6 +2843,20 @@ def test_schema_analysis_ignore_attributes(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    linters: [check_ok_1, check_ok_2]
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_schema_analysis_ignore_linters(
@@ -2240,6 +2898,21 @@ def test_schema_analysis_ignore_linters(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1, check_missing]
+                    linters: [check_ok_2]
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -2286,6 +2959,21 @@ def test_schema_analysis_ignore_attribute_missing(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1]
+                    linters: [check_ok_2, check_missing]
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -2357,6 +3045,45 @@ def test_schema_analysis_ignore_linter_missing(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  snapshot:
+                    description: Take a snapshot of the database.
+                    params:
+                      filename:
+                        type: string
+                        description: The name of the snapshot file.
+                      compression:
+                        type: object
+                        description: The type of compression to use.
+                        properties:
+                          kind:
+                            type: string
+                            enum: [gzip, bzip2, xz]
+                          quality:
+                            description: Compression quality
+                            type: integer
+                            minimum: 0
+                            maximum: 9
+                    required: [filename]
+                    additionalProperties: false
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_actions_defined_in_charmcraft_yaml(
@@ -2368,7 +3095,7 @@ def test_actions_defined_in_charmcraft_yaml(
 
     config = load(tmp_path)
 
-    assert config.actions == {
+    assert config.actions.actions == {
         "pause": {"description": "Pause the database."},
         "resume": {"description": "Resume a paused database."},
         "snapshot": {
@@ -2421,6 +3148,28 @@ def test_actions_defined_in_charmcraft_yaml(
                 description: test description
                 """
             ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  {bad_name}:
+                    description: Take a snapshot of the database.
+                """
+            ),
+            None,
         ],
     ],
 )
@@ -2493,6 +3242,45 @@ def test_actions_badly_defined_in_charmcraft_yaml(
                 """
             ),
         ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  snapshot:
+                    description: Take a snapshot of the database.
+                    params:
+                      filename:
+                        type: string
+                        description: The name of the snapshot file.
+                      compression:
+                        type: object
+                        description: The type of compression to use.
+                        properties:
+                          kind:
+                            type: string
+                            enum: [gzip, bzip2, xz]
+                          quality:
+                            description: Compression quality
+                            type: integer
+                            minimum: 0
+                            maximum: 9
+                    required: [filename]
+                    additionalProperties: false
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_actions_defined_in_charmcraft_yaml_and_actions_yaml(
@@ -2507,7 +3295,14 @@ def test_actions_defined_in_charmcraft_yaml_and_actions_yaml(
     """actions section cannot be used when actions.yaml file is present."""
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
-    prepare_actions_yaml("test")
+    prepare_actions_yaml(
+        dedent(
+            """\
+            pause:
+              description: Pause the database.
+            """
+        )
+    )
 
     with pytest.raises(CraftError) as cm:
         load(tmp_path)

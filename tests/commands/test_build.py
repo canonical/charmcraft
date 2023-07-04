@@ -1247,16 +1247,52 @@ def test_build_package_tree_structure(tmp_path, config):
     assert zf.read("linkeddir/file_ext") == b"external file"  # from file in the outside linked dir
 
 
-def test_build_package_name(tmp_path, config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml, expected_zipname",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            "test-charm-name-from-metadata-yaml_xname-xchannel-xarch1.charm",
+        ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                type: charm
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+            "test-charm-name-from-charmcraft-yaml_xname-xchannel-xarch1.charm",
+        ],
+    ],
+)
+def test_build_package_name(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+    expected_zipname,
+):
     """The zip file name comes from the config."""
     to_be_zipped_dir = tmp_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
-    # the metadata
-    metadata_data = {"name": "name-from-metadata-yaml"}
-    metadata_file = tmp_path / "metadata.yaml"
-    with metadata_file.open("wt", encoding="ascii") as fh:
-        yaml.dump(metadata_data, fh)
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     # zip it
     bases_config = BasesConfiguration(
@@ -1265,10 +1301,12 @@ def test_build_package_name(tmp_path, config):
             "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
         }
     )
+
+    config = load(tmp_path)
     builder = get_builder(config)
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
-    assert zipname == "name-from-metadata-yaml_xname-xchannel-xarch1.charm"
+    assert zipname == expected_zipname
 
 
 @pytest.mark.parametrize(

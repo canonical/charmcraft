@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 def parse_config_yaml(charm_dir: pathlib.Path) -> Optional[JujuConfig]:
     """Parse project's config.yaml.
+
     :param charm_dir: Directory to read config.yaml from.
 
     :returns: a JujuConfig object.

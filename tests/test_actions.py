@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import os
+from textwrap import dedent
 
 import yaml
 
@@ -22,7 +23,7 @@ from charmcraft.config import load
 from charmcraft.metafiles.actions import create_actions_yaml
 
 
-def test_create_actions_yaml(create_config, tmp_path):
+def test_create_actions_yaml(tmp_path, prepare_charmcraft_yaml):
     """create actions.yaml."""
     actions = {
         "actions": {
@@ -57,7 +58,18 @@ def test_create_actions_yaml(create_config, tmp_path):
 
     yaml_data = yaml.safe_dump(actions)
 
-    create_config({"charmcraft.yaml_ext": "type: charm\n" + yaml_data})
+    prepare_charmcraft_yaml(
+        dedent(
+            """
+            name: test-charm-name
+            type: charm
+            summary: test-summary
+            description: test-description
+            """
+        )
+        + yaml_data
+    )
+
     config = load(tmp_path)
 
     actions_file = create_actions_yaml(tmp_path, config)
@@ -65,9 +77,18 @@ def test_create_actions_yaml(create_config, tmp_path):
     assert yaml.safe_load(actions_file.read_text()) == actions["actions"]
 
 
-def test_create_actions_yaml_none(create_config, tmp_path):
+def test_create_actions_yaml_none(tmp_path, prepare_charmcraft_yaml):
     """create actions.yaml with None, the file should not exist."""
-    create_config({"charmcraft.yaml_ext": "type: charm"})
+    prepare_charmcraft_yaml(
+        dedent(
+            """
+            name: test-charm-name
+            type: charm
+            summary: test-summary
+            description: test-description
+            """
+        )
+    )
     config = load(tmp_path)
     actions_file = create_actions_yaml(tmp_path, config)
 

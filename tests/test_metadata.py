@@ -20,7 +20,7 @@ from textwrap import dedent
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.metafiles.metadata import parse_metadata_yaml, read_metadata_yaml
+from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
 
 
 # tests for parsing metadata
@@ -37,7 +37,7 @@ def test_parse_metadata_yaml_complete(tmp_path):
     """
     )
 
-    metadata = parse_metadata_yaml(tmp_path)
+    metadata = parse_charm_metadata_yaml(tmp_path)
 
     assert metadata.name == "test-name"
     assert metadata.summary == "Test summary"
@@ -62,7 +62,7 @@ def test_parse_metadata_yaml_valid_names(
 ):
     prepare_metadata_yaml(metadata_yaml_template.format(name=name))
 
-    metadata = parse_metadata_yaml(tmp_path)
+    metadata = parse_charm_metadata_yaml(tmp_path)
 
     assert metadata.name == name
 
@@ -86,7 +86,7 @@ def test_parse_metadata_yaml_error_invalid_names(
     prepare_metadata_yaml(metadata_yaml_template.format(name=name))
 
     with pytest.raises(CraftError) as cm:
-        parse_metadata_yaml(tmp_path)
+        parse_charm_metadata_yaml(tmp_path)
 
     assert str(cm.value) == dedent(
         """\
@@ -100,7 +100,7 @@ def test_parse_metadata_yaml_error_missing(tmp_path):
         "Cannot read the metadata.yaml file: FileNotFoundError(2, 'No such file or directory')"
     )
     with pytest.raises(CraftError, match=msg):
-        parse_metadata_yaml(tmp_path)
+        parse_charm_metadata_yaml(tmp_path)
 
 
 # tests for reading metadata raw content

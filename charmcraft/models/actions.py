@@ -39,6 +39,8 @@ class JujuActions(ModelConfigDefaults):
     @pydantic.validator("actions")
     def validate_actions(cls, actions, values):
         """Verify actions names and descriptions."""
+        if not isinstance(actions, dict):
+            raise ValueError("actions.yaml is not a valid actions configuration")
         for action in actions:
             if keyword.iskeyword(action):
                 raise ValueError(

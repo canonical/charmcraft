@@ -15,6 +15,7 @@ prepare: |
       charm-requirements: [requirements.txt]
   EOF
 
+  mkdir -p lib/charms/charm/v0/
   cat <<- EOF > lib/charms/charm/v0/my_lib.py
   PYDEPS = ["ops"]
   LIBID = "my_lib"

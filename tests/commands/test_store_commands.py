@@ -30,7 +30,7 @@ from craft_cli import CraftError
 from craft_store.errors import CredentialsUnavailable, StoreServerError
 
 from charmcraft.cmdbase import JSON_FORMAT
-from charmcraft.models.config import CharmhubConfig
+from charmcraft.models.charmcraft import CharmhubConfig
 from charmcraft.commands.store import (
     CloseCommand,
     CreateLibCommand,

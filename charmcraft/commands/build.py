@@ -43,7 +43,7 @@ from charmcraft.const import (
     UBUNTU_LTS_STABLE,
 )
 from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
-from charmcraft.models.config import Base, BasesConfiguration
+from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.parts import Step
 from charmcraft.utils import get_host_architecture
 

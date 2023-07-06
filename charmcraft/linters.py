@@ -388,7 +388,7 @@ CHECKERS = [
 
 
 def analyze(
-    config: config.Config,
+    config: config.CharmcraftConfig,
     basedir: pathlib.Path,
     *,
     override_ignore_config: bool = False,

@@ -25,7 +25,7 @@ from craft_cli import CraftError
 from craft_providers import ProviderError, bases, lxd, multipass
 from craft_providers.actions.snap_installer import Snap
 
-from charmcraft.models.config import Base, BasesConfiguration
+from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft import providers
 from charmcraft.snap import CharmcraftSnapConfiguration
 

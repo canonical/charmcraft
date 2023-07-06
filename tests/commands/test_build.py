@@ -33,7 +33,7 @@ from charmcraft import linters, instrum
 from charmcraft.charm_builder import relativise
 from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
-from charmcraft.models.config import Base, BasesConfiguration
+from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.config import load
 from charmcraft.providers import get_base_configuration
 from charmcraft.utils import get_host_architecture

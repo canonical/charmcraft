@@ -79,10 +79,10 @@ from charmcraft.env import (
     is_charmcraft_running_in_managed_mode,
 )
 from charmcraft.utils import load_yaml
-from charmcraft.models.config import Config, Project
+from charmcraft.models.charmcraft import CharmcraftConfig, Project
 
 
-def load(dirpath: Optional[str]) -> Config:
+def load(dirpath: Optional[str]) -> CharmcraftConfig:
     """Load the config from charmcraft.yaml in the indicated directory."""
     if dirpath is None:
         if is_charmcraft_running_in_managed_mode():
@@ -98,7 +98,7 @@ def load(dirpath: Optional[str]) -> Config:
     if content is None:
         # configuration is mandatory only for some commands; when not provided, it will
         # be initialized all with defaults (but marked as not provided for later verification)
-        return Config(
+        return CharmcraftConfig(
             type="charm",
             project=Project(
                 dirpath=dirpath,
@@ -107,7 +107,7 @@ def load(dirpath: Optional[str]) -> Config:
             ),
         )
 
-    return Config.unmarshal(
+    return CharmcraftConfig.unmarshal(
         content,
         project=Project(
             dirpath=dirpath,

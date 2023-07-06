@@ -31,10 +31,10 @@ import yaml
 from craft_parts import callbacks
 from craft_providers import Executor, Provider
 
-from charmcraft import config as config_module, instrum
-from charmcraft import deprecations, parts
+from charmcraft.models import charmcraft as config_module
+from charmcraft import deprecations, parts, instrum
 from charmcraft.bases import get_host_as_base
-from charmcraft.models.config import Base, BasesConfiguration
+from charmcraft.models.charmcraft import Base, BasesConfiguration
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -51,7 +51,7 @@ def setup_parts():
 def config(tmp_path):
     """Provide a config class with an extra set method for the test to change it."""
 
-    class TestConfig(config_module.Config, frozen=False):
+    class TestConfig(config_module.CharmcraftConfig, frozen=False):
         """The Config, but with a method to set test values."""
 
         def set(self, prime=None, **kwargs):
@@ -84,7 +84,7 @@ def config(tmp_path):
 def bundle_config(tmp_path):
     """Provide a config class with an extra set method for the test to change it."""
 
-    class TestConfig(config_module.Config, frozen=False):
+    class TestConfig(config_module.CharmcraftConfig, frozen=False):
         """The Config, but with a method to set test values."""
 
         def set(self, prime=None, **kwargs):

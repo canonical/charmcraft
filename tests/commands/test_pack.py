@@ -32,7 +32,7 @@ from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand, _get_charm_pack_args, _subprocess_pack_charms
-from charmcraft.models.config import BasesConfiguration
+from charmcraft.models.charmcraft import BasesConfiguration
 from charmcraft.config import load
 
 

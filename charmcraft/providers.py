@@ -29,7 +29,7 @@ from craft_providers.errors import BaseConfigurationError
 from craft_providers.actions.snap_installer import Snap
 
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.models.config import BasesConfiguration
+from charmcraft.models.charmcraft import BasesConfiguration
 from charmcraft.env import (
     get_managed_environment_snap_channel,
     get_managed_environment_log_path,

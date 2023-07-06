@@ -27,7 +27,7 @@ import yaml
 from craft_cli import CraftError
 
 
-import charmcraft.models.config
+import charmcraft.models.charmcraft
 import charmcraft.linters
 from charmcraft.const import IMAGE_INFO_ENV_VAR
 
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 def create_manifest(
     basedir: pathlib.Path,
     started_at: datetime.datetime,
-    bases_config: Optional[charmcraft.models.config.BasesConfiguration],
+    bases_config: Optional[charmcraft.models.charmcraft.BasesConfiguration],
     linting_results: List[charmcraft.linters.CheckResult],
 ) -> pathlib.Path:
     """Create manifest.yaml in basedir for given base configuration.

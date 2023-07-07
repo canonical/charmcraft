@@ -124,7 +124,17 @@ def test_main_managed_instance_error(monkeypatch, side_effect, config):
                 """
             ),
         ],
-        ["type: bundle", None],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_main_load_config_ok(
@@ -206,7 +216,17 @@ def test_main_load_config_not_present_but_needed(capsys):
                 """
             ),
         ],
-        ["type: charm", None],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_main_load_config_bases_not_present_but_not_needed(
@@ -252,7 +272,17 @@ def test_main_load_config_bases_not_present_but_not_needed(
                 """
             ),
         ],
-        ["type: charm", None],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
     ],
 )
 def test_main_load_config_bases_not_present_but_needed(
@@ -354,6 +384,7 @@ def test_main_controlled_error(
         [
             dedent(
                 """\
+                name: test-charm-name-from-charmcraft-yaml
                 type: charm
                 bases:
                   - name: ubuntu
@@ -403,6 +434,7 @@ def test_main_controlled_return_code(
         [
             dedent(
                 """\
+                name: test-charm-name-from-charmcraft-yaml
                 type: charm
                 bases:
                   - name: ubuntu
@@ -457,6 +489,7 @@ def test_main_crash(
         [
             dedent(
                 """\
+                name: test-charm-name-from-charmcraft-yaml
                 type: charm
                 bases:
                   - name: ubuntu
@@ -511,6 +544,7 @@ def test_main_interrupted(
         [
             dedent(
                 """\
+                name: test-charm-name-from-charmcraft-yaml
                 type: charm
                 bases:
                   - name: ubuntu
@@ -564,6 +598,7 @@ def test_main_controlled_arguments_error(
         [
             dedent(
                 """\
+                name: test-charm-name-from-charmcraft-yaml
                 type: charm
                 bases:
                   - name: ubuntu

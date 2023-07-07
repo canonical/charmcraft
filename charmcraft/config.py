@@ -105,6 +105,9 @@ def load(dirpath: Optional[str]) -> CharmcraftConfig:
                 config_provided=False,
                 started_at=now,
             ),
+            name="missing-charm-name",
+            summary="missing-charm-summary",
+            description="missing-charm-description",
         )
 
     return CharmcraftConfig.unmarshal(

@@ -15,48 +15,82 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import os
+from textwrap import dedent
 
 import yaml
 
-from charmcraft.metafiles.actions import create_actions
+from charmcraft.config import load
+from charmcraft.metafiles.actions import create_actions_yaml
 
 
-def test_create_actions_yaml(tmp_path):
+def test_create_actions_yaml(tmp_path, prepare_charmcraft_yaml):
     """create actions.yaml."""
     actions = {
-        "pause": {"description": "Pause the database."},
-        "resume": {"description": "Resume a paused database."},
-        "snapshot": {
-            "description": "Take a snapshot of the database.",
-            "params": {
-                "filename": {"type": "string", "description": "The name of the snapshot file."},
-                "compression": {
-                    "type": "object",
-                    "description": "The type of compression to use.",
-                    "properties": {
-                        "kind": {"type": "string", "enum": ["gzip", "bzip2", "xz"]},
-                        "quality": {
-                            "description": "Compression quality",
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 9,
+        "actions": {
+            "pause": {"description": "Pause the database."},
+            "resume": {"description": "Resume a paused database."},
+            "snapshot": {
+                "description": "Take a snapshot of the database.",
+                "params": {
+                    "filename": {
+                        "type": "string",
+                        "description": "The name of the snapshot file.",
+                    },
+                    "compression": {
+                        "type": "object",
+                        "description": "The type of compression to use.",
+                        "properties": {
+                            "kind": {"type": "string", "enum": ["gzip", "bzip2", "xz"]},
+                            "quality": {
+                                "description": "Compression quality",
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9,
+                            },
                         },
                     },
                 },
+                "required": ["filename"],
+                "additionalProperties": False,
             },
-            "required": ["filename"],
-            "additionalProperties": False,
-        },
+        }
     }
 
-    actions_file = create_actions(tmp_path, actions)
+    yaml_data = yaml.safe_dump(actions)
 
-    assert yaml.safe_load(actions_file.read_text()) == actions
+    prepare_charmcraft_yaml(
+        dedent(
+            """
+            name: test-charm-name
+            type: charm
+            summary: test-summary
+            description: test-description
+            """
+        )
+        + yaml_data
+    )
+
+    config = load(tmp_path)
+
+    actions_file = create_actions_yaml(tmp_path, config)
+
+    assert yaml.safe_load(actions_file.read_text()) == actions["actions"]
 
 
-def test_create_actions_yaml_none(tmp_path):
+def test_create_actions_yaml_none(tmp_path, prepare_charmcraft_yaml):
     """create actions.yaml with None, the file should not exist."""
-    actions_file = create_actions(tmp_path, None)
+    prepare_charmcraft_yaml(
+        dedent(
+            """
+            name: test-charm-name
+            type: charm
+            summary: test-summary
+            description: test-description
+            """
+        )
+    )
+    config = load(tmp_path)
+    actions_file = create_actions_yaml(tmp_path, config)
 
     assert actions_file is None
     assert not os.path.exists(tmp_path / "actions.yaml")

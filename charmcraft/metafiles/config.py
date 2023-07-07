@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Charmcraft project handle actions.yaml file."""
+"""Charmcraft project handle config.yaml file."""
 
 import pathlib
 import logging
@@ -24,8 +24,8 @@ from typing import Optional, TYPE_CHECKING
 import yaml
 
 from craft_cli import emit, CraftError
-from charmcraft.const import JUJU_ACTIONS_FILENAME
-from charmcraft.models.actions import JujuActions
+from charmcraft.const import JUJU_CONFIG_FILENAME
+from charmcraft.models.config import JujuConfig
 from charmcraft.metafiles import read_yaml
 
 if TYPE_CHECKING:
@@ -34,27 +34,27 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def parse_actions_yaml(charm_dir: pathlib.Path) -> Optional[JujuActions]:
-    """Parse project's actions.yaml.
+def parse_config_yaml(charm_dir: pathlib.Path) -> Optional[JujuConfig]:
+    """Parse project's config.yaml.
 
-    :param charm_dir: Directory to read actions.yaml from.
+    :param charm_dir: Directory to read config.yaml from.
 
-    :returns: a JujuActions object or None if actions.yaml does not exist.
+    :returns: a JujuConfig object.
 
-    :raises: CraftError if actions.yaml is not valid.
+    :raises: CraftError if config.yaml is not valid.
     """
     try:
-        actions = read_yaml(charm_dir / JUJU_ACTIONS_FILENAME)
+        config = read_yaml(charm_dir / JUJU_CONFIG_FILENAME)
     except FileNotFoundError:
         return None
     except OSError as exc:
-        raise CraftError(f"Cannot read the {JUJU_ACTIONS_FILENAME} file: {exc!r}") from exc
+        raise CraftError(f"Cannot read the {JUJU_CONFIG_FILENAME} file: {exc!r}") from exc
 
-    emit.debug(f"Validating {JUJU_ACTIONS_FILENAME}")
-    return JujuActions.parse_obj({"actions": actions, "legacy": True})
+    emit.debug(f"Validating {JUJU_CONFIG_FILENAME}")
+    return JujuConfig.parse_obj({"legacy": True, **config})
 
 
-def create_actions_yaml(
+def create_config_yaml(
     basedir: pathlib.Path,
     charmcraft_config: "CharmcraftConfig",
 ) -> Optional[pathlib.Path]:
@@ -63,24 +63,24 @@ def create_actions_yaml(
     :param basedir: Directory to create Charm in.
     :param charmcraft_config: Charmcraft configuration object.
 
-    :returns: Path to created actions.yaml.
+    :returns: Path to created config.yaml.
     """
-    if charmcraft_config.actions is None or charmcraft_config.actions.actions is None:
+    if charmcraft_config.config is None or charmcraft_config.config.options is None:
         return None
 
-    file_path = basedir / JUJU_ACTIONS_FILENAME
+    file_path = basedir / JUJU_CONFIG_FILENAME
 
-    if charmcraft_config.actions.legacy:
+    if charmcraft_config.config.legacy:
         try:
-            shutil.copyfile(charmcraft_config.project.dirpath / JUJU_ACTIONS_FILENAME, file_path)
+            shutil.copyfile(charmcraft_config.project.dirpath / JUJU_CONFIG_FILENAME, file_path)
         except shutil.SameFileError:
             pass
     else:
         file_path.write_text(
             yaml.dump(
-                charmcraft_config.actions.dict(
-                    include={"actions"}, exclude_none=True, by_alias=True
-                )["actions"]
+                charmcraft_config.config.dict(
+                    include={"options"}, exclude_none=True, by_alias=True
+                )
             )
         )
 

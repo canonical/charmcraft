@@ -17,6 +17,9 @@
 """Constants used in charmcraft."""
 
 METADATA_FILENAME = "metadata.yaml"
+JUJU_ACTIONS_FILENAME = "actions.yaml"
+JUJU_CONFIG_FILENAME = "config.yaml"
+
 IMAGE_INFO_ENV_VAR = "CHARMCRAFT_IMAGE_INFO"
 
 WORK_DIRNAME = "work_dir"
@@ -40,34 +43,98 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv \\
 """
 
 # The minimum set of hooks to be provided for compatibility with old Juju
-MANDATORY_HOOK_NAMES = {"install", "start", "upgrade-charm"}
+MANDATORY_HOOK_NAMES = frozenset(("install", "start", "upgrade-charm"))
 HOOKS_DIRNAME = "hooks"
 
 # The minimum set of files for a charm to be considered valid
-CHARM_FILES = [
-    METADATA_FILENAME,
-    DISPATCH_FILENAME,
-    HOOKS_DIRNAME,
-]
+CHARM_FILES = frozenset(
+    (
+        DISPATCH_FILENAME,
+        HOOKS_DIRNAME,
+    )
+)
 
 # Optional files that can be present in a charm
-CHARM_OPTIONAL = [
-    "config.yaml",
-    "metrics.yaml",
-    "actions.yaml",
-    "lxd-profile.yaml",
-    "templates",
-    "version",
-    "lib",
-    "mod",
-    "LICENSE",
-    "icon.svg",
-    "README.md",
-    "actions",
-]
+CHARM_OPTIONAL = frozenset(
+    (
+        METADATA_FILENAME,
+        JUJU_ACTIONS_FILENAME,
+        JUJU_CONFIG_FILENAME,
+        "metrics.yaml",
+        "lxd-profile.yaml",
+        "templates",
+        "version",
+        "lib",
+        "mod",
+        "LICENSE",
+        "icon.svg",
+        "README.md",
+        "actions",
+    )
+)
 
-UBUNTU_LTS_STABLE = {
-    "18.04",
-    "20.04",
-    "22.04",
-}
+UBUNTU_LTS_STABLE = frozenset(
+    (
+        "18.04",
+        "20.04",
+        "22.04",
+    )
+)
+
+# Metadata keys that are defined in the metadata.yaml file, for backwards compatible
+CHARM_METADATA_LEGACY_KEYS = frozenset(
+    (
+        "assumes",
+        "containers",
+        "description",
+        "devices",
+        "display-name",
+        "docs",
+        "extra-bindings",
+        "issues",
+        "maintainers",
+        "name",
+        "peers",
+        "provides",
+        "requires",
+        "resources",
+        "series",
+        "storage",
+        "subordinate",
+        "summary",
+        "terms",
+        "website",
+    )
+)
+
+CHARM_METADATA_LEGARY_KEYS_ALIAS = frozenset(
+    (
+        "display_name",
+        "extra_bindings",
+    )
+)
+
+# Metadata keys that are allowed in the charmcraft.yaml file
+CHARM_METADATA_KEYS = frozenset(
+    (
+        "assumes",
+        "containers",
+        "description",
+        "devices",
+        "title",
+        "documentation",
+        "extra-bindings",
+        "links",
+        "name",
+        "peers",
+        "provides",
+        "requires",
+        "resources",
+        "storage",
+        "subordinate",
+        "summary",
+        "terms",
+    )
+)
+
+CHARM_METADATA_KEYS_ALIAS = frozenset(("extra_bindings",))

@@ -372,8 +372,28 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
                 """
             ),
         ),
-        ("foobar.py", None, "name: foobar"),
-        ("foo_bar.py", None, "name: foo-bar"),
+        (
+            "foobar.py",
+            None,
+            dedent(
+                """\
+                name: foobar
+                summary: Small text.
+                description: Lot of text.
+                """
+            ),
+        ),
+        (
+            "foo_bar.py",
+            None,
+            dedent(
+                """\
+                name: foo-bar
+                summary: Small text.
+                description: Lot of text.
+                """
+            ),
+        ),
     ],
 )
 def test_framework_reactive_used_ok(

@@ -22,7 +22,7 @@ import zipfile
 from textwrap import dedent
 from typing import List
 from unittest import mock
-from unittest.mock import call, patch, MagicMock
+from unittest.mock import call, patch, MagicMock, ANY
 
 import pytest
 import yaml
@@ -242,8 +242,12 @@ def test_build_error_without_metadata_yaml(basic_project):
 
         get_builder(config)
 
-    assert exc_info.value.args[0] == (
-        "Cannot read the metadata.yaml file: FileNotFoundError(2, 'No such file or directory')"
+    assert str(exc_info.value) == dedent(
+        """\
+        Bad charmcraft.yaml content:
+        - needs value in field 'name'
+        - needs value in field 'summary'
+        - needs value in field 'description'"""
     )
 
 
@@ -1243,16 +1247,52 @@ def test_build_package_tree_structure(tmp_path, config):
     assert zf.read("linkeddir/file_ext") == b"external file"  # from file in the outside linked dir
 
 
-def test_build_package_name(tmp_path, config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml, expected_zipname",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            "test-charm-name-from-metadata-yaml_xname-xchannel-xarch1.charm",
+        ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                type: charm
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+            "test-charm-name-from-charmcraft-yaml_xname-xchannel-xarch1.charm",
+        ],
+    ],
+)
+def test_build_package_name(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+    expected_zipname,
+):
     """The zip file name comes from the config."""
     to_be_zipped_dir = tmp_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
-    # the metadata
-    metadata_data = {"name": "name-from-metadata-yaml"}
-    metadata_file = tmp_path / "metadata.yaml"
-    with metadata_file.open("wt", encoding="ascii") as fh:
-        yaml.dump(metadata_data, fh)
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     # zip it
     bases_config = BasesConfiguration(
@@ -1261,10 +1301,12 @@ def test_build_package_name(tmp_path, config):
             "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
         }
     )
+
+    config = load(tmp_path)
     builder = get_builder(config)
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
-    assert zipname == "name-from-metadata-yaml_xname-xchannel-xarch1.charm"
+    assert zipname == expected_zipname
 
 
 @pytest.mark.parametrize(
@@ -1389,17 +1431,7 @@ def test_build_part_from_config(
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
+                        "prime": ANY,
                         "charm-entrypoint": "src/charm.py",
                         "charm-python-packages": ["foo", "bar"],
                         "charm-binary-python-packages": ["baz"],
@@ -1414,6 +1446,17 @@ def test_build_part_from_config(
             )
         ]
     )
+    assert set(mock_lifecycle.call_args_list[0][0][0]["charm"]["prime"]) == {
+        "src",
+        "venv",
+        "hooks",
+        "dispatch",
+        "LICENSE",
+        "README.md",
+        "icon.svg",
+        "lib",
+        "metadata.yaml",
+    }
 
 
 @pytest.mark.parametrize(
@@ -1487,17 +1530,7 @@ def test_build_part_include_venv_pydeps(
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
+                        "prime": ANY,
                         "charm-entrypoint": "src/charm.py",
                         "charm-python-packages": [],
                         "charm-binary-python-packages": [],
@@ -1512,6 +1545,18 @@ def test_build_part_include_venv_pydeps(
             )
         ]
     )
+
+    assert set(mock_lifecycle.call_args_list[0][0][0]["charm"]["prime"]) == {
+        "src",
+        "venv",
+        "hooks",
+        "dispatch",
+        "LICENSE",
+        "README.md",
+        "icon.svg",
+        "lib",
+        "metadata.yaml",
+    }
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

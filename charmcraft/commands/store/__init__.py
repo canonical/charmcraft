@@ -999,10 +999,10 @@ class PromoteBundleCommand(BaseCommand):
                 emit.debug(f"Error when running PRIME step: {error}")
                 raise
 
-            from charmcraft.metafiles.actions import create_actions
+            from charmcraft.metafiles.metadata import create_metadata_yaml
             from charmcraft.metafiles.manifest import create_manifest
 
-            create_actions(lifecycle.prime_dir, self.config.actions)
+            create_metadata_yaml(lifecycle.prime_dir, self.config)
             create_manifest(lifecycle.prime_dir, self.config.project.started_at, None, [])
             zipname = bundle_dir_path / (bundle_name + ".zip")
             build_zip(zipname, lifecycle.prime_dir)

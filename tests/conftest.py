@@ -77,6 +77,9 @@ def config(tmp_path):
         type="charm",
         bases=[base],
         project=project,
+        name="test-charm",
+        summary="test summary",
+        description="test description",
     )
 
 
@@ -107,6 +110,9 @@ def bundle_config(tmp_path):
     return TestConfig(
         type="bundle",
         project=project,
+        name="test-bundle",
+        summary="test summary",
+        description="test description",
     )
 
 

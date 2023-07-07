@@ -18,7 +18,7 @@
 import datetime
 import pathlib
 import os
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any, Union, Literal
 
 import pydantic
 
@@ -116,7 +116,7 @@ class CharmcraftConfig(
 
     metadata_legacy: bool = False
 
-    type: str
+    type: Literal["bundle", "charm"]
     name: Optional[pydantic.StrictStr]
     summary: Optional[pydantic.StrictStr]
     description: Optional[pydantic.StrictStr]
@@ -139,13 +139,6 @@ class CharmcraftConfig(
     terms: Optional[List[str]]
     links: Optional[Links]
     config: Optional[JujuConfig]
-
-    @pydantic.validator("type")
-    def validate_charm_type(cls, charm_type):
-        """Verify charm type is valid with exception when instantiated without YAML."""
-        if charm_type not in ["bundle", "charm"]:
-            raise ValueError("must be either 'charm' or 'bundle'")
-        return charm_type
 
     @pydantic.validator("name", pre=True, always=True)
     def validate_name(cls, name, values):

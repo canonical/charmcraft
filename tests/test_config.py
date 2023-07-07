@@ -451,7 +451,7 @@ def test_schema_type_bad_type(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - must be either 'charm' or 'bundle' in field 'type'"""
+        - unexpected value; permitted: 'bundle', 'charm' in field 'type'"""
     )
 
 
@@ -497,7 +497,7 @@ def test_schema_type_limited_values(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - must be either 'charm' or 'bundle' in field 'type'"""
+        - unexpected value; permitted: 'bundle', 'charm' in field 'type'"""
     )
 
 

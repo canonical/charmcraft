@@ -15,12 +15,16 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft basic pydantic model."""
-
+import craft_application.models
 import pydantic
 
 
 class ModelConfigDefaults(
-    pydantic.BaseModel, extra=pydantic.Extra.forbid, frozen=True, validate_all=True
+    craft_application.models.CraftBaseModel,
+    frozen=True,
+    validate_all=True,
+    allow_population_by_field_name=False,
+    alias_generator=pydantic.BaseConfig.alias_generator,
 ):
     """Define Charmcraft's defaults for the BaseModel configuration."""
 

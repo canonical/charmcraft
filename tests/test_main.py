@@ -29,12 +29,11 @@ from craft_cli import (
     ArgumentParsingError,
     CommandGroup,
     CraftError,
-    EmitterMode,
     ProvideHelpException,
 )
 from craft_store.errors import CraftStoreError
 
-from charmcraft import __version__, env, utils
+from charmcraft import utils
 from charmcraft.cmdbase import FORMAT_HELP_STR, JSON_FORMAT, BaseCommand
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.main import COMMAND_GROUPS, _get_system_details, main
@@ -56,13 +55,8 @@ def test_main_ok():
     assert retcode == 0
     emit_mock.ended_ok.assert_called_once_with()
 
-    # check how Emitter was initted
-    emit_mock.init.assert_called_once_with(
-        EmitterMode.BRIEF,
-        "charmcraft",
-        f"Starting charmcraft version {__version__}",
-        log_filepath=None,
-    )
+    # Emitter is init'd by craft-application
+    emit_mock.init.assert_not_called()
 
 
 def test_main_managed_instance_init(monkeypatch):
@@ -74,13 +68,8 @@ def test_main_managed_instance_init(monkeypatch):
             d_mock.return_value = None
             main(["charmcraft", "version"])
 
-    # check how Emitter was initted
-    emit_mock.init.assert_called_once_with(
-        EmitterMode.BRIEF,
-        "charmcraft",
-        f"Starting charmcraft version {__version__}",
-        log_filepath=env.get_managed_environment_log_path(),
-    )
+    # Emitter is init'd by craft-application
+    emit_mock.init.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -321,7 +310,7 @@ def test_main_load_config_bases_not_present_but_needed(
 def test_main_no_args():
     """The setup.py entry_point function needs to work with no arguments."""
     with patch("sys.argv", ["charmcraft"]):
-        retcode = main()
+        retcode = main(sys.argv)
 
     assert retcode == 1
 
@@ -640,7 +629,7 @@ def test_main_logs_system_details(emitter, config):
                 details_mock.return_value = system_details
                 run_mock.return_value = None
                 main(["charmcraft", "version"])
-    emit_mock.debug.assert_called_once_with(system_details)
+    emit_mock.debug.assert_called_with(system_details)
 
 
 # -- tests for system details producer

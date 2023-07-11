@@ -51,7 +51,11 @@ def setup_parts():
 def config(tmp_path):
     """Provide a config class with an extra set method for the test to change it."""
 
-    class TestConfig(config_module.CharmcraftConfig, frozen=False):
+    class TestConfig(
+        config_module.CharmcraftConfig,
+        frozen=False,
+        validate_assignment=False,  # Don't validate assignments since this causes setup failures.
+    ):
         """The Config, but with a method to set test values."""
 
         def set(self, prime=None, **kwargs):

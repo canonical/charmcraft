@@ -25,8 +25,8 @@ import hashlib
 import os
 import pathlib
 import shutil
-import sys
 import subprocess
+import sys
 from typing import List
 
 from charmcraft import instrum
@@ -34,7 +34,6 @@ from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import make_executable
-
 
 # Some constants that are used through the code.
 WORK_DIRNAME = "work_dir"
@@ -76,7 +75,7 @@ class CharmBuilder:
         binary_python_packages: List[str] = None,
         python_packages: List[str] = None,
         requirements: List[pathlib.Path] = None,
-    ):
+    ) -> None:
         self.builddir = builddir
         self.installdir = installdir
         self.entrypoint = entrypoint
@@ -263,17 +262,15 @@ class CharmBuilder:
                 cmd.extend(self.python_packages)  # the python packages to install
                 _process_run(cmd)
 
-            if self.requirement_paths:
-                # install dependencies from requirement files
+            if self.requirement_paths or self.charmlib_deps:
                 cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-                for reqspath in self.requirement_paths:
-                    cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
-                _process_run(cmd)
 
-            if self.charmlib_deps:
-                # install charmlibs python dependencies
-                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-                cmd.extend(self.charmlib_deps)  # the python packages to install
+                if self.requirement_paths:
+                    # install dependencies from requirement files
+                    cmd.extend(f"--requirement={path}" for path in self.requirement_paths)
+
+                if self.charmlib_deps:
+                    cmd.extend(self.charmlib_deps)
                 _process_run(cmd)
 
     def handle_dependencies(self):

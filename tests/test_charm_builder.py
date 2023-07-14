@@ -792,9 +792,10 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
                 ":all:",
                 f"--requirement={reqs_file_1}",
                 f"--requirement={reqs_file_2}",
+                "pkg5",
+                "pkg6",
             ]
         ),
-        call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg5", "pkg6"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))

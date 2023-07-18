@@ -51,7 +51,7 @@ pyRFC3339==1.1
 pyrsistent==0.19.3
 pytest==7.3.1
 pytest-check==2.1.4
-pytest-cov==4.0.0
+pytest-cov==4.1.0
 pytest-mock==3.10.0
 python-dateutil==2.8.2
 pytz==2023.3

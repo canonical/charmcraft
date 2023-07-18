@@ -10,7 +10,7 @@ cryptography==41.0.2
 Deprecated==1.2.13
 humanize==4.6.0
 idna==3.4
-importlib-metadata==6.5.0
+importlib-metadata==6.8.0
 jaraco.classes==3.2.3
 jeepney==0.8.0
 Jinja2==3.1.2

@@ -18,7 +18,7 @@ distlib==0.3.6
 exceptiongroup==1.1.1
 filelock==3.12.0
 flake8==6.0.0
-humanize==4.6.0
+humanize==4.7.0
 idna==3.4
 importlib-metadata==6.8.0
 iniconfig==2.0.0

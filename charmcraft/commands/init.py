@@ -45,15 +45,29 @@ Initialize a charm operator package tree and files.
 
 This command will modify the directory to create the necessary files for a
 charm operator package. By default it will work in the current directory.
-It will setup the following tree of files and directories:
+
+Available profiles are:
+    simple:
+        A basic kubernetes charm with lot of texts helping the developer
+        to navigate their first charm by following the instructions.
+    kubernetes:
+        A basic Kubernetes charm with exmaple container.
+    machine:
+        A basic charm but meant to be deployed in machine-based environments,
+        without container requirements.
+
+Depending on the profile choice, Charmcraft will setup the following tree of
+files and directories:
 
     .
     ├── charmcraft.yaml        - Charm build configuration
     ├── config.yaml            - Config schema for your operator
-    ├── CONTRIBUTING.md        - Instructions for how to build and develop your charm
+    ├── CONTRIBUTING.md        - Instructions for how to build and develop
+    │                             your charm
     ├── LICENSE                - Your charm license, we recommend Apache 2
     ├── metadata.yaml          - Charm operator package description
-    ├── pyproject.toml         - Configuration for testing, formatting and linting tools
+    ├── pyproject.toml         - Configuration for testing, formatting and
+    │                             linting tools
     ├── README.md              - Frontpage for your charmhub.io/charm/
     ├── requirements.txt       - PyPI dependencies for your charm, with `ops`
     ├── src
@@ -117,8 +131,7 @@ class InitCommand(BaseCommand):
             "--profile",
             choices=list(PROFILES),
             default=DEFAULT_PROFILE,
-            help=f"""Use the specified project profile (defaults to '{DEFAULT_PROFILE}', """
-            f"""could be one of {', '.join(f"'{p}'" for p in PROFILES)})""",
+            help=f"Use the specified project profile (defaults to '{DEFAULT_PROFILE}')",
         )
 
     def run(self, args):

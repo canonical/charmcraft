@@ -176,9 +176,12 @@ class Builder:
         with charmcraft.instrum.Timer("Lifecycle run"):
             lifecycle.run(Step.PRIME)
 
-        create_actions_yaml(lifecycle.prime_dir, self.config)
-        create_config_yaml(lifecycle.prime_dir, self.config)
-        create_metadata_yaml(lifecycle.prime_dir, self.config)
+        # skip creation yaml files if using reactive, reactive will create them
+        # in a incompatible way
+        if self._parts.get("charm", {}).get("plugin", None) != "reactive":
+            create_actions_yaml(lifecycle.prime_dir, self.config)
+            create_config_yaml(lifecycle.prime_dir, self.config)
+            create_metadata_yaml(lifecycle.prime_dir, self.config)
 
         # run linters and show the results
         linting_results = charmcraft.linters.analyze(self.config, lifecycle.prime_dir)

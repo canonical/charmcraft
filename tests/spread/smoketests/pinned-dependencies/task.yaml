@@ -1,0 +1,32 @@
+summary: pack a charm with a specific (old) dependency version
+
+include:
+  - tests/
+
+prepare: |
+  tests.pkgs install unzip
+  charmcraft init --project-dir=charm
+  cd charm
+  echo "ops==2.0.0" > requirements.txt
+  cat <<- EOF >> charmcraft.yaml
+  parts:
+    charm:
+      charm-requirements: [requirements.txt]
+  EOF
+  mkdir -p lib/charms/charm/v0/
+  cat <<- EOF > lib/charms/charm/v0/my_lib.py
+  PYDEPS = ["ops"]
+  LIBID = "my_lib"
+  LIBAPI = 0
+  LIBPATCH = 1
+  EOF
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  rm -rf charm
+execute: |
+  cd charm
+  charmcraft pack --verbose
+  test -f charm*.charm
+  unzip -p charm_*.charm venv/ops/version.py | MATCH "version = '2.0.0'"

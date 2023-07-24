@@ -18,7 +18,7 @@ import contextlib
 import pathlib
 import re
 import sys
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
 import pytest
 from craft_cli import CraftError

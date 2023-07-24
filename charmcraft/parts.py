@@ -18,6 +18,7 @@
 
 import os
 import pathlib
+import re
 import shlex
 import sys
 from typing import Any, Dict, List, Optional, Set, cast
@@ -194,6 +195,10 @@ class CharmPlugin(plugins.Plugin):
                 "python3-setuptools",
                 "python3-wheel",
             }
+        elif platform.is_dnf_based():
+            return {
+                "python3-devel",
+            }
         else:
             return {}
 
@@ -249,14 +254,24 @@ class CharmPlugin(plugins.Plugin):
             build_cmd.extend(["--entrypoint", str(entrypoint)])
 
         try:
-            if (
-                options.charm_python_packages or options.charm_requirements
-            ) and platform.is_yum_based():
+            if options.charm_python_packages or options.charm_requirements:
+                base_tools = ["pip", "setuptools", "wheel"]
+
+                # remove base tools if defined in charm_python_packages
+                for pkg in options.charm_python_packages:
+                    pkg = re.split("[<=>]", pkg, 1)[0].strip()
+                    if pkg in base_tools:
+                        base_tools.remove(pkg)
+
                 os_release = os_utils.OsRelease()
                 if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
-                    # CentOS 7 compatibility
-                    for pkg in ["pip", "setuptools", "wheel"]:
+                    # CentOS 7 compatibility, bootstrap base tools use binary packages
+                    for pkg in base_tools:
                         build_cmd.extend(["-b", pkg])
+
+                # build base tools from source
+                for pkg in base_tools:
+                    build_cmd.extend(["-p", pkg])
         except (OsReleaseIdError, OsReleaseVersionIdError):
             pass
 

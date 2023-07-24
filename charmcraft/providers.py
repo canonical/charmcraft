@@ -29,7 +29,7 @@ from craft_providers.errors import BaseConfigurationError
 from craft_providers.actions.snap_installer import Snap
 
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.config import BasesConfiguration
+from charmcraft.models.charmcraft import BasesConfiguration
 from charmcraft.env import (
     get_managed_environment_snap_channel,
     get_managed_environment_log_path,
@@ -241,10 +241,11 @@ def is_base_available(base: Base) -> Tuple[bool, Union[str, None]]:
             f"host architecture {arch!r} not in base architectures {base.architectures!r}",
         )
 
-    if base.name not in ("ubuntu", "centos"):
+    if base.name not in ("ubuntu", "centos", "almalinux"):
         return (
             False,
-            f"name {base.name!r} is not yet supported (must be 'ubuntu' or 'centos')",
+            f"name {base.name!r} is not yet supported (must be 'ubuntu', 'almalinux', "
+            "or 'centos')",
         )
 
     try:

@@ -18,7 +18,7 @@
 
 from typing import Tuple, Union
 
-from charmcraft.config import Base
+from charmcraft.models.charmcraft import Base
 from charmcraft.utils import get_host_architecture, get_os_platform
 
 
@@ -51,7 +51,14 @@ def check_if_base_matches_host(base: Base) -> Tuple[bool, Union[str, None]]:
     if host_base.name != base.name:
         return False, f"name {base.name!r} does not match host {host_base.name!r}"
 
-    if host_base.channel != base.channel:
+    # For Ubuntu, MacOS and Windows, use the full version.
+    # For other OSes, use the major version only.
+
+    if host_base.name in ("ubuntu", "darwin", "windows"):
+        host_channel = host_base.channel
+    else:
+        host_channel = host_base.channel.split(".")[0]
+    if host_channel != base.channel:
         return (
             False,
             f"channel {base.channel!r} does not match host {host_base.channel!r}",

@@ -34,8 +34,7 @@ from charmcraft.charm_builder import (
     VENV_DIRNAME,
     _process_run,
 )
-from charmcraft.commands.build import BUILD_DIRNAME, DISPATCH_FILENAME
-from charmcraft.metadata import CHARM_METADATA
+from charmcraft.const import METADATA_FILENAME, BUILD_DIRNAME, DISPATCH_FILENAME
 
 
 def test_build_generics_simple_files(tmp_path):
@@ -43,7 +42,7 @@ def test_build_generics_simple_files(tmp_path):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
 
     entrypoint = tmp_path / "crazycharm.py"
@@ -58,7 +57,7 @@ def test_build_generics_simple_files(tmp_path):
 
     # check files are there, are files, and are really hard links (so no
     # check for permissions needed)
-    built_metadata = build_dir / CHARM_METADATA
+    built_metadata = build_dir / METADATA_FILENAME
     assert built_metadata.is_file()
     assert built_metadata.stat().st_ino == metadata.stat().st_ino
 
@@ -76,7 +75,7 @@ def test_build_generics_simple_dir(tmp_path):
     build_dir.mkdir()
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
 
     somedir = tmp_path / "somedir"
@@ -98,7 +97,7 @@ def test_build_generics_ignored_file(tmp_path, assert_output):
     """Don't include ignored filed."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
 
     # create two files (and the needed entrypoint)
@@ -130,7 +129,7 @@ def test_build_generics_ignored_dir(tmp_path, assert_output):
     """Don't include ignored dir."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
 
     # create two files (and the needed entrypoint)
@@ -175,7 +174,7 @@ def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
     #    └─ dir5
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     file1 = tmp_path / "file1.txt"
     file1.touch()
@@ -269,7 +268,7 @@ def test_build_generics_symlink_file(tmp_path):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
@@ -296,7 +295,7 @@ def test_build_generics_symlink_dir(tmp_path):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
@@ -330,7 +329,7 @@ def test_build_generics_symlink_deep(tmp_path):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
 
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
@@ -364,7 +363,7 @@ def test_build_generics_symlink_file_outside(tmp_path, assert_output):
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
-    metadata = project_dir / CHARM_METADATA
+    metadata = project_dir / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = project_dir / BUILD_DIRNAME
     build_dir.mkdir()
@@ -394,7 +393,7 @@ def test_build_generics_symlink_directory_outside(tmp_path, assert_output):
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
-    metadata = project_dir / CHARM_METADATA
+    metadata = project_dir / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = project_dir / BUILD_DIRNAME
     build_dir.mkdir()
@@ -425,7 +424,7 @@ def test_build_generics_different_filetype(tmp_path, assert_output, monkeypatch)
     # will be too long for mac os
     monkeypatch.chdir(tmp_path)
 
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = pathlib.Path(BUILD_DIRNAME)
     build_dir.mkdir()
@@ -451,7 +450,7 @@ def test_build_generics_different_filetype(tmp_path, assert_output, monkeypatch)
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
     """The dispatcher script is properly built."""
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -474,7 +473,7 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_respected(tmp_path):
     """The already included dispatcher script is left untouched."""
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -497,7 +496,7 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     """The mandatory classic hooks are implemented ok if not present."""
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -523,7 +522,7 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
     """The already included mandatory classic hooks are left untouched."""
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -551,7 +550,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_output):
     """Hooks that are just a symlink to the entrypoint are replaced."""
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1093,7 +1092,7 @@ def test_build_dependencies_reused(tmp_path, assert_output):
 
 def test_builder_without_jujuignore(tmp_path):
     """Without a .jujuignore we still have a default set of ignores"""
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
@@ -1111,7 +1110,7 @@ def test_builder_without_jujuignore(tmp_path):
 
 def test_builder_with_jujuignore(tmp_path):
     """With a .jujuignore we will include additional ignores."""
-    metadata = tmp_path / CHARM_METADATA
+    metadata = tmp_path / METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()

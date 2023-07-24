@@ -20,7 +20,6 @@ from craft_cli import emit
 
 from charmcraft import providers
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.metadata import parse_metadata_yaml
 from charmcraft.utils import get_host_architecture
 
 _overview = """
@@ -47,8 +46,7 @@ class CleanCommand(BaseCommand):
         """
         self._check_config(config_file=True, bases=True)
         project_path = self.config.project.dirpath
-        metadata = parse_metadata_yaml(project_path)
-        emit.message(f"Cleaning project {metadata.name!r}.")
+        emit.message(f"Cleaning project {self.config.name!r}.")
         provider = providers.get_provider()
         build_plan = providers.create_build_plan(
             bases=self.config.bases,
@@ -60,7 +58,7 @@ class CleanCommand(BaseCommand):
 
         for plan in build_plan:
             instance_name = providers.get_instance_name(
-                project_name=metadata.name,
+                project_name=self.config.name,
                 project_path=project_path,
                 bases_index=plan.bases_index,
                 build_on_index=plan.build_on_index,
@@ -70,4 +68,4 @@ class CleanCommand(BaseCommand):
             emit.debug(f"Cleaning environment {instance_name!r}")
             provider.clean_project_environments(instance_name=instance_name)
 
-        emit.message(f"Cleaned project {metadata.name!r}.")
+        emit.message(f"Cleaned project {self.config.name!r}.")

@@ -16,7 +16,7 @@ class {{ class_name }}(ops.CharmBase):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.framework.observe(self.on.some_container_pebble_ready, self._on_pebble_ready)
+        self.framework.observe(self.on["some_container"].pebble_ready, self._on_pebble_ready)
 
     def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
         """Handle pebble-ready event."""
@@ -24,4 +24,4 @@ class {{ class_name }}(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main({{ class_name }})
+    ops.main({{ class_name }})  # type: ignore

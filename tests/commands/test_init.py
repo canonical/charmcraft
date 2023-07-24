@@ -25,7 +25,7 @@ import pytest
 from craft_cli import CraftError
 
 from charmcraft.commands.init import InitCommand, DEFAULT_PROFILE, PROFILES
-from charmcraft.config import Project
+from charmcraft.models.charmcraft import Project
 from charmcraft.utils import S_IXALL
 from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
 

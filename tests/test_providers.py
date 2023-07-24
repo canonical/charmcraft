@@ -16,22 +16,24 @@
 
 import contextlib
 import pathlib
+import re
 import sys
 from unittest.mock import Mock, call, patch
 
 import pytest
-from charmcraft import providers
-from charmcraft.config import Base, BasesConfiguration
-from charmcraft.snap import CharmcraftSnapConfiguration
 from craft_cli import CraftError
 from craft_providers import ProviderError, bases, lxd, multipass
 from craft_providers.actions.snap_installer import Snap
+
+from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft import providers
+from charmcraft.snap import CharmcraftSnapConfiguration
 
 
 @pytest.fixture()
 def mock_provider(mock_instance, fake_provider):
     mock_provider = Mock(wraps=fake_provider)
-    with patch("charmcraft.commands.build.providers.get_provider", return_value=mock_provider):
+    with patch("charmcraft.providers.get_provider", return_value=mock_provider):
         yield mock_provider
 
 
@@ -683,23 +685,21 @@ def test_ensure_provider_is_available_installed_no_user_confirms_no(mocker, fake
             "20.04",
             ["host-arch"],
             False,
-            "name 'not-ubuntu' is not yet supported (must be 'ubuntu' or 'centos')",
+            r"name 'not-ubuntu' is not yet supported \(must be 'ubuntu', .*\)",
         ),
         (
             "ubuntu",
             "10.04",
             ["host-arch"],
             False,
-            "base 'ubuntu' channel '10.04' is not yet supported (must be 'centos 7', "
-            "'ubuntu 16.04', 'ubuntu 18.04', 'ubuntu 20.04', 'ubuntu 22.04', "
-            "'ubuntu 22.10', 'ubuntu 23.04' or 'ubuntu devel')",
+            r"base 'ubuntu' channel '10.04' is not yet supported \(must be .*\)",
         ),
         (
             "ubuntu",
             "20.04",
             ["other-arch"],
             False,
-            "host architecture 'host-arch' not in base architectures ['other-arch']",
+            r"host architecture 'host-arch' not in base architectures \['other-arch'\]",
         ),
     ],
 )
@@ -709,7 +709,11 @@ def test_is_base_available(
     base = Base(name=name, channel=channel, architectures=architectures)
     valid, reason = providers.is_base_available(base)
 
-    assert (valid, reason) == (expected_valid, expected_reason)
+    assert valid == expected_valid
+    if reason is None:
+        assert expected_reason == reason
+    else:
+        assert re.fullmatch(expected_reason, reason)
 
 
 def test_get_provider_default(mock_snap_config, mock_is_developer_mode, mock_is_snap):

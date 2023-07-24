@@ -19,7 +19,7 @@ from unittest import mock
 import pytest
 
 from charmcraft.commands.clean import CleanCommand
-from charmcraft.config import Base, BasesConfiguration
+from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.utils import get_host_architecture
 
 
@@ -52,8 +52,7 @@ def test_clean_simple(
     config, emitter, mock_provider, tmp_path, mock_instance_name, mock_is_base_available
 ):
     """Test clean with one base."""
-    metadata_yaml = tmp_path / "metadata.yaml"
-    metadata_yaml.write_text("name: foo")
+    config.name = "foo"
 
     bases_config = [
         BasesConfiguration(
@@ -98,8 +97,7 @@ def test_clean_complex(
     config, emitter, mock_provider, tmp_path, mock_instance_name, mock_is_base_available
 ):
     """Test clean with a complex list of bases."""
-    metadata_yaml = tmp_path / "metadata.yaml"
-    metadata_yaml.write_text("name: foo")
+    config.name = "foo"
 
     bases_config = [
         BasesConfiguration(

@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 import pytest
 
-from charmcraft.config import Base
+from charmcraft.models.charmcraft import Base
 from charmcraft.bases import check_if_base_matches_host, get_host_as_base
 from charmcraft.utils import OSPlatform
 

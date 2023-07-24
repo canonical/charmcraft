@@ -25,16 +25,56 @@ import pytest
 from craft_cli import CraftError
 
 from charmcraft import linters
-from charmcraft.config import Base, BasesConfiguration, CharmhubConfig, load
+from charmcraft.models.charmcraft import Base, BasesConfiguration, CharmhubConfig
+from charmcraft.config import load
 from charmcraft.utils import get_host_architecture
 
 
 # -- tests for the config loading
 
 
-def test_load_current_directory(create_config, monkeypatch):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_load_current_directory(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+    monkeypatch,
+):
     """Init the config using charmcraft.yaml in current directory."""
-    tmp_path = create_config()
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     monkeypatch.chdir(tmp_path)
     fake_utcnow = datetime.datetime(1970, 1, 1, 0, 0, 2, tzinfo=datetime.timezone.utc)
     with patch("datetime.datetime") as mock:
@@ -46,13 +86,13 @@ def test_load_current_directory(create_config, monkeypatch):
     assert config.project.started_at == fake_utcnow
 
 
-def test_load_managed_mode_directory(create_config, monkeypatch, tmp_path):
+def test_load_managed_mode_directory(monkeypatch, tmp_path):
     """Validate managed-mode default directory is /root/project."""
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
 
     # Patch out Config (and Project) to prevent directory validation checks.
-    with patch("charmcraft.config.Config"):
+    with patch("charmcraft.config.CharmcraftConfig"):
         with patch("charmcraft.config.Project") as mock_project:
             with patch("charmcraft.config.load_yaml"):
                 load(None)
@@ -60,9 +100,43 @@ def test_load_managed_mode_directory(create_config, monkeypatch, tmp_path):
     assert mock_project.call_args.kwargs["dirpath"] == pathlib.Path("/root/project")
 
 
-def test_load_specific_directory_ok(create_config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_load_specific_directory_ok(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Init the config using charmcraft.yaml in a specific directory."""
-    tmp_path = create_config()
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.type == "charm"
     assert config.project.dirpath == tmp_path
@@ -83,9 +157,48 @@ def test_load_optional_charmcraft_bad_directory(tmp_path):
     assert not config.project.config_provided
 
 
-def test_load_specific_directory_resolved(create_config, monkeypatch):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_load_specific_directory_resolved(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+    monkeypatch,
+):
     """Ensure that the given directory is resolved to always show the whole path."""
-    tmp_path = create_config()
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     # change to some dir, and reference the config dir relatively
     subdir = tmp_path / "subdir"
     subdir.mkdir()
@@ -96,10 +209,49 @@ def test_load_specific_directory_resolved(create_config, monkeypatch):
     assert config.project.dirpath == tmp_path
 
 
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_load_specific_directory_expanded(create_config, monkeypatch):
+def test_load_specific_directory_expanded(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+    monkeypatch,
+):
     """Ensure that the given directory is user-expanded."""
-    tmp_path = create_config()
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     # fake HOME so the '~' indication is verified to work
     monkeypatch.setitem(os.environ, "HOME", str(tmp_path))
     config = load("~")
@@ -108,353 +260,1056 @@ def test_load_specific_directory_expanded(create_config, monkeypatch):
     assert config.project.dirpath == tmp_path
 
 
+def test_load_metadata_keys_exists_both(tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml):
+    """Cannot define metadata keys in both charmcraft.yaml and metadata.yaml."""
+    prepare_charmcraft_yaml(
+        dedent(
+            """\
+            name: test-charm-name
+            type: charm
+            """
+        )
+    )
+    prepare_metadata_yaml(
+        dedent(
+            """\
+            name: test-charm-name
+            summary: test-summary
+            description: test-description
+            """
+        )
+    )
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+
+    assert str(cm.value) == dedent(
+        """Cannot specify 'name' in charmcraft.yaml when 'metadata.yaml' exists"""
+    )
+
+
 # -- tests for schema restrictions
 
 
-@pytest.fixture
-def check_schema_error(tmp_path):
-    """Helper to check the schema error."""
-
-    def check_schema_error(expected_msg):
-        """The real checker."""
-        with pytest.raises(CraftError) as cm:
-            load(tmp_path)
-        assert str(cm.value) == dedent(expected_msg)
-
-    return check_schema_error
-
-
-def test_schema_top_level_no_extra_properties(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                whatever: new-stuff
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                whatever: new-stuff
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_top_level_no_extra_properties(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
     """Schema validation, cannot add undefined properties at the top level."""
-    create_config(
-        """
-        type: bundle
-        whatever: new-stuff
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - extra field 'whatever' not permitted in top-level configuration"""
     )
 
 
-def test_schema_type_missing(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                charmhub:
+                  api-url: https://www.canonical.com
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  api-url: https://www.canonical.com
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_type_missing(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
     """Schema validation, type is mandatory."""
-    create_config(
-        """
-        charmhub:
-            api-url: https://www.canonical.com
-        bases:
-          - build-on:
-            - name: test-build-name
-              channel: test-build-channel
-            run-on:
-            - name: test-build-name
-              channel: test-build-channel
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - field 'type' required in top-level configuration"""
     )
 
 
-def test_schema_type_bad_type(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: 33
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: 33
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_type_bad_type(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, type is a string."""
-    create_config(
-        """
-        type: 33
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - must be either 'charm' or 'bundle' in field 'type'"""
+        - unexpected value; permitted: 'bundle', 'charm' in field 'type'"""
     )
 
 
-def test_schema_type_limited_values(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: whatever
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: whatever
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_type_limited_values(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, type must be a subset of values."""
-    create_config(
-        """
-        type: whatever
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - must be either 'charm' or 'bundle' in field 'type'"""
+        - unexpected value; permitted: 'bundle', 'charm' in field 'type'"""
     )
 
 
-def test_schema_charmhub_api_url_bad_type(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                charmhub:
+                  api-url: 33
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  api-url: 33
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_charmhub_api_url_bad_type(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, charmhub.api-url must be a string."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        charmhub:
-            api-url: 33
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - invalid or missing URL scheme in field 'charmhub.api-url'"""
     )
 
 
-def test_schema_charmhub_api_url_bad_format(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                charmhub:
+                  api-url: stuff.com
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  api-url: stuff.com
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_charmhub_api_url_bad_format(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, charmhub.api-url must be a full URL."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        charmhub:
-            api-url: stuff.com
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - invalid or missing URL scheme in field 'charmhub.api-url'"""
     )
 
 
-def test_schema_charmhub_storage_url_bad_type(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                charmhub:
+                  storage-url: 33
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  storage-url: 33
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_charmhub_storage_url_bad_type(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, charmhub.storage-url must be a string."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        charmhub:
-            storage-url: 33
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - invalid or missing URL scheme in field 'charmhub.storage-url'"""
     )
 
 
-def test_schema_charmhub_storage_url_bad_format(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                charmhub:
+                  storage-url: stuff.com
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  storage-url: stuff.com
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_charmhub_storage_url_bad_format(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, charmhub.storage-url must be a full URL."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        charmhub:
-            storage-url: stuff.com
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - invalid or missing URL scheme in field 'charmhub.storage-url'"""
     )
 
 
-def test_schema_charmhub_registry_url_bad_type(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                charmhub:
+                  registry-url: 33
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  registry-url: 33
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_charmhub_registry_url_bad_type(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, charmhub.registry-url must be a string."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        charmhub:
-            registry-url: 33
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - invalid or missing URL scheme in field 'charmhub.registry-url'"""
     )
 
 
-def test_schema_charmhub_registry_url_bad_format(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                charmhub:
+                  registry-url: stuff.com
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  registry-url: stuff.com
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_charmhub_registry_url_bad_format(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, charmhub.registry-url must be a full URL."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        charmhub:
-            registry-url: stuff.com
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - invalid or missing URL scheme in field 'charmhub.registry-url'"""
     )
 
 
-def test_schema_charmhub_no_extra_properties(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                charmhub:
+                  storage-url: https://some.server.com
+                  crazy: false
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  storage-url: https://some.server.com
+                  crazy: false
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_charmhub_no_extra_properties(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, cannot add undefined properties in charmhub key."""
-    create_config(
-        """
-        type: bundle
-        charmhub:
-            storage-url: https://some.server.com
-            crazy: false
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - extra field 'crazy' not permitted in 'charmhub' configuration"""
     )
 
 
-def test_schema_basicprime_bad_init_structure(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts: ['foo', 'bar']
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts: ['foo', 'bar']
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_basicprime_bad_init_structure(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with bad parts."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        parts: ['foo', 'bar']
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - value must be a dictionary in field 'parts'"""
     )
 
 
-def test_schema_basicprime_bad_bundle_structure(create_config, check_schema_error):
-    """Instantiate charmhub using a bad structure."""
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  charm: ['foo', 'bar']
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  charm: ['foo', 'bar']
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_basicprime_bad_bundle_structure(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with bad bundle."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        parts:
-            charm: ['foo', 'bar']
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - part 'charm' must be a dictionary in field 'parts'"""
     )
 
 
-def test_schema_basicprime_bad_prime_structure(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  charm:
+                    prime: foo
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  charm:
+                    prime: foo
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_basicprime_bad_prime_structure(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with bad prime."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        parts:
-            charm:
-                prime: foo
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - value is not a valid list in field 'parts.charm.prime'"""
     )
 
 
-def test_schema_basicprime_bad_prime_type(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  charm:
+                    prime: [{}, 'foo']
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  charm:
+                    prime: [{}, 'foo']
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_basicprime_bad_prime_type(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with a prime holding not strings."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        parts:
-            charm:
-                prime: [{}, 'foo']
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - string type expected in field 'parts.charm.prime[0]'"""
     )
 
 
-def test_schema_basicprime_bad_prime_type_empty(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  charm:
+                    prime: ['', 'foo']
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+
+                parts:
+                  charm:
+                    prime: ['', 'foo']
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_basicprime_bad_prime_type_empty(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with a prime holding not strings."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        parts:
-            charm:
-                prime: ['', 'foo']
-    """
-    )
-    check_schema_error(
-        ("Bad charmcraft.yaml content:\n" "- path cannot be empty in field 'parts.charm.prime[0]'")
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
+        """\
+        Bad charmcraft.yaml content:
+        - path cannot be empty in field 'parts.charm.prime[0]'"""
     )
 
 
-def test_schema_basicprime_bad_content_format(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  charm:
+                    prime: ['/bar/foo', 'foo']
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_basicprime_bad_content_format(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with a prime holding not strings."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        parts:
-            charm:
-                prime: ['/bar/foo', 'foo']
-    """
-    )
-    check_schema_error(
-        (
-            "Bad charmcraft.yaml content:\n"
-            "- '/bar/foo' must be a relative path (cannot start with '/')"
-            " in field 'parts.charm.prime[0]'"
-            ""
-        )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
+        """\
+        Bad charmcraft.yaml content:
+        - '/bar/foo' must be a relative path (cannot start with '/') in field 'parts.charm.prime[0]'"""  # NOQA: E501
     )
 
 
-def test_schema_additional_part(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  other-part: 1
+                  charm:
+                    prime: ['/bar/foo', 'foo']
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  other-part: 1
+                  charm:
+                    prime: ['/bar/foo', 'foo']
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_additional_part(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with bad part."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        parts:
-            other-part: 1
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - part 'other-part' must be a dictionary in field 'parts'"""
     )
 
 
-def test_schema_other_charm_part_no_source(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:  # mandatory
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                parts:
+                  other-part:
+                    plugin: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:  # mandatory
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                parts:
+                  other-part:
+                    plugin: charm
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_other_charm_part_no_source(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with bad part."""
-    create_config(
-        """
-        type: charm  # mandatory
-        bases:  # mandatory
-          - build-on:
-            - name: test-build-name
-              channel: test-build-channel
-            run-on:
-            - name: test-build-name
-              channel: test-build-channel
-        parts:
-            other-part:
-                plugin: charm
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - field 'source' required in 'parts.other-part' configuration
-        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""  # NOQA
+        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""  # NOQA: E501
     )
 
 
-def test_schema_other_bundle_part_no_source(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  other-part:
+                    plugin: bundle
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                parts:
+                  other-part:
+                    plugin: bundle
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_other_bundle_part_no_source(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Schema validation, basic prime with bad part."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        parts:
-            other-part:
-                plugin: bundle
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - field 'source' required in 'parts.other-part' configuration"""
@@ -466,16 +1321,49 @@ def test_schema_other_bundle_part_no_source(create_config, check_schema_error):
 #    the 'dump' one because it's a special case of no having a model
 
 
-def test_schema_doublelayer_no_parts_type_charm(create_config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_doublelayer_no_parts_type_charm(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """No 'parts' specified at all, full default to charm plugin."""
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - name: somebase
-            channel: "30.04"
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.parts == {
         "charm": {
@@ -489,13 +1377,43 @@ def test_schema_doublelayer_no_parts_type_charm(create_config):
     }
 
 
-def test_schema_doublelayer_no_parts_type_bundle(create_config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_doublelayer_no_parts_type_bundle(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """No 'parts' specified at all, full default to bundle plugin."""
-    tmp_path = create_config(
-        """
-        type: bundle
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.parts == {
         "bundle": {
@@ -505,21 +1423,59 @@ def test_schema_doublelayer_no_parts_type_bundle(create_config):
     }
 
 
-def test_schema_doublelayer_parts_no_charm(create_config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  mycharm:
+                    plugin: dump
+                    source: https://the.net/whatever.tar.gz
+                    source-type: tar
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  mycharm:
+                    plugin: dump
+                    source: https://the.net/whatever.tar.gz
+                    source-type: tar
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_doublelayer_parts_no_charm(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """The 'parts' key is specified, but no 'charm' entry."""
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - name: somebase
-            channel: "30.04"
-        parts:
-          mycharm:
-             plugin: dump
-             source: https://the.net/whatever.tar.gz
-             source-type: tar
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.parts == {
         "mycharm": {
@@ -530,19 +1486,55 @@ def test_schema_doublelayer_parts_no_charm(create_config):
     }
 
 
-def test_schema_doublelayer_parts_with_charm_plugin_missing(create_config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    prime: [to_be_included.*]  # random key to have a valid yaml
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    prime: [to_be_included.*]  # random key to have a valid yaml
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_doublelayer_parts_with_charm_plugin_missing(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """A charm part is specified but no plugin is indicated."""
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - name: somebase
-            channel: "30.04"
-        parts:
-          charm:
-            prime: [to_be_included.*]  # random key to have a valid yaml
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.parts == {
         "charm": {
@@ -557,19 +1549,55 @@ def test_schema_doublelayer_parts_with_charm_plugin_missing(create_config):
     }
 
 
-def test_schema_doublelayer_parts_with_charm_plugin_charm(create_config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    plugin: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    plugin: charm
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_doublelayer_parts_with_charm_plugin_charm(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """A charm part is fully specified."""
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - name: somebase
-            channel: "30.04"
-        parts:
-          charm:
-            plugin: charm
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.parts == {
         "charm": {
@@ -583,21 +1611,59 @@ def test_schema_doublelayer_parts_with_charm_plugin_charm(create_config):
     }
 
 
-def test_schema_doublelayer_parts_with_charm_plugin_different(create_config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    plugin: dump
+                    source: https://the.net/whatever.tar.gz
+                    source-type: tar
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    plugin: dump
+                    source: https://the.net/whatever.tar.gz
+                    source-type: tar
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_doublelayer_parts_with_charm_plugin_different(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """There is a 'charm' part but using a different plugin."""
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - name: somebase
-            channel: "30.04"
-        parts:
-          charm:
-             plugin: dump
-             source: https://the.net/whatever.tar.gz
-             source-type: tar
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.parts == {
         "charm": {
@@ -608,19 +1674,55 @@ def test_schema_doublelayer_parts_with_charm_plugin_different(create_config):
     }
 
 
-def test_schema_doublelayer_parts_with_charm_overriding_properties(create_config):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    charm-entrypoint: different.py
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    charm-entrypoint: different.py
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_doublelayer_parts_with_charm_overriding_properties(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """A charm plugin is used and its default properties are overriden."""
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - name: somebase
-            channel: "30.04"
-        parts:
-          charm:
-            charm-entrypoint: different.py
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.parts == {
         "charm": {
@@ -634,20 +1736,58 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(create_config
     }
 
 
-def test_schema_doublelayer_parts_with_charm_validating_props(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    charm-point: different.py  # mispelled!
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: somebase
+                    channel: "30.04"
+                parts:
+                  charm:
+                    charm-point: different.py  # mispelled!
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_doublelayer_parts_with_charm_validating_props(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """A charm plugin is used and its validation schema is triggered ok."""
-    create_config(
-        """
-        type: charm
-        bases:
-          - name: somebase
-            channel: "30.04"
-        parts:
-          charm:
-            charm-point: different.py  # mispelled!
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - extra field 'charm-point' not permitted in 'parts.charm' configuration"""
@@ -664,16 +1804,50 @@ def test_charmhub_frozen():
         config.api_url = "broken"
 
 
-def test_charmhub_underscore_in_names(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                charmhub:
+                  storage_url: https://server1.com
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                charmhub:
+                  storage_url: https://server1.com
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_charmhub_underscore_in_names(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Do not support underscore in attributes, only dash."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        charmhub:
-            storage_url: https://server1.com
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - extra field 'storage_url' not permitted in 'charmhub' configuration"""
@@ -683,50 +1857,133 @@ def test_charmhub_underscore_in_names(create_config, check_schema_error):
 # -- tests for bases
 
 
-def test_no_bases_is_ok_for_bundles(emitter, create_config, tmp_path):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_no_bases_is_ok_for_bundles(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Do not send a deprecation message if it is a bundle."""
-    create_config(
-        """
-        type: bundle
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
-    load(tmp_path)
-    assert not emitter.interactions
+    config = load(tmp_path)
+    assert config.type == "bundle"
 
 
-def test_bases_forbidden_for_bundles(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bases_forbidden_for_bundles(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Do not allow a bases configuration for bundles."""
-    create_config(
-        """
-        type: bundle
-        bases:
-          - build-on:
-              - name: test-build-name
-                channel: test-build-channel
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
-    check_schema_error(
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - Field not allowed when type=bundle in field 'bases'"""
     )
 
 
-def test_bases_minimal_long_form(create_config):
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - build-on:
-              - name: test-build-name
-                channel: test-build-channel
-            run-on:
-              - name: test-run-name
-                channel: test-run-channel
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bases_minimal_long_form(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    """Minimal bases configuration, long form."""
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
     assert config.bases == [
@@ -751,43 +2008,100 @@ def test_bases_minimal_long_form(create_config):
     ]
 
 
-def test_bases_extra_field_error(create_config, check_schema_error):
-    create_config(
-        """
-        type: charm
-        bases:
-          - build-on:
-              - name: test-name
-                channel: test-build-channel
-                extra-extra: read all about it
-            run-on:
-              - name: test-name
-                channel: test-run-channel
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: test-name
+                        channel: test-build-channel
+                        extra-extra: read all about it
+                    run-on:
+                      - name: test-name
+                        channel: test-run-channel
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-name
+                        channel: test-build-channel
+                        extra-extra: read all about it
+                    run-on:
+                      - name: test-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bases_extra_field_error(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    """Extra field in bases configuration."""
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
-    check_schema_error(
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - extra field 'extra-extra' not permitted in 'bases[0].build-on[0]' configuration"""
     )
 
 
-def test_bases_underscores_error(create_config, check_schema_error):
-    create_config(
-        """
-        type: charm
-        bases:
-          - build_on:
-              - name: test-name
-                channel: test-build-channel
-            run_on:
-              - name: test-name
-                channel: test-run-channel
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build_on:
+                      - name: test-name
+                        channel: test-build-channel
+                    run_on:
+                      - name: test-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bases_underscores_error(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
-    check_schema_error(
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - field 'build-on' required in 'bases[0]' configuration
@@ -797,40 +2111,114 @@ def test_bases_underscores_error(create_config, check_schema_error):
     )
 
 
-def test_channel_is_yaml_number(create_config, check_schema_error):
-    create_config(
-        """
-        type: charm
-        bases:
-          - build-on:
-              - name: test-build-name
-                channel: 20.10
-            run-on:
-              - name: test-run-name
-                channel: test-run-channel
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: 20.10
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: 20.10
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_channel_is_yaml_number(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
-    check_schema_error(
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - string type expected in field 'bases[0].build-on[0].channel'"""
     )
 
 
-def test_minimal_long_form_bases(create_config):
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - build-on:
-              - name: test-build-name
-                channel: test-build-channel
-            run-on:
-              - name: test-run-name
-                channel: test-run-channel
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name
+                        channel: test-build-channel
+                    run-on:
+                      - name: test-run-name
+                        channel: test-run-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_minimal_long_form_bases(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
     assert config.bases == [
@@ -855,31 +2243,79 @@ def test_minimal_long_form_bases(create_config):
     ]
 
 
-def test_complex_long_form_bases(create_config):
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - build-on:
-              - name: test-build-name-1
-                channel: test-build-channel-1
-              - name: test-build-name-2
-                channel: test-build-channel-2
-              - name: test-build-name-3
-                channel: test-build-channel-3
-                architectures: [riscVI]
-            run-on:
-              - name: test-run-name-1
-                channel: test-run-channel-1
-                architectures: [amd64]
-              - name: test-run-name-2
-                channel: test-run-channel-2
-                architectures: [amd64, arm64]
-              - name: test-run-name-3
-                channel: test-run-channel-3
-                architectures: [amd64, arm64, riscVI]
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: test-build-name-1
+                        channel: test-build-channel-1
+                      - name: test-build-name-2
+                        channel: test-build-channel-2
+                      - name: test-build-name-3
+                        channel: test-build-channel-3
+                        architectures: [riscVI]
+                    run-on:
+                      - name: test-run-name-1
+                        channel: test-run-channel-1
+                        architectures: [amd64]
+                      - name: test-run-name-2
+                        channel: test-run-channel-2
+                        architectures: [amd64, arm64]
+                      - name: test-run-name-3
+                        channel: test-run-channel-3
+                        architectures: [amd64, arm64, riscVI]
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name-1
+                        channel: test-build-channel-1
+                      - name: test-build-name-2
+                        channel: test-build-channel-2
+                      - name: test-build-name-3
+                        channel: test-build-channel-3
+                        architectures: [riscVI]
+                    run-on:
+                      - name: test-run-name-1
+                        channel: test-run-channel-1
+                        architectures: [amd64]
+                      - name: test-run-name-2
+                        channel: test-run-channel-2
+                        architectures: [amd64, arm64]
+                      - name: test-run-name-3
+                        channel: test-run-channel-3
+                        architectures: [amd64, arm64, riscVI]
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_complex_long_form_bases(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
     assert config.bases == [
@@ -924,27 +2360,71 @@ def test_complex_long_form_bases(create_config):
     ]
 
 
-def test_multiple_long_form_bases(create_config):
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - build-on:
-              - name: test-build-name-1
-                channel: test-build-channel-1
-            run-on:
-              - name: test-run-name-1
-                channel: test-run-channel-1
-                architectures: [amd64, arm64]
-          - build-on:
-              - name: test-build-name-2
-                channel: test-build-channel-2
-            run-on:
-              - name: test-run-name-2
-                channel: test-run-channel-2
-                architectures: [amd64, arm64]
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - build-on:
+                      - name: test-build-name-1
+                        channel: test-build-channel-1
+                    run-on:
+                      - name: test-run-name-1
+                        channel: test-run-channel-1
+                        architectures: [amd64, arm64]
+                  - build-on:
+                      - name: test-build-name-2
+                        channel: test-build-channel-2
+                    run-on:
+                      - name: test-run-name-2
+                        channel: test-run-channel-2
+                        architectures: [amd64, arm64]
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - build-on:
+                      - name: test-build-name-1
+                        channel: test-build-channel-1
+                    run-on:
+                      - name: test-run-name-1
+                        channel: test-run-channel-1
+                        architectures: [amd64, arm64]
+                  - build-on:
+                      - name: test-build-name-2
+                        channel: test-build-channel-2
+                    run-on:
+                      - name: test-run-name-2
+                        channel: test-run-channel-2
+                        architectures: [amd64, arm64]
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_multiple_long_form_bases(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
     assert config.bases == [
@@ -987,15 +2467,47 @@ def test_multiple_long_form_bases(create_config):
     ]
 
 
-def test_bases_minimal_short_form(create_config):
-    tmp_path = create_config(
-        """
-        type: charm
-        bases:
-          - name: test-name
-            channel: test-channel
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bases_minimal_short_form(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
     assert config.bases == [
@@ -1020,55 +2532,125 @@ def test_bases_minimal_short_form(create_config):
     ]
 
 
-def test_bases_short_form_extra_field_error(create_config, check_schema_error):
-    create_config(
-        """
-        type: charm
-        bases:
-          - name: test-name
-            channel: test-channel
-            extra-extra: read all about it
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                    extra-extra: read all about it
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+    ],
+)
+def test_bases_short_form_extra_field_error(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
-    check_schema_error(
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - extra field 'extra-extra' not permitted in 'bases[0]' configuration"""
     )
 
 
-def test_bases_short_form_missing_field_error(create_config, check_schema_error):
-    create_config(
-        """
-        type: charm
-        bases:
-          - name: test-name
-    """
-    )
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: test-name
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bases_short_form_missing_field_error(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
-    check_schema_error(
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - field 'channel' required in 'bases[0]' configuration"""
     )
 
 
-def test_bases_mixed_form_errors(create_config, check_schema_error):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                  - build-on:
+                      - name: test-build-name
+                    run-on:
+                      - name: test-run-name
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bases_mixed_form_errors(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Only the short-form errors are exposed as its the first validation pass."""
-    create_config(
-        """
-        type: charm
-        bases:
-          - name: test-name
-          - build-on:
-              - name: test-build-name
-            run-on:
-              - name: test-run-name
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
-    check_schema_error(
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - field 'channel' required in 'bases[0]' configuration"""
@@ -1094,107 +2676,639 @@ def create_checker(monkeypatch):
     return add_checker
 
 
-def test_schema_analysis_missing(create_config, tmp_path):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_analysis_missing(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """No analysis configuration leads to some defaults in place."""
-    create_config(
-        """
-        type: bundle  # mandatory
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.analysis.ignore.attributes == []
     assert config.analysis.ignore.linters == []
 
 
-def test_schema_analysis_full_struct_just_empty(create_config, tmp_path):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                analysis:
+                  ignore:
+                    attributes: []
+                    linters: []
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    attributes: []
+                    linters: []
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_analysis_full_struct_just_empty(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
     """Complete analysis structure, empty."""
-    create_config(
-        """
-        type: bundle  # mandatory
-        analysis:
-            ignore:
-                attributes: []
-                linters: []
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.analysis.ignore.attributes == []
     assert config.analysis.ignore.linters == []
 
 
-def test_schema_analysis_ignore_attributes(create_config, tmp_path, create_checker):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1, check_ok_2]
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1, check_ok_2]
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_analysis_ignore_attributes(
+    tmp_path,
+    create_checker,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
     """Some attributes are correctly ignored."""
     create_checker("check_ok_1", linters.CheckType.attribute)
     create_checker("check_ok_2", linters.CheckType.attribute)
-    create_config(
-        """
-        type: bundle  # mandatory
-        analysis:
-            ignore:
-                attributes: [check_ok_1, check_ok_2]
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.analysis.ignore.attributes == ["check_ok_1", "check_ok_2"]
     assert config.analysis.ignore.linters == []
 
 
-def test_schema_analysis_ignore_linters(create_config, tmp_path, create_checker):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                analysis:
+                  ignore:
+                    linters: [check_ok_1, check_ok_2]
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    linters: [check_ok_1, check_ok_2]
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_schema_analysis_ignore_linters(
+    tmp_path,
+    create_checker,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
     """Some linters are correctly ignored."""
     create_checker("check_ok_1", linters.CheckType.lint)
     create_checker("check_ok_2", linters.CheckType.lint)
-    create_config(
-        """
-        type: bundle  # mandatory
-        analysis:
-            ignore:
-                linters: [check_ok_1, check_ok_2]
-    """
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(tmp_path)
     assert config.analysis.ignore.attributes == []
     assert config.analysis.ignore.linters == ["check_ok_1", "check_ok_2"]
 
 
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1, check_missing]
+                    linters: [check_ok_2]
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1, check_missing]
+                    linters: [check_ok_2]
+                """
+            ),
+            None,
+        ],
+    ],
+)
 def test_schema_analysis_ignore_attribute_missing(
-    create_config, check_schema_error, tmp_path, create_checker
+    tmp_path,
+    create_checker,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
 ):
     """An attribute specified to ignore is missing in the system."""
     create_checker("check_ok_1", linters.CheckType.attribute)
     create_checker("check_ok_2", linters.CheckType.lint)
-    create_config(
-        """
-        type: bundle  # mandatory
-        analysis:
-            ignore:
-                attributes: [check_ok_1, check_missing]
-                linters: [check_ok_2]
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - Bad attribute name 'check_missing' in field 'analysis.ignore.attributes[1]'"""
     )
 
 
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1]
+                    linters: [check_ok_2, check_missing]
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: bundle
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                analysis:
+                  ignore:
+                    attributes: [check_ok_1]
+                    linters: [check_ok_2, check_missing]
+                """
+            ),
+            None,
+        ],
+    ],
+)
 def test_schema_analysis_ignore_linter_missing(
-    create_config, check_schema_error, tmp_path, create_checker
+    tmp_path,
+    create_checker,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
 ):
     """A linter specified to ignore is missing in the system."""
     create_checker("check_ok_1", linters.CheckType.attribute)
     create_checker("check_ok_2", linters.CheckType.lint)
-    create_config(
-        """
-        type: bundle  # mandatory
-        analysis:
-            ignore:
-                attributes: [check_ok_1]
-                linters: [check_ok_2, check_missing]
-    """
-    )
-    check_schema_error(
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+    assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
         - Bad lint name 'check_missing' in field 'analysis.ignore.linters[1]'"""
+    )
+
+
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  snapshot:
+                    description: Take a snapshot of the database.
+                    params:
+                      filename:
+                        type: string
+                        description: The name of the snapshot file.
+                      compression:
+                        type: object
+                        description: The type of compression to use.
+                        properties:
+                          kind:
+                            type: string
+                            enum: [gzip, bzip2, xz]
+                          quality:
+                            description: Compression quality
+                            type: integer
+                            minimum: 0
+                            maximum: 9
+                    required: [filename]
+                    additionalProperties: false
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  snapshot:
+                    description: Take a snapshot of the database.
+                    params:
+                      filename:
+                        type: string
+                        description: The name of the snapshot file.
+                      compression:
+                        type: object
+                        description: The type of compression to use.
+                        properties:
+                          kind:
+                            type: string
+                            enum: [gzip, bzip2, xz]
+                          quality:
+                            description: Compression quality
+                            type: integer
+                            minimum: 0
+                            maximum: 9
+                    required: [filename]
+                    additionalProperties: false
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_actions_defined_in_charmcraft_yaml(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
+):
+    """test actions defined in charmcraft.yaml"""
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
+    config = load(tmp_path)
+
+    assert config.actions.actions == {
+        "pause": {"description": "Pause the database."},
+        "resume": {"description": "Resume a paused database."},
+        "snapshot": {
+            "description": "Take a snapshot of the database.",
+            "params": {
+                "filename": {"type": "string", "description": "The name of the snapshot file."},
+                "compression": {
+                    "type": "object",
+                    "description": "The type of compression to use.",
+                    "properties": {
+                        "kind": {"type": "string", "enum": ["gzip", "bzip2", "xz"]},
+                        "quality": {
+                            "description": "Compression quality",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9,
+                        },
+                    },
+                },
+            },
+            "required": ["filename"],
+            "additionalProperties": False,
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "charmcraft_yaml_template, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  {bad_name}:
+                    description: Take a snapshot of the database.
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  {bad_name}:
+                    description: Take a snapshot of the database.
+                """
+            ),
+            None,
+        ],
+    ],
+)
+@pytest.mark.parametrize(
+    "bad_name",
+    [
+        "is",
+        "-snapshot",
+        "111snapshot",
+    ],
+)
+def test_actions_badly_defined_in_charmcraft_yaml(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml_template,
+    metadata_yaml,
+    bad_name,
+):
+    """test actions badly defined in charmcraft.yaml"""
+    prepare_charmcraft_yaml(charmcraft_yaml_template.format(bad_name=bad_name))
+    prepare_metadata_yaml(metadata_yaml)
+
+    with pytest.raises(CraftError):
+        load(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  snapshot:
+                    description: Take a snapshot of the database.
+                    params:
+                      filename:
+                        type: string
+                        description: The name of the snapshot file.
+                      compression:
+                        type: object
+                        description: The type of compression to use.
+                        properties:
+                          kind:
+                            type: string
+                            enum: [gzip, bzip2, xz]
+                          quality:
+                            description: Compression quality
+                            type: integer
+                            minimum: 0
+                            maximum: 9
+                    required: [filename]
+                    additionalProperties: false
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                actions:
+                  pause:
+                    description: Pause the database.
+                  resume:
+                    description: Resume a paused database.
+                  snapshot:
+                    description: Take a snapshot of the database.
+                    params:
+                      filename:
+                        type: string
+                        description: The name of the snapshot file.
+                      compression:
+                        type: object
+                        description: The type of compression to use.
+                        properties:
+                          kind:
+                            type: string
+                            enum: [gzip, bzip2, xz]
+                          quality:
+                            description: Compression quality
+                            type: integer
+                            minimum: 0
+                            maximum: 9
+                    required: [filename]
+                    additionalProperties: false
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_actions_defined_in_charmcraft_yaml_and_actions_yaml(
+    tmp_path,
+    create_checker,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    prepare_actions_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
+    """actions section cannot be used when actions.yaml file is present."""
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+    prepare_actions_yaml(
+        dedent(
+            """\
+            pause:
+              description: Pause the database.
+            """
+        )
+    )
+
+    with pytest.raises(CraftError) as cm:
+        load(tmp_path)
+
+    assert str(cm.value) == dedent(
+        """\
+        Bad charmcraft.yaml content:
+        - 'actions.yaml' file not allowed when an 'actions' section is defined in 'charmcraft.yaml' in field 'actions'"""  # NOQA: E501
     )

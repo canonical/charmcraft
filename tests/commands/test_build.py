@@ -22,7 +22,7 @@ import zipfile
 from textwrap import dedent
 from typing import List
 from unittest import mock
-from unittest.mock import call, patch, MagicMock
+from unittest.mock import call, patch, MagicMock, ANY
 
 import pytest
 import yaml
@@ -33,8 +33,8 @@ from charmcraft import linters, instrum
 from charmcraft.charm_builder import relativise
 from charmcraft.bases import get_host_as_base
 from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
-from charmcraft.config import Base, BasesConfiguration, load
-from charmcraft.metadata import CHARM_METADATA
+from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.config import load
 from charmcraft.providers import get_base_configuration
 from charmcraft.utils import get_host_architecture
 
@@ -63,20 +63,10 @@ def get_builder(
 
 
 @pytest.fixture
-def basic_project(tmp_path, monkeypatch, create_config):
+def basic_project(tmp_path, monkeypatch, prepare_charmcraft_yaml, prepare_metadata_yaml):
     """Create a basic Charmcraft project."""
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
-
-    # the metadata
-    metadata_data = {
-        "name": "name-from-metadata",
-        "summary": "test-summ",
-        "description": "text",
-    }
-    metadata_file = tmp_path / "metadata.yaml"
-    metadata_raw = yaml.dump(metadata_data).encode("ascii")
-    metadata_file.write_bytes(metadata_raw)
 
     # a lib dir
     lib_dir = tmp_path / "lib"
@@ -107,19 +97,29 @@ def basic_project(tmp_path, monkeypatch, create_config):
 
     # the config
     host_base = get_host_as_base()
-    create_config(
-        f"""
-        type: charm
-        bases:
-          - name: {host_base.name}
-            channel: "{host_base.channel}"
-            architectures: {host_base.architectures!r}
-        parts:  # just to avoid "default charm parts" sneaking in
-          foo:
-            plugin: nil
-        """
+    prepare_charmcraft_yaml(
+        dedent(
+            f"""
+            type: charm
+            bases:
+              - name: {host_base.name}
+                channel: "{host_base.channel}"
+                architectures: {host_base.architectures!r}
+            parts:  # just to avoid "default charm parts" sneaking in
+              foo:
+                plugin: nil
+            """
+        )
     )
-
+    prepare_metadata_yaml(
+        dedent(
+            """\
+            name: test-charm-name-from-metadata-yaml
+            summary: test summary
+            description: test description
+            """
+        ),
+    )
     # paths are relative, make all tests to run in the project's directory
     monkeypatch.chdir(tmp_path)
 
@@ -127,27 +127,40 @@ def basic_project(tmp_path, monkeypatch, create_config):
 
 
 @pytest.fixture
-def basic_project_builder(basic_project):
+def basic_project_builder(basic_project, prepare_charmcraft_yaml):
     def _basic_project_builder(bases_configs: List[BasesConfiguration], **builder_kwargs):
-        charmcraft_file = basic_project / "charmcraft.yaml"
-        with charmcraft_file.open("w") as f:
-            print("type: charm", file=f)
-            print("bases:", file=f)
-            for bases_config in bases_configs:
-                print("- build-on:", file=f)
-                for base in bases_config.build_on:
-                    print(f"  - name: {base.name!r}", file=f)
-                    print(f"    channel: {base.channel!r}", file=f)
-                    print(f"    architectures: {base.architectures!r}", file=f)
+        charmcraft_yaml = dedent(
+            """
+            type: charm
+            bases:
+            """
+        )
 
-                print("  run-on:", file=f)
-                for base in bases_config.run_on:
-                    print(f"  - name: {base.name!r}", file=f)
-                    print(f"    channel: {base.channel!r}", file=f)
-                    print(f"    architectures: {base.architectures!r}", file=f)
-            print("parts:", file=f)
-            print("  foo:", file=f)
-            print("    plugin: nil", file=f)
+        for bases_config in bases_configs:
+            charmcraft_yaml += "  - build-on:\n"
+            for base in bases_config.build_on:
+                charmcraft_yaml += (
+                    f"    - name: {base.name!r}\n"
+                    f"      channel: {base.channel!r}\n"
+                    f"      architectures: {base.architectures!r}\n"
+                )
+
+            charmcraft_yaml += "    run-on:\n"
+            for base in bases_config.run_on:
+                charmcraft_yaml += (
+                    f"    - name: {base.name!r}\n"
+                    f"      channel: {base.channel!r}\n"
+                    f"      architectures: {base.architectures!r}\n"
+                )
+        charmcraft_yaml += dedent(
+            """
+            parts:
+              foo:
+                plugin: nil
+            """
+        )
+
+        prepare_charmcraft_yaml(charmcraft_yaml)
 
         config = load(basic_project)
         return get_builder(config, **builder_kwargs)
@@ -157,7 +170,7 @@ def basic_project_builder(basic_project):
 
 @pytest.fixture
 def mock_capture_logs_from_instance():
-    with patch("charmcraft.commands.build.providers.capture_logs_from_instance") as mock_capture:
+    with patch("charmcraft.providers.capture_logs_from_instance") as mock_capture:
         yield mock_capture
 
 
@@ -169,21 +182,21 @@ def mock_launch_shell():
 
 @pytest.fixture
 def mock_linters():
-    with patch("charmcraft.commands.build.linters") as mock_linters:
+    with patch("charmcraft.linters") as mock_linters:
         mock_linters.analyze.return_value = []
         yield mock_linters
 
 
 @pytest.fixture
 def mock_parts():
-    with patch("charmcraft.commands.build.parts") as mock_parts:
+    with patch("charmcraft.parts") as mock_parts:
         yield mock_parts
 
 
 @pytest.fixture(autouse=True)
 def mock_provider(mock_instance, fake_provider):
     mock_provider = mock.Mock(wraps=fake_provider)
-    with patch("charmcraft.commands.build.providers.get_provider", return_value=mock_provider):
+    with patch("charmcraft.providers.get_provider", return_value=mock_provider):
         yield mock_provider
 
 
@@ -202,7 +215,7 @@ def mock_centos_base_configuration():
 @pytest.fixture()
 def mock_instance_name():
     with mock.patch(
-        "charmcraft.commands.build.providers.get_instance_name", return_value="test-instance-name"
+        "charmcraft.providers.get_instance_name", return_value="test-instance-name"
     ) as patched:
         yield patched
 
@@ -221,16 +234,21 @@ def mock_is_base_available():
 
 def test_build_error_without_metadata_yaml(basic_project):
     """Validate error if trying to build project without metadata.yaml."""
-    metadata = basic_project / CHARM_METADATA
+    metadata = basic_project / "metadata.yaml"
     metadata.unlink()
 
-    config = load(basic_project)
+    with pytest.raises(CraftError) as exc_info:
+        config = load(basic_project)
 
-    msg = re.escape(
-        "Cannot read the metadata.yaml file: FileNotFoundError(2, 'No such file or directory')"
-    )
-    with pytest.raises(CraftError, match=msg):
         get_builder(config)
+
+    assert str(exc_info.value) == dedent(
+        """\
+        Bad charmcraft.yaml content:
+        - needs value in field 'name'
+        - needs value in field 'summary'
+        - needs value in field 'description'"""
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -245,7 +263,8 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, emit
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
-        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
+        "test-charm-name-from-metadata-yaml_"
+        f"{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
 
     emitter.assert_debug("Building for 'bases[0]' as host matches 'build-on[0]'.")
@@ -267,15 +286,15 @@ def test_build_with_charmcraft_yaml_managed_mode(
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
-        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm"
+        "test-charm-name-from-metadata-yaml_"
+        f"{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
 
     emitter.assert_debug("Building for 'bases[0]' as host matches 'build-on[0]'.")
 
 
-def test_build_checks_provider(basic_project, mock_provider, mocker):
+def test_build_checks_provider(basic_project, mock_provider, mock_capture_logs_from_instance):
     """Test cases for base-index parameter."""
-    mocker.patch("charmcraft.commands.build.providers.capture_logs_from_instance")
     config = load(basic_project)
     builder = get_builder(config)
 
@@ -393,8 +412,9 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_buil
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
-        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm",
-        "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
+        "test-charm-name-from-metadata-yaml_"
+        f"{host_base.name}-{host_base.channel}-{host_arch}.charm",
+        "test-charm-name-from-metadata-yaml_" "cross-name-cross-channel-cross-arch1.charm",
     ]
 
     reason = f"name 'unmatched-name' does not match host {host_base.name!r}."
@@ -443,8 +463,9 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
-        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm",
-        "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
+        "test-charm-name-from-metadata-yaml_"
+        f"{host_base.name}-{host_base.channel}-{host_arch}.charm",
+        "test-charm-name-from-metadata-yaml_" "cross-name-cross-channel-cross-arch1.charm",
     ]
 
     reason = f"name 'unmatched-name' does not match host {host_base.name!r}."
@@ -462,8 +483,35 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
     )
 
 
+@pytest.mark.parametrize(
+    "charmcraft_yaml_template, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: ubuntu
+                    channel: "18.04"
+                    architectures: {arch}
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+    ],
+)
 def test_build_project_is_cwd(
     basic_project,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml_template,
+    metadata_yaml,
     emitter,
     mock_capture_logs_from_instance,
     mock_instance,
@@ -477,18 +525,9 @@ def test_build_project_is_cwd(
     emit.set_mode(EmitterMode.BRIEF)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "18.04"
-                    architectures: {host_base.architectures!r}
-                """
-        )
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml_template.format(arch=host_base.architectures))
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(basic_project)
     project_managed_path = pathlib.Path("/root/project")
     builder = get_builder(config)
@@ -501,13 +540,13 @@ def test_build_project_is_cwd(
     zipnames = builder.run([0])
 
     assert zipnames == [
-        f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+        f"test-charm-name-from-metadata-yaml_ubuntu-18.04-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            project_name="name-from-metadata",
+            project_name="test-charm-name-from-metadata-yaml",
             project_path=basic_project,
             base_configuration=base_configuration,
             instance_name=mock_instance_name(),
@@ -529,8 +568,35 @@ def test_build_project_is_cwd(
     ]
 
 
+@pytest.mark.parametrize(
+    "charmcraft_yaml_template, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: ubuntu
+                    channel: "18.04"
+                    architectures: {arch}
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+    ],
+)
 def test_build_project_is_not_cwd(
     basic_project,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml_template,
+    metadata_yaml,
     mock_capture_logs_from_instance,
     mock_instance,
     mock_provider,
@@ -544,18 +610,9 @@ def test_build_project_is_not_cwd(
     emit.set_mode(EmitterMode.BRIEF)
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "18.04"
-                    architectures: {host_base.architectures!r}
-                """
-        )
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml_template.format(arch=host_base.architectures))
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(basic_project)
     builder = get_builder(config)
     base_configuration = get_base_configuration(
@@ -568,13 +625,13 @@ def test_build_project_is_not_cwd(
     zipnames = builder.run([0])
 
     assert zipnames == [
-        f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+        f"test-charm-name-from-metadata-yaml_ubuntu-18.04-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            project_name="name-from-metadata",
+            project_name="test-charm-name-from-metadata-yaml",
             project_path=basic_project,
             base_configuration=base_configuration,
             instance_name=mock_instance_name(),
@@ -611,10 +668,46 @@ def test_build_project_is_not_cwd(
         (EmitterMode.BRIEF, ["--verbosity=brief"]),
     ],
 )
+@pytest.mark.parametrize(
+    "charmcraft_yaml_template, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: ubuntu
+                    channel: "18.04"
+                    architectures: {arch}
+                  - name: ubuntu
+                    channel: "20.04"
+                    architectures: {arch}
+                  - name: centos
+                    channel: "7"
+                    architectures: {arch}
+                  - name: ubuntu
+                    channel: "unsupported-channel"
+                    architectures: {arch}
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+    ],
+)
 def test_build_bases_index_scenarios_provider(
     mode,
     cmd_flags,
     basic_project,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml_template,
+    metadata_yaml,
     emitter,
     mock_capture_logs_from_instance,
     mock_instance,
@@ -630,27 +723,7 @@ def test_build_bases_index_scenarios_provider(
     host_base = get_host_as_base()
     host_arch = host_base.architectures[0]
     project_managed_path = pathlib.Path("/root/project")
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "18.04"
-                    architectures: {host_base.architectures!r}
-                  - name: ubuntu
-                    channel: "20.04"
-                    architectures: {host_base.architectures!r}
-                  - name: centos
-                    channel: "7"
-                    architectures: {host_base.architectures!r}
-                  - name: ubuntu
-                    channel: "unsupported-channel"
-                    architectures: {host_base.architectures!r}
-                """
-        )
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml_template.format(arch=host_base.architectures))
     config = load(basic_project)
     builder = get_builder(config)
     base_bionic_configuration = get_base_configuration(
@@ -671,14 +744,14 @@ def test_build_bases_index_scenarios_provider(
 
     zipnames = builder.run([0])
     assert zipnames == [
-        f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
+        f"test-charm-name-from-metadata-yaml_ubuntu-18.04-{host_arch}.charm",
     ]
 
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            project_name="name-from-metadata",
+            project_name="test-charm-name-from-metadata-yaml",
             project_path=basic_project,
             base_configuration=base_bionic_configuration,
             instance_name=mock_instance_name(),
@@ -714,13 +787,13 @@ def test_build_bases_index_scenarios_provider(
 
     zipnames = builder.run([1])
     assert zipnames == [
-        f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+        f"test-charm-name-from-metadata-yaml_ubuntu-20.04-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            project_name="name-from-metadata",
+            project_name="test-charm-name-from-metadata-yaml",
             project_path=basic_project,
             base_configuration=base_focal_configuration,
             instance_name=mock_instance_name(),
@@ -750,21 +823,21 @@ def test_build_bases_index_scenarios_provider(
 
     zipnames = builder.run([0, 1])
     assert zipnames == [
-        f"name-from-metadata_ubuntu-18.04-{host_arch}.charm",
-        f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
+        f"test-charm-name-from-metadata-yaml_ubuntu-18.04-{host_arch}.charm",
+        f"test-charm-name-from-metadata-yaml_ubuntu-20.04-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            project_name="name-from-metadata",
+            project_name="test-charm-name-from-metadata-yaml",
             project_path=basic_project,
             base_configuration=base_bionic_configuration,
             instance_name=mock_instance_name(),
             allow_unstable=False,
         ),
         call.launched_environment(
-            project_name="name-from-metadata",
+            project_name="test-charm-name-from-metadata-yaml",
             project_path=basic_project,
             base_configuration=base_focal_configuration,
             instance_name=mock_instance_name(),
@@ -801,21 +874,21 @@ def test_build_bases_index_scenarios_provider(
 
     zipnames = builder.run([1, 2])
     assert zipnames == [
-        f"name-from-metadata_ubuntu-20.04-{host_arch}.charm",
-        f"name-from-metadata_centos-7-{host_arch}.charm",
+        f"test-charm-name-from-metadata-yaml_ubuntu-20.04-{host_arch}.charm",
+        f"test-charm-name-from-metadata-yaml_centos-7-{host_arch}.charm",
     ]
     assert mock_provider.mock_calls == [
         call.is_provider_installed(),
         call.ensure_provider_is_available(),
         call.launched_environment(
-            project_name="name-from-metadata",
+            project_name="test-charm-name-from-metadata-yaml",
             project_path=basic_project,
             base_configuration=base_focal_configuration,
             instance_name=mock_instance_name(),
             allow_unstable=False,
         ),
         call.launched_environment(
-            project_name="name-from-metadata",
+            project_name="test-charm-name-from-metadata-yaml",
             project_path=basic_project,
             base_configuration=base_centos_configuration,
             instance_name=mock_instance_name(),
@@ -919,7 +992,8 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         zipnames = builder.run([0])
     assert zipnames == [
-        f"name-from-metadata_{host_base.name}-{host_base.channel}-{host_arch}.charm",
+        "test-charm-name-from-metadata-yaml_"
+        f"{host_base.name}-{host_base.channel}-{host_arch}.charm",
     ]
 
     with pytest.raises(
@@ -931,7 +1005,7 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         zipnames = builder.run([2])
     assert zipnames == [
-        "name-from-metadata_cross-name-cross-channel-cross-arch1.charm",
+        "test-charm-name-from-metadata-yaml_cross-name-cross-channel-cross-arch1.charm",
     ]
 
 
@@ -939,14 +1013,12 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
     "charmcraft.bases.get_host_as_base",
     return_value=Base(name="xname", channel="xchannel", architectures=["xarch"]),
 )
-def test_build_error_no_match_with_charmcraft_yaml(
-    mock_host_base, basic_project, monkeypatch, emitter
-):
-    """Error when no charms are buildable with host base, verifying each mismatched reason."""
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            """\
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
                 type: charm
                 bases:
                   - name: unmatched-name
@@ -959,8 +1031,31 @@ def test_build_error_no_match_with_charmcraft_yaml(
                     channel: xchannel
                     architectures: [unmatched-arch1, unmatched-arch2]
                 """
-        )
-    )
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+    ],
+)
+def test_build_error_no_match_with_charmcraft_yaml(
+    mock_host_base,
+    basic_project,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+    monkeypatch,
+    emitter,
+):
+    """Error when no charms are buildable with host base, verifying each mismatched reason."""
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+
     config = load(basic_project)
     builder = get_builder(config)
 
@@ -1088,7 +1183,7 @@ def test_build_arguments_managed_charmcraft_measure(
 def test_build_package_tree_structure(tmp_path, config):
     """The zip file is properly built internally."""
     # the metadata
-    metadata_data = {"name": "name-from-metadata"}
+    metadata_data = {"name": "test-charm-name-from-metadata-yaml"}
     metadata_file = tmp_path / "metadata.yaml"
     with metadata_file.open("wt", encoding="ascii") as fh:
         yaml.dump(metadata_data, fh)
@@ -1152,16 +1247,52 @@ def test_build_package_tree_structure(tmp_path, config):
     assert zf.read("linkeddir/file_ext") == b"external file"  # from file in the outside linked dir
 
 
-def test_build_package_name(tmp_path, config):
-    """The zip file name comes from the metadata."""
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml, expected_zipname",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+            "test-charm-name-from-metadata-yaml_xname-xchannel-xarch1.charm",
+        ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                type: charm
+                summary: test summary
+                description: test description
+                """
+            ),
+            None,
+            "test-charm-name-from-charmcraft-yaml_xname-xchannel-xarch1.charm",
+        ],
+    ],
+)
+def test_build_package_name(
+    tmp_path,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+    expected_zipname,
+):
+    """The zip file name comes from the config."""
     to_be_zipped_dir = tmp_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
-    # the metadata
-    metadata_data = {"name": "name-from-metadata"}
-    metadata_file = tmp_path / "metadata.yaml"
-    with metadata_file.open("wt", encoding="ascii") as fh:
-        yaml.dump(metadata_data, fh)
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     # zip it
     bases_config = BasesConfiguration(
@@ -1170,32 +1301,55 @@ def test_build_package_name(tmp_path, config):
             "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
         }
     )
+
+    config = load(tmp_path)
     builder = get_builder(config)
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
-    assert zipname == "name-from-metadata_xname-xchannel-xarch1.charm"
+    assert zipname == expected_zipname
 
 
-def test_build_postlifecycle_validation_is_properly_called(basic_project, monkeypatch):
-    """Check how the entrypoint validation helper is called."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
+@pytest.mark.parametrize(
+    "charmcraft_yaml_template, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
                 type: charm
                 bases:
                   - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
+                      - name: {base_name}
+                        channel: "{base_channel}"
                     run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
+                      - name: {base_name}
+                        channel: "{base_channel}"
                 parts:
                   charm:
                     charm-entrypoint: my_entrypoint.py
                 """
-        )
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+    ],
+)
+def test_build_postlifecycle_validation_is_properly_called(
+    basic_project,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml_template,
+    metadata_yaml,
+    monkeypatch,
+):
+    """Check how the entrypoint validation helper is called."""
+    host_base = get_host_as_base()
+    prepare_charmcraft_yaml(
+        charmcraft_yaml_template.format(base_name=host_base.name, base_channel=host_base.channel)
     )
     config = load(basic_project)
     builder = get_builder(config)
@@ -1213,21 +1367,20 @@ def test_build_postlifecycle_validation_is_properly_called(basic_project, monkey
                 builder.run([0])
 
 
-def test_build_part_from_config(basic_project, monkeypatch):
-    """Check that the "parts" are passed to the lifecycle correctly."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
+@pytest.mark.parametrize(
+    "charmcraft_yaml_template, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
                 type: charm
                 bases:
                   - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
+                      - name: {base_name}
+                        channel: "{base_channel}"
                     run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
+                      - name: {base_name}
+                        channel: "{base_channel}"
 
                 parts:
                   charm:
@@ -1236,8 +1389,32 @@ def test_build_part_from_config(basic_project, monkeypatch):
                     charm-binary-python-packages: ["baz"]
                     charm-requirements: ["reqs.txt"]
                 """
-        )
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+    ],
+)
+def test_build_part_from_config(
+    basic_project,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml_template,
+    metadata_yaml,
+    monkeypatch,
+):
+    """Check that the "parts" are passed to the lifecycle correctly."""
+    host_base = get_host_as_base()
+    prepare_charmcraft_yaml(
+        charmcraft_yaml_template.format(base_name=host_base.name, base_channel=host_base.channel)
     )
+    prepare_metadata_yaml(metadata_yaml)
+
     reqs_file = basic_project / "reqs.txt"
     reqs_file.write_text("somedep")
     config = load(basic_project)
@@ -1254,17 +1431,7 @@ def test_build_part_from_config(basic_project, monkeypatch):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
+                        "prime": ANY,
                         "charm-entrypoint": "src/charm.py",
                         "charm-python-packages": ["foo", "bar"],
                         "charm-binary-python-packages": ["baz"],
@@ -1274,35 +1441,69 @@ def test_build_part_from_config(basic_project, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
-                project_name="name-from-metadata",
+                project_name="test-charm-name-from-metadata-yaml",
                 ignore_local_sources=["*.charm"],
             )
         ]
     )
+    assert set(mock_lifecycle.call_args_list[0][0][0]["charm"]["prime"]) == {
+        "src",
+        "venv",
+        "hooks",
+        "dispatch",
+        "LICENSE",
+        "README.md",
+        "icon.svg",
+        "lib",
+        "metadata.yaml",
+    }
 
 
-def test_build_part_include_venv_pydeps(basic_project, monkeypatch):
-    """Include the venv directory even if only charmlib python dependencies exist."""
-    host_base = get_host_as_base()
-    charmcraft_file = basic_project / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            f"""\
+@pytest.mark.parametrize(
+    "charmcraft_yaml_template, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
                 type: charm
                 bases:
                   - build-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
+                      - name: {base_name}
+                        channel: "{base_channel}"
                     run-on:
-                      - name: {host_base.name!r}
-                        channel: {host_base.channel!r}
+                      - name: {base_name}
+                        channel: "{base_channel}"
 
                 parts:
                   charm:
                     charm-entrypoint: src/charm.py
                 """
-        )
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+    ],
+)
+def test_build_part_include_venv_pydeps(
+    basic_project,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml_template,
+    metadata_yaml,
+    monkeypatch,
+):
+    """Include the venv directory even if only charmlib python dependencies exist."""
+    host_base = get_host_as_base()
+    prepare_charmcraft_yaml(
+        charmcraft_yaml_template.format(base_name=host_base.name, base_channel=host_base.channel)
     )
+    prepare_metadata_yaml(metadata_yaml)
+
     charmlib = basic_project / "lib" / "charms" / "somecharm" / "v1" / "somelib.py"
     charmlib.parent.mkdir(parents=True)
     charmlib.write_text(
@@ -1329,17 +1530,7 @@ def test_build_part_include_venv_pydeps(basic_project, monkeypatch):
                 {
                     "charm": {
                         "plugin": "charm",
-                        "prime": [
-                            "src",
-                            "venv",
-                            "metadata.yaml",
-                            "dispatch",
-                            "hooks",
-                            "lib",
-                            "LICENSE",
-                            "icon.svg",
-                            "README.md",
-                        ],
+                        "prime": ANY,
                         "charm-entrypoint": "src/charm.py",
                         "charm-python-packages": [],
                         "charm-binary-python-packages": [],
@@ -1349,11 +1540,23 @@ def test_build_part_include_venv_pydeps(basic_project, monkeypatch):
                 },
                 work_dir=pathlib.Path("/root"),
                 project_dir=basic_project,
-                project_name="name-from-metadata",
+                project_name="test-charm-name-from-metadata-yaml",
                 ignore_local_sources=["*.charm"],
             )
         ]
     )
+
+    assert set(mock_lifecycle.call_args_list[0][0][0]["charm"]["prime"]) == {
+        "src",
+        "venv",
+        "hooks",
+        "dispatch",
+        "LICENSE",
+        "README.md",
+        "icon.svg",
+        "lib",
+        "metadata.yaml",
+    }
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

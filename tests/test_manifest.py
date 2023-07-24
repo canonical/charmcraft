@@ -22,28 +22,30 @@ import pytest
 import yaml
 from craft_cli import CraftError
 
-from charmcraft import __version__, config, linters
-from charmcraft.manifest import create_manifest, IMAGE_INFO_ENV_VAR
+from charmcraft import __version__, linters
+from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.metafiles.manifest import create_manifest
+from charmcraft.const import IMAGE_INFO_ENV_VAR
 from charmcraft.utils import OSPlatform
 
 
 def test_manifest_simple_ok(tmp_path):
     """Simple construct."""
-    bases_config = config.BasesConfiguration(
+    bases_config = BasesConfiguration(
         **{
             "build-on": [
-                config.Base(
+                Base(
                     name="test-name",
                     channel="test-channel",
                 ),
             ],
             "run-on": [
-                config.Base(
+                Base(
                     name="test-name",
                     channel="test-channel",
                     architectures=["arch1"],
                 ),
-                config.Base(
+                Base(
                     name="test-name2",
                     channel="test-channel2",
                     architectures=["arch1", "arch2"],

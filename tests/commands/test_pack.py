@@ -32,7 +32,8 @@ from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
 from charmcraft.commands.pack import PackCommand, _get_charm_pack_args, _subprocess_pack_charms
-from charmcraft.config import load, BasesConfiguration
+from charmcraft.models.charmcraft import BasesConfiguration
+from charmcraft.config import load
 
 
 def get_namespace(
@@ -383,7 +384,45 @@ def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mo
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_bundle_parts_not_defined(tmp_path, monkeypatch, bundle_yaml):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                type: bundle
+                summary: test-summary
+                description: test-description
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bundle_parts_not_defined(
+    tmp_path,
+    monkeypatch,
+    bundle_yaml,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
     """Parts are not defined.
 
     When the "parts" section does not exist, create an implicit "bundle" part and
@@ -392,8 +431,8 @@ def test_bundle_parts_not_defined(tmp_path, monkeypatch, bundle_yaml):
     bundle_yaml(name="testbundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    charmcraft_file = tmp_path / "charmcraft.yaml"
-    charmcraft_file.write_text("type: bundle")
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
 
@@ -425,7 +464,53 @@ def test_bundle_parts_not_defined(tmp_path, monkeypatch, bundle_yaml):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_bundle_parts_with_bundle_part(tmp_path, monkeypatch, bundle_yaml):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  bundle:
+                    prime:
+                      - my_extra_file.txt
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                type: bundle
+                summary: test-summary
+                description: test-description
+                parts:
+                  bundle:
+                    prime:
+                      - my_extra_file.txt
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bundle_parts_with_bundle_part(
+    tmp_path,
+    monkeypatch,
+    bundle_yaml,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
     """Parts are declared with a charm part with implicit plugin.
 
     When the "parts" section exists in chamcraft.yaml and a part named "bundle"
@@ -435,18 +520,8 @@ def test_bundle_parts_with_bundle_part(tmp_path, monkeypatch, bundle_yaml):
     bundle_yaml(name="testbundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    charmcraft_file = tmp_path / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            """
-            type: bundle
-            parts:
-              bundle:
-                prime:
-                  - my_extra_file.txt
-        """
-        )
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
 
@@ -479,7 +554,51 @@ def test_bundle_parts_with_bundle_part(tmp_path, monkeypatch, bundle_yaml):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_bundle_parts_without_bundle_part(tmp_path, monkeypatch, bundle_yaml):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  foo:
+                    plugin: nil
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                type: bundle
+                summary: test-summary
+                description: test-description
+                parts:
+                  foo:
+                    plugin: nil
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bundle_parts_without_bundle_part(
+    tmp_path,
+    monkeypatch,
+    bundle_yaml,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
     """Parts are declared without a bundle part.
 
     When the "parts" section exists in chamcraft.yaml and a part named "bundle"
@@ -488,17 +607,8 @@ def test_bundle_parts_without_bundle_part(tmp_path, monkeypatch, bundle_yaml):
     bundle_yaml(name="testbundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    charmcraft_file = tmp_path / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            """
-            type: bundle
-            parts:
-              foo:
-                plugin: nil
-        """
-        )
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
 
@@ -525,7 +635,51 @@ def test_bundle_parts_without_bundle_part(tmp_path, monkeypatch, bundle_yaml):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_bundle_parts_with_bundle_part_with_plugin(tmp_path, monkeypatch, bundle_yaml):
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: bundle
+                parts:
+                  bundle:
+                    plugin: nil
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                name: test-charm-name-from-charmcraft-yaml
+                type: bundle
+                summary: test-summary
+                description: test-description
+                parts:
+                  bundle:
+                    plugin: nil
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_bundle_parts_with_bundle_part_with_plugin(
+    tmp_path,
+    monkeypatch,
+    bundle_yaml,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
     """Parts are declared with a bundle part that uses a different plugin.
 
     When the "parts" section exists in chamcraft.yaml and a part named "bundle"
@@ -535,17 +689,8 @@ def test_bundle_parts_with_bundle_part_with_plugin(tmp_path, monkeypatch, bundle
     bundle_yaml(name="testbundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    charmcraft_file = tmp_path / "charmcraft.yaml"
-    charmcraft_file.write_text(
-        dedent(
-            """
-            type: bundle
-            parts:
-              bundle:
-                plugin: nil
-        """
-        )
-    )
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
 

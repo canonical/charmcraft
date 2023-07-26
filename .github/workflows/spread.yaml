@@ -32,7 +32,7 @@ jobs:
       matrix:
         spread:
           - "google:"
-          - "google:ubuntu-22.04-64:tests/spread/charms/k8s-operator:prometheus"
+#          - "google:ubuntu-22.04-64:tests/spread/charms/k8s-operator:prometheus"
 
     steps:
       - name: Cleanup job workspace

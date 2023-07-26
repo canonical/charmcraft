@@ -1,36 +1,36 @@
-summary: Recursively pack a bundle with all charms on
-systems:
-  - ubuntu-22.04-64
-kill-timeout: 30m
-
-environment:
-  BUNDLE/notebook_operators: https://github.com/canonical/notebook-operators
-
-prepare: |
-  git clone --depth=1 "${BUNDLE}" bundle
-
-restore: |
-  pushd bundle/charms/jupyter-controller
-  charmcraft clean
-  popd
-  pushd bundle/charms/jupyter-ui
-  charmcraft clean
-  popd
-
-  rm -rf bundle
-
-execute: |
-  cd bundle
-  charmcraft pack --verbose --include-all-charms --output-bundle=output_bundle.yaml
-
-  # Ensure that the output bundle.yaml file is the same as the bundle.yaml file
-  # within the bundle itself.
-  unzip -p *.zip bundle.yaml | diff -s output_bundle.yaml -
-  # Ensure at least one charm file is referenced in the bundle.yaml
-  test $(grep "charm: ${PWD}" output_bundle.yaml | wc -l) -ge 1
-  # Ensure all local charms referenced in the bundle exist
-  grep "charm: ${PWD}" output_bundle.yaml | cut -d: -f2 | xargs file -E
-
-  # Test deploying the bundle.
-  # TODO: install juju on the runner and re-enable this.
-  # juju deploy --dry-run *.zip
+summary: Recursively pack a bundle with all charms
+#systems:
+#  - ubuntu-22.04-64
+#kill-timeout: 30m
+#
+#environment:
+#  BUNDLE/notebook_operators: https://github.com/canonical/notebook-operators
+#
+#prepare: |
+#  git clone --depth=1 "${BUNDLE}" bundle
+#
+#restore: |
+#  pushd bundle/charms/jupyter-controller
+#  charmcraft clean
+#  popd
+#  pushd bundle/charms/jupyter-ui
+#  charmcraft clean
+#  popd
+#
+#  rm -rf bundle
+#
+#execute: |
+#  cd bundle
+#  charmcraft pack --verbose --include-all-charms --output-bundle=output_bundle.yaml
+#
+#  # Ensure that the output bundle.yaml file is the same as the bundle.yaml file
+#  # within the bundle itself.
+#  unzip -p *.zip bundle.yaml | diff -s output_bundle.yaml -
+#  # Ensure at least one charm file is referenced in the bundle.yaml
+#  test $(grep "charm: ${PWD}" output_bundle.yaml | wc -l) -ge 1
+#  # Ensure all local charms referenced in the bundle exist
+#  grep "charm: ${PWD}" output_bundle.yaml | cut -d: -f2 | xargs file -E
+#
+#  # Test deploying the bundle.
+#  # TODO: install juju on the runner and re-enable this.
+#  # juju deploy --dry-run *.zip

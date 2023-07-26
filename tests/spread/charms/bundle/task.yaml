@@ -1,4 +1,4 @@
-#summary: Recursively pack a bundle with all charms on
+summary: Recursively pack a bundle with all charms
 #systems:
 #  - ubuntu-22.04-64
 #kill-timeout: 30m

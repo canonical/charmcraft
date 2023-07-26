@@ -9,7 +9,7 @@ environment:
   CHARM/grafana: https://github.com/canonical/grafana-k8s-operator
   CHARM/mysql: https://github.com/canonical/mysql-k8s-operator
   CHARM/postgresql: https://github.com/canonical/postgresql-k8s-operator
-  CHARM/prometheus: https://github.com/canonical/prometheus-k8s-operator
+#  CHARM/prometheus: https://github.com/canonical/prometheus-k8s-operator
   CHARM/traefik: https://github.com/canonical/traefik-k8s-operator
   CHARM/mattermost: https://git.launchpad.net/charm-k8s-mattermost
   CHARM/discourse: https://git.launchpad.net/charm-k8s-discourse
@@ -21,7 +21,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

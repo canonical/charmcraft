@@ -1,0 +1,120 @@
+summary: create, list, publish and fetch libraries
+
+environment:
+  LIB_NAME: lib_$(uuidgen | sed -e 's/-//g')
+  CHARM_UNDERSCORE_NAME: $(echo $CHARM_DEFAULT_NAME | sed -e 's/-/_/g')
+
+include:
+  - tests/
+
+prepare: |
+  tests.pkgs install jq
+
+  # init the project so we have a proper place to work with the library, but no need
+  # to pack and upload (which takes a lot of time) because other zillion tests already
+  # do that and we can be sure that $CHARM_DEFAULT_NAME already exists in Charmhub
+  charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME
+  cd charm
+
+  cat <<- EOF >> charmcraft.yaml
+  charmhub:
+    api-url: https://api.staging.charmhub.io
+    storage-url: https://storage.staging.snapcraftcontent.com
+  EOF
+
+  # If necessary, try to register the charm.
+  if ! charmcraft status $CHARM_DEFAULT_NAME; then
+    if ! charmcraft register $CHARM_DEFAULT_NAME; then
+      ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
+    fi
+  fi
+
+restore: |
+  rm -rf charm
+
+execute: |
+  cd charm
+
+  # create a library
+  charmcraft create-lib $LIB_NAME
+  test -f lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py
+
+  # publish 0.1
+  publish_result=$(charmcraft publish-lib charms.$CHARM_UNDERSCORE_NAME.v0.$LIB_NAME --format=json)
+  published_api=$(echo $publish_result | jq .[0].published.api)
+  published_patch=$(echo $publish_result | jq .[0].published.patch)
+  test $published_api = 0
+  test $published_patch = 1
+
+  # publish 1.0
+  cp -r lib/charms/$CHARM_UNDERSCORE_NAME/v0 lib/charms/$CHARM_UNDERSCORE_NAME/v1
+  echo "# more code 1.0" >> lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py
+  sed -i 's/LIBAPI =.*/LIBAPI = 1/' lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py
+  sed -i 's/LIBPATCH =.*/LIBPATCH = 0/' lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py
+  publish_result=$(charmcraft publish-lib charms.$CHARM_UNDERSCORE_NAME.v1.$LIB_NAME --format=json)
+  published_api=$(echo $publish_result | jq .[0].published.api)
+  published_patch=$(echo $publish_result | jq .[0].published.patch)
+  test $published_api = 1
+  test $published_patch = 0
+
+  # publish 2.0
+  cp -r lib/charms/$CHARM_UNDERSCORE_NAME/v1 lib/charms/$CHARM_UNDERSCORE_NAME/v2
+  echo "# more code 2.0" >> lib/charms/$CHARM_UNDERSCORE_NAME/v2/$LIB_NAME.py
+  sed -i 's/LIBAPI =.*/LIBAPI = 2/' lib/charms/$CHARM_UNDERSCORE_NAME/v2/$LIB_NAME.py
+  sed -i 's/LIBPATCH =.*/LIBPATCH = 0/' lib/charms/$CHARM_UNDERSCORE_NAME/v2/$LIB_NAME.py
+  publish_result=$(charmcraft publish-lib charms.$CHARM_UNDERSCORE_NAME.v2.$LIB_NAME --format=json)
+  published_api=$(echo $publish_result | jq .[0].published.api)
+  published_patch=$(echo $publish_result | jq .[0].published.patch)
+  test $published_api = 2
+  test $published_patch = 0
+
+  # publish 0.2
+  echo "# more code 0.2" >> lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py
+  sed -i 's/LIBAPI =.*/LIBAPI = 0/' lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py
+  sed -i 's/LIBPATCH =.*/LIBPATCH = 2/' lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py
+  publish_result=$(charmcraft publish-lib charms.$CHARM_UNDERSCORE_NAME.v0.$LIB_NAME --format=json)
+  published_api=$(echo $publish_result | jq .[0].published.api)
+  published_patch=$(echo $publish_result | jq .[0].published.patch)
+  test $published_api = 0
+  test $published_patch = 2
+
+  # publish 1.2
+  echo "# more code 1.2" >> lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py
+  sed -i 's/LIBAPI =.*/LIBAPI = 1/' lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py
+  sed -i 's/LIBPATCH =.*/LIBPATCH = 2/' lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py
+  publish_result=$(charmcraft publish-lib charms.$CHARM_UNDERSCORE_NAME.v1.$LIB_NAME --format=json)
+  published_api=$(echo $publish_result | jq .[0].published.api)
+  published_patch=$(echo $publish_result | jq .[0].published.patch)
+  test $published_api = 1
+  test $published_patch = 2
+
+  # list it
+  list_result=$(charmcraft list-lib $CHARM_DEFAULT_NAME --format=json)
+  listed_patch=$(echo $list_result | jq --arg libname $LIB_NAME '.[] | select(.library_name == $libname) | .patch')
+  published_api=$(echo $publish_result | jq .[0].published.api)
+  published_patch=$(echo $publish_result | jq .[0].published.patch)
+  test $published_api = 2
+  test $published_patch = 0
+
+  unset CHARMCRAFT_AUTH
+
+  # clean the lib directory and fetch 0.2 again without auth
+  rm -rf lib/
+  charmcraft fetch-lib charms.$CHARM_UNDERSCORE_NAME.v0.$LIB_NAME
+  test -f lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py
+  cat lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py | MATCH "LIBAPI = 0"
+  cat lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py | MATCH "LIBPATCH = 2"
+
+  # clean the lib directory and fetch 1.2 again without auth
+  rm -rf lib/
+  charmcraft fetch-lib charms.$CHARM_UNDERSCORE_NAME.v1.$LIB_NAME
+  test -f lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py
+  cat lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py | MATCH "LIBAPI = 1"
+  cat lib/charms/$CHARM_UNDERSCORE_NAME/v1/$LIB_NAME.py | MATCH "LIBPATCH = 2"
+
+  # clean the lib directory and fetch 2.0 again without auth
+  rm -rf lib/
+  charmcraft fetch-lib charms.$CHARM_UNDERSCORE_NAME.v2.$LIB_NAME
+  test -f lib/charms/$CHARM_UNDERSCORE_NAME/v2/$LIB_NAME.py
+  cat lib/charms/$CHARM_UNDERSCORE_NAME/v2/$LIB_NAME.py | MATCH "LIBAPI = 2"
+  cat lib/charms/$CHARM_UNDERSCORE_NAME/v2/$LIB_NAME.py | MATCH "LIBPATCH = 0"

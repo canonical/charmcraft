@@ -1,0 +1,98 @@
+summary: >
+  create a charm that use charmcraft.yaml, but bad
+  metadata.yaml, config.yaml, actions.yaml
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install unzip
+  charmcraft init --project-dir=charm
+  rm -f charm/metadata.yaml
+  rm -f charm/config.yaml
+
+  cat <<- EOF > charm/charmcraft.yaml
+  type: charm
+
+  bases:
+    - build-on:
+      - name: ubuntu
+        channel: "22.04"
+      run-on:
+      - name: ubuntu
+        channel: "22.04"
+
+  EOF
+
+  cat <<- EOF > charm/metadata.yaml
+  name: charmcraft-test
+  summary: test-summary
+  description: test-description
+
+  title: test-title
+
+  links:
+    issues: https://example.com/issues
+    contact:
+      - https://example.com/contact
+      - contact@example.com
+      - "IRC #example"
+    documentation: https://example.com/docs
+    source:
+      - https://example.com/source
+      - https://example.com/source2
+      - https://example.com/source3
+    website:
+      - https://example.com/
+
+  meow: meow
+
+  #### TEST-COPY ####
+  EOF
+
+  cat <<- EOF > charm/actions.yaml
+  pause
+  #### TEST-COPY ####
+
+  EOF
+
+  cat <<- EOF > charm/config.yaml
+  options:
+    max-body-size:
+      default: 20
+      description: Max allowed body-size (for file uploads) in megabytes,
+        set to 0 to disable limits.
+      source: default
+      type: int
+      value: 20
+  #### TEST-COPY ####
+
+  EOF
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+  
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+  test -f charm*.charm
+
+  unzip -l charm*.charm | MATCH "actions.yaml"
+  unzip -l charm*.charm | MATCH "config.yaml"
+  unzip -l charm*.charm | MATCH "metadata.yaml"
+
+  unzip -p charm*.charm actions.yaml | MATCH "pause"
+  unzip -p charm*.charm actions.yaml | MATCH "#### TEST-COPY ####"
+
+  unzip -p charm*.charm config.yaml | MATCH "max-body-size"
+  unzip -p charm*.charm config.yaml | MATCH "#### TEST-COPY ####"
+
+  unzip -p charm*.charm metadata.yaml | MATCH "meow"
+  unzip -p charm*.charm metadata.yaml | MATCH "#### TEST-COPY ####"
+
+  test ! -d build
+

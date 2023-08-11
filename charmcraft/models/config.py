@@ -30,7 +30,6 @@ class JujuConfig(ModelConfigDefaults):
     """
 
     options: Optional[Dict[str, Dict]]
-    legacy: bool = False
 
     @pydantic.validator("options", pre=True)
     def validate_actions(cls, options, values):

@@ -3312,3 +3312,63 @@ def test_actions_defined_in_charmcraft_yaml_and_actions_yaml(
         Bad charmcraft.yaml content:
         - 'actions.yaml' file not allowed when an 'actions' section is defined in 'charmcraft.yaml' in field 'actions'"""  # NOQA: E501
     )
+
+
+@pytest.mark.parametrize(
+    "charmcraft_yaml, metadata_yaml",
+    [
+        [
+            dedent(
+                """\
+                type: charm
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name-from-metadata-yaml
+                summary: test summary
+                description: test description
+                """
+            ),
+        ],
+        [
+            dedent(
+                """\
+                type: charm
+                name: test-charm-name-from-charmcraft-yaml
+                summary: test summary
+                description: test description
+                bases:
+                  - name: test-name
+                    channel: test-channel
+                """
+            ),
+            None,
+        ],
+    ],
+)
+def test_actions_bad_unenforced_defined_in_actions_yaml(
+    tmp_path,
+    create_checker,
+    prepare_charmcraft_yaml,
+    prepare_metadata_yaml,
+    prepare_actions_yaml,
+    charmcraft_yaml,
+    metadata_yaml,
+):
+    """Load a bad actions in actions.yaml. Should not raise an error since check unenforced."""
+    prepare_charmcraft_yaml(charmcraft_yaml)
+    prepare_metadata_yaml(metadata_yaml)
+    prepare_actions_yaml(
+        dedent(
+            """\
+            invalid: 111
+            """
+        )
+    )
+
+    config = load(tmp_path)
+    assert config.actions is None

@@ -16,15 +16,18 @@
 
 """Handlers for metadata.yaml file."""
 
+import contextlib
 import shutil
 import pathlib
 import logging
 from typing import Any, Dict, TYPE_CHECKING
 
+import pydantic
 import yaml
 from craft_cli import emit, CraftError
 
 from charmcraft.const import METADATA_FILENAME, CHARM_METADATA_KEYS, CHARM_METADATA_KEYS_ALIAS
+from charmcraft.format import format_pydantic_errors
 from charmcraft.models.metadata import CharmMetadataLegacy, BundleMetadataLegacy
 
 if TYPE_CHECKING:
@@ -44,7 +47,9 @@ def read_metadata_yaml(charm_dir: pathlib.Path) -> Dict[str, Any]:
         return yaml.safe_load(fh)
 
 
-def parse_charm_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadataLegacy:
+def parse_charm_metadata_yaml(
+    charm_dir: pathlib.Path, allow_basic: bool = False
+) -> CharmMetadataLegacy:
     """Parse project's legacy metadata.yaml that used for charms.
 
     :returns: a CharmMetadataLegacy object.
@@ -59,7 +64,19 @@ def parse_charm_metadata_yaml(charm_dir: pathlib.Path) -> CharmMetadataLegacy:
         raise CraftError(f"The {charm_dir / METADATA_FILENAME} file is not valid YAML.")
 
     emit.debug("Validating metadata keys")
-    return CharmMetadataLegacy.unmarshal(metadata)
+    try:
+        return CharmMetadataLegacy.unmarshal(metadata)
+    except pydantic.ValidationError as error:
+        if allow_basic:
+            emit.progress(
+                format_pydantic_errors(error.errors(), file_name=METADATA_FILENAME), permanent=True
+            )
+            emit.debug("Falling back to basic metadata.yaml")
+            metadata_basic = {
+                k: v for k, v in metadata.items() if k in ("name", "summary", "description")
+            }
+            return CharmMetadataLegacy.unmarshal(metadata_basic)
+        raise
 
 
 def parse_bundle_metadata_yaml(charm_dir: pathlib.Path) -> BundleMetadataLegacy:
@@ -93,13 +110,14 @@ def create_metadata_yaml(
 
     :returns: Path to created metadata.yaml.
     """
-    file_path = charm_dir / METADATA_FILENAME
-    # metadata.yaml should be copied if it exists in the project
-    if charmcraft_config.metadata_legacy:
-        try:
-            shutil.copyfile(charmcraft_config.project.dirpath / METADATA_FILENAME, file_path)
-        except shutil.SameFileError:
-            pass
+    original_file_path = charmcraft_config.project.dirpath / METADATA_FILENAME
+    target_file_path = charm_dir / METADATA_FILENAME
+
+    # Copy metadata.yaml if it exists, otherwise create it from CharmcraftConfig.
+    if original_file_path.exists():
+        # In the build / test process, the original file may be the same as the target file.
+        with contextlib.suppress(shutil.SameFileError):
+            shutil.copyfile(original_file_path, target_file_path)
     else:
         # metadata.yaml not exists, create it from config
         metadata = charmcraft_config.dict(
@@ -124,6 +142,6 @@ def create_metadata_yaml(
             if (website := links.pop("website", None)) is not None:
                 metadata["website"] = website
 
-        file_path.write_text(yaml.dump(metadata))
+        target_file_path.write_text(yaml.dump(metadata))
 
-    return file_path
+    return target_file_path

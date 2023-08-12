@@ -45,6 +45,12 @@ def test_dump_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
               - any-of:
                   - extra-feature-1
                   - extra-feature-2
+                  - all-of:
+                    - juju >= 2.9.44
+                    - juju < 3
+                  - all-of:
+                    - juju >= 3.1.6
+                    - juju < 4
               - all-of:
                   - test-feature-1
                   - test-feature-2
@@ -157,7 +163,14 @@ def test_dump_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
         "description": "test-description",
         "assumes": [
             "test-feature",
-            {"any-of": ["extra-feature-1", "extra-feature-2"]},
+            {
+                "any-of": [
+                    "extra-feature-1",
+                    "extra-feature-2",
+                    {"all-of": ["juju >= 2.9.44", "juju < 3"]},
+                    {"all-of": ["juju >= 3.1.6", "juju < 4"]},
+                ]
+            },
             {"all-of": ["test-feature-1", "test-feature-2"]},
         ],
         "containers": {
@@ -243,6 +256,12 @@ def test_copy_metadata_from_metadata_yaml(
               - any-of:
                   - extra-feature-1
                   - extra-feature-2
+                  - all-of:
+                    - juju >= 2.9.44
+                    - juju < 3
+                  - all-of:
+                    - juju >= 3.1.6
+                    - juju < 4
               - all-of:
                   - test-feature-1
                   - test-feature-2
@@ -367,7 +386,14 @@ def test_copy_metadata_from_metadata_yaml(
         "description": "test-description",
         "assumes": [
             "test-feature",
-            {"any-of": ["extra-feature-1", "extra-feature-2"]},
+            {
+                "any-of": [
+                    "extra-feature-1",
+                    "extra-feature-2",
+                    {"all-of": ["juju >= 2.9.44", "juju < 3"]},
+                    {"all-of": ["juju >= 3.1.6", "juju < 4"]},
+                ]
+            },
             {"all-of": ["test-feature-1", "test-feature-2"]},
         ],
         "containers": {

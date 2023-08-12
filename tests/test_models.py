@@ -301,6 +301,39 @@ def test_load_minimal_metadata_from_metadata_yaml_missing_summary(
         load(tmp_path)
 
 
+def test_load_minimal_metadata_from_metadata_yaml_bad_others_allowed(
+    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml
+):
+    """Load a mimimal charmcraft.yaml with metadata.yaml. Had bad other fields but allowed."""
+    prepare_charmcraft_yaml(
+        dedent(
+            """
+            type: charm
+
+            bases:
+                - name: test-name
+                  channel: test-channel
+            """
+        ),
+    )
+    prepare_metadata_yaml(
+        dedent(
+            """
+            name: test-charm-name
+            summary: test-summary
+            description: test-description
+
+            peers:
+              - aaa
+              - bbb
+              - ccc
+            """
+        ),
+    )
+
+    load(tmp_path)
+
+
 def test_load_minimal_metadata_from_metadata_yaml_missing_description(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml
 ):
@@ -1159,6 +1192,31 @@ def test_load_config_in_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare_c
             "test-bool": {"default": True, "type": "boolean"},
         },
     }
+
+
+def test_load_bad_config_in_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare_config_yaml):
+    """Load a bad config in config.yaml. Should not raise an error since check unenforced."""
+    prepare_charmcraft_yaml(
+        dedent(
+            """
+            name: test-charm-name
+            type: charm
+            summary: test-summary
+            description: test-description
+            """
+        ),
+    )
+    prepare_config_yaml(
+        dedent(
+            """
+            options:
+              test-int:
+            """
+        ),
+    )
+    config = load(tmp_path)
+
+    assert config.config is None
 
 
 def test_load_bad_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):

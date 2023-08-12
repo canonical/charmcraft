@@ -10,7 +10,7 @@ prepare: |
   rm -f charm/config.yaml
 
   cat <<- EOF > charm/charmcraft.yaml
-  name: test-charm-name
+  name: charmcraft-test
   type: charm
   summary: test-summary
   description: test-description
@@ -19,7 +19,7 @@ prepare: |
     - build-on:
       - name: ubuntu
         channel: "22.04"
-    run-on:
+      run-on:
       - name: ubuntu
         channel: "22.04"
 
@@ -65,20 +65,21 @@ prepare: |
       required: [filename]
       additionalProperties: false
 
-  options:
-    test-int:
-      default: 123
-      description: test-1
-      type: int
-    test-string:
-      description: test-2
-      type: string
-    test-float:
-      default: 1.23
-      type: float
-    test-bool:
-      default: true
-      type: boolean
+  config:
+    options:
+      test-int:
+        default: 123
+        description: test-1
+        type: int
+      test-string:
+        description: test-2
+        type: string
+      test-float:
+        default: 1.23
+        type: float
+      test-bool:
+        default: true
+        type: boolean
 
   EOF
 
@@ -96,7 +97,7 @@ execute: |
   unzip -l charm*.charm | MATCH "actions.yaml"
   unzip -l charm*.charm | MATCH "config.yaml"
   unzip -l charm*.charm | MATCH "metadata.yaml"
-  unzip -p actions.yaml charm*.charm | MATCH "description: The type of compression to use."
-  unzip -p config.yaml charm*.charm | MATCH "description: test-2"
-  unzip -p metadata.yaml charm*.charm | MATCH "issues: https://example.com/issues"
+  unzip -p charm*.charm actions.yaml | MATCH "description: The type of compression to use."
+  unzip -p charm*.charm config.yaml | MATCH "description: test-2"
+  unzip -p charm*.charm metadata.yaml | MATCH "issues: https://example.com/issues"
   test ! -d build

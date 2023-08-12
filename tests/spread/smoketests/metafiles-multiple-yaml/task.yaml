@@ -18,14 +18,14 @@ prepare: |
     - build-on:
       - name: ubuntu
         channel: "22.04"
-    run-on:
+      run-on:
       - name: ubuntu
         channel: "22.04"
 
   EOF
 
   cat <<- EOF > charm/metadata.yaml
-  name: test-charm-name
+  name: charmcraft-test
   summary: test-summary
   description: test-description
 
@@ -112,14 +112,14 @@ execute: |
   unzip -l charm*.charm | MATCH "config.yaml"
   unzip -l charm*.charm | MATCH "metadata.yaml"
 
-  unzip -p actions.yaml charm*.charm | MATCH "description: The type of compression to use."
-  unzip -p actions.yaml charm*.charm | MATCH "#### TEST-COPY ####"
+  unzip -p charm*.charm actions.yaml | MATCH "description: The type of compression to use."
+  unzip -p charm*.charm actions.yaml | MATCH "#### TEST-COPY ####"
 
-  unzip -p config.yaml charm*.charm | MATCH "description: test-2"
-  unzip -p config.yaml charm*.charm | MATCH "#### TEST-COPY ####"
+  unzip -p charm*.charm config.yaml | MATCH "description: test-2"
+  unzip -p charm*.charm config.yaml | MATCH "#### TEST-COPY ####"
 
-  unzip -p metadata.yaml charm*.charm | MATCH "issues: https://example.com/issues"
-  unzip -p metadata.yaml charm*.charm | MATCH "#### TEST-COPY ####"
+  unzip -p charm*.charm metadata.yaml | MATCH "issues: https://example.com/issues"
+  unzip -p charm*.charm metadata.yaml | MATCH "#### TEST-COPY ####"
 
   test ! -d build
 

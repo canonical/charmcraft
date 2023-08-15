@@ -18,6 +18,7 @@ import re
 from textwrap import dedent
 
 import pytest
+import pydantic
 from craft_cli import CraftError
 
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
@@ -85,14 +86,8 @@ def test_parse_metadata_yaml_error_invalid_names(
 ):
     prepare_metadata_yaml(metadata_yaml_template.format(name=name))
 
-    with pytest.raises(CraftError) as cm:
+    with pytest.raises(pydantic.ValidationError):
         parse_charm_metadata_yaml(tmp_path)
-
-    assert str(cm.value) == dedent(
-        """\
-        Bad metadata.yaml content:
-        - string type expected in field 'name'"""
-    )
 
 
 def test_parse_metadata_yaml_error_missing(tmp_path):

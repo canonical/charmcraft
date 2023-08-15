@@ -7,7 +7,12 @@ prepare: |
   pushd charm
 
   cat <<- EOF >> charmcraft.yaml
+  name: basic-almalinux
   type: charm
+  summary: A basic charm for AlmaLinux 9
+  description: |
+    This is a basic charm for AlmaLinux 9.
+
   bases:
     - build-on:
       - name: almalinux

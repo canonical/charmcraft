@@ -9,7 +9,12 @@ prepare: |
   pushd charm
 
   cat <<- EOF >> charmcraft.yaml
+  name: basic-centos-7
   type: charm
+  summary: A basic charm for CentOS 7
+  description: |
+    This is a basic charm for CentOS 7.
+
   bases:
     - build-on:
       - name: centos

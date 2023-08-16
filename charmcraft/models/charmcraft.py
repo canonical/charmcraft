@@ -125,7 +125,7 @@ class CharmcraftConfig(
     bases: Optional[List[BasesConfiguration]]
     analysis: AnalysisConfig = AnalysisConfig()
     actions: Optional[JujuActions]
-    assumes: Optional[List[Union[str, Dict[str, List[str]]]]]
+    assumes: Optional[List[Union[str, Dict[str, Union[List, Dict]]]]]
     containers: Optional[Dict[str, Any]]
     devices: Optional[Dict[str, Any]]
     title: Optional[pydantic.StrictStr]
@@ -223,7 +223,7 @@ class CharmcraftConfig(
         And individual "actions.yaml" should not exists when actions
         is defined in charmcraft.yaml.
         """
-        actions_yaml = parse_actions_yaml(values["project"].dirpath)
+        actions_yaml = parse_actions_yaml(values["project"].dirpath, allow_broken=True)
         if actions is None:
             return actions_yaml
         else:
@@ -233,7 +233,7 @@ class CharmcraftConfig(
                     "defined in 'charmcraft.yaml'"
                 )
 
-            return JujuActions.parse_obj({"actions": actions, "legacy": False})
+            return JujuActions.parse_obj({"actions": actions})
 
     @pydantic.validator("config", pre=True, always=True)
     def validate_config(cls, config, values):
@@ -243,7 +243,7 @@ class CharmcraftConfig(
         And individual "actions.yaml" should not exists when actions
         is defined in charmcraft.yaml.
         """
-        config_yaml = parse_config_yaml(values["project"].dirpath)
+        config_yaml = parse_config_yaml(values["project"].dirpath, allow_broken=True)
         if config is None:
             return config_yaml
         else:
@@ -253,7 +253,7 @@ class CharmcraftConfig(
                     "defined in 'charmcraft.yaml'"
                 )
 
-            return JujuConfig.parse_obj({"legacy": False, **config})
+            return JujuConfig.parse_obj(config)
 
     @classmethod
     def expand_short_form_bases(cls, bases: List[Dict[str, Any]]) -> None:
@@ -267,7 +267,7 @@ class CharmcraftConfig(
 
             try:
                 converted_base = Base(**base)
-            except pydantic.error_wrappers.ValidationError as error:
+            except pydantic.ValidationError as error:
                 # Rewrite location to assist user.
                 pydantic_errors = error.errors()
                 for pydantic_error in pydantic_errors:
@@ -308,7 +308,7 @@ class CharmcraftConfig(
                         )
 
                 if obj.get("type") == "charm":
-                    metadata_legacy = parse_charm_metadata_yaml(project.dirpath)
+                    metadata_legacy = parse_charm_metadata_yaml(project.dirpath, allow_basic=True)
 
                     # need to copy 3 fields from metadata_legacy to charmcraft config
                     return cls.parse_obj(
@@ -340,7 +340,7 @@ class CharmcraftConfig(
                     pass
 
             return cls.parse_obj({"project": project, **obj})
-        except pydantic.error_wrappers.ValidationError as error:
+        except pydantic.ValidationError as error:
             raise CraftError(format_pydantic_errors(error.errors()))
 
     @classmethod

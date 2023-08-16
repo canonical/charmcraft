@@ -21,7 +21,6 @@ from typing import Any, Dict, Optional, List, Union
 import pydantic
 
 from craft_cli import CraftError
-from charmcraft.format import format_pydantic_errors
 from charmcraft.const import METADATA_FILENAME
 
 
@@ -43,7 +42,7 @@ class CharmMetadataLegacy(
     name: pydantic.StrictStr
     summary: pydantic.StrictStr
     description: pydantic.StrictStr
-    assumes: Optional[List[Union[str, Dict[str, List[str]]]]]
+    assumes: Optional[List[Union[str, Dict[str, Union[List, Dict]]]]]
     containers: Optional[Dict[str, Any]]
     devices: Optional[Dict[str, Any]]
     display_name: Optional[pydantic.StrictStr]
@@ -79,10 +78,7 @@ class CharmMetadataLegacy(
             obj["maintainers"] = [obj["maintainer"]]
             del obj["maintainer"]
 
-        try:
-            return cls.parse_obj(obj)
-        except pydantic.error_wrappers.ValidationError as error:
-            raise CraftError(format_pydantic_errors(error.errors(), file_name=METADATA_FILENAME))
+        return cls.parse_obj(obj)
 
 
 class BundleMetadataLegacy(
@@ -110,7 +106,4 @@ class BundleMetadataLegacy(
 
         :raises CraftError: On failure to unmarshal object.
         """
-        try:
-            return cls.parse_obj(obj)
-        except pydantic.error_wrappers.ValidationError as error:
-            raise CraftError(format_pydantic_errors(error.errors(), file_name=METADATA_FILENAME))
+        return cls.parse_obj(obj)

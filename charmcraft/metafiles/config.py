@@ -16,15 +16,18 @@
 
 """Charmcraft project handle config.yaml file."""
 
+import contextlib
 import pathlib
 import logging
 import shutil
 from typing import Optional, TYPE_CHECKING
 
+import pydantic
 import yaml
 
 from craft_cli import emit, CraftError
 from charmcraft.const import JUJU_CONFIG_FILENAME
+from charmcraft.format import format_pydantic_errors
 from charmcraft.models.config import JujuConfig
 from charmcraft.metafiles import read_yaml
 
@@ -34,7 +37,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def parse_config_yaml(charm_dir: pathlib.Path) -> Optional[JujuConfig]:
+def parse_config_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[JujuConfig]:
     """Parse project's config.yaml.
 
     :param charm_dir: Directory to read config.yaml from.
@@ -51,7 +54,17 @@ def parse_config_yaml(charm_dir: pathlib.Path) -> Optional[JujuConfig]:
         raise CraftError(f"Cannot read the {JUJU_CONFIG_FILENAME} file: {exc!r}") from exc
 
     emit.debug(f"Validating {JUJU_CONFIG_FILENAME}")
-    return JujuConfig.parse_obj({"legacy": True, **config})
+    try:
+        return JujuConfig.parse_obj(config)
+    except pydantic.ValidationError as error:
+        if allow_broken:
+            emit.progress(
+                format_pydantic_errors(error.errors(), file_name=JUJU_CONFIG_FILENAME),
+                permanent=True,
+            )
+            emit.debug(f"Ignoring {JUJU_CONFIG_FILENAME}")
+            return None
+        raise
 
 
 def create_config_yaml(
@@ -65,23 +78,24 @@ def create_config_yaml(
 
     :returns: Path to created config.yaml.
     """
-    if charmcraft_config.config is None or charmcraft_config.config.options is None:
-        return None
+    original_file_path = charmcraft_config.project.dirpath / JUJU_CONFIG_FILENAME
+    target_file_path = basedir / JUJU_CONFIG_FILENAME
 
-    file_path = basedir / JUJU_CONFIG_FILENAME
-
-    if charmcraft_config.config.legacy:
-        try:
-            shutil.copyfile(charmcraft_config.project.dirpath / JUJU_CONFIG_FILENAME, file_path)
-        except shutil.SameFileError:
-            pass
+    # Copy config.yaml if it exists, otherwise create it from CharmcraftConfig.
+    if original_file_path.exists():
+        # In the build / test process, the original file may be the same as the target file.
+        with contextlib.suppress(shutil.SameFileError):
+            shutil.copyfile(original_file_path, target_file_path)
     else:
-        file_path.write_text(
-            yaml.dump(
-                charmcraft_config.config.dict(
-                    include={"options"}, exclude_none=True, by_alias=True
+        if charmcraft_config.config:
+            target_file_path.write_text(
+                yaml.dump(
+                    charmcraft_config.config.dict(
+                        include={"options"}, exclude_none=True, by_alias=True
+                    )
                 )
             )
-        )
+        else:
+            return None
 
-    return file_path
+    return target_file_path

@@ -10,6 +10,7 @@ environment:
   BUNDLE/argo: https://github.com/canonical/argo-operators
   # Needs a different workflow for now, but a target for later enabling.
   # BUNDLE/cos_lite: https://github.com/canonical/cos-lite-bundle
+  BUNDLE/istio: https://github.com/canonical/istio-operators
   BUNDLE/kfp: https://github.com/canonical/kfp-operators
   # Needs a different workflow
   # BUNDLE/kubeflow: https://github.com/canonical/bundle-kubeflow

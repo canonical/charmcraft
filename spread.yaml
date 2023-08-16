@@ -6,6 +6,12 @@ environment:
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
   PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
 
+exclude:
+  - .git
+  - .github
+  - .tox
+  - .*_cache
+
 backends:
   google:
     key: '$(HOST: echo "$SPREAD_GOOGLE_KEY")'
@@ -30,60 +36,45 @@ backends:
   multipass:
     type: adhoc
     allocate: |
-      if [ "$SPREAD_SYSTEM" = "ubuntu-18.04-64" ]; then
-        image="18.04"
-        instance_name="spread-18-04"
-      elif [ "$SPREAD_SYSTEM" = "ubuntu-20.04-64" ]; then
-        image="20.04"
-        instance_name="spread-20-04"
-      elif [ "$SPREAD_SYSTEM" = "ubuntu-22.04-64" ]; then
-        image="22.04"
-        instance_name="spread-22-04"
-      else
-        FATAL "$SPREAD_SYSTEM is not supported!"
+      sleep 0.$RANDOM
+      if [[ ! -f $HOME/.spread/multipass-count ]]; then
+        mkdir -p $HOME/.spread
+        echo 0 > $HOME/.spread/multipass-count
       fi
+      instance_num=$(< $HOME/.spread/multipass-count)
+      echo $(( $instance_num + 1 )) > $HOME/.spread/multipass-count
+      multipass_image=$(echo ${SPREAD_SYSTEM} | sed -e s/ubuntu-// -e s/-64//)
 
-      multipass launch --disk 20G --mem 2G --name "$instance_name" "$image"
+      system=$(echo "${SPREAD_SYSTEM}" | tr . -)
+      instance_name="spread-${SPREAD_BACKEND}-${instance_num}-${system}"
 
-      # Get the IP from the instance
-      ip=$(multipass info --format csv "$instance_name" | tail -1 | cut -d\, -f3)
-      # Enable PasswordAuthertication for root over SSH.
+      multipass launch --disk 20G --memory 2G --name "${instance_name}" "${multipass_image}"
+
+      # Enable PasswordAuthentication for root over SSH.
       multipass exec "$instance_name" -- \
-        sudo sh -c "echo root:ubuntu | sudo chpasswd"
+        sudo sh -c "echo root:${SPREAD_PASSWORD} | sudo chpasswd"
       multipass exec "$instance_name" -- \
         sudo sh -c \
         "sed -i /etc/ssh/sshd_config -e 's/^PasswordAuthentication.*/PasswordAuthentication yes/' -e 's/^#PermitRootLogin.*/PermitRootLogin yes/'"
       multipass exec "$instance_name" -- \
         sudo systemctl restart ssh
 
-      ADDRESS "$ip:22"
+      multipass exec "$instance_name" -- sudo lxd init --auto
 
+      # Get the IP from the instance
+      ip=$(multipass info --format csv "$instance_name" | tail -1 | cut -d\, -f3)
+      ADDRESS "$ip"
     discard: |
-      if [ "$SPREAD_SYSTEM" = "ubuntu-18.04-64" ]; then
-        instance_name="spread-18-04"
-      elif [ "$SPREAD_SYSTEM" = "ubuntu-20.04-64" ]; then
-        instance_name="spread-20-04"
-      elif [ "$SPREAD_SYSTEM" = "ubuntu-22.04-64" ]; then
-        instance_name="spread-22-04"
-      else
-        FATAL "$SPREAD_SYSTEM is not supported!"
-      fi
-
-      multipass delete --purge "$instance_name"
+      instance_name=$(multipass list --format csv | grep $SPREAD_SYSTEM_ADDRESS | cut -f1 -d\,)
+      multipass delete --purge "${instance_name}"
 
     systems:
       - ubuntu-18.04-64:
-          workers: 1
-          username: root
-          password: ubuntu
+          workers: 2
       - ubuntu-20.04-64:
-          workers: 1
-          username: root
-          password: ubuntu
+          workers: 2
       - ubuntu-22.04-64:
-          workers: 1
-          username: root
-          password: ubuntu
+          workers: 4
 
 prepare: |
   set -e

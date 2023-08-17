@@ -16,6 +16,7 @@
 
 import datetime
 import os
+import re
 import subprocess
 import sys
 from argparse import Namespace
@@ -64,16 +65,14 @@ def test_init_non_ascii_author(tmp_path, config):
     test_init_pep8(tmp_path, config, author="فلانة الفلانية", profile=DEFAULT_PROFILE)
 
 
-def test_all_the_files_simple(tmp_path, config):
+def test_all_the_files_simple_unified(tmp_path, config):
     cmd = InitCommand(config)
-    cmd.run(create_namespace())
+    cmd.run(create_namespace(profile="simple"))
     assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
         ".gitignore",
         "charmcraft.yaml",
         "CONTRIBUTING.md",
         "LICENSE",
-        "config.yaml",
-        "metadata.yaml",
         "pyproject.toml",
         "README.md",
         "requirements.txt",
@@ -87,8 +86,10 @@ def test_all_the_files_simple(tmp_path, config):
         "tox.ini",
     }
 
+    assert re.search(r"^name: my-charm$", (tmp_path / "charmcraft.yaml").read_text(), re.MULTILINE)
 
-def test_all_the_files_kubernetes(tmp_path, config):
+
+def test_all_the_files_kubernetes_unified(tmp_path, config):
     cmd = InitCommand(config)
     cmd.run(create_namespace(profile="kubernetes"))
     assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
@@ -96,7 +97,6 @@ def test_all_the_files_kubernetes(tmp_path, config):
         "charmcraft.yaml",
         "CONTRIBUTING.md",
         "LICENSE",
-        "metadata.yaml",
         "pyproject.toml",
         "README.md",
         "requirements.txt",
@@ -110,8 +110,10 @@ def test_all_the_files_kubernetes(tmp_path, config):
         "tox.ini",
     }
 
+    assert re.search(r"^name: my-charm$", (tmp_path / "charmcraft.yaml").read_text(), re.MULTILINE)
 
-def test_all_the_files_machine(tmp_path, config):
+
+def test_all_the_files_machine_unified(tmp_path, config):
     cmd = InitCommand(config)
     cmd.run(create_namespace(profile="machine"))
     assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
@@ -119,7 +121,6 @@ def test_all_the_files_machine(tmp_path, config):
         "charmcraft.yaml",
         "CONTRIBUTING.md",
         "LICENSE",
-        "metadata.yaml",
         "pyproject.toml",
         "README.md",
         "requirements.txt",
@@ -132,6 +133,8 @@ def test_all_the_files_machine(tmp_path, config):
         os.path.join("tests", "unit", "test_charm.py"),
         "tox.ini",
     }
+
+    assert re.search(r"^name: my-charm$", (tmp_path / "charmcraft.yaml").read_text(), re.MULTILINE)
 
 
 def test_force(tmp_path, config):

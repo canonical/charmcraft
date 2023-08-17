@@ -50,8 +50,10 @@ Available profiles are:
     simple:
         A basic kubernetes charm with lot of texts helping the developer
         to navigate their first charm by following the instructions.
+
     kubernetes:
         A basic Kubernetes charm with exmaple container.
+
     machine:
         A basic charm but meant to be deployed in machine-based environments,
         without container requirements.
@@ -61,11 +63,9 @@ files and directories:
 
     .
     ├── charmcraft.yaml        - Charm build configuration
-    ├── config.yaml            - Config schema for your operator
     ├── CONTRIBUTING.md        - Instructions for how to build and develop
     │                             your charm
     ├── LICENSE                - Your charm license, we recommend Apache 2
-    ├── metadata.yaml          - Charm operator package description
     ├── pyproject.toml         - Configuration for testing, formatting and
     │                             linting tools
     ├── README.md              - Frontpage for your charmhub.io/charm/
@@ -79,7 +79,7 @@ files and directories:
     │       └── test_charm.py  - Unit tests
     └── tox.ini                - Configuration for tox, the tool to run all tests
 
-You will need to edit at least metadata.yaml and README.md.
+You will need to edit at least charmcraft.yaml and README.md.
 
 Your minimal operator code is in src/charm.py which uses the Python operator
 framework from https://github.com/canonical/operator and there are some
@@ -89,10 +89,10 @@ example unit and integration tests with a harness to run them.
 SUCCESS_MESSAGE = """\
 Charmed operator package file and directory tree initialised.
 
-Now edit the following package files to provide fundamental charm metadata and other information:
+Now edit the following package files to provide fundamental charm metadata
+and other information:
 
-metadata.yaml
-config.yaml
+charmcraft.yaml
 src/charm.py
 README.md
 """

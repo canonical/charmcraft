@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
 """Infrastructure for the 'pack' command."""
-# XXX Facundo 2022-06-29: all this functionality will be moved into the
-# pack.py file (in a branch with no semantic changes, just move stuff around)
 
 import os
 import pathlib
@@ -47,8 +44,6 @@ from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.parts import Step
 from charmcraft.utils import get_host_architecture
-
-# Some constants that are used through the code.
 
 
 def _format_run_on_base(base: Base) -> str:

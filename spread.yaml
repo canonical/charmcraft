@@ -6,6 +6,12 @@ environment:
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
   PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
 
+exclude:
+  - .git
+  - .github
+  - .tox
+  - .*_cache
+
 backends:
   google:
     key: '$(HOST: echo "$SPREAD_GOOGLE_KEY")'

@@ -17,18 +17,21 @@
 
 import os
 import pathlib
+import shutil
 import subprocess
+import tempfile
 import zipfile
-from typing import List, Optional
+from typing import Collection, Dict, List, Mapping, Optional
 
+import yaml
 from craft_cli import CraftError, emit
 from craft_providers.bases import get_base_alias
 
 import charmcraft.env
 import charmcraft.instrum
 import charmcraft.linters
-import charmcraft.parts
 import charmcraft.providers
+from charmcraft import const, env, errors, parts
 from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.const import (
     BUILD_DIRNAME,
@@ -42,8 +45,7 @@ from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.metafiles.metadata import create_metadata_yaml
 from charmcraft.models.charmcraft import Base, BasesConfiguration
-from charmcraft.parts import Step
-from charmcraft.utils import get_host_architecture
+from charmcraft.utils import build_zip, get_host_architecture, humanize_list, load_yaml
 
 
 def _format_run_on_base(base: Base) -> str:
@@ -89,7 +91,10 @@ class Builder:
         self.charmdir = config.project.dirpath
         self.buildpath = self.charmdir / BUILD_DIRNAME
         self.config = config
-        self._parts = self.config.parts.copy()
+        if self.config.parts:
+            self._parts = self.config.parts.copy()
+        else:
+            self._parts = None
 
         # a part named "charm" using plugin "charm" is special and has
         # predefined values set automatically.
@@ -169,7 +174,7 @@ class Builder:
             ignore_local_sources=["*.charm"],
         )
         with charmcraft.instrum.Timer("Lifecycle run"):
-            lifecycle.run(Step.PRIME)
+            lifecycle.run(parts.Step.PRIME)
 
         # skip creation yaml files if using reactive, reactive will create them
         # in a incompatible way
@@ -418,3 +423,123 @@ class Builder:
 
         zipfh.close()
         return zipname
+
+    def _get_charm_pack_args(self, base_indeces: List[str], destructive_mode: bool) -> List[str]:
+        """Get the arguments for a charmcraft pack subprocess to run."""
+        args = ["charmcraft", "pack", "--verbose"]
+        if destructive_mode:
+            args.append("--destructive-mode")
+        for base in base_indeces:
+            args.append(f"--bases-index={base}")
+        if self.force_packing:
+            args.append("--force")
+        return args
+
+    def pack_bundle(
+        self,
+        *,
+        charms: Dict[str, pathlib.Path],
+        base_indeces: List[str],
+        destructive_mode: bool,
+        overwrite: bool = False,
+    ) -> List[pathlib.Path]:
+        """Pack a bundle."""
+        if self._parts is None:
+            self._parts = {"bundle": {"plugin": "bundle"}}
+
+        if env.is_charmcraft_running_in_managed_mode():
+            work_dir = env.get_managed_environment_home_path()
+        else:
+            work_dir = self.config.project.dirpath / const.BUILD_DIRNAME
+
+        # get the config files
+        bundle_filepath = self.config.project.dirpath / "bundle.yaml"
+        bundle = load_yaml(bundle_filepath)
+        bundle_name = bundle.get("name")
+        if not bundle_name:
+            raise CraftError(
+                "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
+                "file {!r}.".format(str(bundle_filepath))
+            )
+
+        if charms:
+            bundle_charms = bundle.get("applications", {})
+            command_args = self._get_charm_pack_args(base_indeces, destructive_mode)
+            charms = _subprocess_pack_charms(charms, command_args)
+            for name, value in bundle_charms.items():
+                if name in charms:
+                    value["charm"] = charms[name]
+        else:
+            charms = {}
+
+        lifecycle = parts.PartsLifecycle(
+            self._parts,
+            work_dir=work_dir,
+            project_dir=self.config.project.dirpath,
+            project_name=bundle_name,
+            ignore_local_sources=[bundle_name + ".zip"],
+        )
+
+        lifecycle.run(parts.Step.PRIME)
+
+        # pack everything
+        create_manifest(
+            lifecycle.prime_dir,
+            self.config.project.started_at,
+            bases_config=None,
+            linting_results=[],
+        )
+        zipname = self.config.project.dirpath / (bundle_name + ".zip")
+        if overwrite:
+            primed_bundle_path = lifecycle.prime_dir / "bundle.yaml"
+            with primed_bundle_path.open("w") as bundle_file:
+                yaml.safe_dump(bundle, bundle_file)
+        build_zip(zipname, lifecycle.prime_dir)
+
+        return [*charms.values(), zipname]
+
+
+def _subprocess_pack_charms(
+    charms: Mapping[str, pathlib.Path],
+    command_args: Collection[str],
+) -> Dict[str, pathlib.Path]:
+    """Pack the given charms for a bundle in subprocesses.
+
+    :param command_args: The initial arguments
+    :param charms: A mapping of charm name to charm path
+    :returns: A mapping of charm names to the generated charm.
+    """
+    if charms:
+        charm_str = humanize_list(charms.keys(), "and")
+        emit.progress(f"Packing charms: {charm_str}...")
+    cwd = pathlib.Path(os.getcwd()).resolve()
+    generated_charms = {}
+    with tempfile.TemporaryDirectory(prefix="charmcraft-bundle-", dir=cwd) as temp_dir:
+        temp_dir = pathlib.Path(temp_dir)
+        try:
+            # Put all the charms in this temporary directory.
+            os.chdir(temp_dir)
+            for charm, project_dir in charms.items():
+                full_command = [*command_args, f"--project-dir={project_dir}"]
+                with emit.open_stream(f"Packing charm {charm}...") as stream:
+                    subprocess.check_call(full_command, stdout=stream, stderr=stream)
+            duplicate_charms = {}
+            for charm_file in temp_dir.glob("*.charm"):
+                charm_name = charm_file.name.partition("_")[0]
+                if charm_name not in charms:
+                    emit.debug(f"Unknown charm file generated: {charm_file.name}")
+                    continue
+                if charm_name in generated_charms:
+                    if charm_name not in duplicate_charms:
+                        duplicate_charms[charm_name] = temp_dir.glob(f"{charm_name}_*.charm")
+                    continue
+                generated_charms[charm_name] = charm_file
+            if duplicate_charms:
+                raise errors.DuplicateCharmsError(duplicate_charms)
+            for charm, charm_file in generated_charms.items():
+                destination = cwd / charm_file.name
+                destination.unlink(missing_ok=True)
+                generated_charms[charm] = shutil.move(charm_file, destination)
+        finally:
+            os.chdir(cwd)
+    return generated_charms

@@ -35,7 +35,12 @@ from charmcraft.charm_builder import relativise
 from charmcraft.config import load
 from charmcraft.const import BUILD_DIRNAME
 from charmcraft.models.charmcraft import Base, BasesConfiguration
-from charmcraft.package import Builder, format_charm_file_name, launch_shell
+from charmcraft.package import (
+    Builder,
+    _subprocess_pack_charms,
+    format_charm_file_name,
+    launch_shell,
+)
 from charmcraft.providers import get_base_configuration
 from charmcraft.utils import get_host_architecture
 
@@ -1718,6 +1723,21 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
     )
 
 
+@pytest.mark.parametrize("force", [True, False])
+@pytest.mark.parametrize("destructive_mode", [True, False])
+@pytest.mark.parametrize("base_indeces", [[], [1], [1, 2, 3, 4, 5]])
+def test_get_charm_pack_args(config, force, base_indeces, destructive_mode):
+    builder = get_builder(config, force=force)
+
+    actual = builder._get_charm_pack_args(base_indeces, destructive_mode)
+
+    assert actual[:3] == ["charmcraft", "pack", "--verbose"]
+    assert ("--force" in actual) == force
+    assert ("--destructive-mode" in actual) == destructive_mode
+    for index in base_indeces:
+        assert f"--bases-index={index}" in actual
+
+
 # --- tests for relativise helper
 
 
@@ -1831,3 +1851,58 @@ def test_launch_shell(emitter):
 
     with mock.patch("subprocess.run", fake_run):
         launch_shell()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+@pytest.mark.parametrize(
+    ("charms", "command_args", "charm_files", "expected_calls", "expected"),
+    [
+        pytest.param({}, [], [], [], {}, id="empty"),
+        pytest.param(
+            {"test": pathlib.Path("charms/test")},
+            ["pack_cmd"],
+            [],
+            [
+                mock.call(
+                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
+                )
+            ],
+            {},
+            id="no_outputs",
+        ),
+        pytest.param(
+            {"test": pathlib.Path("charms/test")},
+            ["pack_cmd"],
+            ["test_amd64.charm"],
+            [
+                mock.call(
+                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
+                )
+            ],
+            {"test": pathlib.Path("test_amd64.charm").resolve()},
+            id="one_correct_charm",
+        ),
+        pytest.param(
+            {"test": pathlib.Path("charms/test")},
+            ["pack_cmd"],
+            ["test_amd64.charm", "where-did-this-come-from_riscv.charm"],
+            [
+                mock.call(
+                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
+                )
+            ],
+            {"test": pathlib.Path("test_amd64.charm").resolve()},
+            id="one_correct_charm",
+        ),
+    ],
+)
+def test_subprocess_pack_charms_success(
+    mocker, check, charms, charm_files, command_args, expected_calls, expected
+):
+    mock_check_call = mocker.patch("subprocess.check_call")
+    mock_check_call.side_effect = lambda *_, **__: [pathlib.Path(f).touch() for f in charm_files]
+
+    actual = _subprocess_pack_charms(charms, command_args)
+
+    check.equal(actual, expected)
+    check.equal(mock_check_call.mock_calls, expected_calls)

@@ -65,10 +65,11 @@ strict = false
 [tool.ruff]
 line-length = 88
 target-version = "py38"
-src = ["starcraft", "tests"]
 extend-exclude = [
     "docs",
     "__pycache__",
+    "tools",
+    "snap/local",
 ]
 # Follow ST063 - Maintaining and updating linting specifications for updating these.
 select = [  # Base linting rule selections.
@@ -78,49 +79,63 @@ select = [  # Base linting rule selections.
     # failures with ruff updates.
     "F",  # The rules built into Flake8
     "E", "W",  # pycodestyle errors and warnings
-    "D",  # Implement pydocstyle checking as well.
     "I",  # isort checking
-    "PLC", "PLE", "PLR", "PLW",  # Pylint
     "N",  # PEP8 naming
+    "D",  # Implement pydocstyle checking as well.
+    "UP",  # Pyupgrade - note that some of are excluded below due to Python versions
     "YTT",  # flake8-2020: Misuse of `sys.version` and `sys.version_info`
+    "ANN",  # Type annotations.
     "BLE",  # Do not catch blind exceptions
     "FBT",  # Disallow boolean positional arguments (make them keyword-only)
+    "B0",  # Common mistakes and typos.
     "A",  # Shadowing built-ins.
     "C4", # Encourage comprehensions, which tend to be faster than alternatives.
     "T10",  # Don't call the debugger in production code
     "ISC",  # Implicit string concatenation that can cause subtle issues
     "ICN",  # Only use common conventions for import aliases.
+    "INP",  # Implicit namespace packages
+    "PYI",  # Linting for type stubs.
+    "PT",  # Pytest
     "Q",  # Consistent quotations
+    "RSE",  # Errors on pytest raises.
     "RET",  # Simpler logic after return, raise, continue or break
-    "UP018", "C408",  # Convert type calls to literals. The latest pylint enforces this, but ruff has auto-fixes.
+    "SIM",  # Code simplification
+    "TCH004",  # Remove imports from type-checking guard blocks if used at runtime
+    "TCH005",  # Delete empty type-checking blocks
+    "ARG",  # Unused arguments
+    "PTH",  # Migrate to pathlib
+    "ERA",  # Don't check in commented out code
+    "PGH",  # Pygrep hooks
+    "PL",  # Pylint
+    "TRY",  # Cleaner try/except,
 ]
 extend-select = [
-    # These sets are still frequently getting new rules.
-    # Therefore, they're getting frozen with the current rules so we can
-    # upgrade ruff without breaking linting.
     # Pyupgrade: https://github.com/charliermarsh/ruff#pyupgrade-up
     "UP00", "UP01", "UP02", "UP030", "UP032", "UP033",
     # "UP034",  # Very new, not yet enabled in ruff 0.0.227
     # Annotations: https://github.com/charliermarsh/ruff#flake8-annotations-ann
     "ANN0",  # Type annotations for arguments other than `self` and `cls`
     "ANN2",  # Return type annotations
+    "B026",  # Keyword arguments must come after starred arguments
     # flake8-bandit: security testing. https://github.com/charliermarsh/ruff#flake8-bandit-s
     # https://bandit.readthedocs.io/en/latest/plugins/index.html#complete-test-plugin-listing
     "S101", "S102",  # assert or exec
     "S103", "S108",  # File permissions and tempfiles - use #noqa to silence when appropriate.
     "S104",  # Network binds
     "S105", "S106", "S107",  # Hardcoded passwords
+    "S110",  # try-except-pass (use contextlib.suppress instead)
     "S113",  # Requests calls without timeouts
+    "S3",  # Serialising, deserialising, hashing, crypto, etc.
     "S506",  # Unsafe YAML load
     "S508", "S509",  # Insecure SNMP
     "S701",  # jinja2 templates without autoescape
-    "B0",  # Common mistakes and typos.
     "RUF001", "RUF002", "RUF003",  # Ambiguous unicode characters
-    "RUF004",  # Keyword arguments must come after starred arguments
     "RUF005",  # Encourages unpacking rather than concatenation
-    "RUF100",  # #noqa directive that doesn't flag anything.
+    "RUF008",  # Do not use mutable default values for dataclass attributes
+    "RUF100",  # #noqa directive that doesn't flag anything
 ]
 ignore = [
+    "ANN10",  # Type annotations for `self` and `cls`
     #"E203",  # Whitespace before ":"  -- Commented because ruff doesn't currently check E203
     "E501",  # Line too long (reason: black will automatically fix this for us)
     "D105",  # Missing docstring in magic method (reason: magic methods already have definitions)
@@ -129,17 +144,50 @@ ignore = [
     "D213",  # Multi-line docstring summary should start at the second line (reason: pep257 default)
     "D215",  # Section underline is over-indented (reason: pep257 default)
     "A003",  # Class attribute shadowing built-in (reason: Class attributes don't often get bare references)
+    "SIM117", # Use a single `with` statement with multiple contexts instead of nested `with` statements
+              # (reason: this creates long lines that get wrapped and reduces readability)
 
+    # Ignored due to common usage in current code
+    "TRY003",  # Avoid specifying long messages outside the exception class
+
+    # Charmcraft-specific ignores, to be removed as we modernise the code.
+    "ANN0", "ANN2",
+    "ARG001", "ARG002", "ARG005",
+    "B034",
+    "BLE",
+    "D417",
+    "FBT",
+    "N805", "N806",
+    "PGH003",
+    "PLR0912", "PLR0913", "PLR0915", "PLR1714", "PLR2004", "PLR5501",
+    "PLW2901",
+    "PT007", "PT011",
+    "PTH102", "PTH108", "PTH109", "PTH113", "PTH118", "PTH119", "PTH123",
+    "RET505", "RET506", "RET508",
+    "S108", "S113", "S324", "S701",
+    "SIM102",
+    "TRY004", "TRY200",
 ]
 
 [tool.ruff.per-file-ignores]
 "tests/**.py" = [  # Some things we want for the moin project are unnecessary in tests.
     "D",  # Ignore docstring rules in tests
     "ANN", # Ignore type annotations in tests
+    "INP001", # Tests don't need to be in packages.
     "S101",  # Allow assertions in tests
     "S103", # Allow `os.chmod` setting a permissive mask `0o555` on file or directory
     "S108", # Allow Probable insecure usage of temporary file or directory
     "PLR0913",  # Allow many arguments for test functions
+
+    # Charmcraft-specific ignores, to be removed as we modernise the code.
+    "A001", "A002",
+    "B007", "B015",
+    "D100",
+    "N802",
+    "PT004", "PT012",
+    "PTH1",
+    "S105", "S106",
+    "SIM105", "SIM115",
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.
 "__init__.py" = ["I001"]

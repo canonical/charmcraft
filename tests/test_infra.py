@@ -45,12 +45,6 @@ def get_python_filepaths(*, roots=None, python_paths=None):
     return python_paths
 
 
-@pytest.mark.skipif(os.getenv("RUNNING_TOX"), reason="does not work inside tox")
-def test_pep8():
-    """Verify all files are nicely styled."""
-    pep8_test(get_python_filepaths())
-
-
 def pep8_test(python_filepaths):
     """Helper to check PEP8 (used from this module and from test_init.py to check templates)."""
     style_guide = get_style_guide()

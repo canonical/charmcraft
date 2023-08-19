@@ -10,6 +10,37 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Configure environment
+        run: |
+          echo "::group::Begin snap install"
+          echo "Installing snaps in the background while running apt and pip..."
+          sudo snap install --no-wait shellcheck
+          echo "::endgroup::"
+          echo "::group::pip install"
+          python -m pip install tox
+          echo "::endgroup::"
+          echo "::group::Create virtual environments for linting processes."
+          tox run -m lint --notest
+          echo "::endgroup::"
+          echo "::group::Wait for snap to complete"
+          snap watch --last=install
+          echo "::endgroup::"
+      - name: Run Linters
+        # Currently picking specific linters that pass until we can enable them all.
+        # run: tox run --skip-pkg-install --no-list-dependencies -m lint
+        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff
   run-tests:
     strategy:
       matrix:

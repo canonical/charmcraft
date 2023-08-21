@@ -46,8 +46,19 @@ install_requires = [
     "urllib3<2.0",
 ]
 
+lint_requires = [
+    "black==23.7.0",
+    "codespell[tomli]==2.2.5",
+    "ruff==0.0.280",
+    "yamllint==1.32.0",
+]
+
+type_requires = [
+    "mypy[reports]==1.4.1",
+    "pyright==1.1.316",
+]
+
 dev_requires = [
-    "black",
     "coverage",
     "flake8",
     "pydocstyle",
@@ -58,9 +69,12 @@ dev_requires = [
     "responses",
     "tox",
 ]
+dev_requires += lint_requires + type_requires
 
 extras_require = {
     "dev": dev_requires,
+    "lint": lint_requires,
+    "type": type_requires,
 }
 
 

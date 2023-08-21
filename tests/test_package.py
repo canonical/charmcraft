@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,8 @@ from craft_providers import bases
 from charmcraft import linters, instrum
 from charmcraft.charm_builder import relativise
 from charmcraft.bases import get_host_as_base
-from charmcraft.commands.build import BUILD_DIRNAME, Builder, format_charm_file_name, launch_shell
+from charmcraft.const import BUILD_DIRNAME
+from charmcraft.package import Builder, format_charm_file_name, launch_shell
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.config import load
 from charmcraft.providers import get_base_configuration
@@ -176,7 +177,7 @@ def mock_capture_logs_from_instance():
 
 @pytest.fixture
 def mock_launch_shell():
-    with patch("charmcraft.commands.build.launch_shell") as mock_shell:
+    with patch("charmcraft.package.launch_shell") as mock_shell:
         yield mock_shell
 
 

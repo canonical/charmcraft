@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ def mock_parts():
 
 @pytest.fixture
 def mock_launch_shell():
-    with patch("charmcraft.commands.build.launch_shell") as mock_shell:
+    with patch("charmcraft.package.launch_shell") as mock_shell:
         yield mock_shell
 
 
@@ -904,7 +904,7 @@ def test_charm_builder_infrastructure_called(config, tmp_path):
         measure=measure_filepath,
     )
     config.set(type="charm")
-    with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+    with patch("charmcraft.package.Builder") as builder_class_mock:
         builder_class_mock.return_value = builder_instance_mock = MagicMock()
         PackCommand(config).run(args)
     builder_class_mock.assert_called_with(
@@ -926,7 +926,7 @@ def test_charm_pack_output_simple(config, emitter, formatted):
 
     builder_instance_mock = MagicMock()
     builder_instance_mock.run.return_value = ["mystuff.charm"]
-    with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+    with patch("charmcraft.package.Builder") as builder_class_mock:
         builder_class_mock.return_value = builder_instance_mock
         PackCommand(config).run(args)
 
@@ -949,7 +949,7 @@ def test_charm_pack_output_multiple(config, emitter, formatted):
 
     builder_instance_mock = MagicMock()
     builder_instance_mock.run.return_value = ["mystuff1.charm", "mystuff2.charm"]
-    with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+    with patch("charmcraft.package.Builder") as builder_class_mock:
         builder_class_mock.return_value = builder_instance_mock
         PackCommand(config).run(args)
 
@@ -974,7 +974,7 @@ def test_charm_pack_output_managed_mode(config, emitter, formatted, monkeypatch)
     builder_instance_mock = MagicMock()
     builder_instance_mock.run.return_value = ["mystuff.charm"]
     with patch("charmcraft.env.is_charmcraft_running_in_managed_mode", return_value=True):
-        with patch("charmcraft.commands.build.Builder") as builder_class_mock:
+        with patch("charmcraft.package.Builder") as builder_class_mock:
             builder_class_mock.return_value = builder_instance_mock
             PackCommand(config).run(args)
 

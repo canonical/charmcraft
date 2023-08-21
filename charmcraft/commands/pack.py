@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,9 +27,8 @@ from typing import Any, Collection, Dict, List, Mapping
 import yaml
 from craft_cli import emit, CraftError, ArgumentParsingError
 
-from charmcraft import env, parts, instrum
+from charmcraft import env, parts, instrum, const, package
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.commands import build
 from charmcraft.errors import DuplicateCharmsError
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.parts import Step
@@ -210,7 +209,7 @@ class PackCommand(BaseCommand):
 
         # build
         emit.progress("Packing the charm.")
-        builder = build.Builder(
+        builder = package.Builder(
             config=self.config,
             force=parsed_args.force,
             debug=parsed_args.debug,
@@ -245,7 +244,7 @@ class PackCommand(BaseCommand):
         """Pack a bundle."""
         emit.progress("Packing the bundle.")
         if parsed_args.shell:
-            build.launch_shell()
+            package.launch_shell()
             return []
 
         project = self.config.project
@@ -289,7 +288,7 @@ class PackCommand(BaseCommand):
         if env.is_charmcraft_running_in_managed_mode():
             work_dir = env.get_managed_environment_home_path()
         else:
-            work_dir = project.dirpath / build.BUILD_DIRNAME
+            work_dir = project.dirpath / const.BUILD_DIRNAME
 
         # run the parts lifecycle
         emit.debug(f"Parts definition: {config_parts}")
@@ -305,7 +304,7 @@ class PackCommand(BaseCommand):
         except (RuntimeError, CraftError) as error:
             if parsed_args.debug:
                 emit.debug(f"Error when running PRIME step: {error}")
-                build.launch_shell()
+                package.launch_shell()
             raise
 
         # pack everything
@@ -324,7 +323,7 @@ class PackCommand(BaseCommand):
             emit.message(f"Created {str(zipname)!r}.")
 
         if parsed_args.shell_after:
-            build.launch_shell()
+            package.launch_shell()
 
         return [zipname]
 

@@ -1,0 +1,58 @@
+summary: pack a init-created charm with lxd
+
+# run last because this test deletes base instances
+priority: -10
+
+prepare: |
+  charmcraft init --project-dir=charm
+  cd charm
+  sed -i "s/22.04/$(echo $SPREAD_SYSTEM | cut -c 8-12)/g" charmcraft.yaml
+
+  # delete charmcraft instances
+  ALL_INSTANCES="$(lxc list --project=charmcraft --format=csv --columns="n")"
+  if [ -n "$ALL_INSTANCES" ]; then
+    for instance in $ALL_INSTANCES; do
+      lxc delete --project=charmcraft --force "$instance"
+    done
+  fi
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+  test -f charm*.charm
+
+  # there should be two instances, sorted alphabetically:
+  # - base-instance-charmcraft...
+  # - charmcraft-charm-...
+  INSTANCE="$(lxc --project=charmcraft list --format=csv -c n | tail -n 1)"
+
+  lxc --project charmcraft start "$INSTANCE"
+  REFRESH_HOLD="$(lxc --project charmcraft exec "$INSTANCE" -- snap get system refresh.hold)"
+
+  # assert snap refreshes are held
+  if [[ "$REFRESH_HOLD" != "forever" ]]; then
+    echo "snap refresh not set as expected"
+    exit 1
+  fi
+
+  charmcraft clean
+  ALL_INSTANCES="$(lxc --project=charmcraft list --format=csv -c n)"
+
+  # confirm only one instance remains
+  if [[ $(echo "$ALL_INSTANCES" | wc -l) != 1 ]]; then
+    echo "wrong number of lxd instances"
+    exit 1
+  fi
+
+  # confirm the remaining instance is the base instance
+  if ! grep -q "^base-instance-charmcraft" <<< "$ALL_INSTANCES"; then
+    echo "could not find base instance"
+    exit 1
+  fi

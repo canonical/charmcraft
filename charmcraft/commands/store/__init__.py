@@ -1373,11 +1373,11 @@ class PublishLibCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        charm_name = get_name_from_metadata()
+        charm_name = self.config.name or get_name_from_metadata()
         if charm_name is None:
             raise CraftError(
-                "Can't access name in 'metadata.yaml' file. The 'publish-lib' command needs to "
-                "be executed in a valid project's directory."
+                "Cannot find a valid charm name in charm definition. "
+                "Check that you are using the correct project directory."
             )
 
         if parsed_args.library:

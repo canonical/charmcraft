@@ -1,4 +1,5 @@
 summary: pack external magma charm
+# This test is broken. See https://github.com/canonical/charmcraft/issues/1215
 manual: true
 systems:
   - ubuntu-22.04-64
@@ -15,7 +16,7 @@ restore: |
   pushd charm/"${CHARM_DIR}"
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

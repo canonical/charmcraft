@@ -16,8 +16,8 @@
 
 """Tests for analyze and lint code."""
 
-import sys
 import pathlib
+import sys
 from textwrap import dedent
 from unittest.mock import patch
 
@@ -25,21 +25,20 @@ import pytest
 
 from charmcraft.linters import (
     CHECKERS,
+    FATAL,
+    IGNORED,
+    UNKNOWN,
     CheckType,
     Entrypoint,
-    FATAL,
     Framework,
-    IGNORED,
     JujuActions,
     JujuConfig,
     JujuMetadata,
     Language,
-    UNKNOWN,
     analyze,
     check_dispatch_with_python_entrypoint,
     get_entrypoint_from_dispatch,
 )
-
 
 EXAMPLE_DISPATCH = """
 #!/bin/sh
@@ -340,7 +339,7 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     ],
 )
 @pytest.mark.parametrize(
-    "charm_module, charmcraft_yaml, metadata_yaml",
+    ("charm_module", "charmcraft_yaml", "metadata_yaml"),
     [
         (
             "foobar.py",
@@ -658,7 +657,13 @@ def create_fake_checker(**kwargs):
     Receive generic kwargs and process them as a dict for the defaults, as we can't declare
     the name in the function definition and then use it in the class definition.
     """
-    params = dict(check_type="type", name="name", url="url", text="text", result="result")
+    params = {
+        "check_type": "type",
+        "name": "name",
+        "url": "url",
+        "text": "text",
+        "result": "result",
+    }
     params.update(kwargs)
 
     class FakeChecker:

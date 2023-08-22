@@ -20,20 +20,24 @@ import sys
 import zipfile
 from argparse import Namespace
 from textwrap import dedent
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
 import pytest
 import yaml
-from craft_cli import CraftError, ArgumentParsingError
+from craft_cli import ArgumentParsingError, CraftError
 
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
-from charmcraft.commands.pack import PackCommand, _get_charm_pack_args, _subprocess_pack_charms
-from charmcraft.models.charmcraft import BasesConfiguration
+from charmcraft.commands.pack import (
+    PackCommand,
+    _get_charm_pack_args,
+    _subprocess_pack_charms,
+)
 from charmcraft.config import load
+from charmcraft.models.charmcraft import BasesConfiguration
 
 
 def get_namespace(
@@ -72,7 +76,7 @@ def get_namespace(
 noargs = get_namespace()
 
 
-@pytest.fixture
+@pytest.fixture()
 def bundle_yaml(tmp_path):
     """Create an empty bundle.yaml, with the option to set values to it."""
     bundle_path = tmp_path / "bundle.yaml"
@@ -90,13 +94,13 @@ def bundle_yaml(tmp_path):
     return func
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_parts():
     with patch("charmcraft.commands.pack.parts") as mock_parts:
         yield mock_parts
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_launch_shell():
     with patch("charmcraft.package.launch_shell") as mock_shell:
         yield mock_shell
@@ -104,7 +108,7 @@ def mock_launch_shell():
 
 # region Tests for bad CLI parameters
 @pytest.mark.parametrize(
-    "namespace,message_start,project_type",
+    ("namespace", "message_start", "project_type"),
     [
         pytest.param(
             get_namespace(include_all_charms=True),
@@ -176,11 +180,11 @@ def test_resolve_dump_measure_if_indicated(config, tmp_path):
     # is the whole pack run
     assert measure_filepath.exists()
     dumped = json.loads(measure_filepath.read_text())
-    (root_measurement,) = [
+    (root_measurement,) = (
         measurement
         for measurement in dumped.values()
         if "parent" in measurement and measurement["parent"] is None
-    ]
+    )
     assert root_measurement["msg"] == "Whole pack run"
 
 
@@ -219,7 +223,7 @@ def test_bundle_simple_successful_build(
     if formatted:
         emitter.assert_json_output({"bundles": [str(zipname)]})
     else:
-        expected = "Created '{}'.".format(zipname)
+        expected = f"Created '{zipname}'."
         emitter.assert_message(expected)
 
     # check the manifest is present and with particular values that depend on given info
@@ -232,7 +236,7 @@ def test_bundle_simple_successful_build(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "parsed_args,charms",
+    ("parsed_args", "charms"),
     [
         pytest.param(
             get_namespace(include_all_charms=True),
@@ -272,7 +276,7 @@ def test_bundle_recursive_pack_setup(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "parsed_args,charms",
+    ("parsed_args", "charms"),
     [
         pytest.param(
             get_namespace(include_all_charms=True),
@@ -385,7 +389,7 @@ def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mo
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -465,7 +469,7 @@ def test_bundle_parts_not_defined(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -555,7 +559,7 @@ def test_bundle_parts_with_bundle_part(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -636,7 +640,7 @@ def test_bundle_parts_without_bundle_part(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -983,7 +987,7 @@ def test_charm_pack_output_managed_mode(config, emitter, formatted, monkeypatch)
 
 
 @pytest.mark.parametrize(
-    "bases_indices, bad_index",
+    ("bases_indices", "bad_index"),
     [
         (None, None),  # not used, it's fine
         ([], None),  # empty, it's fine
@@ -1024,7 +1028,7 @@ def test_validator_bases_index_invalid(bases_indices, bad_index, config):
 
 # region Unit tests for private functions
 @pytest.mark.parametrize(
-    "base_args,parsed_args,expected",
+    ("base_args", "parsed_args", "expected"),
     [
         pytest.param([], get_namespace(), [], id="empty"),
         pytest.param(["cmd", "--option"], get_namespace(), ["cmd", "--option"], id="base_only"),
@@ -1071,7 +1075,7 @@ def test_get_charm_pack_args(base_args, parsed_args, expected):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "charms,command_args,charm_files,expected_calls,expected",
+    ("charms", "command_args", "charm_files", "expected_calls", "expected"),
     [
         pytest.param({}, [], [], [], {}, id="empty"),
         pytest.param(

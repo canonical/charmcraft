@@ -16,12 +16,11 @@
 
 """Charmcraft Juju Actions pydantic model."""
 
-import re
 import keyword
+import re
+from typing import Dict, Optional
 
 import pydantic
-
-from typing import Optional, Dict
 
 from charmcraft.models.basic import ModelConfigDefaults
 

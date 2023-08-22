@@ -16,27 +16,30 @@
 
 """Charmcraft configuration pydantic model."""
 import datetime
-import pathlib
 import os
-from typing import Optional, List, Dict, Any, Union, Literal
+import pathlib
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import pydantic
-
 from craft_cli import CraftError
-from charmcraft.parts import process_part_config
-from charmcraft.utils import get_host_architecture
-from charmcraft.format import format_pydantic_errors
+
 from charmcraft.const import (
-    METADATA_FILENAME,
     CHARM_METADATA_KEYS,
     CHARM_METADATA_LEGACY_KEYS,
+    METADATA_FILENAME,
 )
-from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, parse_bundle_metadata_yaml
+from charmcraft.format import format_pydantic_errors
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
-from charmcraft.models.basic import ModelConfigDefaults, AttributeName, LinterName
+from charmcraft.metafiles.metadata import (
+    parse_bundle_metadata_yaml,
+    parse_charm_metadata_yaml,
+)
 from charmcraft.models.actions import JujuActions
+from charmcraft.models.basic import AttributeName, LinterName, ModelConfigDefaults
 from charmcraft.models.config import JujuConfig
+from charmcraft.parts import process_part_config
+from charmcraft.utils import get_host_architecture
 
 
 class CharmhubConfig(
@@ -171,7 +174,7 @@ class CharmcraftConfig(
             # we need 'type' to be set in this validator; if not there it's an error in
             # the schema anyway, so the whole loading will fail (no need to raise an
             # extra error here, it gets confusing to the user)
-            return
+            return None
 
         if parts is None:
             # no parts indicated, default to the type of package
@@ -201,8 +204,7 @@ class CharmcraftConfig(
     @pydantic.validator("parts", each_item=True)
     def validate_each_part(cls, item, values):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
-        completed_item = process_part_config(item)
-        return completed_item
+        return process_part_config(item)
 
     @pydantic.validator("bases", pre=True)
     def validate_bases_presence(cls, bases, values):

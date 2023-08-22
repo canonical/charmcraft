@@ -21,14 +21,14 @@ from craft_cli import CraftError
 from pydantic import AnyHttpUrl
 from pydantic.tools import parse_obj_as
 
+from charmcraft.config import load
+from charmcraft.metafiles.metadata import parse_charm_metadata_yaml
 from charmcraft.models.charmcraft import (
     Base,
     BasesConfiguration,
     Links,
 )
-from charmcraft.config import load
 from charmcraft.utils import get_host_architecture
-from charmcraft.metafiles.metadata import parse_charm_metadata_yaml
 
 
 def test_load_minimal_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):

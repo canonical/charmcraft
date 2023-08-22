@@ -34,9 +34,8 @@ from charmcraft.commands.store.client import (
 )
 from charmcraft.utils import OSPlatform
 
-
 # something well formed as tests exercise the internal machinery
-ENCODED_CREDENTIALS = base64.b64encode("secret credentials".encode()).decode()
+ENCODED_CREDENTIALS = base64.b64encode(b"secret credentials").decode()
 
 
 # --- General tests
@@ -104,7 +103,7 @@ class FakeResponse(requests.Response):
         return self.content
 
 
-@pytest.fixture
+@pytest.fixture()
 def client_class():
     """Return a client instance with craft-store's StoreClient methods mocked."""
 
@@ -256,7 +255,7 @@ def test_client_push_simple_ok(tmp_path, emitter, client_class):
         assert fh.name == str(test_filepath)
         assert ctype == "application/octet-stream"
 
-        content = json.dumps(dict(successful=True, upload_id="test-upload-id"))
+        content = json.dumps({"successful": True, "upload_id": "test-upload-id"})
 
         return FakeResponse(content=content, status_code=200)
 
@@ -282,7 +281,7 @@ def test_client_push_configured_url_simple(tmp_path, client_class):
 
     def fake_pusher(monitor):
         """Check the received URL."""
-        content = json.dumps(dict(successful=True, upload_id="test-upload-id"))
+        content = json.dumps({"successful": True, "upload_id": "test-upload-id"})
         return FakeResponse(content=content, status_code=200)
 
     test_filepath = tmp_path / "supercharm.bin"
@@ -300,7 +299,7 @@ def test_client_push_response_unsuccessful(tmp_path, client_class):
     with test_filepath.open("wb") as fh:
         fh.write(b"abcdefgh")
     fake_response = FakeResponse(
-        content=json.dumps(dict(successful=False, upload_id=None)), status_code=200
+        content=json.dumps({"successful": False, "upload_id": None}), status_code=200
     )
 
     client = client_class("http://api.test", "https://local.test:1234/")

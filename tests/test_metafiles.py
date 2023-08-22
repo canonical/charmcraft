@@ -14,16 +14,19 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 import os
-
 from textwrap import dedent
 
 import yaml
 
 from charmcraft.config import load
-from charmcraft.const import METADATA_FILENAME, JUJU_ACTIONS_FILENAME, JUJU_CONFIG_FILENAME
-from charmcraft.metafiles.metadata import create_metadata_yaml
+from charmcraft.const import (
+    JUJU_ACTIONS_FILENAME,
+    JUJU_CONFIG_FILENAME,
+    METADATA_FILENAME,
+)
 from charmcraft.metafiles.actions import create_actions_yaml
 from charmcraft.metafiles.config import create_config_yaml
+from charmcraft.metafiles.metadata import create_metadata_yaml
 
 
 def test_dump_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):

@@ -170,9 +170,7 @@ class CharmBuilder:
                     print(f"Ignoring file because of type: {str(rel_path)!r}")
 
         # the linked entrypoint is calculated here because it's when it's really in the build dir
-        linked_entrypoint = self.installdir / self.entrypoint.relative_to(self.builddir)
-
-        return linked_entrypoint
+        return self.installdir / self.entrypoint.relative_to(self.builddir)
 
     @instrum.Timer("Handling dispatcher")
     def handle_dispatcher(self, linked_entrypoint):
@@ -222,8 +220,7 @@ class CharmBuilder:
         all_deps.extend(self.python_packages)
         all_deps.extend(self.charmlib_deps)
         deps_mashup = "".join(map(repr, all_deps))
-        deps_hash = hashlib.sha1(deps_mashup.encode("utf8")).hexdigest()
-        return deps_hash
+        return hashlib.sha1(deps_mashup.encode("utf8")).hexdigest()
 
     @instrum.Timer("Installing dependencies")
     def _install_dependencies(self, staging_venv_dir):

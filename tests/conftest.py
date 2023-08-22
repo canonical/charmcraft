@@ -16,14 +16,14 @@
 
 import contextlib
 import datetime
-import json
 import importlib
+import json
 import os
 import pathlib
 import tempfile
 import types
-from unittest.mock import Mock
 from typing import Optional
+from unittest.mock import Mock
 
 import pytest
 import responses as responses_module
@@ -31,9 +31,9 @@ import yaml
 from craft_parts import callbacks
 from craft_providers import Executor, Provider
 
-from charmcraft.models import charmcraft as config_module
-from charmcraft import deprecations, parts, instrum
+from charmcraft import deprecations, instrum, parts
 from charmcraft.bases import get_host_as_base
+from charmcraft.models import charmcraft as config_module
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 
 
@@ -47,7 +47,7 @@ def setup_parts():
     parts.setup_parts()
 
 
-@pytest.fixture
+@pytest.fixture()
 def config(tmp_path):
     """Provide a config class with an extra set method for the test to change it."""
 
@@ -83,7 +83,7 @@ def config(tmp_path):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def bundle_config(tmp_path):
     """Provide a config class with an extra set method for the test to change it."""
 
@@ -138,17 +138,17 @@ def intertests_cleanups():
     callbacks.unregister_all()
 
 
-@pytest.fixture
+@pytest.fixture()
 def responses():
     """Simple helper to use responses module as a fixture, for easier integration in tests."""
     with responses_module.RequestsMock() as rsps:
         yield rsps
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_instance():
     """Provide a mock instance (Executor)."""
-    yield Mock(spec=Executor)
+    return Mock(spec=Executor)
 
 
 @pytest.fixture(autouse=True)
@@ -199,7 +199,7 @@ def fake_provider(mock_instance):
     return FakeProvider()
 
 
-@pytest.fixture
+@pytest.fixture()
 def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     """Helper to create a charmcraft.yaml file in disk.
 
@@ -221,7 +221,7 @@ def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     return prepare_charmcraft_yaml
 
 
-@pytest.fixture
+@pytest.fixture()
 def prepare_metadata_yaml(tmp_path: pathlib.Path):
     """Helper to create a metadata.yaml file in disk.
 
@@ -243,7 +243,7 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
     return prepare_metadata_yaml
 
 
-@pytest.fixture
+@pytest.fixture()
 def prepare_actions_yaml(tmp_path: pathlib.Path):
     """Helper to create a actions.yaml file in disk.
 
@@ -265,7 +265,7 @@ def prepare_actions_yaml(tmp_path: pathlib.Path):
     return prepare_actions_yaml
 
 
-@pytest.fixture
+@pytest.fixture()
 def prepare_config_yaml(tmp_path: pathlib.Path):
     """Helper to create a config.yaml file in disk.
 
@@ -287,7 +287,7 @@ def prepare_config_yaml(tmp_path: pathlib.Path):
     return prepare_config_yaml
 
 
-@pytest.fixture
+@pytest.fixture()
 def emitter(emitter):
     """Monkeypatch craft-cli's emitter fixture to easily test the JSON encoded output."""
 
@@ -306,7 +306,7 @@ def emitter(emitter):
     return emitter
 
 
-@pytest.fixture
+@pytest.fixture()
 def assert_output(capsys):
     """Assert that a given string was sent to stdout.
 
@@ -327,7 +327,7 @@ def assert_output(capsys):
     return helper
 
 
-@pytest.fixture
+@pytest.fixture()
 def build_charm_directory():
     def helper(tmp_path, fake_charms, file_type="charm"):
         expected = {}

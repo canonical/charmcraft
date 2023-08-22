@@ -22,10 +22,10 @@ from unittest.mock import patch
 import pytest
 
 from charmcraft import instrum
-from charmcraft.instrum import _Measurements, Timer
+from charmcraft.instrum import Timer, _Measurements
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_times():
     """Provide times from 5 by 10."""
     with patch("charmcraft.instrum.time", side_effect=list(range(5, 100, 10))):

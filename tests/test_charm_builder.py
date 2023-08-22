@@ -27,14 +27,14 @@ import pytest
 
 from charmcraft import charm_builder
 from charmcraft.charm_builder import (
-    CharmBuilder,
     DEPENDENCIES_HASH_FILENAME,
     DISPATCH_CONTENT,
     STAGING_VENV_DIRNAME,
     VENV_DIRNAME,
+    CharmBuilder,
     _process_run,
 )
-from charmcraft.const import METADATA_FILENAME, BUILD_DIRNAME, DISPATCH_FILENAME
+from charmcraft.const import BUILD_DIRNAME, DISPATCH_FILENAME, METADATA_FILENAME
 
 
 def test_build_generics_simple_files(tmp_path):
@@ -959,7 +959,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
 
 
 @pytest.mark.parametrize(
-    "new_reqs_content, new_pypackages, new_pybinaries, new_charmlibdeps",
+    ("new_reqs_content", "new_pypackages", "new_pybinaries", "new_charmlibdeps"),
     [
         ("ops==2", None, None, None),
         (None, ["foo2", "bar"], None, None),
@@ -1115,7 +1115,7 @@ def test_builder_with_jujuignore(tmp_path):
     build_dir = tmp_path / BUILD_DIRNAME
     build_dir.mkdir()
     with (tmp_path / ".jujuignore").open("w", encoding="utf-8") as ignores:
-        ignores.write("*.py\n" "/h\xef.txt\n")
+        ignores.write("*.py\n/h\xef.txt\n")
 
     builder = CharmBuilder(
         builddir=tmp_path,
@@ -1162,7 +1162,7 @@ def test_builder_arguments_full(tmp_path):
         sys.exit(42)
 
     fake_argv = ["cmd", "--builddir", "builddir", "--installdir", "installdir"]
-    fake_argv += ["-r" "reqs1.txt", "--requirement", "reqs2.txt"]
+    fake_argv += ["-rreqs1.txt", "--requirement", "reqs2.txt"]
     with patch.object(sys, "argv", fake_argv):
         with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
             with patch("charmcraft.charm_builder.collect_charmlib_pydeps") as mock_collect_pydeps:
@@ -1234,7 +1234,7 @@ def test_processrun_crashed(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "platform,result",
+    ("platform", "result"),
     [
         ("win32", "/basedir/Scripts/cmd.exe"),
         ("linux", "/basedir/bin/cmd"),
@@ -1249,7 +1249,7 @@ def test_find_venv_bin(monkeypatch, platform, result):
 
 
 @pytest.mark.parametrize(
-    "platform,result",
+    ("platform", "result"),
     [
         ("win32", "/basedir/PythonXY/site-packages"),
         ("linux", "/basedir/lib/pythonX.Y/site-packages"),

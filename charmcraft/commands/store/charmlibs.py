@@ -20,14 +20,14 @@ import ast
 import hashlib
 import os
 import pathlib
-from dataclasses import dataclass
 from collections import namedtuple
-from typing import Optional, Set, List
+from dataclasses import dataclass
+from typing import List, Optional, Set
 
 import yaml
 from craft_cli import CraftError
 
-from charmcraft.errors import BadLibraryPathError, BadLibraryNameError
+from charmcraft.errors import BadLibraryNameError, BadLibraryPathError
 
 LibData = namedtuple(
     "LibData",
@@ -54,7 +54,7 @@ def get_name_from_metadata() -> Optional[str]:
             metadata = yaml.safe_load(fh)
         charm_name = metadata["name"]
     except (yaml.error.YAMLError, OSError, KeyError):
-        return
+        return None
     return charm_name
 
 

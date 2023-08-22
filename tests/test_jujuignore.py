@@ -18,8 +18,8 @@ import io
 import pathlib
 import subprocess
 import sys
-import textwrap
 import tempfile
+import textwrap
 
 import pytest
 
@@ -324,14 +324,14 @@ def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):
     """For a given set of globs, check that it does and doesn't match as expected"""
     ignore = jujuignore.JujuIgnore(globs)
     for m in matched:
-        assert ignore.match(m, is_dir=False), "{} should have matched".format(m)
+        assert ignore.match(m, is_dir=False), f"{m} should have matched"
     for m in unmatched:
-        assert not ignore.match(m, is_dir=False), "{} should not have matched".format(m)
+        assert not ignore.match(m, is_dir=False), f"{m} should not have matched"
     if skip_git:
         return
     with tempfile.TemporaryDirectory() as tmpdir:
         subprocess.run(["git", "init", tmpdir], check=True)
-        with open(str(pathlib.Path(tmpdir) / ".gitignore"), "wt") as gitignore:
+        with open(str(pathlib.Path(tmpdir) / ".gitignore"), "w") as gitignore:
             gitignore.writelines([g + "\n" for g in globs])
         input = "".join([m.lstrip("/") + "\n" for m in matched + unmatched])
         check = True
@@ -344,7 +344,7 @@ def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):
             input=input,
             stdout=subprocess.PIPE,
             cwd=tmpdir,
-            universal_newlines=True,
+            text=True,
         )
     matched_out = p.stdout.splitlines()
     assert sorted(matched) == sorted(matched_out), "expected exactly {} to match not {}".format(

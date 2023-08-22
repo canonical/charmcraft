@@ -21,7 +21,7 @@ import os
 import pathlib
 import shlex
 from collections import namedtuple
-from typing import List, Generator, Union
+from typing import Generator, List, Union
 
 import yaml
 
@@ -62,12 +62,11 @@ def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, N
                     last_line = line
             if last_line:
                 entrypoint_str = shlex.split(last_line)[-1]
-    except (IOError, UnicodeDecodeError):
-        return
+    except (OSError, UnicodeDecodeError):
+        return None
     if not entrypoint_str:
-        return
-    entrypoint = basedir / entrypoint_str
-    return entrypoint
+        return None
+    return basedir / entrypoint_str
 
 
 def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
@@ -78,6 +77,7 @@ def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> Union[pathli
     entrypoint = get_entrypoint_from_dispatch(basedir)
     if entrypoint and entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
         return entrypoint
+    return None
 
 
 class Language:

@@ -8,16 +8,31 @@ kill-timeout: 60m
 
 environment:
   BUNDLE/argo: https://github.com/canonical/argo-operators
-  # Needs a different workflow for now, but a target for later enabling.
-  # BUNDLE/cos_lite: https://github.com/canonical/cos-lite-bundle
+  BUNDLE/cos_lite: https://github.com/canonical/cos-lite-bundle
   BUNDLE/istio: https://github.com/canonical/istio-operators
   BUNDLE/kfp: https://github.com/canonical/kfp-operators
-  # Needs a different workflow
-  # BUNDLE/kubeflow: https://github.com/canonical/bundle-kubeflow
+  BUNDLE/kubeflow: https://github.com/canonical/bundle-kubeflow
   BUNDLE/notebook_operators: https://github.com/canonical/notebook-operators
 
 prepare: |
   git clone --depth=1 "${BUNDLE}" bundle
+
+  pushd bundle
+
+  # Create bundle.yaml file for bundles (e.g. cos-lite) that require it.
+  if [ -f "render_bundle.py" ]; then
+    ./render_bundle.py bundle.yaml
+    touch .do_not_diff_bundle
+  fi
+
+  # Get the bundle.yaml if necessary (e.g. for kubeflow)
+  if [ -f "releases/latest/edge/bundle.yaml" ]; then
+    cp releases/latest/edge/bundle.yaml .
+    touch .do_not_diff_bundle
+  fi
+
+  popd
+
 
 restore: |
   for directory in $(ls -1 bundle/charms); do
@@ -34,11 +49,17 @@ execute: |
 
   # Ensure that the output bundle.yaml file is the same as the bundle.yaml file
   # within the bundle itself.
-  unzip -p *.zip bundle.yaml | diff -s output_bundle.yaml -
-  # Ensure at least one charm file is referenced in the bundle.yaml
-  test $(grep "charm: ${PWD}" output_bundle.yaml | wc -l) -ge 1
-  # Ensure all local charms referenced in the bundle exist
-  grep "charm: ${PWD}" output_bundle.yaml | cut -d: -f2 | xargs file -E
+  if [ ! -e .do_not_diff_bundle ]; then
+    unzip -p *.zip bundle.yaml | diff -s output_bundle.yaml -
+  fi
+
+  # Tests only needed if the bundle has contained charms rather than store charms
+  if [ -d charms ]; then
+    # Ensure at least one charm file is referenced in the bundle.yaml
+    test $(grep "charm: ${PWD}" output_bundle.yaml | wc -l) -ge 1
+    # Ensure all local charms referenced in the bundle exist
+    grep "charm: ${PWD}" output_bundle.yaml | cut -d: -f2 | xargs file -E
+  fi
 
   # Test deploying the bundle.
   # TODO: install juju on the runner and re-enable this.

@@ -21,7 +21,7 @@ import tempfile
 import textwrap
 import zipfile
 
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 
 from charmcraft import linters
 from charmcraft.cmdbase import BaseCommand
@@ -96,7 +96,7 @@ class AnalyzeCommand(BaseCommand):
                 for r in linting_results
             ]
             emit.message(self.format_content(parsed_args.format, info))
-            return
+            return None
 
         # group by attributes and lint outcomes (discarding ignored ones)
         grouped = {}

@@ -31,33 +31,33 @@ from charmcraft.errors import DuplicateCharmsError, InvalidCharmPathError
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
+    build_zip,
     confirm_with_user,
+    find_charm_sources,
     format_timestamp,
+    get_charm_name_from_path,
     get_host_architecture,
     get_os_platform,
     humanize_list,
     load_yaml,
     make_executable,
     useful_filepath,
-    build_zip,
-    find_charm_sources,
-    get_charm_name_from_path,
 )
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_isatty():
     with patch("charmcraft.utils.sys.stdin.isatty", return_value=True) as mock_isatty:
         yield mock_isatty
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_input():
     with patch("charmcraft.utils.input", return_value="") as mock_input:
         yield mock_input
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_is_charmcraft_running_in_managed_mode():
     with patch(
         "charmcraft.utils.is_charmcraft_running_in_managed_mode", return_value=False
@@ -93,7 +93,7 @@ def test_load_yaml_no_file(tmp_path, emitter):
     content = load_yaml(test_file)
     assert content is None
 
-    expected = "Couldn't find config file {!r}".format(str(test_file))
+    expected = f"Couldn't find config file {str(test_file)!r}"
     emitter.assert_debug(expected)
 
 
@@ -103,7 +103,7 @@ def test_load_yaml_directory(tmp_path, emitter):
     content = load_yaml(test_file)
     assert content is None
 
-    expected = "Couldn't find config file {!r}".format(str(test_file))
+    expected = f"Couldn't find config file {str(test_file)!r}"
     emitter.assert_debug(expected)
 
 
@@ -225,14 +225,14 @@ def test_usefulfilepath_inaccessible(tmp_path):
     test_file.touch(mode=0o000)
     with pytest.raises(CraftError) as cm:
         useful_filepath(str(test_file))
-    assert str(cm.value) == "Cannot access {!r}.".format(str(test_file))
+    assert str(cm.value) == f"Cannot access {str(test_file)!r}."
 
 
 def test_usefulfilepath_not_a_file(tmp_path):
     """The indicated path is not a file."""
     with pytest.raises(CraftError) as cm:
         useful_filepath(str(tmp_path))
-    assert str(cm.value) == "{!r} is not a file.".format(str(tmp_path))
+    assert str(cm.value) == f"{str(tmp_path)!r} is not a file."
 
 
 # -- tests for the OS platform getter
@@ -322,12 +322,10 @@ def test_get_os_platform_alternative_formats(name, tmp_path):
     filepath = tmp_path / "os-release"
     filepath.write_text(
         dedent(
-            """
-        ID={}
+            f"""
+        ID={source}
         VERSION_ID="20.04"
-        """.format(
-                source
-            )
+        """
         )
     )
     # need to patch this to "Linux" so actually uses /etc/os-release...
@@ -348,7 +346,7 @@ def test_get_os_platform_windows():
 
 
 @pytest.mark.parametrize(
-    "platform_arch,deb_arch",
+    ("platform_arch", "deb_arch"),
     [
         ("AMD64", "amd64"),
         ("aarch64", "arm64"),
@@ -387,7 +385,7 @@ def test_confirm_with_user_defaults_without_tty(mock_input, mock_isatty):
 
 
 @pytest.mark.parametrize(
-    "user_input,expected",
+    ("user_input", "expected"),
     [
         ("y", True),
         ("Y", True),
@@ -451,7 +449,7 @@ def test_timestampstr_nonutc():
 
 
 @pytest.mark.parametrize(
-    "items,conjunction,expected",
+    ("items", "conjunction", "expected"),
     (
         (["foo"], "xor", "'foo'"),
         (["foo", "bar"], "xor", "'bar' xor 'foo'"),
@@ -622,7 +620,7 @@ def test_find_charm_sources_duplicates(check, tmp_path, build_charm_directory):
 # endregion
 # region Tests for get_charm_name_from_path
 @pytest.mark.parametrize(
-    "name,path",
+    ("name", "path"),
     [
         ("test1", "test1"),
         ("test1", "charms/test1"),
@@ -638,7 +636,7 @@ def test_get_charm_name_from_path_success(tmp_path, build_charm_directory, name,
 
 
 @pytest.mark.parametrize(
-    "name,path",
+    ("name", "path"),
     [
         ("test1", "test1"),
         ("test1", "charms/test1"),
@@ -656,7 +654,7 @@ def test_get_charm_name_from_path_bundle(tmp_path, build_charm_directory, name, 
 
 
 @pytest.mark.parametrize(
-    "name,path,del_file",
+    ("name", "path", "del_file"),
     [
         ("test1", "test1", "charmcraft.yaml"),
         ("test1", "charms/test1", "metadata.yaml"),
@@ -677,7 +675,7 @@ def test_get_charm_name_from_path_missing_file(
 
 
 @pytest.mark.parametrize(
-    "name,path",
+    ("name", "path"),
     [
         ("test1", "test1"),
         ("test1", "charms/test1"),

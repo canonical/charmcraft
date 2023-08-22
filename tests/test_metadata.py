@@ -17,12 +17,11 @@
 import re
 from textwrap import dedent
 
-import pytest
 import pydantic
+import pytest
 from craft_cli import CraftError
 
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
-
 
 # tests for parsing metadata
 

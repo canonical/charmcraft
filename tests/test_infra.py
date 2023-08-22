@@ -45,12 +45,6 @@ def get_python_filepaths(*, roots=None, python_paths=None):
     return python_paths
 
 
-@pytest.mark.skipif(os.getenv("RUNNING_TOX"), reason="does not work inside tox")
-def test_pep8():
-    """Verify all files are nicely styled."""
-    pep8_test(get_python_filepaths())
-
-
 def pep8_test(python_filepaths):
     """Helper to check PEP8 (used from this module and from test_init.py to check templates)."""
     style_guide = get_style_guide()
@@ -100,7 +94,7 @@ def test_ensure_copyright():
         if os.stat(filepath).st_size == 0:
             continue
 
-        with open(filepath, "rt", encoding="utf8") as fh:
+        with open(filepath, encoding="utf8") as fh:
             for line in itertools.islice(fh, 5):
                 if regex.match(line):
                     break
@@ -125,7 +119,7 @@ def test_bashcompletion_all_commands():
     # get the line where all commands are specified in the completion file; this is custom
     # to our file, but simple and good enough
     completed_commands = None
-    with open("completion.bash", "rt", encoding="utf8") as fh:
+    with open("completion.bash", encoding="utf8") as fh:
         completion_text = fh.read()
     m = re.search(r"cmds=\((.*?)\)", completion_text, re.DOTALL)
     if m:
@@ -144,7 +138,7 @@ def test_black():
     runner = click.testing.CliRunner()
     result = runner.invoke(
         black.main,
-        ["--check"] + get_python_filepaths(),
+        ["--check", *get_python_filepaths()],
     )
 
     if result.exit_code != 0:

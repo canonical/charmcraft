@@ -2757,31 +2757,36 @@ def test_status_unreleased_track(emitter, store_mock, config):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_createlib_simple(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
+@pytest.mark.parametrize("charmcraft_yaml_name", [None, "test-charm"])
+def test_createlib_simple(
+    emitter, store_mock, tmp_path, monkeypatch, config, formatted, charmcraft_yaml_name
+):
     """Happy path with result from the Store."""
     monkeypatch.chdir(tmp_path)
+
+    config.name = charmcraft_yaml_name
 
     lib_id = "test-example-lib-id"
     store_mock.create_library_id.return_value = lib_id
 
     args = Namespace(name="testlib", format=formatted)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "testcharm"
+        mock.return_value = "test-charm"
         CreateLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
-        call.create_library_id("testcharm", "testlib"),
+        call.create_library_id("test-charm", "testlib"),
     ]
     if formatted:
         expected = {"library_id": lib_id}
         emitter.assert_json_output(expected)
     else:
         expected = [
-            "Library charms.testcharm.v0.testlib created with id test-example-lib-id.",
-            "Consider 'git add lib/charms/testcharm/v0/testlib.py'.",
+            "Library charms.test_charm.v0.testlib created with id test-example-lib-id.",
+            "Consider 'git add lib/charms/test_charm/v0/testlib.py'.",
         ]
         emitter.assert_messages(expected)
-    created_lib_file = tmp_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
+    created_lib_file = tmp_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
 
     env = get_templates_environment("charmlibs")
     expected_newlib_content = env.get_template("new_library.py.j2").render(lib_id=lib_id)
@@ -2791,13 +2796,14 @@ def test_createlib_simple(emitter, store_mock, tmp_path, monkeypatch, config, fo
 def test_createlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     args = Namespace(name="testlib", format=None)
+    config.name = None
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = None
         with pytest.raises(CraftError) as cm:
             CreateLibCommand(config).run(args)
         assert str(cm.value) == (
-            "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-            "directory with metadata.yaml."
+            "Cannot find a valid charm name in charm definition. "
+            "Check that you are using the correct project directory."
         )
 
 
@@ -2856,22 +2862,20 @@ def test_createlib_path_already_there(tmp_path, monkeypatch, config):
     """The intended-to-be-created library is already there."""
     monkeypatch.chdir(tmp_path)
 
-    factory.create_lib_filepath("test-charm-name", "testlib", api=0)
+    factory.create_lib_filepath("test-charm", "testlib", api=0)
     args = Namespace(name="testlib", format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "test-charm-name"
-        with pytest.raises(CraftError) as err:
-            CreateLibCommand(config).run(args)
+    with pytest.raises(CraftError) as err:
+        CreateLibCommand(config).run(args)
 
     assert str(err.value) == (
-        "This library already exists: 'lib/charms/test_charm_name/v0/testlib.py'."
+        "This library already exists: 'lib/charms/test_charm/v0/testlib.py'."
     )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cleanup, config):
     """Disk error when trying to write the new lib (bad permissions, name too long, whatever)."""
-    lib_dir = tmp_path / "lib" / "charms" / "test_charm_name" / "v0"
+    lib_dir = tmp_path / "lib" / "charms" / "test_charm" / "v0"
     lib_dir.mkdir(parents=True)
     lib_dir.chmod(0o111)
     add_cleanup(lib_dir.chmod, 0o777)
@@ -2880,10 +2884,8 @@ def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cle
     args = Namespace(name="testlib", format=None)
     store_mock.create_library_id.return_value = "lib_id"
     expected_error = "Error writing the library in .*: PermissionError.*"
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "test-charm-name"
-        with pytest.raises(CraftError, match=expected_error):
-            CreateLibCommand(config).run(args)
+    with pytest.raises(CraftError, match=expected_error):
+        CreateLibCommand(config).run(args)
 
 
 def test_createlib_library_template_is_python(emitter, store_mock, tmp_path, monkeypatch):

@@ -1298,11 +1298,11 @@ class CreateLibCommand(BaseCommand):
                 "characters and underscore, starting with alpha."
             )
 
-        charm_name = get_name_from_metadata()
+        charm_name = self.config.name or get_name_from_metadata()
         if charm_name is None:
             raise CraftError(
-                "Cannot find a valid charm name in metadata.yaml. Check you are in a charm "
-                "directory with metadata.yaml."
+                "Cannot find a valid charm name in charm definition. "
+                "Check that you are using the correct project directory."
             )
 
         # '-' is valid in charm names, but not in a python import
@@ -1310,11 +1310,11 @@ class CreateLibCommand(BaseCommand):
         importable_charm_name = create_importable_name(charm_name)
 
         # all libraries born with API version 0
-        full_name = "charms.{}.v0.{}".format(importable_charm_name, lib_name)
+        full_name = f"charms.{importable_charm_name}.v0.{lib_name}"
         lib_data = get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
-            raise CraftError("This library already exists: {!r}.".format(str(lib_path)))
+            raise CraftError(f"This library already exists: {str(lib_path)!r}.")
 
         emit.progress(f"Creating library {lib_name}.")
         store = Store(self.config.charmhub)
@@ -1323,12 +1323,12 @@ class CreateLibCommand(BaseCommand):
         # create the new library file from the template
         env = get_templates_environment("charmlibs")
         template = env.get_template("new_library.py.j2")
-        context = dict(lib_id=lib_id)
+        context = {"lib_id": lib_id}
         try:
             lib_path.parent.mkdir(parents=True, exist_ok=True)
             lib_path.write_text(template.render(context))
         except OSError as exc:
-            raise CraftError("Error writing the library in {!r}: {!r}.".format(str(lib_path), exc))
+            raise CraftError(f"Error writing the library in {str(lib_path)!r}: {exc!r}.")
 
         if parsed_args.format:
             info = {"library_id": lib_id}

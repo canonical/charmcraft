@@ -24,12 +24,12 @@ import json
 import os
 import tarfile
 import tempfile
-from typing import Union, Dict, Any
+from typing import Any, Dict, Union
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
 import requests_unixsocket
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 
 # some mimetypes
 CONFIG_MIMETYPE = "application/vnd.docker.container.image.v1+json"
@@ -65,7 +65,7 @@ def assert_response_ok(
         )
 
     if response.headers.get("Content-Type") not in JSON_RELATED_MIMETYPES:
-        return
+        return None
 
     result = response.json()
     if "errors" in result:
@@ -82,7 +82,7 @@ class OCIRegistry:
         self.auth_token = None
 
         if username:
-            _u_p = "{}:{}".format(username, password)
+            _u_p = f"{username}:{password}"
             self.auth_encoded_credentials = base64.b64encode(_u_p.encode("ascii")).decode("ascii")
         else:
             self.auth_encoded_credentials = None
@@ -98,34 +98,32 @@ class OCIRegistry:
         """Get the auth token."""
         headers = {}
         if self.auth_encoded_credentials is not None:
-            headers["Authorization"] = "Basic {}".format(self.auth_encoded_credentials)
+            headers["Authorization"] = f"Basic {self.auth_encoded_credentials}"
 
         emit.trace(f"Authenticating! {auth_info}")
         url = "{realm}?service={service}&scope={scope}".format_map(auth_info)
         response = requests.get(url, headers=headers)
 
         result = assert_response_ok(response)
-        auth_token = result["token"]
-        return auth_token
+        return result["token"]
 
     def _get_url(self, subpath):
         """Build the URL completing the subpath."""
-        return "{}/v2/{}/{}".format(self.server, self.image_name, subpath)
+        return f"{self.server}/v2/{self.image_name}/{subpath}"
 
     def _get_auth_info(self, response):
         """Parse a 401 response and get the needed auth parameters."""
         www_auth = response.headers["Www-Authenticate"]
         if not www_auth.startswith("Bearer "):
             raise ValueError("Bearer not found")
-        info = parse_keqv_list(parse_http_list(www_auth[7:]))
-        return info
+        return parse_keqv_list(parse_http_list(www_auth[7:]))
 
     def _hit(self, method, url, headers=None, log=True, **kwargs):
         """Hit the specific URL, taking care of the authentication."""
         if headers is None:
             headers = {}
         if self.auth_token is not None:
-            headers["Authorization"] = "Bearer {}".format(self.auth_token)
+            headers["Authorization"] = f"Bearer {self.auth_token}"
 
         if log:
             emit.trace(f"Hitting the registry: {method} {url}")
@@ -135,11 +133,9 @@ class OCIRegistry:
             try:
                 auth_info = self._get_auth_info(response)
             except (ValueError, KeyError) as exc:
-                raise CraftError(
-                    "Bad 401 response: {}; headers: {!r}".format(exc, response.headers)
-                )
+                raise CraftError(f"Bad 401 response: {exc}; headers: {response.headers!r}")
             self.auth_token = self._authenticate(auth_info)
-            headers["Authorization"] = "Bearer {}".format(self.auth_token)
+            headers["Authorization"] = f"Bearer {self.auth_token}"
             response = requests.request(method, url, headers=headers, **kwargs)
 
         return response
@@ -170,7 +166,7 @@ class OCIRegistry:
         If yes, return its digest.
         """
         emit.progress("Checking if manifest is already uploaded")
-        url = self._get_url("manifests/{}".format(reference))
+        url = self._get_url(f"manifests/{reference}")
         return self._is_item_already_uploaded(url)
 
     def is_blob_already_uploaded(self, reference):
@@ -179,12 +175,12 @@ class OCIRegistry:
         If yes, return its digest.
         """
         emit.progress("Checking if the blob is already uploaded")
-        url = self._get_url("blobs/{}".format(reference))
+        url = self._get_url(f"blobs/{reference}")
         return self._is_item_already_uploaded(url)
 
     def upload_manifest(self, manifest_data, reference):
         """Upload a manifest."""
-        url = self._get_url("manifests/{}".format(reference))
+        url = self._get_url(f"manifests/{reference}")
         headers = {
             "Content-Type": MANIFEST_V2_MIMETYPE,
         }
@@ -201,7 +197,7 @@ class OCIRegistry:
         response = self._hit("POST", url)
         assert_response_ok(response, expected_status=202)
         upload_url = response.headers["Location"]
-        range_from, range_to_inclusive = [int(x) for x in response.headers["Range"].split("-")]
+        range_from, range_to_inclusive = (int(x) for x in response.headers["Range"].split("-"))
         emit.progress(f"Got upload URL ok with range {range_from}-{range_to_inclusive}")
         if range_from != 0:
             raise CraftError(
@@ -235,7 +231,7 @@ class OCIRegistry:
                     end_position = from_position + len(chunk)
                     headers = {
                         "Content-Length": str(len(chunk)),
-                        "Content-Range": "{}-{}".format(from_position, end_position),
+                        "Content-Range": f"{from_position}-{end_position}",
                         "Content-Type": OCTET_STREAM_MIMETYPE,
                     }
                     response = self._hit(
@@ -250,7 +246,7 @@ class OCIRegistry:
             "Connection": "close",
         }
         emit.progress("Closing the upload")
-        closing_url = "{}&digest={}".format(upload_url, digest)
+        closing_url = f"{upload_url}&digest={digest}"
 
         response = self._hit("PUT", closing_url, headers=headers, data="")
         assert_response_ok(response, expected_status=201)
@@ -295,14 +291,14 @@ class LocalDockerdInterface:
 
         Returns None to flag that the requested id was not found for any reason.
         """
-        url = self.dockerd_socket_baseurl + "/images/{}/json".format(image_id)
+        url = self.dockerd_socket_baseurl + f"/images/{image_id}/json"
         try:
             response = self.session.get(url)
         except requests.exceptions.ConnectionError:
             emit.debug(
                 "Cannot connect to /var/run/docker.sock , please ensure dockerd is running.",
             )
-            return
+            return None
 
         if response.status_code == 200:
             # image is there, we're fine
@@ -312,6 +308,8 @@ class LocalDockerdInterface:
         # for proper debugging
         if response.status_code != 404:
             emit.debug(f"Bad response when validating local image: {response.status_code}")
+            return None
+        return None
 
     def get_image_info_from_digest(self, digest: str) -> Union[dict, None]:
         """Get the info for a specific image using its digest.
@@ -325,21 +323,22 @@ class LocalDockerdInterface:
             emit.debug(
                 "Cannot connect to /var/run/docker.sock , please ensure dockerd is running.",
             )
-            return
+            return None
 
         if response.status_code != 200:
             emit.debug(f"Bad response when validating local image: {response.status_code}")
-            return
+            return None
 
         for image_info in response.json():
             if image_info["RepoDigests"] is None:
                 continue
             if any(digest in repo_digest for repo_digest in image_info["RepoDigests"]):
                 return image_info
+        return None
 
     def get_streamed_image_content(self, image_id: str) -> requests.Response:
         """Stream the content of a specific image."""
-        url = self.dockerd_socket_baseurl + "/images/{}/get".format(image_id)
+        url = self.dockerd_socket_baseurl + f"/images/{image_id}/get"
         return self.session.get(url, stream=True)
 
 
@@ -383,7 +382,7 @@ class ImageHandler:
             # gzip does not automatically close the underlying file handler, let's do it manually
             hashing_temp_file.close()
 
-        digest = "sha256:{}".format(hashing_temp_file.hexdigest)
+        digest = f"sha256:{hashing_temp_file.hexdigest}"
         return hashing_temp_file.name, hashing_temp_file.total_length, digest
 
     def _upload_blob(self, filepath: str, size: int, digest: str) -> None:

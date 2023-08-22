@@ -37,15 +37,13 @@ def format_pydantic_error_location(loc) -> str:
     loc = ".".join(loc_parts)
 
     # Filter out internal __root__ detail.
-    loc = loc.replace(".__root__", "")
-    return loc
+    return loc.replace(".__root__", "")
 
 
 def format_pydantic_error_message(msg: str) -> str:
     """Format pydantic's error message field."""
     # Replace shorthand "str" with "string".
-    msg = msg.replace("str type expected", "string type expected")
-    return msg
+    return msg.replace("str type expected", "string type expected")
 
 
 def printable_field_location_split(location: str) -> Tuple[str, str]:
@@ -54,7 +52,8 @@ def printable_field_location_split(location: str) -> Tuple[str, str]:
     If top-level, location is returned as unquoted "top-level".
     If not top-level, location is returned as quoted location.
 
-    Examples:
+    Examples
+    --------
     (1) field1[idx].foo => 'foo', 'field1[idx]'
     (2) field2 => 'field2', top-level
 

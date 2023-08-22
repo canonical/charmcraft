@@ -16,16 +16,16 @@
 
 import pathlib
 import sys
-from unittest.mock import ANY, patch, call
+from unittest.mock import ANY, call, patch
 
 import craft_parts
 import pydantic
 import pytest
 from craft_cli import CraftError
-from craft_parts import Step, plugins, Action, ActionType
+from craft_parts import Action, ActionType, Step, plugins
 from craft_parts.errors import PartsError
 
-from charmcraft import charm_builder, parts, env
+from charmcraft import charm_builder, env, parts
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 
@@ -59,8 +59,7 @@ def charm_plugin(tmp_path):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    plugin = plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
-    return plugin
+    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
 
 
 def test_charmplugin_get_build_package_deb_based(charm_plugin):
@@ -357,8 +356,7 @@ def bundle_plugin(tmp_path):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    plugin = plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
-    return plugin
+    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
 
 
 def test_bundleplugin_get_build_package(bundle_plugin):

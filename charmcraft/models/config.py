@@ -16,9 +16,9 @@
 
 """Charmcraft Juju Config pydantic model."""
 
-import pydantic
+from typing import Dict, Optional
 
-from typing import Optional, Dict
+import pydantic
 
 from charmcraft.models.basic import ModelConfigDefaults
 

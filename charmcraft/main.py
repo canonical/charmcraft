@@ -30,11 +30,10 @@ from craft_cli import (
     ProvideHelpException,
     emit,
 )
-
 from craft_store import errors
 
-from charmcraft import config, __version__, env, utils
-from charmcraft.commands import clean, init, pack, store, version, analyze
+from charmcraft import __version__, config, env, utils
+from charmcraft.commands import analyze, clean, init, pack, store, version
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.parts import setup_parts
 

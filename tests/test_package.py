@@ -22,20 +22,20 @@ import zipfile
 from textwrap import dedent
 from typing import List
 from unittest import mock
-from unittest.mock import call, patch, MagicMock, ANY
+from unittest.mock import ANY, MagicMock, call, patch
 
 import pytest
 import yaml
-from craft_cli import EmitterMode, emit, CraftError
+from craft_cli import CraftError, EmitterMode, emit
 from craft_providers import bases
 
-from charmcraft import linters, instrum
-from charmcraft.charm_builder import relativise
+from charmcraft import instrum, linters
 from charmcraft.bases import get_host_as_base
-from charmcraft.const import BUILD_DIRNAME
-from charmcraft.package import Builder, format_charm_file_name, launch_shell
-from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.charm_builder import relativise
 from charmcraft.config import load
+from charmcraft.const import BUILD_DIRNAME
+from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.package import Builder, format_charm_file_name, launch_shell
 from charmcraft.providers import get_base_configuration
 from charmcraft.utils import get_host_architecture
 
@@ -63,7 +63,7 @@ def get_builder(
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def basic_project(tmp_path, monkeypatch, prepare_charmcraft_yaml, prepare_metadata_yaml):
     """Create a basic Charmcraft project."""
     build_dir = tmp_path / BUILD_DIRNAME
@@ -124,10 +124,10 @@ def basic_project(tmp_path, monkeypatch, prepare_charmcraft_yaml, prepare_metada
     # paths are relative, make all tests to run in the project's directory
     monkeypatch.chdir(tmp_path)
 
-    yield tmp_path
+    return tmp_path
 
 
-@pytest.fixture
+@pytest.fixture()
 def basic_project_builder(basic_project, prepare_charmcraft_yaml):
     def _basic_project_builder(bases_configs: List[BasesConfiguration], **builder_kwargs):
         charmcraft_yaml = dedent(
@@ -169,26 +169,26 @@ def basic_project_builder(basic_project, prepare_charmcraft_yaml):
     return _basic_project_builder
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_capture_logs_from_instance():
     with patch("charmcraft.providers.capture_logs_from_instance") as mock_capture:
         yield mock_capture
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_launch_shell():
     with patch("charmcraft.package.launch_shell") as mock_shell:
         yield mock_shell
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_linters():
     with patch("charmcraft.linters") as mock_linters:
         mock_linters.analyze.return_value = []
         yield mock_linters
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_parts():
     with patch("charmcraft.parts") as mock_parts:
         yield mock_parts
@@ -415,7 +415,7 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_buil
     assert zipnames == [
         "test-charm-name-from-metadata-yaml_"
         f"{host_base.name}-{host_base.channel}-{host_arch}.charm",
-        "test-charm-name-from-metadata-yaml_" "cross-name-cross-channel-cross-arch1.charm",
+        "test-charm-name-from-metadata-yaml_cross-name-cross-channel-cross-arch1.charm",
     ]
 
     reason = f"name 'unmatched-name' does not match host {host_base.name!r}."
@@ -466,7 +466,7 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
     assert zipnames == [
         "test-charm-name-from-metadata-yaml_"
         f"{host_base.name}-{host_base.channel}-{host_arch}.charm",
-        "test-charm-name-from-metadata-yaml_" "cross-name-cross-channel-cross-arch1.charm",
+        "test-charm-name-from-metadata-yaml_cross-name-cross-channel-cross-arch1.charm",
     ]
 
     reason = f"name 'unmatched-name' does not match host {host_base.name!r}."
@@ -485,7 +485,7 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml_template, metadata_yaml",
+    ("charmcraft_yaml_template", "metadata_yaml"),
     [
         [
             dedent(
@@ -570,7 +570,7 @@ def test_build_project_is_cwd(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml_template, metadata_yaml",
+    ("charmcraft_yaml_template", "metadata_yaml"),
     [
         [
             dedent(
@@ -660,7 +660,7 @@ def test_build_project_is_not_cwd(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "mode,cmd_flags",
+    ("mode", "cmd_flags"),
     [
         (EmitterMode.VERBOSE, ["--verbosity=verbose"]),
         (EmitterMode.QUIET, ["--verbosity=quiet"]),
@@ -670,7 +670,7 @@ def test_build_project_is_not_cwd(
     ],
 )
 @pytest.mark.parametrize(
-    "charmcraft_yaml_template, metadata_yaml",
+    ("charmcraft_yaml_template", "metadata_yaml"),
     [
         [
             dedent(
@@ -762,7 +762,7 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "0", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
@@ -804,7 +804,7 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "1", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
@@ -848,13 +848,13 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "0", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "1", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
@@ -899,13 +899,13 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "1"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "1", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "2"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "2", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
@@ -955,7 +955,7 @@ def test_build_bases_index_scenarios_provider(
     assert mock_instance.mock_calls == [
         call.mount(host_source=basic_project, target=project_managed_path),
         call.execute_run(
-            ["charmcraft", "pack", "--bases-index", "0"] + cmd_flags,
+            ["charmcraft", "pack", "--bases-index", "0", *cmd_flags],
             check=True,
             cwd=project_managed_path,
         ),
@@ -1015,7 +1015,7 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
     return_value=Base(name="xname", channel="xchannel", architectures=["xarch"]),
 )
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1107,7 +1107,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
-    "builder_flag,cmd_flag",
+    ("builder_flag", "cmd_flag"),
     [
         ("debug", "--debug"),
         ("shell", "--shell"),
@@ -1249,7 +1249,7 @@ def test_build_package_tree_structure(tmp_path, config):
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml, expected_zipname",
+    ("charmcraft_yaml", "metadata_yaml", "expected_zipname"),
     [
         [
             dedent(
@@ -1311,7 +1311,7 @@ def test_build_package_name(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml_template, metadata_yaml",
+    ("charmcraft_yaml_template", "metadata_yaml"),
     [
         [
             dedent(
@@ -1369,7 +1369,7 @@ def test_build_postlifecycle_validation_is_properly_called(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml_template, metadata_yaml",
+    ("charmcraft_yaml_template", "metadata_yaml"),
     [
         [
             dedent(
@@ -1461,7 +1461,7 @@ def test_build_part_from_config(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml_template, metadata_yaml",
+    ("charmcraft_yaml_template", "metadata_yaml"),
     [
         [
             dedent(

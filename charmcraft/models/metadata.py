@@ -16,11 +16,11 @@
 
 """Charmcraft metadata pydantic model."""
 
-from typing import Any, Dict, Optional, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pydantic
-
 from craft_cli import CraftError
+
 from charmcraft.const import METADATA_FILENAME
 
 

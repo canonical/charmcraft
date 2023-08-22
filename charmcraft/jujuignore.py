@@ -45,8 +45,7 @@ def _rstrip_unescaped(rule):
         elif i == 0 or rule[i - 1] != "\\":
             last = i
         i -= 1
-    rule = rule[:last]
-    return rule
+    return rule[:last]
 
 
 def _unescape_rule(rule):
@@ -104,7 +103,7 @@ def _rule_to_regex(rule):
                     stuff = "^" + stuff[1:]
                 elif stuff[0] in ("["):
                     stuff = "\\" + stuff
-                res = "%s[%s]" % (res, stuff)
+                res = f"{res}[{stuff}]"
         elif c == "/":
             # Special case of '/**/' which can match a single '/'
             if i < n and rule[i] == "*" and rule[i - 1 : i + 3] == "/**/":
@@ -138,7 +137,8 @@ class _Matcher:
     def match(self, path: str, is_dir: bool) -> str:
         """Check if a path matches.
 
-        Returns:
+        Returns
+        -------
             Can return one of KEEP, SKIP, FORCEKEEP
         """
         if self.only_dirs and not is_dir:
@@ -195,10 +195,13 @@ class JujuIgnore:
         """Check if the given path should be ignored.
 
         Args:
+        ----
             path: A local path (eg /foo/bar or foo/bar) from the root directory of the project.
             is_dir: Indicate whether the given path is a directory (because of special handling
             from ignore files when the path ends with a '/')
+
         Return:
+        ------
             A boolean indicating whether the ignore rules matched the given path (thus the path
             should be ignored).
         """

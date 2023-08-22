@@ -52,7 +52,7 @@ def test_get_managed_environment_snap_channel(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "snap_name,snap,result",
+    ("snap_name", "snap", "result"),
     [
         (None, None, False),
         (None, "/snap/charmcraft/x1", False),
@@ -75,7 +75,7 @@ def test_is_charmcraft_running_from_snap(monkeypatch, snap_name, snap, result):
 
 
 @pytest.mark.parametrize(
-    "developer,result",
+    ("developer", "result"),
     [
         (None, False),
         ("y", True),
@@ -104,7 +104,7 @@ def test_is_charmcraft_running_in_developer_mode(monkeypatch, developer, result)
 
 
 @pytest.mark.parametrize(
-    "managed,result",
+    ("managed", "result"),
     [
         (None, False),
         ("y", True),

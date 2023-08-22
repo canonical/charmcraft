@@ -17,19 +17,19 @@
 """Charmcraft project handle config.yaml file."""
 
 import contextlib
-import pathlib
 import logging
+import pathlib
 import shutil
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pydantic
 import yaml
+from craft_cli import CraftError, emit
 
-from craft_cli import emit, CraftError
 from charmcraft.const import JUJU_CONFIG_FILENAME
 from charmcraft.format import format_pydantic_errors
-from charmcraft.models.config import JujuConfig
 from charmcraft.metafiles import read_yaml
+from charmcraft.models.config import JujuConfig
 
 if TYPE_CHECKING:
     from charmcraft.models.charmcraft import CharmcraftConfig

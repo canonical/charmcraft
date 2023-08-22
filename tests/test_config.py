@@ -25,16 +25,15 @@ import pytest
 from craft_cli import CraftError
 
 from charmcraft import linters
-from charmcraft.models.charmcraft import Base, BasesConfiguration, CharmhubConfig
 from charmcraft.config import load
+from charmcraft.models.charmcraft import Base, BasesConfiguration, CharmhubConfig
 from charmcraft.utils import get_host_architecture
-
 
 # -- tests for the config loading
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -101,7 +100,7 @@ def test_load_managed_mode_directory(monkeypatch, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -158,7 +157,7 @@ def test_load_optional_charmcraft_bad_directory(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -210,7 +209,7 @@ def test_load_specific_directory_resolved(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -292,7 +291,7 @@ def test_load_metadata_keys_exists_both(tmp_path, prepare_charmcraft_yaml, prepa
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -344,7 +343,7 @@ def test_schema_top_level_no_extra_properties(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -410,7 +409,7 @@ def test_schema_type_missing(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -456,7 +455,7 @@ def test_schema_type_bad_type(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -502,7 +501,7 @@ def test_schema_type_limited_values(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -552,7 +551,7 @@ def test_schema_charmhub_api_url_bad_type(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -602,7 +601,7 @@ def test_schema_charmhub_api_url_bad_format(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -652,7 +651,7 @@ def test_schema_charmhub_storage_url_bad_type(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -702,7 +701,7 @@ def test_schema_charmhub_storage_url_bad_format(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -752,7 +751,7 @@ def test_schema_charmhub_registry_url_bad_type(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -802,7 +801,7 @@ def test_schema_charmhub_registry_url_bad_format(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -854,7 +853,7 @@ def test_schema_charmhub_no_extra_properties(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -902,7 +901,7 @@ def test_schema_basicprime_bad_init_structure(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -952,7 +951,7 @@ def test_schema_basicprime_bad_bundle_structure(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1004,7 +1003,7 @@ def test_schema_basicprime_bad_prime_structure(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1056,7 +1055,7 @@ def test_schema_basicprime_bad_prime_type(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1109,7 +1108,7 @@ def test_schema_basicprime_bad_prime_type_empty(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1139,12 +1138,12 @@ def test_schema_basicprime_bad_content_format(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - '/bar/foo' must be a relative path (cannot start with '/') in field 'parts.charm.prime[0]'"""  # NOQA: E501
+        - '/bar/foo' must be a relative path (cannot start with '/') in field 'parts.charm.prime[0]'"""
     )
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1198,7 +1197,7 @@ def test_schema_additional_part(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1260,12 +1259,12 @@ def test_schema_other_charm_part_no_source(
         """\
         Bad charmcraft.yaml content:
         - field 'source' required in 'parts.other-part' configuration
-        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""  # NOQA: E501
+        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""
     )
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1322,7 +1321,7 @@ def test_schema_other_bundle_part_no_source(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1378,7 +1377,7 @@ def test_schema_doublelayer_no_parts_type_charm(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1424,7 +1423,7 @@ def test_schema_doublelayer_no_parts_type_bundle(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1487,7 +1486,7 @@ def test_schema_doublelayer_parts_no_charm(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1550,7 +1549,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_missing(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1612,7 +1611,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_charm(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1675,7 +1674,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_different(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1737,7 +1736,7 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1805,7 +1804,7 @@ def test_charmhub_frozen():
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1858,7 +1857,7 @@ def test_charmhub_underscore_in_names(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1899,7 +1898,7 @@ def test_no_bases_is_ok_for_bundles(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -1935,7 +1934,7 @@ def test_bases_forbidden_for_bundles(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2009,7 +2008,7 @@ def test_bases_minimal_long_form(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2071,7 +2070,7 @@ def test_bases_extra_field_error(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2112,7 +2111,7 @@ def test_bases_underscores_error(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2171,7 +2170,7 @@ def test_channel_is_yaml_number(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2244,7 +2243,7 @@ def test_minimal_long_form_bases(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2361,7 +2360,7 @@ def test_complex_long_form_bases(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2468,7 +2467,7 @@ def test_multiple_long_form_bases(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2533,7 +2532,7 @@ def test_bases_minimal_short_form(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2571,7 +2570,7 @@ def test_bases_short_form_extra_field_error(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2620,7 +2619,7 @@ def test_bases_short_form_missing_field_error(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2660,7 +2659,7 @@ def test_bases_mixed_form_errors(
 # -- tests for analysis
 
 
-@pytest.fixture
+@pytest.fixture()
 def create_checker(monkeypatch):
     """Helper to patch and add checkers to the real structure."""
     test_checkers = []
@@ -2677,7 +2676,7 @@ def create_checker(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2719,7 +2718,7 @@ def test_schema_analysis_missing(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2769,7 +2768,7 @@ def test_schema_analysis_full_struct_just_empty(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2824,7 +2823,7 @@ def test_schema_analysis_ignore_attributes(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2879,7 +2878,7 @@ def test_schema_analysis_ignore_linters(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -2940,7 +2939,7 @@ def test_schema_analysis_ignore_attribute_missing(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -3001,7 +3000,7 @@ def test_schema_analysis_ignore_linter_missing(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -3123,7 +3122,7 @@ def test_actions_defined_in_charmcraft_yaml(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml_template, metadata_yaml",
+    ("charmcraft_yaml_template", "metadata_yaml"),
     [
         [
             dedent(
@@ -3198,7 +3197,7 @@ def test_actions_badly_defined_in_charmcraft_yaml(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -3310,12 +3309,12 @@ def test_actions_defined_in_charmcraft_yaml_and_actions_yaml(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - 'actions.yaml' file not allowed when an 'actions' section is defined in 'charmcraft.yaml' in field 'actions'"""  # NOQA: E501
+        - 'actions.yaml' file not allowed when an 'actions' section is defined in 'charmcraft.yaml' in field 'actions'"""
     )
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(

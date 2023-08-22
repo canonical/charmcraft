@@ -28,12 +28,10 @@ from craft_cli import emit
 
 from charmcraft.env import is_charmcraft_running_in_managed_mode
 
-
 # the message to show for each deprecation ID (this needs to be in sync with the
 # documentation)
 _DEPRECATION_MESSAGES = {
     # example of item in this structure when something is deprecated:
-    # "dn99": "The zircunium mogrifier is deprecated, use stellar dust instead.",
 }
 
 # the URL to point to the deprecation entry in the documentation

@@ -21,26 +21,26 @@ import subprocess
 import zipfile
 from typing import List, Optional
 
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from craft_providers.bases import get_base_alias
 
 import charmcraft.env
+import charmcraft.instrum
 import charmcraft.linters
 import charmcraft.parts
 import charmcraft.providers
-import charmcraft.instrum
-from charmcraft.metafiles.config import create_config_yaml
-from charmcraft.metafiles.actions import create_actions_yaml
-from charmcraft.metafiles.manifest import create_manifest
+from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.const import (
     BUILD_DIRNAME,
     CHARM_FILES,
     CHARM_OPTIONAL,
-    VENV_DIRNAME,
     UBUNTU_LTS_STABLE,
+    VENV_DIRNAME,
 )
+from charmcraft.metafiles.actions import create_actions_yaml
+from charmcraft.metafiles.config import create_config_yaml
+from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.metafiles.metadata import create_metadata_yaml
-from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.parts import Step
 from charmcraft.utils import get_host_architecture
@@ -410,7 +410,7 @@ class Builder:
         emit.progress("Creating the package itself")
         zipname = format_charm_file_name(self.config.name, bases_config)
         zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
-        for dirpath, dirnames, filenames in os.walk(prime_dir, followlinks=True):
+        for dirpath, _dirnames, filenames in os.walk(prime_dir, followlinks=True):
             dirpath = pathlib.Path(dirpath)
             for filename in filenames:
                 filepath = dirpath / filename

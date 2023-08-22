@@ -18,11 +18,11 @@
 
 """Setup script for Charmcraft."""
 
-from tools.version import determine_version
-
 from setuptools import find_packages, setup
 
-with open("README.md", "rt", encoding="utf8") as fh:
+from tools.version import determine_version
+
+with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [

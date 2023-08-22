@@ -22,22 +22,26 @@ import pathlib
 import sys
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from craft_providers import Base, Executor, Provider, ProviderError, lxd, multipass
-from craft_providers.bases import get_base_alias, get_base_from_alias, BASE_NAME_TO_BASE_ALIAS
-from craft_providers.errors import BaseConfigurationError
 from craft_providers.actions.snap_installer import Snap
+from craft_providers.bases import (
+    BASE_NAME_TO_BASE_ALIAS,
+    get_base_alias,
+    get_base_from_alias,
+)
+from craft_providers.errors import BaseConfigurationError
 
 from charmcraft.bases import check_if_base_matches_host
-from charmcraft.models.charmcraft import BasesConfiguration
 from charmcraft.env import (
-    get_managed_environment_snap_channel,
     get_managed_environment_log_path,
+    get_managed_environment_snap_channel,
     is_charmcraft_running_from_snap,
     is_charmcraft_running_in_developer_mode,
 )
-from charmcraft.utils import confirm_with_user, get_host_architecture
+from charmcraft.models.charmcraft import BasesConfiguration
 from charmcraft.snap import get_snap_configuration
+from charmcraft.utils import confirm_with_user, get_host_architecture
 
 
 class Plan(NamedTuple):
@@ -199,7 +203,7 @@ def capture_logs_from_instance(instance: Executor) -> None:
     with instance.temporarily_pull_file(source=source_log_path, missing_ok=True) as local_log_path:
         if local_log_path:
             emit.debug("Logs captured from managed instance:")
-            with open(local_log_path, "rt", encoding="utf8") as fh:
+            with open(local_log_path, encoding="utf8") as fh:
                 for line in fh:
                     emit.debug(f":: {line.rstrip()}")
         else:
@@ -251,7 +255,7 @@ def is_base_available(base: Base) -> Tuple[bool, Union[str, None]]:
     try:
         get_base_alias((base.name, base.channel))
     except BaseConfigurationError:
-        *firsts, last = sorted((" ".join(s) for s in BASE_NAME_TO_BASE_ALIAS))
+        *firsts, last = sorted(" ".join(s) for s in BASE_NAME_TO_BASE_ALIAS)
         allowed = f"{', '.join(map(repr, firsts))} or {last!r}"
         return (
             False,

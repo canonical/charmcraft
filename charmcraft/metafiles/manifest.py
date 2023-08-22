@@ -18,17 +18,16 @@
 
 import datetime
 import json
+import logging
 import os
 import pathlib
-import logging
-from typing import Optional, List
+from typing import List, Optional
 
 import yaml
 from craft_cli import CraftError
 
-
-import charmcraft.models.charmcraft
 import charmcraft.linters
+import charmcraft.models.charmcraft
 from charmcraft.const import IMAGE_INFO_ENV_VAR
 
 logger = logging.getLogger(__name__)

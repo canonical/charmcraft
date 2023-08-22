@@ -30,7 +30,7 @@ from charmcraft import reactive_plugin
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 
 
-@pytest.fixture
+@pytest.fixture()
 def charm_exe(tmp_path):
     """Provide a fake charm executable."""
     charm_bin = pathlib.Path(tmp_path, "mock_bin", "charm")
@@ -40,23 +40,23 @@ def charm_exe(tmp_path):
         '"gitn": 7, "gitsha": "6126e17", "pre_release": false, "snap": "+snap-x12"}}\''
     )
     charm_bin.chmod(0o755)
-    yield charm_bin
+    return charm_bin
 
 
-@pytest.fixture
+@pytest.fixture()
 def broken_charm_exe(tmp_path):
     """Provide a fake charm executable that fails to run."""
     charm_bin = pathlib.Path(tmp_path, "mock_bin", "charm")
     charm_bin.parent.mkdir(exist_ok=True)
     charm_bin.write_text('#!/bin/sh\nexit 1"')
     charm_bin.chmod(0o755)
-    yield charm_bin
+    return charm_bin
 
 
 @pytest.fixture()
 def spec(tmp_path):
     """Provide a common spec to build the different artifacts."""
-    spec = {
+    return {
         "plugin": "reactive",
         "source": str(tmp_path),
         "reactive-charm-build-arguments": [
@@ -64,13 +64,11 @@ def spec(tmp_path):
             "--charm-argument-with argument",
         ],
     }
-    return spec
 
 
 @pytest.fixture()
 def plugin_properties(spec):
-    plugin_properties = reactive_plugin.ReactivePluginProperties.unmarshal(spec)
-    return plugin_properties
+    return reactive_plugin.ReactivePluginProperties.unmarshal(spec)
 
 
 @pytest.fixture()
@@ -88,8 +86,7 @@ def plugin(tmp_path, plugin_properties, spec):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    plugin = plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
-    return plugin
+    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
 
 
 def test_get_build_package(plugin):
@@ -145,7 +142,7 @@ def test_validate_missing_charm(plugin, plugin_properties):
         validator.validate_environment()
 
     assert raised.value.reason == (
-        "charm tool not found and part 'my-part' does " "not depend on a part named 'charm-tools'"
+        "charm tool not found and part 'my-part' does not depend on a part named 'charm-tools'"
     )
 
 
@@ -161,7 +158,7 @@ def test_validate_broken_charm(plugin, plugin_properties, broken_charm_exe):
     assert raised.value.reason == "charm tools failed with error code 2"
 
 
-@pytest.fixture
+@pytest.fixture()
 def build_dir(tmp_path):
     build_dir = tmp_path / "build"
     build_dir.mkdir()
@@ -169,7 +166,7 @@ def build_dir(tmp_path):
     return build_dir
 
 
-@pytest.fixture
+@pytest.fixture()
 def install_dir(tmp_path):
     install_dir = tmp_path / "install"
     install_dir.mkdir()
@@ -177,7 +174,7 @@ def install_dir(tmp_path):
     return install_dir
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_run():
     patcher = patch("subprocess.run")
     yield patcher.start()

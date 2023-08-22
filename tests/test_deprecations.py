@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import re
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 import pytest
 

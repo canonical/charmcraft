@@ -19,7 +19,7 @@
 import json
 import uuid
 from time import time
-from typing import Dict, Any
+from typing import Any, Dict
 
 # the base time of the started process: all the recorded times will be relative to
 # this one (they will be easier to read and simple to understand the time passed since
@@ -71,12 +71,12 @@ class _Measurements:
             m["tstart"] -= _baseline
             m["tend"] -= _baseline
         measurements["__meta__"] = {"baseline": _baseline}
-        with open(filename, "wt") as fh:
+        with open(filename, "w") as fh:
             json.dump(measurements, fh, indent=4)
 
     def merge_from(self, filename: str) -> None:
         """Merge measurements from a file to the current ongoing structure."""
-        with open(filename, "rt") as fh:
+        with open(filename) as fh:
             to_merge = json.load(fh)
 
         # add the measurements from the file to this process ones, and while doing that

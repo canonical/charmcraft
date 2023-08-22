@@ -21,15 +21,19 @@ import platform
 import time
 from collections import namedtuple
 from functools import wraps
-from typing import List, Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import craft_store
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
 from dateutil import parser
 
-from charmcraft.commands.store.client import AnonymousClient, Client, ALTERNATE_AUTH_ENV_VAR
+from charmcraft.commands.store.client import (
+    ALTERNATE_AUTH_ENV_VAR,
+    AnonymousClient,
+    Client,
+)
 
 # helpers to build responses from this layer
 Account = namedtuple("Account", "name username id")
@@ -75,7 +79,7 @@ def _build_errors(item):
 def _build_revision(item: Dict[str, Any]) -> Revision:
     """Build a Revision from a response item."""
     bases = [(None if base is None else Base(**base)) for base in item["bases"]]
-    rev = Revision(
+    return Revision(
         revision=item["revision"],
         version=item["version"],
         created_at=parser.parse(item["created-at"]),
@@ -83,22 +87,20 @@ def _build_revision(item: Dict[str, Any]) -> Revision:
         errors=_build_errors(item),
         bases=bases,
     )
-    return rev
 
 
 def _build_resource_revision(item):
     """Build a Revision from a response item."""
-    rev = ResourceRevision(
+    return ResourceRevision(
         revision=item["revision"],
         created_at=parser.parse(item["created-at"]),
         size=item["size"],
     )
-    return rev
 
 
 def _build_library(resp):
     """Build a Library from a response."""
-    lib = Library(
+    return Library(
         api=resp["api"],
         content=resp.get("content"),  # not always present
         content_hash=resp["hash"],
@@ -107,18 +109,16 @@ def _build_library(resp):
         charm_name=resp["charm-name"],
         patch=resp["patch"],
     )
-    return lib
 
 
 def _build_resource(item):
     """Build a Resource from a response item."""
-    resource = Resource(
+    return Resource(
         name=item["name"],
         optional=item.get("optional"),
         revision=item.get("revision"),
         resource_type=item["type"],
     )
-    return resource
 
 
 def _get_hostname() -> str:
@@ -243,13 +243,12 @@ class Store:
                 Package(type=pkg["type"], name=pkg.get("name"), id=pkg.get("id"))
                 for pkg in response["packages"]
             ]
-        result = MacaroonInfo(
+        return MacaroonInfo(
             account=account,
             packages=packages,
             channels=response["channels"],
             permissions=response["permissions"],
         )
-        return result
 
     def _check_authorized(self) -> None:
         """Check if current credentials authenticated."""
@@ -343,13 +342,12 @@ class Store:
     def list_revisions(self, name):
         """Return charm revisions for the indicated charm."""
         response = self._client.request_urlpath_json("GET", f"/v1/charm/{name}/revisions")
-        result = [_build_revision(item) for item in response["revisions"]]
-        return result
+        return [_build_revision(item) for item in response["revisions"]]
 
     @_store_client_wrapper()
     def release(self, name: str, revision: int, channels: List[str], resources) -> Dict[str, Any]:
         """Release one or more revisions for a package."""
-        endpoint = "/v1/charm/{}/releases".format(name)
+        endpoint = f"/v1/charm/{name}/releases"
         resources = [{"name": res.name, "revision": res.revision} for res in resources]
         items = [
             {"revision": revision, "channel": channel, "resources": resources}
@@ -361,7 +359,7 @@ class Store:
     @_store_client_wrapper()
     def list_releases(self, name: str) -> Tuple[List[Release], List[Channel], List[Revision]]:
         """List current releases for a package."""
-        endpoint = "/v1/charm/{}/releases".format(name)
+        endpoint = f"/v1/charm/{name}/releases"
         response = self._client.request_urlpath_json("GET", endpoint)
 
         channel_map = []
@@ -404,8 +402,7 @@ class Store:
         response = self._client.request_urlpath_json(
             "POST", endpoint, json={"library-name": lib_name}
         )
-        lib_id = response["library-id"]
-        return lib_id
+        return response["library-id"]
 
     @_store_client_wrapper()
     def create_library_revision(self, charm_name, lib_id, api, patch, content, content_hash):
@@ -418,16 +415,14 @@ class Store:
             "hash": content_hash,
         }
         response = self._client.request_urlpath_json("POST", endpoint, json=payload)
-        result = _build_library(response)
-        return result
+        return _build_library(response)
 
     @_store_client_wrapper()
     def get_library(self, charm_name, lib_id, api):
         """Get the library tip by id for a given api version."""
         endpoint = f"/v1/charm/libraries/{charm_name}/{lib_id}?api={api}"
         response = self._client.request_urlpath_json("GET", endpoint)
-        result = _build_library(response)
-        return result
+        return _build_library(response)
 
     @_store_client_wrapper()
     def get_libraries_tips(self, libraries):
@@ -456,23 +451,20 @@ class Store:
             payload.append(item)
         response = self._client.request_urlpath_json("POST", endpoint, json=payload)
         libraries = response["libraries"]
-        result = {(item["library-id"], item["api"]): _build_library(item) for item in libraries}
-        return result
+        return {(item["library-id"], item["api"]): _build_library(item) for item in libraries}
 
     @_store_client_wrapper()
     def list_resources(self, charm):
         """Return resources associated to the indicated charm."""
         response = self._client.request_urlpath_json("GET", f"/v1/charm/{charm}/resources")
-        result = [_build_resource(item) for item in response["resources"]]
-        return result
+        return [_build_resource(item) for item in response["resources"]]
 
     @_store_client_wrapper()
     def list_resource_revisions(self, charm_name, resource_name):
         """Return revisions for the indicated charm resource."""
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/revisions"
         response = self._client.request_urlpath_json("GET", endpoint)
-        result = [_build_resource_revision(item) for item in response["revisions"]]
-        return result
+        return [_build_resource_revision(item) for item in response["revisions"]]
 
     @_store_client_wrapper()
     def get_oci_registry_credentials(self, charm_name, resource_name):
@@ -490,6 +482,5 @@ class Store:
         """Get the blob that points to the OCI image in the Canonical's OCI Registry."""
         payload = {"image-digest": digest}
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/oci-image/blob"
-        content = self._client.request_urlpath_text("POST", endpoint, json=payload)
+        return self._client.request_urlpath_text("POST", endpoint, json=payload)
         # the response here is returned as is, because it's opaque to charmcraft
-        return content

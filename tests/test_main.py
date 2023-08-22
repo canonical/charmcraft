@@ -19,8 +19,8 @@ import ast
 import os
 import subprocess
 import sys
-from textwrap import dedent
 from argparse import ArgumentParser
+from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
@@ -34,10 +34,9 @@ from craft_cli import (
 from craft_store.errors import CraftStoreError
 
 from charmcraft import __version__, env, utils
-from charmcraft.cmdbase import BaseCommand, JSON_FORMAT, FORMAT_HELP_STR
+from charmcraft.cmdbase import FORMAT_HELP_STR, JSON_FORMAT, BaseCommand
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
-from charmcraft.main import COMMAND_GROUPS, main, _get_system_details
-
+from charmcraft.main import COMMAND_GROUPS, _get_system_details, main
 
 # --- Tests for the main entry point
 
@@ -108,7 +107,7 @@ def test_main_managed_instance_error(monkeypatch, side_effect, config):
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -200,7 +199,7 @@ def test_main_load_config_not_present_but_needed(capsys):
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -256,7 +255,7 @@ def test_main_load_config_bases_not_present_but_not_needed(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -327,7 +326,7 @@ def test_main_no_args():
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -363,7 +362,7 @@ def test_main_controlled_error(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -413,7 +412,7 @@ def test_main_controlled_return_code(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -468,7 +467,7 @@ def test_main_crash(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -523,7 +522,7 @@ def test_main_interrupted(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -577,7 +576,7 @@ def test_main_controlled_arguments_error(
 
 
 @pytest.mark.parametrize(
-    "charmcraft_yaml, metadata_yaml",
+    ("charmcraft_yaml", "metadata_yaml"),
     [
         [
             dedent(
@@ -735,7 +734,8 @@ def test_commands(command):
 def test_aesthetic_help_msg(command):
     """All real commands help msgs start with uppercase and do not end with a dot."""
     msg = command.help_msg
-    assert msg[0].isupper() and msg[-1] != "."
+    assert msg[0].isupper()
+    assert msg[-1] != "."
 
 
 @pytest.mark.parametrize("command", all_commands)
@@ -753,7 +753,8 @@ def test_aesthetic_args_options_msg(command, config):
             """Verify that all commands have a correctly formatted help."""
             help_msg = kwargs.get("help")
             assert help_msg, "The help message must be present in each option"
-            assert help_msg[0].isupper() and help_msg[-1] != "."
+            assert help_msg[0].isupper()
+            assert help_msg[-1] != "."
 
     command(config).fill_parser(FakeParser())
 
@@ -774,7 +775,7 @@ def test_usage_of_parsed_args(command_class, config):
 
     # build the abstract source tree for the command
     filepath = sys.modules[command_class.__module__].__file__
-    tree = ast.parse(open(filepath, "rt").read())
+    tree = ast.parse(open(filepath).read())
 
     # get the node for the command
     for node in ast.walk(tree):
@@ -829,7 +830,7 @@ def test_basecommand_include_format_option(config):
     cmd = MySimpleCommand(config)
     cmd.include_format_option(parser)
 
-    (action,) = [action for action in parser._actions if action.dest == "format"]
+    (action,) = (action for action in parser._actions if action.dest == "format")
     assert action.option_strings == ["--format"]
     assert action.dest == "format"
     assert action.default is None

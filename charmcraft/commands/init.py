@@ -21,10 +21,10 @@ import re
 from datetime import date
 from typing import Optional
 
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.utils import make_executable, get_templates_environment
+from charmcraft.utils import get_templates_environment, make_executable
 
 try:
     import pwd
@@ -71,12 +71,12 @@ files and directories:
     ├── README.md              - Frontpage for your charmhub.io/charm/
     ├── requirements.txt       - PyPI dependencies for your charm, with `ops`
     ├── src
-    │   └── charm.py           - Minimal operator using Python operator framework
+    │   └── charm.py           - Minimal operator using Python operator framework
     ├── tests
-    │   ├── integration
-    │   │   └── test_charm.py  - Integration tests
-    │   └── unit
-    │       └── test_charm.py  - Unit tests
+    │   ├── integration
+    │   │   └── test_charm.py  - Integration tests
+    │   └── unit
+    │       └── test_charm.py  - Unit tests
     └── tox.ini                - Configuration for tox, the tool to run all tests
 
 You will need to edit at least charmcraft.yaml and README.md.

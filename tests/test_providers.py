@@ -25,8 +25,8 @@ from craft_cli import CraftError
 from craft_providers import ProviderError, bases, lxd, multipass
 from craft_providers.actions.snap_installer import Snap
 
-from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft import providers
+from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.snap import CharmcraftSnapConfiguration
 
 
@@ -87,7 +87,7 @@ def mock_is_snap():
 @pytest.fixture()
 def simple_base_config():
     """Yields a simple BaseConfiguration object."""
-    yield [
+    return [
         BasesConfiguration(
             **{
                 "build-on": [
@@ -104,7 +104,7 @@ def simple_base_config():
 @pytest.fixture()
 def complex_base_config():
     """Yields a complex list of BaseConfiguration objects."""
-    yield [
+    return [
         # 1 build-on and 1 run-on
         BasesConfiguration(
             **{
@@ -258,7 +258,7 @@ def test_create_build_plan_complex(
     )
 
 
-@pytest.mark.parametrize("destructive_mode, managed_mode", [(True, False), (False, True)])
+@pytest.mark.parametrize(("destructive_mode", "managed_mode"), [(True, False), (False, True)])
 def test_create_build_plan_base_matches_host(
     emitter,
     destructive_mode,
@@ -491,7 +491,7 @@ def test_get_command_environment_all_opts(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "bases_index,build_on_index,project_name,target_arch,expected",
+    ("bases_index", "build_on_index", "project_name", "target_arch", "expected"),
     [
         (0, 0, "mycharm", "test-arch1", "charmcraft-mycharm-{inode}-0-0-test-arch1"),
         (
@@ -516,7 +516,7 @@ def test_get_instance_name(
 
 
 @pytest.mark.parametrize(
-    "platform, snap_channel, expected_snap_channel",
+    ("platform", "snap_channel", "expected_snap_channel"),
     [
         ("linux", None, None),
         ("linux", "edge", "edge"),
@@ -563,7 +563,7 @@ def test_get_base_configuration_ubuntu(
 
 
 @pytest.mark.parametrize(
-    "platform, snap_channel, expected_snap_channel",
+    ("platform", "snap_channel", "expected_snap_channel"),
     [
         ("linux", None, None),
         ("linux", "edge", "edge"),
@@ -674,7 +674,7 @@ def test_ensure_provider_is_available_installed_no_user_confirms_no(mocker, fake
 
 
 @pytest.mark.parametrize(
-    "name,channel,architectures,expected_valid,expected_reason",
+    ("name", "channel", "architectures", "expected_valid", "expected_reason"),
     [
         ("ubuntu", "18.04", ["host-arch"], True, None),
         ("ubuntu", "20.04", ["host-arch"], True, None),

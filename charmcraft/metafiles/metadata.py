@@ -17,18 +17,22 @@
 """Handlers for metadata.yaml file."""
 
 import contextlib
-import shutil
-import pathlib
 import logging
-from typing import Any, Dict, TYPE_CHECKING
+import pathlib
+import shutil
+from typing import TYPE_CHECKING, Any, Dict
 
 import pydantic
 import yaml
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 
-from charmcraft.const import METADATA_FILENAME, CHARM_METADATA_KEYS, CHARM_METADATA_KEYS_ALIAS
+from charmcraft.const import (
+    CHARM_METADATA_KEYS,
+    CHARM_METADATA_KEYS_ALIAS,
+    METADATA_FILENAME,
+)
 from charmcraft.format import format_pydantic_errors
-from charmcraft.models.metadata import CharmMetadataLegacy, BundleMetadataLegacy
+from charmcraft.models.metadata import BundleMetadataLegacy, CharmMetadataLegacy
 
 if TYPE_CHECKING:
     from charmcraft.models.charmcraft import CharmcraftConfig

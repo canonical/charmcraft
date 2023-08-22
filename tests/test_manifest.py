@@ -23,9 +23,9 @@ import yaml
 from craft_cli import CraftError
 
 from charmcraft import __version__, linters
-from charmcraft.models.charmcraft import Base, BasesConfiguration
-from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.const import IMAGE_INFO_ENV_VAR
+from charmcraft.metafiles.manifest import create_manifest
+from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.utils import OSPlatform
 
 

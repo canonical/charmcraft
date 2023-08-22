@@ -25,13 +25,13 @@ import pathlib
 import platform
 import sys
 import zipfile
-from collections import namedtuple, defaultdict
+from collections import defaultdict, namedtuple
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
-from typing import Any, Dict, Optional, Iterable, Container, Union
+from typing import Any, Container, Dict, Iterable, Optional, Union
 
 import yaml
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
 from charmcraft.env import is_charmcraft_running_in_managed_mode
@@ -142,13 +142,13 @@ def load_yaml(fpath) -> Optional[Dict[str, Any]]:
     """Return the content of a YAML file."""
     if not fpath.is_file():
         emit.debug(f"Couldn't find config file {str(fpath)!r}")
-        return
+        return None
     try:
         with fpath.open("rb") as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
         emit.debug(f"Failed to read/parse config file {str(fpath)!r}: {err!r}")
-        return
+        return None
     return content
 
 
@@ -165,14 +165,13 @@ def get_templates_environment(templates_dir):
     else:
         loader = PackageLoader("charmcraft", templates_dir)
 
-    env = Environment(
+    return Environment(
         loader=loader,
         autoescape=False,  # no need to escape things here :-)
         keep_trailing_newline=True,  # they're not text files if they don't end in newline!
         optimized=False,  # optimization doesn't make sense for one-offs
         undefined=StrictUndefined,
     )  # fail on undefined
-    return env
 
 
 class SingleOptionEnsurer:
@@ -239,9 +238,9 @@ def useful_filepath(filepath):
     """
     filepath = pathlib.Path(filepath).expanduser()
     if not os.access(filepath, os.R_OK):
-        raise CraftError("Cannot access {!r}.".format(str(filepath)))
+        raise CraftError(f"Cannot access {str(filepath)!r}.")
     if not filepath.is_file():
-        raise CraftError("{!r} is not a file.".format(str(filepath)))
+        raise CraftError(f"{str(filepath)!r} is not a file.")
     return filepath
 
 

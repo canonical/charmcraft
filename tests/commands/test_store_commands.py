@@ -20,8 +20,8 @@ import base64
 import datetime
 import sys
 import zipfile
-from argparse import Namespace, ArgumentParser
-from unittest.mock import patch, call, MagicMock, Mock, ANY
+from argparse import ArgumentParser, Namespace
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import dateutil.parser
 import pytest
@@ -30,7 +30,6 @@ from craft_cli import CraftError
 from craft_store.errors import CredentialsUnavailable, StoreServerError
 
 from charmcraft.cmdbase import JSON_FORMAT
-from charmcraft.models.charmcraft import CharmhubConfig
 from charmcraft.commands.store import (
     CloseCommand,
     CreateLibCommand,
@@ -46,9 +45,9 @@ from charmcraft.commands.store import (
     PublishLibCommand,
     RegisterBundleNameCommand,
     RegisterCharmNameCommand,
-    UnregisterNameCommand,
     ReleaseCommand,
     StatusCommand,
+    UnregisterNameCommand,
     UploadCommand,
     UploadResourceCommand,
     WhoamiCommand,
@@ -71,6 +70,7 @@ from charmcraft.commands.store.store import (
     Uploaded,
 )
 from charmcraft.main import ArgumentParsingError
+from charmcraft.models.charmcraft import CharmhubConfig
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
@@ -96,7 +96,7 @@ def _fake_response(status_code, reason=None, json=None):
     return response
 
 
-@pytest.fixture
+@pytest.fixture()
 def store_mock():
     """The fixture to fake the store layer in all the tests."""
     store_mock = MagicMock()
@@ -112,7 +112,7 @@ def store_mock():
         yield store_mock
 
 
-@pytest.fixture
+@pytest.fixture()
 def add_cleanup():
     """Generic cleaning helper."""
     to_cleanup = []
@@ -831,7 +831,7 @@ def test_get_name_bad_zip(tmp_path):
 
     with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
-    assert str(cm.value) == "Cannot open '{}' (bad zip file).".format(bad_zip)
+    assert str(cm.value) == f"Cannot open '{bad_zip}' (bad zip file)."
 
 
 def test_get_name_charm_ok(tmp_path):
@@ -917,7 +917,7 @@ def test_upload_parameters_filepath_type(config):
     cmd = UploadCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "filepath"]
+    (action,) = (action for action in parser._actions if action.dest == "filepath")
     assert action.type is useful_filepath
 
 
@@ -979,7 +979,7 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path, formatted):
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_upload_call_login_expired(mocker, monkeypatch, config, tmp_path, formatted):
     """Simple upload but login expired."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode("credentials".encode()).decode())
+    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode(b"credentials").decode())
     mock_whoami = mocker.patch("craft_store.base_client.HTTPClient.request")
     push_file_mock = mocker.patch("charmcraft.commands.store.store.Client.push_file")
 
@@ -1083,7 +1083,7 @@ def test_upload_options_resource(config):
     cmd = UploadCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "resource"]
+    (action,) = (action for action in parser._actions if action.dest == "resource")
     assert isinstance(action.type, ResourceOption)
 
 
@@ -1363,7 +1363,7 @@ def test_revisions_errors_multiple(emitter, store_mock, config, formatted):
     else:
         expected = [
             "Revision    Version    Created at            Status",
-            "1                      2020-07-03T20:30:40Z  rejected: text 1 [missing-stuff]; other long error text [broken]",  # NOQA
+            "1                      2020-07-03T20:30:40Z  rejected: text 1 [missing-stuff]; other long error text [broken]",
         ]
         emitter.assert_messages(expected)
 
@@ -1422,12 +1422,12 @@ def test_release_options_resource(config):
     cmd = ReleaseCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "resource"]
+    (action,) = (action for action in parser._actions if action.dest == "resource")
     assert isinstance(action.type, ResourceOption)
 
 
 @pytest.mark.parametrize(
-    "sysargs,expected_parsed",
+    ("sysargs", "expected_parsed"),
     [
         (
             ["somename", "--channel=stable", "--revision=33"],
@@ -1472,7 +1472,7 @@ def test_release_parameters_ok(config, sysargs, expected_parsed):
     try:
         args = parser.parse_args(sysargs)
     except SystemExit:
-        pytest.fail("Parsing of {} was not ok.".format(sysargs))
+        pytest.fail(f"Parsing of {sysargs} was not ok.")
     attribs = ["name", "revision", "channel", "resource"]
     assert args == Namespace(**dict(zip(attribs, expected_parsed)))
 
@@ -1525,7 +1525,7 @@ def _build_channels(track="latest"):
     """Helper to build simple channels structure."""
     channels = []
     risks = ["stable", "candidate", "beta", "edge"]
-    for risk, fback in zip(risks, [None] + risks):
+    for risk, fback in zip(risks, [None, *risks]):
         name = "/".join((track, risk))
         fallback = None if fback is None else "/".join((track, fback))
         channels.append(Channel(name=name, fallback=fallback, track=track, risk=risk, branch=None))
@@ -2106,7 +2106,7 @@ def test_status_with_one_branch(emitter, store_mock, config, formatted):
             "                               candidate      -          -",
             "                               beta           5.1        5",
             "                               edge           ↑          ↑",
-            "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40Z",  # NOQA
+            "                               beta/mybranch  ver.12     12          2020-07-03T20:30:40Z",
         ]
         emitter.assert_messages(expected)
 
@@ -2158,8 +2158,8 @@ def test_status_with_multiple_branches(emitter, store_mock, config):
         "                               candidate      -          -",
         "                               beta           5.1        5",
         "                               edge           ↑          ↑",
-        "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40Z",  # NOQA
-        "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40Z",  # NOQA
+        "                               beta/branch-1  ver.12     12          2020-07-03T20:30:40Z",
+        "                               beta/branch-2  15.0.0     15          2020-07-03T20:30:40Z",
     ]
     emitter.assert_messages(expected)
 
@@ -2239,7 +2239,7 @@ def test_status_with_resources(emitter, store_mock, config, formatted):
         expected = [
             "Track    Base                  Channel    Version    Revision    Resources",
             "latest   ubuntu 20.04 (amd64)  stable     -          -           -",
-            "                               candidate  5.1        5           resource1 (r1), resource2 (r54)",  # NOQA
+            "                               candidate  5.1        5           resource1 (r1), resource2 (r54)",
             "                               beta       5.1        5           resource1 (r1)",
             "                               edge       ↑          ↑           ↑",
         ]
@@ -2307,12 +2307,12 @@ def test_status_with_resources_and_branches(emitter, store_mock, config):
     StatusCommand(config).run(args)
 
     expected = [
-        "Track    Base                  Channel        Version    Revision    Resources      Expires at",  # NOQA
+        "Track    Base                  Channel        Version    Revision    Resources      Expires at",
         "latest   ubuntu 20.04 (amd64)  stable         -          -           -",
         "                               candidate      -          -           -",
         "                               beta           7.0.0      23          testres (r14)",
         "                               edge           ↑          ↑           ↑",
-        "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40Z",  # NOQA
+        "                               edge/mybranch  5.1        5           testres (r1)   2020-07-03T20:30:40Z",
     ]
     emitter.assert_messages(expected)
 
@@ -2569,17 +2569,17 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
     ]
 
     expected = [
-        "Track    Base                  Channel        Version       Revision    Resources     Expires at",  # NOQA
+        "Track    Base                  Channel        Version       Revision    Resources     Expires at",
         "latest   ubuntu 20.04 (amd64)  stable         -             -           -",
         "                               candidate      v7            7           -",
         "                               beta           ↑             ↑           ↑",
         "                               edge           git-0db35ea1  156         -",
-        "                               candidate/br1  v7            7           -             2020-07-03T20:30:40Z",  # NOQA
+        "                               candidate/br1  v7            7           -             2020-07-03T20:30:40Z",
         "         xz 1 (16b)            stable         v7            7           -",
         "                               candidate      ↑             ↑           ↑",
         "                               beta           2.0           80          -",
         "                               edge           ↑             ↑           ↑",
-        "                               beta/br2       weird         99          testres (r1)  2020-07-03T20:30:40Z",  # NOQA
+        "                               beta/br2       weird         99          testres (r1)  2020-07-03T20:30:40Z",
         "2.0      ubuntu 20.04 (amd64)  stable         -             -           -",
         "                               candidate      v7            7           -",
         "                               beta           2.0           80          -",
@@ -2588,7 +2588,7 @@ def test_status_multiplebases_everything_combined(emitter, store_mock, config):
         "                               candidate      ↑             ↑           ↑",
         "                               beta           ↑             ↑           ↑",
         "                               edge           2.0           80          -",
-        "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40Z",  # NOQA
+        "                               edge/foobar    2.0           80          -             2020-07-03T20:30:40Z",
     ]
     emitter.assert_messages(expected)
 
@@ -4096,7 +4096,7 @@ def test_uploadresource_options_filepath_type(config):
     cmd = UploadResourceCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "filepath"]
+    (action,) = (action for action in parser._actions if action.dest == "filepath")
     assert isinstance(action.type, SingleOptionEnsurer)
     assert action.type.converter is useful_filepath
 
@@ -4106,7 +4106,7 @@ def test_uploadresource_options_image_type(config):
     cmd = UploadResourceCommand(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
-    (action,) = [action for action in parser._actions if action.dest == "image"]
+    (action,) = (action for action in parser._actions if action.dest == "image")
     assert isinstance(action.type, SingleOptionEnsurer)
     assert action.type.converter is str
 

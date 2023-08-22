@@ -38,7 +38,7 @@ class BadLibraryNameError(CraftError):
 
     def __init__(self, name):
         super().__init__(
-            "Charm library name {!r} must conform to charms.<charm>.vN.<libname>".format(name)
+            f"Charm library name {name!r} must conform to charms.<charm>.vN.<libname>"
         )
 
 
@@ -83,7 +83,7 @@ class DuplicateCharmsError(CraftError):
     @staticmethod
     def _format_details(charms: Mapping[str, Iterable[pathlib.Path]]) -> str:
         # 6 is the length of "CHARM", the left side of the header.
-        longest_name = max([max(len(k) for k in charms.keys()), 5])
+        longest_name = max([max(len(k) for k in charms), 5])
         path_tree_line_format = "{name:>" + str(longest_name) + "} : {path}"
         details = io.StringIO()
         print("Charms with duplicate paths:", file=details)

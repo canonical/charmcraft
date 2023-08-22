@@ -23,12 +23,11 @@ from typing import Any, Dict
 
 import craft_store
 import requests
-from craft_cli import emit, CraftError
+from craft_cli import CraftError, emit
 from craft_store import endpoints
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 from charmcraft import __version__, utils
-
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
@@ -37,7 +36,7 @@ ALTERNATE_AUTH_ENV_VAR = "CHARMCRAFT_AUTH"
 
 def build_user_agent():
     """Build the charmcraft's user agent."""
-    if any(key.startswith(prefix) for prefix in TESTING_ENV_PREFIXES for key in os.environ.keys()):
+    if any(key.startswith(prefix) for prefix in TESTING_ENV_PREFIXES for key in os.environ):
         testing = " (testing) "
     else:
         testing = " "
@@ -138,7 +137,7 @@ class Client(craft_store.StoreClient):
 
         result = response.json()
         if not result["successful"]:
-            raise CraftError("Server error while pushing file: {}".format(result))
+            raise CraftError(f"Server error while pushing file: {result}")
 
         upload_id = result["upload_id"]
         emit.progress(f"Uploading bytes ended, id {upload_id}")

@@ -78,8 +78,8 @@ from charmcraft.env import (
     get_managed_environment_project_path,
     is_charmcraft_running_in_managed_mode,
 )
-from charmcraft.utils import load_yaml
 from charmcraft.models.charmcraft import CharmcraftConfig, Project
+from charmcraft.utils import load_yaml
 
 
 def load(dirpath: Optional[str]) -> CharmcraftConfig:

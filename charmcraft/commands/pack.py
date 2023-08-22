@@ -25,19 +25,19 @@ import tempfile
 from typing import Any, Collection, Dict, List, Mapping
 
 import yaml
-from craft_cli import emit, CraftError, ArgumentParsingError
+from craft_cli import ArgumentParsingError, CraftError, emit
 
-from charmcraft import env, parts, instrum, const, package
+from charmcraft import const, env, instrum, package, parts
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.errors import DuplicateCharmsError
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.parts import Step
 from charmcraft.utils import (
-    load_yaml,
     build_zip,
     find_charm_sources,
     get_charm_name_from_path,
     humanize_list,
+    load_yaml,
 )
 
 # the minimum set of files in a bundle
@@ -178,7 +178,7 @@ class PackCommand(BaseCommand):
             else:
                 pack_method = functools.partial(self._pack_bundle, bundle_config=bundle)
         else:
-            raise CraftError("Unknown type {!r} in charmcraft.yaml".format(self.config.type))
+            raise CraftError(f"Unknown type {self.config.type!r} in charmcraft.yaml")
 
         with instrum.Timer("Whole pack run"):
             pack_method(parsed_args)
@@ -277,7 +277,7 @@ class PackCommand(BaseCommand):
             for fname in MANDATORY_FILES:
                 fpath = project.dirpath / fname
                 if not fpath.exists():
-                    raise CraftError("Missing mandatory file: {!r}.".format(str(fpath)))
+                    raise CraftError(f"Missing mandatory file: {str(fpath)!r}.")
             prime = special_bundle_part.setdefault("prime", [])
             prime.extend(MANDATORY_FILES)
 

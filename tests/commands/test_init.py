@@ -25,13 +25,13 @@ from unittest.mock import patch
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.commands.init import InitCommand, DEFAULT_PROFILE, PROFILES
+from charmcraft.commands.init import DEFAULT_PROFILE, PROFILES, InitCommand
 from charmcraft.models.charmcraft import Project
 from charmcraft.utils import S_IXALL
-from tests.test_infra import pep8_test, get_python_filepaths, pep257_test
+from tests.test_infra import get_python_filepaths, pep8_test, pep257_test
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_pwd():
     with patch("charmcraft.commands.init.pwd", autospec=True) as mock_pwd:
         mock_pwd.getpwuid.return_value.pw_gecos = "Test Gecos Author Name,,,"

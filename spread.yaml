@@ -103,6 +103,7 @@ prepare: |
   fi
 
   tests.pkgs install snapd
+  tests.pkgs install unzip
 
   snap wait system seed.loaded
 

@@ -14,14 +14,14 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Infrastructure for the 'pack' command."""
-
+import dataclasses
 import os
 import pathlib
 import shutil
 import subprocess
 import tempfile
 import zipfile
-from typing import Collection, Dict, List, Mapping, Optional
+from typing import Collection, Dict, List, Mapping, Optional, Sequence
 
 import yaml
 from craft_cli import CraftError, emit
@@ -46,6 +46,14 @@ from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.metafiles.metadata import create_metadata_yaml
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.utils import build_zip, get_host_architecture, humanize_list, load_yaml
+
+
+@dataclasses.dataclass(frozen=True)
+class OutputFiles:
+    """Collection of output files, separated into charms and an optional bundle."""
+
+    charms: Sequence[pathlib.Path] = ()
+    bundles: Sequence[pathlib.Path] = ()
 
 
 def _format_run_on_base(base: Base) -> str:
@@ -442,7 +450,7 @@ class Builder:
         base_indeces: List[str],
         destructive_mode: bool,
         overwrite: bool = False,
-    ) -> List[pathlib.Path]:
+    ) -> OutputFiles:
         """Pack a bundle."""
         if self._parts is None:
             self._parts = {"bundle": {"plugin": "bundle"}}
@@ -496,7 +504,7 @@ class Builder:
                 yaml.safe_dump(bundle, bundle_file)
         build_zip(zipname, lifecycle.prime_dir)
 
-        return [*charms.values(), zipname]
+        return OutputFiles(charms=list(charms.values()), bundles=[zipname])
 
 
 def _subprocess_pack_charms(

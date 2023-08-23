@@ -225,7 +225,7 @@ class PackCommand(BaseCommand):
         charms: Dict[str, pathlib.Path],
         builder: package.Builder,
         overwrite_bundle: bool = False,
-    ) -> List[pathlib.Path]:
+    ) -> None:
         """Pack a bundle."""
         emit.progress("Packing the bundle.")
         project = self.config.project
@@ -269,12 +269,12 @@ class PackCommand(BaseCommand):
             raise
 
         if parsed_args.format:
-            info = {"bundles": [str(output_files[-1])]}
+            info = {"bundles": [str(b) for b in output_files.bundles]}
+            if output_files.charms:
+                info["charms"] = [str(c) for c in output_files.charms]
             emit.message(self.format_content(parsed_args.format, info))
         else:
-            emit.message(f"Created {str(output_files[-1])!r}.")
+            emit.message(f"Created {str(output_files.bundles[0])!r}.")
 
         if parsed_args.shell_after:
             package.launch_shell()
-
-        return output_files

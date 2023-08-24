@@ -149,7 +149,7 @@ suites:
         registry-url: https://registry.staging.jujucharms.com
       EOF
 
-      if ! charmcraft status $CHARM_DEFAULT_NAME; then
+      if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
         charmcraft register $CHARM_DEFAULT_NAME || ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
       fi
       if ! charmcraft status $BUNDLE_DEFAULT_NAME; then

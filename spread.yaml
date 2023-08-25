@@ -136,6 +136,28 @@ suites:
       # https://linuxcontainers.org/lxd/docs/master/howto/network_bridge_firewalld/#prevent-issues-with-lxd-and-docker
       # https://github.com/canonical/lxd-cloud/blob/f20a64a8af42485440dcbfd370faf14137d2f349/test/includes/lxd.sh#L13-L23
       iptables -P FORWARD ACCEPT
+
+      # Ensure that the reused charms and bundles are registered if necessary.
+      cat <<- EOF > charmcraft.yaml
+      name: store_config_charm
+      type: charm
+      summary: Charmcraft.yaml file for using the staging store.
+      description: Charmcraft.yaml file for using the staging store.
+      charmhub:
+        api-url: https://api.staging.charmhub.io
+        storage-url: https://storage.staging.snapcraftcontent.com
+        registry-url: https://registry.staging.jujucharms.com
+      EOF
+
+      if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
+        charmcraft register $CHARM_DEFAULT_NAME || ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
+      fi
+      if ! charmcraft status $BUNDLE_DEFAULT_NAME; then
+        charmcraft register-bundle $BUNDLE_DEFAULT_NAME || ERROR Charm $BUNDLE_DEFAULT_NAME cannot be registered to this account.
+      fi
+
+      rm -f charmcraft.yaml
+
     restore: |
       snap remove docker --purge
     summary: sequence of commands for different store-related functionalities

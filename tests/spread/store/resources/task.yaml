@@ -9,40 +9,39 @@ prepare: |
   charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME
   cd charm
 
-  cat <<- EOF >> charmcraft.yaml
+  # The charmcraft.yaml we need is sufficiently different from the project template
+  # that we're just going to overwrite it.
+  cat <<- EOF > charmcraft.yaml
+  name: $CHARM_DEFAULT_NAME
+  type: charm
+  summary: Test charm
+  description: Test charm
+  bases:
+    - build-on:
+      - name: ubuntu
+        channel: "22.04"
+      run-on:
+      - name: ubuntu
+        channel: "22.04"
+  resources:
+     example-image:
+       type: oci-image
+       description: Example OCI image resource
+     example-file:
+       type: file
+       description: Example file resource
   charmhub:
     api-url: https://api.staging.charmhub.io
     storage-url: https://storage.staging.snapcraftcontent.com
     registry-url: https://registry.staging.jujucharms.com
   EOF
 
-  # fix the metadata to have control on the resources we need to test
-  cat <<- EOF > metadata.yaml
-  name: $CHARM_DEFAULT_NAME
-  description: Example charm for spread testing.
-  summary: Example.
-
-  resources:
-   example-image:
-     type: oci-image
-     description: Example OCI image resource
-   example-file:
-     type: file
-     description: Example file resource
-  EOF
-
   # a file resource
   echo "Super complex file resource" > resourcefile.txt
+  date >> resourcefile.txt
 
   # an oci image resource
   docker pull hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
-
-  # If necessary, try to register the charm.
-  if ! charmcraft status $CHARM_DEFAULT_NAME; then
-    if ! charmcraft register $CHARM_DEFAULT_NAME; then
-      ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
-    fi
-  fi
 
 restore: |
   pushd charm

@@ -28,14 +28,11 @@ import pytest
 import yaml
 from craft_cli import ArgumentParsingError, CraftError
 
+from charmcraft import parts
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
-from charmcraft.commands.pack import (
-    PackCommand,
-    _get_charm_pack_args,
-    _subprocess_pack_charms,
-)
+from charmcraft.commands.pack import PackCommand
 from charmcraft.config import load
 from charmcraft.models.charmcraft import BasesConfiguration
 
@@ -96,8 +93,10 @@ def bundle_yaml(tmp_path):
 
 @pytest.fixture()
 def mock_parts():
-    with patch("charmcraft.commands.pack.parts") as mock_parts:
+    with patch("charmcraft.parts") as mock_parts:
+        pack.package.parts = mock_parts
         yield mock_parts
+    pack.package.parts = parts
 
 
 @pytest.fixture()
@@ -149,9 +148,9 @@ def test_resolve_charm_type(config):
     config.set(type="charm")
     cmd = PackCommand(config)
 
-    with patch.object(cmd, "_pack_charm") as mock:
+    with patch.object(cmd, "_pack_charm") as mock_obj:
         cmd.run(noargs)
-    mock.assert_called_with(noargs)
+    mock_obj.assert_called_with(noargs, mock.ANY)
 
 
 def test_resolve_bundle_type(config):
@@ -161,9 +160,9 @@ def test_resolve_bundle_type(config):
 
     with patch.object(pack, "load_yaml") as mock_yaml:
         mock_yaml.return_value = {}
-        with patch.object(cmd, "_pack_bundle") as mock:
+        with patch.object(cmd, "_pack_bundle") as mock_pack:
             cmd.run(noargs)
-    mock.assert_called_with(noargs, bundle_config={})
+    mock_pack.assert_called_with(noargs, {}, mock.ANY)
 
 
 def test_resolve_dump_measure_if_indicated(config, tmp_path):
@@ -264,14 +263,12 @@ def test_bundle_recursive_pack_setup(
     bundle_yaml(name="testbundle", base_content=charms_content)
     (tmp_path / "README.md").touch()
     packer = PackCommand(bundle_config)
-    mock_pack = mocker.patch.object(packer, "_recursive_pack_bundle")
+    mock_pack = mocker.patch.object(packer, "_pack_bundle")
     expected_charms = build_charm_directory(tmp_path, fake_charms=charms)
 
     packer.run(parsed_args)
 
-    mock_pack.assert_called_once_with(
-        parsed_args, bundle_config=charms_content, charms=expected_charms
-    )
+    mock_pack.assert_called_once_with(parsed_args, expected_charms, mock.ANY)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -297,7 +294,7 @@ def test_bundle_non_recursive_pack_setup(
 
     packer.run(parsed_args)
 
-    mock_pack.assert_called_once_with(parsed_args, bundle_config=charms_content)
+    mock_pack.assert_called_once_with(parsed_args, {}, mock.ANY)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -326,6 +323,7 @@ def test_bundle_missing_other_mandatory_file(tmp_path, bundle_config, bundle_yam
 def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
     """Can not build a bundle without name."""
     bundle_config.set(type="bundle")
+    (tmp_path / "README.md").touch()
 
     # build!
     with pytest.raises(CraftError) as cm:
@@ -421,6 +419,7 @@ def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mo
 def test_bundle_parts_not_defined(
     tmp_path,
     monkeypatch,
+    mock_parts,
     bundle_yaml,
     prepare_charmcraft_yaml,
     prepare_metadata_yaml,
@@ -441,29 +440,26 @@ def test_bundle_parts_not_defined(
     config = load(tmp_path)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            PackCommand(config).run(get_namespace(shell_after=True))
-    mock_lifecycle.assert_has_calls(
-        [
-            call(
-                {
-                    "bundle": {
-                        "plugin": "bundle",
-                        "source": str(tmp_path),
-                        "prime": [
-                            "bundle.yaml",
-                            "README.md",
-                        ],
-                    }
-                },
-                work_dir=pathlib.Path("/root"),
-                project_dir=tmp_path,
-                project_name="testbundle",
-                ignore_local_sources=["testbundle.zip"],
-            )
-        ]
+
+    mock_parts.PartsLifecycle.side_effect = SystemExit()
+    with pytest.raises(SystemExit):
+        PackCommand(config).run(get_namespace(shell_after=True))
+
+    mock_parts.PartsLifecycle.assert_called_once_with(
+        {
+            "bundle": {
+                "plugin": "bundle",
+                "source": str(tmp_path),
+                "prime": [
+                    "bundle.yaml",
+                    "README.md",
+                ],
+            }
+        },
+        work_dir=pathlib.Path("/root"),
+        project_dir=tmp_path,
+        project_name="testbundle",
+        ignore_local_sources=["testbundle.zip"],
     )
 
 
@@ -509,6 +505,7 @@ def test_bundle_parts_not_defined(
 def test_bundle_parts_with_bundle_part(
     tmp_path,
     monkeypatch,
+    mock_parts,
     bundle_yaml,
     prepare_charmcraft_yaml,
     prepare_metadata_yaml,
@@ -530,11 +527,11 @@ def test_bundle_parts_with_bundle_part(
     config = load(tmp_path)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            PackCommand(config).run(get_namespace(shell_after=True))
-    mock_lifecycle.assert_has_calls(
+    mock_parts.PartsLifecycle.side_effect = SystemExit()
+
+    with pytest.raises(SystemExit):
+        PackCommand(config).run(get_namespace(shell_after=True))
+    mock_parts.PartsLifecycle.assert_has_calls(
         [
             call(
                 {
@@ -597,6 +594,7 @@ def test_bundle_parts_with_bundle_part(
 def test_bundle_parts_without_bundle_part(
     tmp_path,
     monkeypatch,
+    mock_parts,
     bundle_yaml,
     prepare_charmcraft_yaml,
     prepare_metadata_yaml,
@@ -617,11 +615,10 @@ def test_bundle_parts_without_bundle_part(
     config = load(tmp_path)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            PackCommand(config).run(get_namespace(shell_after=True))
-    mock_lifecycle.assert_has_calls(
+    mock_parts.PartsLifecycle.side_effect = SystemExit()
+    with pytest.raises(SystemExit):
+        PackCommand(config).run(get_namespace(shell_after=True))
+    mock_parts.PartsLifecycle.assert_has_calls(
         [
             call(
                 {
@@ -678,6 +675,7 @@ def test_bundle_parts_without_bundle_part(
 def test_bundle_parts_with_bundle_part_with_plugin(
     tmp_path,
     monkeypatch,
+    mock_parts,
     bundle_yaml,
     prepare_charmcraft_yaml,
     prepare_metadata_yaml,
@@ -699,11 +697,10 @@ def test_bundle_parts_with_bundle_part_with_plugin(
     config = load(tmp_path)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
-    with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
-        mock_lifecycle.side_effect = SystemExit()
-        with pytest.raises(SystemExit):
-            PackCommand(config).run(get_namespace(shell_after=True))
-    mock_lifecycle.assert_has_calls(
+    mock_parts.PartsLifecycle.side_effect = SystemExit()
+    with pytest.raises(SystemExit):
+        PackCommand(config).run(get_namespace(shell_after=True))
+    mock_parts.PartsLifecycle.assert_has_calls(
         [
             call(
                 {
@@ -1024,108 +1021,3 @@ def test_validator_bases_index_invalid(bases_indices, bad_index, config):
             f"Bases index '{bad_index}' is invalid (must be >= 0 and fit in configured bases)."
         )
         assert str(exc_cm.value) == expected_msg
-
-
-# region Unit tests for private functions
-@pytest.mark.parametrize(
-    ("base_args", "parsed_args", "expected"),
-    [
-        pytest.param([], get_namespace(), [], id="empty"),
-        pytest.param(["cmd", "--option"], get_namespace(), ["cmd", "--option"], id="base_only"),
-        pytest.param(
-            [], get_namespace(destructive_mode=True), ["--destructive-mode"], id="destructive_mode"
-        ),
-        pytest.param([], get_namespace(bases_index=[1]), ["--bases-index=1"], id="bases_index"),
-        pytest.param([], get_namespace(force=True), ["--force"], id="force"),
-        pytest.param(
-            ["charmcraft", "pack", "--verbose"],
-            get_namespace(destructive_mode=True, bases_index=[1, 2, 3], force=True),
-            [
-                "charmcraft",
-                "pack",
-                "--verbose",
-                "--destructive-mode",
-                "--bases-index=1",
-                "--bases-index=2",
-                "--bases-index=3",
-                "--force",
-            ],
-            id="all_on",
-        ),
-        pytest.param(
-            [],
-            get_namespace(
-                debug=True,
-                shell=True,
-                shell_after=True,
-                format="json",
-                measure="file",
-                include_all_charms=True,
-                include_charm=[pathlib.Path("/dev/null")],
-                output_bundle=pathlib.Path("/dev/null"),
-            ),
-            [],
-            id="unforwarded_params",
-        ),
-    ],
-)
-def test_get_charm_pack_args(base_args, parsed_args, expected):
-    assert _get_charm_pack_args(base_args, parsed_args) == expected
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-@pytest.mark.parametrize(
-    ("charms", "command_args", "charm_files", "expected_calls", "expected"),
-    [
-        pytest.param({}, [], [], [], {}, id="empty"),
-        pytest.param(
-            {"test": pathlib.Path("charms/test")},
-            ["pack_cmd"],
-            [],
-            [
-                mock.call(
-                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
-                )
-            ],
-            {},
-            id="no_outputs",
-        ),
-        pytest.param(
-            {"test": pathlib.Path("charms/test")},
-            ["pack_cmd"],
-            ["test_amd64.charm"],
-            [
-                mock.call(
-                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
-                )
-            ],
-            {"test": pathlib.Path("test_amd64.charm").resolve()},
-            id="one_correct_charm",
-        ),
-        pytest.param(
-            {"test": pathlib.Path("charms/test")},
-            ["pack_cmd"],
-            ["test_amd64.charm", "where-did-this-come-from_riscv.charm"],
-            [
-                mock.call(
-                    ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
-                )
-            ],
-            {"test": pathlib.Path("test_amd64.charm").resolve()},
-            id="one_correct_charm",
-        ),
-    ],
-)
-def test_subprocess_pack_charms_success(
-    mocker, check, charms, charm_files, command_args, expected_calls, expected
-):
-    mock_check_call = mocker.patch("subprocess.check_call")
-    mock_check_call.side_effect = lambda *_, **__: [pathlib.Path(f).touch() for f in charm_files]
-
-    actual = _subprocess_pack_charms(charms, command_args)
-
-    check.equal(actual, expected)
-    check.equal(mock_check_call.mock_calls, expected_calls)
-
-
-# endregion

@@ -2905,23 +2905,23 @@ def test_publishlib_simple(emitter, store_mock, tmp_path, monkeypatch, config, f
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
-        "testcharm", "testlib", api=0, patch=1, lib_id=lib_id
+        "test-charm", "testlib", api=0, patch=1, lib_id=lib_id
     )
 
     store_mock.get_libraries_tips.return_value = {}
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
+    args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
         PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
-        call.create_library_revision("testcharm", lib_id, 0, 1, content, content_hash),
+        call.create_library_revision("test-charm", lib_id, 0, 1, content, content_hash),
     ]
     if formatted:
         expected = [
             {
-                "charm_name": "testcharm",
+                "charm_name": "test-charm",
                 "library_name": "testlib",
                 "library_id": lib_id,
                 "api": 0,
@@ -2933,7 +2933,7 @@ def test_publishlib_simple(emitter, store_mock, tmp_path, monkeypatch, config, f
         ]
         emitter.assert_json_output(expected)
     else:
-        expected = "Library charms.testcharm.v0.testlib sent to the store with version 0.1"
+        expected = "Library charms.test_charm.v0.testlib sent to the store with version 0.1"
         emitter.assert_message(expected)
 
 
@@ -2965,6 +2965,7 @@ def test_publishlib_contains_dash(emitter, store_mock, tmp_path, monkeypatch, co
 def test_publishlib_all(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
     """Publish all the libraries found in disk."""
     monkeypatch.chdir(tmp_path)
+    config.name = "testcharm-1"
 
     c1, h1 = factory.create_lib_filepath(
         "testcharm-1", "testlib-a", api=0, patch=1, lib_id="lib_id_1"
@@ -3064,6 +3065,7 @@ def test_publishlib_not_found(emitter, store_mock, tmp_path, monkeypatch, config
 def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkeypatch, config):
     """The indicated library to publish does not belong to this charm."""
     monkeypatch.chdir(tmp_path)
+    config.name = "charm2"
     factory.create_lib_filepath("testcharm", "testlib", api=0)
 
     args = Namespace(library="charms.testcharm.v0.testlib", format=None)
@@ -3079,6 +3081,7 @@ def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkey
 
 def test_publishlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
+    config.name = None
     args = Namespace(library="charms.testcharm.v0.testlib", format=None)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
         mock.return_value = None
@@ -3086,8 +3089,8 @@ def test_publishlib_name_from_metadata_problem(store_mock, config):
             PublishLibCommand(config).run(args)
 
         assert str(cm.value) == (
-            "Can't access name in 'metadata.yaml' file. The 'publish-lib' command needs to "
-            "be executed in a valid project's directory."
+            "Cannot find a valid charm name in charm definition. "
+            "Check that you are using the correct project directory."
         )
 
 
@@ -3099,7 +3102,7 @@ def test_publishlib_store_is_advanced(
     monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
-    factory.create_lib_filepath("testcharm", "testlib", api=0, patch=1, lib_id=lib_id)
+    factory.create_lib_filepath("test-charm", "testlib", api=0, patch=1, lib_id=lib_id)
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
@@ -3109,25 +3112,25 @@ def test_publishlib_store_is_advanced(
             api=0,
             patch=2,
             lib_name="testlib",
-            charm_name="testcharm",
+            charm_name="test-charm",
         ),
     }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
+    args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "testcharm"
+        mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     error_message = (
-        "Library charms.testcharm.v0.testlib is out-of-date locally, Charmhub has version 0.2, "
+        "Library charms.test_charm.v0.testlib is out-of-date locally, Charmhub has version 0.2, "
         "please fetch the updates before publishing."
     )
     if formatted:
         expected = [
             {
-                "charm_name": "testcharm",
+                "charm_name": "test-charm",
                 "library_name": "testlib",
                 "library_id": lib_id,
                 "api": 0,
@@ -3145,7 +3148,7 @@ def test_publishlib_store_is_exactly_behind_ok(emitter, store_mock, tmp_path, mo
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
-        "testcharm", "testlib", api=0, patch=7, lib_id=lib_id
+        "test-charm", "testlib", api=0, patch=7, lib_id=lib_id
     )
 
     store_mock.get_libraries_tips.return_value = {
@@ -3156,19 +3159,19 @@ def test_publishlib_store_is_exactly_behind_ok(emitter, store_mock, tmp_path, mo
             api=0,
             patch=6,
             lib_name="testlib",
-            charm_name="testcharm",
+            charm_name="test-charm",
         ),
     }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=None)
+    args = Namespace(library="charms.test_charm.v0.testlib", format=None)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "testcharm"
+        mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
-        call.create_library_revision("testcharm", lib_id, 0, 7, content, content_hash),
+        call.create_library_revision("test-charm", lib_id, 0, 7, content, content_hash),
     ]
-    expected = "Library charms.testcharm.v0.testlib sent to the store with version 0.7"
+    expected = "Library charms.test_charm.v0.testlib sent to the store with version 0.7"
     emitter.assert_message(expected)
 
 
@@ -3181,7 +3184,7 @@ def test_publishlib_store_is_exactly_behind_same_hash(
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
-        "testcharm", "testlib", api=0, patch=7, lib_id=lib_id
+        "test-charm", "testlib", api=0, patch=7, lib_id=lib_id
     )
 
     store_mock.get_libraries_tips.return_value = {
@@ -3192,25 +3195,25 @@ def test_publishlib_store_is_exactly_behind_same_hash(
             api=0,
             patch=6,
             lib_name="testlib",
-            charm_name="testcharm",
+            charm_name="test-charm",
         ),
     }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
+    args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "testcharm"
+        mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     error_message = (
-        "Library charms.testcharm.v0.testlib LIBPATCH number was incorrectly incremented, "
+        "Library charms.test_charm.v0.testlib LIBPATCH number was incorrectly incremented, "
         "Charmhub has the same content in version 0.6."
     )
     if formatted:
         expected = [
             {
-                "charm_name": "testcharm",
+                "charm_name": "test-charm",
                 "library_name": "testlib",
                 "library_id": lib_id,
                 "api": 0,
@@ -3230,7 +3233,7 @@ def test_publishlib_store_is_too_behind(
     monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
-    factory.create_lib_filepath("testcharm", "testlib", api=0, patch=4, lib_id=lib_id)
+    factory.create_lib_filepath("test-charm", "testlib", api=0, patch=4, lib_id=lib_id)
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
@@ -3240,25 +3243,25 @@ def test_publishlib_store_is_too_behind(
             api=0,
             patch=2,
             lib_name="testlib",
-            charm_name="testcharm",
+            charm_name="test-charm",
         ),
     }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
+    args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "testcharm"
+        mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     error_message = (
-        "Library charms.testcharm.v0.testlib has a wrong LIBPATCH number, it's too high and needs "
+        "Library charms.test_charm.v0.testlib has a wrong LIBPATCH number, it's too high and needs "
         "to be consecutive, Charmhub highest version is 0.2."
     )
     if formatted:
         expected = [
             {
-                "charm_name": "testcharm",
+                "charm_name": "test-charm",
                 "library_name": "testlib",
                 "library_id": lib_id,
                 "api": 0,
@@ -3284,7 +3287,7 @@ def test_publishlib_store_has_same_revision_same_hash(
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
-        "testcharm", "testlib", api=0, patch=7, lib_id=lib_id
+        "test-charm", "testlib", api=0, patch=7, lib_id=lib_id
     )
 
     store_mock.get_libraries_tips.return_value = {
@@ -3295,22 +3298,22 @@ def test_publishlib_store_has_same_revision_same_hash(
             api=0,
             patch=7,
             lib_name="testlib",
-            charm_name="testcharm",
+            charm_name="test-charm",
         ),
     }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
+    args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "testcharm"
+        mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
-    error_message = "Library charms.testcharm.v0.testlib is already updated in Charmhub."
+    error_message = "Library charms.test_charm.v0.testlib is already updated in Charmhub."
     if formatted:
         expected = [
             {
-                "charm_name": "testcharm",
+                "charm_name": "test-charm",
                 "library_name": "testlib",
                 "library_id": lib_id,
                 "api": 0,
@@ -3330,7 +3333,7 @@ def test_publishlib_store_has_same_revision_other_hash(
     monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
-    factory.create_lib_filepath("testcharm", "testlib", api=0, patch=7, lib_id=lib_id)
+    factory.create_lib_filepath("test-charm", "testlib", api=0, patch=7, lib_id=lib_id)
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
@@ -3340,25 +3343,25 @@ def test_publishlib_store_has_same_revision_other_hash(
             api=0,
             patch=7,
             lib_name="testlib",
-            charm_name="testcharm",
+            charm_name="test-charm",
         ),
     }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
+    args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
     with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
-        mock.return_value = "testcharm"
+        mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
         call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
     error_message = (
-        "Library charms.testcharm.v0.testlib version 0.7 is the same than in Charmhub but "
+        "Library charms.test_charm.v0.testlib version 0.7 is the same than in Charmhub but "
         "content is different"
     )
     if formatted:
         expected = [
             {
-                "charm_name": "testcharm",
+                "charm_name": "test-charm",
                 "library_name": "testlib",
                 "library_id": lib_id,
                 "api": 0,

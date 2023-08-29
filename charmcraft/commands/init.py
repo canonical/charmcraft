@@ -52,7 +52,7 @@ Available profiles are:
         to navigate their first charm by following the instructions.
 
     kubernetes:
-        A basic Kubernetes charm with exmaple container.
+        A basic Kubernetes charm with example container.
 
     machine:
         A basic charm but meant to be deployed in machine-based environments,

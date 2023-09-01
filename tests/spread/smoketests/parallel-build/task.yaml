@@ -1,0 +1,42 @@
+summary: pack 2 charms at same time and check that they are built successfully
+
+kill-timeout: 60m
+
+include: 
+  - tests/
+
+prepare: |
+  tests.pkgs install unzip
+  charmcraft init --project-dir=charm1
+  charmcraft init --project-dir=charm2
+
+restore: |
+  pushd charm1
+  charmcraft clean
+  popd
+
+  rm -rf charm1
+
+  pushd charm2
+  charmcraft clean
+  popd
+
+  rm -rf charm2
+
+execute: |
+  (cd charm1 && charmcraft pack --verbose) &
+  (cd charm2 && charmcraft pack --verbose) &
+
+  wait
+
+  pushd charm1
+  test -f charm*.charm
+  unzip -l charm*.charm | grep "venv/ops/charm.py"
+  test ! -d build
+  popd
+
+  pushd charm2
+  test -f charm*.charm
+  unzip -l charm*.charm | grep "venv/ops/charm.py"
+  test ! -d build
+  popd

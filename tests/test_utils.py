@@ -748,8 +748,8 @@ def test_exclude_packages(requirements, excluded, expected):
 def test_get_pip_command(
     prefix, requirements, source_deps, binary_deps, expected_no_binary, expected_other_packages
 ):
-    with tempfile.NamedTemporaryFile() as file:
-        path = pathlib.Path(file.name)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        path = pathlib.Path(tmp_dir, "requirements.txt")
         path.write_text("\n".join(requirements))
 
         command = get_pip_command(prefix, [path], source_deps=source_deps, binary_deps=binary_deps)
@@ -757,7 +757,7 @@ def test_get_pip_command(
         actual_no_binary, actual_requirement, *actual_other_packgaes = command[len(prefix) :]
         assert actual_no_binary == expected_no_binary
         assert actual_other_packgaes == expected_other_packages
-        assert actual_requirement == f"--requirement={file.name}"
+        assert actual_requirement == f"--requirement={path}"
 
 
 @pytest.mark.parametrize(

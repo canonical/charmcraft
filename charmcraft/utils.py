@@ -30,7 +30,18 @@ import zipfile
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
-from typing import Any, Dict, Optional, Iterable, Container, Union, Set, Collection, List, Tuple
+from typing import (
+    Any,
+    Collection,
+    Container,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import yaml
 from craft_cli import CraftError, emit
@@ -471,7 +482,7 @@ def get_pip_command(
     :param requirements_files: Paths to the requirements files to include.
     :param source_deps: Additional dependencies that can only be installed from source.
     :param binary_deps: Dependencies (including from requirements files) allowed for binary install.
-    :retruns: A full pip command line
+    :returns: A full pip command line
     """
     charm_packages = get_pypi_packages(source_deps)
     binary_packages = get_pypi_packages(binary_deps)

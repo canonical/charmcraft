@@ -43,9 +43,9 @@ from charmcraft.const import (
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import (
-    make_executable,
     get_pip_command,
     get_pip_version,
+    make_executable,
 )
 
 
@@ -270,7 +270,7 @@ class CharmBuilder:
                     # install dependencies from requirement files
                     cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
                     for reqspath in self.requirement_paths:
-                        cmd.append("--requirement={}".format(reqspath))  # the dependencies file(s)
+                        cmd.append(f"--requirement={reqspath}")  # the dependencies file(s)
                     _process_run(cmd)
                 if self.charmlib_deps:
                     # install charmlibs python dependencies

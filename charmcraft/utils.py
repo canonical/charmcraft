@@ -59,7 +59,7 @@ ARCH_TRANSLATIONS = {
 
 PathOrString = Union[os.PathLike, str]
 
-PACKAGE_LINE_REGEX = re.compile(r"^([A-z0-9_.-]+)([<>=!]=[0-9.]+)?")
+PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)([<>=!]=[0-9.]+)?")
 
 
 @functools.total_ordering
@@ -411,6 +411,11 @@ def get_charm_name_from_path(path: pathlib.Path) -> str:
 
 
 def get_pypi_packages(*requirements: Iterable[str]) -> Set[str]:
+    """Get a set of pypi packages from requirements files.
+
+    :param requirements: An iterable of strings for each requirement.
+    :returns: A set of package names and their requirements (e.g. version numbers)
+    """
     packages = set()
     for req in requirements:
         for line in req:
@@ -423,11 +428,31 @@ def get_pypi_packages(*requirements: Iterable[str]) -> Set[str]:
     return packages
 
 
+def get_package_names(packages: Iterable[str]) -> Set[str]:
+    """Get just the names of packages from an iterable of package lines.
+
+    :param packages: An iterable of package lines (e.g. ["abc==1.0.0", "def"])
+    :returns: A set of package names only (e.g. {"abc", "def"})
+    """
+    names = set()
+    for package in packages:
+        if match := PACKAGE_LINE_REGEX.match(package):
+            names.add(match.group(1))
+
+    return names
+
+
 def exclude_packages(requirements: Set[str], *, excluded: Collection[str]) -> Set[str]:
+    """Filter a set of requirements lines by a collection of package names.
+
+    :param requirements: A set of requirements lines (e.g. {"abc==1.0.0", "def>=1.0"})
+    :param excluded: A collection of package names (only) to exclude.
+    :returns A filtered set of requirements, excluding the given packages.
+    """
     exclusions = set()
     for requirement in requirements:
         if match := PACKAGE_LINE_REGEX.match(requirement):
-            if match.group(0) in excluded:
+            if match.group(1) in excluded:
                 exclusions.add(requirement)
 
     return requirements - exclusions
@@ -437,25 +462,40 @@ def get_pip_command(
     prefix: Iterable[str],
     requirements_files: Collection[pathlib.Path],
     *,
-    source_deps: Collection[str],
-    binary_deps: Collection[str],
+    source_deps: Collection[str] = (),
+    binary_deps: Collection[str] = (),
 ) -> List[str]:
+    """Build a pip command based on requirements files and dependencies.
+
+    :param prefix: The pip command and any earlier arguments.
+    :param requirements_files: Paths to the requirements files to include.
+    :param source_deps: Additional dependencies that can only be installed from source.
+    :param binary_deps: Dependencies (including from requirements files) allowed for binary install.
+    :retruns: A full pip command line
+    """
     charm_packages = get_pypi_packages(source_deps)
     binary_packages = get_pypi_packages(binary_deps)
     requirements_packages = get_pypi_packages(
         *(path.read_text().splitlines(keepends=False) for path in requirements_files)
     )
     all_packages = charm_packages | binary_packages | requirements_packages
-    source_only_packages = all_packages - binary_packages
+    source_only_packages = sorted(get_package_names(all_packages - binary_packages))
 
-    non_requirements_packages = exclude_packages(
-        set(source_deps),
-        excluded=requirements_packages,
+    non_requirements_packages = sorted(
+        exclude_packages(
+            set(source_deps) | set(binary_deps),
+            excluded=get_package_names(requirements_packages),
+        )
     )
+
+    if source_only_packages:
+        no_binary = [f"--no-binary={','.join(source_only_packages)}"]
+    else:
+        no_binary = []
 
     return [
         *prefix,
-        f"--no-binary={','.join(source_only_packages)}",
+        *no_binary,
         *(f"--requirement={path}" for path in requirements_files),
         *non_requirements_packages,
     ]

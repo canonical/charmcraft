@@ -66,6 +66,7 @@ dev_requires = [
     "pytest-cov",
     "pytest-mock",
     "pytest-check",
+    "pytest-subprocess",
     "responses",
     "tox",
 ]

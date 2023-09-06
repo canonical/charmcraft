@@ -44,8 +44,6 @@ from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import (
     make_executable,
-    get_pypi_packages,
-    exclude_packages,
     get_pip_command,
     get_pip_version,
 )
@@ -234,7 +232,7 @@ class CharmBuilder:
         # create virtualenv using the host environment python
         with instrum.Timer("Creating venv"):
             _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
-        pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
+        pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip"))
 
         with instrum.Timer("Ensuring a recent enough pip..."):
             if get_pip_version(pip_cmd) < (22, 0):

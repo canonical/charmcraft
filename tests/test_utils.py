@@ -18,6 +18,7 @@ import datetime
 import os
 import pathlib
 import sys
+import tempfile
 import zipfile
 from textwrap import dedent
 from unittest.mock import call, patch
@@ -31,17 +32,22 @@ from charmcraft.errors import DuplicateCharmsError, InvalidCharmPathError
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
-    build_zip,
     confirm_with_user,
-    find_charm_sources,
     format_timestamp,
-    get_charm_name_from_path,
     get_host_architecture,
     get_os_platform,
     humanize_list,
     load_yaml,
     make_executable,
     useful_filepath,
+    build_zip,
+    find_charm_sources,
+    get_charm_name_from_path,
+    get_pypi_packages,
+    exclude_packages,
+    get_package_names,
+    get_pip_command,
+    get_pip_version,
 )
 
 
@@ -692,6 +698,97 @@ def test_get_charm_name_from_path_wrong_name(tmp_path, build_charm_directory, na
         get_charm_name_from_path(full_path)
 
     assert exc_info.value.args[0] == f"Path does not contain source for a valid charm: {full_path}"
+
+
+# endregion
+# region Tests for pip-related functions.
+
+
+@pytest.mark.parametrize(
+    ("requirements", "expected"),
+    [
+        pytest.param([], set(), id="empty"),
+        pytest.param(["abc==1.0.0"], {"abc==1.0.0"}, id="simple"),
+        pytest.param(["-e ."], set(), id="editable-ignored"),
+    ],
+)
+def test_get_pypi_packages(requirements, expected):
+    assert get_pypi_packages(requirements) == expected
+
+
+@pytest.mark.parametrize(("packages", "expected"), [({"abc"}, {"abc"}), ({"abc==1.0.0"}, {"abc"})])
+def test_get_package_names(packages, expected):
+    assert get_package_names(packages) == expected
+
+
+@pytest.mark.parametrize(
+    ("requirements", "excluded", "expected"),
+    [
+        pytest.param(set(), set(), set(), id="empty"),
+        pytest.param({"abc==1.0.0"}, {"abc"}, set(), id="make-empty"),
+        pytest.param({"abc==1.0.0", "def==1.2.3"}, {"abc"}, {"def==1.2.3"}, id="remove-one"),
+        pytest.param({"abc==1.0.0"}, {"invalid"}, {"abc==1.0.0"}, id="irrelevant-exclusion"),
+    ],
+)
+def test_exclude_packages(requirements, excluded, expected):
+    assert exclude_packages(requirements, excluded=excluded) == expected
+
+
+@pytest.mark.parametrize(
+    (
+        "requirements",
+        "source_deps",
+        "binary_deps",
+        "expected_no_binary",
+        "expected_other_packages",
+    ),
+    [(["abc==1.0.0", "def=1.2.3"], [], ["def"], "--no-binary=abc", [])],
+)
+@pytest.mark.parametrize("prefix", [["/bin/pip"], ["/some/path/to/pip3"], ["pip", "--some-param"]])
+def test_get_pip_command(
+    prefix, requirements, source_deps, binary_deps, expected_no_binary, expected_other_packages
+):
+    with tempfile.NamedTemporaryFile() as file:
+        path = pathlib.Path(file.name)
+        path.write_text("\n".join(requirements))
+
+        command = get_pip_command(prefix, [path], source_deps=source_deps, binary_deps=binary_deps)
+        assert command[: len(prefix)] == prefix
+        actual_no_binary, actual_requirement, *actual_other_packgaes = command[len(prefix) :]
+        assert actual_no_binary == expected_no_binary
+        assert actual_other_packgaes == expected_other_packages
+        assert actual_requirement == f"--requirement={file.name}"
+
+
+@pytest.mark.parametrize(
+    ("pip_cmd", "stdout", "expected"),
+    [("pip", "pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)\n", (22, 0, 2))],
+)
+def test_get_pip_version_success(
+    fake_process,
+    pip_cmd,
+    stdout,
+    expected,
+):
+    fake_process.register([pip_cmd, "--version"], stdout=stdout)
+
+    assert get_pip_version(pip_cmd) == expected
+
+
+@pytest.mark.parametrize(
+    ("pip_cmd", "stdout", "error_msg"),
+    [
+        ("pip", "pip?", "Unknown pip version"),
+        ("pip", "pip 1.0.0-dev0-yolo", "Unknown pip version 1.0.0-dev0-yolo"),
+    ],
+)
+def test_get_pip_version_parsing_failure(fake_process, pip_cmd, stdout, error_msg):
+    fake_process.register([pip_cmd, "--version"], stdout=stdout)
+
+    with pytest.raises(ValueError) as exc_info:
+        get_pip_version(pip_cmd)
+
+    assert exc_info.value.args[0] == error_msg
 
 
 # endregion

@@ -1381,7 +1381,7 @@ def test_release_simple_ok(emitter, store_mock, config):
         call.release("testcharm", 7, channels, []),
     ]
 
-    expected = "Revision 7 of charm 'testcharm' released to somechannel"
+    expected = "Revision 7 of 'testcharm' released to somechannel"
     emitter.assert_message(expected)
 
 
@@ -1395,7 +1395,7 @@ def test_release_simple_multiple_channels(emitter, store_mock, config):
     )
     ReleaseCommand(config).run(args)
 
-    expected = "Revision 7 of charm 'testcharm' released to channel1, channel2, channel3"
+    expected = "Revision 7 of 'testcharm' released to channel1, channel2, channel3"
     emitter.assert_message(expected)
 
 
@@ -1411,7 +1411,7 @@ def test_release_including_resources(emitter, store_mock, config):
     ]
 
     expected = (
-        "Revision 7 of charm 'testcharm' released to testchannel "
+        "Revision 7 of 'testcharm' released to testchannel "
         "(attaching resources: 'foo' r3, 'bar' r17)"
     )
     emitter.assert_message(expected)

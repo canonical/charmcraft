@@ -776,7 +776,7 @@ class ReleaseCommand(BaseCommand):
             parsed_args.resource,
         )
 
-        msg = "Revision {:d} of charm {!r} released to {}"
+        msg = "Revision {:d} of {!r} released to {}"
         args = [parsed_args.revision, parsed_args.name, ", ".join(parsed_args.channel)]
         if parsed_args.resource:
             msg += " (attaching resources: {})"

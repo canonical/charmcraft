@@ -235,6 +235,8 @@ class CharmBuilder:
         pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip"))
 
         with instrum.Timer("Ensuring a recent enough pip..."):
+            # Get at least a known-working minimum pip version if needed.
+            # This becomes unnecessary once all supported bases include pip >= 22.0
             if get_pip_version(pip_cmd) < (22, 0):
                 _process_run([pip_cmd, "install", "-U", "pip"])
 

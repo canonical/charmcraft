@@ -344,3 +344,13 @@ def build_charm_directory():
         return expected
 
     return helper
+
+
+@pytest.fixture()
+def stub_extensions(monkeypatch):
+    from charmcraft.extensions import registry
+
+    extensions_dict = {}
+    monkeypatch.setattr(registry, "_EXTENSIONS", extensions_dict)
+
+    return extensions_dict

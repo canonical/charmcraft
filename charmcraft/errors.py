@@ -20,8 +20,6 @@ from typing import Iterable, Mapping
 
 from craft_cli import CraftError
 
-from charmcraft import utils
-
 
 class BadLibraryPathError(CraftError):
     """Subclass to provide a specific error for a bad library path."""
@@ -71,7 +69,9 @@ class DuplicateCharmsError(CraftError):
     )
 
     def __init__(self, charms: Mapping[str, Iterable[pathlib.Path]], source: bool = True):
-        charm_names = utils.humanize_list(charms.keys(), "and")
+        import charmcraft.utils
+
+        charm_names = charmcraft.utils.humanize_list(charms.keys(), "and")
         super().__init__(
             f"Duplicate charms found: {charm_names}",
             details=self._format_details(charms),
@@ -94,3 +94,7 @@ class DuplicateCharmsError(CraftError):
             for path in path_iter:
                 print(path_tree_line_format.format(name="", path=path), file=details)
         return details.getvalue()
+
+
+class ExtensionError(CraftError):
+    """Error related to extension handling."""

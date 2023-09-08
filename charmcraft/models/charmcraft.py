@@ -28,6 +28,7 @@ from charmcraft.const import (
     CHARM_METADATA_LEGACY_KEYS,
     METADATA_FILENAME,
 )
+from charmcraft.extensions import apply_extensions
 from charmcraft.format import format_pydantic_errors
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
@@ -296,6 +297,12 @@ class CharmcraftConfig(
         try:
             # Expand short-form bases if only the bases is a valid list. If it
             # is not a valid list, parse_obj() will properly handle the error.
+            if isinstance(obj.get("bases"), list):
+                cls.expand_short_form_bases(obj["bases"])
+
+            obj = apply_extensions(project.dirpath, obj)
+
+            # Re-expand it in case extenstions added short-form bases.
             if isinstance(obj.get("bases"), list):
                 cls.expand_short_form_bases(obj["bases"])
 

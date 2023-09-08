@@ -716,7 +716,19 @@ def test_get_pypi_packages(requirements, expected):
     assert get_pypi_packages(requirements) == expected
 
 
-@pytest.mark.parametrize(("packages", "expected"), [({"abc"}, {"abc"}), ({"abc==1.0.0"}, {"abc"})])
+@pytest.mark.parametrize(
+    ("packages", "expected"),
+    [
+        # Specifiers from pep440: https://peps.python.org/pep-0440/#version-specifiers
+        pytest.param({"abc"}, {"abc"}, id="no-version"),
+        pytest.param({"abc==1.0.0"}, {"abc"}, id="version-matching"),
+        pytest.param({"abc >= 1.0.0"}, {"abc"}, id="inclusive-ordered-gt"),
+        pytest.param({"abc<= 1.0.0"}, {"abc"}, id="inclusive-ordered-lt"),
+        pytest.param({"abc ~= 1.0"}, {"abc"}, id="compatible-release"),
+        pytest.param({"abc===foobar"}, {"abc"}, id="arbitrary-equality"),
+        pytest.param({"abc >=1.0,<2.0, !=1.2.3.*"}, {"abc"}, id="compound-specifier"),
+    ],
+)
 def test_get_package_names(packages, expected):
     assert get_package_names(packages) == expected
 
@@ -742,7 +754,16 @@ def test_exclude_packages(requirements, excluded, expected):
         "expected_no_binary",
         "expected_other_packages",
     ),
-    [(["abc==1.0.0", "def=1.2.3"], [], ["def"], "--no-binary=abc", [])],
+    [
+        (["abc==1.0.0", "def>=1.2.3"], [], ["def"], "--no-binary=abc", []),
+        (
+            ["abc==1.0", "def>=1.2.3"],
+            ["ghi"],
+            ["def", "jkl"],
+            "--no-binary=abc,ghi",
+            ["ghi", "jkl"],
+        ),
+    ],
 )
 @pytest.mark.parametrize("prefix", [["/bin/pip"], ["/some/path/to/pip3"], ["pip", "--some-param"]])
 def test_get_pip_command(

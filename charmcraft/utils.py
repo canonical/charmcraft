@@ -24,6 +24,7 @@ import os
 import pathlib
 import platform
 import re
+import string
 import subprocess
 import sys
 import zipfile
@@ -70,7 +71,7 @@ ARCH_TRANSLATIONS = {
 
 PathOrString = Union[os.PathLike, str]
 
-PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)([<>=!]=[0-9.]+)?")
+PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)( .[~<>=!]==?)?")
 
 
 @functools.total_ordering
@@ -427,14 +428,15 @@ def get_pypi_packages(*requirements: Iterable[str]) -> Set[str]:
     :param requirements: An iterable of strings for each requirement.
     :returns: A set of package names and their requirements (e.g. version numbers)
     """
+    valid_package_start_chars = string.ascii_letters + string.digits
     packages = set()
     for req in requirements:
         for line in req:
             line = line.strip()
-            if line.startswith("-"):
+            if line[0] not in valid_package_start_chars:
                 continue
-            if match := PACKAGE_LINE_REGEX.match(line):
-                packages.add(match.group(0))
+            if PACKAGE_LINE_REGEX.match(line):
+                packages.add(line)
 
     return packages
 
@@ -490,7 +492,9 @@ def get_pip_command(
         *(path.read_text().splitlines(keepends=False) for path in requirements_files)
     )
     all_packages = charm_packages | binary_packages | requirements_packages
-    source_only_packages = sorted(get_package_names(all_packages - binary_packages))
+    source_only_packages = sorted(
+        get_package_names(all_packages) - get_package_names(binary_packages)
+    )
 
     non_requirements_packages = sorted(
         exclude_packages(

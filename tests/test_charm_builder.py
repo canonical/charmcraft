@@ -604,18 +604,17 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
         requirements=[reqs_file],
     )
 
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        with patch("shutil.copytree") as mock_copytree:
-            builder.handle_dependencies()
+    with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
+        mock_pip_version.return_value = (22, 0)
+        with patch("charmcraft.charm_builder._process_run") as mock:
+            with patch("shutil.copytree") as mock_copytree:
+                builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "--version"]),
-        call(
-            [pip_cmd, "install", "--upgrade", "--no-binary", ":all:", f"--requirement={reqs_file}"]
-        ),
+        call([pip_cmd, "install", f"--requirement={reqs_file}"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
@@ -642,21 +641,19 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
         requirements=[reqs_file_1, reqs_file_2],
     )
 
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        with patch("shutil.copytree") as mock_copytree:
-            builder.handle_dependencies()
+    with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
+        mock_pip_version.return_value = (22, 0)
+        with patch("charmcraft.charm_builder._process_run") as mock:
+            with patch("shutil.copytree") as mock_copytree:
+                builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "--version"]),
         call(
             [
                 pip_cmd,
                 "install",
-                "--upgrade",
-                "--no-binary",
-                ":all:",
                 f"--requirement={reqs_file_1}",
                 f"--requirement={reqs_file_2}",
             ]
@@ -703,16 +700,17 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
         requirements=[],
     )
 
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        with patch("shutil.copytree") as mock_copytree:
-            builder.handle_dependencies()
+    with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
+        mock_pip_version.return_value = (22, 0)
+        with patch("charmcraft.charm_builder._process_run") as mock:
+            with patch("shutil.copytree") as mock_copytree:
+                builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "--version"]),
-        call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", "--no-binary=pkg1,pkg2", "pkg1", "pkg2"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
@@ -734,16 +732,17 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
         requirements=[],
     )
 
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        with patch("shutil.copytree") as mock_copytree:
-            builder.handle_dependencies()
+    with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
+        mock_pip_version.return_value = (22, 0)
+        with patch("charmcraft.charm_builder._process_run") as mock:
+            with patch("shutil.copytree") as mock_copytree:
+                builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "--version"]),
-        call([pip_cmd, "install", "--upgrade", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", "pkg1", "pkg2"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
@@ -771,26 +770,27 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
     )
     builder.charmlib_deps = ["pkg5", "pkg6"]
 
-    with patch("charmcraft.charm_builder._process_run") as mock:
-        with patch("shutil.copytree") as mock_copytree:
-            builder.handle_dependencies()
+    with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
+        mock_pip_version.return_value = (22, 0)
+        with patch("charmcraft.charm_builder._process_run") as mock:
+            with patch("shutil.copytree") as mock_copytree:
+                builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip3"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "--version"]),
-        call([pip_cmd, "install", "--upgrade", "pkg1", "pkg2"]),
-        call([pip_cmd, "install", "--upgrade", "--no-binary", ":all:", "pkg3", "pkg4"]),
         call(
             [
                 pip_cmd,
                 "install",
-                "--upgrade",
-                "--no-binary",
-                ":all:",
+                "--no-binary=pkg3,pkg4,pkg5,pkg6",
                 f"--requirement={reqs_file_1}",
                 f"--requirement={reqs_file_2}",
+                "pkg1",
+                "pkg2",
+                "pkg3",
+                "pkg4",
                 "pkg5",
                 "pkg6",
             ]
@@ -937,7 +937,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
     assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
 
-    # avoid the file to be read succesfully
+    # avoid the file to be read successfully
     (tmp_path / DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
 
     # second run!

@@ -23,12 +23,26 @@ import itertools
 import os
 import pathlib
 import platform
+import re
+import string
+import subprocess
 import sys
 import zipfile
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
-from typing import Any, Container, Dict, Iterable, Optional, Union
+from typing import (
+    Any,
+    Collection,
+    Container,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import yaml
 from craft_cli import CraftError, emit
@@ -56,6 +70,8 @@ ARCH_TRANSLATIONS = {
 }
 
 PathOrString = Union[os.PathLike, str]
+
+PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)( *[~<>=!]==?)?")
 
 
 @functools.total_ordering
@@ -404,3 +420,110 @@ def get_charm_name_from_path(path: pathlib.Path) -> str:
     if metadata_yaml is None or "name" not in metadata_yaml:
         raise InvalidCharmPathError(path)
     return metadata_yaml["name"]
+
+
+def get_pypi_packages(*requirements: Iterable[str]) -> Set[str]:
+    """Get a set of pypi packages from requirements files.
+
+    :param requirements: An iterable of strings for each requirement.
+    :returns: A set of package names and their requirements (e.g. version numbers)
+    """
+    valid_package_start_chars = string.ascii_letters + string.digits
+    packages = set()
+    for req in requirements:
+        for line in req:
+            line = line.strip()
+            if line[0] not in valid_package_start_chars:
+                continue
+            if PACKAGE_LINE_REGEX.match(line):
+                packages.add(line)
+
+    return packages
+
+
+def get_package_names(packages: Iterable[str]) -> Set[str]:
+    """Get just the names of packages from an iterable of package lines.
+
+    :param packages: An iterable of package lines (e.g. ["abc==1.0.0", "def"])
+    :returns: A set of package names only (e.g. {"abc", "def"})
+    """
+    names = set()
+    for package in packages:
+        if match := PACKAGE_LINE_REGEX.match(package):
+            names.add(match.group(1))
+
+    return names
+
+
+def exclude_packages(requirements: Set[str], *, excluded: Collection[str]) -> Set[str]:
+    """Filter a set of requirements lines by a collection of package names.
+
+    :param requirements: A set of requirements lines (e.g. {"abc==1.0.0", "def>=1.0"})
+    :param excluded: A collection of package names (only) to exclude.
+    :returns A filtered set of requirements, excluding the given packages.
+    """
+    exclusions = set()
+    for requirement in requirements:
+        if match := PACKAGE_LINE_REGEX.match(requirement):
+            if match.group(1) in excluded:
+                exclusions.add(requirement)
+
+    return requirements - exclusions
+
+
+def get_pip_command(
+    prefix: Iterable[str],
+    requirements_files: Collection[pathlib.Path],
+    *,
+    source_deps: Collection[str] = (),
+    binary_deps: Collection[str] = (),
+) -> List[str]:
+    """Build a pip command based on requirements files and dependencies.
+
+    :param prefix: The pip command and any earlier arguments.
+    :param requirements_files: Paths to the requirements files to include.
+    :param source_deps: Additional dependencies that can only be installed from source.
+    :param binary_deps: Dependencies (including from requirements files) allowed for binary install.
+    :returns: A full pip command line
+    """
+    charm_packages = get_pypi_packages(source_deps)
+    binary_packages = get_pypi_packages(binary_deps)
+    requirements_packages = get_pypi_packages(
+        *(path.read_text().splitlines(keepends=False) for path in requirements_files)
+    )
+    all_packages = charm_packages | binary_packages | requirements_packages
+    source_only_packages = sorted(
+        get_package_names(all_packages) - get_package_names(binary_packages)
+    )
+
+    non_requirements_packages = sorted(
+        exclude_packages(
+            set(source_deps) | set(binary_deps),
+            excluded=get_package_names(requirements_packages),
+        )
+    )
+
+    if source_only_packages:
+        no_binary = [f"--no-binary={','.join(source_only_packages)}"]
+    else:
+        no_binary = []
+
+    return [
+        *prefix,
+        *no_binary,
+        *(f"--requirement={path}" for path in requirements_files),
+        *non_requirements_packages,
+    ]
+
+
+def get_pip_version(pip_cmd: str) -> Tuple[int, ...]:
+    """Get the version of pip available from a specific pip command."""
+    result = subprocess.run([pip_cmd, "--version"], text=True, capture_output=True)
+    version_data = result.stdout.split(" ")
+    if len(version_data) < 2:
+        raise ValueError("Unknown pip version")
+    version_strings = version_data[1].split(".")
+    try:
+        return tuple(int(num) for num in version_strings)
+    except ValueError:
+        raise ValueError(f"Unknown pip version {version_data[1]}")

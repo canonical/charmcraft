@@ -42,7 +42,13 @@ from charmcraft.const import (
 )
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
-from charmcraft.utils import make_executable
+from charmcraft.utils import (
+    get_pip_command,
+    get_pip_version,
+    make_executable,
+)
+
+KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/ba/19/e63fb4e0d20e48bd2167bb7e857abc0e21679e24805ba921a224df8977c0/pip-23.2.1.tar.gz"
 
 
 def relativise(src, dst):
@@ -228,33 +234,53 @@ class CharmBuilder:
         # create virtualenv using the host environment python
         with instrum.Timer("Creating venv"):
             _process_run(["python3", "-m", "venv", str(staging_venv_dir)])
-        pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip3"))
+        pip_cmd = str(_find_venv_bin(staging_venv_dir, "pip"))
 
-        with instrum.Timer("Getting pip version"):
-            _process_run([pip_cmd, "--version"])
+        with instrum.Timer("Ensuring a recent enough pip..."):
+            # pip 20 (included with focal) has dependency resolution issues related to
+            # common charm dependencies (e.g. ops). Resolve this by updating to a
+            # known working version of pip.
+            if get_pip_version(pip_cmd) < (22, 0):
+                _process_run([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"])
 
         with instrum.Timer("Installing all dependencies"):
-            if self.binary_python_packages:
-                # install python packages, allowing binary packages
-                cmd = [pip_cmd, "install", "--upgrade"]  # base command
-                cmd.extend(self.binary_python_packages)  # the python packages to install
-                _process_run(cmd)
-
-            if self.python_packages:
-                # install python packages from source
-                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-                cmd.extend(self.python_packages)  # the python packages to install
-                _process_run(cmd)
-
-            if self.requirement_paths or self.charmlib_deps:
-                cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
-
+            try:
+                _process_run(
+                    get_pip_command(
+                        [pip_cmd, "install"],
+                        self.requirement_paths,
+                        source_deps=[*self.python_packages, *self.charmlib_deps],
+                        binary_deps=self.binary_python_packages,
+                    )
+                )
+            except RuntimeError:
+                # Fall back to old behaviour if pip install fails.
+                # This will go away with a future base.
+                print(
+                    "WARNING: Initial package installation failed. "
+                    "Falling back to older method, which may leave your charm "
+                    "in an un-runnable state."
+                )
+                if self.binary_python_packages:
+                    # install python packages, allowing binary packages
+                    cmd = [pip_cmd, "install", "--upgrade"]  # base command
+                    cmd.extend(self.binary_python_packages)  # the python packages to install
+                    _process_run(cmd)
+                if self.python_packages:
+                    # install python packages from source
+                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    cmd.extend(self.python_packages)  # the python packages to install
+                    _process_run(cmd)
                 if self.requirement_paths:
                     # install dependencies from requirement files
-                    cmd.extend(f"--requirement={path}" for path in self.requirement_paths)
-
+                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    for reqspath in self.requirement_paths:
+                        cmd.append(f"--requirement={reqspath}")  # the dependencies file(s)
+                    _process_run(cmd)
                 if self.charmlib_deps:
-                    cmd.extend(self.charmlib_deps)
+                    # install charmlibs python dependencies
+                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    cmd.extend(self.charmlib_deps)  # the python packages to install
                 _process_run(cmd)
 
     def handle_dependencies(self):
@@ -306,7 +332,7 @@ class CharmBuilder:
         shutil.copytree(site_packages_dir, self.installdir / VENV_DIRNAME)
 
 
-def _find_venv_bin(basedir, exec_base):
+def _find_venv_bin(basedir: pathlib.Path, exec_base: str) -> pathlib.Path:
     """Determine the venv executable in different platforms."""
     if sys.platform == "win32":
         return basedir / "Scripts" / f"{exec_base}.exe"

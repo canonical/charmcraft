@@ -71,7 +71,7 @@ ARCH_TRANSLATIONS = {
 
 PathOrString = Union[os.PathLike, str]
 
-PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)( .[~<>=!]==?)?")
+PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)( *[~<>=!]==?)?")
 
 
 @functools.total_ordering

@@ -238,9 +238,10 @@ class CharmBuilder:
 
         with instrum.Timer("Ensuring a recent enough pip..."):
             # pip 20 (included with focal) has dependency resolution issues related to
-            # common charm dependencies (e.g. ops). Resolve this by updating to a
-            # known working version of pip.
-            if get_pip_version(pip_cmd) < (22, 0):
+            # common charm dependencies (e.g. ops).
+            # Pip 23.1 is the first version that uses the wheel cache even with --no-binary,
+            # so we update to >= that version if we're not using it already.
+            if get_pip_version(pip_cmd) < (23, 1):
                 _process_run([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"])
 
         with instrum.Timer("Installing all dependencies"):

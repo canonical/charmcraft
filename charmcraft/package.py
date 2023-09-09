@@ -23,6 +23,7 @@ import tempfile
 import zipfile
 from typing import Collection, Dict, List, Mapping, Optional, Sequence
 
+import platformdirs
 import yaml
 from craft_cli import CraftError, emit
 from craft_providers.bases import get_base_alias
@@ -44,7 +45,7 @@ from charmcraft.metafiles.actions import create_actions_yaml
 from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.metafiles.metadata import create_metadata_yaml
-from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.models.charmcraft import Base, BasesConfiguration, CharmcraftConfig
 from charmcraft.utils import build_zip, get_host_architecture, humanize_list, load_yaml
 
 
@@ -89,16 +90,20 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 class Builder:
     """The package builder."""
 
-    def __init__(self, *, config, force, debug, shell, shell_after, measure):
+    def __init__(self, *, config, force, debug, shell, shell_after, measure, cache: bool):
         self.force_packing = force
         self.debug = debug
         self.shell = shell
         self.shell_after = shell_after
         self.measure = measure
+        if cache:
+            self.cache_path = platformdirs.user_cache_path("charmcraft")
+        else:
+            self.cache_path = None
 
         self.charmdir = config.project.dirpath
         self.buildpath = self.charmdir / BUILD_DIRNAME
-        self.config = config
+        self.config: CharmcraftConfig = config
         if self.config.parts:
             self._parts = self.config.parts.copy()
         else:
@@ -357,8 +362,7 @@ class Builder:
             target_arch=get_host_architecture(),
         )
         base_configuration = charmcraft.providers.get_base_configuration(
-            alias=build_base_alias,
-            instance_name=instance_name,
+            alias=build_base_alias, instance_name=instance_name, cache_path=self.cache_path
         )
 
         if build_on.name == "ubuntu":

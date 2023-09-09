@@ -16,6 +16,7 @@
 
 """Infrastructure for the 'pack' command."""
 import argparse
+import os
 import pathlib
 from typing import Dict, List
 
@@ -65,13 +66,17 @@ class PackCommand(BaseCommand):
             action="store_true",
             help="Launch shell in build environment upon failure",
         )
-        parser.add_argument(
+        provider_group = parser.add_mutually_exclusive_group()
+        provider_group.add_argument(
             "--destructive-mode",
             action="store_true",
             help=(
                 "Pack charm using current host which may result in breaking "
                 "changes to system configuration"
             ),
+        )
+        provider_group.add_argument(
+            "--cache", action="store_true", help="Use system-wide cross-charm cache"
         )
         parser.add_argument(
             "--shell",
@@ -129,6 +134,7 @@ class PackCommand(BaseCommand):
             shell=parsed_args.shell,
             shell_after=parsed_args.shell_after,
             measure=parsed_args.measure,
+            cache=parsed_args.cache or bool(os.getenv("CHARMCRAFT_USE_CACHE")),
         )
 
         # decide if this will work on a charm or a bundle

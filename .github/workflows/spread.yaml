@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Build snap
@@ -41,7 +41,7 @@ jobs:
           mkdir "${{ github.workspace }}"
 
       - name: Checkout charmcraft
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: true
@@ -79,7 +79,7 @@ jobs:
 
       - if: steps.decisions.outputs.RUN == 'true'
         name: Checkout charmcraft
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: true

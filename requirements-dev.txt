@@ -31,7 +31,7 @@ keyring==24.2.0
 macaroonbakery==1.3.1
 MarkupSafe==2.1.3
 mccabe==0.7.0
-more-itertools==10.0.0
+more-itertools==10.1.0
 mypy-extensions==1.0.0
 overrides==7.3.1
 packaging==23.1

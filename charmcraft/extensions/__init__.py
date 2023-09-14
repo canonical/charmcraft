@@ -17,6 +17,7 @@
 """Extension processor and related utilities."""
 
 from charmcraft.extensions._utils import apply_extensions
+from charmcraft.extensions.flask import Flask
 from charmcraft.extensions.registry import (
     get_extension_class,
     get_extension_names,
@@ -31,3 +32,5 @@ __all__ = [
     "register",
     "unregister",
 ]
+
+register("flask", Flask)

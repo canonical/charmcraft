@@ -20,6 +20,8 @@ import logging
 import os
 import sys
 
+import craft_providers.errors
+import craft_store.errors
 from craft_cli import (
     ArgumentParsingError,
     CommandGroup,
@@ -30,7 +32,6 @@ from craft_cli import (
     ProvideHelpException,
     emit,
 )
-from craft_store import errors
 
 from charmcraft import __version__, config, env, utils
 from charmcraft.commands import analyze, clean, init, pack, store, version
@@ -189,9 +190,12 @@ def main(argv=None):
     except CraftError as err:
         _emit_error(err)
         retcode = err.retcode
-    except errors.CraftStoreError as err:
+    except craft_store.errors.CraftStoreError as err:
         error = CraftError(f"craft-store error: {err}")
         _emit_error(error)
+        retcode = 1
+    except craft_providers.errors.ProviderError as err:
+        _emit_error(CraftError(err.brief, details=err.details, resolution=err.resolution))
         retcode = 1
     except KeyboardInterrupt as exc:
         error = CraftError("Interrupted.")

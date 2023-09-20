@@ -34,7 +34,7 @@ from craft_cli import (
 )
 
 from charmcraft import __version__, config, env, utils
-from charmcraft.commands import analyze, clean, init, pack, store, version
+from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.parts import setup_parts
 
@@ -93,9 +93,15 @@ _charmhub_commands = [
     store.UploadResourceCommand,
     store.ListResourceRevisionsCommand,
 ]
+_extensions_commands = [
+    extensions.ExtensionsCommand,
+    extensions.ListExtensionsCommand,
+    extensions.ExpandExtensionsCommand,
+]
 COMMAND_GROUPS = [
     CommandGroup("Basic", _basic_commands),
     CommandGroup("Charmhub", _charmhub_commands),
+    CommandGroup("Extensions", _extensions_commands),
 ]
 
 # non-charmcraft useful environment variables to log

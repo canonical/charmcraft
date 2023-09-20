@@ -28,12 +28,13 @@ from charmcraft.extensions.extension import Extension
 class FakeExtension(Extension):
     """A fake test Extension"""
 
-    NAME = "fake-extension"
+    name = "fake-extension"
+    bases = [("ubuntu", "22.04")]
 
-    @staticmethod
-    def get_supported_bases() -> List[Tuple[str, ...]]:
+    @classmethod
+    def get_supported_bases(cls) -> List[Tuple[str, ...]]:
         """Return a list of tuple of supported bases."""
-        return [("ubuntu", "22.04")]
+        return cls.bases
 
     @staticmethod
     def is_experimental(_base: Optional[Tuple[str, ...]]) -> bool:
@@ -56,7 +57,8 @@ class FakeExtension(Extension):
 class ExperimentalExtension(FakeExtension):
     """A fake test Extension that is experimental"""
 
-    NAME = "experimental-extension"
+    name = "experimental-extension"
+    bases = [("ubuntu", "22.04")]
 
     @staticmethod
     def is_experimental(_base: Optional[str]) -> bool:
@@ -66,7 +68,8 @@ class ExperimentalExtension(FakeExtension):
 class InvalidPartExtension(FakeExtension):
     """A fake test Extension that has invalid parts snippet"""
 
-    NAME = "invalid-extension"
+    name = "invalid-extension"
+    bases = [("ubuntu", "22.04")]
 
     @override
     def get_parts_snippet(self) -> Dict[str, Any]:
@@ -76,7 +79,8 @@ class InvalidPartExtension(FakeExtension):
 class FullExtension(FakeExtension):
     """A fake test Extension that has complete behavior"""
 
-    NAME = "full-extension"
+    name = "full-extension"
+    bases = [("ubuntu", "22.04")]
 
     @override
     def get_root_snippet(self) -> Dict[str, Any]:
@@ -98,10 +102,10 @@ class FullExtension(FakeExtension):
 
 @pytest.fixture()
 def fake_extensions(stub_extensions):
-    extensions.register(FakeExtension.NAME, FakeExtension)
-    extensions.register(ExperimentalExtension.NAME, ExperimentalExtension)
-    extensions.register(InvalidPartExtension.NAME, InvalidPartExtension)
-    extensions.register(FullExtension.NAME, FullExtension)
+    extensions.register(FakeExtension.name, FakeExtension)
+    extensions.register(ExperimentalExtension.name, ExperimentalExtension)
+    extensions.register(InvalidPartExtension.name, InvalidPartExtension)
+    extensions.register(FullExtension.name, FullExtension)
 
 
 def test_experimental_with_env(fake_extensions, tmp_path, monkeypatch):
@@ -111,7 +115,7 @@ def test_experimental_with_env(fake_extensions, tmp_path, monkeypatch):
         "summary": "test summary",
         "description": "test description",
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
-        "extensions": [ExperimentalExtension.NAME],
+        "extensions": [ExperimentalExtension.name],
     }
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
     project_root = tmp_path
@@ -130,12 +134,12 @@ def test_experimental_no_env(fake_extensions, tmp_path):
                 "run-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}],
             }
         ],
-        "extensions": [ExperimentalExtension.NAME],
+        "extensions": [ExperimentalExtension.name],
     }
     with pytest.raises(errors.ExtensionError) as exc:
         extensions.apply_extensions(tmp_path, charmcraft_config)
 
-    expected_message = f"Extension is experimental: '{ExperimentalExtension.NAME}'"
+    expected_message = f"Extension is experimental: '{ExperimentalExtension.name}'"
     assert str(exc.value) == expected_message
 
 
@@ -151,13 +155,13 @@ def test_wrong_base(fake_extensions, tmp_path):
                 "run-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}],
             }
         ],
-        "extensions": [FakeExtension.NAME],
+        "extensions": [FakeExtension.name],
     }
     with pytest.raises(errors.ExtensionError) as exc:
         extensions.apply_extensions(tmp_path, charmcraft_config)
 
     expected_message = (
-        f"Extension '{FakeExtension.NAME}' does not support base: ('ubuntu', '20.04')"
+        f"Extension '{FakeExtension.name}' does not support base: ('ubuntu', '20.04')"
     )
     assert str(exc.value) == expected_message
 
@@ -169,7 +173,7 @@ def test_invalid_parts(fake_extensions, tmp_path):
         "summary": "test summary",
         "description": "test description",
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
-        "extensions": [InvalidPartExtension.NAME],
+        "extensions": [InvalidPartExtension.name],
     }
 
     with pytest.raises(ValueError) as exc:
@@ -185,7 +189,7 @@ def test_apply_extensions(fake_extensions, tmp_path):
         "summary": "test summary",
         "description": "test description",
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
-        "extensions": [FullExtension.NAME],
+        "extensions": [FullExtension.name],
         "parts": {"my-part": {"plugin": "nil", "source": None, "stage-packages": ["old-package"]}},
     }
 
@@ -199,7 +203,7 @@ def test_apply_extensions(fake_extensions, tmp_path):
     ]
 
     # New part
-    assert parts[f"{FullExtension.NAME}/new-part"] == {"plugin": "nil", "source": None}
+    assert parts[f"{FullExtension.name}/new-part"] == {"plugin": "nil", "source": None}
 
 
 @pytest.mark.parametrize(
@@ -215,7 +219,7 @@ def test_apply_extensions(fake_extensions, tmp_path):
               - name: ubuntu
                 channel: "22.04"
             extensions:
-              - {FullExtension.NAME}
+              - {FullExtension.name}
             parts:
               foo:
                 plugin: nil
@@ -243,7 +247,7 @@ def test_load_charmcraft_yaml_with_extensions(
     ]
 
     # New part
-    assert config.parts[f"{FullExtension.NAME}/new-part"] == {"plugin": "nil", "source": None}
+    assert config.parts[f"{FullExtension.name}/new-part"] == {"plugin": "nil", "source": None}
     assert config.terms == ["https://example.com/terms", "https://example.com/terms2"]
 
 
@@ -262,7 +266,7 @@ def test_load_charmcraft_yaml_with_extensions(
               - name: ubuntu
                 channel: "22.04"
             extensions:
-              - {FullExtension.NAME}
+              - {FullExtension.name}
             parts:
               foo:
                 plugin: nil

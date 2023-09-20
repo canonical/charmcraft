@@ -16,6 +16,7 @@
 
 import argparse
 import ast
+import itertools
 import os
 import subprocess
 import sys
@@ -704,7 +705,7 @@ def test_systemdetails_hidden_auth():
 
 # -- generic tests for all Charmcraft commands
 
-all_commands = list.__add__(*[cgroup.commands for cgroup in COMMAND_GROUPS])
+all_commands = list(itertools.chain(*(cgroup.commands for cgroup in COMMAND_GROUPS)))
 
 
 @pytest.mark.parametrize("command", all_commands)

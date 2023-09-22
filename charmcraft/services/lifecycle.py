@@ -17,19 +17,7 @@
 """Service class for packing."""
 from __future__ import annotations
 
-import abc
-from typing import TYPE_CHECKING
-
 from craft_application.services import LifecycleService
-from craft_parts.plugins import plugins
-
-from charmcraft.parts import CharmPlugin, BundlePlugin
-from charmcraft.reactive_plugin import ReactivePlugin
-
-if TYPE_CHECKING:  # pragma: no cover
-    import pathlib
-
-    from craft_application import models
 
 
 class CharmLifecycleService(LifecycleService):
@@ -39,4 +27,3 @@ class CharmLifecycleService(LifecycleService):
 #
 #     def setup(self) -> None:
 #
-#         super().setup()

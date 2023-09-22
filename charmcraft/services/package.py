@@ -17,21 +17,24 @@
 """Service class for packing."""
 from __future__ import annotations
 
-import abc
+import os
+import pathlib
+import zipfile
 from typing import TYPE_CHECKING
 
 from craft_application.services import PackageService
+from craft_cli import emit
+
+from charmcraft.models.charmcraft import BasesConfiguration
+from charmcraft.package import format_charm_file_name
 
 if TYPE_CHECKING:  # pragma: no cover
-    import pathlib
-
     from craft_application import models
 
 
 class CharmPackageService(PackageService):
     """Business logic for creating packages."""
 
-    @abc.abstractmethod
     def pack(self, prime_dir: pathlib.Path, dest: pathlib.Path) -> list[pathlib.Path]:
         """Create one or more packages as appropriate.
 
@@ -39,18 +42,35 @@ class CharmPackageService(PackageService):
         :param dest: Directory into which to write the package(s).
         :returns: A list of paths to created packages.
         """
-        raise NotImplementedError("TODO: pack within the pack service.")
+        raise NotImplementedError("No general packing available yet.")
+
+    def pack_charm(
+        self, prime_dir: pathlib.Path, bases_config: BasesConfiguration
+    ) -> pathlib.Path:
+        """Pack a prime directory as a charm for a given set of bases."""
+        zip_path = self.get_charm_path(bases_config)
+        emit.progress(f"Packing charm {zip_path.name}")
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as charm:
+            for dirpath, _dirnames, filenames in os.walk(prime_dir, followlinks=True):
+                dirpath = pathlib.Path(dirpath)
+                for filename in filenames:
+                    filepath = dirpath / filename
+                    charm.write(str(filepath), str(filepath.relative_to(prime_dir)))
+
+        return zip_path
+
+    def get_charm_path(self, bases_config: BasesConfiguration) -> pathlib.Path:
+        """Get a charm file name for the appropriate set of run-on bases."""
+        return pathlib.Path(format_charm_file_name(self._project.name, bases_config)).resolve()
 
     @property
-    @abc.abstractmethod
     def metadata(self) -> models.BaseMetadata:
-        """Get the metadata model for this project."""
-        raise NotImplementedError("TODO: have the pack service write the metadata.")
+        """Metadata model for this project."""
+        raise NotImplementedError("Metadata not yet handled this way")
 
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write the project metadata to metadata.yaml in the given directory.
 
         :param path: The path to the prime directory.
         """
-        # path.mkdir(parents=True, exist_ok=True)
-        # self.metadata.to_yaml_file(path / "metadata.yaml")
+        # Right now this is a no-op until we bring in the metadata.

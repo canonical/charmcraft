@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for common base commands functionality."""
-import functools
 import json
 
 import craft_application.commands

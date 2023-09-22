@@ -24,6 +24,7 @@ from typing import List
 from unittest import mock
 from unittest.mock import ANY, MagicMock, call, patch
 
+import craft_application.services.package
 import pytest
 import yaml
 from craft_cli import CraftError, EmitterMode, emit
@@ -48,6 +49,7 @@ from charmcraft.utils import get_host_architecture
 def get_builder(
     config,
     *,
+    package_service: craft_application.services.package.PackageService,
     project_dir=None,
     force=False,
     debug=False,
@@ -65,6 +67,7 @@ def get_builder(
         shell=shell,
         shell_after=shell_after,
         measure=measure,
+        package_service=package_service,
     )
 
 
@@ -133,7 +136,7 @@ def basic_project(tmp_path, monkeypatch, prepare_charmcraft_yaml, prepare_metada
 
 
 @pytest.fixture()
-def basic_project_builder(basic_project, prepare_charmcraft_yaml):
+def basic_project_builder(service_factory, basic_project, prepare_charmcraft_yaml):
     def _basic_project_builder(bases_configs: List[BasesConfiguration], **builder_kwargs):
         charmcraft_yaml = dedent(
             """
@@ -169,7 +172,8 @@ def basic_project_builder(basic_project, prepare_charmcraft_yaml):
         prepare_charmcraft_yaml(charmcraft_yaml)
 
         config = load(basic_project)
-        return get_builder(config, **builder_kwargs)
+        service_factory.project = config
+        return get_builder(config, package_service=service_factory.package, **builder_kwargs)
 
     return _basic_project_builder
 
@@ -238,7 +242,7 @@ def mock_is_base_available():
 # --- (real) build tests
 
 
-def test_build_error_without_metadata_yaml(basic_project):
+def test_build_error_without_metadata_yaml(basic_project, service_factory):
     """Validate error if trying to build project without metadata.yaml."""
     metadata = basic_project / "metadata.yaml"
     metadata.unlink()
@@ -246,7 +250,7 @@ def test_build_error_without_metadata_yaml(basic_project):
     with pytest.raises(CraftError) as exc_info:
         config = load(basic_project)
 
-        get_builder(config)
+        get_builder(config, package_service=service_factory.package)
 
     assert str(exc_info.value) == dedent(
         """\
@@ -265,7 +269,7 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, emit
         force=True,  # to ignore any linter issue
     )
 
-    zipnames = builder.run(destructive_mode=True)
+    zipnames = [path.name for path in builder.run(destructive_mode=True)]
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
@@ -288,10 +292,12 @@ def test_build_with_charmcraft_yaml_managed_mode(
     )
 
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
-        zipnames = builder.run()
+        zip_paths = builder.run()
+
+    zip_names = [path.name for path in zip_paths]
 
     host_arch = host_base.architectures[0]
-    assert zipnames == [
+    assert zip_names == [
         "test-charm-name-from-metadata-yaml_"
         f"{host_base.name}-{host_base.channel}-{host_arch}.charm"
     ]
@@ -299,10 +305,12 @@ def test_build_with_charmcraft_yaml_managed_mode(
     emitter.assert_debug("Building for 'bases[0]' as host matches 'build-on[0]'.")
 
 
-def test_build_checks_provider(basic_project, mock_provider, mock_capture_logs_from_instance):
+def test_build_checks_provider(
+    service_factory, basic_project, mock_provider, mock_capture_logs_from_instance
+):
     """Test cases for base-index parameter."""
     config = load(basic_project)
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
 
     try:
         builder.run()
@@ -381,11 +389,11 @@ def test_build_with_shell_after(
     assert mock_launch_shell.mock_calls == [mock.call()]
 
 
-def test_build_checks_provider_error(basic_project, mock_provider):
+def test_build_checks_provider_error(basic_project, mock_provider, service_factory):
     """Test cases for base-index parameter."""
     mock_provider.ensure_provider_is_available.side_effect = RuntimeError("foo")
     config = load(basic_project)
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
 
     with pytest.raises(RuntimeError, match="foo"):
         builder.run()
@@ -414,7 +422,7 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_buil
         force=True,
     )
 
-    zipnames = builder.run(destructive_mode=True)
+    zipnames = [path.name for path in builder.run(destructive_mode=True)]
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
@@ -465,7 +473,7 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
-        zipnames = builder.run()
+        zipnames = [path.name for path in builder.run()]
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
@@ -526,6 +534,7 @@ def test_build_project_is_cwd(
     mock_ubuntu_buildd_base_configuration,
     mock_is_base_available,
     mocker,
+    service_factory,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -536,7 +545,7 @@ def test_build_project_is_cwd(
 
     config = load(basic_project)
     project_managed_path = pathlib.Path("/root/project")
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
     base_configuration = get_base_configuration(
         alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
@@ -611,6 +620,7 @@ def test_build_project_is_not_cwd(
     mock_ubuntu_buildd_base_configuration,
     mock_is_base_available,
     mocker,
+    service_factory,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -620,7 +630,7 @@ def test_build_project_is_not_cwd(
     prepare_metadata_yaml(metadata_yaml)
 
     config = load(basic_project)
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
     base_configuration = get_base_configuration(
         alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
@@ -723,6 +733,7 @@ def test_build_bases_index_scenarios_provider(
     mock_centos_base_configuration,
     mock_is_base_available,
     mocker,
+    service_factory,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(mode)
@@ -731,7 +742,7 @@ def test_build_bases_index_scenarios_provider(
     project_managed_path = pathlib.Path("/root/project")
     prepare_charmcraft_yaml(charmcraft_yaml_template.format(arch=host_base.architectures))
     config = load(basic_project)
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
     base_bionic_configuration = get_base_configuration(
         alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
@@ -996,9 +1007,9 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
-        zipnames = builder.run([0])
-    assert zipnames == [
-        "test-charm-name-from-metadata-yaml_"
+        first_zip_paths = builder.run([0])
+    assert first_zip_paths == [
+        tmp_path / "test-charm-name-from-metadata-yaml_"
         f"{host_base.name}-{host_base.channel}-{host_arch}.charm",
     ]
 
@@ -1009,9 +1020,9 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
         builder.run([1])
 
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
-        zipnames = builder.run([2])
-    assert zipnames == [
-        "test-charm-name-from-metadata-yaml_cross-name-cross-channel-cross-arch1.charm",
+        second_zip_paths = builder.run([2])
+    assert second_zip_paths == [
+        tmp_path / "test-charm-name-from-metadata-yaml_cross-name-cross-channel-cross-arch1.charm",
     ]
 
 
@@ -1057,13 +1068,14 @@ def test_build_error_no_match_with_charmcraft_yaml(
     metadata_yaml,
     monkeypatch,
     emitter,
+    service_factory,
 ):
     """Error when no charms are buildable with host base, verifying each mismatched reason."""
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
     config = load(basic_project)
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
 
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -1185,136 +1197,6 @@ def test_build_arguments_managed_charmcraft_measure(
     ]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_package_tree_structure(tmp_path, config):
-    """The zip file is properly built internally."""
-    # the metadata
-    metadata_data = {"name": "test-charm-name-from-metadata-yaml"}
-    metadata_file = tmp_path / "metadata.yaml"
-    with metadata_file.open("wt", encoding="ascii") as fh:
-        yaml.dump(metadata_data, fh)
-
-    # create some dirs and files! a couple of files outside, and the dir we'll zip...
-    file_outside_1 = tmp_path / "file_outside_1"
-    with file_outside_1.open("wb") as fh:
-        fh.write(b"content_out_1")
-    file_outside_2 = tmp_path / "file_outside_2"
-    with file_outside_2.open("wb") as fh:
-        fh.write(b"content_out_2")
-    to_be_zipped_dir = tmp_path / BUILD_DIRNAME
-    to_be_zipped_dir.mkdir()
-
-    # ...also outside a dir with a file...
-    dir_outside = tmp_path / "extdir"
-    dir_outside.mkdir()
-    file_ext = dir_outside / "file_ext"
-    with file_ext.open("wb") as fh:
-        fh.write(b"external file")
-
-    # ...then another file inside, and another dir...
-    file_inside = to_be_zipped_dir / "file_inside"
-    with file_inside.open("wb") as fh:
-        fh.write(b"content_in")
-    dir_inside = to_be_zipped_dir / "somedir"
-    dir_inside.mkdir()
-
-    # ...also inside, a link to the external dir...
-    dir_linked_inside = to_be_zipped_dir / "linkeddir"
-    dir_linked_inside.symlink_to(dir_outside)
-
-    # ...and finally another real file, and two symlinks
-    file_deep_1 = dir_inside / "file_deep_1"
-    with file_deep_1.open("wb") as fh:
-        fh.write(b"content_deep")
-    file_deep_2 = dir_inside / "file_deep_2"
-    file_deep_2.symlink_to(file_inside)
-    file_deep_3 = dir_inside / "file_deep_3"
-    file_deep_3.symlink_to(file_outside_1)
-
-    # zip it
-    bases_config = BasesConfiguration(
-        **{
-            "build-on": [],
-            "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
-        }
-    )
-    builder = get_builder(config)
-    zipname = builder.handle_package(to_be_zipped_dir, bases_config)
-
-    # check the stuff outside is not in the zip, the stuff inside is zipped (with
-    # contents!), and all relative to build dir
-    zf = zipfile.ZipFile(zipname)
-    assert "file_outside_1" not in [x.filename for x in zf.infolist()]
-    assert "file_outside_2" not in [x.filename for x in zf.infolist()]
-    assert zf.read("file_inside") == b"content_in"
-    assert zf.read("somedir/file_deep_1") == b"content_deep"  # own
-    assert zf.read("somedir/file_deep_2") == b"content_in"  # from file inside
-    assert zf.read("somedir/file_deep_3") == b"content_out_1"  # from file outside 1
-    assert zf.read("linkeddir/file_ext") == b"external file"  # from file in the outside linked dir
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml", "expected_zipname"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-            "test-charm-name-from-metadata-yaml_xname-xchannel-xarch1.charm",
-        ],
-        [
-            dedent(
-                """\
-                name: test-charm-name-from-charmcraft-yaml
-                type: charm
-                summary: test summary
-                description: test description
-                """
-            ),
-            None,
-            "test-charm-name-from-charmcraft-yaml_xname-xchannel-xarch1.charm",
-        ],
-    ],
-)
-def test_build_package_name(
-    tmp_path,
-    prepare_charmcraft_yaml,
-    prepare_metadata_yaml,
-    charmcraft_yaml,
-    metadata_yaml,
-    expected_zipname,
-):
-    """The zip file name comes from the config."""
-    to_be_zipped_dir = tmp_path / BUILD_DIRNAME
-    to_be_zipped_dir.mkdir()
-
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    # zip it
-    bases_config = BasesConfiguration(
-        **{
-            "build-on": [],
-            "run-on": [Base(name="xname", channel="xchannel", architectures=["xarch1"])],
-        }
-    )
-
-    config = load(tmp_path)
-    builder = get_builder(config)
-    zipname = builder.handle_package(to_be_zipped_dir, bases_config)
-
-    assert zipname == expected_zipname
-
-
 @pytest.mark.parametrize(
     ("charmcraft_yaml_template", "metadata_yaml"),
     [
@@ -1351,6 +1233,7 @@ def test_build_postlifecycle_validation_is_properly_called(
     charmcraft_yaml_template,
     metadata_yaml,
     monkeypatch,
+    service_factory,
 ):
     """Check how the entrypoint validation helper is called."""
     host_base = get_host_as_base()
@@ -1358,7 +1241,8 @@ def test_build_postlifecycle_validation_is_properly_called(
         charmcraft_yaml_template.format(base_name=host_base.name, base_channel=host_base.channel)
     )
     config = load(basic_project)
-    builder = get_builder(config)
+    service_factory.project = config
+    builder = get_builder(config, package_service=service_factory.package)
 
     entrypoint = basic_project / "my_entrypoint.py"
     entrypoint.touch(mode=0o700)
@@ -1413,6 +1297,7 @@ def test_build_part_from_config(
     charmcraft_yaml_template,
     metadata_yaml,
     monkeypatch,
+    service_factory,
 ):
     """Check that the "parts" are passed to the lifecycle correctly."""
     host_base = get_host_as_base()
@@ -1424,7 +1309,7 @@ def test_build_part_from_config(
     reqs_file = basic_project / "reqs.txt"
     reqs_file.write_text("somedep")
     config = load(basic_project)
-    builder = get_builder(config, force=True)
+    builder = get_builder(config, package_service=service_factory.package, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -1502,6 +1387,7 @@ def test_build_part_include_venv_pydeps(
     charmcraft_yaml_template,
     metadata_yaml,
     monkeypatch,
+    service_factory,
 ):
     """Include the venv directory even if only charmlib python dependencies exist."""
     host_base = get_host_as_base()
@@ -1523,7 +1409,8 @@ def test_build_part_include_venv_pydeps(
         )
     )
     config = load(basic_project)
-    builder = get_builder(config, force=True)
+    service_factory.project = config
+    builder = get_builder(config, force=True, package_service=service_factory.package)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -1615,9 +1502,9 @@ def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_
     assert manifest["analysis"] == expected
 
 
-def test_show_linters_attributes(basic_project, emitter, config):
+def test_show_linters_attributes(service_factory, basic_project, emitter, config):
     """Show the linting results, only attributes, one ignored."""
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
 
     # fake results from the analyzer
     linting_results = [
@@ -1643,9 +1530,9 @@ def test_show_linters_attributes(basic_project, emitter, config):
     emitter.assert_verbose(expected)
 
 
-def test_show_linters_lint_warnings(basic_project, emitter, config):
+def test_show_linters_lint_warnings(service_factory, basic_project, emitter, config):
     """Show the linting results, some warnings."""
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
 
     # fake result from the analyzer
     linting_results = [
@@ -1668,9 +1555,9 @@ def test_show_linters_lint_warnings(basic_project, emitter, config):
     )
 
 
-def test_show_linters_lint_errors_normal(basic_project, emitter, config):
+def test_show_linters_lint_errors_normal(service_factory, basic_project, emitter, config):
     """Show the linting results, have errors."""
-    builder = get_builder(config)
+    builder = get_builder(config, package_service=service_factory.package)
 
     # fake result from the analyzer
     linting_results = [
@@ -1697,9 +1584,9 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
     )
 
 
-def test_show_linters_lint_errors_forced(basic_project, emitter, config):
+def test_show_linters_lint_errors_forced(service_factory, basic_project, emitter, config):
     """Show the linting results, have errors but the packing is forced."""
-    builder = get_builder(config, force=True)
+    builder = get_builder(config, package_service=service_factory.package, force=True)
 
     # fake result from the analyzer
     linting_results = [
@@ -1726,8 +1613,8 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
 @pytest.mark.parametrize("force", [True, False])
 @pytest.mark.parametrize("destructive_mode", [True, False])
 @pytest.mark.parametrize("base_indeces", [[], [1], [1, 2, 3, 4, 5]])
-def test_get_charm_pack_args(config, force, base_indeces, destructive_mode):
-    builder = get_builder(config, force=force)
+def test_get_charm_pack_args(service_factory, config, force, base_indeces, destructive_mode):
+    builder = get_builder(config, package_service=service_factory.package, force=force)
 
     actual = builder._get_charm_pack_args(base_indeces, destructive_mode)
 

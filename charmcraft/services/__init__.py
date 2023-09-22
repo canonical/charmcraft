@@ -13,4 +13,8 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Service classes for craft-application framework."""
+"""Service classes charmcraft."""
+
+from .package import CharmPackageService
+
+__all__ = ["CharmPackageService"]

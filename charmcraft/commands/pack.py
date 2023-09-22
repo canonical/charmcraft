@@ -19,7 +19,6 @@ import argparse
 import pathlib
 from typing import Dict, List
 
-import craft_application.commands
 import yaml
 from craft_cli import ArgumentParsingError, CraftError, emit
 
@@ -134,6 +133,7 @@ class PackCommand(AppCommand):
             shell=parsed_args.shell,
             shell_after=parsed_args.shell_after,
             measure=parsed_args.measure,
+            package_service=self._services.package,
         )
 
         # decide if this will work on a charm or a bundle

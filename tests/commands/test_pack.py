@@ -908,7 +908,9 @@ def test_prime_extra_globstar_specific_files(
 # tests for the main charm building process
 
 
-def test_charm_builder_infrastructure_called(app_command_charm_config, config, tmp_path):
+def test_charm_builder_infrastructure_called(
+    app_command_charm_config, service_factory, config, tmp_path
+):
     """Check that build.Builder is properly called."""
     measure_filepath = tmp_path / "measurements.json"
     args = get_namespace(
@@ -932,6 +934,7 @@ def test_charm_builder_infrastructure_called(app_command_charm_config, config, t
         shell_after=True,
         shell=True,
         measure=measure_filepath,
+        package_service=service_factory.package,
     )
     builder_instance_mock.run.assert_called_with([], destructive_mode=True)
 

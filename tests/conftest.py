@@ -368,11 +368,9 @@ def stub_extensions(monkeypatch):
 
 @pytest.fixture()
 def service_factory(config: config_module.CharmcraftConfig) -> craft_application.ServiceFactory:
-    factory = craft_application.ServiceFactory(
+    return craft_application.ServiceFactory(
         app=main.APP_METADATA, PackageClass=CharmPackageService, project=config
     )
-
-    return factory
 
 
 @pytest.fixture()

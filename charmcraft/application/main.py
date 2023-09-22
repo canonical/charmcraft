@@ -30,7 +30,7 @@ from charmcraft import errors, models
 from charmcraft.main import GENERAL_SUMMARY, PROJECT_DIR_ARGUMENT
 from charmcraft.main import main as old_main
 from charmcraft.commands import pack
-from charmcraft.parts import CharmPlugin, BundlePlugin
+from charmcraft.parts import BundlePlugin, CharmPlugin
 from charmcraft.reactive_plugin import ReactivePlugin
 from charmcraft.services.package import CharmPackageService
 
@@ -54,12 +54,8 @@ class Charmcraft(Application):
         return [craft_cli.CommandGroup("Lifecycle", commands=[pack.PackCommand])]
 
     # def _configure_services(self) -> None:
-    #     super()._configure_services()
     #     self.services.set_kwargs(
     #         "package",
-    #         work_dir=self._work_dir,
-    #         prime_dir=self.services.lifecycle.prime_dir,
-    #     )
 
     def _get_dispatcher(self) -> craft_cli.Dispatcher:
         """Configure charmcraft, including a fallback to the classic entrypoint.
@@ -109,7 +105,6 @@ def main() -> int:
     services = ServiceFactory(  # type: ignore[call-arg]
         app=APP_METADATA,
         PackageClass=CharmPackageService,
-        # LifecycleClass=CharmLifecycleService,
     )
 
     plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})

@@ -25,6 +25,8 @@ from typing import Optional
 
 def get_managed_environment_home_path():
     """Path for home when running in managed environment."""
+    if is_charmcraft_running_in_developer_mode():
+        return pathlib.Path.cwd()
     return pathlib.Path("/root")
 
 

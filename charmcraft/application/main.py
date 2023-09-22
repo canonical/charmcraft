@@ -19,36 +19,53 @@ from __future__ import annotations
 import signal
 import sys
 
+import craft_application
 import craft_cli
 from craft_application import Application, AppMetadata, ServiceFactory
+from craft_application.services import service_factory
 from craft_cli import emit
+from craft_parts.plugins import plugins
 
 from charmcraft import errors, models
-from charmcraft.main import GENERAL_SUMMARY
+from charmcraft.main import GENERAL_SUMMARY, PROJECT_DIR_ARGUMENT
 from charmcraft.main import main as old_main
+from charmcraft.commands import pack
+from charmcraft.parts import CharmPlugin, BundlePlugin
+from charmcraft.reactive_plugin import ReactivePlugin
+from charmcraft.services.package import CharmPackageService
 
 APP_METADATA = AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
-    ProjectClass=models.charmcraft.Project,
+    ProjectClass=models.charmcraft.CharmcraftConfig,
 )
 
 
 class Charmcraft(Application):
     """Charmcraft application definition."""
 
+    def __init__(self, app: AppMetadata, services: service_factory.ServiceFactory):
+
+        super().__init__(app, services)
+        self.add_global_argument(PROJECT_DIR_ARGUMENT)
+
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
         """Excluding lifecycle commands for right now."""
-        return self._command_groups
+        return [
+            craft_cli.CommandGroup(
+                "Lifecycle",
+                commands=[pack.PackCommand]
+            )
+        ]
 
-    def _configure_services(self) -> None:
-        super()._configure_services()
-        self.services.set_kwargs(
-            "package",
-            work_dir=self._work_dir,
-            prime_dir=self.services.lifecycle.prime_dir,
-        )
+    # def _configure_services(self) -> None:
+    #     super()._configure_services()
+    #     self.services.set_kwargs(
+    #         "package",
+    #         work_dir=self._work_dir,
+    #         prime_dir=self.services.lifecycle.prime_dir,
+    #     )
 
     def _get_dispatcher(self) -> craft_cli.Dispatcher:
         """Configure charmcraft, including a fallback to the classic entrypoint.
@@ -65,7 +82,7 @@ class Charmcraft(Application):
             log_filepath=self.log_path,
         )
 
-        dispatcher = craft_cli.Dispatcher(
+        dispatcher = craft_application.application._Dispatcher(
             self.app.name,
             self.command_groups,
             summary=str(self.app.summary),
@@ -95,9 +112,19 @@ class Charmcraft(Application):
 
 def main() -> int:
     """Run craft-application based charmcraft with classic fallback."""
-    services = ServiceFactory(app=APP_METADATA, PackageClass=None)  # type: ignore[call-arg]
+    services = ServiceFactory(  # type: ignore[call-arg]
+        app=APP_METADATA,
+        PackageClass=CharmPackageService,
+        # LifecycleClass=CharmLifecycleService,
+    )
 
-    app = Charmcraft(app=APP_METADATA, services=services)
+    plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
+
+    app = Charmcraft(
+        app=APP_METADATA,
+        services=services,
+
+    )
 
     try:
         return app.run()

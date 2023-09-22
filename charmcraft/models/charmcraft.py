@@ -21,7 +21,10 @@ import pathlib
 from typing import Any, Dict, List, Literal, Optional, Union
 
 import pydantic
+from craft_application import errors
+from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
+from typing_extensions import Self
 
 from charmcraft.const import (
     CHARM_METADATA_KEYS,
@@ -365,3 +368,19 @@ class CharmcraftConfig(
         schema["properties"].pop("project", None)
         schema["required"].remove("project")
         return schema
+
+
+    @classmethod
+    def from_yaml_file(cls, path: pathlib.Path) -> Self:
+        """Instantiate this model from a YAML file.
+
+        For use with craft-application.
+        """
+        with path.open() as file:
+            data = safe_yaml_load(file)
+        try:
+            return cls.unmarshal(data, Project(dirpath=path.parent, started_at=datetime.datetime.utcnow(), config_provided=True))
+        except pydantic.ValidationError as err:
+            raise errors.CraftValidationError.from_pydantic(
+                err, file_name=path.name
+            ) from None

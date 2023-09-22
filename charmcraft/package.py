@@ -44,7 +44,7 @@ from charmcraft.metafiles.actions import create_actions_yaml
 from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.metafiles.metadata import create_metadata_yaml
-from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.models.charmcraft import Base, BasesConfiguration, CharmcraftConfig
 from charmcraft.utils import build_zip, get_host_architecture, humanize_list, load_yaml
 
 
@@ -89,7 +89,7 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 class Builder:
     """The package builder."""
 
-    def __init__(self, *, config, force, debug, shell, shell_after, measure):
+    def __init__(self, *, config: CharmcraftConfig, force: bool, debug: bool, shell: bool, shell_after: bool, measure: bool):
         self.force_packing = force
         self.debug = debug
         self.shell = shell

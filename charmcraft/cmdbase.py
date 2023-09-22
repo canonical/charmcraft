@@ -15,17 +15,18 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for common base commands functionality."""
-
+import functools
 import json
 
+import craft_application.commands
 import craft_cli
-from craft_cli import ArgumentParsingError, CraftError
+from craft_cli import ArgumentParsingError, CraftError\
 
 JSON_FORMAT = "json"
 FORMAT_HELP_STR = "Produce the result in the specified format (currently only 'json')"
 
 
-class BaseCommand(craft_cli.BaseCommand):
+class BaseCommand(craft_application.commands.AppCommand):
     """Subclass this to create a new command.
 
     The following default attribute is provided beyond craft-cli ones:
@@ -60,14 +61,23 @@ class BaseCommand(craft_cli.BaseCommand):
         :raises ArgumentParsingError: if 'charmcraft.yaml' file is missing.
         :raises CraftError: if any specified config are missing or invaild.
         """
-        if config_file and not self.config.project.config_provided:
+        from charmcraft.models.charmcraft import CharmcraftConfig
+        if isinstance(self.config, CharmcraftConfig):
+            # Classic, pre craft-application run
+            project = self.config.project
+            project_bases = self.config.bases
+        else:
+            # Using craft-application
+            project = self._services.project.project
+            project_bases = self._services.project.bases
+        if config_file and not project.config_provided:
             raise ArgumentParsingError(
                 "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
                 "the current directory or where specified with --project-dir option); see "
                 "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138"
             )
 
-        if bases and self.config.bases is None:
+        if bases and project_bases is None:
             raise CraftError(
                 "The specified command needs a valid 'bases' in 'charmcraft.yaml' configuration "
                 "file (in the current directory or where specified with --project-dir option)."

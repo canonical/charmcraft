@@ -53,6 +53,14 @@ operator development and collaboration.
 See https://charmhub.io/publishing for more information.
 """
 
+PROJECT_DIR_ARGUMENT = GlobalArgument(
+    "project_dir",
+    "option",
+    "-p",
+    "--project-dir",
+    "Specify the project's directory (defaults to current)",
+)
+
 # Collect commands in different groups, for easier human consumption. Note that this is not
 # declared in each command because it's much easier to do this separation/grouping in one
 # central place and not distributed in several classes/files. Also note that order here is
@@ -145,13 +153,7 @@ def main(argv):
     emit.debug("Starting classic fallback.")
 
     extra_global_options = [
-        GlobalArgument(
-            "project_dir",
-            "option",
-            "-p",
-            "--project-dir",
-            "Specify the project's directory (defaults to current)",
-        ),
+        PROJECT_DIR_ARGUMENT,
     ]
 
     # process

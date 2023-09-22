@@ -24,6 +24,7 @@ from craft_cli import ArgumentParsingError, CraftError, emit
 
 from charmcraft import env, instrum, package
 from charmcraft.cmdbase import BaseCommand
+from charmcraft.models.charmcraft import CharmcraftConfig
 from charmcraft.utils import find_charm_sources, get_charm_name_from_path, load_yaml
 
 # the minimum set of files in a bundle
@@ -56,6 +57,7 @@ class PackCommand(BaseCommand):
     help_msg = "Build the charm or bundle"
     overview = _overview
     common = True
+    run_managed = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -122,8 +124,10 @@ class PackCommand(BaseCommand):
         """Run the command."""
         self._check_config(config_file=True)
 
+        config: CharmcraftConfig = self._services.project
+
         builder = package.Builder(
-            config=self.config,
+            config=config,
             force=parsed_args.force,
             debug=parsed_args.debug,
             shell=parsed_args.shell,
@@ -132,41 +136,41 @@ class PackCommand(BaseCommand):
         )
 
         # decide if this will work on a charm or a bundle
-        if self.config.type == "charm":
+        if config.type == "charm":
             if parsed_args.include_all_charms:
                 raise ArgumentParsingError(
                     "--include-all-charms can only be used when packing a bundle. "
-                    f"Currently trying to pack: {self.config.project.dirpath}"
+                    f"Currently trying to pack: {config.project.dirpath}"
                 )
             if parsed_args.include_charm:
                 raise ArgumentParsingError(
                     "--include-charm can only be used when packing a bundle. "
-                    f"Currently trying to pack: {self.config.project.dirpath}"
+                    f"Currently trying to pack: {config.project.dirpath}"
                 )
             if parsed_args.output_bundle:
                 raise ArgumentParsingError(
                     "--output-bundle can only be used when packing a bundle. "
-                    f"Currently trying to pack: {self.config.project.dirpath}"
+                    f"Currently trying to pack: {config.project.dirpath}"
                 )
             self._check_config(bases=True)
             with instrum.Timer("Whole pack run"):
                 self._pack_charm(parsed_args, builder)
-        elif self.config.type == "bundle":
+        elif config.type == "bundle":
             if parsed_args.shell:
                 package.launch_shell()
                 return
-            bundle_filepath = self.config.project.dirpath / "bundle.yaml"
+            bundle_filepath = config.project.dirpath / "bundle.yaml"
             bundle = load_yaml(bundle_filepath)
             if bundle is None:
                 raise CraftError(f"Missing or invalid main bundle file: {str(bundle_filepath)!r}.")
             if parsed_args.include_all_charms:
                 charm_names = bundle.get("applications", {}).keys()
-                charms = find_charm_sources(self.config.project.dirpath, charm_names)
+                charms = find_charm_sources(config.project.dirpath, charm_names)
             elif parsed_args.include_charm:
                 charms: Dict[str, pathlib.Path] = {}
                 for path in parsed_args.include_charm:
                     if not path.is_absolute():
-                        path = self.config.project.dirpath / path
+                        path = config.project.dirpath / path
                     name = get_charm_name_from_path(path)
                     charms[name] = path
             else:
@@ -177,7 +181,7 @@ class PackCommand(BaseCommand):
                 with parsed_args.output_bundle.open("wt") as file:
                     yaml.safe_dump(bundle, file)
         else:
-            raise CraftError(f"Unknown type {self.config.type!r} in charmcraft.yaml")
+            raise CraftError(f"Unknown type {config.type!r} in charmcraft.yaml")
 
         if parsed_args.measure:
             instrum.dump(parsed_args.measure)
@@ -188,7 +192,7 @@ class PackCommand(BaseCommand):
             return
 
         msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
-        len_configured_bases = len(self.config.bases)
+        len_configured_bases = len(self._services.project.bases)
         for bases_index in bases_indices:
             if bases_index < 0:
                 raise CraftError(msg.format(bases_index))
@@ -228,10 +232,10 @@ class PackCommand(BaseCommand):
     ) -> None:
         """Pack a bundle."""
         emit.progress("Packing the bundle.")
-        project = self.config.project
+        project = self.config["project"]
 
-        if self.config.parts:
-            config_parts = self.config.parts.copy()
+        if self.config["parts"]:
+            config_parts = self.config["parts"].copy()
         else:
             # "parts" not declared, create an implicit "bundle" part
             config_parts = {"bundle": {"plugin": "bundle"}}

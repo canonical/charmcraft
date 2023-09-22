@@ -369,7 +369,6 @@ class CharmcraftConfig(
         schema["required"].remove("project")
         return schema
 
-
     @classmethod
     def from_yaml_file(cls, path: pathlib.Path) -> Self:
         """Instantiate this model from a YAML file.
@@ -379,8 +378,13 @@ class CharmcraftConfig(
         with path.open() as file:
             data = safe_yaml_load(file)
         try:
-            return cls.unmarshal(data, Project(dirpath=path.parent, started_at=datetime.datetime.utcnow(), config_provided=True))
+            return cls.unmarshal(
+                data,
+                Project(
+                    dirpath=path.parent,
+                    started_at=datetime.datetime.utcnow(),
+                    config_provided=True,
+                ),
+            )
         except pydantic.ValidationError as err:
-            raise errors.CraftValidationError.from_pydantic(
-                err, file_name=path.name
-            ) from None
+            raise errors.CraftValidationError.from_pydantic(err, file_name=path.name) from None

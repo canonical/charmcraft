@@ -25,6 +25,7 @@ import types
 from typing import Optional
 from unittest.mock import Mock
 
+import craft_application
 import pytest
 import responses as responses_module
 import yaml
@@ -32,9 +33,11 @@ from craft_parts import callbacks
 from craft_providers import Executor, Provider
 
 from charmcraft import deprecations, instrum, parts
+from charmcraft.application import main
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
 from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.services.package import CharmPackageService
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -358,3 +361,37 @@ def stub_extensions(monkeypatch):
     monkeypatch.setattr(registry, "_EXTENSIONS", extensions_dict)
 
     return extensions_dict
+
+
+# region Fixtures for craft-application based commands.
+
+
+@pytest.fixture()
+def service_factory(config: config_module.CharmcraftConfig) -> craft_application.ServiceFactory:
+    factory = craft_application.ServiceFactory(
+        app=main.APP_METADATA, PackageClass=CharmPackageService, project=config
+    )
+
+    return factory
+
+
+@pytest.fixture()
+def app_command_charm_config(config, service_factory):
+    config.set(type="charm")
+    return {
+        "app": service_factory.app,
+        "services": service_factory,
+    }
+
+
+@pytest.fixture()
+def app_command_bundle_config(bundle_config, service_factory):
+    bundle_config.set(type="bundle")
+    service_factory.project = bundle_config
+    return {
+        "app": service_factory.app,
+        "services": service_factory,
+    }
+
+
+# endregion

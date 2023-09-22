@@ -129,9 +129,9 @@ def mock_launch_shell():
         ),
     ],
 )
-def test_invalid_arguments(config, namespace, message_start, project_type):
-    config.set(type=project_type)
-    cmd = PackCommand(config)
+def test_invalid_arguments(app_command_charm_config, namespace, message_start, project_type):
+    app_command_charm_config["services"].project.set(type=project_type)
+    cmd = PackCommand(app_command_charm_config)
 
     with pytest.raises(ArgumentParsingError) as exc_info:
         cmd.run(namespace)
@@ -143,20 +143,18 @@ def test_invalid_arguments(config, namespace, message_start, project_type):
 # -- tests for the project type decissor
 
 
-def test_resolve_charm_type(config):
+def test_resolve_charm_type(app_command_charm_config):
     """The config indicates the project is a charm."""
-    config.set(type="charm")
-    cmd = PackCommand(config)
+    cmd = PackCommand(app_command_charm_config)
 
     with patch.object(cmd, "_pack_charm") as mock_obj:
         cmd.run(noargs)
     mock_obj.assert_called_with(noargs, mock.ANY)
 
 
-def test_resolve_bundle_type(config):
+def test_resolve_bundle_type(app_command_bundle_config):
     """The config indicates the project is a bundle."""
-    config.set(type="bundle")
-    cmd = PackCommand(config)
+    cmd = PackCommand(app_command_bundle_config)
 
     with patch.object(pack, "load_yaml") as mock_yaml:
         mock_yaml.return_value = {}
@@ -165,10 +163,9 @@ def test_resolve_bundle_type(config):
     mock_pack.assert_called_with(noargs, {}, mock.ANY)
 
 
-def test_resolve_dump_measure_if_indicated(config, tmp_path):
+def test_resolve_dump_measure_if_indicated(app_command_charm_config, tmp_path):
     """Dumps measurement if the user requested it."""
-    config.set(type="charm")
-    cmd = PackCommand(config)
+    cmd = PackCommand(app_command_charm_config)
 
     measure_filepath = tmp_path / "testmeasures.json"
     args = get_namespace(measure=measure_filepath)
@@ -200,17 +197,22 @@ def test_resolve_dump_measure_if_indicated(config, tmp_path):
     ],
 )
 def test_bundle_simple_successful_build(
-    tmp_path, emitter, bundle_yaml, bundle_config, formatted, namespace_kwargs
+    tmp_path,
+    emitter,
+    bundle_yaml,
+    bundle_config,
+    app_command_bundle_config,
+    formatted,
+    namespace_kwargs,
 ):
     """A simple happy story."""
     # mandatory files (other than the automatically provided manifest)
     content = bundle_yaml(name="testbundle")
-    bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
     # build!
     args = get_namespace(format=formatted, **namespace_kwargs)
-    PackCommand(bundle_config).run(args)
+    PackCommand(app_command_bundle_config).run(args)
 
     # check
     zipname = tmp_path / "testbundle.zip"
@@ -255,14 +257,14 @@ def test_bundle_recursive_pack_setup(
     build_charm_directory,
     emitter,
     bundle_yaml,
-    bundle_config,
+    app_command_bundle_config,
     parsed_args,
     charms,
 ):
     charms_content = {"applications": charms, "name": "testbundle"}
     bundle_yaml(name="testbundle", base_content=charms_content)
     (tmp_path / "README.md").touch()
-    packer = PackCommand(bundle_config)
+    packer = PackCommand(app_command_bundle_config)
     mock_pack = mocker.patch.object(packer, "_pack_bundle")
     expected_charms = build_charm_directory(tmp_path, fake_charms=charms)
 
@@ -284,12 +286,12 @@ def test_bundle_recursive_pack_setup(
     ],
 )
 def test_bundle_non_recursive_pack_setup(
-    tmp_path, mocker, emitter, bundle_yaml, bundle_config, parsed_args, charms
+    tmp_path, mocker, emitter, bundle_yaml, app_command_bundle_config, parsed_args, charms
 ):
     charms_content = {"applications": charms, "name": "testbundle"}
     bundle_yaml(name="testbundle", base_content=charms_content)
     (tmp_path / "README.md").touch()
-    packer = PackCommand(bundle_config)
+    packer = PackCommand(app_command_bundle_config)
     mock_pack = mocker.patch.object(packer, "_pack_bundle")
 
     packer.run(parsed_args)
@@ -298,36 +300,34 @@ def test_bundle_non_recursive_pack_setup(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_bundle_missing_bundle_file(tmp_path, bundle_config):
+def test_bundle_missing_bundle_file(tmp_path, app_command_bundle_config):
     """Can not build a bundle without bundle.yaml."""
     # build without a bundle.yaml!
     with pytest.raises(CraftError) as cm:
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
     assert str(cm.value) == (
         "Missing or invalid main bundle file: '{}'.".format(tmp_path / "bundle.yaml")
     )
 
 
-def test_bundle_missing_other_mandatory_file(tmp_path, bundle_config, bundle_yaml):
+def test_bundle_missing_other_mandatory_file(tmp_path, app_command_bundle_config, bundle_yaml):
     """Can not build a bundle without any of the mandatory files."""
     bundle_yaml(name="testbundle")
-    bundle_config.set(type="bundle")
 
     # build without a README!
     with pytest.raises(CraftError) as cm:
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
     assert str(cm.value) == "Missing mandatory file: {!r}.".format(str(tmp_path / "README.md"))
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
+def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, app_command_bundle_config):
     """Can not build a bundle without name."""
-    bundle_config.set(type="bundle")
     (tmp_path / "README.md").touch()
 
     # build!
     with pytest.raises(CraftError) as cm:
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
     assert str(cm.value) == (
         "Invalid bundle config; "
         "missing a 'name' field indicating the bundle's name in file '{}'.".format(
@@ -337,47 +337,47 @@ def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
 
 
 def test_bundle_debug_no_error(
-    tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell
+    tmp_path, bundle_yaml, app_command_bundle_config, mock_parts, mock_launch_shell
 ):
     bundle_yaml(name="testbundle")
-    bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    PackCommand(bundle_config).run(get_namespace(debug=True))
+    PackCommand(app_command_bundle_config).run(get_namespace(debug=True))
 
     assert mock_launch_shell.mock_calls == []
 
 
 def test_bundle_debug_with_error(
-    tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell
+    tmp_path, bundle_yaml, app_command_bundle_config, mock_parts, mock_launch_shell
 ):
     mock_parts.PartsLifecycle.return_value.run.side_effect = CraftError("fail")
     bundle_yaml(name="testbundle")
-    bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
     with pytest.raises(CraftError):
-        PackCommand(bundle_config).run(get_namespace(debug=True))
+        PackCommand(app_command_bundle_config).run(get_namespace(debug=True))
 
     assert mock_launch_shell.mock_calls == [mock.call()]
 
 
-def test_bundle_shell(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell):
+def test_bundle_shell(
+    tmp_path, bundle_yaml, app_command_bundle_config, mock_parts, mock_launch_shell
+):
     bundle_yaml(name="testbundle")
-    bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    PackCommand(bundle_config).run(get_namespace(shell=True))
+    PackCommand(app_command_bundle_config).run(get_namespace(shell=True))
 
     assert mock_launch_shell.mock_calls == [mock.call()]
 
 
-def test_bundle_shell_after(tmp_path, bundle_yaml, bundle_config, mock_parts, mock_launch_shell):
+def test_bundle_shell_after(
+    tmp_path, bundle_yaml, app_command_bundle_config, mock_parts, mock_launch_shell
+):
     bundle_yaml(name="testbundle")
-    bundle_config.set(type="bundle")
     (tmp_path / "README.md").write_text("test readme")
 
-    PackCommand(bundle_config).run(get_namespace(shell_after=True))
+    PackCommand(app_command_bundle_config).run(get_namespace(shell_after=True))
 
     assert mock_launch_shell.mock_calls == [mock.call()]
 
@@ -425,6 +425,8 @@ def test_bundle_parts_not_defined(
     prepare_metadata_yaml,
     charmcraft_yaml,
     metadata_yaml,
+    app_command_bundle_config,
+    service_factory,
 ):
     """Parts are not defined.
 
@@ -438,12 +440,13 @@ def test_bundle_parts_not_defined(
     prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
+    service_factory.project = config
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
 
     mock_parts.PartsLifecycle.side_effect = SystemExit()
     with pytest.raises(SystemExit):
-        PackCommand(config).run(get_namespace(shell_after=True))
+        PackCommand(app_command_bundle_config).run(get_namespace(shell_after=True))
 
     mock_parts.PartsLifecycle.assert_called_once_with(
         {
@@ -511,6 +514,8 @@ def test_bundle_parts_with_bundle_part(
     prepare_metadata_yaml,
     charmcraft_yaml,
     metadata_yaml,
+    app_command_bundle_config,
+    service_factory,
 ):
     """Parts are declared with a charm part with implicit plugin.
 
@@ -525,12 +530,13 @@ def test_bundle_parts_with_bundle_part(
     prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
+    service_factory.project = config
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     mock_parts.PartsLifecycle.side_effect = SystemExit()
 
     with pytest.raises(SystemExit):
-        PackCommand(config).run(get_namespace(shell_after=True))
+        PackCommand(app_command_bundle_config).run(get_namespace(shell_after=True))
     mock_parts.PartsLifecycle.assert_has_calls(
         [
             call(
@@ -600,6 +606,8 @@ def test_bundle_parts_without_bundle_part(
     prepare_metadata_yaml,
     charmcraft_yaml,
     metadata_yaml,
+    service_factory,
+    app_command_bundle_config,
 ):
     """Parts are declared without a bundle part.
 
@@ -613,11 +621,12 @@ def test_bundle_parts_without_bundle_part(
     prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
+    service_factory.project = config
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     mock_parts.PartsLifecycle.side_effect = SystemExit()
     with pytest.raises(SystemExit):
-        PackCommand(config).run(get_namespace(shell_after=True))
+        PackCommand(app_command_bundle_config).run(get_namespace(shell_after=True))
     mock_parts.PartsLifecycle.assert_has_calls(
         [
             call(
@@ -681,6 +690,8 @@ def test_bundle_parts_with_bundle_part_with_plugin(
     prepare_metadata_yaml,
     charmcraft_yaml,
     metadata_yaml,
+    service_factory,
+    app_command_bundle_config,
 ):
     """Parts are declared with a bundle part that uses a different plugin.
 
@@ -695,11 +706,12 @@ def test_bundle_parts_with_bundle_part_with_plugin(
     prepare_metadata_yaml(metadata_yaml)
 
     config = load(tmp_path)
+    service_factory.project = config
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     mock_parts.PartsLifecycle.side_effect = SystemExit()
     with pytest.raises(SystemExit):
-        PackCommand(config).run(get_namespace(shell_after=True))
+        PackCommand(app_command_bundle_config).run(get_namespace(shell_after=True))
     mock_parts.PartsLifecycle.assert_has_calls(
         [
             call(
@@ -721,7 +733,7 @@ def test_bundle_parts_with_bundle_part_with_plugin(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_prime_mandatory_ok(tmp_path, bundle_yaml, bundle_config):
+def test_prime_mandatory_ok(tmp_path, bundle_yaml, app_command_bundle_config):
     """Simple successful case getting all mandatory files."""
     bundle_yaml(name="testbundle")
     test_mandatory = ["foo.txt", "bar.bin"]
@@ -731,7 +743,7 @@ def test_prime_mandatory_ok(tmp_path, bundle_yaml, bundle_config):
     test_file2.touch()
 
     with patch.object(pack, "MANDATORY_FILES", test_mandatory):
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -740,7 +752,7 @@ def test_prime_mandatory_ok(tmp_path, bundle_yaml, bundle_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_prime_extra_ok(tmp_path, bundle_yaml, bundle_config):
+def test_prime_extra_ok(tmp_path, bundle_yaml, app_command_bundle_config, bundle_config):
     """Extra files were indicated ok."""
     bundle_yaml(name="testbundle")
     bundle_config.set(prime=["f2.txt", "f1.txt"])
@@ -750,7 +762,7 @@ def test_prime_extra_ok(tmp_path, bundle_yaml, bundle_config):
     testfile2.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -759,7 +771,7 @@ def test_prime_extra_ok(tmp_path, bundle_yaml, bundle_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config):
+def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config, app_command_bundle_config):
     """Extra files were indicated but not found."""
     bundle_yaml(name="testbundle")
     bundle_config.set(prime=["f2.txt", "f1.txt"])
@@ -768,7 +780,7 @@ def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config):
 
     with patch.object(pack, "MANDATORY_FILES", []):
         with pytest.raises(CraftError) as err:
-            PackCommand(bundle_config).run(noargs)
+            PackCommand(app_command_bundle_config).run(noargs)
     assert str(err.value) == (
         "Parts processing error: Failed to copy '{}/build/stage/f2.txt': "
         "no such file or directory.".format(tmp_path)
@@ -776,7 +788,7 @@ def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_prime_extra_long_path(tmp_path, bundle_yaml, bundle_config):
+def test_prime_extra_long_path(tmp_path, bundle_yaml, bundle_config, app_command_bundle_config):
     """An extra file can be deep in directories."""
     bundle_yaml(name="testbundle")
     bundle_config.set(prime=["foo/bar/baz/extra.txt"])
@@ -785,7 +797,7 @@ def test_prime_extra_long_path(tmp_path, bundle_yaml, bundle_config):
     testfile.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -793,7 +805,7 @@ def test_prime_extra_long_path(tmp_path, bundle_yaml, bundle_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_prime_extra_wildcards_ok(tmp_path, bundle_yaml, bundle_config):
+def test_prime_extra_wildcards_ok(tmp_path, bundle_yaml, bundle_config, app_command_bundle_config):
     """Use wildcards to specify several files ok."""
     bundle_yaml(name="testbundle")
     bundle_config.set(prime=["*.txt"])
@@ -805,7 +817,7 @@ def test_prime_extra_wildcards_ok(tmp_path, bundle_yaml, bundle_config):
     testfile3.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -815,14 +827,16 @@ def test_prime_extra_wildcards_ok(tmp_path, bundle_yaml, bundle_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_prime_extra_wildcards_not_found(tmp_path, bundle_yaml, bundle_config):
+def test_prime_extra_wildcards_not_found(
+    tmp_path, bundle_yaml, bundle_config, app_command_bundle_config
+):
     """Use wildcards to specify several files but nothing found."""
     bundle_yaml(name="testbundle")
     bundle_config.set(prime=["*.txt"])
 
     # non-existent files are not included if using a wildcard
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -830,7 +844,7 @@ def test_prime_extra_wildcards_not_found(tmp_path, bundle_yaml, bundle_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config):
+def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config, app_command_bundle_config):
     """Double star means whatever directories are in the path."""
     bundle_yaml(name="testbundle")
     bundle_config.set(prime=["lib/**/*"])
@@ -849,7 +863,7 @@ def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config):
         testfile.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -858,7 +872,9 @@ def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_config):
+def test_prime_extra_globstar_specific_files(
+    tmp_path, bundle_yaml, bundle_config, app_command_bundle_config
+):
     """Combination of both mechanisms."""
     bundle_yaml(name="testbundle")
     bundle_config.set(prime=["lib/**/*.txt"])
@@ -881,7 +897,7 @@ def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_confi
         testfile.touch()
 
     with patch.object(pack, "MANDATORY_FILES", []):
-        PackCommand(bundle_config).run(noargs)
+        PackCommand(app_command_bundle_config).run(noargs)
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
@@ -892,7 +908,7 @@ def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_confi
 # tests for the main charm building process
 
 
-def test_charm_builder_infrastructure_called(config, tmp_path):
+def test_charm_builder_infrastructure_called(app_command_charm_config, config, tmp_path):
     """Check that build.Builder is properly called."""
     measure_filepath = tmp_path / "measurements.json"
     args = get_namespace(
@@ -904,10 +920,11 @@ def test_charm_builder_infrastructure_called(config, tmp_path):
         shell_after=True,
         measure=measure_filepath,
     )
-    config.set(type="charm")
     with patch("charmcraft.package.Builder") as builder_class_mock:
         builder_class_mock.return_value = builder_instance_mock = MagicMock()
-        PackCommand(config).run(args)
+
+        PackCommand(app_command_charm_config).run(args)
+
     builder_class_mock.assert_called_with(
         config=config,
         debug=True,
@@ -920,16 +937,15 @@ def test_charm_builder_infrastructure_called(config, tmp_path):
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_charm_pack_output_simple(config, emitter, formatted):
+def test_charm_pack_output_simple(app_command_charm_config, emitter, formatted):
     """Output when packing one charm."""
     args = get_namespace(format=formatted)
-    config.set(type="charm")
 
     builder_instance_mock = MagicMock()
     builder_instance_mock.run.return_value = ["mystuff.charm"]
     with patch("charmcraft.package.Builder") as builder_class_mock:
         builder_class_mock.return_value = builder_instance_mock
-        PackCommand(config).run(args)
+        PackCommand(app_command_charm_config).run(args)
 
     if formatted:
         emitter.assert_json_output({"charms": ["mystuff.charm"]})
@@ -943,16 +959,15 @@ def test_charm_pack_output_simple(config, emitter, formatted):
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_charm_pack_output_multiple(config, emitter, formatted):
+def test_charm_pack_output_multiple(app_command_charm_config, emitter, formatted):
     """Output when packing multiple charm."""
     args = get_namespace(format=formatted)
-    config.set(type="charm")
 
     builder_instance_mock = MagicMock()
     builder_instance_mock.run.return_value = ["mystuff1.charm", "mystuff2.charm"]
     with patch("charmcraft.package.Builder") as builder_class_mock:
         builder_class_mock.return_value = builder_instance_mock
-        PackCommand(config).run(args)
+        PackCommand(app_command_charm_config).run(args)
 
     if formatted:
         emitter.assert_json_output({"charms": ["mystuff1.charm", "mystuff2.charm"]})
@@ -967,17 +982,16 @@ def test_charm_pack_output_multiple(config, emitter, formatted):
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_charm_pack_output_managed_mode(config, emitter, formatted, monkeypatch):
+def test_charm_pack_output_managed_mode(app_command_charm_config, emitter, formatted, monkeypatch):
     """Output when packing charms under managed mode."""
     args = get_namespace(format=formatted)
-    config.set(type="charm")
 
     builder_instance_mock = MagicMock()
     builder_instance_mock.run.return_value = ["mystuff.charm"]
     with patch("charmcraft.env.is_charmcraft_running_in_managed_mode", return_value=True):
         with patch("charmcraft.package.Builder") as builder_class_mock:
             builder_class_mock.return_value = builder_instance_mock
-            PackCommand(config).run(args)
+            PackCommand(app_command_charm_config).run(args)
 
     for emitter_call in emitter.interactions:
         assert emitter_call.args[0] != "message"
@@ -997,7 +1011,7 @@ def test_charm_pack_output_managed_mode(config, emitter, formatted, monkeypatch)
         ([3, 1], 3),  # too big
     ],
 )
-def test_validator_bases_index_invalid(bases_indices, bad_index, config):
+def test_validator_bases_index_invalid(bases_indices, bad_index, app_command_charm_config, config):
     """Validate the bases indices given in the command line."""
     config.set(
         bases=[
@@ -1009,7 +1023,7 @@ def test_validator_bases_index_invalid(bases_indices, bad_index, config):
             ),
         ]
     )
-    cmd = PackCommand(config)
+    cmd = PackCommand(app_command_charm_config)
 
     if bad_index is None:
         # success case

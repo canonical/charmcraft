@@ -89,7 +89,16 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 class Builder:
     """The package builder."""
 
-    def __init__(self, *, config: CharmcraftConfig, force: bool, debug: bool, shell: bool, shell_after: bool, measure: bool):
+    def __init__(
+        self,
+        *,
+        config: CharmcraftConfig,
+        force: bool,
+        debug: bool,
+        shell: bool,
+        shell_after: bool,
+        measure: bool,
+    ):
         self.force_packing = force
         self.debug = debug
         self.shell = shell

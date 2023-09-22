@@ -39,11 +39,13 @@ class CharmPackageService(PackageService):
         :param dest: Directory into which to write the package(s).
         :returns: A list of paths to created packages.
         """
+        raise NotImplementedError("TODO: pack within the pack service.")
 
     @property
     @abc.abstractmethod
     def metadata(self) -> models.BaseMetadata:
-        """The metadata model for this project."""
+        """Get the metadata model for this project."""
+        raise NotImplementedError("TODO: have the pack service write the metadata.")
 
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write the project metadata to metadata.yaml in the given directory.

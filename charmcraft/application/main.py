@@ -45,19 +45,13 @@ class Charmcraft(Application):
     """Charmcraft application definition."""
 
     def __init__(self, app: AppMetadata, services: service_factory.ServiceFactory):
-
         super().__init__(app, services)
         self.add_global_argument(PROJECT_DIR_ARGUMENT)
 
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
         """Excluding lifecycle commands for right now."""
-        return [
-            craft_cli.CommandGroup(
-                "Lifecycle",
-                commands=[pack.PackCommand]
-            )
-        ]
+        return [craft_cli.CommandGroup("Lifecycle", commands=[pack.PackCommand])]
 
     # def _configure_services(self) -> None:
     #     super()._configure_services()
@@ -123,7 +117,6 @@ def main() -> int:
     app = Charmcraft(
         app=APP_METADATA,
         services=services,
-
     )
 
     try:

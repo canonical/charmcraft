@@ -729,7 +729,7 @@ def test_aesthetic_help_msg(command):
 
 
 @pytest.mark.parametrize("command", all_commands)
-def test_aesthetic_args_options_msg(command, config):
+def test_aesthetic_args_options_msg(command):
     """All real commands args help messages start with uppercase and do not end with a dot."""
 
     class FakeParser:
@@ -746,11 +746,11 @@ def test_aesthetic_args_options_msg(command, config):
             assert help_msg[0].isupper()
             assert help_msg[-1] != "."
 
-    command(config).fill_parser(FakeParser())
+    command(None).fill_parser(FakeParser())
 
 
 @pytest.mark.parametrize("command_class", all_commands)
-def test_usage_of_parsed_args(command_class, config):
+def test_usage_of_parsed_args(command_class):
     """The elements accesed on parsed_args need to be added before.
 
     This test is useful because normally all the tests for any command fake the
@@ -758,7 +758,7 @@ def test_usage_of_parsed_args(command_class, config):
     execution but forgot to add the parameter in the 'fill_parser' method.
     """
     # get the list of attributes added by the command to the parser
-    cmd = command_class(config)
+    cmd = command_class(None)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     added_attributes = {action.dest for action in parser._actions}

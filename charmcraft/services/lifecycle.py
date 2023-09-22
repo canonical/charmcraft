@@ -34,9 +34,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class CharmLifecycleService(LifecycleService):
     """Business logic for creating packages."""
+
+
 #
 #     def setup(self) -> None:
 #
 #         super().setup()
-
-

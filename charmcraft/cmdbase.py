@@ -20,13 +20,13 @@ import json
 
 import craft_application.commands
 import craft_cli
-from craft_cli import ArgumentParsingError, CraftError\
+from craft_cli import ArgumentParsingError, CraftError
 
 JSON_FORMAT = "json"
 FORMAT_HELP_STR = "Produce the result in the specified format (currently only 'json')"
 
 
-class BaseCommand(craft_application.commands.AppCommand):
+class BaseCommand(craft_cli.BaseCommand):
     """Subclass this to create a new command.
 
     The following default attribute is provided beyond craft-cli ones:
@@ -62,6 +62,7 @@ class BaseCommand(craft_application.commands.AppCommand):
         :raises CraftError: if any specified config are missing or invaild.
         """
         from charmcraft.models.charmcraft import CharmcraftConfig
+
         if isinstance(self.config, CharmcraftConfig):
             # Classic, pre craft-application run
             project = self.config.project
@@ -82,3 +83,7 @@ class BaseCommand(craft_application.commands.AppCommand):
                 "The specified command needs a valid 'bases' in 'charmcraft.yaml' configuration "
                 "file (in the current directory or where specified with --project-dir option)."
             )
+
+
+class AppCommand(craft_application.commands.AppCommand, BaseCommand):
+    """Base class for commands that have been migrated to craft-application."""

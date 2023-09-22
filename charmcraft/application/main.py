@@ -23,12 +23,13 @@ import craft_cli
 from craft_application import Application, AppMetadata, ServiceFactory
 from craft_cli import emit
 
-import charmcraft.main
 from charmcraft import errors, models
+from charmcraft.main import GENERAL_SUMMARY
+from charmcraft.main import main as old_main
 
 APP_METADATA = AppMetadata(
     name="charmcraft",
-    summary=charmcraft.main.GENERAL_SUMMARY,
+    summary=GENERAL_SUMMARY,
     ProjectClass=models.charmcraft.Project,
 )
 
@@ -94,13 +95,11 @@ class Charmcraft(Application):
 
 def main() -> int:
     """Run craft-application based charmcraft with classic fallback."""
-    services = ServiceFactory(  # type: ignore[call-arg]
-        app=APP_METADATA, PackageClass=None  # SourcePackageService,
-    )
+    services = ServiceFactory(app=APP_METADATA, PackageClass=None)  # type: ignore[call-arg]
 
     app = Charmcraft(app=APP_METADATA, services=services)
 
     try:
         return app.run()
     except errors.ClassicFallback:
-        return charmcraft.main.main(sys.argv)
+        return old_main(sys.argv)

@@ -188,6 +188,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pyinstaller -r requirements.txt
+          pip install .
       - name: Build
         run: |
           pyinstaller charmcraft.spec

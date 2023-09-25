@@ -27,13 +27,12 @@ from craft_cli import (
     CommandGroup,
     CraftError,
     Dispatcher,
-    EmitterMode,
     GlobalArgument,
     ProvideHelpException,
     emit,
 )
 
-from charmcraft import __version__, config, env, utils
+from charmcraft import config, env, utils
 from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.const import SHARED_CACHE_ENV_VAR
@@ -142,22 +141,9 @@ def _emit_error(error, cause=None):
     emit.error(error)
 
 
-def main(argv=None):
+def main(argv):
     """Provide the main entry point."""
-    if env.is_charmcraft_running_in_managed_mode():
-        logpath = env.get_managed_environment_log_path()
-    else:
-        logpath = None
-
-    emit.init(
-        EmitterMode.BRIEF,
-        "charmcraft",
-        f"Starting charmcraft version {__version__}",
-        log_filepath=logpath,
-    )
-
-    if argv is None:
-        argv = sys.argv
+    emit.debug("Starting classic fallback.")
 
     extra_global_options = [
         GlobalArgument(

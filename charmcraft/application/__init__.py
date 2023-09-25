@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+"""Craft-application based entrypoint for charmcraft.
 
-"""Init file to allow execution of charmcraft as a module."""
+This submodule contains what's needed to run charmcraft with the
+craft-application framework, falling back to "classic" charmcraft when a command
+is not available.
 
-import sys
-
-from charmcraft.application import main
-
-sys.exit(main.main())
+Help is (for now) handled by classic charmcraft.
+"""

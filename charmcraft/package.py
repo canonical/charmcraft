@@ -89,7 +89,16 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 class Builder:
     """The package builder."""
 
-    def __init__(self, *, config, force, debug, shell, shell_after, measure):
+    def __init__(
+        self,
+        *,
+        config,
+        force,
+        debug,
+        shell,
+        shell_after,
+        measure,
+    ):
         self.force_packing = force
         self.debug = debug
         self.shell = shell
@@ -98,6 +107,8 @@ class Builder:
 
         self.charmdir = config.project.dirpath
         self.buildpath = self.charmdir / BUILD_DIRNAME
+        self.shared_cache_path = charmcraft.env.get_host_shared_cache_path()
+
         self.config = config
         if self.config.parts:
             self._parts = self.config.parts.copy()
@@ -359,6 +370,7 @@ class Builder:
         base_configuration = charmcraft.providers.get_base_configuration(
             alias=build_base_alias,
             instance_name=instance_name,
+            shared_cache_path=self.shared_cache_path,
         )
 
         if build_on.name == "ubuntu":

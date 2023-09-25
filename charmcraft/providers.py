@@ -174,6 +174,7 @@ def get_base_configuration(
     *,
     alias: enum.Enum,
     instance_name: str,
+    shared_cache_path: Optional[pathlib.Path] = None,
 ) -> Base:
     """Create a Base configuration."""
     # injecting a snap on a non-linux system is not supported, so default to
@@ -191,6 +192,7 @@ def get_base_configuration(
         hostname=instance_name,
         snaps=[charmcraft_snap],
         compatibility_tag=f"charmcraft-{base.compatibility_tag}.0",
+        cache_path=shared_cache_path,
     )
 
 

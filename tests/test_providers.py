@@ -516,6 +516,13 @@ def test_get_instance_name(
 
 
 @pytest.mark.parametrize(
+    "cache_path",
+    [
+        None,
+        pathlib.Path("charmcraft-cache"),
+    ],
+)
+@pytest.mark.parametrize(
     ("platform", "snap_channel", "expected_snap_channel"),
     [
         ("linux", None, None),
@@ -538,7 +545,9 @@ def test_get_base_configuration_ubuntu(
     snap_channel,
     expected_snap_channel,
     alias_ubuntu,
+    cache_path,
     mocker,
+    tmp_path,
 ):
     """Verify the snapcraft snap is installed from the correct channel."""
     mocker.patch("sys.platform", platform)
@@ -551,7 +560,13 @@ def test_get_base_configuration_ubuntu(
     mock_buildd_base = mocker.patch("craft_providers.bases.ubuntu.BuilddBase")
     mock_buildd_base.compatibility_tag = "buildd-base-v0"
 
-    providers.get_base_configuration(alias=alias_ubuntu, instance_name="test-instance-name")
+    if cache_path:
+        cache_path = tmp_path / cache_path
+        cache_path.mkdir(parents=True, exist_ok=True)
+
+    providers.get_base_configuration(
+        alias=alias_ubuntu, instance_name="test-instance-name", shared_cache_path=cache_path
+    )
 
     mock_buildd_base.assert_called_with(
         alias=alias_ubuntu,
@@ -559,9 +574,17 @@ def test_get_base_configuration_ubuntu(
         hostname="test-instance-name",
         snaps=[Snap(name="charmcraft", channel=expected_snap_channel, classic=True)],
         compatibility_tag="charmcraft-buildd-base-v0.0",
+        cache_path=cache_path,
     )
 
 
+@pytest.mark.parametrize(
+    "cache_path",
+    [
+        None,
+        pathlib.Path("charmcraft-cache"),
+    ],
+)
 @pytest.mark.parametrize(
     ("platform", "snap_channel", "expected_snap_channel"),
     [
@@ -576,7 +599,9 @@ def test_get_base_configuration_centos(
     platform,
     snap_channel,
     expected_snap_channel,
+    cache_path,
     mocker,
+    tmp_path,
 ):
     """Verify the snapcraft snap is installed from the correct channel."""
     mocker.patch("sys.platform", platform)
@@ -589,8 +614,14 @@ def test_get_base_configuration_centos(
     mock_centos_base = mocker.patch("craft_providers.bases.centos.CentOSBase")
     mock_centos_base.compatibility_tag = "centos-base-v0"
 
+    if cache_path:
+        cache_path = tmp_path / cache_path
+        cache_path.mkdir(parents=True, exist_ok=True)
+
     providers.get_base_configuration(
-        alias=bases.centos.CentOSBaseAlias.SEVEN, instance_name="test-instance-name"
+        alias=bases.centos.CentOSBaseAlias.SEVEN,
+        instance_name="test-instance-name",
+        shared_cache_path=cache_path,
     )
 
     mock_centos_base.assert_called_with(
@@ -599,6 +630,7 @@ def test_get_base_configuration_centos(
         hostname="test-instance-name",
         snaps=[Snap(name="charmcraft", channel=expected_snap_channel, classic=True)],
         compatibility_tag="charmcraft-centos-base-v0.0",
+        cache_path=cache_path,
     )
 
 

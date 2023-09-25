@@ -1,4 +1,4 @@
-summary: pack 2 charms at same time and check that they are built successfully
+summary: pack 3 charms at same time and check that they are built successfully
 
 kill-timeout: 60m
 
@@ -9,6 +9,7 @@ prepare: |
   tests.pkgs install unzip
   charmcraft init --project-dir=charm1
   charmcraft init --project-dir=charm2
+  charmcraft init --project-dir=charm3
 
 restore: |
   pushd charm1
@@ -23,20 +24,34 @@ restore: |
 
   rm -rf charm2
 
+  pushd charm3
+  charmcraft clean
+  popd
+
+  rm -rf charm3
+
 execute: |
   (cd charm1 && charmcraft pack --verbose) &
   (cd charm2 && charmcraft pack --verbose) &
+  sleep 60
+  (cd charm3 && charmcraft pack --verbose) &
 
   wait
 
   pushd charm1
-  test -f charm*.charm
-  unzip -l charm*.charm | grep "venv/ops/charm.py"
-  test ! -d build
+  test -f charm*.charm || { echo "charm1 failed to build"; exit 1; }
+  unzip -l charm*.charm | MATCH "venv/ops/charm.py"
+  test ! -d build || { echo "charm1 build dir not cleaned"; exit 1; }
   popd
 
   pushd charm2
-  test -f charm*.charm
-  unzip -l charm*.charm | grep "venv/ops/charm.py"
-  test ! -d build
+  test -f charm*.charm || { echo "charm2 failed to build"; exit 1; }
+  unzip -l charm*.charm | MATCH "venv/ops/charm.py"
+  test ! -d build || { echo "charm2 build dir not cleaned"; exit 1; }
+  popd
+
+  pushd charm3
+  test -f charm*.charm || { echo "charm3 failed to build"; exit 1; }
+  unzip -l charm*.charm | MATCH "venv/ops/charm.py"
+  test ! -d build || { echo "charm3 build dir not cleaned"; exit 1; }
   popd

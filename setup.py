@@ -26,6 +26,7 @@ with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [
+    "craft-application@git+https://github.com/canonical/craft-application.git",
     "craft-cli",
     "craft-parts>=1.18",
     "craft-providers",
@@ -97,7 +98,7 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     entry_points={
-        "console_scripts": ["charmcraft = charmcraft.main:main"],
+        "console_scripts": ["charmcraft = charmcraft.application.main:main"],
     },
     python_requires=">=3",
     install_requires=install_requires,

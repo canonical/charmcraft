@@ -21,6 +21,13 @@ from typing import Iterable, Mapping
 from craft_cli import CraftError
 
 
+class ClassicFallback(BaseException):
+    """Exception used for falling back to classic charmcraft.
+
+    Only used during the transition to craft-application.
+    """
+
+
 class BadLibraryPathError(CraftError):
     """Subclass to provide a specific error for a bad library path."""
 

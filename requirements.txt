@@ -4,7 +4,7 @@ cffi==1.15.1
 charset-normalizer==3.2.0
 craft-application@git+https://github.com/canonical/craft-application.git
 craft-cli==2.1.0
-craft-parts==1.24.1
+craft-parts==1.25.1
 craft-providers==1.16.0
 craft-store==2.4.0
 cryptography==41.0.4
@@ -46,7 +46,7 @@ snap-helpers==0.4.2
 tabulate==0.9.0
 types-Deprecated==1.2.9.3
 types-PyYAML==6.0.12.11
-typing_extensions==4.7.1
+typing_extensions==4.8.0
 urllib3==1.26.16
 wrapt==1.15.0
 zipp==3.16.2

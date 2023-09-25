@@ -44,7 +44,7 @@ pycparser==2.21
 pydantic==1.10.11
 pydantic-yaml==0.11.2
 pydocstyle==6.3.0
-pyflakes==3.0.1
+pyflakes==3.1.0
 pymacaroons==0.13.0
 PyNaCl==1.5.0
 pyproject-api==1.6.1

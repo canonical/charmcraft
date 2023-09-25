@@ -60,8 +60,8 @@ class Charmcraft(Application):
     def _get_dispatcher(self) -> craft_cli.Dispatcher:
         """Configure charmcraft, including a fallback to the classic entrypoint.
 
-        Side-effect: This method may exit the process.
-        Raises: ClassicFallback() to fall back to the classic interface.
+        :side-effect: This method may exit the process.
+        :raises: ClassicFallback: if the classic entry point should be used instead.
 
         :returns: A ready-to-run Dispatcher object
         """

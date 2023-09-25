@@ -22,6 +22,21 @@ import os
 import pathlib
 from typing import Optional
 
+import platformdirs
+
+from charmcraft.const import SHARED_CACHE_ENV_VAR
+
+
+def get_host_shared_cache_path():
+    """Path for host shared cache."""
+    shared_cache_env = os.getenv(SHARED_CACHE_ENV_VAR)
+    if shared_cache_env is not None:
+        cache_path = pathlib.Path(shared_cache_env).expanduser().resolve()
+        cache_path.mkdir(parents=True, exist_ok=True)
+        return cache_path
+
+    return platformdirs.user_cache_path(appname="charmcraft", ensure_exists=True)
+
 
 def get_managed_environment_home_path():
     """Path for home when running in managed environment."""

@@ -16,6 +16,7 @@
 """New entrypoint for charmcraft."""
 from __future__ import annotations
 
+import os
 import signal
 import sys
 
@@ -63,6 +64,7 @@ class Charmcraft(Application):
             appname=self.app.name,
             greeting=f"Starting {self.app.name}",
             log_filepath=self.log_path,
+            streaming_brief=True,
         )
 
         dispatcher = craft_cli.Dispatcher(
@@ -75,7 +77,7 @@ class Charmcraft(Application):
         try:
             craft_cli.emit.trace("pre-parsing arguments...")
             if "--version" in sys.argv or "-V" in sys.argv:
-                raise errors.ClassicFallback
+                raise errors.ClassicFallback  # noqa: TRY301 (This is temporary)
             else:
                 global_args = dispatcher.pre_parse_args(sys.argv[1:])
         except KeyboardInterrupt as err:
@@ -87,6 +89,13 @@ class Charmcraft(Application):
                 f"Falling back to classic: {err!r}"
             )
             raise errors.ClassicFallback
+        except Exception as err:
+            self._emit_error(
+                craft_cli.CraftError(f"Internal error while loading {self.app.name}: {err!r}")
+            )
+            if os.getenv("CRAFT_DEBUG") == "1":
+                raise
+            sys.exit(70)  # EX_SOFTWARE from sysexits.h
         craft_cli.emit.trace("Preparing application...")
         self.configure(global_args)
 

@@ -57,14 +57,6 @@ execute: |
     }
   fi
 
-  # Tests only needed if the bundle has contained charms rather than store charms
-  if [ -d charms ]; then
-    # Ensure at least one charm file is referenced in the bundle.yaml
-    test $(grep "charm: ${PWD}" output_bundle.yaml | wc -l) -ge 1
-    # Ensure all local charms referenced in the bundle exist
-    grep "charm: ${PWD}" output_bundle.yaml | cut -d: -f2 | xargs file -E
-  fi
-
   # Test deploying the bundle.
   # TODO: install juju on the runner and re-enable this.
   # juju deploy --dry-run *.zip

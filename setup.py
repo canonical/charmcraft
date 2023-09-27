@@ -47,7 +47,7 @@ install_requires = [
 ]
 
 lint_requires = [
-    "black==23.7.0",
+    "black==23.9.1",
     "codespell[tomli]==2.2.5",
     "ruff==0.0.280",
     "yamllint==1.32.0",

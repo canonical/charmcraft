@@ -84,6 +84,7 @@ def create_config_yaml(
     # Copy config.yaml if it exists, otherwise create it from CharmcraftConfig.
     if original_file_path.exists():
         # In the build / test process, the original file may be the same as the target file.
+        basedir.mkdir(parents=True, exist_ok=True)
         with contextlib.suppress(shutil.SameFileError):
             shutil.copyfile(original_file_path, target_file_path)
     else:

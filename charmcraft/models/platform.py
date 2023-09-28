@@ -13,12 +13,5 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+"""Models for craft-application compatible platforms."""
 
-"""Charmcraft pydantic models."""
-
-from .project import CharmcraftProject, CharmBuildInfo
-
-__all__ = [
-    "CharmBuildInfo",
-    "CharmcraftProject",
-]

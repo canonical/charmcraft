@@ -16,9 +16,9 @@
 
 """Logic dealing with bases."""
 
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
-from charmcraft.models.charmcraft import Base
+from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.utils import get_host_architecture, get_os_platform
 
 

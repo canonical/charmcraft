@@ -15,13 +15,14 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft-specific code to interface with craft-providers."""
-
+import dataclasses
 import enum
 import os
 import pathlib
 import sys
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
+import craft_providers
 from craft_cli import CraftError, emit
 from craft_providers import Base, Executor, Provider, ProviderError, lxd, multipass
 from craft_providers.actions.snap_installer import Snap
@@ -32,6 +33,9 @@ from craft_providers.bases import (
 )
 from craft_providers.errors import BaseConfigurationError
 
+from craft_application import models
+
+import charmcraft.models.charmcraft
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.env import (
     get_managed_environment_log_path,
@@ -53,6 +57,8 @@ class Plan(NamedTuple):
     :param bases_index: Index of the BasesConfiguration in bases_config containing the
       Base to build on.
     :param build_on_index: Index of the Base to build on in the BasesConfiguration's build_on list.
+
+    This will be phased out and replaced with charmcraft.models.CharmBuildInfo
     """
 
     bases_config: BasesConfiguration
@@ -273,7 +279,7 @@ def _get_platform_default_provider() -> str:
     return "multipass"
 
 
-def get_provider():
+def get_provider() -> craft_providers.Provider:
     """Get the configured or appropriate provider for the host OS.
 
     If platform is not Linux, use Multipass.

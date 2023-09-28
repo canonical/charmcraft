@@ -113,7 +113,7 @@ class Builder:
         if self.config.parts:
             self._parts = self.config.parts.copy()
         else:
-            self._parts = None
+            self._parts = {}
 
         # a part named "charm" using plugin "charm" is special and has
         # predefined values set automatically.

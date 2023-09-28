@@ -37,7 +37,7 @@ from charmcraft.services.package import CharmPackageService
 APP_METADATA = AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
-    ProjectClass=models.charmcraft.CharmcraftConfig,
+    ProjectClass=models.CharmcraftProject,
 )
 
 

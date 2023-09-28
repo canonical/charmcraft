@@ -13,12 +13,21 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+"""Tests for Charmcraft project-related models."""
+from typing import List
 
-"""Charmcraft pydantic models."""
+from charmcraft.models import project, charmcraft
 
-from .project import CharmcraftProject, CharmBuildInfo
 
-__all__ = [
-    "CharmBuildInfo",
-    "CharmcraftProject",
-]
+# region CharmBuildInfo tests
+def test_build_info_from_build_on_run_on(
+    build_on_base: charmcraft.Base,
+    build_on_arch: str,
+    run_on: List[charmcraft.Base],
+):
+    info = project.CharmBuildInfo.from_build_on_run_on(
+        build_on_base, build_on_arch, run_on, bases_index=10, build_on_index=256
+    )
+
+
+# endregion

@@ -8,6 +8,7 @@ craft-providers==1.17.0
 craft-store==2.4.0
 cryptography==41.0.4
 Deprecated==1.2.14
+distro==1.8.0
 humanize==4.8.0
 idna==3.4
 importlib-metadata==6.8.0

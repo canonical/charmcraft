@@ -249,7 +249,7 @@ def test_hit_simple_re_auth_ok(responses):
     responses.add(responses.GET, "https://fakereg.com/api/stuff", headers=headers, status=401)
     responses.add(responses.GET, "https://fakereg.com/api/stuff")
 
-    # try it, isolating the re-authentication (tested separatedly above)
+    # try it, isolating the re-authentication (tested separately above)
     with patch.object(ocireg, "_authenticate") as mock_auth:
         mock_auth.return_value = "new auth token"
         response = ocireg._hit("GET", "https://fakereg.com/api/stuff")
@@ -278,7 +278,7 @@ def test_hit_simple_re_auth_problems(responses):
     headers = {"Www-Authenticate": "broken header"}
     responses.add(responses.GET, "https://fakereg.com/api/stuff", headers=headers, status=401)
 
-    # try it, isolating the re-authentication (tested separatedly above)
+    # try it, isolating the re-authentication (tested separately above)
     expected = (
         "Bad 401 response: Bearer not found; headers: {.*'Www-Authenticate': 'broken header'.*}"
     )

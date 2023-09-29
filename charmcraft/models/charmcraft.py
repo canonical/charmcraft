@@ -302,7 +302,7 @@ class CharmcraftConfig(
 
             obj = apply_extensions(project.dirpath, obj)
 
-            # Re-expand it in case extenstions added short-form bases.
+            # Re-expand it in case extensions added short-form bases.
             if isinstance(obj.get("bases"), list):
                 cls.expand_short_form_bases(obj["bases"])
 

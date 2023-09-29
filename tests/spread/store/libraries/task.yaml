@@ -22,13 +22,6 @@ prepare: |
     storage-url: https://storage.staging.snapcraftcontent.com
   EOF
 
-  # If necessary, try to register the charm.
-  if ! charmcraft status $CHARM_DEFAULT_NAME; then
-    if ! charmcraft register $CHARM_DEFAULT_NAME; then
-      ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
-    fi
-  fi
-
 restore: |
   rm -rf charm
 

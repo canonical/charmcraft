@@ -28,13 +28,6 @@ prepare: |
   summary: Test bundle for charmcraft
   EOF
 
-  # If necessary, try to register the bundle.
-  if ! charmcraft status $BUNDLE_DEFAULT_NAME; then
-    if ! charmcraft register-bundle $BUNDLE_DEFAULT_NAME; then
-      ERROR Charm $BUNDLE_DEFAULT_NAME cannot be registered to this account.
-    fi
-  fi
-
 restore: |
   rm -rf bundle
 

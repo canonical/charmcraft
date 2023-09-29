@@ -713,14 +713,14 @@ def test_analyze_run_everything(config):
 def test_analyze_ignore_attribute(config):
     """Run all checkers except the ignored attribute."""
     FakeChecker1 = create_fake_checker(
-        check_type=CheckType.attribute,
+        check_type=CheckType.ATTRIBUTE,
         name="name1",
         result="res1",
         text="text1",
         url="url1",
     )
     FakeChecker2 = create_fake_checker(
-        check_type=CheckType.lint,
+        check_type=CheckType.LINT,
         name="name2",
         result="res2",
         text="text2",
@@ -732,12 +732,12 @@ def test_analyze_ignore_attribute(config):
         result = analyze(config, "somepath")
 
     res1, res2 = result
-    assert res1.check_type == CheckType.attribute
+    assert res1.check_type == CheckType.ATTRIBUTE
     assert res1.name == "name1"
     assert res1.result == IGNORED
     assert res1.text == ""
     assert res1.url == "url1"
-    assert res2.check_type == CheckType.lint
+    assert res2.check_type == CheckType.LINT
     assert res2.name == "name2"
     assert res2.result == "res2"
     assert res2.text == "text2"
@@ -747,14 +747,14 @@ def test_analyze_ignore_attribute(config):
 def test_analyze_ignore_linter(config):
     """Run all checkers except the ignored linter."""
     FakeChecker1 = create_fake_checker(
-        check_type=CheckType.attribute,
+        check_type=CheckType.ATTRIBUTE,
         name="name1",
         result="res1",
         text="text1",
         url="url1",
     )
     FakeChecker2 = create_fake_checker(
-        check_type=CheckType.lint,
+        check_type=CheckType.LINT,
         name="name2",
         result="res2",
         text="text2",
@@ -766,12 +766,12 @@ def test_analyze_ignore_linter(config):
         result = analyze(config, "somepath")
 
     res1, res2 = result
-    assert res1.check_type == CheckType.attribute
+    assert res1.check_type == CheckType.ATTRIBUTE
     assert res1.name == "name1"
     assert res1.result == "res1"
     assert res1.text == "text1"
     assert res1.url == "url1"
-    assert res2.check_type == CheckType.lint
+    assert res2.check_type == CheckType.LINT
     assert res2.name == "name2"
     assert res2.result == IGNORED
     assert res2.text == ""
@@ -780,8 +780,8 @@ def test_analyze_ignore_linter(config):
 
 def test_analyze_override_ignore(config):
     """Run all checkers even the ignored ones, if requested."""
-    FakeChecker1 = create_fake_checker(check_type=CheckType.attribute, name="name1", result="res1")
-    FakeChecker2 = create_fake_checker(check_type=CheckType.lint, name="name2", result="res2")
+    FakeChecker1 = create_fake_checker(check_type=CheckType.ATTRIBUTE, name="name1", result="res1")
+    FakeChecker2 = create_fake_checker(check_type=CheckType.LINT, name="name2", result="res2")
 
     config.analysis.ignore.attributes.append("name1")
     config.analysis.ignore.linters.append("name2")
@@ -789,10 +789,10 @@ def test_analyze_override_ignore(config):
         result = analyze(config, "somepath", override_ignore_config=True)
 
     res1, res2 = result
-    assert res1.check_type == CheckType.attribute
+    assert res1.check_type == CheckType.ATTRIBUTE
     assert res1.name == "name1"
     assert res1.result == "res1"
-    assert res2.check_type == CheckType.lint
+    assert res2.check_type == CheckType.LINT
     assert res2.name == "name2"
     assert res2.result == "res2"
 
@@ -800,7 +800,7 @@ def test_analyze_override_ignore(config):
 def test_analyze_crash_attribute(config):
     """The attribute checker crashes."""
     FakeChecker = create_fake_checker(
-        check_type=CheckType.attribute, name="name", text="text", url="url"
+        check_type=CheckType.ATTRIBUTE, name="name", text="text", url="url"
     )
 
     def raises(*a):
@@ -812,7 +812,7 @@ def test_analyze_crash_attribute(config):
         result = analyze(config, "somepath")
 
     (res,) = result
-    assert res.check_type == CheckType.attribute
+    assert res.check_type == CheckType.ATTRIBUTE
     assert res.name == "name"
     assert res.result == UNKNOWN
     assert res.text == "text"
@@ -822,7 +822,7 @@ def test_analyze_crash_attribute(config):
 def test_analyze_crash_lint(config):
     """The lint checker crashes."""
     FakeChecker = create_fake_checker(
-        check_type=CheckType.lint, name="name", text="text", url="url"
+        check_type=CheckType.LINT, name="name", text="text", url="url"
     )
 
     def raises(*a):
@@ -834,7 +834,7 @@ def test_analyze_crash_lint(config):
         result = analyze(config, "somepath")
 
     (res,) = result
-    assert res.check_type == CheckType.lint
+    assert res.check_type == CheckType.LINT
     assert res.name == "name"
     assert res.result == FATAL
     assert res.text == "text"
@@ -844,10 +844,10 @@ def test_analyze_crash_lint(config):
 def test_analyze_all_can_be_ignored(config):
     """Control that all real life checkers can be ignored."""
     config.analysis.ignore.attributes.extend(
-        c.name for c in CHECKERS if c.check_type == CheckType.attribute
+        c.name for c in CHECKERS if c.check_type == CheckType.ATTRIBUTE
     )
     config.analysis.ignore.linters.extend(
-        c.name for c in CHECKERS if c.check_type == CheckType.lint
+        c.name for c in CHECKERS if c.check_type == CheckType.LINT
     )
     result = analyze(config, "somepath")
     assert all(r.result == IGNORED for r in result)

@@ -17,6 +17,7 @@
 """Analyze and lint charm structures and files."""
 
 import ast
+import enum
 import os
 import pathlib
 import shlex
@@ -28,7 +29,16 @@ import yaml
 from charmcraft import config, utils
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
 
-CheckType = namedtuple("CheckType", "attribute lint")(attribute="attribute", lint="lint")
+
+class CheckType(str, enum.Enum):
+    """Type of analyzer, either attribute check or linter.
+
+    More documentation: https://juju.is/docs/sdk/charmcraft-analyzers-and-linters
+    """
+
+    ATTRIBUTE = "attribute"
+    LINT = "lint"
+
 
 # result information from each checker/linter
 CheckResult = namedtuple("CheckResult", "name result url check_type text")
@@ -90,7 +100,7 @@ class Language:
     - the entry point file is executable
     """
 
-    check_type = CheckType.attribute
+    check_type = CheckType.ATTRIBUTE
     name = "language"
     url = BASE_DOCS_URL + "#heading--language"
     text = "The charm is written with Python."
@@ -120,7 +130,7 @@ class Framework:
     - has a file name that starts with "charms.reactive-" inside the "wheelhouse" directory
     """
 
-    check_type = CheckType.attribute
+    check_type = CheckType.ATTRIBUTE
     name = "framework"
     url = BASE_DOCS_URL + "#heading--framework"
 
@@ -224,7 +234,7 @@ class JujuMetadata:
     - it has at least the following fields: name, summary, and description
     """
 
-    check_type = CheckType.lint
+    check_type = CheckType.LINT
     name = "metadata"
     url = BASE_DOCS_URL + "#heading--metadata"
 
@@ -258,7 +268,7 @@ class JujuMetadata:
 class JujuActions:
     """Check that the actions.yaml file is valid YAML if it exists."""
 
-    check_type = CheckType.lint
+    check_type = CheckType.LINT
     name = "juju-actions"
     url = BASE_DOCS_URL + "#heading--juju-actions"
     text = "The actions.yaml file is not a valid YAML file."
@@ -292,7 +302,7 @@ class JujuConfig:
     - each item inside has the mandatory 'type' key
     """
 
-    check_type = CheckType.lint
+    check_type = CheckType.LINT
     name = "juju-config"
     url = BASE_DOCS_URL + "#heading--juju-config"
 
@@ -339,7 +349,7 @@ class Entrypoint:
     - is executable
     """
 
-    check_type = CheckType.lint
+    check_type = CheckType.LINT
     name = "entrypoint"
     url = BASE_DOCS_URL + "#heading--entrypoint"
 
@@ -397,7 +407,7 @@ def analyze(
     all_results = []
     for cls in CHECKERS:
         # do not run the ignored ones
-        if cls.check_type == CheckType.attribute:
+        if cls.check_type == CheckType.ATTRIBUTE:
             ignore_list = config.analysis.ignore.attributes
         else:
             ignore_list = config.analysis.ignore.linters
@@ -417,7 +427,7 @@ def analyze(
         try:
             result = checker.run(basedir)
         except Exception:
-            result = UNKNOWN if checker.check_type == CheckType.attribute else FATAL
+            result = UNKNOWN if checker.check_type == CheckType.ATTRIBUTE else FATAL
         all_results.append(
             CheckResult(
                 check_type=checker.check_type,

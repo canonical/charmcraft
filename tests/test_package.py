@@ -1578,14 +1578,14 @@ def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_
     linting_results = [
         linters.CheckResult(
             name="check-name-1",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result="check-result-1",
         ),
         linters.CheckResult(
             name="check-name-2",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result=linters.IGNORED,
@@ -1623,14 +1623,14 @@ def test_show_linters_attributes(basic_project, emitter, config):
     linting_results = [
         linters.CheckResult(
             name="check-name-1",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result="check-result-1",
         ),
         linters.CheckResult(
             name="check-name-2",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result=linters.IGNORED,
@@ -1651,7 +1651,7 @@ def test_show_linters_lint_warnings(basic_project, emitter, config):
     linting_results = [
         linters.CheckResult(
             name="check-name",
-            check_type=linters.CheckType.lint,
+            check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
             result=linters.WARNINGS,
@@ -1676,7 +1676,7 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
     linting_results = [
         linters.CheckResult(
             name="check-name",
-            check_type=linters.CheckType.lint,
+            check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
             result=linters.ERRORS,
@@ -1705,7 +1705,7 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
     linting_results = [
         linters.CheckResult(
             name="check-name",
-            check_type=linters.CheckType.lint,
+            check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
             result=linters.ERRORS,

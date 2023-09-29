@@ -2812,8 +2812,8 @@ def test_schema_analysis_ignore_attributes(
     metadata_yaml,
 ):
     """Some attributes are correctly ignored."""
-    create_checker("check_ok_1", linters.CheckType.attribute)
-    create_checker("check_ok_2", linters.CheckType.attribute)
+    create_checker("check_ok_1", linters.CheckType.ATTRIBUTE)
+    create_checker("check_ok_2", linters.CheckType.ATTRIBUTE)
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
@@ -2867,8 +2867,8 @@ def test_schema_analysis_ignore_linters(
     metadata_yaml,
 ):
     """Some linters are correctly ignored."""
-    create_checker("check_ok_1", linters.CheckType.lint)
-    create_checker("check_ok_2", linters.CheckType.lint)
+    create_checker("check_ok_1", linters.CheckType.LINT)
+    create_checker("check_ok_2", linters.CheckType.LINT)
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
@@ -2924,8 +2924,8 @@ def test_schema_analysis_ignore_attribute_missing(
     metadata_yaml,
 ):
     """An attribute specified to ignore is missing in the system."""
-    create_checker("check_ok_1", linters.CheckType.attribute)
-    create_checker("check_ok_2", linters.CheckType.lint)
+    create_checker("check_ok_1", linters.CheckType.ATTRIBUTE)
+    create_checker("check_ok_2", linters.CheckType.LINT)
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
@@ -2985,8 +2985,8 @@ def test_schema_analysis_ignore_linter_missing(
     metadata_yaml,
 ):
     """A linter specified to ignore is missing in the system."""
-    create_checker("check_ok_1", linters.CheckType.attribute)
-    create_checker("check_ok_2", linters.CheckType.lint)
+    create_checker("check_ok_1", linters.CheckType.ATTRIBUTE)
+    create_checker("check_ok_2", linters.CheckType.LINT)
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 

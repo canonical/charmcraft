@@ -16,6 +16,7 @@
 
 """Commands related to Charmhub."""
 import collections
+import dataclasses
 import os
 import pathlib
 import shutil
@@ -1552,7 +1553,7 @@ class FetchLibCommand(BaseCommand):
             if lib_data.lib_id is None:
                 for tip in libs_tips.values():
                     if lib_data.charm_name == tip.charm_name and lib_data.lib_name == tip.lib_name:
-                        lib_data = lib_data._replace(lib_id=tip.lib_id)
+                        lib_data = dataclasses.replace(lib_data, lib_id=tip.lib_id)
                         break
 
             tip = libs_tips.get((lib_data.lib_id, lib_data.api))
@@ -1604,7 +1605,8 @@ class FetchLibCommand(BaseCommand):
 
                 # fix lib_data with new info so it's later available
                 # for the case of programmatic output
-                lib_data = lib_data._replace(
+                lib_data = dataclasses.replace(
+                    lib_data,
                     patch=downloaded.patch,
                     content=downloaded.content,
                     content_hash=downloaded.content_hash,

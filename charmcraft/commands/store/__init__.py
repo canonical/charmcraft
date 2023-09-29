@@ -1119,7 +1119,7 @@ class StatusCommand(BaseCommand):
             by_channel = by_base.setdefault(item.base, {})
             by_channel[item.channel] = item
 
-        # groupe revision objects by revision number
+        # group revision objects by revision number
         revisions_by_revno = {item.revision: item for item in revisions}
 
         # process and order the channels, while preserving the tracks order

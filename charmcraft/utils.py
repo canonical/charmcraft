@@ -44,6 +44,7 @@ from typing import (
     Union,
 )
 
+import distro
 import yaml
 from craft_cli import CraftError, emit
 from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
@@ -267,23 +268,12 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
     machine = platform.machine()
 
     if system == "Linux":
-        try:
-            with filepath.open("rt", encoding="utf-8") as fh:
-                lines = fh.readlines()
-        except FileNotFoundError:
-            emit.debug("Unable to locate 'os-release' file, using default values")
-        else:
-            os_release = {}
-            for line in lines:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                key, value = line.rstrip().split("=", 1)
-                if value[0] == value[-1] and value[0] in ('"', "'"):
-                    value = value[1:-1]
-                os_release[key] = value
-            system = os_release.get("ID", system)
-            release = os_release.get("VERSION_ID", release)
+        info = distro.info()
+        system = info.get("id", system)
+        # Treat Ubuntu derivatives as Ubuntu, as they should be compatible.
+        if system != "ubuntu" and "ubuntu" in info.get("like", "").split():
+            system = "ubuntu"
+        release = info.get("version", release)
 
     return OSPlatform(system=system, release=release, machine=machine)
 

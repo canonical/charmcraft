@@ -30,6 +30,7 @@ install_requires = [
     "craft-parts>=1.18",
     "craft-providers",
     "craft-store>=2.4",
+    "distro>=1.3.0",
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",

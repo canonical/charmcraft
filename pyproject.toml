@@ -31,7 +31,7 @@ skip_empty = true
 #fail_under = 80
 
 [tool.pyright]
-strict = ["starcraft"]
+strict = ["charmcraft"]
 pythonVersion = "3.8"
 pythonPlatform = "Linux"
 venvPath = ".tox"
@@ -39,22 +39,50 @@ venv = "py38"
 
 [tool.mypy]
 python_version = "3.8"
+packages = [
+    "charmcraft",
+]
 exclude = [
     "build",
-    "tests",
     "results",
+    "tests",
+    "tools",
 ]
 warn_unused_configs = true
 warn_redundant_casts = true
 strict_equality = true
-strict_concatenate = true
-warn_return_any = true
+#warn_return_any = true
 disallow_subclassing_any = true
 disallow_untyped_decorators = true
-disallow_any_generics = true
+#disallow_any_generics = true
 
 [[tool.mypy.overrides]]
-module = ["starcraft"]
+# Ignore typing errors in most legacy packages until we fix them.
+module=[
+    "charmcraft.charm_builder",
+    "charmcraft.cmdbase",
+    "charmcraft.commands.extensions",
+    "charmcraft.commands.pack",
+    "charmcraft.commands.store",
+    "charmcraft.commands.store.registry",
+    "charmcraft.commands.store.store",
+    "charmcraft.config",
+    "charmcraft.extensions._utils",
+    "charmcraft.linters",
+    "charmcraft.models.actions",
+    "charmcraft.models.basic",
+    "charmcraft.models.config",
+    "charmcraft.models.charmcraft",
+    "charmcraft.package",
+    "charmcraft.parts",
+    "charmcraft.providers",
+    "charmcraft.reactive_plugin",
+    "charmcraft.utils"
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["charmcraft"]
 disallow_untyped_defs = true
 no_implicit_optional = true
 

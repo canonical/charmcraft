@@ -17,7 +17,7 @@
 import datetime
 import sys
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Optional
 
 from craft_cli import emit
 
@@ -59,8 +59,8 @@ class ResourceOption:
         parser.add_argument('--resource',  type=ResourceOption())
     """
 
-    name: str = None
-    revision: int = None
+    name: Optional[str] = None
+    revision: Optional[int] = None
 
     def __call__(self, value):
         """Run by argparse to validate and convert the given argument."""

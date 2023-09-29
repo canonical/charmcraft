@@ -39,13 +39,13 @@ def find_charm_sources(
     :raises: DuplicateCharmsError if a charm is found in multiple directories.
     """
     duplicate_charms = defaultdict(list)
-    charm_paths = {}
-    potential_paths = itertools.chain(
+    charm_paths: Dict[str, pathlib.Path] = {}
+    outer_potential_paths = itertools.chain(
         (p.parent.resolve() for p in base_path.glob("charms/*/metadata.yaml")),
         (p.parent.resolve() for p in base_path.glob("operators/*/metadata.yaml")),
         (p.parent.resolve() for p in base_path.glob("*/metadata.yaml")),
     )
-    potential_paths = filter(lambda p: (p / "charmcraft.yaml").exists(), potential_paths)
+    potential_paths = filter(lambda p: (p / "charmcraft.yaml").exists(), outer_potential_paths)
     for path in potential_paths:
         if path in charm_paths.values():  # Symlinks can cause ignorable duplicate paths.
             continue

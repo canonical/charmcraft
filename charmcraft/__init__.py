@@ -21,9 +21,9 @@ import os
 import pkg_resources
 
 
-def _get_version():
+def _get_version() -> str:
     if os.getenv("SNAP_NAME") == "charmcraft":
-        return os.getenv("SNAP_VERSION")
+        return os.getenv("SNAP_VERSION", "")
     try:
         return pkg_resources.require("charmcraft")[0].version
     except pkg_resources.DistributionNotFound:

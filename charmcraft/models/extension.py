@@ -21,7 +21,7 @@ from typing import Dict, List, Tuple
 from charmcraft.models.basic import ModelConfigDefaults
 
 
-class ExtensionModel(ModelConfigDefaults):
+class ExtensionModel(ModelConfigDefaults, frozen=True):
     """Extension model for presentation."""
 
     name: str

@@ -1316,7 +1316,7 @@ def test_schema_other_bundle_part_no_source(
 
 
 # -- tests to check the double layer schema loading; using the 'charm' plugin
-#    because it is the default (and has good default properties to be overriden and )
+#    because it is the default (and has good default properties to be overridden and )
 #    the 'dump' one because it's a special case of no having a model
 
 
@@ -1718,7 +1718,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_different(
 def test_schema_doublelayer_parts_with_charm_overriding_properties(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
 ):
-    """A charm plugin is used and its default properties are overriden."""
+    """A charm plugin is used and its default properties are overridden."""
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
@@ -1747,7 +1747,7 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(
                     channel: "30.04"
                 parts:
                   charm:
-                    charm-point: different.py  # mispelled!
+                    charm-point: different.py  # misspelled!
                 """
             ),
             dedent(
@@ -1770,7 +1770,7 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(
                     channel: "30.04"
                 parts:
                   charm:
-                    charm-point: different.py  # mispelled!
+                    charm-point: different.py  # misspelled!
                 """
             ),
             None,

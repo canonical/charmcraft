@@ -32,7 +32,7 @@ from charmcraft.utils import get_host_architecture
 
 
 def test_load_minimal_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
-    """Load a mimimal charmcraft.yaml with full metadata. (Spec ST087)"""
+    """Load a minimal charmcraft.yaml with full metadata. (Spec ST087)"""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -80,7 +80,7 @@ def test_load_minimal_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft
 def test_load_minimal_metadata_from_charmcraft_yaml_missing_name(
     tmp_path, prepare_charmcraft_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata. But missing name."""
+    """Load a minimal charmcraft.yaml with metadata. But missing name."""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -102,7 +102,7 @@ def test_load_minimal_metadata_from_charmcraft_yaml_missing_name(
 def test_load_minimal_metadata_from_charmcraft_yaml_missing_type(
     tmp_path, prepare_charmcraft_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata. But missing type."""
+    """Load a minimal charmcraft.yaml with metadata. But missing type."""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -124,7 +124,7 @@ def test_load_minimal_metadata_from_charmcraft_yaml_missing_type(
 def test_load_minimal_metadata_from_charmcraft_yaml_missing_summary(
     tmp_path, prepare_charmcraft_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata. But missing summary."""
+    """Load a minimal charmcraft.yaml with metadata. But missing summary."""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -146,7 +146,7 @@ def test_load_minimal_metadata_from_charmcraft_yaml_missing_summary(
 def test_load_minimal_metadata_from_charmcraft_yaml_missing_description(
     tmp_path, prepare_charmcraft_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata. But missing description."""
+    """Load a minimal charmcraft.yaml with metadata. But missing description."""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -168,7 +168,7 @@ def test_load_minimal_metadata_from_charmcraft_yaml_missing_description(
 def test_load_minimal_metadata_from_metadata_yaml(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml
 ):
-    """Load a mimimal charmcraft.yaml with full metadata. (Spec ST087)"""
+    """Load a minimal charmcraft.yaml with full metadata. (Spec ST087)"""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -222,7 +222,7 @@ def test_load_minimal_metadata_from_metadata_yaml(
 def test_load_minimal_metadata_from_metadata_yaml_missing_name(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata.yaml. But missing name."""
+    """Load a minimal charmcraft.yaml with metadata.yaml. But missing name."""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -249,7 +249,7 @@ def test_load_minimal_metadata_from_metadata_yaml_missing_name(
 def test_load_minimal_metadata_from_metadata_yaml_missing_type(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata.yaml. But missing type."""
+    """Load a minimal charmcraft.yaml with metadata.yaml. But missing type."""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -276,7 +276,7 @@ def test_load_minimal_metadata_from_metadata_yaml_missing_type(
 def test_load_minimal_metadata_from_metadata_yaml_missing_summary(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata.yaml. But missing summary."""
+    """Load a minimal charmcraft.yaml with metadata.yaml. But missing summary."""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -304,7 +304,7 @@ def test_load_minimal_metadata_from_metadata_yaml_missing_summary(
 def test_load_minimal_metadata_from_metadata_yaml_bad_others_allowed(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata.yaml. Had bad other fields but allowed."""
+    """Load a minimal charmcraft.yaml with metadata.yaml. Had bad other fields but allowed."""
     prepare_charmcraft_yaml(
         dedent(
             """
@@ -337,7 +337,7 @@ def test_load_minimal_metadata_from_metadata_yaml_bad_others_allowed(
 def test_load_minimal_metadata_from_metadata_yaml_missing_description(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml
 ):
-    """Load a mimimal charmcraft.yaml with metadata.yaml. But missing description."""
+    """Load a minimal charmcraft.yaml with metadata.yaml. But missing description."""
     prepare_charmcraft_yaml(
         dedent(
             """

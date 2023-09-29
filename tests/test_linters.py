@@ -25,9 +25,6 @@ import pytest
 
 from charmcraft.linters import (
     CHECKERS,
-    FATAL,
-    IGNORED,
-    UNKNOWN,
     CheckType,
     Entrypoint,
     Framework,
@@ -35,6 +32,7 @@ from charmcraft.linters import (
     JujuConfig,
     JujuMetadata,
     Language,
+    Result,
     analyze,
     check_dispatch_with_python_entrypoint,
     get_entrypoint_from_dispatch,
@@ -170,7 +168,7 @@ def test_framework_run_operator():
     checker = Framework()
     with patch.object(Framework, "_check_operator", lambda self, path: True):
         result = checker.run("somepath")
-    assert result == Framework.Result.operator
+    assert result == Framework.CharmFramework.operator
     assert checker.text == "The charm is based on the Operator Framework."
 
 
@@ -180,7 +178,7 @@ def test_framework_run_reactive():
     with patch.object(Framework, "_check_operator", lambda self, path: False):
         with patch.object(Framework, "_check_reactive", lambda self, path: True):
             result = checker.run("somepath")
-    assert result == Framework.Result.reactive
+    assert result == Framework.CharmFramework.reactive
     assert checker.text == "The charm is based on the Reactive Framework."
 
 
@@ -190,7 +188,7 @@ def test_framework_run_unknown():
     with patch.object(Framework, "_check_operator", lambda self, path: False):
         with patch.object(Framework, "_check_reactive", lambda self, path: False):
             result = checker.run("somepath")
-    assert result == Framework.Result.unknown
+    assert result == Framework.CharmFramework.unknown
     assert checker.text == "The charm is not based on any known Framework."
 
 
@@ -588,14 +586,14 @@ def test_jujumetadata_all_ok(tmp_path):
     """
     )
     result = JujuMetadata().run(tmp_path)
-    assert result == JujuMetadata.Result.ok
+    assert result == Result.OK
 
 
 def test_jujumetadata_missing_file(tmp_path):
     """No metadata.yaml file at all."""
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == "Cannot read the metadata.yaml file."
 
 
@@ -605,7 +603,7 @@ def test_jujumetadata_file_corrupted(tmp_path):
     metadata_file.write_text(" - \n-")
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == "The metadata.yaml file is not a valid YAML file."
 
 
@@ -624,7 +622,7 @@ def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
     metadata_file.write_text(content)
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == (
         f"The metadata.yaml file is missing the following attribute(s): '{missing}'."
     )
@@ -641,7 +639,7 @@ def test_jujumetadata_missing_field_multiple(tmp_path):
     )
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == (
         "The metadata.yaml file is missing the following attribute(s): "
         "'description' and 'summary'."
@@ -734,7 +732,7 @@ def test_analyze_ignore_attribute(config):
     res1, res2 = result
     assert res1.check_type == CheckType.ATTRIBUTE
     assert res1.name == "name1"
-    assert res1.result == IGNORED
+    assert res1.result == Result.IGNORED
     assert res1.text == ""
     assert res1.url == "url1"
     assert res2.check_type == CheckType.LINT
@@ -773,7 +771,7 @@ def test_analyze_ignore_linter(config):
     assert res1.url == "url1"
     assert res2.check_type == CheckType.LINT
     assert res2.name == "name2"
-    assert res2.result == IGNORED
+    assert res2.result == Result.IGNORED
     assert res2.text == ""
     assert res2.url == "url2"
 
@@ -814,7 +812,7 @@ def test_analyze_crash_attribute(config):
     (res,) = result
     assert res.check_type == CheckType.ATTRIBUTE
     assert res.name == "name"
-    assert res.result == UNKNOWN
+    assert res.result == Result.UNKNOWN
     assert res.text == "text"
     assert res.url == "url"
 
@@ -836,7 +834,7 @@ def test_analyze_crash_lint(config):
     (res,) = result
     assert res.check_type == CheckType.LINT
     assert res.name == "name"
-    assert res.result == FATAL
+    assert res.result == Result.FATAL
     assert res.text == "text"
     assert res.url == "url"
 
@@ -850,7 +848,7 @@ def test_analyze_all_can_be_ignored(config):
         c.name for c in CHECKERS if c.check_type == CheckType.LINT
     )
     result = analyze(config, "somepath")
-    assert all(r.result == IGNORED for r in result)
+    assert all(r.result == Result.IGNORED for r in result)
 
 
 # --- tests for JujuActions checker
@@ -861,13 +859,13 @@ def test_jujuactions_ok(tmp_path):
     actions_file = tmp_path / "actions.yaml"
     actions_file.write_text("stuff: foobar")
     result = JujuActions().run(tmp_path)
-    assert result == JujuActions.Result.ok
+    assert result == Result.OK
 
 
 def test_jujuactions_missing_file(tmp_path):
     """No actions.yaml file at all."""
     result = JujuActions().run(tmp_path)
-    assert result == JujuActions.Result.ok
+    assert result == Result.OK
 
 
 def test_jujuactions_file_corrupted(tmp_path):
@@ -875,7 +873,7 @@ def test_jujuactions_file_corrupted(tmp_path):
     actions_file = tmp_path / "actions.yaml"
     actions_file.write_text(" - \n-")
     result = JujuActions().run(tmp_path)
-    assert result == JujuActions.Result.errors
+    assert result == Result.ERRORS
 
 
 # --- tests for JujuConfig checker
@@ -892,13 +890,13 @@ def test_jujuconfig_ok(tmp_path):
     """
     )
     result = JujuConfig().run(tmp_path)
-    assert result == JujuConfig.Result.ok
+    assert result == Result.OK
 
 
 def test_jujuconfig_missing_file(tmp_path):
     """No config.yaml file at all."""
     result = JujuConfig().run(tmp_path)
-    assert result == JujuConfig.Result.ok
+    assert result == Result.OK
 
 
 def test_jujuconfig_file_corrupted(tmp_path):
@@ -907,7 +905,7 @@ def test_jujuconfig_file_corrupted(tmp_path):
     config_file.write_text(" - \n-")
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == "The config.yaml file is not a valid YAML file."
 
 
@@ -921,7 +919,7 @@ def test_jujuconfig_no_options(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
@@ -935,7 +933,7 @@ def test_jujuconfig_empty_options(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
@@ -951,7 +949,7 @@ def test_jujuconfig_options_not_dict(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
@@ -967,7 +965,7 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
 
 
@@ -979,7 +977,7 @@ def test_entrypoint_not_used(tmp_path):
     with patch("charmcraft.linters.get_entrypoint_from_dispatch") as mock_check:
         mock_check.return_value = None
         result = Entrypoint().run(tmp_path)
-    assert result == Entrypoint.Result.nonapplicable
+    assert result == Result.NONAPPLICABLE
     mock_check.assert_called_with(tmp_path)
 
 
@@ -990,7 +988,7 @@ def test_entrypoint_all_ok(tmp_path):
     with patch("charmcraft.linters.get_entrypoint_from_dispatch") as mock_check:
         mock_check.return_value = entrypoint
         result = Entrypoint().run(tmp_path)
-    assert result == Entrypoint.Result.ok
+    assert result == Result.OK
     mock_check.assert_called_with(tmp_path)
 
 
@@ -1000,7 +998,7 @@ def test_entrypoint_missing(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == f"Cannot find the entrypoint file: {str(entrypoint)!r}"
 
 
@@ -1011,7 +1009,7 @@ def test_entrypoint_directory(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == f"The entrypoint is not a file: {str(entrypoint)!r}"
 
 
@@ -1023,5 +1021,5 @@ def test_entrypoint_non_exec(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.errors
+    assert result == Result.ERRORS
     assert linter.text == f"The entrypoint file is not executable: {str(entrypoint)!r}"

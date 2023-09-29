@@ -135,7 +135,7 @@ class Builder:
         attribute_results = []
         lint_results_by_outcome = {}
         for result in linting_results:
-            if result.result == charmcraft.linters.IGNORED:
+            if result.result == charmcraft.linters.Result.IGNORED:
                 continue
             if result.check_type == charmcraft.linters.CheckType.ATTRIBUTE:
                 attribute_results.append(result)
@@ -151,13 +151,13 @@ class Builder:
 
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
-        if charmcraft.linters.WARNINGS in lint_results_by_outcome:
+        if charmcraft.linters.Result.WARNINGS in lint_results_by_outcome:
             emit.progress("Lint Warnings:", permanent=True)
-            for result in lint_results_by_outcome[charmcraft.linters.WARNINGS]:
+            for result in lint_results_by_outcome[charmcraft.linters.Result.WARNINGS]:
                 emit.progress(template.format(result), permanent=True)
-        if charmcraft.linters.ERRORS in lint_results_by_outcome:
+        if charmcraft.linters.Result.ERRORS in lint_results_by_outcome:
             emit.progress("Lint Errors:", permanent=True)
-            for result in lint_results_by_outcome[charmcraft.linters.ERRORS]:
+            for result in lint_results_by_outcome[charmcraft.linters.Result.ERRORS]:
                 emit.progress(template.format(result), permanent=True)
             if self.force_packing:
                 emit.progress("Packing anyway as requested.", permanent=True)

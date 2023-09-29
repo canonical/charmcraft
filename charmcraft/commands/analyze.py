@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for the 'analyze' command."""
-
+import enum
 import pathlib
 import tempfile
 import textwrap
@@ -103,13 +103,16 @@ class AnalyzeCommand(BaseCommand):
         for result in linting_results:
             if result.check_type == linters.CheckType.ATTRIBUTE:
                 group_key = linters.CheckType.ATTRIBUTE
-                result_info = result.result
+                if isinstance(result.result, enum.Enum):
+                    result_info = result.result.value
+                else:
+                    result_info = result.result
             else:
                 # linters
                 group_key = result.result
-                if result.result == linters.OK:
+                if result.result == linters.Result.OK:
                     result_info = "no issues found"
-                elif result.result in (linters.FATAL, linters.IGNORED):
+                elif result.result in (linters.Result.FATAL, linters.Result.IGNORED):
                     result_info = None
                 else:
                     result_info = result.text
@@ -118,11 +121,11 @@ class AnalyzeCommand(BaseCommand):
         # present the results
         titles = [
             ("Attributes", linters.CheckType.ATTRIBUTE),
-            ("Lint Ignored", linters.IGNORED),
-            ("Lint Warnings", linters.WARNINGS),
-            ("Lint Errors", linters.ERRORS),
-            ("Lint Fatal", linters.FATAL),
-            ("Lint OK", linters.OK),
+            ("Lint Ignored", linters.Result.IGNORED),
+            ("Lint Warnings", linters.Result.WARNINGS),
+            ("Lint Errors", linters.Result.ERRORS),
+            ("Lint Fatal", linters.Result.FATAL),
+            ("Lint OK", linters.Result.OK),
         ]
         for title, key in titles:
             results = grouped.get(key)
@@ -130,16 +133,16 @@ class AnalyzeCommand(BaseCommand):
                 emit.message(f"{title}:")
                 for result, result_info in results:
                     if result_info:
-                        emit.message(f"- {result.name}: { result_info} ({result.url})")
+                        emit.message(f"- {result.name}: {result_info} ({result.url})")
                     else:
                         emit.message(f"- {result.name} ({result.url})")
 
         # the return code depends on the presence of different issues
-        if linters.FATAL in grouped:
+        if linters.Result.FATAL in grouped:
             retcode = 1
-        elif linters.ERRORS in grouped:
+        elif linters.Result.ERRORS in grouped:
             retcode = 2
-        elif linters.WARNINGS in grouped:
+        elif linters.Result.WARNINGS in grouped:
             retcode = 3
         else:
             retcode = 0

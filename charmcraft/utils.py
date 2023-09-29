@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Collection of utilities for charmcraft."""
-
 import datetime
 import enum
 import functools
@@ -28,7 +27,7 @@ import string
 import subprocess
 import sys
 import zipfile
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from dataclasses import dataclass
 from stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
 from typing import (
@@ -52,7 +51,15 @@ from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 from charmcraft.env import is_charmcraft_running_in_managed_mode
 from charmcraft.errors import DuplicateCharmsError, InvalidCharmPathError
 
-OSPlatform = namedtuple("OSPlatform", "system release machine")
+
+@dataclass(frozen=True)
+class OSPlatform:
+    """Description of an operating system platform."""
+
+    system: str
+    release: str
+    machine: str
+
 
 # handy masks for execution and reading for everybody
 S_IXALL = S_IXUSR | S_IXGRP | S_IXOTH

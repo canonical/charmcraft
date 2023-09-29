@@ -132,7 +132,7 @@ class Builder:
         for result in linting_results:
             if result.result == charmcraft.linters.IGNORED:
                 continue
-            if result.check_type == charmcraft.linters.CheckType.attribute:
+            if result.check_type == charmcraft.linters.CheckType.ATTRIBUTE:
                 attribute_results.append(result)
             else:
                 lint_results_by_outcome.setdefault(result.result, []).append(result)
@@ -140,7 +140,7 @@ class Builder:
         # show attribute results
         for result in attribute_results:
             emit.verbose(
-                f"Check result: {result.name} [{result.check_type}] {result.result} "
+                f"Check result: {result.name} [{result.check_type.value}] {result.result} "
                 f"({result.text}; see more at {result.url}).",
             )
 

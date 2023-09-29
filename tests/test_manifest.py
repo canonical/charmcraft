@@ -57,7 +57,7 @@ def test_manifest_simple_ok(tmp_path):
     linting_results = [
         linters.CheckResult(
             name="check-name",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result="check-result",
@@ -120,21 +120,21 @@ def test_manifest_checkers_multiple(tmp_path):
     linting_results = [
         linters.CheckResult(
             name="attrib-name-1",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result="result-1",
         ),
         linters.CheckResult(
             name="attrib-name-2",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result="result-2",
         ),
         linters.CheckResult(
             name="warning-name",
-            check_type=linters.CheckType.lint,
+            check_type=linters.CheckType.LINT,
             url="url",
             text="text",
             result="result",

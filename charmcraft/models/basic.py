@@ -65,7 +65,7 @@ class AttributeName(CustomStrictStr):
         valid_names = [
             checker.name
             for checker in linters.CHECKERS
-            if checker.check_type == linters.CheckType.attribute
+            if checker.check_type == linters.CheckType.ATTRIBUTE
         ]
         if value not in valid_names:
             raise ValueError(f"Bad attribute name {value!r}")
@@ -83,7 +83,7 @@ class LinterName(CustomStrictStr):
         valid_names = [
             checker.name
             for checker in linters.CHECKERS
-            if checker.check_type == linters.CheckType.lint
+            if checker.check_type == linters.CheckType.LINT
         ]
         if value not in valid_names:
             raise ValueError(f"Bad lint name {value!r}")

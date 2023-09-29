@@ -101,8 +101,8 @@ class AnalyzeCommand(BaseCommand):
         # group by attributes and lint outcomes (discarding ignored ones)
         grouped = {}
         for result in linting_results:
-            if result.check_type == linters.CheckType.attribute:
-                group_key = linters.CheckType.attribute
+            if result.check_type == linters.CheckType.ATTRIBUTE:
+                group_key = linters.CheckType.ATTRIBUTE
                 result_info = result.result
             else:
                 # linters
@@ -117,7 +117,7 @@ class AnalyzeCommand(BaseCommand):
 
         # present the results
         titles = [
-            ("Attributes", linters.CheckType.attribute),
+            ("Attributes", linters.CheckType.ATTRIBUTE),
             ("Lint Ignored", linters.IGNORED),
             ("Lint Warnings", linters.WARNINGS),
             ("Lint Errors", linters.ERRORS),

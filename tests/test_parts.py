@@ -578,7 +578,9 @@ def test_parthelpers_get_dispatch_entrypoint_no_file(tmp_path):
 # -- tests for part config processing
 
 
-def test_partconfig_happy_validation_and_completion():
+def test_partconfig_happy_validation_and_completion(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "requirements.txt").touch()
     data = {
         "plugin": "charm",
         "source": ".",

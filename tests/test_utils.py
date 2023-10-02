@@ -55,20 +55,20 @@ from charmcraft.utils import (
 
 @pytest.fixture()
 def mock_isatty():
-    with patch("charmcraft.utils.sys.stdin.isatty", return_value=True) as mock_isatty:
+    with patch("charmcraft.utils.cli.sys.stdin.isatty", return_value=True) as mock_isatty:
         yield mock_isatty
 
 
 @pytest.fixture()
 def mock_input():
-    with patch("charmcraft.utils.input", return_value="") as mock_input:
+    with patch("charmcraft.utils.cli.input", return_value="") as mock_input:
         yield mock_input
 
 
 @pytest.fixture()
 def mock_is_charmcraft_running_in_managed_mode():
     with patch(
-        "charmcraft.utils.is_charmcraft_running_in_managed_mode", return_value=False
+        "charmcraft.utils.cli.is_charmcraft_running_in_managed_mode", return_value=False
     ) as mock_managed:
         yield mock_managed
 
@@ -418,7 +418,7 @@ def test_confirm_with_user_pause_emitter(mock_isatty, emitter):
         assert emitter.paused
         return ""
 
-    with patch("charmcraft.utils.input", fake_input):
+    with patch("charmcraft.utils.cli.input", fake_input):
         confirm_with_user("prompt")
 
 

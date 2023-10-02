@@ -32,7 +32,6 @@ import charmcraft.instrum
 import charmcraft.linters
 import charmcraft.providers
 from charmcraft import const, env, errors, parts
-from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.const import (
     BUILD_DIRNAME,
     CHARM_FILES,
@@ -45,7 +44,13 @@ from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.metafiles.metadata import create_metadata_yaml
 from charmcraft.models.charmcraft import Base, BasesConfiguration
-from charmcraft.utils import build_zip, get_host_architecture, humanize_list, load_yaml
+from charmcraft.utils import (
+    build_zip,
+    collect_charmlib_pydeps,
+    get_host_architecture,
+    humanize_list,
+    load_yaml,
+)
 
 
 @dataclasses.dataclass(frozen=True)

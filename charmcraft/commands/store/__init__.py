@@ -26,7 +26,7 @@ import textwrap
 import zipfile
 from collections import namedtuple
 from operator import attrgetter
-from typing import List, TYPE_CHECKING, Optional, Dict
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 import yaml
 from craft_cli import emit, ArgumentParsingError
@@ -40,14 +40,8 @@ from tabulate import tabulate
 from charmcraft.cmdbase import BaseCommand
 from charmcraft import parts, utils
 
-from charmcraft.commands.store.charmlibs import (
-    create_importable_name,
-    get_name_from_metadata,
-    get_lib_info,
-    get_libs_from_tree,
-)
-from charmcraft.commands.store.store import Store, Entity
 from charmcraft.commands.store.registry import ImageHandler, OCIRegistry, LocalDockerdInterface
+from charmcraft.commands.store.store import Store, Entity
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
@@ -887,7 +881,7 @@ class PromoteBundleCommand(BaseCommand):
             except ValueError:
                 errant_excludes.append(excluded)
         if errant_excludes:
-            bad_charms = utils.cli.humanize_list(errant_excludes, "and")
+            bad_charms = utils.humanize_list(errant_excludes, "and")
             raise CraftError(
                 f"Bundle does not contain the following excluded charms: {bad_charms}"
             )
@@ -913,13 +907,13 @@ class PromoteBundleCommand(BaseCommand):
             elif name_map[charm_name].entity_type != EntityType.charm:
                 non_charms.append(charm_name)
         if invalid_charms:
-            charm_list = utils.cli.humanize_list(invalid_charms, "and")
+            charm_list = utils.humanize_list(invalid_charms, "and")
             raise CraftError(
                 "The following entities do not exist or you are not a collaborator on them: "
                 f"{charm_list}"
             )
         if non_charms:
-            non_charm_list = utils.cli.humanize_list(non_charms, "and")
+            non_charm_list = utils.humanize_list(non_charms, "and")
             raise CraftError(f"The following store entities are not charms: {non_charm_list}")
 
         # Revision in the source channel
@@ -1287,7 +1281,7 @@ class CreateLibCommand(BaseCommand):
                 "characters and underscore, starting with alpha."
             )
 
-        charm_name = self.config.name or get_name_from_metadata()
+        charm_name = self.config.name or utils.get_name_from_metadata()
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1296,11 +1290,11 @@ class CreateLibCommand(BaseCommand):
 
         # '-' is valid in charm names, but not in a python import
         # mutate the name so the path is a valid import
-        importable_charm_name = create_importable_name(charm_name)
+        importable_charm_name = utils.create_importable_name(charm_name)
 
         # all libraries born with API version 0
         full_name = f"charms.{importable_charm_name}.v0.{lib_name}"
-        lib_data = get_lib_info(full_name=full_name)
+        lib_data = utils.get_lib_info(full_name=full_name)
         lib_path = lib_data.path
         if lib_path.exists():
             raise CraftError(f"This library already exists: {str(lib_path)!r}.")
@@ -1362,7 +1356,7 @@ class PublishLibCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        charm_name = self.config.name or get_name_from_metadata()
+        charm_name = self.config.name or utils.get_name_from_metadata()
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1370,7 +1364,7 @@ class PublishLibCommand(BaseCommand):
             )
 
         if parsed_args.library:
-            lib_data = get_lib_info(full_name=parsed_args.library)
+            lib_data = utils.get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
                 raise CraftError(
                     "The specified library was not found at path {!r}.".format(str(lib_data.path))
@@ -1383,7 +1377,7 @@ class PublishLibCommand(BaseCommand):
                 )
             local_libs_data = [lib_data]
         else:
-            local_libs_data = get_libs_from_tree(charm_name)
+            local_libs_data = utils.get_libs_from_tree(charm_name)
             found_libs = [lib_data.full_name for lib_data in local_libs_data]
             (charmlib_path,) = {lib_data.path.parent.parent for lib_data in local_libs_data}
             emit.debug(f"Libraries found under {str(charmlib_path)!r}: {found_libs}")
@@ -1515,9 +1509,9 @@ class FetchLibCommand(BaseCommand):
     def run(self, parsed_args):
         """Run the command."""
         if parsed_args.library:
-            local_libs_data = [get_lib_info(full_name=parsed_args.library)]
+            local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
         else:
-            local_libs_data = get_libs_from_tree()
+            local_libs_data = utils.get_libs_from_tree()
             found_libs = [lib_data.full_name for lib_data in local_libs_data]
             emit.debug(f"Libraries found under 'lib/charms': {found_libs}")
 
@@ -1667,7 +1661,7 @@ class ListLibCommand(BaseCommand):
         if parsed_args.name:
             charm_name = parsed_args.name
         else:
-            charm_name = get_name_from_metadata()
+            charm_name = utils.get_name_from_metadata()
             if charm_name is None:
                 raise CraftError(
                     "Can't access name in 'metadata.yaml' file. The 'list-lib' command must "

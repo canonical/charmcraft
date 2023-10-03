@@ -1186,8 +1186,9 @@ def test_build_arguments_managed_charmcraft_measure(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_package_tree_structure(tmp_path, config):
+def test_build_package_tree_structure(monkeypatch, tmp_path, config):
     """The zip file is properly built internally."""
+    monkeypatch.chdir(tmp_path)
     # the metadata
     metadata_data = {"name": "test-charm-name-from-metadata-yaml"}
     metadata_file = tmp_path / "metadata.yaml"
@@ -1286,6 +1287,7 @@ def test_build_package_tree_structure(tmp_path, config):
     ],
 )
 def test_build_package_name(
+    monkeypatch,
     tmp_path,
     prepare_charmcraft_yaml,
     prepare_metadata_yaml,
@@ -1294,6 +1296,7 @@ def test_build_package_name(
     expected_zipname,
 ):
     """The zip file name comes from the config."""
+    monkeypatch.chdir(tmp_path)
     to_be_zipped_dir = tmp_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
@@ -1899,10 +1902,16 @@ def test_launch_shell(emitter):
 def test_subprocess_pack_charms_success(
     mocker, check, charms, charm_files, command_args, expected_calls, expected
 ):
-    mock_check_call = mocker.patch("subprocess.check_call")
-    mock_check_call.side_effect = lambda *_, **__: [pathlib.Path(f).touch() for f in charm_files]
+    try:
+        mock_check_call = mocker.patch("subprocess.check_call")
+        mock_check_call.side_effect = lambda *_, **__: [
+            pathlib.Path(f).touch() for f in charm_files
+        ]
 
-    actual = _subprocess_pack_charms(charms, command_args)
+        actual = _subprocess_pack_charms(charms, command_args)
 
-    check.equal(actual, expected)
-    check.equal(mock_check_call.mock_calls, expected_calls)
+        check.equal(actual, expected)
+        check.equal(mock_check_call.mock_calls, expected_calls)
+    finally:
+        for path in expected.values():
+            path.unlink(missing_ok=True)

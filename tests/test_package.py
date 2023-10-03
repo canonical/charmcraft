@@ -1567,7 +1567,7 @@ def test_build_part_include_venv_pydeps(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_path):
-    """Generic use of linters, pass them ok to their proceessor and save them in the manifest."""
+    """Generic use of linters, pass them ok to their processor and save them in the manifest."""
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],

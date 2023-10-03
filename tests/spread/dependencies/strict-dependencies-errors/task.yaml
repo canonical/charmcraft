@@ -1,0 +1,10 @@
+summary: test charm build failures with strict dependencies
+
+environment:
+  CHARM/no_requirements: no-requirements/
+  CHARM/extra_packages: extra-packages/
+
+execute: |
+  cd $CHARM
+  # Charmcraft should fail for these charms.
+  ! charmcraft pack --verbose

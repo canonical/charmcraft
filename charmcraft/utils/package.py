@@ -20,6 +20,8 @@ import string
 import subprocess
 from typing import Collection, Iterable, List, Set, Tuple
 
+from charmcraft.errors import MissingDependenciesError
+
 PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)( *[~<>=!]==?)?")
 
 
@@ -56,6 +58,16 @@ def get_package_names(packages: Iterable[str]) -> Set[str]:
     return names
 
 
+def get_requirements_file_package_names(*requirements_files: pathlib.Path) -> Set[str]:
+    """Get all the package names from one or more requirements files as a single set."""
+    packages = set()
+    for file in requirements_files:
+        packages |= get_package_names(
+            get_pypi_packages(file.read_text().splitlines(keepends=False))
+        )
+    return packages
+
+
 def exclude_packages(requirements: Set[str], *, excluded: Collection[str]) -> Set[str]:
     """Filter a set of requirements lines by a collection of package names.
 
@@ -89,9 +101,7 @@ def get_pip_command(
     """
     charm_packages = get_pypi_packages(source_deps)
     binary_packages = get_pypi_packages(binary_deps)
-    requirements_packages = get_pypi_packages(
-        *(path.read_text().splitlines(keepends=False) for path in requirements_files)
-    )
+    requirements_packages = get_requirements_file_package_names(*requirements_files)
     all_packages = charm_packages | binary_packages | requirements_packages
     source_only_packages = sorted(
         get_package_names(all_packages) - get_package_names(binary_packages)
@@ -128,3 +138,24 @@ def get_pip_version(pip_cmd: str) -> Tuple[int, ...]:
         return tuple(int(num) for num in version_strings)
     except ValueError:
         raise ValueError(f"Unknown pip version {version_data[1]}")
+
+
+def validate_strict_dependencies(
+    dependencies: Iterable[str], *other_packages: Collection[str]
+) -> None:
+    """Validate that a charm has an appropriate set of strict dependencies.
+
+    :param dependencies: Packages that are included in known dependencies.
+    :param other_packages: Packages from other sources, to ensure these packages are in the
+        overall set of dependencies.
+    """
+    dependency_names = get_package_names(dependencies)
+
+    extra_packages: Set[str] = set()
+
+    for package_set in other_packages:
+        other_names = get_package_names(package_set)
+        extra_packages |= other_names - dependency_names
+
+    if extra_packages:
+        raise MissingDependenciesError(extra_packages)

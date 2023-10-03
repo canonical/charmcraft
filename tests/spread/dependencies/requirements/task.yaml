@@ -13,6 +13,11 @@ include:
 kill-timeout: 30m
 
 prepare: |
+  mkdir -p charm
+    pushd charm
+    charmcraft init --profile=machine
+    popd
+
   cp "${REQUIREMENTS_FILE}" charm/requirements.txt
   if [ -n "${CHARMCRAFT_YAML:-}" ]; then
     cp "${CHARMCRAFT_YAML}" charm/charmcraft.yaml

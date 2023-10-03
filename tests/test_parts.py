@@ -591,6 +591,7 @@ def test_partconfig_happy_validation_and_completion():
         "charm-entrypoint": "src/charm.py",
         "charm-python-packages": [],
         "charm-requirements": ["requirements.txt"],
+        "charm-strict-dependencies": False,
     }
 
 

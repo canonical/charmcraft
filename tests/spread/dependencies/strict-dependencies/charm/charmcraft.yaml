@@ -1,0 +1,13 @@
+name: charm
+type: charm
+title: Strict dependencies test charm
+summary: a test charm for checking that strict dependencies are used.
+description: a test charm for checking that strict dependencies are used.
+bases:
+  - name: ubuntu
+    channel: "22.04"
+
+parts:
+  charm:
+    charm-strict-dependencies: true
+    charm-binary-python-packages: ["ops>=2.6"]

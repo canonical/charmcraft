@@ -1443,6 +1443,7 @@ def test_build_part_from_config(
                         "charm-binary-python-packages": ["baz"],
                         "source": str(basic_project),
                         "charm-requirements": ["reqs.txt"],
+                        "charm-strict-dependencies": False,
                     }
                 },
                 work_dir=pathlib.Path("/root"),
@@ -1542,6 +1543,7 @@ def test_build_part_include_venv_pydeps(
                         "charm-binary-python-packages": [],
                         "source": str(basic_project),
                         "charm-requirements": [],
+                        "charm-strict-dependencies": False,
                     }
                 },
                 work_dir=pathlib.Path("/root"),

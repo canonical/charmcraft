@@ -63,6 +63,7 @@ dev_requires = [
     "coverage",
     "flake8",
     "pydocstyle",
+    "pyfakefs",
     "pytest",
     "pytest-cov",
     "pytest-mock",

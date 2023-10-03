@@ -59,6 +59,7 @@ backends:
       multipass exec "$instance_name" -- \
         sudo systemctl restart ssh
 
+      multipass exec "$instance_name" -- sudo snap refresh --channel=latest/stable lxd
       multipass exec "$instance_name" -- sudo lxd init --auto
 
       # Get the IP from the instance
@@ -143,11 +144,6 @@ suites:
         juju destroy-model --force --no-prompt --destroy-storage test-model
         juju add-model test-model
       fi
-
-      mkdir -p charm
-      pushd charm
-      charmcraft init --profile=machine
-      popd
     restore-each: |
       pushd charm
       charmcraft clean

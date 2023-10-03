@@ -203,7 +203,7 @@ class CharmcraftConfig(
         return parts
 
     @pydantic.validator("parts", each_item=True)
-    def validate_each_part(cls, item, values):
+    def validate_each_part(cls, item):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
         return process_part_config(item)
 

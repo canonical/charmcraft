@@ -35,7 +35,7 @@ class JujuActions(ModelConfigDefaults):
     actions: Optional[Dict[str, Dict]]
 
     @pydantic.validator("actions")
-    def validate_actions(cls, actions, values):
+    def validate_actions(cls, actions):
         """Verify actions names and descriptions."""
         if not isinstance(actions, dict):
             raise ValueError("actions.yaml is not a valid actions configuration")
@@ -50,7 +50,7 @@ class JujuActions(ModelConfigDefaults):
         return actions
 
     @pydantic.validator("actions", each_item=True)
-    def validate_each_action(cls, action, values):
+    def validate_each_action(cls, action):
         """Verify actions names and descriptions."""
         if not isinstance(action, dict):
             raise ValueError(f"'{action}' is not a dictionary")

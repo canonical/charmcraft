@@ -32,7 +32,7 @@ class JujuConfig(ModelConfigDefaults):
     options: Optional[Dict[str, Dict]]
 
     @pydantic.validator("options", pre=True)
-    def validate_actions(cls, options, values):
+    def validate_actions(cls, options):
         """Verify options section."""
         for name, option in options.items():
             if not isinstance(option, dict):

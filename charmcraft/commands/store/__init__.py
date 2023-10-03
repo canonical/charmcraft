@@ -26,7 +26,7 @@ import textwrap
 import zipfile
 from collections import namedtuple
 from operator import attrgetter
-from typing import List
+from typing import List, TYPE_CHECKING, Optional, Dict
 
 import yaml
 from craft_cli import emit, ArgumentParsingError
@@ -38,32 +38,18 @@ from humanize import naturalsize
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand
-from charmcraft.utils import (
-    ResourceOption,
-    SingleOptionEnsurer,
-    format_timestamp,
-    get_templates_environment,
-    useful_filepath,
-    ChannelData,
-    load_yaml,
-    humanize_list,
-    build_zip,
-)
+from charmcraft import parts, utils
 
-from .charmlibs import (
+from charmcraft.commands.store.charmlibs import (
     create_importable_name,
     get_name_from_metadata,
     get_lib_info,
     get_libs_from_tree,
 )
-from .store import Store, Entity
-from .registry import ImageHandler, OCIRegistry, LocalDockerdInterface
+from charmcraft.commands.store.store import Store, Entity
+from charmcraft.commands.store.registry import ImageHandler, OCIRegistry, LocalDockerdInterface
 
-import typing
-
-from charmcraft import utils, parts
-
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
 
 # some types
@@ -555,7 +541,9 @@ class UploadCommand(BaseCommand):
         """Add own parameters to the general parser."""
         self.include_format_option(parser)
 
-        parser.add_argument("filepath", type=useful_filepath, help="The charm or bundle to upload")
+        parser.add_argument(
+            "filepath", type=utils.useful_filepath, help="The charm or bundle to upload"
+        )
         parser.add_argument(
             "--release",
             action="append",
@@ -569,7 +557,7 @@ class UploadCommand(BaseCommand):
         parser.add_argument(
             "--resource",
             action="append",
-            type=ResourceOption(),
+            type=utils.ResourceOption(),
             default=[],
             help=(
                 "The resource(s) to attach to the release, in the <name>:<revision> format "
@@ -660,7 +648,7 @@ class ListRevisionsCommand(BaseCommand):
             else:
                 status = item.status
 
-            tstamp = format_timestamp(item.created_at)
+            tstamp = utils.format_timestamp(item.created_at)
             human_data.append(
                 [
                     item.revision,
@@ -745,7 +733,7 @@ class ReleaseCommand(BaseCommand):
         parser.add_argument(
             "-r",
             "--revision",
-            type=SingleOptionEnsurer(int),
+            type=utils.SingleOptionEnsurer(int),
             required=True,
             help="The revision to release",
         )
@@ -759,7 +747,7 @@ class ReleaseCommand(BaseCommand):
         parser.add_argument(
             "--resource",
             action="append",
-            type=ResourceOption(),
+            type=utils.ResourceOption(),
             default=[],
             help=(
                 "The resource(s) to attach to the release, in the <name>:<revision> format "
@@ -803,13 +791,13 @@ class PromoteBundleCommand(BaseCommand):
         """Add promote-bundle parameters to the general parser."""
         parser.add_argument(
             "--from-channel",
-            type=SingleOptionEnsurer(str),
+            type=utils.SingleOptionEnsurer(str),
             required=True,
             help="The channel from which to promote the bundle",
         )
         parser.add_argument(
             "--to-channel",
-            type=SingleOptionEnsurer(str),
+            type=utils.SingleOptionEnsurer(str),
             required=True,
             help="The target channel for the promoted bundle",
         )
@@ -833,8 +821,8 @@ class PromoteBundleCommand(BaseCommand):
             raise CraftError("promote-bundle must be run on a bundle.")
 
         # Check snapcraft for equiv logic
-        from_channel = ChannelData.from_str(parsed_args.from_channel)
-        to_channel = ChannelData.from_str(parsed_args.to_channel)
+        from_channel = utils.ChannelData.from_str(parsed_args.from_channel)
+        to_channel = utils.ChannelData.from_str(parsed_args.to_channel)
 
         if to_channel == from_channel:
             raise CraftError("Cannot promote from a channel to the same channel.")
@@ -861,7 +849,7 @@ class PromoteBundleCommand(BaseCommand):
                 f"{from_channel.track} to {to_channel.track})"
             )
 
-        output_bundle: typing.Optional[pathlib.Path] = parsed_args.output_bundle
+        output_bundle: Optional[pathlib.Path] = parsed_args.output_bundle
         if output_bundle is not None and output_bundle.exists():
             if output_bundle.is_file() or output_bundle.is_symlink():
                 emit.verbose(f"Overwriting existing bundle file: {str(output_bundle)}")
@@ -881,7 +869,7 @@ class PromoteBundleCommand(BaseCommand):
 
         # Load bundle
         bundle_path = self.config.project.dirpath / "bundle.yaml"
-        bundle_config = load_yaml(bundle_path)
+        bundle_config = utils.load_yaml(bundle_path)
         if bundle_config is None:
             raise CraftError(f"Missing or invalid main bundle file: {(str(bundle_path))}")
         bundle_name = bundle_config.get("name")
@@ -899,7 +887,7 @@ class PromoteBundleCommand(BaseCommand):
             except ValueError:
                 errant_excludes.append(excluded)
         if errant_excludes:
-            bad_charms = utils.humanize_list(errant_excludes, "and")
+            bad_charms = utils.cli.humanize_list(errant_excludes, "and")
             raise CraftError(
                 f"Bundle does not contain the following excluded charms: {bad_charms}"
             )
@@ -925,13 +913,13 @@ class PromoteBundleCommand(BaseCommand):
             elif name_map[charm_name].entity_type != EntityType.charm:
                 non_charms.append(charm_name)
         if invalid_charms:
-            charm_list = utils.humanize_list(invalid_charms, "and")
+            charm_list = utils.cli.humanize_list(invalid_charms, "and")
             raise CraftError(
                 "The following entities do not exist or you are not a collaborator on them: "
                 f"{charm_list}"
             )
         if non_charms:
-            non_charm_list = utils.humanize_list(non_charms, "and")
+            non_charm_list = utils.cli.humanize_list(non_charms, "and")
             raise CraftError(f"The following store entities are not charms: {non_charm_list}")
 
         # Revision in the source channel
@@ -945,8 +933,8 @@ class PromoteBundleCommand(BaseCommand):
             raise CraftError("Cannot find a bundle released to the given source channel.")
 
         # Get source channel charms
-        charm_revisions: typing.Dict[str, int] = {}
-        charm_resources: typing.Dict[str, List[str]] = collections.defaultdict(list)
+        charm_revisions: Dict[str, int] = {}
+        charm_resources: Dict[str, List[str]] = collections.defaultdict(list)
         error_charms = []
         for charm_name in charms:
             channel_map, *_ = store.list_releases(charm_name)
@@ -959,7 +947,7 @@ class PromoteBundleCommand(BaseCommand):
             else:
                 error_charms.append(charm_name)
         if error_charms:
-            charm_list = humanize_list(error_charms, "and")
+            charm_list = utils.humanize_list(error_charms, "and")
             raise CraftError(f"Not found in channel {from_channel.name}: {charm_list}")
 
         for application in bundle_config.get("applications", {}).values():
@@ -1006,7 +994,7 @@ class PromoteBundleCommand(BaseCommand):
             create_metadata_yaml(lifecycle.prime_dir, self.config)
             create_manifest(lifecycle.prime_dir, self.config.project.started_at, None, [])
             zipname = bundle_dir_path / (bundle_name + ".zip")
-            build_zip(zipname, lifecycle.prime_dir)
+            utils.build_zip(zipname, lifecycle.prime_dir)
 
             # Upload the bundle and release it to the target channel.
             store.upload(bundle_name, zipname)
@@ -1228,7 +1216,7 @@ class StatusCommand(BaseCommand):
                         # not for this base!
                         continue
                     description = "/".join((branch.risk, branch.branch))
-                    expiration = format_timestamp(release.expires_at)
+                    expiration = utils.format_timestamp(release.expires_at)
                     revision = revisions_by_revno[release.revision]
                     datum = ["", "", description, revision.version, release.revision]
                     if resources_present:
@@ -1322,7 +1310,7 @@ class CreateLibCommand(BaseCommand):
         lib_id = store.create_library_id(charm_name, lib_name)
 
         # create the new library file from the template
-        env = get_templates_environment("charmlibs")
+        env = utils.get_templates_environment("charmlibs")
         template = env.get_template("new_library.py.j2")
         context = {"lib_id": lib_id}
         try:
@@ -1814,12 +1802,12 @@ class UploadResourceCommand(BaseCommand):
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument(
             "--filepath",
-            type=SingleOptionEnsurer(useful_filepath),
+            type=utils.SingleOptionEnsurer(utils.useful_filepath),
             help="The file path of the resource content to upload",
         )
         group.add_argument(
             "--image",
-            type=SingleOptionEnsurer(str),
+            type=utils.SingleOptionEnsurer(str),
             help=(
                 'The digest (remote or local) or id (local, exclude "sha256:") of the OCI image'
             ),
@@ -1970,7 +1958,7 @@ class ListResourceRevisionsCommand(BaseCommand):
             info = [
                 {
                     "revision": item.revision,
-                    "created at": format_timestamp(item.created_at),
+                    "created at": utils.format_timestamp(item.created_at),
                     "size": item.size,
                 }
                 for item in result
@@ -1988,7 +1976,7 @@ class ListResourceRevisionsCommand(BaseCommand):
         data = [
             (
                 item.revision,
-                format_timestamp(item.created_at),
+                utils.format_timestamp(item.created_at),
                 naturalsize(item.size, gnu=True),
             )
             for item in result

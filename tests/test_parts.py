@@ -34,14 +34,14 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [ye
 
 
 @pytest.fixture()
-def charm_plugin(tmp_path):
+def charm_plugin(fake_path):
     requirement_files = ["reqs1.txt", "reqs2.txt"]
     for req in requirement_files:
-        (tmp_path / req).write_text("somedep")
-    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+        (fake_path / req).write_text("somedep")
+    project_dirs = craft_parts.ProjectDirs(work_dir=fake_path)
     spec = {
         "plugin": "charm",
-        "source": str(tmp_path),
+        "source": str(fake_path),
         "charm-entrypoint": "entrypoint",
         "charm-binary-python-packages": ["pkg1", "pkg2"],
         "charm-python-packages": ["pkg3", "pkg4"],
@@ -55,7 +55,7 @@ def charm_plugin(tmp_path):
     project_info = craft_parts.ProjectInfo(
         application_name="test",
         project_dirs=project_dirs,
-        cache_dir=tmp_path,
+        cache_dir=fake_path,
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
@@ -138,7 +138,7 @@ def test_charmplugin_get_build_environment_centos_7(charm_plugin, mocker, monkey
     }
 
 
-def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, monkeypatch):
+def test_charmplugin_get_build_commands_ubuntu(charm_plugin, fake_path, mocker, monkeypatch):
     monkeypatch.setenv("PATH", "/some/path")
     monkeypatch.setenv("SNAP", "snap_value")
     monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
@@ -176,7 +176,7 @@ def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, m
         "-r reqs2.txt".format(
             python=sys.executable,
             charm_builder=charm_builder.__file__,
-            work_dir=str(tmp_path),
+            work_dir=str(fake_path),
         )
     ]
 
@@ -184,7 +184,7 @@ def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, m
     mock_register.assert_called_with(charm_plugin.post_build_callback, step_list=[Step.BUILD])
 
 
-def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker, monkeypatch):
+def test_charmplugin_get_build_commands_centos_7(charm_plugin, fake_path, mocker, monkeypatch):
     monkeypatch.setenv("PATH", "/some/path")
     monkeypatch.setenv("SNAP", "snap_value")
     monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
@@ -225,7 +225,7 @@ def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker,
         "-r reqs2.txt".format(
             python=sys.executable,
             charm_builder=charm_builder.__file__,
-            work_dir=str(tmp_path),
+            work_dir=str(fake_path),
         )
     ]
 
@@ -266,18 +266,18 @@ def test_charmpluginproperties_entrypoint_default():
     assert properties.charm_entrypoint == "src/charm.py"
 
 
-def test_charmpluginproperties_entrypoint_relative(tmp_path):
+def test_charmpluginproperties_entrypoint_relative(fake_path):
     """The configuration is stored relative no matter what."""
-    absolute_path = tmp_path / "myep.py"
-    content = {"source": str(tmp_path), "charm-entrypoint": str(absolute_path)}
+    absolute_path = fake_path / "myep.py"
+    content = {"source": str(fake_path), "charm-entrypoint": str(absolute_path)}
     properties = parts.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_entrypoint == "myep.py"
 
 
-def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
+def test_charmpluginproperties_entrypoint_outside_project_absolute(fake_path):
     """The entrypoint must be inside the project."""
-    outside_path = tmp_path.parent / "charm.py"
-    content = {"source": str(tmp_path), "charm-entrypoint": str(outside_path)}
+    outside_path = fake_path.parent / "charm.py"
+    content = {"source": str(fake_path), "charm-entrypoint": str(outside_path)}
     with pytest.raises(pydantic.ValidationError) as raised:
         parts.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
@@ -286,10 +286,10 @@ def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
     assert err[0]["msg"] == f"charm entry point must be inside the project: {str(outside_path)!r}"
 
 
-def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
+def test_charmpluginproperties_entrypoint_outside_project_relative(fake_path):
     """The entrypoint must be inside the project."""
-    outside_path = tmp_path.parent / "charm.py"
-    content = {"source": str(tmp_path), "charm-entrypoint": "../charm.py"}
+    outside_path = fake_path.parent / "charm.py"
+    content = {"source": str(fake_path), "charm-entrypoint": "../charm.py"}
     with pytest.raises(pydantic.ValidationError) as raised:
         parts.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
@@ -298,17 +298,17 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
     assert err[0]["msg"] == f"charm entry point must be inside the project: {str(outside_path)!r}"
 
 
-def test_charmpluginproperties_requirements_default(tmp_path):
+def test_charmpluginproperties_requirements_default(fake_path):
     """The configuration is empty by default."""
-    content = {"source": str(tmp_path)}
+    content = {"source": str(fake_path)}
     properties = parts.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_requirements == []
 
 
-def test_charmpluginproperties_requirements_must_exist(tmp_path):
+def test_charmpluginproperties_requirements_must_exist(fake_path):
     """The configured files must be present."""
-    reqs_path = tmp_path / "reqs.txt"  # not in disk, really
-    content = {"source": str(tmp_path), "charm-requirements": [str(reqs_path)]}
+    reqs_path = fake_path / "reqs.txt"  # not in disk, really
+    content = {"source": str(fake_path), "charm-requirements": [str(reqs_path)]}
     with pytest.raises(pydantic.ValidationError) as raised:
         parts.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
@@ -317,19 +317,19 @@ def test_charmpluginproperties_requirements_must_exist(tmp_path):
     assert err[0]["msg"] == f"requirements file {str(reqs_path)!r} not found"
 
 
-def test_charmpluginproperties_requirements_filepresent_ok(tmp_path):
+def test_charmpluginproperties_requirements_filepresent_ok(fake_path):
     """If a specific file is present in disk it's used."""
-    (tmp_path / "requirements.txt").write_text("somedep")
-    content = {"source": str(tmp_path)}
+    (fake_path / "requirements.txt").write_text("somedep")
+    content = {"source": str(fake_path)}
     properties = parts.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_requirements == ["requirements.txt"]
 
 
-def test_charmpluginproperties_requirements_filepresent_but_configured(tmp_path):
+def test_charmpluginproperties_requirements_filepresent_but_configured(fake_path):
     """The specific file is present in disk but configuration takes priority."""
-    (tmp_path / "requirements.txt").write_text("somedep")
-    (tmp_path / "alternative.txt").write_text("somedep")
-    content = {"source": str(tmp_path), "charm-requirements": ["alternative.txt"]}
+    (fake_path / "requirements.txt").write_text("somedep")
+    (fake_path / "alternative.txt").write_text("somedep")
+    content = {"source": str(fake_path), "charm-requirements": ["alternative.txt"]}
     properties = parts.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_requirements == ["alternative.txt"]
 
@@ -338,11 +338,11 @@ def test_charmpluginproperties_requirements_filepresent_but_configured(tmp_path)
 
 
 @pytest.fixture()
-def bundle_plugin(tmp_path):
-    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+def bundle_plugin(fake_path):
+    project_dirs = craft_parts.ProjectDirs(work_dir=fake_path)
     spec = {
         "plugin": "bundle",
-        "source": str(tmp_path),
+        "source": str(fake_path),
     }
     plugin_properties = parts.BundlePluginProperties.unmarshal(spec)
     part_spec = plugins.extract_part_properties(spec, plugin_name="bundle")
@@ -352,7 +352,7 @@ def bundle_plugin(tmp_path):
     project_info = craft_parts.ProjectInfo(
         application_name="test",
         project_dirs=project_dirs,
-        cache_dir=tmp_path,
+        cache_dir=fake_path,
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
@@ -371,16 +371,16 @@ def test_bundleplugin_get_build_environment(bundle_plugin):
     assert bundle_plugin.get_build_environment() == {}
 
 
-def test_bundleplugin_get_build_commands(bundle_plugin, tmp_path):
+def test_bundleplugin_get_build_commands(bundle_plugin, fake_path):
     if sys.platform == "linux":
         assert bundle_plugin.get_build_commands() == [
-            f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
-            f'cp --archive --link --no-dereference * "{str(tmp_path)}/parts/foo/install"',
+            f'mkdir -p "{str(fake_path)}/parts/foo/install"',
+            f'cp --archive --link --no-dereference * "{str(fake_path)}/parts/foo/install"',
         ]
     else:
         assert bundle_plugin.get_build_commands() == [
-            f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
-            f'cp -R -p -P * "{str(tmp_path)}/parts/foo/install"',
+            f'mkdir -p "{str(fake_path)}/parts/foo/install"',
+            f'cp -R -p -P * "{str(fake_path)}/parts/foo/install"',
         ]
 
 
@@ -396,7 +396,7 @@ def test_bundleplugin_invalid_properties():
 # -- tests for parts lifecycle
 
 
-def test_partslifecycle_bad_bootstrap(tmp_path):
+def test_partslifecycle_bad_bootstrap(fake_path):
     fake_error = PartsError("pumba")
     with patch("craft_parts.LifecycleManager.__init__") as mock:
         mock.side_effect = fake_error
@@ -404,7 +404,7 @@ def test_partslifecycle_bad_bootstrap(tmp_path):
             parts.PartsLifecycle(
                 all_parts={},
                 work_dir="/some/workdir",
-                project_dir=tmp_path,
+                project_dir=fake_path,
                 project_name="test",
                 ignore_local_sources=["*.charm"],
             )
@@ -413,7 +413,7 @@ def test_partslifecycle_bad_bootstrap(tmp_path):
         assert exc.__cause__ == fake_error
 
 
-def test_partslifecycle_prime_dir(tmp_path):
+def test_partslifecycle_prime_dir(fake_path):
     data = {
         "plugin": "charm",
         "source": ".",
@@ -423,14 +423,14 @@ def test_partslifecycle_prime_dir(tmp_path):
         lifecycle = parts.PartsLifecycle(
             all_parts={"charm": data},
             work_dir="/some/workdir",
-            project_dir=tmp_path,
+            project_dir=fake_path,
             project_name="test",
             ignore_local_sources=["*.charm"],
         )
     assert lifecycle.prime_dir == pathlib.Path("/some/workdir/prime")
 
 
-def test_partslifecycle_run_new_entrypoint(tmp_path, monkeypatch):
+def test_partslifecycle_run_new_entrypoint(fake_path, monkeypatch):
     data = {
         "plugin": "charm",
         "source": ".",
@@ -440,7 +440,7 @@ def test_partslifecycle_run_new_entrypoint(tmp_path, monkeypatch):
     }
 
     # create dispatcher from previous run
-    prime_dir = tmp_path / "prime"
+    prime_dir = fake_path / "prime"
     prime_dir.mkdir()
     dispatch = prime_dir / "dispatch"
     dispatch.write_text(
@@ -449,8 +449,8 @@ def test_partslifecycle_run_new_entrypoint(tmp_path, monkeypatch):
 
     lifecycle = parts.PartsLifecycle(
         all_parts={"charm": data},
-        work_dir=tmp_path,
-        project_dir=tmp_path,
+        work_dir=fake_path,
+        project_dir=fake_path,
         project_name="test",
         ignore_local_sources=["*.charm"],
     )
@@ -464,7 +464,7 @@ def test_partslifecycle_run_new_entrypoint(tmp_path, monkeypatch):
     mock_clean.assert_called_once_with(Step.BUILD, part_names=["charm"])
 
 
-def test_partslifecycle_run_same_entrypoint(tmp_path, monkeypatch):
+def test_partslifecycle_run_same_entrypoint(fake_path, monkeypatch):
     data = {
         "plugin": "charm",
         "source": ".",
@@ -474,7 +474,7 @@ def test_partslifecycle_run_same_entrypoint(tmp_path, monkeypatch):
     }
 
     # create dispatcher from previous run
-    prime_dir = tmp_path / "prime"
+    prime_dir = fake_path / "prime"
     prime_dir.mkdir()
     dispatch = prime_dir / "dispatch"
     dispatch.write_text(
@@ -483,8 +483,8 @@ def test_partslifecycle_run_same_entrypoint(tmp_path, monkeypatch):
 
     lifecycle = parts.PartsLifecycle(
         all_parts={"charm": data},
-        work_dir=tmp_path,
-        project_dir=tmp_path,
+        work_dir=fake_path,
+        project_dir=fake_path,
         project_name="test",
         ignore_local_sources=["*.charm"],
     )
@@ -498,7 +498,7 @@ def test_partslifecycle_run_same_entrypoint(tmp_path, monkeypatch):
     mock_clean.assert_not_called()
 
 
-def test_partslifecycle_run_no_previous_entrypoint(tmp_path, monkeypatch):
+def test_partslifecycle_run_no_previous_entrypoint(fake_path, monkeypatch):
     data = {
         "plugin": "charm",
         "source": ".",
@@ -509,8 +509,8 @@ def test_partslifecycle_run_no_previous_entrypoint(tmp_path, monkeypatch):
 
     lifecycle = parts.PartsLifecycle(
         all_parts={"charm": data},
-        work_dir=tmp_path,
-        project_dir=tmp_path,
+        work_dir=fake_path,
+        project_dir=fake_path,
         project_name="test",
         ignore_local_sources=["*.charm"],
     )
@@ -524,7 +524,7 @@ def test_partslifecycle_run_no_previous_entrypoint(tmp_path, monkeypatch):
     mock_clean.assert_called_once_with(Step.BUILD, part_names=["charm"])
 
 
-def test_partslifecycle_run_actions_progress(tmp_path, monkeypatch, emitter):
+def test_partslifecycle_run_actions_progress(fake_path, monkeypatch, emitter):
     data = {
         "plugin": "nil",
         "source": ".",
@@ -532,8 +532,8 @@ def test_partslifecycle_run_actions_progress(tmp_path, monkeypatch, emitter):
 
     lifecycle = parts.PartsLifecycle(
         all_parts={"testpart": data},
-        work_dir=tmp_path,
-        project_dir=tmp_path,
+        work_dir=fake_path,
+        project_dir=fake_path,
         project_name="test",
         ignore_local_sources=[],
     )
@@ -561,24 +561,25 @@ def test_partslifecycle_run_actions_progress(tmp_path, monkeypatch, emitter):
 # -- tests for part helpers
 
 
-def test_parthelpers_get_dispatch_entrypoint(tmp_path):
-    dispatch = tmp_path / "dispatch"
+def test_parthelpers_get_dispatch_entrypoint(fake_path):
+    dispatch = fake_path / "dispatch"
     dispatch.write_text(
         'JUJU_DISPATCH_PATH="${JUJU_DISPATCH_PATH:-$0}" PYTHONPATH=lib:venv ./my/entrypoint'
     )
-    entrypoint = parts._get_dispatch_entrypoint(tmp_path)
+    entrypoint = parts._get_dispatch_entrypoint(fake_path)
     assert entrypoint == "./my/entrypoint"
 
 
-def test_parthelpers_get_dispatch_entrypoint_no_file(tmp_path):
-    entrypoint = parts._get_dispatch_entrypoint(tmp_path)
+def test_parthelpers_get_dispatch_entrypoint_no_file(fake_path):
+    entrypoint = parts._get_dispatch_entrypoint(fake_path)
     assert entrypoint == ""
 
 
 # -- tests for part config processing
 
 
-def test_partconfig_happy_validation_and_completion():
+def test_partconfig_happy_validation_and_completion(fake_path):
+    (fake_path / "requirements.txt").touch()
     data = {
         "plugin": "charm",
         "source": ".",

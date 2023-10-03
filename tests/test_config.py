@@ -141,16 +141,16 @@ def test_load_specific_directory_ok(
     assert config.project.dirpath == tmp_path
 
 
-def test_load_optional_charmcraft_missing(tmp_path):
+def test_load_optional_charmcraft_missing(fake_path):
     """Specify a directory where the file is missing."""
-    config = load(tmp_path)
-    assert config.project.dirpath == tmp_path
+    config = load(fake_path)
+    assert config.project.dirpath == fake_path
     assert not config.project.config_provided
 
 
-def test_load_optional_charmcraft_bad_directory(tmp_path):
+def test_load_optional_charmcraft_bad_directory(fake_path):
     """Specify a missing directory."""
-    missing_directory = tmp_path / "missing"
+    missing_directory = fake_path / "missing"
     config = load(missing_directory)
     assert config.project.dirpath == missing_directory
     assert not config.project.config_provided

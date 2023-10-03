@@ -224,10 +224,10 @@ def test_client_init_removes_trailing_slashes(client_class):
     assert client.storage_base_url == "http://storage.test"
 
 
-def test_client_push_simple_ok(tmp_path, emitter, client_class):
+def test_client_push_simple_ok(fake_path, emitter, client_class):
     """Happy path for pushing bytes."""
     # fake some bytes to push
-    test_filepath = tmp_path / "supercharm.bin"
+    test_filepath = fake_path / "supercharm.bin"
     with test_filepath.open("wb") as fh:
         fh.write(b"abcdefgh")
 
@@ -276,7 +276,7 @@ def test_client_push_simple_ok(tmp_path, emitter, client_class):
     )
 
 
-def test_client_push_configured_url_simple(tmp_path, client_class):
+def test_client_push_configured_url_simple(fake_path, client_class):
     """The storage server can be configured."""
 
     def fake_pusher(monitor):
@@ -284,7 +284,7 @@ def test_client_push_configured_url_simple(tmp_path, client_class):
         content = json.dumps({"successful": True, "upload_id": "test-upload-id"})
         return FakeResponse(content=content, status_code=200)
 
-    test_filepath = tmp_path / "supercharm.bin"
+    test_filepath = fake_path / "supercharm.bin"
     test_filepath.write_text("abcdefgh")
 
     client = client_class("http://api.test", "https://local.test:1234/")
@@ -292,10 +292,10 @@ def test_client_push_configured_url_simple(tmp_path, client_class):
         client.push_file(test_filepath)
 
 
-def test_client_push_response_unsuccessful(tmp_path, client_class):
+def test_client_push_response_unsuccessful(fake_path, client_class):
     """Didn't get a 200 from the Storage."""
     # fake some bytes to push
-    test_filepath = tmp_path / "supercharm.bin"
+    test_filepath = fake_path / "supercharm.bin"
     with test_filepath.open("wb") as fh:
         fh.write(b"abcdefgh")
     fake_response = FakeResponse(

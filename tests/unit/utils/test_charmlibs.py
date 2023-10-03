@@ -16,6 +16,7 @@
 
 """Tests for store helpers commands (code in store/charmlibs.py)."""
 import hashlib
+import os
 import pathlib
 import sys
 
@@ -32,12 +33,11 @@ from charmcraft.utils.charmlibs import (
 
 
 # region Name-related tests
-def test_get_name_from_metadata_ok(tmp_path, monkeypatch):
+def test_get_name_from_metadata_ok(fake_path):
     """The metadata file is valid yaml, but there is no name."""
-    monkeypatch.chdir(tmp_path)
 
     # put a valid metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     with metadata_file.open("wb") as fh:
         fh.write(b"name: test-name")
 
@@ -45,19 +45,17 @@ def test_get_name_from_metadata_ok(tmp_path, monkeypatch):
     assert result == "test-name"
 
 
-def test_get_name_from_metadata_no_file(tmp_path, monkeypatch):
+def test_get_name_from_metadata_no_file(fake_path):
     """No metadata file to get info."""
-    monkeypatch.chdir(tmp_path)
     result = get_name_from_metadata()
     assert result is None
 
 
-def test_get_name_from_metadata_bad_content_garbage(tmp_path, monkeypatch):
+def test_get_name_from_metadata_bad_content_garbage(fake_path):
     """The metadata file is broken."""
-    monkeypatch.chdir(tmp_path)
 
     # put a broken metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     with metadata_file.open("wb") as fh:
         fh.write(b"\b00\bff -- not a really yaml stuff")
 
@@ -65,12 +63,11 @@ def test_get_name_from_metadata_bad_content_garbage(tmp_path, monkeypatch):
     assert result is None
 
 
-def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
+def test_get_name_from_metadata_bad_content_no_name(fake_path):
     """The metadata file is valid yaml, but there is no name."""
-    monkeypatch.chdir(tmp_path)
 
     # put a broken metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     with metadata_file.open("wb") as fh:
         fh.write(b"{}")
 
@@ -122,9 +119,8 @@ def _create_lib(
     return lib_file
 
 
-def test_getlibinfo_success_simple(tmp_path, monkeypatch):
+def test_getlibinfo_success_simple(fake_path):
     """Simple basic case of success getting info from the library."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib()
 
     lib_data = get_lib_info(lib_path=test_path)
@@ -235,9 +231,8 @@ def test_getlibinfo_missing_library_from_path():
     assert lib_data.charm_name == "testcharm"
 
 
-def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
+def test_getlibinfo_metadata_api_different_path_api(fake_path):
     """The API value included in the file is different than the one in the path."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_api="LIBAPI = 99")
     with pytest.raises(CraftError) as err:
         get_lib_info(lib_path=test_path)
@@ -252,9 +247,8 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
 # region tests for get_lib_internals
 
 
-def test_getlibinternals_success_simple(tmp_path, monkeypatch):
+def test_getlibinternals_success_simple(fake_path):
     """Simple basic case of success getting internals from the library."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib()
     internals = get_lib_internals(test_path)
     assert internals.lib_id == "test-lib-id"
@@ -265,9 +259,8 @@ def test_getlibinternals_success_simple(tmp_path, monkeypatch):
     assert internals.content_hash is not None
 
 
-def test_getlibinternals_success_with_pydeps(tmp_path, monkeypatch):
+def test_getlibinternals_success_with_pydeps(fake_path):
     """Simple basic successful case that includes pydeps."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(pydeps="PYDEPS = ['foo', 'bar']")
     internals = get_lib_internals(test_path)
     assert internals.lib_id == "test-lib-id"
@@ -278,7 +271,7 @@ def test_getlibinternals_success_with_pydeps(tmp_path, monkeypatch):
     assert internals.content_hash is not None
 
 
-def test_getlibinternals_success_content(tmp_path, monkeypatch):
+def test_getlibinternals_success_content(fake_path):
     """Check that content and its hash are ok."""
     extra_content = """
         # extra lines for the file
@@ -286,7 +279,6 @@ def test_getlibinternals_success_content(tmp_path, monkeypatch):
         # the content is everything, this plus metadata
         # the hash should be of this, excluding metadata
     """
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(extra_content=extra_content)
 
     internals = get_lib_internals(test_path)
@@ -294,9 +286,8 @@ def test_getlibinternals_success_content(tmp_path, monkeypatch):
     assert internals.content_hash == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
 
 
-def test_getlibinternals_non_toplevel_names(tmp_path, monkeypatch):
+def test_getlibinternals_non_toplevel_names(fake_path):
     """Test non direct assignments."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(extra_content="logging.getLogger('kazoo.client').disabled = True")
     internals = get_lib_internals(test_path)
 
@@ -308,9 +299,8 @@ def test_getlibinternals_non_toplevel_names(tmp_path, monkeypatch):
     assert internals.content_hash is not None
 
 
-def test_getlibinternals_malformed_content(tmp_path, monkeypatch):
+def test_getlibinternals_malformed_content(fake_path):
     """Some internals field is not really valid."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(extra_content="  broken \n    python  ")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
@@ -328,9 +318,8 @@ def test_getlibinternals_malformed_content(tmp_path, monkeypatch):
         (["metadata_patch", "metadata_id"], "LIBID, LIBPATCH"),
     ],
 )
-def test_getlibinternals_missing_internals_field(tmp_path, empty_args, missing, monkeypatch):
+def test_getlibinternals_missing_internals_field(fake_path, empty_args, missing):
     """Some internals field is not present."""
-    monkeypatch.chdir(tmp_path)
     kwargs = {arg: "" for arg in empty_args}
     test_path = _create_lib(**kwargs)
     with pytest.raises(CraftError) as err:
@@ -341,9 +330,8 @@ def test_getlibinternals_missing_internals_field(tmp_path, empty_args, missing, 
 
 
 @pytest.mark.parametrize("value", ["v3", "-3"])
-def test_getlibinternals_api_bad_value(tmp_path, value, monkeypatch):
+def test_getlibinternals_api_bad_value(fake_path, value):
     """The API is not a positive integer."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_api=f"LIBAPI = {value}")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
@@ -354,9 +342,8 @@ def test_getlibinternals_api_bad_value(tmp_path, value, monkeypatch):
 
 
 @pytest.mark.parametrize("value", ["beta3", "-1"])
-def test_getlibinternals_patch_bad_value(tmp_path, value, monkeypatch):
+def test_getlibinternals_patch_bad_value(fake_path, value):
     """The PATCH is not a positive integer."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_patch="LIBPATCH = {value}")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
@@ -366,9 +353,8 @@ def test_getlibinternals_patch_bad_value(tmp_path, value, monkeypatch):
     )
 
 
-def test_getlibinternals_api_patch_both_zero(tmp_path, monkeypatch):
+def test_getlibinternals_api_patch_both_zero(fake_path):
     """Invalid combination of both API and PATCH being 0."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_patch="LIBPATCH = 0", metadata_api="LIBAPI = 0")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
@@ -378,9 +364,8 @@ def test_getlibinternals_api_patch_both_zero(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("value", [99, "moño", ""])
-def test_getlibinternals_libid_bad_value(tmp_path, value, monkeypatch):
+def test_getlibinternals_libid_bad_value(fake_path, value):
     """The ID is not really a ASCII nonempty string."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_id=f"LIBID = {value!r}")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
@@ -390,9 +375,8 @@ def test_getlibinternals_libid_bad_value(tmp_path, value, monkeypatch):
     )
 
 
-def test_getlibinternals_pydeps_complex(tmp_path, monkeypatch):
+def test_getlibinternals_pydeps_complex(fake_path):
     """The PYDEPS field can be multiline, unicode, different quotes."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(
         pydeps="""PYDEPS = [
         'foo',
@@ -420,9 +404,8 @@ def test_getlibinternals_pydeps_complex(tmp_path, monkeypatch):
         "['foo', otherdep]",  # a list with wrong fields inside
     ],
 )
-def test_getlibinternals_pydeps_bad_value(tmp_path, value, monkeypatch):
+def test_getlibinternals_pydeps_bad_value(fake_path, value):
     """Different cases with invalid PYDEPS."""
-    monkeypatch.chdir(tmp_path)
     test_path = _create_lib(metadata_id=f"PYDEPS = {value}")
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)
@@ -436,9 +419,8 @@ def test_getlibinternals_pydeps_bad_value(tmp_path, value, monkeypatch):
 # region get libs from tree tests
 
 
-def test_getlibsfromtree_named_currentdir(tmp_path, monkeypatch):
+def test_getlibsfromtree_named_currentdir(fake_path):
     """Get libs for a specific charm in the current directory."""
-    monkeypatch.chdir(tmp_path)
     test_path_1 = _create_lib(charm_name="charm1", lib_name="testlib1.py")
     test_path_2 = _create_lib(charm_name="charm1", lib_name="testlib2.py")
     _create_lib(charm_name="charm2", lib_name="testlib3.py")
@@ -446,9 +428,8 @@ def test_getlibsfromtree_named_currentdir(tmp_path, monkeypatch):
     assert {data.path for data in libs_data} == {test_path_1, test_path_2}
 
 
-def test_getlibsfromtree_everything_currentdir(tmp_path, monkeypatch):
+def test_getlibsfromtree_everything_currentdir(fake_path):
     """Get libs for a specific charm in the current directory."""
-    monkeypatch.chdir(tmp_path)
     test_path_1 = _create_lib(charm_name="charm1", lib_name="testlib1.py")
     test_path_2 = _create_lib(charm_name="charm1", lib_name="testlib2.py")
     test_path_3 = _create_lib(charm_name="charm2", lib_name="testlib3.py")
@@ -456,28 +437,26 @@ def test_getlibsfromtree_everything_currentdir(tmp_path, monkeypatch):
     assert {data.path for data in libs_data} == {test_path_1, test_path_2, test_path_3}
 
 
-def test_getlibsfromtree_named_otherdir(tmp_path, monkeypatch):
+def test_getlibsfromtree_named_otherdir(fake_path):
     """Get libs for a specific charm in other directory."""
-    otherdir = tmp_path / "otherdir"
+    otherdir = fake_path / "otherdir"
     otherdir.mkdir()
-    monkeypatch.chdir(otherdir)
+    os.chdir(otherdir)  # Ok because we're in a fake FS.
     test_path_1 = _create_lib(charm_name="charm1", lib_name="testlib1.py")
     test_path_2 = _create_lib(charm_name="charm1", lib_name="testlib2.py")
-    monkeypatch.chdir(tmp_path)
     _create_lib(charm_name="charm2", lib_name="testlib3.py")
     libs_data = get_libs_from_tree(charm_name="charm1", root=otherdir)
     assert {data.path for data in libs_data} == {test_path_1, test_path_2}
 
 
-def test_getlibsfromtree_everything_otherdir(tmp_path, monkeypatch):
+def test_getlibsfromtree_everything_otherdir(fake_path):
     """Get libs for a specific charm in other directory."""
-    otherdir = tmp_path / "otherdir"
+    otherdir = fake_path / "otherdir"
     otherdir.mkdir()
-    monkeypatch.chdir(otherdir)
+    os.chdir(otherdir)  # Ok because we're in a fake FS.
     test_path_1 = _create_lib(charm_name="charm1", lib_name="testlib1.py")
     test_path_2 = _create_lib(charm_name="charm1", lib_name="testlib2.py")
     test_path_3 = _create_lib(charm_name="charm2", lib_name="testlib3.py")
-    monkeypatch.chdir(tmp_path)
     libs_data = get_libs_from_tree(root=otherdir)
     assert {data.path for data in libs_data} == {test_path_1, test_path_2, test_path_3}
 
@@ -486,16 +465,15 @@ def test_getlibsfromtree_everything_otherdir(tmp_path, monkeypatch):
 # region pydeps collection tests
 
 
-def test_collectpydeps_generic(tmp_path, monkeypatch):
+def test_collectpydeps_generic(fake_path):
     """Collect the PYDEPS from all libs from all charms."""
-    otherdir = tmp_path / "otherdir"
+    otherdir = fake_path / "otherdir"
     otherdir.mkdir()
-    monkeypatch.chdir(otherdir)
+    os.chdir(otherdir)  # Ok because we're in a fake FS.
     _create_lib(charm_name="charm1", lib_name="lib1.py", pydeps="PYDEPS = ['foo', 'bar']")
     _create_lib(charm_name="charm1", lib_name="lib2.py", pydeps="PYDEPS = ['bar']")
     _create_lib(charm_name="charm2", lib_name="lib3.py")
     _create_lib(charm_name="charm2", lib_name="lib3.py", pydeps="PYDEPS = ['baz']")
-    monkeypatch.chdir(tmp_path)
     charmlib_deps = collect_charmlib_pydeps(otherdir)
     assert charmlib_deps == {"foo", "bar", "baz"}
 

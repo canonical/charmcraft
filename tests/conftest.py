@@ -20,6 +20,8 @@ import importlib
 import json
 import os
 import pathlib
+import random
+import string
 import tempfile
 import types
 from typing import Optional
@@ -30,11 +32,35 @@ import responses as responses_module
 import yaml
 from craft_parts import callbacks
 from craft_providers import Executor, Provider
+from pyfakefs.fake_filesystem import FakeFilesystem
 
 from charmcraft import deprecations, instrum, parts
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
 from charmcraft.models.charmcraft import Base, BasesConfiguration
+
+
+@pytest.fixture()
+def new_path(tmp_path):
+    """Change to a new temporary directory."""
+    cwd = os.getcwd()
+    os.chdir(tmp_path)
+
+    yield tmp_path
+
+    os.chdir(cwd)
+
+
+@pytest.fixture()
+def fake_path(fs: FakeFilesystem):
+    """Create a new temporary path using pyfakefs and chdir to it."""
+    # We're not using these pseudo-random numbers for cryptographic purposes :-)
+    dir_name = "".join(random.choices(string.ascii_letters, k=8))  # noqa: S311
+    dir_path = pathlib.Path(tempfile.gettempdir(), dir_name)
+    fs.makedirs(dir_path)
+    os.chdir(dir_path)
+
+    return dir_path
 
 
 @pytest.fixture(autouse=True, scope="session")

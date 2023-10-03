@@ -108,7 +108,7 @@ def fake_extensions(stub_extensions):
     extensions.register(FullExtension.name, FullExtension)
 
 
-def test_experimental_with_env(fake_extensions, tmp_path, monkeypatch):
+def test_experimental_with_env(fake_extensions, fake_path, monkeypatch):
     charmcraft_config = {
         "type": "charm",
         "name": "test-charm-name-from-charmcraft-yaml",
@@ -118,11 +118,11 @@ def test_experimental_with_env(fake_extensions, tmp_path, monkeypatch):
         "extensions": [ExperimentalExtension.name],
     }
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
-    project_root = tmp_path
+    project_root = fake_path
     extensions.apply_extensions(project_root, charmcraft_config)
 
 
-def test_experimental_no_env(fake_extensions, tmp_path):
+def test_experimental_no_env(fake_extensions, fake_path):
     charmcraft_config = {
         "type": "charm",
         "name": "test-charm-name-from-charmcraft-yaml",
@@ -137,13 +137,13 @@ def test_experimental_no_env(fake_extensions, tmp_path):
         "extensions": [ExperimentalExtension.name],
     }
     with pytest.raises(errors.ExtensionError) as exc:
-        extensions.apply_extensions(tmp_path, charmcraft_config)
+        extensions.apply_extensions(fake_path, charmcraft_config)
 
     expected_message = f"Extension is experimental: '{ExperimentalExtension.name}'"
     assert str(exc.value) == expected_message
 
 
-def test_wrong_base(fake_extensions, tmp_path):
+def test_wrong_base(fake_extensions, fake_path):
     charmcraft_config = {
         "type": "charm",
         "name": "test-charm-name-from-charmcraft-yaml",
@@ -158,7 +158,7 @@ def test_wrong_base(fake_extensions, tmp_path):
         "extensions": [FakeExtension.name],
     }
     with pytest.raises(errors.ExtensionError) as exc:
-        extensions.apply_extensions(tmp_path, charmcraft_config)
+        extensions.apply_extensions(fake_path, charmcraft_config)
 
     expected_message = (
         f"Extension '{FakeExtension.name}' does not support base: ('ubuntu', '20.04')"
@@ -166,7 +166,7 @@ def test_wrong_base(fake_extensions, tmp_path):
     assert str(exc.value) == expected_message
 
 
-def test_invalid_parts(fake_extensions, tmp_path):
+def test_invalid_parts(fake_extensions, fake_path):
     charmcraft_config = {
         "type": "charm",
         "name": "test-charm-name-from-charmcraft-yaml",
@@ -177,12 +177,12 @@ def test_invalid_parts(fake_extensions, tmp_path):
     }
 
     with pytest.raises(ValueError) as exc:
-        extensions.apply_extensions(tmp_path, charmcraft_config)
+        extensions.apply_extensions(fake_path, charmcraft_config)
 
     assert "Extension has invalid part names" in str(exc.value)
 
 
-def test_apply_extensions(fake_extensions, tmp_path):
+def test_apply_extensions(fake_extensions, fake_path):
     charmcraft_config = {
         "type": "charm",
         "name": "test-charm-name-from-charmcraft-yaml",
@@ -193,7 +193,7 @@ def test_apply_extensions(fake_extensions, tmp_path):
         "parts": {"my-part": {"plugin": "nil", "source": None, "stage-packages": ["old-package"]}},
     }
 
-    applied = extensions.apply_extensions(tmp_path, charmcraft_config)
+    applied = extensions.apply_extensions(fake_path, charmcraft_config)
 
     # Part snippet extends the existing part
     parts = applied["parts"]

@@ -824,9 +824,9 @@ def _build_zip_with_yaml(zippath, filename, *, content=None, raw_yaml=None):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_get_name_bad_zip(tmp_path):
+def test_get_name_bad_zip(fake_path):
     """Get the name from a bad zip file."""
-    bad_zip = tmp_path / "badstuff.zip"
+    bad_zip = fake_path / "badstuff.zip"
     bad_zip.write_text("I'm not really a zip file")
 
     with pytest.raises(CraftError) as cm:
@@ -834,9 +834,9 @@ def test_get_name_bad_zip(tmp_path):
     assert str(cm.value) == f"Cannot open '{bad_zip}' (bad zip file)."
 
 
-def test_get_name_charm_ok(tmp_path):
+def test_get_name_charm_ok(fake_path):
     """Get the name from a charm file, all ok."""
-    test_zip = tmp_path / "some.zip"
+    test_zip = fake_path / "some.zip"
     test_name = "whatever"
     _build_zip_with_yaml(test_zip, "metadata.yaml", content={"name": test_name})
 
@@ -852,9 +852,9 @@ def test_get_name_charm_ok(tmp_path):
         b"foo: bar",  # missing 'name'
     ],
 )
-def test_get_name_charm_bad_metadata(tmp_path, yaml_content):
+def test_get_name_charm_bad_metadata(fake_path, yaml_content):
     """Get the name from a charm file, but with a wrong metadata.yaml."""
-    bad_zip = tmp_path / "badstuff.zip"
+    bad_zip = fake_path / "badstuff.zip"
     _build_zip_with_yaml(bad_zip, "metadata.yaml", raw_yaml=yaml_content)
 
     with pytest.raises(CraftError) as cm:
@@ -866,9 +866,9 @@ def test_get_name_charm_bad_metadata(tmp_path, yaml_content):
     assert cm.value.__cause__ is not None
 
 
-def test_get_name_bundle_ok(tmp_path):
+def test_get_name_bundle_ok(fake_path):
     """Get the name from a bundle file, all ok."""
-    test_zip = tmp_path / "some.zip"
+    test_zip = fake_path / "some.zip"
     test_name = "whatever"
     _build_zip_with_yaml(test_zip, "bundle.yaml", content={"name": test_name})
 
@@ -884,9 +884,9 @@ def test_get_name_bundle_ok(tmp_path):
         b"foo: bar",  # missing 'name'
     ],
 )
-def test_get_name_bundle_bad_data(tmp_path, yaml_content):
+def test_get_name_bundle_bad_data(fake_path, yaml_content):
     """Get the name from a bundle file, but with a bad bundle.yaml."""
-    bad_zip = tmp_path / "badstuff.zip"
+    bad_zip = fake_path / "badstuff.zip"
     _build_zip_with_yaml(bad_zip, "bundle.yaml", raw_yaml=yaml_content)
 
     with pytest.raises(CraftError) as cm:
@@ -899,9 +899,9 @@ def test_get_name_bundle_bad_data(tmp_path, yaml_content):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_get_name_nor_charm_nor_bundle(tmp_path):
+def test_get_name_nor_charm_nor_bundle(fake_path):
     """Get the name from a zip that has no metadata.yaml nor bundle.yaml."""
-    bad_zip = tmp_path / "bad-stuff.zip"
+    bad_zip = fake_path / "bad-stuff.zip"
     _build_zip_with_yaml(bad_zip, "whatever.yaml", content={})
 
     with pytest.raises(CraftError) as cm:
@@ -2758,12 +2758,8 @@ def test_status_unreleased_track(emitter, store_mock, config):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 @pytest.mark.parametrize("charmcraft_yaml_name", [None, "test-charm"])
-def test_createlib_simple(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted, charmcraft_yaml_name
-):
+def test_createlib_simple(emitter, store_mock, new_path, config, formatted, charmcraft_yaml_name):
     """Happy path with result from the Store."""
-    monkeypatch.chdir(tmp_path)
-
     config.name = charmcraft_yaml_name
 
     lib_id = "test-example-lib-id"
@@ -2786,7 +2782,7 @@ def test_createlib_simple(
             "Consider 'git add lib/charms/test_charm/v0/testlib.py'.",
         ]
         emitter.assert_messages(expected)
-    created_lib_file = tmp_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
+    created_lib_file = new_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
 
     env = get_templates_environment("charmlibs")
     expected_newlib_content = env.get_template("new_library.py.j2").render(lib_id=lib_id)
@@ -2808,10 +2804,8 @@ def test_createlib_name_from_metadata_problem(store_mock, config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_createlib_name_contains_dash(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_createlib_name_contains_dash(emitter, store_mock, new_path, monkeypatch, config):
     """'-' is valid in charm names but can't be imported"""
-    monkeypatch.chdir(tmp_path)
-
     lib_id = "test-example-lib-id"
     store_mock.create_library_id.return_value = lib_id
 
@@ -2828,7 +2822,7 @@ def test_createlib_name_contains_dash(emitter, store_mock, tmp_path, monkeypatch
         "Consider 'git add lib/charms/test_charm/v0/testlib.py'.",
     ]
     emitter.assert_messages(expected)
-    created_lib_file = tmp_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
+    created_lib_file = new_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
 
     env = get_templates_environment("charmlibs")
     expected_newlib_content = env.get_template("new_library.py.j2").render(lib_id=lib_id)
@@ -2858,9 +2852,8 @@ def test_createlib_invalid_name(lib_name, config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_createlib_path_already_there(tmp_path, monkeypatch, config):
+def test_createlib_path_already_there(new_path, monkeypatch, config):
     """The intended-to-be-created library is already there."""
-    monkeypatch.chdir(tmp_path)
 
     factory.create_lib_filepath("test-charm", "testlib", api=0)
     args = Namespace(name="testlib", format=None)
@@ -2873,13 +2866,12 @@ def test_createlib_path_already_there(tmp_path, monkeypatch, config):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cleanup, config):
+def test_createlib_path_can_not_write(new_path, monkeypatch, store_mock, add_cleanup, config):
     """Disk error when trying to write the new lib (bad permissions, name too long, whatever)."""
-    lib_dir = tmp_path / "lib" / "charms" / "test_charm" / "v0"
+    lib_dir = new_path / "lib" / "charms" / "test_charm" / "v0"
     lib_dir.mkdir(parents=True)
     lib_dir.chmod(0o111)
     add_cleanup(lib_dir.chmod, 0o777)
-    monkeypatch.chdir(tmp_path)
 
     args = Namespace(name="testlib", format=None)
     store_mock.create_library_id.return_value = "lib_id"
@@ -2888,7 +2880,7 @@ def test_createlib_path_can_not_write(tmp_path, monkeypatch, store_mock, add_cle
         CreateLibCommand(config).run(args)
 
 
-def test_createlib_library_template_is_python(emitter, store_mock, tmp_path, monkeypatch):
+def test_createlib_library_template_is_python(emitter, store_mock, new_path, monkeypatch):
     """Verify that the template used to create a library is valid Python code."""
     env = get_templates_environment("charmlibs")
     newlib_content = env.get_template("new_library.py.j2").render(lib_id="test-lib-id")
@@ -2899,9 +2891,8 @@ def test_createlib_library_template_is_python(emitter, store_mock, tmp_path, mon
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_publishlib_simple(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
+def test_publishlib_simple(emitter, store_mock, new_path, monkeypatch, config, formatted):
     """Happy path publishing because no revision at all in the Store."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
@@ -2937,9 +2928,8 @@ def test_publishlib_simple(emitter, store_mock, tmp_path, monkeypatch, config, f
         emitter.assert_message(expected)
 
 
-def test_publishlib_contains_dash(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_publishlib_contains_dash(emitter, store_mock, new_path, monkeypatch, config):
     """Happy path publishing because no revision at all in the Store."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
@@ -2962,9 +2952,9 @@ def test_publishlib_contains_dash(emitter, store_mock, tmp_path, monkeypatch, co
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_publishlib_all(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
+def test_publishlib_all(emitter, store_mock, new_path, monkeypatch, config, formatted):
     """Publish all the libraries found in disk."""
-    monkeypatch.chdir(tmp_path)
+
     config.name = "testcharm-1"
 
     c1, h1 = factory.create_lib_filepath(
@@ -3047,9 +3037,8 @@ def test_publishlib_all(emitter, store_mock, tmp_path, monkeypatch, config, form
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_publishlib_not_found(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_publishlib_not_found(emitter, store_mock, new_path, monkeypatch, config):
     """The indicated library is not found."""
-    monkeypatch.chdir(tmp_path)
 
     args = Namespace(library="charms.testcharm.v0.testlib", format=None)
     with patch("charmcraft.utils.get_name_from_metadata") as mock:
@@ -3062,9 +3051,9 @@ def test_publishlib_not_found(emitter, store_mock, tmp_path, monkeypatch, config
         )
 
 
-def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_publishlib_not_from_current_charm(emitter, store_mock, new_path, monkeypatch, config):
     """The indicated library to publish does not belong to this charm."""
-    monkeypatch.chdir(tmp_path)
+
     config.name = "charm2"
     factory.create_lib_filepath("testcharm", "testlib", api=0)
 
@@ -3096,10 +3085,9 @@ def test_publishlib_name_from_metadata_problem(store_mock, config):
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_publishlib_store_is_advanced(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted
+    emitter, store_mock, new_path, monkeypatch, config, formatted
 ):
     """The store has a higher revision number than what we expect."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     factory.create_lib_filepath("test-charm", "testlib", api=0, patch=1, lib_id=lib_id)
@@ -3142,9 +3130,8 @@ def test_publishlib_store_is_advanced(
         emitter.assert_messages([error_message])
 
 
-def test_publishlib_store_is_exactly_behind_ok(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_publishlib_store_is_exactly_behind_ok(emitter, store_mock, new_path, monkeypatch, config):
     """The store is exactly one revision less than local lib, ok."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
@@ -3177,10 +3164,9 @@ def test_publishlib_store_is_exactly_behind_ok(emitter, store_mock, tmp_path, mo
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_publishlib_store_is_exactly_behind_same_hash(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted
+    emitter, store_mock, new_path, monkeypatch, config, formatted
 ):
     """The store is exactly one revision less than local lib, same hash."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
@@ -3227,10 +3213,9 @@ def test_publishlib_store_is_exactly_behind_same_hash(
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_publishlib_store_is_too_behind(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted
+    emitter, store_mock, new_path, monkeypatch, config, formatted
 ):
     """The store is way more behind than what we expected (local lib too high!)."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     factory.create_lib_filepath("test-charm", "testlib", api=0, patch=4, lib_id=lib_id)
@@ -3277,13 +3262,12 @@ def test_publishlib_store_is_too_behind(
 def test_publishlib_store_has_same_revision_same_hash(
     emitter,
     store_mock,
-    tmp_path,
+    new_path,
     monkeypatch,
     config,
     formatted,
 ):
     """The store has the same revision we want to publish, with the same hash."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
@@ -3327,10 +3311,9 @@ def test_publishlib_store_has_same_revision_same_hash(
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_publishlib_store_has_same_revision_other_hash(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted
+    emitter, store_mock, new_path, monkeypatch, config, formatted
 ):
     """The store has the same revision we want to publish, but with a different hash."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     factory.create_lib_filepath("test-charm", "testlib", api=0, patch=7, lib_id=lib_id)
@@ -3377,9 +3360,8 @@ def test_publishlib_store_has_same_revision_other_hash(
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_simple_downloaded(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
+def test_fetchlib_simple_downloaded(emitter, store_mock, new_path, monkeypatch, config, formatted):
     """Happy path fetching the lib for the first time (downloading it)."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     lib_content = "some test content with uñicode ;)"
@@ -3428,13 +3410,12 @@ def test_fetchlib_simple_downloaded(emitter, store_mock, tmp_path, monkeypatch, 
     else:
         expected = "Library charms.testcharm.v0.testlib version 0.7 downloaded."
         emitter.assert_message(expected)
-    saved_file = tmp_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
+    saved_file = new_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
     assert saved_file.read_text() == lib_content
 
 
-def test_fetchlib_simple_dash_in_name(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_fetchlib_simple_dash_in_name(emitter, store_mock, new_path, monkeypatch, config):
     """Happy path fetching the lib for the first time (downloading it)."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     lib_content = "some test content with uñicode ;)"
@@ -3468,13 +3449,12 @@ def test_fetchlib_simple_dash_in_name(emitter, store_mock, tmp_path, monkeypatch
     ]
     expected = "Library charms.test_charm.v0.testlib version 0.7 downloaded."
     emitter.assert_message(expected)
-    saved_file = tmp_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
+    saved_file = new_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
     assert saved_file.read_text() == lib_content
 
 
-def test_fetchlib_simple_dash_in_name_on_disk(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_fetchlib_simple_dash_in_name_on_disk(emitter, store_mock, new_path, monkeypatch, config):
     """Happy path fetching the lib for the first time (downloading it)."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     lib_content = "test-content"
@@ -3511,9 +3491,8 @@ def test_fetchlib_simple_dash_in_name_on_disk(emitter, store_mock, tmp_path, mon
     emitter.assert_message(expected)
 
 
-def test_fetchlib_simple_updated(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_fetchlib_simple_updated(emitter, store_mock, new_path, monkeypatch, config):
     """Happy path fetching the lib for Nth time (updating it)."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     content, content_hash = factory.create_lib_filepath(
@@ -3551,15 +3530,14 @@ def test_fetchlib_simple_updated(emitter, store_mock, tmp_path, monkeypatch, con
     ]
     expected = "Library charms.testcharm.v0.testlib updated to version 0.2."
     emitter.assert_message(expected)
-    saved_file = tmp_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
+    saved_file = new_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
     assert saved_file.read_text() == new_lib_content
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_all(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
+def test_fetchlib_all(emitter, store_mock, new_path, monkeypatch, config, formatted):
     """Update all the libraries found in disk."""
-    monkeypatch.chdir(tmp_path)
 
     c1, h1 = factory.create_lib_filepath(
         "testcharm1", "testlib1", api=0, patch=1, lib_id="lib_id_1"
@@ -3660,9 +3638,9 @@ def test_fetchlib_all(emitter, store_mock, tmp_path, monkeypatch, config, format
             ]
         )
 
-    saved_file = tmp_path / "lib" / "charms" / "testcharm1" / "v0" / "testlib1.py"
+    saved_file = new_path / "lib" / "charms" / "testcharm1" / "v0" / "testlib1.py"
     assert saved_file.read_text() == "new lib content 1"
-    saved_file = tmp_path / "lib" / "charms" / "testcharm2" / "v3" / "testlib2.py"
+    saved_file = new_path / "lib" / "charms" / "testcharm2" / "v3" / "testlib2.py"
     assert saved_file.read_text() == "new lib content 2"
 
 
@@ -3693,9 +3671,8 @@ def test_fetchlib_store_not_found(emitter, store_mock, config, formatted):
 
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
+def test_fetchlib_store_is_old(emitter, store_mock, new_path, monkeypatch, config, formatted):
     """The store has an older version that what is found locally."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     factory.create_lib_filepath("testcharm", "testlib", api=0, patch=7, lib_id=lib_id)
@@ -3735,10 +3712,9 @@ def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, confi
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_fetchlib_store_same_versions_same_hash(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted
+    emitter, store_mock, new_path, monkeypatch, config, formatted
 ):
     """The store situation is the same than locally."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     _, c_hash = factory.create_lib_filepath("testcharm", "testlib", api=0, patch=7, lib_id=lib_id)
@@ -3778,10 +3754,9 @@ def test_fetchlib_store_same_versions_same_hash(
 
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_fetchlib_store_same_versions_different_hash(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted
+    emitter, store_mock, new_path, monkeypatch, config, formatted
 ):
     """The store has the lib in the same version, but with different content."""
-    monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
     factory.create_lib_filepath("testcharm", "testlib", api=0, patch=7, lib_id=lib_id)
@@ -4121,11 +4096,10 @@ def test_uploadresource_options_image_type(config):
         ("c", "r", "--image=x"),
     ],
 )
-def test_uploadresource_options_good_combinations(tmp_path, config, sysargs, monkeypatch):
+def test_uploadresource_options_good_combinations(new_path, config, sysargs, monkeypatch):
     """Check the specific rules for filepath and image/[registry] good combinations."""
     # fake the file for filepath
-    (tmp_path / "fpath").touch()
-    monkeypatch.chdir(tmp_path)
+    (new_path / "fpath").touch()
 
     cmd = UploadResourceCommand(config)
     parser = ArgumentParser()
@@ -4143,11 +4117,10 @@ def test_uploadresource_options_good_combinations(tmp_path, config, sysargs, mon
         ("c", "r", "--filepath=fpath", "--image=y"),  # can't specify both
     ],
 )
-def test_uploadresource_options_bad_combinations(config, sysargs, tmp_path, monkeypatch):
+def test_uploadresource_options_bad_combinations(config, sysargs, new_path, monkeypatch):
     """Check the specific rules for filepath and image/[registry] bad combinations."""
     # fake the file for filepath
-    (tmp_path / "fpath").touch()
-    monkeypatch.chdir(tmp_path)
+    (new_path / "fpath").touch()
 
     cmd = UploadResourceCommand(config)
     parser = ArgumentParser()

@@ -113,13 +113,13 @@ def test_measurement_overlapped_measurements():
         measurements.end(mid_1)
 
 
-def test_measurement_dump(tmp_path, fake_times):
+def test_measurement_dump(fake_path, fake_times):
     """Dump the measurements content to a dump file."""
     measurements = _Measurements()
     mid = measurements.start("test msg", {"foo": "bar"})
     measurements.end(mid)
 
-    measures_filepath = tmp_path / "measures.json"
+    measures_filepath = fake_path / "measures.json"
     with patch("charmcraft.instrum._baseline", 3):
         measurements.dump(measures_filepath)
 
@@ -136,9 +136,9 @@ def test_measurement_dump(tmp_path, fake_times):
     }
 
 
-def test_measurement_merge_simple(tmp_path, fake_times):
+def test_measurement_merge_simple(fake_path, fake_times):
     """Merge a simple measurement into current structure."""
-    measures_filepath = tmp_path / "measures.json"
+    measures_filepath = fake_path / "measures.json"
 
     # start the outer measure
     measurements_outer = _Measurements()
@@ -172,9 +172,9 @@ def test_measurement_merge_simple(tmp_path, fake_times):
     assert merged["tend"] == 25  # back to absolute
 
 
-def test_measurement_merge_complex(tmp_path, fake_times):
+def test_measurement_merge_complex(fake_path, fake_times):
     """Merge a complex measurements tree into current structure."""
-    measures_filepath = tmp_path / "measures.json"
+    measures_filepath = fake_path / "measures.json"
 
     # start two outer measures
     measurements_outer = _Measurements()

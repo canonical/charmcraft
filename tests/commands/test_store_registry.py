@@ -575,7 +575,7 @@ def test_ociregistry_upload_blob_bad_upload_range(responses):
     assert error.details == "Range='9-9'"
 
 
-def test_ociregistry_upload_blob_resumed(tmp_path, emitter, responses):
+def test_ociregistry_upload_blob_resumed(fake_path, emitter, responses):
     """The upload is resumed after server indication to do so."""
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
     base_url = "https://fakereg.com/v2/test-image/"
@@ -602,7 +602,7 @@ def test_ociregistry_upload_blob_resumed(tmp_path, emitter, responses):
     )
 
     # prepare a fake content
-    bytes_source = tmp_path / "testfile"
+    bytes_source = fake_path / "testfile"
     bytes_source.write_text("abcdefgh")
 
     # call!
@@ -647,7 +647,7 @@ def test_ociregistry_upload_blob_resumed(tmp_path, emitter, responses):
     )
 
 
-def test_ociregistry_upload_blob_bad_response_middle(tmp_path, responses, monkeypatch):
+def test_ociregistry_upload_blob_bad_response_middle(fake_path, responses, monkeypatch):
     """Bad response from the server when pumping bytes."""
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
     base_url = "https://fakereg.com/v2/test-image/"
@@ -668,7 +668,7 @@ def test_ociregistry_upload_blob_bad_response_middle(tmp_path, responses, monkey
 
     # prepare a fake content that will be pushed in 3 parts
     monkeypatch.setattr(registry, "CHUNK_SIZE", 3)
-    bytes_source = tmp_path / "testfile"
+    bytes_source = fake_path / "testfile"
     bytes_source.write_text("abcdefgh")
 
     # call!
@@ -677,7 +677,7 @@ def test_ociregistry_upload_blob_bad_response_middle(tmp_path, responses, monkey
         ocireg.upload_blob(bytes_source, 8, "test-digest")
 
 
-def test_ociregistry_upload_blob_bad_response_closing(tmp_path, responses):
+def test_ociregistry_upload_blob_bad_response_closing(fake_path, responses):
     """Bad response from the server when closing the upload."""
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
     base_url = "https://fakereg.com/v2/test-image/"
@@ -699,7 +699,7 @@ def test_ociregistry_upload_blob_bad_response_closing(tmp_path, responses):
     responses.add(responses.PUT, base_url + "fakeurl-2&digest=test-digest", status=502)
 
     # prepare a fake content
-    bytes_source = tmp_path / "testfile"
+    bytes_source = fake_path / "testfile"
     bytes_source.write_text("abcdefgh")
 
     # call!
@@ -708,7 +708,7 @@ def test_ociregistry_upload_blob_bad_response_closing(tmp_path, responses):
         ocireg.upload_blob(bytes_source, 8, "test-digest")
 
 
-def test_ociregistry_upload_blob_bad_final_digest(tmp_path, responses):
+def test_ociregistry_upload_blob_bad_final_digest(fake_path, responses):
     """Bad digest from server after closing the upload."""
     ocireg = OCIRegistry("https://fakereg.com", "test-image")
     base_url = "https://fakereg.com/v2/test-image/"
@@ -735,7 +735,7 @@ def test_ociregistry_upload_blob_bad_final_digest(tmp_path, responses):
     )
 
     # prepare a fake content
-    bytes_source = tmp_path / "testfile"
+    bytes_source = fake_path / "testfile"
     bytes_source.write_text("abcdefgh")
 
     # call!
@@ -1026,13 +1026,13 @@ def test_imagehandler_extract_file_compressed_ok(tmp_path, emitter):
     emitter.assert_progress("Extracting file 'testfile.txt' from local tar (compress=True)")
 
 
-def test_imagehandler_extract_file_compressed_deterministic(tmp_path, emitter):
+def test_imagehandler_extract_file_compressed_deterministic(fake_path, emitter):
     """Different compressions for the same file give the exact same data."""
     # create a tar file with one file inside
     test_content = b"test content for the sample file"
-    sample_file = tmp_path / "testfile.txt"
+    sample_file = fake_path / "testfile.txt"
     sample_file.write_bytes(test_content)
-    tar_filepath = tmp_path / "testfile.tar"
+    tar_filepath = fake_path / "testfile.tar"
     with tarfile.open(tar_filepath, "w") as tar:
         tar.add(sample_file, "testfile.txt")
 
@@ -1063,9 +1063,9 @@ def test_imagehandler_uploadblob_first_time(emitter, tmp_path):
     emitter.assert_interactions(None)
 
 
-def test_imagehandler_uploadblob_duplicated(emitter, tmp_path):
+def test_imagehandler_uploadblob_duplicated(emitter, fake_path):
     """Upload a blob that was already there."""
-    tmp_file = tmp_path / "somebinary.dat"
+    tmp_file = fake_path / "somebinary.dat"
     tmp_file.write_text("testcontent")
 
     fake_registry = FakeRegistry()

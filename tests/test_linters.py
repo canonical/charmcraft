@@ -49,95 +49,95 @@ PYTHONPATH=lib:venv ./charm.py
 # --- tests for helper functions
 
 
-def test_epfromdispatch_ok(tmp_path):
+def test_epfromdispatch_ok(fake_path):
     """An entrypoint is found in the dispatch."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = fake_path / "dispatch"
     dispatch.write_text(EXAMPLE_DISPATCH)
-    entrypoint = tmp_path / "charm.py"
-    result = get_entrypoint_from_dispatch(tmp_path)
+    entrypoint = fake_path / "charm.py"
+    result = get_entrypoint_from_dispatch(fake_path)
     assert result == entrypoint
 
 
-def test_epfromdispatch_no_dispatch(tmp_path):
+def test_epfromdispatch_no_dispatch(fake_path):
     """The charm has no dispatch at all."""
-    result = get_entrypoint_from_dispatch(tmp_path)
+    result = get_entrypoint_from_dispatch(fake_path)
     assert result is None
 
 
-def test_epfromdispatch_inaccessible_dispatch(tmp_path):
+def test_epfromdispatch_inaccessible_dispatch(fake_path):
     """The charm has a dispatch we can't use."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = fake_path / "dispatch"
     dispatch.touch()
     dispatch.chmod(0o000)
-    result = get_entrypoint_from_dispatch(tmp_path)
+    result = get_entrypoint_from_dispatch(fake_path)
     assert result is None
 
 
-def test_epfromdispatch_broken_dispatch(tmp_path):
+def test_epfromdispatch_broken_dispatch(fake_path):
     """The charm has a dispatch which we can't decode."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = fake_path / "dispatch"
     dispatch.write_bytes(b"\xC0\xC0")
-    result = get_entrypoint_from_dispatch(tmp_path)
+    result = get_entrypoint_from_dispatch(fake_path)
     assert result is None
 
 
-def test_epfromdispatch_empty_dispatch(tmp_path):
+def test_epfromdispatch_empty_dispatch(fake_path):
     """The charm dispatch is empty."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = fake_path / "dispatch"
     dispatch.write_text("")
-    result = get_entrypoint_from_dispatch(tmp_path)
+    result = get_entrypoint_from_dispatch(fake_path)
     assert result is None
 
 
-def test_checkdispatchpython_python_ok(tmp_path):
+def test_checkdispatchpython_python_ok(new_path):
     """The charm is written in Python."""
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = new_path / "charm.py"
     entrypoint.touch(mode=0o700)
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
-        result = check_dispatch_with_python_entrypoint(tmp_path)
+        result = check_dispatch_with_python_entrypoint(new_path)
     assert result == entrypoint
 
 
-def test_checkdispatchpython_no_entrypoint(tmp_path):
+def test_checkdispatchpython_no_entrypoint(fake_path):
     """Cannot find the entrypoint used in dispatch."""
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
-        result = check_dispatch_with_python_entrypoint(tmp_path)
+        result = check_dispatch_with_python_entrypoint(fake_path)
     assert result is None
 
 
-def test_checkdispatchpython_nothing_from_dispatch(tmp_path):
+def test_checkdispatchpython_nothing_from_dispatch(fake_path):
     """The dispatch is not there, or not usable."""
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=None):
-        result = check_dispatch_with_python_entrypoint(tmp_path)
+        result = check_dispatch_with_python_entrypoint(fake_path)
     assert result is None
 
 
-def test_checkdispatchpython_entrypoint_is_not_python(tmp_path):
+def test_checkdispatchpython_entrypoint_is_not_python(fake_path):
     """The charm entrypoint has not a .py extension."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = fake_path / "dispatch"
     dispatch.write_text(
         """
         #!/bin/sh
         ./charm
     """
     )
-    entrypoint = tmp_path / "charm"
+    entrypoint = fake_path / "charm"
     entrypoint.touch(mode=0o700)
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
-        result = check_dispatch_with_python_entrypoint(tmp_path)
+        result = check_dispatch_with_python_entrypoint(fake_path)
     assert result is None
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_checkdispatchpython_entrypoint_no_exec(tmp_path):
+def test_checkdispatchpython_entrypoint_no_exec(fake_path):
     """The charm entrypoint is not executable."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = fake_path / "dispatch"
     dispatch.write_text(EXAMPLE_DISPATCH)
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     entrypoint.touch()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
-        result = check_dispatch_with_python_entrypoint(tmp_path)
+        result = check_dispatch_with_python_entrypoint(fake_path)
     assert result is None
 
 
@@ -153,7 +153,7 @@ def test_language_python():
     mock_check.assert_called_with("somedir")
 
 
-def test_language_no_dispatch(tmp_path):
+def test_language_no_dispatch(fake_path):
     """The charm has no dispatch at all."""
     with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = None
@@ -203,103 +203,103 @@ def test_framework_run_unknown():
         "from ops.charm import CharmBase",
     ],
 )
-def test_framework_operator_used_ok(tmp_path, import_line):
+def test_framework_operator_used_ok(fake_path, import_line):
     """All conditions for 'framework' are in place."""
     # an entry point that import ops
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     entrypoint.write_text(f"{import_line}")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = fake_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
     # check
     with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
-        result = Framework()._check_operator(tmp_path)
+        result = Framework()._check_operator(fake_path)
     assert result is True
-    mock_check.assert_called_with(tmp_path)
+    mock_check.assert_called_with(fake_path)
 
 
-def test_framework_operator_language_not_python(tmp_path):
+def test_framework_operator_language_not_python(fake_path):
     """The language trait is not set to Python."""
     # an entry point that is not really python
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     entrypoint.write_text("no python :)")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = fake_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
     # check
     with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = None
-        result = Framework()._check_operator(tmp_path)
+        result = Framework()._check_operator(fake_path)
     assert result is False
 
 
-def test_framework_operator_venv_directory_missing(tmp_path):
+def test_framework_operator_venv_directory_missing(fake_path):
     """The charm has not a specific 'venv' dir."""
     # an entry point that import ops
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     entrypoint.write_text("import ops")
 
     # check
     with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
-        result = Framework()._check_operator(tmp_path)
+        result = Framework()._check_operator(fake_path)
     assert result is False
 
 
-def test_framework_operator_no_venv_ops_directory(tmp_path):
+def test_framework_operator_no_venv_ops_directory(fake_path):
     """The charm *has not* a specific 'venv/ops' dir."""
     # an entry point that import ops
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     entrypoint.write_text("import ops")
 
     # an empty venv
-    venvdir = tmp_path / "venv"
+    venvdir = fake_path / "venv"
     venvdir.mkdir()
 
     # check
     with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
-        result = Framework()._check_operator(tmp_path)
+        result = Framework()._check_operator(fake_path)
     assert result is False
 
 
-def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path):
+def test_framework_operator_venv_ops_directory_is_not_a_dir(fake_path):
     """The charm has not a specific 'venv/ops' *dir*."""
     # an entry point that import ops
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     entrypoint.write_text("import ops")
 
     # an ops *file* inside venv
-    opsfile = tmp_path / "venv" / "ops"
+    opsfile = fake_path / "venv" / "ops"
     opsfile.parent.mkdir()
     opsfile.touch()
 
     # check
     with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
-        result = Framework()._check_operator(tmp_path)
+        result = Framework()._check_operator(fake_path)
     assert result is False
 
 
-def test_framework_operator_corrupted_entrypoint(tmp_path):
+def test_framework_operator_corrupted_entrypoint(fake_path):
     """Cannot parse the Python file."""
     # an entry point that import ops
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     entrypoint.write_text("xx --")  # not really Python
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = fake_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
     # check
     with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
-        result = Framework()._check_operator(tmp_path)
+        result = Framework()._check_operator(fake_path)
     assert result is False
 
 
@@ -312,20 +312,20 @@ def test_framework_operator_corrupted_entrypoint(tmp_path):
         "from stuff.ops import whatever",
     ],
 )
-def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
+def test_framework_operator_no_ops_imported(fake_path, monkeypatch, import_line):
     """Different imports that are NOT importing the Operator Framework."""
     # an entry point that import ops
-    entrypoint = tmp_path / "charm.py"
+    entrypoint = fake_path / "charm.py"
     entrypoint.write_text(f"{import_line}")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = fake_path / "venv" / "ops"
     opsdir.mkdir(parents=True)
 
     # check
     with patch("charmcraft.linters.check_dispatch_with_python_entrypoint") as mock_check:
         mock_check.return_value = pathlib.Path(entrypoint)
-        result = Framework()._check_operator(tmp_path)
+        result = Framework()._check_operator(fake_path)
     assert result is False
 
 
@@ -427,117 +427,117 @@ def test_framework_reactive_used_ok(
     assert result is True
 
 
-def test_framework_reactive_no_metadata(tmp_path, monkeypatch):
+def test_framework_reactive_no_metadata(fake_path, monkeypatch):
     """No useful name from metadata."""
     # a Python file that imports charms.reactive
-    entrypoint = tmp_path / "reactive" / "foobar.py"
+    entrypoint = fake_path / "reactive" / "foobar.py"
     entrypoint.parent.mkdir()
     entrypoint.write_text("import charms.reactive")
 
     # the reactive lib is used
-    reactive_lib = tmp_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
+    reactive_lib = fake_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
     reactive_lib.parent.mkdir()
     reactive_lib.touch()
 
     # check
-    result = Framework()._check_reactive(tmp_path)
+    result = Framework()._check_reactive(fake_path)
     assert result is False
 
 
-def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
+def test_framework_reactive_no_entrypoint(fake_path, monkeypatch):
     """Missing entrypoint file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
     # the reactive lib is used
-    reactive_lib = tmp_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
+    reactive_lib = fake_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
     reactive_lib.parent.mkdir()
     reactive_lib.touch()
 
     # check
-    result = Framework()._check_reactive(tmp_path)
+    result = Framework()._check_reactive(fake_path)
     assert result is False
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
+def test_framework_reactive_unaccesible_entrypoint(fake_path, monkeypatch):
     """Cannot read the entrypoint file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
-    entrypoint = tmp_path / "reactive" / "foobar.py"
+    entrypoint = fake_path / "reactive" / "foobar.py"
     entrypoint.parent.mkdir()
     entrypoint.write_text("import charms.reactive")
     entrypoint.chmod(0o000)
 
     # the reactive lib is used
-    reactive_lib = tmp_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
+    reactive_lib = fake_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
     reactive_lib.parent.mkdir()
     reactive_lib.touch()
 
     # check
-    result = Framework()._check_reactive(tmp_path)
+    result = Framework()._check_reactive(fake_path)
     assert result is False
 
 
-def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
+def test_framework_reactive_corrupted_entrypoint(fake_path, monkeypatch):
     """The entrypoint is not really a Python file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
-    entrypoint = tmp_path / "reactive" / "foobar.py"
+    entrypoint = fake_path / "reactive" / "foobar.py"
     entrypoint.parent.mkdir()
     entrypoint.write_text("xx --")  # not really Python
 
     # the reactive lib is used
-    reactive_lib = tmp_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
+    reactive_lib = fake_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
     reactive_lib.parent.mkdir()
     reactive_lib.touch()
 
     # check
-    result = Framework()._check_reactive(tmp_path)
+    result = Framework()._check_reactive(fake_path)
     assert result is False
 
 
-def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
+def test_framework_reactive_no_wheelhouse(fake_path, monkeypatch):
     """The wheelhouse directory does not exist."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
-    entrypoint = tmp_path / "reactive" / "foobar.py"
+    entrypoint = fake_path / "reactive" / "foobar.py"
     entrypoint.parent.mkdir()
     entrypoint.write_text("import charms.reactive")
 
     # check
-    result = Framework()._check_reactive(tmp_path)
+    result = Framework()._check_reactive(fake_path)
     assert result is False
 
 
-def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
+def test_framework_reactive_no_reactive_lib(fake_path, monkeypatch):
     """The wheelhouse directory has no reactive lib."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
-    entrypoint = tmp_path / "reactive" / "foobar.py"
+    entrypoint = fake_path / "reactive" / "foobar.py"
     entrypoint.parent.mkdir()
     entrypoint.write_text("import charms.reactive")
 
     # the reactive lib is used
-    reactive_lib = tmp_path / "wheelhouse" / "charms.noreallyreactive-1.0.1.zip"
+    reactive_lib = fake_path / "wheelhouse" / "charms.noreallyreactive-1.0.1.zip"
     reactive_lib.parent.mkdir()
     reactive_lib.touch()
 
     # check
-    result = Framework()._check_reactive(tmp_path)
+    result = Framework()._check_reactive(fake_path)
     assert result is False
 
 
@@ -552,34 +552,34 @@ def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
         "from stuff.charms.reactive import whatever",
     ],
 )
-def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_line):
+def test_framework_reactive_no_reactive_imported(fake_path, monkeypatch, import_line):
     """Different imports that are NOT importing the Reactive Framework."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
-    entrypoint = tmp_path / "reactive" / "foobar.py"
+    entrypoint = fake_path / "reactive" / "foobar.py"
     entrypoint.parent.mkdir()
     entrypoint.write_text(f"{import_line}")
 
     # the reactive lib is used
-    reactive_lib = tmp_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
+    reactive_lib = fake_path / "wheelhouse" / "charms.reactive-1.0.1.zip"
     reactive_lib.parent.mkdir()
     reactive_lib.touch()
 
     # check
-    result = Framework()._check_reactive(tmp_path)
+    result = Framework()._check_reactive(fake_path)
     assert result is False
 
 
 # --- tests for JujuMetadata checker
 
 
-def test_jujumetadata_all_ok(tmp_path):
+def test_jujumetadata_all_ok(fake_path):
     """All conditions ok for JujuMetadata to result ok."""
     # metadata file with proper fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text(
         """
         name: foobar
@@ -587,24 +587,24 @@ def test_jujumetadata_all_ok(tmp_path):
         description: Lot of text.
     """
     )
-    result = JujuMetadata().run(tmp_path)
+    result = JujuMetadata().run(fake_path)
     assert result == JujuMetadata.Result.ok
 
 
-def test_jujumetadata_missing_file(tmp_path):
+def test_jujumetadata_missing_file(fake_path):
     """No metadata.yaml file at all."""
     linter = JujuMetadata()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuMetadata.Result.errors
     assert linter.text == "Cannot read the metadata.yaml file."
 
 
-def test_jujumetadata_file_corrupted(tmp_path):
+def test_jujumetadata_file_corrupted(fake_path):
     """The metadata.yaml file is not valid YAML."""
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text(" - \n-")
     linter = JujuMetadata()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuMetadata.Result.errors
     assert linter.text == "The metadata.yaml file is not a valid YAML file."
 
@@ -613,34 +613,34 @@ _mandatory_fields = ["summary", "description", "name"]
 
 
 @pytest.mark.parametrize("to_miss", range(len(_mandatory_fields)))
-def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
+def test_jujumetadata_missing_field_simple(fake_path, to_miss):
     """A required field is missing in the metadata file."""
     included_fields = _mandatory_fields.copy()
     missing = included_fields.pop(to_miss)
 
     # metadata file with not all fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     content = "\n".join(f"{field}: some text" for field in included_fields)
     metadata_file.write_text(content)
     linter = JujuMetadata()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuMetadata.Result.errors
     assert linter.text == (
         f"The metadata.yaml file is missing the following attribute(s): '{missing}'."
     )
 
 
-def test_jujumetadata_missing_field_multiple(tmp_path):
+def test_jujumetadata_missing_field_multiple(fake_path):
     """More than one required field is missing in the metadata file."""
     # metadata file with not all fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     metadata_file.write_text(
         """
         name: foobar
     """
     )
     linter = JujuMetadata()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuMetadata.Result.errors
     assert linter.text == (
         "The metadata.yaml file is missing the following attribute(s): "
@@ -856,34 +856,34 @@ def test_analyze_all_can_be_ignored(config):
 # --- tests for JujuActions checker
 
 
-def test_jujuactions_ok(tmp_path):
+def test_jujuactions_ok(fake_path):
     """The actions.yaml file is valid."""
-    actions_file = tmp_path / "actions.yaml"
+    actions_file = fake_path / "actions.yaml"
     actions_file.write_text("stuff: foobar")
-    result = JujuActions().run(tmp_path)
+    result = JujuActions().run(fake_path)
     assert result == JujuActions.Result.ok
 
 
-def test_jujuactions_missing_file(tmp_path):
+def test_jujuactions_missing_file(fake_path):
     """No actions.yaml file at all."""
-    result = JujuActions().run(tmp_path)
+    result = JujuActions().run(fake_path)
     assert result == JujuActions.Result.ok
 
 
-def test_jujuactions_file_corrupted(tmp_path):
+def test_jujuactions_file_corrupted(fake_path):
     """The actions.yaml file is not valid YAML."""
-    actions_file = tmp_path / "actions.yaml"
+    actions_file = fake_path / "actions.yaml"
     actions_file.write_text(" - \n-")
-    result = JujuActions().run(tmp_path)
+    result = JujuActions().run(fake_path)
     assert result == JujuActions.Result.errors
 
 
 # --- tests for JujuConfig checker
 
 
-def test_jujuconfig_ok(tmp_path):
+def test_jujuconfig_ok(fake_path):
     """The config.yaml file is valid."""
-    config_file = tmp_path / "config.yaml"
+    config_file = fake_path / "config.yaml"
     config_file.write_text(
         """
         options:
@@ -891,57 +891,57 @@ def test_jujuconfig_ok(tmp_path):
                 type: buzz
     """
     )
-    result = JujuConfig().run(tmp_path)
+    result = JujuConfig().run(fake_path)
     assert result == JujuConfig.Result.ok
 
 
-def test_jujuconfig_missing_file(tmp_path):
+def test_jujuconfig_missing_file(fake_path):
     """No config.yaml file at all."""
-    result = JujuConfig().run(tmp_path)
+    result = JujuConfig().run(fake_path)
     assert result == JujuConfig.Result.ok
 
 
-def test_jujuconfig_file_corrupted(tmp_path):
+def test_jujuconfig_file_corrupted(fake_path):
     """The config.yaml file is not valid YAML."""
-    config_file = tmp_path / "config.yaml"
+    config_file = fake_path / "config.yaml"
     config_file.write_text(" - \n-")
     linter = JujuConfig()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuConfig.Result.errors
     assert linter.text == "The config.yaml file is not a valid YAML file."
 
 
-def test_jujuconfig_no_options(tmp_path):
+def test_jujuconfig_no_options(fake_path):
     """The config.yaml file does not have an options key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = fake_path / "config.yaml"
     config_file.write_text(
         """
         summary: Small text.
     """
     )
     linter = JujuConfig()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuConfig.Result.errors
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
-def test_jujuconfig_empty_options(tmp_path):
+def test_jujuconfig_empty_options(fake_path):
     """The config.yaml file has an empty options key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = fake_path / "config.yaml"
     config_file.write_text(
         """
         options:
     """
     )
     linter = JujuConfig()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuConfig.Result.errors
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
-def test_jujuconfig_options_not_dict(tmp_path):
+def test_jujuconfig_options_not_dict(fake_path):
     """The config.yaml file has an options key that is not a dict."""
-    config_file = tmp_path / "config.yaml"
+    config_file = fake_path / "config.yaml"
     config_file.write_text(
         """
         options:
@@ -950,14 +950,14 @@ def test_jujuconfig_options_not_dict(tmp_path):
     """
     )
     linter = JujuConfig()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuConfig.Result.errors
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
-def test_jujuconfig_no_type_in_options_items(tmp_path):
+def test_jujuconfig_no_type_in_options_items(fake_path):
     """The items under 'options' must have a 'type' key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = fake_path / "config.yaml"
     config_file.write_text(
         """
         options:
@@ -966,7 +966,7 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     """
     )
     linter = JujuConfig()
-    result = linter.run(tmp_path)
+    result = linter.run(fake_path)
     assert result == JujuConfig.Result.errors
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
 
@@ -974,54 +974,54 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
 # --- tests for Entrypoint checker
 
 
-def test_entrypoint_not_used(tmp_path):
+def test_entrypoint_not_used(fake_path):
     """An entrypoint is not really used, nothing to check."""
     with patch("charmcraft.linters.get_entrypoint_from_dispatch") as mock_check:
         mock_check.return_value = None
-        result = Entrypoint().run(tmp_path)
+        result = Entrypoint().run(fake_path)
     assert result == Entrypoint.Result.nonapplicable
-    mock_check.assert_called_with(tmp_path)
+    mock_check.assert_called_with(fake_path)
 
 
-def test_entrypoint_all_ok(tmp_path):
+def test_entrypoint_all_ok(new_path):
     """All conditions for 'framework' are in place."""
-    entrypoint = tmp_path / "charm.sh"
+    entrypoint = new_path / "charm.sh"
     entrypoint.touch(mode=0o777)
     with patch("charmcraft.linters.get_entrypoint_from_dispatch") as mock_check:
         mock_check.return_value = entrypoint
-        result = Entrypoint().run(tmp_path)
+        result = Entrypoint().run(new_path)
     assert result == Entrypoint.Result.ok
-    mock_check.assert_called_with(tmp_path)
+    mock_check.assert_called_with(new_path)
 
 
-def test_entrypoint_missing(tmp_path):
+def test_entrypoint_missing(fake_path):
     """The file does not exist."""
-    entrypoint = tmp_path / "charm"
+    entrypoint = fake_path / "charm"
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
-        result = linter.run(tmp_path)
+        result = linter.run(fake_path)
     assert result == Entrypoint.Result.errors
     assert linter.text == f"Cannot find the entrypoint file: {str(entrypoint)!r}"
 
 
-def test_entrypoint_directory(tmp_path):
+def test_entrypoint_directory(fake_path):
     """The pointed entrypoint is a directory."""
-    entrypoint = tmp_path / "charm"
+    entrypoint = fake_path / "charm"
     entrypoint.mkdir()
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
-        result = linter.run(tmp_path)
+        result = linter.run(fake_path)
     assert result == Entrypoint.Result.errors
     assert linter.text == f"The entrypoint is not a file: {str(entrypoint)!r}"
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_entrypoint_non_exec(tmp_path):
+def test_entrypoint_non_exec(fake_path):
     """The pointed entrypoint is not an executable file."""
-    entrypoint = tmp_path / "charm"
+    entrypoint = fake_path / "charm"
     entrypoint.touch()
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
-        result = linter.run(tmp_path)
+        result = linter.run(fake_path)
     assert result == Entrypoint.Result.errors
     assert linter.text == f"The entrypoint file is not executable: {str(entrypoint)!r}"

@@ -1186,26 +1186,26 @@ def test_build_arguments_managed_charmcraft_measure(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_package_tree_structure(tmp_path, config):
+def test_build_package_tree_structure(fake_path, config):
     """The zip file is properly built internally."""
     # the metadata
     metadata_data = {"name": "test-charm-name-from-metadata-yaml"}
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = fake_path / "metadata.yaml"
     with metadata_file.open("wt", encoding="ascii") as fh:
         yaml.dump(metadata_data, fh)
 
     # create some dirs and files! a couple of files outside, and the dir we'll zip...
-    file_outside_1 = tmp_path / "file_outside_1"
+    file_outside_1 = fake_path / "file_outside_1"
     with file_outside_1.open("wb") as fh:
         fh.write(b"content_out_1")
-    file_outside_2 = tmp_path / "file_outside_2"
+    file_outside_2 = fake_path / "file_outside_2"
     with file_outside_2.open("wb") as fh:
         fh.write(b"content_out_2")
-    to_be_zipped_dir = tmp_path / BUILD_DIRNAME
+    to_be_zipped_dir = fake_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
     # ...also outside a dir with a file...
-    dir_outside = tmp_path / "extdir"
+    dir_outside = fake_path / "extdir"
     dir_outside.mkdir()
     file_ext = dir_outside / "file_ext"
     with file_ext.open("wb") as fh:
@@ -1286,7 +1286,7 @@ def test_build_package_tree_structure(tmp_path, config):
     ],
 )
 def test_build_package_name(
-    tmp_path,
+    new_path,
     prepare_charmcraft_yaml,
     prepare_metadata_yaml,
     charmcraft_yaml,
@@ -1294,7 +1294,7 @@ def test_build_package_name(
     expected_zipname,
 ):
     """The zip file name comes from the config."""
-    to_be_zipped_dir = tmp_path / BUILD_DIRNAME
+    to_be_zipped_dir = new_path / BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
     prepare_charmcraft_yaml(charmcraft_yaml)
@@ -1308,7 +1308,7 @@ def test_build_package_name(
         }
     )
 
-    config = load(tmp_path)
+    config = load(new_path)
     builder = get_builder(config)
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
@@ -1854,6 +1854,7 @@ def test_launch_shell(emitter):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+@pytest.mark.usefixtures("new_path")
 @pytest.mark.parametrize(
     ("charms", "command_args", "charm_files", "expected_calls", "expected"),
     [
@@ -1867,7 +1868,7 @@ def test_launch_shell(emitter):
                     ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
                 )
             ],
-            {},
+            [],
             id="no_outputs",
         ),
         pytest.param(
@@ -1879,7 +1880,7 @@ def test_launch_shell(emitter):
                     ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
                 )
             ],
-            {"test": pathlib.Path("test_amd64.charm").resolve()},
+            [pathlib.Path("test_amd64.charm")],
             id="one_correct_charm",
         ),
         pytest.param(
@@ -1891,7 +1892,7 @@ def test_launch_shell(emitter):
                     ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
                 )
             ],
-            {"test": pathlib.Path("test_amd64.charm").resolve()},
+            [pathlib.Path("test_amd64.charm")],
             id="one_correct_charm",
         ),
     ],
@@ -1904,5 +1905,5 @@ def test_subprocess_pack_charms_success(
 
     actual = _subprocess_pack_charms(charms, command_args)
 
-    check.equal(actual, expected)
+    check.equal(set(actual.values()), {p.resolve() for p in expected})
     check.equal(mock_check_call.mock_calls, expected_calls)

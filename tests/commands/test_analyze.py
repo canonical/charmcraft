@@ -143,21 +143,21 @@ def test_complete_set_of_results(emitter, config, monkeypatch, tmp_path, indicat
             check_type=linters.CheckType.LINT,
             url="url-01",
             text="text-01",
-            result=linters.WARNINGS,
+            result=linters.Result.WARNINGS,
         ),
         linters.CheckResult(
             name="check-lint-02",
             check_type=linters.CheckType.LINT,
             url="url-02",
             text="text-02",
-            result=linters.OK,
+            result=linters.Result.OK,
         ),
         linters.CheckResult(
             name="check-lint-03",
             check_type=linters.CheckType.LINT,
             url="url-03",
             text="text-03",
-            result=linters.ERRORS,
+            result=linters.Result.ERRORS,
         ),
         linters.CheckResult(
             name="check-attribute-04",
@@ -171,21 +171,21 @@ def test_complete_set_of_results(emitter, config, monkeypatch, tmp_path, indicat
             check_type=linters.CheckType.ATTRIBUTE,
             url="url-05",
             text="text-05",
-            result=linters.IGNORED,
+            result=linters.Result.IGNORED,
         ),
         linters.CheckResult(
             name="check-lint-06",
             check_type=linters.CheckType.LINT,
             url="url-06",
             text="text-06",
-            result=linters.IGNORED,
+            result=linters.Result.IGNORED,
         ),
         linters.CheckResult(
             name="check-lint-07",
             check_type=linters.CheckType.LINT,
             url="url-07",
             text="text-07",
-            result=linters.FATAL,
+            result=linters.Result.FATAL,
         ),
     ]
 
@@ -308,7 +308,7 @@ def test_only_warnings(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url",
             text="text",
-            result=linters.WARNINGS,
+            result=linters.Result.WARNINGS,
         ),
     ]
 
@@ -334,7 +334,7 @@ def test_only_errors(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url",
             text="text",
-            result=linters.ERRORS,
+            result=linters.Result.ERRORS,
         ),
     ]
 
@@ -360,14 +360,14 @@ def test_both_errors_and_warnings(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url-1",
             text="text-1",
-            result=linters.ERRORS,
+            result=linters.Result.ERRORS,
         ),
         linters.CheckResult(
             name="check-lint-2",
             check_type=linters.CheckType.LINT,
             url="url-2",
             text="text-2",
-            result=linters.WARNINGS,
+            result=linters.Result.WARNINGS,
         ),
     ]
 
@@ -395,7 +395,7 @@ def test_only_lint_ok(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url",
             text="text",
-            result=linters.OK,
+            result=linters.Result.OK,
         ),
     ]
 
@@ -421,7 +421,7 @@ def test_only_fatal(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url",
             text="text",
-            result=linters.FATAL,
+            result=linters.Result.FATAL,
         ),
     ]
 

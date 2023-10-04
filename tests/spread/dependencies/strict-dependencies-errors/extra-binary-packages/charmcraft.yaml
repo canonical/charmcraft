@@ -1,0 +1,17 @@
+name: charm
+type: charm
+title: Strict dependencies test charm
+summary: a test charm for checking strict dependency build failures.
+description: |
+  This charm fails to build because it has strict dependencies enabled and
+  adds a binary package that isn't listed in requirements.txt. Strict
+  dependencies require all packages allowed to be binary to be included in
+  a requirements file.
+bases:
+  - name: ubuntu
+    channel: "22.04"
+
+parts:
+  charm:
+    charm-strict-dependencies: true
+    charm-binary-python-packages: ["distro"]

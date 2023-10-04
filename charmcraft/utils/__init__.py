@@ -16,6 +16,17 @@
 
 """Collection of utilities for charmcraft."""
 
+from charmcraft.utils.charmlibs import (
+    LibData,
+    LibInternals,
+    get_name_from_metadata,
+    create_charm_name_from_importable,
+    create_importable_name,
+    get_lib_internals,
+    get_lib_info,
+    get_libs_from_tree,
+    collect_charmlib_pydeps,
+)
 from charmcraft.utils.cli import (
     SingleOptionEnsurer,
     ResourceOption,
@@ -47,6 +58,15 @@ from charmcraft.utils.store import ChannelData, Risk
 from charmcraft.utils.yaml import load_yaml
 
 __all__ = [
+    "LibData",
+    "LibInternals",
+    "get_name_from_metadata",
+    "create_charm_name_from_importable",
+    "create_importable_name",
+    "get_lib_internals",
+    "get_lib_info",
+    "get_libs_from_tree",
+    "collect_charmlib_pydeps",
     "ARCH_TRANSLATIONS",
     "OSPlatform",
     "get_os_platform",

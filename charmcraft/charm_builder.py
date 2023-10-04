@@ -30,7 +30,6 @@ import sys
 from typing import List
 
 from charmcraft import instrum
-from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.const import (
     DEPENDENCIES_HASH_FILENAME,
     DISPATCH_CONTENT,
@@ -43,6 +42,7 @@ from charmcraft.const import (
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import (
+    collect_charmlib_pydeps,
     get_pip_command,
     get_pip_version,
     make_executable,

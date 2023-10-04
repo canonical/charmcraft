@@ -22,7 +22,7 @@ import sys
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.commands.store.charmlibs import (
+from charmcraft.utils.charmlibs import (
     collect_charmlib_pydeps,
     get_lib_info,
     get_lib_internals,

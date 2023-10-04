@@ -34,3 +34,8 @@ execute: |
 
   mv *.charm ~/
   juju deploy ~/*.charm
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd

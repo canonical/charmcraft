@@ -145,10 +145,6 @@ suites:
         juju add-model test-model
       fi
     restore-each: |
-      pushd charm
-      charmcraft clean
-      popd
-
       rm -rf charm
 
       juju destroy-model --force --no-prompt --destroy-storage --no-wait test-model

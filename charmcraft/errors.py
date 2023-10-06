@@ -100,6 +100,10 @@ class DependencyError(CraftError):
     """Errors related to dependencies."""
 
 
+class InvalidDependenciesError(DependencyError):
+    """In strict dependencies mode, some binary dependencies."""
+
+
 class MissingDependenciesError(DependencyError):
     """In strict dependencies mode, some dependencies are missing from requirements files."""
 

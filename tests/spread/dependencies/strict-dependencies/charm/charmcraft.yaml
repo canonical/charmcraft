@@ -13,4 +13,4 @@ bases:
 parts:
   charm:
     charm-strict-dependencies: true
-    charm-binary-python-packages: ["ops>=2.6"]
+    charm-binary-python-packages: ["ops"]

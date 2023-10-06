@@ -41,6 +41,8 @@ from charmcraft.utils import (
     validate_strict_dependencies,
 )
 
+PACKAGE_NAME_REGEX = re.compile(r"[A-Za-z0-9_.-]+")
+
 
 class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
     """Properties used in charm building."""
@@ -127,6 +129,18 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
         if not values.get("charm_requirements"):
             raise ValueError(
                 "'charm-strict-dependencies' requires at least one requirements file."
+            )
+
+        invalid_binaries = set()
+        for binary_package in values.get("charm_binary_python_packages", []):
+            if not PACKAGE_NAME_REGEX.fullmatch(binary_package):
+                invalid_binaries.add(binary_package)
+
+        if invalid_binaries:
+            raise ValueError(
+                "'charm-binary-python-packages' may contain only package names allowed "
+                "to be installed from binary if 'charm-strict-dependencies' is enabled. "
+                f"Invalid package names: {sorted(invalid_binaries)}"
             )
 
         try:

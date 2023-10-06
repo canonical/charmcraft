@@ -51,10 +51,10 @@ exclude = [
 warn_unused_configs = true
 warn_redundant_casts = true
 strict_equality = true
-#warn_return_any = true
+warn_return_any = true
 disallow_subclassing_any = true
 disallow_untyped_decorators = true
-#disallow_any_generics = true
+disallow_any_generics = true
 
 [[tool.mypy.overrides]]
 # Ignore typing errors in most legacy packages until we fix them.

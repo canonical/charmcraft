@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1372,6 +1372,7 @@ def test_schema_doublelayer_no_parts_type_charm(
             "charm-entrypoint": "src/charm.py",
             "charm-python-packages": [],
             "charm-requirements": [],
+            "charm-strict-dependencies": False,
         }
     }
 
@@ -1544,6 +1545,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_missing(
             "charm-python-packages": [],
             "charm-requirements": [],
             "prime": ["to_be_included.*"],
+            "charm-strict-dependencies": False,
         }
     }
 
@@ -1606,6 +1608,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_charm(
             "charm-entrypoint": "src/charm.py",
             "charm-python-packages": [],
             "charm-requirements": [],
+            "charm-strict-dependencies": False,
         }
     }
 
@@ -1731,6 +1734,7 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(
             "charm-entrypoint": "different.py",
             "charm-python-packages": [],
             "charm-requirements": [],
+            "charm-strict-dependencies": False,
         }
     }
 

@@ -18,12 +18,15 @@ import tempfile
 
 import pytest
 
+from charmcraft.errors import MissingDependenciesError
 from charmcraft.utils.package import (
     exclude_packages,
     get_package_names,
     get_pip_command,
     get_pip_version,
     get_pypi_packages,
+    get_requirements_file_package_names,
+    validate_strict_dependencies,
 )
 
 
@@ -67,6 +70,25 @@ def test_get_package_names(packages, expected):
 )
 def test_exclude_packages(requirements, excluded, expected):
     assert exclude_packages(requirements, excluded=excluded) == expected
+
+
+@pytest.mark.parametrize(
+    ("file_contents", "expected"),
+    [
+        pytest.param([], set(), id="empty"),
+        pytest.param(["abc>=1.3.5", "abc<2.0"], {"abc"}, id="versions_stripped"),
+        pytest.param(["abc>1.0", "abc<0.1"], {"abc"}, id="versions_not_checked"),
+    ],
+)
+def test_get_requirements_file_package_names(tmp_path, file_contents, expected):
+    """Test that get_requirements_file_package_names succeeds with correct outputs."""
+    files = []
+    for n, content in enumerate(file_contents):
+        current_file = tmp_path / f"requirements-{n}.txt"
+        current_file.write_text(content)
+        files.append(current_file)
+
+    assert get_requirements_file_package_names(*files) == expected
 
 
 @pytest.mark.parametrize(
@@ -133,3 +155,30 @@ def test_get_pip_version_parsing_failure(fake_process, pip_cmd, stdout, error_ms
         get_pip_version(pip_cmd)
 
     assert exc_info.value.args[0] == error_msg
+
+
+@pytest.mark.parametrize(
+    ("dependencies", "other_packages"),
+    [
+        ([], []),
+        (["abc>2.0", "def<1.0"], ["abc", "def"]),
+        (["abc", "def", "ghi"], []),
+    ],
+)
+def test_validate_strict_dependencies_success(dependencies, other_packages):
+    validate_strict_dependencies(dependencies, other_packages)
+
+
+@pytest.mark.parametrize(
+    ("dependencies", "other_packages", "extra_packages"),
+    [
+        ([], ["abc"], ["abc"]),
+        (["abc>=1.0"], ["abc<2.0", "def>1.2"], ["def"]),
+        ([], ["zyx", "wvut"], ["wvut", "zyx"]),
+    ],
+)
+def test_validate_strict_dependencies_missing(dependencies, other_packages, extra_packages):
+    with pytest.raises(MissingDependenciesError) as exc_info:
+        validate_strict_dependencies(dependencies, other_packages)
+
+    assert exc_info.value.extra_dependencies == extra_packages

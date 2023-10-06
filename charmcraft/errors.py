@@ -96,5 +96,28 @@ class DuplicateCharmsError(CraftError):
         return details.getvalue()
 
 
+class DependencyError(CraftError):
+    """Errors related to dependencies."""
+
+
+class InvalidDependenciesError(DependencyError):
+    """In strict dependencies mode, some binary dependencies."""
+
+
+class MissingDependenciesError(DependencyError):
+    """In strict dependencies mode, some dependencies are missing from requirements files."""
+
+    def __init__(self, extra_dependencies: Iterable[str]):
+        self.extra_dependencies = sorted(extra_dependencies)
+        extra_deps_str = ", ".join(self.extra_dependencies)
+        super().__init__(
+            "Some dependencies were not included in requirements files.",
+            details=f"Missing dependencies: {extra_deps_str}",
+            resolution="Ensure all missing dependencies are included in a requirements file.",
+            # TODO: Docs URL
+            reportable=False,
+        )
+
+
 class ExtensionError(CraftError):
     """Error related to extension handling."""

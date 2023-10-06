@@ -1,0 +1,16 @@
+name: charm
+type: charm
+title: Strict dependencies test charm
+summary: a test charm for checking that strict dependencies are used.
+description: |
+  This charm fails to build because strict dependencies are enabled and no
+  requirements file is provided. In the unlikely scenario where a charm author
+  chooses to enable strict dependencies but does not need extra packages, an empty
+  requirements.txt file should be created in the same directory as the charm.
+bases:
+  - name: ubuntu
+    channel: "22.04"
+
+parts:
+  charm:
+    charm-strict-dependencies: true

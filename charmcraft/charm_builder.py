@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,14 +40,18 @@ from charmcraft.const import (
     VENV_DIRNAME,
 )
 from charmcraft.env import get_charm_builder_metrics_path
+from charmcraft.errors import DependencyError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
 from charmcraft.utils import (
     collect_charmlib_pydeps,
     get_pip_command,
     get_pip_version,
+    get_requirements_file_package_names,
     make_executable,
+    validate_strict_dependencies,
 )
 
+MINIMUM_PIP_VERSION = (22, 0)
 KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/ba/19/e63fb4e0d20e48bd2167bb7e857abc0e21679e24805ba921a224df8977c0/pip-23.2.1.tar.gz"
 
 
@@ -68,6 +72,7 @@ class CharmBuilder:
         binary_python_packages: List[str] = None,
         python_packages: List[str] = None,
         requirements: List[pathlib.Path] = None,
+        strict_dependencies: bool = False,
     ) -> None:
         self.builddir = builddir
         self.installdir = installdir
@@ -76,6 +81,7 @@ class CharmBuilder:
         self.binary_python_packages = binary_python_packages
         self.python_packages = python_packages
         self.requirement_paths = requirements
+        self.strict_dependencies = strict_dependencies
         self.ignore_rules = self._load_juju_ignore()
         self.ignore_rules.extend_patterns([f"/{STAGING_VENV_DIRNAME}"])
 
@@ -240,10 +246,16 @@ class CharmBuilder:
             # pip 20 (included with focal) has dependency resolution issues related to
             # common charm dependencies (e.g. ops). Resolve this by updating to a
             # known working version of pip.
-            if get_pip_version(pip_cmd) < (22, 0):
+            if get_pip_version(pip_cmd) < MINIMUM_PIP_VERSION:
                 _process_run([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"])
 
         with instrum.Timer("Installing all dependencies"):
+            if self.strict_dependencies:
+                self._install_strict_dependencies(pip_cmd)
+                return
+
+            # Legacy non-strict dependencies.
+            # This method is not valid for any bases added after 2024-01-01 or for DEVEL bases.
             try:
                 _process_run(
                     get_pip_command(
@@ -254,8 +266,6 @@ class CharmBuilder:
                     )
                 )
             except RuntimeError:
-                # Fall back to old behaviour if pip install fails.
-                # This will go away with a future base.
                 print(
                     "WARNING: Initial package installation failed. "
                     "Falling back to older method, which may leave your charm "
@@ -282,6 +292,26 @@ class CharmBuilder:
                     cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
                     cmd.extend(self.charmlib_deps)  # the python packages to install
                 _process_run(cmd)
+
+    def _install_strict_dependencies(self, pip_cmd: str) -> None:
+        if not self.requirement_paths:
+            raise DependencyError(
+                "No requirements files have been passed to the charm builder.",
+                details="Strict dependencies mode needs at least one requirements file.",
+            )
+        validate_strict_dependencies(
+            get_requirements_file_package_names(*self.requirement_paths),
+            self.charmlib_deps,
+            self.python_packages or [],
+            self.binary_python_packages or [],
+        )
+        _process_run(
+            get_pip_command(
+                [pip_cmd, "install"],
+                self.requirement_paths,
+                binary_deps=self.binary_python_packages or [],
+            )
+        )
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""
@@ -404,11 +434,15 @@ def _parse_arguments() -> argparse.Namespace:
         action="append",
         help="Binary Python package to install before requirements.",
     )
-    parser.add_argument(
+    strict_group = parser.add_mutually_exclusive_group()
+    strict_group.add_argument(
         "-p",
         "--package",
         action="append",
         help="Python package to install before requirements.",
+    )
+    strict_group.add_argument(
+        "--strict-dependencies", action="store_true", help="Use strict dependencies."
     )
     parser.add_argument(
         "-r",
@@ -433,6 +467,7 @@ def main():
         binary_python_packages=options.binary_package or [],
         python_packages=options.package or [],
         requirements=options.requirement or [],
+        strict_dependencies=options.strict_dependencies,
     )
     builder.build_charm()
 

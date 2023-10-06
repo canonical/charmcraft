@@ -48,6 +48,8 @@ from charmcraft.utils.package import (
     exclude_packages,
     get_pip_command,
     get_pip_version,
+    get_requirements_file_package_names,
+    validate_strict_dependencies,
 )
 from charmcraft.utils.project import (
     find_charm_sources,
@@ -83,6 +85,8 @@ __all__ = [
     "exclude_packages",
     "get_pip_command",
     "get_pip_version",
+    "get_requirements_file_package_names",
+    "validate_strict_dependencies",
     "ChannelData",
     "Risk",
     "SingleOptionEnsurer",

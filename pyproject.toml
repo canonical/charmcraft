@@ -61,12 +61,12 @@ disallow_untyped_decorators = true
 module=[
     "charmcraft.charm_builder",
     "charmcraft.cmdbase",
+    "charmcraft.commands.extensions",
     "charmcraft.commands.pack",
     "charmcraft.commands.store",
     "charmcraft.commands.store.registry",
     "charmcraft.commands.store.store",
     "charmcraft.config",
-    "charmcraft.extensions",
     "charmcraft.extensions._utils",
     "charmcraft.linters",
     "charmcraft.models.actions",

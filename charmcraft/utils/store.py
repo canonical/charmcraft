@@ -59,31 +59,32 @@ class ChannelData:
         """
         invalid_channel_error = CraftError(f"Invalid channel name: {name!r}")
         parts = name.split("/")
-        if len(parts) == 1:
+        track: Optional[str] = None
+        branch: Optional[str] = None
+        if len(parts) == 1:  # Just the risk, e.g. "stable"
             try:
                 risk = Risk[parts[0].upper()]
             except KeyError:
                 raise invalid_channel_error from None
-            else:
-                parts = [None, risk, None]
         elif len(parts) == 2:
-            try:
+            try:  # risk/branch, e.g. "stable/debug"
                 risk = Risk[parts[0].upper()]
-                parts.insert(0, None)
+                branch = parts[1]
             except KeyError:
-                try:
+                try:  # track/risk, e.g. "latest/stable"
                     risk = Risk[parts[1].upper()]
-                    parts.append(None)
+                    track = parts[0]
                 except KeyError:
                     raise invalid_channel_error from None
-        elif len(parts) == 3:
+        elif len(parts) == 3:  # Fully defined, e.g. "latest/stable/debug"
             try:
                 risk = Risk[parts[1].upper()]
             except KeyError:
                 raise invalid_channel_error from None
+            track, _, branch = parts
         else:
             raise invalid_channel_error
-        return cls(parts[0], risk, parts[2])
+        return cls(track, risk, branch)
 
     @property
     def name(self) -> str:

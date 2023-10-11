@@ -8,4 +8,4 @@ environment:
 execute: |
   cd $CHARM
   # Charmcraft should fail for these charms.
-  (! charmcraft pack) 2>&1 | MATCH "'charm-strict-dependencies'"
+  (! charmcraft pack) 2>&1 | MATCH "charm-strict-dependencies"

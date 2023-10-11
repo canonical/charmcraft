@@ -13,6 +13,8 @@ environment:
   BUNDLE/kfp: https://github.com/canonical/kfp-operators
   BUNDLE/kubeflow: https://github.com/canonical/bundle-kubeflow
   BUNDLE/notebook_operators: https://github.com/canonical/notebook-operators
+  JUJU_CONTROLLER: lxd
+  JUJU_MODEL: bundle-test
 
 prepare: |
   tests.pkgs install python3-yaml
@@ -35,8 +37,9 @@ prepare: |
 
   popd
 
-
 restore: |
+  rm ~/*.zip
+
   for directory in $(ls -1 bundle/charms); do
     pushd "bundle/charms/${directory}"
     charmcraft clean
@@ -59,4 +62,5 @@ execute: |
 
   # Test deploying the bundle.
   # TODO: install juju on the runner and re-enable this.
-  # juju deploy --dry-run *.zip
+  mv *.zip ~/
+  juju deploy *.zip

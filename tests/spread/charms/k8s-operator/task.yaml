@@ -23,11 +23,16 @@ environment:
   CHARM/traefik: https://github.com/canonical/traefik-k8s-operator
   CHARM/wordpress: https://github.com/canonical/wordpress-k8s-operator
   CHARM/zookeeper: https://github.com/canonical/zookeeper-k8s-operator
+  JUJU_CONTROLLER: k8s
+  JUJU_MODEL: k8s-operator-test
+
 
 prepare: |
   git clone --depth=1 "${CHARM}" charm
 
 restore: |
+  rm ~/*.charm
+
   pushd charm
   charmcraft clean
   popd
@@ -37,3 +42,6 @@ restore: |
 execute: |
   cd charm
   charmcraft pack --verbose
+
+  mv *.charm ~/
+  juju deploy ~/*.charm

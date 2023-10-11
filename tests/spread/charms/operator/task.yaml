@@ -28,11 +28,15 @@ environment:
   CHARM/seldon_core: https://github.com/canonical/seldon-core-operator
   CHARM/tls_certificates: https://github.com/canonical/tls-certificates-operator
   CHARM/zookeeper: https://github.com/canonical/zookeeper-operator
+  JUJU_CONTROLLER: lxd
+  JUJU_MODEL: operator-test
 
 prepare: |
   git clone --depth=1 "${CHARM}" charm
 
 restore: |
+  rm ~/*.charm
+
   pushd charm
   charmcraft clean
   popd
@@ -42,3 +46,6 @@ restore: |
 execute: |
   cd charm
   charmcraft pack --verbose
+
+  mv *.charm ~/
+  juju deploy ~/*.charm

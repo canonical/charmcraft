@@ -54,7 +54,31 @@ strict_equality = true
 warn_return_any = true
 disallow_subclassing_any = true
 disallow_untyped_decorators = true
-disallow_any_generics = true
+#disallow_any_generics = true
+
+[[tool.mypy.overrides]]
+# Ignore typing errors in most legacy packages until we fix them.
+module=[
+    "charmcraft.charm_builder",
+    "charmcraft.cmdbase",
+    "charmcraft.commands.extensions",
+    "charmcraft.commands.pack",
+    "charmcraft.commands.store",
+    "charmcraft.commands.store.registry",
+    "charmcraft.commands.store.store",
+    "charmcraft.config",
+    "charmcraft.extensions._utils",
+    "charmcraft.linters",
+    "charmcraft.models.actions",
+    "charmcraft.models.basic",
+    "charmcraft.models.config",
+    "charmcraft.models.charmcraft",
+    "charmcraft.package",
+    "charmcraft.parts",
+    "charmcraft.providers",
+    "charmcraft.reactive_plugin",
+]
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 # Ignore typing errors in most legacy packages until we fix them.

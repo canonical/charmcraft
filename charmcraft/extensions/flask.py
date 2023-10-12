@@ -124,7 +124,7 @@ class Flask(Extension):
         }
         merging_fields = {
             "actions": ACTIONS,
-            "options": OPTIONS,
+            "config": {"options": OPTIONS},
         }
         incompatible_fields = ("devices", "extra-bindings", "storage")
         for incompatible_field in incompatible_fields:

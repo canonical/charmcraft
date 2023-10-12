@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Canonical Ltd.
+# Copyright 2021-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,14 @@ from craft_parts.utils import os_utils
 from xdg import BaseDirectory  # type: ignore
 
 from charmcraft import charm_builder, env, instrum
+from charmcraft.errors import DependencyError
 from charmcraft.reactive_plugin import ReactivePlugin
+from charmcraft.utils import (
+    get_requirements_file_package_names,
+    validate_strict_dependencies,
+)
+
+PACKAGE_NAME_REGEX = re.compile(r"[A-Za-z0-9_.-]+")
 
 
 class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
@@ -45,6 +52,15 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
     charm_binary_python_packages: List[str] = []
     charm_python_packages: List[str] = []
     charm_requirements: List[str] = []
+    charm_strict_dependencies: bool = False
+    """Whether to select strict dependencies only.
+
+    If true, ``charm-strict-dependencies`` will enforce that all dependencies, direct or indirect,
+    be specified within a requirements file. This includes any ``PYDEPS`` specified from a charm
+    library. It also changes the behaviour of ``charm-binary-python-packages`` to be a list of
+    packages to pass to ``pip`` that are allowed to use binary packages.
+    ``charm-strict-dependencies`` is mutually exclusive with ``charm-python-packages``.
+    """
 
     @pydantic.validator("charm_entrypoint")
     def validate_entry_point(cls, charm_entrypoint, values):
@@ -93,6 +109,54 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
 
         return charm_requirements
 
+    @pydantic.validator("charm_strict_dependencies")
+    def validate_strict_dependencies(
+        cls, charm_strict_dependencies: bool, values: Dict[str, Any]
+    ) -> bool:
+        """Validate basic requirements if strict dependencies are enabled.
+
+        Full validation that the requirements file contains all dependencies is done later, but
+        we can fail early if the strict dependencies setting causes the charm to be invalid.
+        """
+        if not charm_strict_dependencies:
+            return charm_strict_dependencies
+
+        if values.get("charm_python_packages"):
+            raise ValueError(
+                "'charm-python-packages' must not be set if 'charm-strict-dependencies' is enabled"
+            )
+
+        if not values.get("charm_requirements"):
+            raise ValueError(
+                "'charm-strict-dependencies' requires at least one requirements file."
+            )
+
+        invalid_binaries = set()
+        for binary_package in values.get("charm_binary_python_packages", []):
+            if not PACKAGE_NAME_REGEX.fullmatch(binary_package):
+                invalid_binaries.add(binary_package)
+
+        if invalid_binaries:
+            raise ValueError(
+                "'charm-binary-python-packages' may contain only package names allowed "
+                "to be installed from binary if 'charm-strict-dependencies' is enabled. "
+                f"Invalid package names: {sorted(invalid_binaries)}"
+            )
+
+        try:
+            validate_strict_dependencies(
+                get_requirements_file_package_names(
+                    *(pathlib.Path(r) for r in values["charm_requirements"])
+                ),
+                values.get("charm_binary_python_packages", []),
+            )
+        except DependencyError as e:
+            raise ValueError(
+                "All dependencies must be specified in requirements files for strict dependencies."
+            ) from e
+
+        return charm_strict_dependencies
+
     @classmethod
     def unmarshal(cls, data: Dict[str, Any]):
         """Populate charm properties from the part specification.
@@ -135,6 +199,13 @@ class CharmPlugin(plugins.Plugin):
       - ``charm-requirements``
         (list of strings)
         List of paths to requirements files.
+
+      - ``charm-strict-dependencies``
+        (boolean)
+        Whether to use legacy dependency resolution or strict dependency resolution.
+        By default, legacy dependency resolution is used. If set to true, strict
+        dependency resolution will be used, requiring all dependencies, including
+        library dependencies, to be defined in provided requirements files.
 
     Extra files to be included in the charm payload must be listed under
     the ``prime`` file filter.
@@ -249,6 +320,31 @@ class CharmPlugin(plugins.Plugin):
             entrypoint = self._part_info.part_build_dir / options.charm_entrypoint
             build_cmd.extend(["--entrypoint", str(entrypoint)])
 
+        if options.charm_strict_dependencies:
+            build_cmd.extend(self._get_strict_dependencies_parameters())
+        else:
+            build_cmd.extend(self._get_legacy_dependencies_parameters())
+
+        commands = [" ".join(shlex.quote(i) for i in build_cmd)]
+
+        # hook a callback after the BUILD happened (to collect metrics left by charm builder)
+        callbacks.register_post_step(self.post_build_callback, step_list=[Step.BUILD])
+
+        return commands
+
+    def _get_strict_dependencies_parameters(self) -> List[str]:
+        """Get the parameters to pass to the charm builder if strict dependencies are enabled."""
+        options = cast(CharmPluginProperties, self._options)
+        return [
+            "--strict-dependencies",
+            *(f"--binary-package={package}" for package in options.charm_binary_python_packages),
+            *(f"--requirement={reqs}" for reqs in options.charm_requirements),
+        ]
+
+    def _get_legacy_dependencies_parameters(self) -> List[str]:
+        """Get the parameters to pass to the charm builder with strict dependencies disabled."""
+        options = cast(CharmPluginProperties, self._options)
+        parameters = []
         try:
             if options.charm_python_packages or options.charm_requirements:
                 base_tools = ["pip", "setuptools", "wheel"]
@@ -263,29 +359,24 @@ class CharmPlugin(plugins.Plugin):
                 if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
                     # CentOS 7 compatibility, bootstrap base tools use binary packages
                     for pkg in base_tools:
-                        build_cmd.extend(["-b", pkg])
+                        parameters.extend(["-b", pkg])
 
                 # build base tools from source
                 for pkg in base_tools:
-                    build_cmd.extend(["-p", pkg])
+                    parameters.extend(["-p", pkg])
         except (OsReleaseIdError, OsReleaseVersionIdError):
             pass
 
         for pkg in options.charm_binary_python_packages:
-            build_cmd.extend(["-b", pkg])
+            parameters.extend(["-b", pkg])
 
         for pkg in options.charm_python_packages:
-            build_cmd.extend(["-p", pkg])
+            parameters.extend(["-p", pkg])
 
         for req in options.charm_requirements:
-            build_cmd.extend(["-r", req])
+            parameters.extend(["-r", req])
 
-        commands = [" ".join(shlex.quote(i) for i in build_cmd)]
-
-        # hook a callback after the BUILD happened (to collect metrics left by charm builder)
-        callbacks.register_post_step(self.post_build_callback, step_list=[Step.BUILD])
-
-        return commands
+        return parameters
 
     def post_build_callback(self, step_info):
         """Collect metrics left by charm_builder.py."""

@@ -124,6 +124,6 @@ def test_read_metadata_yaml_error_invalid(tmp_path):
 
 
 def test_read_metadata_yaml_error_missing(tmp_path):
-    """Do not hide the file not being accesible."""
+    """Do not hide the file not being accessible."""
     with pytest.raises(OSError):
         read_metadata_yaml(tmp_path)

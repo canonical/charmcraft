@@ -2770,7 +2770,7 @@ def test_createlib_simple(
     store_mock.create_library_id.return_value = lib_id
 
     args = Namespace(name="testlib", format=formatted)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         CreateLibCommand(config).run(args)
 
@@ -2797,7 +2797,7 @@ def test_createlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     args = Namespace(name="testlib", format=None)
     config.name = None
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = None
         with pytest.raises(CraftError) as cm:
             CreateLibCommand(config).run(args)
@@ -2816,7 +2816,7 @@ def test_createlib_name_contains_dash(emitter, store_mock, tmp_path, monkeypatch
     store_mock.create_library_id.return_value = lib_id
 
     args = Namespace(name="testlib", format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         CreateLibCommand(config).run(args)
 
@@ -2910,7 +2910,7 @@ def test_publishlib_simple(emitter, store_mock, tmp_path, monkeypatch, config, f
 
     store_mock.get_libraries_tips.return_value = {}
     args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
         PublishLibCommand(config).run(args)
 
@@ -2948,7 +2948,7 @@ def test_publishlib_contains_dash(emitter, store_mock, tmp_path, monkeypatch, co
 
     store_mock.get_libraries_tips.return_value = {}
     args = Namespace(library="charms.test_charm.v0.testlib", format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
@@ -2980,7 +2980,7 @@ def test_publishlib_all(emitter, store_mock, tmp_path, monkeypatch, config, form
 
     store_mock.get_libraries_tips.return_value = {}
     args = Namespace(library=None, format=formatted)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "testcharm-1"
         PublishLibCommand(config).run(args)
 
@@ -3052,7 +3052,7 @@ def test_publishlib_not_found(emitter, store_mock, tmp_path, monkeypatch, config
     monkeypatch.chdir(tmp_path)
 
     args = Namespace(library="charms.testcharm.v0.testlib", format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
         with pytest.raises(CraftError) as cm:
             PublishLibCommand(config).run(args)
@@ -3069,7 +3069,7 @@ def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkey
     factory.create_lib_filepath("testcharm", "testlib", api=0)
 
     args = Namespace(library="charms.testcharm.v0.testlib", format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "charm2"
         with pytest.raises(CraftError) as cm:
             PublishLibCommand(config).run(args)
@@ -3083,7 +3083,7 @@ def test_publishlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     config.name = None
     args = Namespace(library="charms.testcharm.v0.testlib", format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = None
         with pytest.raises(CraftError) as cm:
             PublishLibCommand(config).run(args)
@@ -3116,7 +3116,7 @@ def test_publishlib_store_is_advanced(
         ),
     }
     args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
@@ -3163,7 +3163,7 @@ def test_publishlib_store_is_exactly_behind_ok(emitter, store_mock, tmp_path, mo
         ),
     }
     args = Namespace(library="charms.test_charm.v0.testlib", format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
@@ -3199,7 +3199,7 @@ def test_publishlib_store_is_exactly_behind_same_hash(
         ),
     }
     args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
@@ -3247,7 +3247,7 @@ def test_publishlib_store_is_too_behind(
         ),
     }
     args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
@@ -3302,7 +3302,7 @@ def test_publishlib_store_has_same_revision_same_hash(
         ),
     }
     args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
@@ -3347,7 +3347,7 @@ def test_publishlib_store_has_same_revision_other_hash(
         ),
     }
     args = Namespace(library="charms.test_charm.v0.testlib", format=formatted)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "test-charm"
         PublishLibCommand(config).run(args)
 
@@ -3866,7 +3866,7 @@ def test_listlib_charm_from_metadata(emitter, store_mock, config):
     """Happy path listing simple case."""
     store_mock.get_libraries_tips.return_value = {}
     args = Namespace(name=None, format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = "testcharm"
         ListLibCommand(config).run(args)
 
@@ -3878,7 +3878,7 @@ def test_listlib_charm_from_metadata(emitter, store_mock, config):
 def test_listlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     args = Namespace(name=None, format=None)
-    with patch("charmcraft.commands.store.get_name_from_metadata") as mock:
+    with patch("charmcraft.utils.get_name_from_metadata") as mock:
         mock.return_value = None
         with pytest.raises(CraftError) as cm:
             ListLibCommand(config).run(args)

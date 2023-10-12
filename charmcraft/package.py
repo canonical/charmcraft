@@ -32,7 +32,6 @@ import charmcraft.instrum
 import charmcraft.linters
 import charmcraft.providers
 from charmcraft import const, env, errors, parts
-from charmcraft.commands.store.charmlibs import collect_charmlib_pydeps
 from charmcraft.const import (
     BUILD_DIRNAME,
     CHARM_FILES,
@@ -45,7 +44,13 @@ from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.metafiles.metadata import create_metadata_yaml
 from charmcraft.models.charmcraft import Base, BasesConfiguration
-from charmcraft.utils import build_zip, get_host_architecture, humanize_list, load_yaml
+from charmcraft.utils import (
+    build_zip,
+    collect_charmlib_pydeps,
+    get_host_architecture,
+    humanize_list,
+    load_yaml,
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -89,7 +94,16 @@ def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
 class Builder:
     """The package builder."""
 
-    def __init__(self, *, config, force, debug, shell, shell_after, measure):
+    def __init__(
+        self,
+        *,
+        config,
+        force,
+        debug,
+        shell,
+        shell_after,
+        measure,
+    ):
         self.force_packing = force
         self.debug = debug
         self.shell = shell
@@ -98,6 +112,8 @@ class Builder:
 
         self.charmdir = config.project.dirpath
         self.buildpath = self.charmdir / BUILD_DIRNAME
+        self.shared_cache_path = charmcraft.env.get_host_shared_cache_path()
+
         self.config = config
         if self.config.parts:
             self._parts = self.config.parts.copy()
@@ -119,9 +135,9 @@ class Builder:
         attribute_results = []
         lint_results_by_outcome = {}
         for result in linting_results:
-            if result.result == charmcraft.linters.IGNORED:
+            if result.result == charmcraft.linters.Result.IGNORED:
                 continue
-            if result.check_type == charmcraft.linters.CheckType.attribute:
+            if result.check_type == charmcraft.linters.CheckType.ATTRIBUTE:
                 attribute_results.append(result)
             else:
                 lint_results_by_outcome.setdefault(result.result, []).append(result)
@@ -129,19 +145,19 @@ class Builder:
         # show attribute results
         for result in attribute_results:
             emit.verbose(
-                f"Check result: {result.name} [{result.check_type}] {result.result} "
+                f"Check result: {result.name} [{result.check_type.value}] {result.result} "
                 f"({result.text}; see more at {result.url}).",
             )
 
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
-        if charmcraft.linters.WARNINGS in lint_results_by_outcome:
+        if charmcraft.linters.Result.WARNINGS in lint_results_by_outcome:
             emit.progress("Lint Warnings:", permanent=True)
-            for result in lint_results_by_outcome[charmcraft.linters.WARNINGS]:
+            for result in lint_results_by_outcome[charmcraft.linters.Result.WARNINGS]:
                 emit.progress(template.format(result), permanent=True)
-        if charmcraft.linters.ERRORS in lint_results_by_outcome:
+        if charmcraft.linters.Result.ERRORS in lint_results_by_outcome:
             emit.progress("Lint Errors:", permanent=True)
-            for result in lint_results_by_outcome[charmcraft.linters.ERRORS]:
+            for result in lint_results_by_outcome[charmcraft.linters.Result.ERRORS]:
                 emit.progress(template.format(result), permanent=True)
             if self.force_packing:
                 emit.progress("Packing anyway as requested.", permanent=True)
@@ -359,6 +375,7 @@ class Builder:
         base_configuration = charmcraft.providers.get_base_configuration(
             alias=build_base_alias,
             instance_name=instance_name,
+            shared_cache_path=self.shared_cache_path,
         )
 
         if build_on.name == "ubuntu":

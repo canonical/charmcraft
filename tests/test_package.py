@@ -1160,7 +1160,7 @@ def test_build_arguments_managed_charmcraft_measure(
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 
-    # fake a dumped mesure to be pulled from the instance
+    # fake a dumped measure to be pulled from the instance
     fake_local_m = tmp_path / "local.json"
     instrum._Measurements().dump(fake_local_m)
 
@@ -1443,6 +1443,7 @@ def test_build_part_from_config(
                         "charm-binary-python-packages": ["baz"],
                         "source": str(basic_project),
                         "charm-requirements": ["reqs.txt"],
+                        "charm-strict-dependencies": False,
                     }
                 },
                 work_dir=pathlib.Path("/root"),
@@ -1542,6 +1543,7 @@ def test_build_part_include_venv_pydeps(
                         "charm-binary-python-packages": [],
                         "source": str(basic_project),
                         "charm-requirements": [],
+                        "charm-strict-dependencies": False,
                     }
                 },
                 work_dir=pathlib.Path("/root"),
@@ -1567,7 +1569,7 @@ def test_build_part_include_venv_pydeps(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_path):
-    """Generic use of linters, pass them ok to their proceessor and save them in the manifest."""
+    """Generic use of linters, pass them ok to their processor and save them in the manifest."""
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
@@ -1578,17 +1580,17 @@ def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_
     linting_results = [
         linters.CheckResult(
             name="check-name-1",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result="check-result-1",
         ),
         linters.CheckResult(
             name="check-name-2",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
-            result=linters.IGNORED,
+            result=linters.Result.IGNORED.value,
         ),
     ]
 
@@ -1623,17 +1625,17 @@ def test_show_linters_attributes(basic_project, emitter, config):
     linting_results = [
         linters.CheckResult(
             name="check-name-1",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
             result="check-result-1",
         ),
         linters.CheckResult(
             name="check-name-2",
-            check_type=linters.CheckType.attribute,
+            check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
-            result=linters.IGNORED,
+            result=linters.Result.IGNORED,
         ),
     ]
 
@@ -1651,10 +1653,10 @@ def test_show_linters_lint_warnings(basic_project, emitter, config):
     linting_results = [
         linters.CheckResult(
             name="check-name",
-            check_type=linters.CheckType.lint,
+            check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=linters.WARNINGS,
+            result=linters.Result.WARNINGS,
         ),
     ]
 
@@ -1676,10 +1678,10 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
     linting_results = [
         linters.CheckResult(
             name="check-name",
-            check_type=linters.CheckType.lint,
+            check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=linters.ERRORS,
+            result=linters.Result.ERRORS,
         ),
     ]
 
@@ -1705,10 +1707,10 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
     linting_results = [
         linters.CheckResult(
             name="check-name",
-            check_type=linters.CheckType.lint,
+            check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=linters.ERRORS,
+            result=linters.Result.ERRORS,
         ),
     ]
 

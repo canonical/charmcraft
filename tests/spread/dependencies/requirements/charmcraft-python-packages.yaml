@@ -1,0 +1,17 @@
+type: charm
+name: test-charm
+summary: Test charm
+description: Test charm
+parts:
+  charm:
+    charm-python-packages:
+      - pip
+    charm-binary-python-packages:
+      - setuptools
+bases:
+  - build-on:
+      - name: "ubuntu"
+        channel: "22.04"
+    run-on:
+      - name: "ubuntu"
+        channel: "22.04"

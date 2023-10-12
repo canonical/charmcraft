@@ -20,6 +20,8 @@ import logging
 import os
 import sys
 
+import craft_providers.errors
+import craft_store.errors
 from craft_cli import (
     ArgumentParsingError,
     CommandGroup,
@@ -30,11 +32,11 @@ from craft_cli import (
     ProvideHelpException,
     emit,
 )
-from craft_store import errors
 
 from charmcraft import __version__, config, env, utils
-from charmcraft.commands import analyze, clean, init, pack, store, version
+from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
+from charmcraft.const import SHARED_CACHE_ENV_VAR
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -92,13 +94,19 @@ _charmhub_commands = [
     store.UploadResourceCommand,
     store.ListResourceRevisionsCommand,
 ]
+_extensions_commands = [
+    extensions.ExtensionsCommand,
+    extensions.ListExtensionsCommand,
+    extensions.ExpandExtensionsCommand,
+]
 COMMAND_GROUPS = [
     CommandGroup("Basic", _basic_commands),
     CommandGroup("Charmhub", _charmhub_commands),
+    CommandGroup("Extensions", _extensions_commands),
 ]
 
 # non-charmcraft useful environment variables to log
-EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP")
+EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP", SHARED_CACHE_ENV_VAR)
 
 
 def _get_system_details():
@@ -189,9 +197,12 @@ def main(argv=None):
     except CraftError as err:
         _emit_error(err)
         retcode = err.retcode
-    except errors.CraftStoreError as err:
+    except craft_store.errors.CraftStoreError as err:
         error = CraftError(f"craft-store error: {err}")
         _emit_error(error)
+        retcode = 1
+    except craft_providers.errors.ProviderError as err:
+        _emit_error(CraftError(err.brief, details=err.details, resolution=err.resolution))
         retcode = 1
     except KeyboardInterrupt as exc:
         error = CraftError("Interrupted.")

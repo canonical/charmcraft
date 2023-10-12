@@ -16,6 +16,7 @@
 
 import argparse
 import ast
+import itertools
 import os
 import subprocess
 import sys
@@ -704,7 +705,7 @@ def test_systemdetails_hidden_auth():
 
 # -- generic tests for all Charmcraft commands
 
-all_commands = list.__add__(*[cgroup.commands for cgroup in COMMAND_GROUPS])
+all_commands = list(itertools.chain(*(cgroup.commands for cgroup in COMMAND_GROUPS)))
 
 
 @pytest.mark.parametrize("command", all_commands)
@@ -761,7 +762,7 @@ def test_aesthetic_args_options_msg(command, config):
 
 @pytest.mark.parametrize("command_class", all_commands)
 def test_usage_of_parsed_args(command_class, config):
-    """The elements accesed on parsed_args need to be added before.
+    """The elements accessed on parsed_args need to be added before.
 
     This test is useful because normally all the tests for any command fake the
     Namespace and it happened in the past that we added functionality in the command

@@ -203,7 +203,7 @@ class CharmcraftConfig(
         return parts
 
     @pydantic.validator("parts", each_item=True)
-    def validate_each_part(cls, item, values):
+    def validate_each_part(cls, item):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
         return process_part_config(item)
 
@@ -302,7 +302,7 @@ class CharmcraftConfig(
 
             obj = apply_extensions(project.dirpath, obj)
 
-            # Re-expand it in case extenstions added short-form bases.
+            # Re-expand it in case extensions added short-form bases.
             if isinstance(obj.get("bases"), list):
                 cls.expand_short_form_bases(obj["bases"])
 

@@ -1,0 +1,41 @@
+summary: test dependencies with requirements files
+
+environment:
+  REQUIREMENTS_FILE: requirements-basic.txt
+  REQUIREMENTS_FILE/basic: requirements-basic.txt
+  REQUIREMENTS_FILE/hash,hash_deps,hash_pydeps,hash_deps_pydeps: requirements-hashes.txt
+  CHARMCRAFT_YAML/deps,deps_pydeps,hash_deps,hash_deps_pydeps: charmcraft-python-packages.yaml
+  PYDEPS/pydeps,hash_pydeps,deps_pydeps,hash_deps_pydeps: '["cosl", "pydantic"]'
+
+include:
+  - tests/spread/dependencies
+
+kill-timeout: 30m
+
+prepare: |
+  mkdir -p charm
+    pushd charm
+    charmcraft init --profile=machine
+    popd
+
+  cp "${REQUIREMENTS_FILE}" charm/requirements.txt
+  if [ -n "${CHARMCRAFT_YAML:-}" ]; then
+    cp "${CHARMCRAFT_YAML}" charm/charmcraft.yaml
+  fi
+  if [ -n "${PYDEPS:-}" ]; then
+    mkdir -p lib/charms/test_lib/v0
+    echo "LIBAPI=0\nLIBPATCH=1\nPYDEPS=${PYDEPS}" > lib/charms/test_lib/v0/lib.py
+  fi
+
+execute: |
+  pushd charm
+  charmcraft pack --verbose
+  test -f *.charm
+
+  mv *.charm ~/
+  juju deploy ~/*.charm
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd

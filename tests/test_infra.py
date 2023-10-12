@@ -52,7 +52,7 @@ def pep8_test(python_filepaths):
     with patch("sys.stdout", fake_stdout):
         report = style_guide.check_files(python_filepaths)
 
-    # if flake8 didnt' report anything, we're done
+    # if flake8 didn't report anything, we're done
     if report.total_errors == 0:
         return
 
@@ -129,7 +129,7 @@ def test_bashcompletion_all_commands():
 
     real_command_names = set()
     for cgroup in main.COMMAND_GROUPS:
-        real_command_names.update(cmd.name for cmd in cgroup.commands)
+        real_command_names.update(cmd.name for cmd in cgroup.commands if not cmd.hidden)
 
     assert completed_commands == real_command_names
 

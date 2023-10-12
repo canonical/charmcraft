@@ -2,7 +2,8 @@ summary: create, list, publish and fetch libraries
 
 environment:
   LIB_NAME: lib_$(uuidgen | sed -e 's/-//g')
-  CHARM_UNDERSCORE_NAME: $(echo $CHARM_DEFAULT_NAME | sed -e 's/-/_/g')
+  CHARM_NAME: spreadtests-charm-$(stat --format=%i%W .)
+  CHARM_UNDERSCORE_NAME: $(echo $CHARM_NAME | sed -e 's/-/_/g')
 
 include:
   - tests/
@@ -10,10 +11,10 @@ include:
 prepare: |
   tests.pkgs install jq
 
-  # init the project so we have a proper place to work with the library, but no need
-  # to pack and upload (which takes a lot of time) because other zillion tests already
-  # do that and we can be sure that $CHARM_DEFAULT_NAME already exists in Charmhub
-  charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME
+  # init the project so we have a proper place to work with the library.
+  # We do not want to upload a revision, as this makes it impossible to unregister
+  # during the restore process.
+  charmcraft init --project-dir=charm --name=$CHARM_NAME
   cd charm
 
   cat <<- EOF >> charmcraft.yaml
@@ -22,14 +23,13 @@ prepare: |
     storage-url: https://storage.staging.snapcraftcontent.com
   EOF
 
-  # If necessary, try to register the charm.
-  if ! charmcraft status $CHARM_DEFAULT_NAME; then
-    if ! charmcraft register $CHARM_DEFAULT_NAME; then
-      ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
-    fi
-  fi
+  charmcraft register $CHARM_NAME
 
 restore: |
+  pushd charm
+  charmcraft unregister $CHARM_NAME
+  popd
+
   rm -rf charm
 
 execute: |

@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import pathlib
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 from craft_cli import CraftError
@@ -50,7 +50,7 @@ def create_manifest(
 
     :returns: Path to created manifest.yaml.
     """
-    content = {
+    content: Dict[str, Any] = {
         "charmcraft-version": charmcraft.__version__,
         "charmcraft-started-at": started_at.isoformat() + "Z",
     }
@@ -71,7 +71,7 @@ def create_manifest(
     attributes_info = [
         {"name": result.name, "result": result.result}
         for result in linting_results
-        if result.check_type == charmcraft.linters.CheckType.attribute
+        if result.check_type == charmcraft.linters.CheckType.ATTRIBUTE
     ]
     content["analysis"] = {"attributes": attributes_info}
 

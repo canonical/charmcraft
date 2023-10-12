@@ -29,7 +29,7 @@ from charmcraft.utils import get_templates_environment, make_executable
 try:
     import pwd
 except ImportError:
-    pwd = None
+    pwd = None  # type: ignore[assignment]
 
 # the available profiles and in which directory the template can be found
 PROFILES = {

@@ -25,7 +25,10 @@ import craft_store
 import requests
 from craft_cli import CraftError, emit
 from craft_store import endpoints
-from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+from requests_toolbelt import (  # type: ignore[import]
+    MultipartEncoder,
+    MultipartEncoderMonitor,
+)
 
 from charmcraft import __version__, utils
 

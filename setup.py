@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ install_requires = [
     "craft-parts>=1.18",
     "craft-providers",
     "craft-store>=2.4",
+    "distro>=1.3.0",
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
@@ -47,21 +48,27 @@ install_requires = [
 ]
 
 lint_requires = [
-    "black==23.7.0",
-    "codespell[tomli]==2.2.5",
-    "ruff==0.0.280",
-    "yamllint==1.32.0",
+    "black>=23.7.0,<24.0.0",
+    "codespell[tomli]>=2.2.5,<3.0.0",
+    "ruff==0.0.282",
+    "yamllint>=1.32.0,<2.0.0",
 ]
 
 type_requires = [
     "mypy[reports]==1.5.1",
     "pyright==1.1.316",
+    "types-python-dateutil",
+    "types-requests",
+    "types-setuptools",
+    "types-tabulate",
+    "types-urllib3",
 ]
 
 dev_requires = [
     "coverage",
     "flake8",
     "pydocstyle",
+    "pyfakefs",
     "pytest",
     "pytest-cov",
     "pytest-mock",

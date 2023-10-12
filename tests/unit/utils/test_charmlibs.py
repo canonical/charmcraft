@@ -22,7 +22,7 @@ import sys
 import pytest
 from craft_cli import CraftError
 
-from charmcraft.commands.store.charmlibs import (
+from charmcraft.utils.charmlibs import (
     collect_charmlib_pydeps,
     get_lib_info,
     get_lib_internals,
@@ -266,7 +266,7 @@ def test_getlibinternals_success_simple(tmp_path, monkeypatch):
 
 
 def test_getlibinternals_success_with_pydeps(tmp_path, monkeypatch):
-    """Simple basic succesful case that includes pydeps."""
+    """Simple basic successful case that includes pydeps."""
     monkeypatch.chdir(tmp_path)
     test_path = _create_lib(pydeps="PYDEPS = ['foo', 'bar']")
     internals = get_lib_internals(test_path)

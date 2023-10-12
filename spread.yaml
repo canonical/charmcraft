@@ -59,6 +59,7 @@ backends:
       multipass exec "$instance_name" -- \
         sudo systemctl restart ssh
 
+      multipass exec "$instance_name" -- sudo snap refresh --channel=latest/stable lxd
       multipass exec "$instance_name" -- sudo lxd init --auto
 
       # Get the IP from the instance
@@ -73,7 +74,7 @@ backends:
       - ubuntu-20.04-64:
           workers: 1
       - ubuntu-22.04-64:
-          workers: 2
+          workers: 4
 
 prepare: |
   set -e
@@ -126,6 +127,29 @@ suites:
     summary: simple charmcraft commands
   tests/spread/charms/:
     summary: real charm building tests
+  tests/spread/dependencies/:
+    summary: test charm dependencies
+    systems:
+      - ubuntu-22.04-64
+    prepare: |
+      snap install lxd || true
+      snap install juju || true
+      lxd init --auto
+      lxc network set lxdbr0 ipv6.address none
+      mkdir -p ~/.local/share
+      # This should better detect the controller
+      juju bootstrap localhost test-controller || true
+    prepare-each: |
+      if ! juju add-model test-model; then
+        juju destroy-model --force --no-prompt --destroy-storage test-model
+        juju add-model test-model
+      fi
+    restore-each: |
+      rm -rf charm
+
+      juju destroy-model --force --no-prompt --destroy-storage --no-wait test-model
+      rm -f ~/*.charm
+
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
     systems:

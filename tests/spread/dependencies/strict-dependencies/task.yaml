@@ -1,0 +1,19 @@
+summary: ensure that a charm with strict dependencies can build.
+
+prepare: |
+  tests.pkgs install unzip
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+execute: |
+  cd charm
+  charmcraft pack --verbose
+  test -f charm*.charm
+
+  # This should be exactly version 2.5.1. Newer versions have been released,
+  # but are not valid. Non-strict dependencies would install ops 2.7.0 or newer.
+  unzip -p charm_*.charm venv/ops/version.py | MATCH "version = '2.5.1'"

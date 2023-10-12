@@ -20,7 +20,6 @@ import ast
 import hashlib
 import os
 import pathlib
-from collections import namedtuple
 from dataclasses import dataclass
 from typing import List, Optional, Set
 
@@ -29,10 +28,20 @@ from craft_cli import CraftError
 
 from charmcraft.errors import BadLibraryNameError, BadLibraryPathError
 
-LibData = namedtuple(
-    "LibData",
-    "lib_id api patch content content_hash full_name path lib_name charm_name",
-)
+
+@dataclass(frozen=True)
+class LibData:
+    """All data fields for a library, including external ones."""
+
+    lib_id: Optional[str]
+    api: int
+    patch: int
+    content: Optional[str]
+    content_hash: Optional[str]
+    full_name: str
+    path: pathlib.Path
+    lib_name: str
+    charm_name: str
 
 
 @dataclass
@@ -42,9 +51,9 @@ class LibInternals:
     lib_id: str
     api: int
     patch: int
-    pydeps: list
+    pydeps: List[str]
     content_hash: str
-    content: bytes
+    content: str
 
 
 def get_name_from_metadata() -> Optional[str]:

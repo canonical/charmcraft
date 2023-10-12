@@ -19,7 +19,7 @@
 import pathlib
 import textwrap
 
-from charmcraft.commands.store import create_importable_name, get_lib_info
+from charmcraft.utils import create_importable_name, get_lib_info
 
 
 def create_lib_filepath(charm_name, lib_name, api=0, patch=1, lib_id="test-lib-id"):

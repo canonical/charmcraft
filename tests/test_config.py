@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1316,7 +1316,7 @@ def test_schema_other_bundle_part_no_source(
 
 
 # -- tests to check the double layer schema loading; using the 'charm' plugin
-#    because it is the default (and has good default properties to be overriden and )
+#    because it is the default (and has good default properties to be overridden and )
 #    the 'dump' one because it's a special case of no having a model
 
 
@@ -1372,6 +1372,7 @@ def test_schema_doublelayer_no_parts_type_charm(
             "charm-entrypoint": "src/charm.py",
             "charm-python-packages": [],
             "charm-requirements": [],
+            "charm-strict-dependencies": False,
         }
     }
 
@@ -1544,6 +1545,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_missing(
             "charm-python-packages": [],
             "charm-requirements": [],
             "prime": ["to_be_included.*"],
+            "charm-strict-dependencies": False,
         }
     }
 
@@ -1606,6 +1608,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_charm(
             "charm-entrypoint": "src/charm.py",
             "charm-python-packages": [],
             "charm-requirements": [],
+            "charm-strict-dependencies": False,
         }
     }
 
@@ -1718,7 +1721,7 @@ def test_schema_doublelayer_parts_with_charm_plugin_different(
 def test_schema_doublelayer_parts_with_charm_overriding_properties(
     tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
 ):
-    """A charm plugin is used and its default properties are overriden."""
+    """A charm plugin is used and its default properties are overridden."""
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
@@ -1731,6 +1734,7 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(
             "charm-entrypoint": "different.py",
             "charm-python-packages": [],
             "charm-requirements": [],
+            "charm-strict-dependencies": False,
         }
     }
 
@@ -1747,7 +1751,7 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(
                     channel: "30.04"
                 parts:
                   charm:
-                    charm-point: different.py  # mispelled!
+                    charm-point: different.py  # misspelled!
                 """
             ),
             dedent(
@@ -1770,7 +1774,7 @@ def test_schema_doublelayer_parts_with_charm_overriding_properties(
                     channel: "30.04"
                 parts:
                   charm:
-                    charm-point: different.py  # mispelled!
+                    charm-point: different.py  # misspelled!
                 """
             ),
             None,
@@ -2812,8 +2816,8 @@ def test_schema_analysis_ignore_attributes(
     metadata_yaml,
 ):
     """Some attributes are correctly ignored."""
-    create_checker("check_ok_1", linters.CheckType.attribute)
-    create_checker("check_ok_2", linters.CheckType.attribute)
+    create_checker("check_ok_1", linters.CheckType.ATTRIBUTE)
+    create_checker("check_ok_2", linters.CheckType.ATTRIBUTE)
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
@@ -2867,8 +2871,8 @@ def test_schema_analysis_ignore_linters(
     metadata_yaml,
 ):
     """Some linters are correctly ignored."""
-    create_checker("check_ok_1", linters.CheckType.lint)
-    create_checker("check_ok_2", linters.CheckType.lint)
+    create_checker("check_ok_1", linters.CheckType.LINT)
+    create_checker("check_ok_2", linters.CheckType.LINT)
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
@@ -2924,8 +2928,8 @@ def test_schema_analysis_ignore_attribute_missing(
     metadata_yaml,
 ):
     """An attribute specified to ignore is missing in the system."""
-    create_checker("check_ok_1", linters.CheckType.attribute)
-    create_checker("check_ok_2", linters.CheckType.lint)
+    create_checker("check_ok_1", linters.CheckType.ATTRIBUTE)
+    create_checker("check_ok_2", linters.CheckType.LINT)
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 
@@ -2985,8 +2989,8 @@ def test_schema_analysis_ignore_linter_missing(
     metadata_yaml,
 ):
     """A linter specified to ignore is missing in the system."""
-    create_checker("check_ok_1", linters.CheckType.attribute)
-    create_checker("check_ok_2", linters.CheckType.lint)
+    create_checker("check_ok_1", linters.CheckType.ATTRIBUTE)
+    create_checker("check_ok_2", linters.CheckType.LINT)
     prepare_charmcraft_yaml(charmcraft_yaml)
     prepare_metadata_yaml(metadata_yaml)
 

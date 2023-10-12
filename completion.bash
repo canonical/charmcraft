@@ -24,9 +24,11 @@ _charmcraft()
         clean
         close
         create-lib
+        expand-extensions
         fetch-lib
         init
         list-lib
+        list-extensions
         login
         logout
         names

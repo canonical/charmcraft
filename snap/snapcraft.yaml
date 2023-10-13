@@ -75,7 +75,7 @@ parts:
   # As of cryptography 39, it requires rust v1.48.0 or newer, which is available from focal-updates.
   # This part builds the wheel for cryptography.
   cryptography-deps:
-    plugin: dump
+    plugin: nil
     source: .
     build-packages:
       - cargo
@@ -115,8 +115,22 @@ parts:
       snapcraftctl build
       install -D -m 0755 $SNAPCRAFT_PROJECT_DIR/snap/local/sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
 
+  python-apt:
+    after: [python3]
+    plugin: nil
+    source: .
+    build-packages:
+      - libapt-pkg-dev
+      - python3.8-dev
+      - libpython3.8-dev
+    build-environment:
+      - LDFLAGS: -L/usr/lib/python3.8
+      - CPPFLAGS: -I/usr/include/python3.8
+    override-build: |
+      pip wheel $(cat requirements-focal.txt)
+
   charmcraft:
-    after: [python3, cryptography-deps]
+    after: [python3, cryptography-deps, python-apt]
     source: .
     plugin: python
     requirements:

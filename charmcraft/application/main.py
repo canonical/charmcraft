@@ -31,7 +31,8 @@ from charmcraft.main import main as old_main
 APP_METADATA = AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
-    ProjectClass=models.charmcraft.Project,
+    # This will change soon so just ignore it for now.
+    ProjectClass=models.charmcraft.Project,  # type: ignore[arg-type]
 )
 
 
@@ -43,15 +44,15 @@ class Charmcraft(Application):
         """Excluding lifecycle commands for right now."""
         return self._command_groups
 
-    def _configure_services(self) -> None:
-        super()._configure_services()
+    def _configure_services(self, platform: str | None, build_for: str | None) -> None:
+        super()._configure_services(platform, build_for)
         self.services.set_kwargs(
             "package",
             work_dir=self._work_dir,
             prime_dir=self.services.lifecycle.prime_dir,
         )
 
-    def _get_dispatcher(self) -> craft_cli.Dispatcher:
+    def _get_dispatcher(self) -> craft_cli.Dispatcher:  # type: ignore[override]
         """Configure charmcraft, including a fallback to the classic entrypoint.
 
         Side-effect: This method may exit the process.
@@ -104,7 +105,7 @@ class Charmcraft(Application):
 
 def main() -> int:
     """Run craft-application based charmcraft with classic fallback."""
-    services = ServiceFactory(app=APP_METADATA, PackageClass=None)  # type: ignore[call-arg]
+    services = ServiceFactory(app=APP_METADATA, PackageClass=None)  # type: ignore[arg-type]
 
     app = Charmcraft(app=APP_METADATA, services=services)
 

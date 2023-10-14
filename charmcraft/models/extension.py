@@ -16,18 +16,19 @@
 
 """Extension models."""
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from charmcraft.models.basic import ModelConfigDefaults
 
 
-class ExtensionModel(ModelConfigDefaults, frozen=True):
+# Mypy complaining about frozen inheritance.
+class ExtensionModel(ModelConfigDefaults, frozen=True):  # type: ignore[misc]
     """Extension model for presentation."""
 
     name: str
     bases: List[Tuple[str, str]]
 
-    def marshal(self) -> Dict[str, str]:
+    def marshal(self) -> Dict[str, Union[str, List[str], Dict[str, Any]]]:
         """Marshal model into a dictionary for presentation."""
         return {
             "Extension name": self.name,

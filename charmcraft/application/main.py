@@ -32,7 +32,7 @@ APP_METADATA = AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
     # This will change soon so just ignore it for now.
-    ProjectClass=models.charmcraft.Project,  # type: ignore[arg-type]
+    ProjectClass=models.CharmcraftProject,  # type: ignore[arg-type]
 )
 
 

@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Constants used in charmcraft."""
+from craft_providers.bases import BaseName
 
 METADATA_FILENAME = "metadata.yaml"
 JUJU_ACTIONS_FILENAME = "actions.yaml"
@@ -47,6 +48,31 @@ JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv \\
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = frozenset(("install", "start", "upgrade-charm"))
 HOOKS_DIRNAME = "hooks"
+
+SUPPORTED_BASES = frozenset(
+    (
+        BaseName("ubuntu", "18.04"),
+        BaseName("ubuntu", "20.04"),
+        BaseName("ubuntu", "22.04"),
+        BaseName("ubuntu", "23.04"),
+        BaseName("ubuntu", "devel"),
+        BaseName("centos", "7"),
+        BaseName("almalinux", "9"),
+    )
+)
+
+SUPPORTED_OSES = frozenset(base.name for base in SUPPORTED_BASES)
+
+SUPPORTED_ARCHITECTURES = frozenset(
+    (
+        "amd64",
+        "arm64",
+        "armhf",
+        "ppc64el",
+        "riscv64",
+        "s390x",
+    )
+)
 
 # The minimum set of files for a charm to be considered valid
 CHARM_FILES = frozenset(
@@ -84,7 +110,7 @@ UBUNTU_LTS_STABLE = frozenset(
 )
 
 # Metadata keys that are defined in the metadata.yaml file, for backwards compatible
-CHARM_METADATA_LEGACY_KEYS = frozenset(
+METADATA_YAML_KEYS = frozenset(
     (
         "assumes",
         "containers",

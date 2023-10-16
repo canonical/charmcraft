@@ -10,6 +10,9 @@ environment:
   CHARM/grafana: https://github.com/canonical/grafana-k8s-operator
   # Requires some pre-setup.
   # CHARM/grafana_agent: https://github.com/canonical/grafana-agent-k8s-operator
+  CHARM/hydra: https://github.com/canonical/hydra-operator
+  CHARM/identity_platform: https://github.com/canonical/identity-platform-login-ui-operator
+  CHARM/indico: https://github.com/canonical/indico-operator
   CHARM/kafka: https://github.com/canonical/kafka-k8s-operator
   CHARM/loki: https://github.com/canonical/loki-k8s-operator
   CHARM/mattermost: https://git.launchpad.net/charm-k8s-mattermost
@@ -44,4 +47,5 @@ execute: |
   charmcraft pack --verbose
 
   mv *.charm ~/
-  juju deploy ~/*.charm
+  cd ~
+  juju deploy ./*.charm

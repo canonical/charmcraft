@@ -9,9 +9,6 @@ environment:
   CHARM/dex_auth: https://github.com/canonical/dex-auth-operator
   CHARM/github_runner: https://github.com/canonical/github-runner-operator
   CHARM/hardware_observer: https://github.com/canonical/hardware-observer-operator
-  CHARM/hydra: https://github.com/canonical/hydra-operator
-  CHARM/identity_platform: https://github.com/canonical/identity-platform-login-ui-operator
-  CHARM/indico: https://github.com/canonical/indico-operator
   CHARM/kafka: https://github.com/canonical/kafka-operator
   CHARM/kratos: https://github.com/canonical/kratos-operator
   CHARM/minio: https://github.com/canonical/minio-operator

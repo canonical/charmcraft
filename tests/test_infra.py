@@ -14,19 +14,15 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import io
 import itertools
 import os
 import re
 import subprocess
 import sys
-from unittest.mock import patch
 
 import black
 import click.testing
-import pydocstyle
 import pytest
-from flake8.api.legacy import get_style_guide
 
 from charmcraft import __version__, main
 
@@ -43,47 +39,6 @@ def get_python_filepaths(*, roots=None, python_paths=None):
                 if filename.endswith(".py"):
                     python_paths.append(os.path.join(dirpath, filename))
     return python_paths
-
-
-def pep8_test(python_filepaths):
-    """Helper to check PEP8 (used from this module and from test_init.py to check templates)."""
-    style_guide = get_style_guide()
-    fake_stdout = io.TextIOWrapper(io.BytesIO())
-    with patch("sys.stdout", fake_stdout):
-        report = style_guide.check_files(python_filepaths)
-
-    # if flake8 didn't report anything, we're done
-    if report.total_errors == 0:
-        return
-
-    # grab on which files we have issues
-    fake_stdout.seek(0)
-    flake8_issues = fake_stdout.read().split("\n")
-
-    if flake8_issues:
-        msg = "Please fix the following flake8 issues!\n" + "\n".join(flake8_issues)
-        pytest.fail(msg, pytrace=False)
-
-
-def test_pep257():
-    """Verify all files have nice docstrings."""
-    pep257_test(get_python_filepaths(roots=["charmcraft"]))
-
-
-def pep257_test(python_filepaths):
-    """Helper to check PEP257 (used from this module and from test_init.py to check templates)."""
-    to_ignore = {
-        "D105",  # Missing docstring in magic method
-        "D107",  # Missing docstring in __init__
-    }
-    to_include = pydocstyle.violations.conventions.pep257 - to_ignore
-    errors = list(pydocstyle.check(python_filepaths, select=to_include))
-
-    if errors:
-        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
-        report.extend(str(e) for e in errors)
-        msg = "\n".join(report)
-        pytest.fail(msg, pytrace=False)
 
 
 def test_ensure_copyright():

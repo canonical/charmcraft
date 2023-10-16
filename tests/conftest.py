@@ -29,12 +29,53 @@ import pytest
 import responses as responses_module
 import yaml
 from craft_parts import callbacks
+from craft_parts.plugins import plugins
 from craft_providers import Executor, Provider
 
-from charmcraft import deprecations, instrum, parts
+from charmcraft import deprecations, instrum, parts, reactive_plugin
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
 from charmcraft.models.charmcraft import Base, BasesConfiguration
+
+plugins.register(
+    {
+        "charm": parts.CharmPlugin,
+        "bundle": parts.BundlePlugin,
+        "reactive": reactive_plugin.ReactivePlugin,
+    }
+)
+
+
+@pytest.fixture()
+def fake_project_dir(fs) -> pathlib.Path:
+    project_dir = pathlib.Path("/root/project")
+    fs.create_dir(project_dir)
+    return project_dir
+
+
+@pytest.fixture()
+def fake_prime_dir(fs) -> pathlib.Path:
+    prime_dir = pathlib.Path("/root/prime")
+    fs.create_dir(prime_dir)
+    return prime_dir
+
+
+@pytest.fixture()
+def fake_path(fs) -> pathlib.Path:
+    """Like tmp_path, but with a fake filesystem."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        yield pathlib.Path(tmp_dir)
+
+
+@pytest.fixture()
+def global_debug():
+    os.environ["CRAFT_DEBUG"] = "1"
+
+
+@pytest.fixture()
+def new_path(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
 
 
 @pytest.fixture(autouse=True, scope="session")

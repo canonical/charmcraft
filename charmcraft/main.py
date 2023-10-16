@@ -27,6 +27,7 @@ from craft_cli import (
     CommandGroup,
     CraftError,
     Dispatcher,
+    EmitterMode,
     GlobalArgument,
     ProvideHelpException,
     emit,
@@ -207,4 +208,15 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    if env.is_charmcraft_running_in_managed_mode():
+        logpath = env.get_managed_environment_log_path()
+    else:
+        logpath = None
+
+    emit.init(
+        EmitterMode.BRIEF,
+        "charmcraft",
+        "Starting legacy charmcraft entrypoint",
+        log_filepath=logpath,
+    )
     sys.exit(main(sys.argv))

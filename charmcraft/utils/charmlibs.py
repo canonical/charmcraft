@@ -26,7 +26,7 @@ from typing import List, Optional, Set
 import yaml
 from craft_cli import CraftError
 
-from charmcraft.errors import BadLibraryNameError, BadLibraryPathError
+from charmcraft import errors
 
 
 @dataclass(frozen=True)
@@ -184,9 +184,9 @@ def get_lib_info(*, full_name=None, lib_path=None):
         try:
             libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
         except ValueError:
-            raise BadLibraryPathError(lib_path)
+            raise errors.BadLibraryPathError(lib_path)
         if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":
-            raise BadLibraryPathError(lib_path)
+            raise errors.BadLibraryPathError(lib_path)
         full_name = ".".join((charmsdir, importable_charm_name, v_api, lib_path.stem))
 
     else:
@@ -196,13 +196,13 @@ def get_lib_info(*, full_name=None, lib_path=None):
         try:
             charmsdir, charm_name, v_api, libfile = full_name.split(".")
         except ValueError:
-            raise BadLibraryNameError(full_name)
+            raise errors.BadLibraryNameError(full_name)
 
         # the lib full_name includes the charm_name which might not be importable (dashes)
         importable_charm_name = create_importable_name(charm_name)
 
         if charmsdir != "charms":
-            raise BadLibraryNameError(full_name)
+            raise errors.BadLibraryNameError(full_name)
         path = pathlib.Path("lib")
         lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + ".py")
 

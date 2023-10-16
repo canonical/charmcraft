@@ -26,6 +26,7 @@ from craft_cli import CraftError
 from charmcraft import linters
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands.analyze import AnalyzeCommand
+from charmcraft.models.lint import LintResult
 from charmcraft.utils import useful_filepath
 
 
@@ -143,21 +144,21 @@ def test_complete_set_of_results(emitter, config, monkeypatch, tmp_path, indicat
             check_type=linters.CheckType.LINT,
             url="url-01",
             text="text-01",
-            result=linters.Result.WARNINGS,
+            result=LintResult.WARNINGS.value,
         ),
         linters.CheckResult(
             name="check-lint-02",
             check_type=linters.CheckType.LINT,
             url="url-02",
             text="text-02",
-            result=linters.Result.OK,
+            result=LintResult.OK.value,
         ),
         linters.CheckResult(
             name="check-lint-03",
             check_type=linters.CheckType.LINT,
             url="url-03",
             text="text-03",
-            result=linters.Result.ERRORS,
+            result=LintResult.ERRORS.value,
         ),
         linters.CheckResult(
             name="check-attribute-04",
@@ -171,21 +172,21 @@ def test_complete_set_of_results(emitter, config, monkeypatch, tmp_path, indicat
             check_type=linters.CheckType.ATTRIBUTE,
             url="url-05",
             text="text-05",
-            result=linters.Result.IGNORED,
+            result=LintResult.IGNORED.value,
         ),
         linters.CheckResult(
             name="check-lint-06",
             check_type=linters.CheckType.LINT,
             url="url-06",
             text="text-06",
-            result=linters.Result.IGNORED,
+            result=LintResult.IGNORED.value,
         ),
         linters.CheckResult(
             name="check-lint-07",
             check_type=linters.CheckType.LINT,
             url="url-07",
             text="text-07",
-            result=linters.Result.FATAL,
+            result=LintResult.FATAL.value,
         ),
     ]
 
@@ -308,7 +309,7 @@ def test_only_warnings(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url",
             text="text",
-            result=linters.Result.WARNINGS,
+            result=LintResult.WARNINGS.value,
         ),
     ]
 
@@ -334,7 +335,7 @@ def test_only_errors(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url",
             text="text",
-            result=linters.Result.ERRORS,
+            result=LintResult.ERRORS.value,
         ),
     ]
 
@@ -360,14 +361,14 @@ def test_both_errors_and_warnings(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url-1",
             text="text-1",
-            result=linters.Result.ERRORS,
+            result=LintResult.ERRORS.value,
         ),
         linters.CheckResult(
             name="check-lint-2",
             check_type=linters.CheckType.LINT,
             url="url-2",
             text="text-2",
-            result=linters.Result.WARNINGS,
+            result=LintResult.WARNINGS.value,
         ),
     ]
 
@@ -395,7 +396,7 @@ def test_only_lint_ok(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url",
             text="text",
-            result=linters.Result.OK,
+            result=LintResult.OK.value,
         ),
     ]
 
@@ -421,7 +422,7 @@ def test_only_fatal(emitter, config, monkeypatch, tmp_path):
             check_type=linters.CheckType.LINT,
             url="url",
             text="text",
-            result=linters.Result.FATAL,
+            result=LintResult.FATAL.value,
         ),
     ]
 

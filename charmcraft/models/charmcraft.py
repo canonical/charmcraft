@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 import pydantic
 from craft_cli import CraftError
 
+from charmcraft import parts
 from charmcraft.const import (
     CHARM_METADATA_KEYS,
     METADATA_FILENAME,
@@ -39,7 +40,6 @@ from charmcraft.metafiles.metadata import (
 from charmcraft.models.actions import JujuActions
 from charmcraft.models.basic import AttributeName, LinterName, ModelConfigDefaults
 from charmcraft.models.config import JujuConfig
-from charmcraft.parts import process_part_config
 from charmcraft.utils import get_host_architecture
 
 
@@ -205,7 +205,7 @@ class CharmcraftConfig(
     @pydantic.validator("parts", each_item=True)
     def validate_each_part(cls, item):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
-        return process_part_config(item)
+        return parts.process_part_config(item)
 
     @pydantic.validator("bases", pre=True)
     def validate_bases_presence(cls, bases, values):

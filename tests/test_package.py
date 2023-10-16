@@ -35,6 +35,7 @@ from charmcraft.charm_builder import relativise
 from charmcraft.config import load
 from charmcraft.const import BUILD_DIRNAME
 from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.models.lint import LintResult
 from charmcraft.package import (
     Builder,
     _subprocess_pack_charms,
@@ -1590,7 +1591,7 @@ def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_
             check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
-            result=linters.Result.IGNORED.value,
+            result=LintResult.IGNORED.value,
         ),
     ]
 
@@ -1635,7 +1636,7 @@ def test_show_linters_attributes(basic_project, emitter, config):
             check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
-            result=linters.Result.IGNORED,
+            result=LintResult.IGNORED.value,
         ),
     ]
 
@@ -1656,7 +1657,7 @@ def test_show_linters_lint_warnings(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=linters.Result.WARNINGS,
+            result=LintResult.WARNINGS.value,
         ),
     ]
 
@@ -1681,7 +1682,7 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=linters.Result.ERRORS,
+            result=LintResult.ERRORS.value,
         ),
     ]
 
@@ -1710,7 +1711,7 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=linters.Result.ERRORS,
+            result=LintResult.ERRORS.value,
         ),
     ]
 

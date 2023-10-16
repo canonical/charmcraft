@@ -17,14 +17,17 @@
 """Charmcraft pydantic models."""
 
 from . import config, metadata
-from .project import CharmcraftProject, Charm, CharmPlatform, CharmBuildInfo, Bundle
+from .metadata import BundleMetadata, BundleMetadataLegacy, CharmMetadata, CharmMetadataLegacy
+from .project import CharmcraftProject, Charm, Bundle
 
 __all__ = [
     "config",
     "metadata",
+    "Bundle",
     "Charm",
     "CharmcraftProject",
-    "CharmPlatform",
-    "CharmBuildInfo",
-    "Bundle",
+    "BundleMetadata",
+    "BundleMetadataLegacy",
+    "CharmMetadata",
+    "CharmMetadataLegacy",
 ]

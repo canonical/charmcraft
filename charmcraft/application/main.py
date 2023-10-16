@@ -21,17 +21,19 @@ import signal
 import sys
 
 import craft_cli
-from craft_application import Application, AppMetadata, ServiceFactory
-from craft_cli import emit
+from craft_application import Application, AppMetadata
+from craft_parts import plugins
 
-from charmcraft import errors, models
+from charmcraft import errors, models, services
+from charmcraft.application.commands.lifecycle import get_lifecycle_command_group
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
+from charmcraft.parts import BundlePlugin, CharmPlugin
+from charmcraft.reactive_plugin import ReactivePlugin
 
 APP_METADATA = AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
-    # This will change soon so just ignore it for now.
     ProjectClass=models.CharmcraftProject,  # type: ignore[arg-type]
 )
 
@@ -41,8 +43,22 @@ class Charmcraft(Application):
 
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
-        """Excluding lifecycle commands for right now."""
-        return self._command_groups
+        """Return command groups."""
+        lifecycle_commands = get_lifecycle_command_group()
+
+        merged: dict[str, list[type[craft_cli.BaseCommand]]] = {}
+        all_groups = [
+            lifecycle_commands,
+            # other_commands,
+            *self._command_groups,
+        ]
+
+        # Merge the default command groups with those provided by the application,
+        # so that we don't get multiple groups with the same name.
+        for group in all_groups:
+            merged.setdefault(group.name, []).extend(group.commands)
+
+        return [craft_cli.CommandGroup(name, commands_) for name, commands_ in merged.items()]
 
     def _configure_services(self, platform: str | None, build_for: str | None) -> None:
         super()._configure_services(platform, build_for)
@@ -50,6 +66,7 @@ class Charmcraft(Application):
             "package",
             work_dir=self._work_dir,
             prime_dir=self.services.lifecycle.prime_dir,
+            platform=platform,
         )
 
     def _get_dispatcher(self) -> craft_cli.Dispatcher:  # type: ignore[override]
@@ -84,12 +101,14 @@ class Charmcraft(Application):
         except KeyboardInterrupt as err:
             self._emit_error(craft_cli.CraftError("Interrupted."), cause=err)
             sys.exit(128 + signal.SIGINT)
-        except (craft_cli.ProvideHelpException, craft_cli.ArgumentParsingError) as err:
-            emit.debug(
-                "Command not available through craft-application yet. "
-                f"Falling back to classic: {err!r}"
-            )
-            raise errors.ClassicFallback
+        except craft_cli.ProvideHelpException as err:
+            print(err, file=sys.stderr)  # to stderr, as argparse normally does
+            craft_cli.emit.ended_ok()
+            sys.exit(0)
+        except craft_cli.ArgumentParsingError as err:
+            print(err, file=sys.stderr)  # to stderr, as argparse normally does
+            craft_cli.emit.ended_ok()
+            sys.exit(64)  # Command line usage error from sysexits.h
         except Exception as err:
             self._emit_error(
                 craft_cli.CraftError(f"Internal error while loading {self.app.name}: {err!r}")
@@ -105,9 +124,11 @@ class Charmcraft(Application):
 
 def main() -> int:
     """Run craft-application based charmcraft with classic fallback."""
-    services = ServiceFactory(app=APP_METADATA, PackageClass=None)  # type: ignore[arg-type]
+    plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
 
-    app = Charmcraft(app=APP_METADATA, services=services)
+    charmcraft_services = services.CharmcraftServiceFactory(app=APP_METADATA)
+
+    app = Charmcraft(app=APP_METADATA, services=charmcraft_services)
 
     try:
         return app.run()

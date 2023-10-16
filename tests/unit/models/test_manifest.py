@@ -36,7 +36,8 @@ SIMPLE_MANIFEST = Manifest(
     bases=[Base(name="ubuntu", channel="22.04", architectures=["arm64"])],
 )
 MANIFEST_WITH_ATTRIBUTE = Manifest(
-    **SIMPLE_MANIFEST.marshal(), analysis={"attributes": [Attribute("boop", "success")]}
+    **SIMPLE_MANIFEST.marshal(),
+    analysis={"attributes": [Attribute(name="boop", result="success")]},
 )
 
 

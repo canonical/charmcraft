@@ -21,7 +21,6 @@ from typing import Any, Dict, Iterable, List, Literal, Optional
 
 from craft_application import models
 from craft_cli import CraftError
-from pydantic import dataclasses
 from typing_extensions import Self
 
 import charmcraft
@@ -31,8 +30,7 @@ from charmcraft.models.charmcraft import Base
 from charmcraft.models.project import Charm
 
 
-@dataclasses.dataclass(frozen=True)
-class Attribute:
+class Attribute(models.BaseMetadata):
     """An attribute as a linter result."""
 
     name: str
@@ -64,7 +62,7 @@ class Manifest(models.BaseMetadata):
         for result in lint_results:
             if result.check_type != CheckType.ATTRIBUTE:
                 continue
-            attributes.append(Attribute(result.name, result.result))
+            attributes.append(Attribute(name=result.name, result=result.result))
 
         image_info = os.getenv(IMAGE_INFO_ENV_VAR)
         if image_info is not None:

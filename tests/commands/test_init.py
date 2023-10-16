@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
+import io
 import os
 import re
 import subprocess
@@ -22,13 +23,51 @@ import sys
 from argparse import Namespace
 from unittest.mock import patch
 
+import pydocstyle
 import pytest
 from craft_cli import CraftError
+from flake8.api.legacy import get_style_guide
 
 from charmcraft.commands.init import DEFAULT_PROFILE, PROFILES, InitCommand
 from charmcraft.models.charmcraft import Project
 from charmcraft.utils import S_IXALL
-from tests.test_infra import get_python_filepaths, pep8_test, pep257_test
+from tests.test_infra import get_python_filepaths
+
+
+def pep8_test(python_filepaths):
+    """Helper to check PEP8 (used from this module and from test_init.py to check templates)."""
+    style_guide = get_style_guide()
+    fake_stdout = io.TextIOWrapper(io.BytesIO())
+    with patch("sys.stdout", fake_stdout):
+        report = style_guide.check_files(python_filepaths)
+
+    # if flake8 didn't report anything, we're done
+    if report.total_errors == 0:
+        return
+
+    # grab on which files we have issues
+    fake_stdout.seek(0)
+    flake8_issues = fake_stdout.read().split("\n")
+
+    if flake8_issues:
+        msg = "Please fix the following flake8 issues!\n" + "\n".join(flake8_issues)
+        pytest.fail(msg, pytrace=False)
+
+
+def pep257_test(python_filepaths):
+    """Helper to check PEP257 (used from this module and from test_init.py to check templates)."""
+    to_ignore = {
+        "D105",  # Missing docstring in magic method
+        "D107",  # Missing docstring in __init__
+    }
+    to_include = pydocstyle.violations.conventions.pep257 - to_ignore
+    errors = list(pydocstyle.check(python_filepaths, select=to_include))
+
+    if errors:
+        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
+        report.extend(str(e) for e in errors)
+        msg = "\n".join(report)
+        pytest.fail(msg, pytrace=False)
 
 
 @pytest.fixture()

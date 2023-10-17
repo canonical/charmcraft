@@ -426,6 +426,9 @@ class PartsLifecycle:
         # set the cache dir for parts package management
         cache_dir = BaseDirectory.save_cache_path("charmcraft")
 
+        if not project_name:
+            breakpoint()
+
         try:
             self._lcm = LifecycleManager(
                 {"parts": all_parts},

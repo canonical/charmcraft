@@ -16,40 +16,43 @@
 
 """Charmcraft metadata pydantic model."""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import pydantic
+from craft_application import models
 from craft_cli import CraftError
+from typing_extensions import Self
 
-from charmcraft.const import METADATA_FILENAME
+from charmcraft.const import (
+    CHARM_METADATA_KEYS,
+    CHARM_METADATA_KEYS_ALIAS,
+    METADATA_FILENAME,
+)
+
+if TYPE_CHECKING:
+    from charmcraft.models.project import Bundle, Charm
+else:
+    Charm = Bundle = None
 
 
-class CharmMetadataLegacy(
-    pydantic.BaseModel,
-    extra=pydantic.Extra.allow,
-    frozen=True,
-    validate_all=True,
-    alias_generator=lambda s: s.replace("_", "-"),
-):
-    """Object representing LEGACY charm metadata.yaml contents.
+class CharmMetadata(models.BaseMetadata):
+    """A charm's metadata.yaml file.
 
-    This model only supports the legacy charm metadata.yaml format for compatibility.
-    New metadata defined in charmcraft.yaml is handled by the CharmcraftConfig model.
-
-    specs: https://juju.is/docs/sdk/metadata-yaml
+    This model represents the metadata.yaml file that gets placed in the root
+    of a charm.
     """
 
-    name: pydantic.StrictStr
-    summary: pydantic.StrictStr
+    name: models.ProjectName
+    display_name: Optional[models.ProjectTitle]
+    summary: models.SummaryStr
     description: pydantic.StrictStr
+    maintainers: Optional[List[pydantic.StrictStr]]
     assumes: Optional[List[Union[str, Dict[str, Union[List, Dict]]]]]
     containers: Optional[Dict[str, Any]]
     devices: Optional[Dict[str, Any]]
-    display_name: Optional[pydantic.StrictStr]
     docs: Optional[pydantic.AnyHttpUrl]
     extra_bindings: Optional[Dict[str, Any]]
     issues: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    maintainers: Optional[List[pydantic.StrictStr]]
     peers: Optional[Dict[str, Any]]
     provides: Optional[Dict[str, Any]]
     requires: Optional[Dict[str, Any]]
@@ -59,6 +62,48 @@ class CharmMetadataLegacy(
     subordinate: Optional[bool]
     terms: Optional[List[pydantic.StrictStr]]
     website: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+
+    @classmethod
+    def from_charm(cls, charm: Charm) -> Self:
+        """Turn a populated charm model into a metadata model.
+
+        Performs the necessary renaming and reorganisation.
+        """
+        charm_dict = charm.dict(
+            include=CHARM_METADATA_KEYS | CHARM_METADATA_KEYS_ALIAS,
+            exclude_none=True,
+            by_alias=True,
+        )
+
+        # Flatten links and match to the appropriate metadata.yaml name
+        if charm.links is not None:
+            links = charm.links.marshal()
+            if "documentation" in links:
+                charm_dict["docs"] = links.pop("documentation")
+            if "contact" in links:
+                charm_dict["maintainers"] = links.pop("contact")
+            charm_dict.update(links)
+
+        if "title" in charm_dict:
+            charm_dict["display-name"] = charm_dict.pop("title")
+
+        return cls.parse_obj(charm_dict)
+
+
+class CharmMetadataLegacy(CharmMetadata):
+    """Object representing LEGACY charm metadata.yaml contents.
+
+    This model only supports the legacy charm metadata.yaml format for compatibility.
+    New metadata defined in charmcraft.yaml is handled by the CharmcraftConfig model.
+
+    specs: https://juju.is/docs/sdk/metadata-yaml
+    """
+
+    # These are looser in the metadata.yaml schema than charmcraft requires.
+    name: pydantic.StrictStr
+    summary: pydantic.StrictStr
+    description: pydantic.StrictStr
+    display_name: Optional[pydantic.StrictStr]
 
     @classmethod
     def unmarshal(cls, obj: Dict[str, Any]):
@@ -81,13 +126,20 @@ class CharmMetadataLegacy(
         return cls.parse_obj(obj)
 
 
-class BundleMetadataLegacy(
-    pydantic.BaseModel,
-    extra=pydantic.Extra.allow,
-    frozen=True,
-    validate_all=True,
-    alias_generator=lambda s: s.replace("_", "-"),
-):
+class BundleMetadata(models.BaseMetadata):
+    """metadata.yaml for a bundle zip."""
+
+    name: models.ProjectName
+    description: Optional[pydantic.StrictStr]
+
+    @classmethod
+    def from_bundle(cls, bundle: Bundle) -> Self:
+        """Turn a populated bundle model into a metadata.yaml model."""
+        # TODO
+        raise NotImplementedError
+
+
+class BundleMetadataLegacy(BundleMetadata):
     """Object representing LEGACY bundle metadata.yaml contents.
 
     This model only supports the legacy bundle metadata.yaml format.
@@ -95,8 +147,8 @@ class BundleMetadataLegacy(
     specs: https://juju.is/docs/sdk/metadata-yaml
     """
 
+    # Juju is less strict
     name: pydantic.StrictStr
-    description: Optional[pydantic.StrictStr]
 
     @classmethod
     def unmarshal(cls, obj: Dict[str, Any]):

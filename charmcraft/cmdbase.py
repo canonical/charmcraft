@@ -52,24 +52,16 @@ class BaseCommand(craft_cli.BaseCommand):
         )
 
     def _check_config(self, config_file: bool = False, bases: bool = False) -> None:
-        """Check if vaild config contents exists.
+        """Check if valid config contents exists.
 
         - config_file: if True, check if a valid "charmcraft.yaml" file exists.
         - bases: if True, check if a valid "bases" in "charmcraft.yaml" exists.
 
         :raises ArgumentParsingError: if 'charmcraft.yaml' file is missing.
-        :raises CraftError: if any specified config are missing or invaild.
+        :raises CraftError: if any specified config are missing or invalid.
         """
-        from charmcraft.models.charmcraft import CharmcraftConfig
-
-        if isinstance(self.config, CharmcraftConfig):
-            # Classic, pre craft-application run
-            project = self.config.project
-            project_bases = self.config.bases
-        else:
-            # Using craft-application
-            project = self._services.project.project
-            project_bases = self._services.project.bases
+        project = self.config.project
+        project_bases = self.config.bases
         if config_file and not project.config_provided:
             raise ArgumentParsingError(
                 "The specified command needs a valid 'charmcraft.yaml' configuration file (in "

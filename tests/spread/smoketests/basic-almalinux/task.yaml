@@ -6,7 +6,7 @@ prepare: |
   charmcraft init --project-dir=charm
   pushd charm
 
-  cat <<- EOF >> charmcraft.yaml
+  cat <<- EOF > charmcraft.yaml
   name: basic-almalinux
   type: charm
   summary: A basic charm for AlmaLinux 9
@@ -28,7 +28,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

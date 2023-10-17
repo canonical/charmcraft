@@ -156,7 +156,7 @@ def configure_hook_main():
         elif any(re.fullmatch(obsolete, instance["name"]) for obsolete in OBSOLETE_VERSIONS):
             _delete_lxd_instance(instance)
 
-        # Do nothing if not match any known pattens
+        # Do nothing if not match any known patterns
 
 
 if __name__ == "__main__":

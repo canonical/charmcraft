@@ -24,7 +24,6 @@ from typing import List
 from unittest import mock
 from unittest.mock import ANY, MagicMock, call, patch
 
-import craft_application.services.package
 import pytest
 import yaml
 from craft_cli import CraftError, EmitterMode, emit
@@ -49,7 +48,6 @@ from charmcraft.utils import get_host_architecture
 def get_builder(
     config,
     *,
-    package_service: craft_application.services.package.PackageService,
     project_dir=None,
     force=False,
     debug=False,
@@ -67,7 +65,6 @@ def get_builder(
         shell=shell,
         shell_after=shell_after,
         measure=measure,
-        package_service=package_service,
     )
 
 
@@ -173,7 +170,7 @@ def basic_project_builder(service_factory, basic_project, prepare_charmcraft_yam
 
         config = load(basic_project)
         service_factory.project = config
-        return get_builder(config, package_service=service_factory.package, **builder_kwargs)
+        return get_builder(config, **builder_kwargs)
 
     return _basic_project_builder
 
@@ -250,7 +247,7 @@ def test_build_error_without_metadata_yaml(basic_project, service_factory):
     with pytest.raises(CraftError) as exc_info:
         config = load(basic_project)
 
-        get_builder(config, package_service=service_factory.package)
+        get_builder(config)
 
     assert str(exc_info.value) == dedent(
         """\
@@ -269,7 +266,7 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, emit
         force=True,  # to ignore any linter issue
     )
 
-    zipnames = [path.name for path in builder.run(destructive_mode=True)]
+    zipnames = builder.run(destructive_mode=True)
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
@@ -292,9 +289,7 @@ def test_build_with_charmcraft_yaml_managed_mode(
     )
 
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
-        zip_paths = builder.run()
-
-    zip_names = [path.name for path in zip_paths]
+        zip_names = builder.run()
 
     host_arch = host_base.architectures[0]
     assert zip_names == [
@@ -310,7 +305,7 @@ def test_build_checks_provider(
 ):
     """Test cases for base-index parameter."""
     config = load(basic_project)
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
 
     try:
         builder.run()
@@ -393,7 +388,7 @@ def test_build_checks_provider_error(basic_project, mock_provider, service_facto
     """Test cases for base-index parameter."""
     mock_provider.ensure_provider_is_available.side_effect = RuntimeError("foo")
     config = load(basic_project)
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
 
     with pytest.raises(RuntimeError, match="foo"):
         builder.run()
@@ -422,7 +417,7 @@ def test_build_multiple_with_charmcraft_yaml_destructive_mode(basic_project_buil
         force=True,
     )
 
-    zipnames = [path.name for path in builder.run(destructive_mode=True)]
+    zipnames = builder.run(destructive_mode=True)
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
@@ -473,7 +468,7 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
-        zipnames = [path.name for path in builder.run()]
+        zipnames = builder.run()
 
     host_arch = host_base.architectures[0]
     assert zipnames == [
@@ -534,7 +529,6 @@ def test_build_project_is_cwd(
     mock_ubuntu_buildd_base_configuration,
     mock_is_base_available,
     mocker,
-    service_factory,
 ):
     """Test cases for base-index parameter."""
     emit.set_mode(EmitterMode.BRIEF)
@@ -545,7 +539,7 @@ def test_build_project_is_cwd(
 
     config = load(basic_project)
     project_managed_path = pathlib.Path("/root/project")
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
     base_configuration = get_base_configuration(
         alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
@@ -630,7 +624,7 @@ def test_build_project_is_not_cwd(
     prepare_metadata_yaml(metadata_yaml)
 
     config = load(basic_project)
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
     base_configuration = get_base_configuration(
         alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
@@ -742,7 +736,7 @@ def test_build_bases_index_scenarios_provider(
     project_managed_path = pathlib.Path("/root/project")
     prepare_charmcraft_yaml(charmcraft_yaml_template.format(arch=host_base.architectures))
     config = load(basic_project)
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
     base_bionic_configuration = get_base_configuration(
         alias=bases.ubuntu.BuilddBaseAlias.BIONIC, instance_name=mock_instance_name()
     )
@@ -1009,7 +1003,7 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         first_zip_paths = builder.run([0])
     assert first_zip_paths == [
-        tmp_path / "test-charm-name-from-metadata-yaml_"
+        "test-charm-name-from-metadata-yaml_"
         f"{host_base.name}-{host_base.channel}-{host_arch}.charm",
     ]
 
@@ -1022,7 +1016,7 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         second_zip_paths = builder.run([2])
     assert second_zip_paths == [
-        tmp_path / "test-charm-name-from-metadata-yaml_cross-name-cross-channel-cross-arch1.charm",
+        "test-charm-name-from-metadata-yaml_cross-name-cross-channel-cross-arch1.charm",
     ]
 
 
@@ -1075,7 +1069,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     prepare_metadata_yaml(metadata_yaml)
 
     config = load(basic_project)
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
 
     # Managed bases build.
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
@@ -1172,7 +1166,7 @@ def test_build_arguments_managed_charmcraft_measure(
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 
-    # fake a dumped mesure to be pulled from the instance
+    # fake a dumped measure to be pulled from the instance
     fake_local_m = tmp_path / "local.json"
     instrum._Measurements().dump(fake_local_m)
 
@@ -1242,7 +1236,7 @@ def test_build_postlifecycle_validation_is_properly_called(
     )
     config = load(basic_project)
     service_factory.project = config
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
 
     entrypoint = basic_project / "my_entrypoint.py"
     entrypoint.touch(mode=0o700)
@@ -1309,7 +1303,7 @@ def test_build_part_from_config(
     reqs_file = basic_project / "reqs.txt"
     reqs_file.write_text("somedep")
     config = load(basic_project)
-    builder = get_builder(config, package_service=service_factory.package, force=True)
+    builder = get_builder(config, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -1387,7 +1381,6 @@ def test_build_part_include_venv_pydeps(
     charmcraft_yaml_template,
     metadata_yaml,
     monkeypatch,
-    service_factory,
 ):
     """Include the venv directory even if only charmlib python dependencies exist."""
     host_base = get_host_as_base()
@@ -1409,8 +1402,7 @@ def test_build_part_include_venv_pydeps(
         )
     )
     config = load(basic_project)
-    service_factory.project = config
-    builder = get_builder(config, force=True, package_service=service_factory.package)
+    builder = get_builder(config, force=True)
 
     monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
@@ -1504,7 +1496,7 @@ def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_
 
 def test_show_linters_attributes(service_factory, basic_project, emitter, config):
     """Show the linting results, only attributes, one ignored."""
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
 
     # fake results from the analyzer
     linting_results = [
@@ -1532,7 +1524,7 @@ def test_show_linters_attributes(service_factory, basic_project, emitter, config
 
 def test_show_linters_lint_warnings(service_factory, basic_project, emitter, config):
     """Show the linting results, some warnings."""
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
 
     # fake result from the analyzer
     linting_results = [
@@ -1557,7 +1549,7 @@ def test_show_linters_lint_warnings(service_factory, basic_project, emitter, con
 
 def test_show_linters_lint_errors_normal(service_factory, basic_project, emitter, config):
     """Show the linting results, have errors."""
-    builder = get_builder(config, package_service=service_factory.package)
+    builder = get_builder(config)
 
     # fake result from the analyzer
     linting_results = [
@@ -1586,7 +1578,7 @@ def test_show_linters_lint_errors_normal(service_factory, basic_project, emitter
 
 def test_show_linters_lint_errors_forced(service_factory, basic_project, emitter, config):
     """Show the linting results, have errors but the packing is forced."""
-    builder = get_builder(config, package_service=service_factory.package, force=True)
+    builder = get_builder(config, force=True)
 
     # fake result from the analyzer
     linting_results = [
@@ -1613,8 +1605,8 @@ def test_show_linters_lint_errors_forced(service_factory, basic_project, emitter
 @pytest.mark.parametrize("force", [True, False])
 @pytest.mark.parametrize("destructive_mode", [True, False])
 @pytest.mark.parametrize("base_indeces", [[], [1], [1, 2, 3, 4, 5]])
-def test_get_charm_pack_args(service_factory, config, force, base_indeces, destructive_mode):
-    builder = get_builder(config, package_service=service_factory.package, force=force)
+def test_get_charm_pack_args(config, force, base_indeces, destructive_mode):
+    builder = get_builder(config, force=force)
 
     actual = builder._get_charm_pack_args(base_indeces, destructive_mode)
 

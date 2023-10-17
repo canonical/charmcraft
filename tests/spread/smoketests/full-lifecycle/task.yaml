@@ -1,6 +1,6 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
-include: 
+include:
   - tests/
 
 kill-timeout: 30m
@@ -12,7 +12,15 @@ prepare: |
   echo "ignore me" > secrets.txt
   touch extra_file.txt
 
-  cat <<- EOF >> charmcraft.yaml
+  cat <<- EOF > charmcraft.yaml
+  type: charm
+  bases:
+    - build-on:
+      - name: ubuntu
+        channel: "22.04"
+      run-on:
+      - name: ubuntu
+        channel: "22.04"
   parts:
     charm:
       prime:
@@ -27,11 +35,26 @@ prepare: |
         craftctl default
   EOF
 
+  cat <<- EOF > metadata.yaml
+  name: charm
+  display-name: Test charm
+  summary: Lifecycle test
+  description: Lifecycle test
+  containers:
+    httpbin:
+      resource: httpbin-image
+  resources:
+    httpbin-image:
+      type: oci-image
+      description: OCI image for httpbin
+      upstream-source: kennethreitz/httpbin
+  EOF
+
 restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |
@@ -39,6 +62,6 @@ execute: |
   charmcraft pack --verbose
   test -f charm*.charm
   unzip -c charm*.charm hello.txt | grep "^Hello, world!"
-  unzip -l charm*.charm | grep "venv/ops/charm.py"
-  unzip -l charm*.charm | grep extra_file.txt
-  ! unzip -l charm*.charm | grep secrets.txt
+  unzip -l charm*.charm | MATCH "venv/ops/charm.py"
+  unzip -l charm*.charm | MATCH extra_file.txt
+  unzip -l charm*.charm | NOMATCH secrets.txt

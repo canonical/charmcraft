@@ -223,7 +223,7 @@ class CharmcraftConfig(
         """Verify 'actions' in charms.
 
         Currently, actions will be passed through to the charms.
-        And individual "actions.yaml" should not exists when actions
+        And individual "actions.yaml" should not exist when actions
         is defined in charmcraft.yaml.
         """
         actions_yaml = parse_actions_yaml(values["project"].dirpath, allow_broken=True)
@@ -302,7 +302,7 @@ class CharmcraftConfig(
 
             obj = apply_extensions(project.dirpath, obj)
 
-            # Re-expand it in case extenstions added short-form bases.
+            # Re-expand it in case extensions added short-form bases.
             if isinstance(obj.get("bases"), list):
                 cls.expand_short_form_bases(obj["bases"])
 

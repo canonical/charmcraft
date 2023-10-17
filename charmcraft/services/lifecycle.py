@@ -17,13 +17,20 @@
 """Service class for packing."""
 from __future__ import annotations
 
+import os
+
 from craft_application.services import LifecycleService
 
 
-class CharmLifecycleService(LifecycleService):
+class CharmcraftLifecycleService(LifecycleService):
     """Business logic for creating packages."""
 
+    def setup(self) -> None:
+        """Do Charmcraft-specific setup work."""
+        self._manager_kwargs["project_name"] = self._project.name
+        self._manager_kwargs.setdefault("parallel_build_count", os.cpu_count())
+        super().setup()
 
-#
-#     def setup(self) -> None:
-#
+    # def run(self, step_name: Optional[str], part_names: Optional[List[str]] = None) -> None:
+    #     """Run the parts lifecycle for Charmcraft."""
+    #     # TODO: I'm not strictly sure this is necessary. Test it.

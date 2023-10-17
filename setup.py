@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [
-    "craft-application@git+https://github.com/canonical/craft-application.git",
+    "craft-application@git+https://github.com/canonical/craft-application.git@affe529b7fb4be4027992c1f0e0287333b1a59fb",
     "craft-cli",
     "craft-parts>=1.18",
     "craft-providers",

@@ -37,7 +37,7 @@ from charmcraft.application import main
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
 from charmcraft.models.charmcraft import Base, BasesConfiguration
-from charmcraft.services.package import CharmPackageService
+from charmcraft.services.package import CharmcraftPackageService
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -369,7 +369,7 @@ def stub_extensions(monkeypatch):
 @pytest.fixture()
 def service_factory(config: config_module.CharmcraftConfig) -> craft_application.ServiceFactory:
     return craft_application.ServiceFactory(
-        app=main.APP_METADATA, PackageClass=CharmPackageService, project=config
+        app=main.APP_METADATA, PackageClass=CharmcraftPackageService, project=config
     )
 
 

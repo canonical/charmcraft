@@ -27,13 +27,14 @@ from craft_cli import (
     CommandGroup,
     CraftError,
     Dispatcher,
+    EmitterMode,
     GlobalArgument,
     ProvideHelpException,
     emit,
 )
 
 from charmcraft import config, env, utils
-from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
+from charmcraft.commands import analyze, clean, extensions, init, store, version
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.parts import setup_parts
 
@@ -68,7 +69,7 @@ PROJECT_DIR_ARGUMENT = GlobalArgument(
 _basic_commands = [
     analyze.AnalyzeCommand,
     clean.CleanCommand,
-    pack.PackCommand,
+    # pack.PackCommand,
     init.InitCommand,
     version.VersionCommand,
 ]
@@ -208,4 +209,15 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    if env.is_charmcraft_running_in_managed_mode():
+        logpath = env.get_managed_environment_log_path()
+    else:
+        logpath = None
+
+    emit.init(
+        EmitterMode.BRIEF,
+        "charmcraft",
+        "Starting legacy charmcraft entrypoint",
+        log_filepath=logpath,
+    )
     sys.exit(main(sys.argv))

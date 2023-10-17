@@ -5,6 +5,7 @@ environment:
   PROJECT_PATH: /charmcraft
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
   PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
+ouoeu  CRAFT_DEBUG: 1
 
 exclude:
   - .git

@@ -20,10 +20,10 @@ import pathlib
 import shutil
 import subprocess
 import tempfile
+import zipfile
 from typing import Collection, Dict, List, Mapping, Optional, Sequence
 
 import yaml
-from craft_application import services
 from craft_cli import CraftError, emit
 from craft_providers.bases import get_base_alias
 
@@ -98,14 +98,13 @@ class Builder:
         shell: bool,
         shell_after: bool,
         measure: bool,
-        package_service: services.PackageService,
+        # package_service: services.PackageService,
     ):
         self.force_packing = force
         self.debug = debug
         self.shell = shell
         self.shell_after = shell_after
         self.measure = measure
-        self._package_service = package_service
 
         self.charmdir = config.project.dirpath
         self.buildpath = self.charmdir / BUILD_DIRNAME
@@ -185,6 +184,8 @@ class Builder:
 
         # run the parts lifecycle
         emit.debug(f"Parts definition: {self._parts}")
+        if not self.config.name:  # TODO: This is for debugging
+            raise Exception(str(self.config))
         lifecycle = charmcraft.parts.PartsLifecycle(
             self._parts,
             work_dir=work_dir,
@@ -213,9 +214,9 @@ class Builder:
             linting_results,
         )
 
-        zip_path = self._package_service.pack_charm(lifecycle.prime_dir, bases_config)
-        emit.progress(f"Created {zip_path.name!r}.", permanent=True)
-        return zip_path
+        zipname = self.handle_package(lifecycle.prime_dir, bases_config)
+        emit.progress(f"Created '{zipname}'.", permanent=True)
+        return zipname
 
     def _set_prime_filter(self):
         """Add mandatory and optional charm files to the prime filter.
@@ -258,7 +259,7 @@ class Builder:
     @charmcraft.instrum.Timer("Builder run")
     def run(
         self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
-    ) -> List[pathlib.Path]:
+    ) -> List[str]:
         """Run build process.
 
         In managed-mode or destructive-mode, build for each bases configuration
@@ -268,7 +269,7 @@ class Builder:
 
         :returns: List of charm files created.
         """
-        charms: List[pathlib.Path] = []
+        charms: List[str] = []
 
         managed_mode = charmcraft.env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
@@ -428,6 +429,20 @@ class Builder:
 
         emit.progress("Charm packed ok")
         return charm_name
+
+    def handle_package(self, prime_dir, bases_config: BasesConfiguration):
+        """Handle the final package creation."""
+        emit.progress("Creating the package itself")
+        zipname = format_charm_file_name(self.config.name, bases_config)
+        zipfh = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
+        for dirpath, _dirnames, filenames in os.walk(prime_dir, followlinks=True):
+            dirpath = pathlib.Path(dirpath)
+            for filename in filenames:
+                filepath = dirpath / filename
+                zipfh.write(str(filepath), str(filepath.relative_to(prime_dir)))
+
+        zipfh.close()
+        return zipname
 
     def _get_charm_pack_args(self, base_indeces: List[str], destructive_mode: bool) -> List[str]:
         """Get the arguments for a charmcraft pack subprocess to run."""

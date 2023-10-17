@@ -16,8 +16,11 @@
 """New entrypoint for charmcraft."""
 from __future__ import annotations
 
+import functools
+import pathlib
 import signal
 import sys
+from typing import Any
 
 import craft_application
 import craft_cli
@@ -29,33 +32,50 @@ from craft_parts.plugins import plugins
 from charmcraft import errors, models
 from charmcraft.main import GENERAL_SUMMARY, PROJECT_DIR_ARGUMENT
 from charmcraft.main import main as old_main
-from charmcraft.commands import pack
 from charmcraft.parts import BundlePlugin, CharmPlugin
 from charmcraft.reactive_plugin import ReactivePlugin
-from charmcraft.services.package import CharmPackageService
+from charmcraft.services import (
+    CharmcraftLifecycleService,
+    CharmcraftPackageService,
+    CharmcraftProviderService,
+)
 
 APP_METADATA = AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,
+    source_ignore_patterns=[
+        "*.charm",
+        "*.zip",
+    ],
 )
 
 
 class Charmcraft(Application):
     """Charmcraft application definition."""
 
+    project_dir: pathlib.Path
+
     def __init__(self, app: AppMetadata, services: service_factory.ServiceFactory):
         super().__init__(app, services)
         self.add_global_argument(PROJECT_DIR_ARGUMENT)
 
-    @property
-    def command_groups(self) -> list[craft_cli.CommandGroup]:
-        """Excluding lifecycle commands for right now."""
-        return [craft_cli.CommandGroup("Lifecycle", commands=[pack.PackCommand])]
+    def _configure_services(
+        self,
+        platform: str | None,  # (Unused method argument)
+        build_for: str | None,
+    ) -> None:
+        super()._configure_services(platform, build_for)
+        self.services.set_kwargs("package", project_dir=self.project_dir)
 
-    # def _configure_services(self) -> None:
-    #     self.services.set_kwargs(
-    #         "package",
+    def configure(self, global_args: dict[str, Any]) -> None:
+        self.project_dir = pathlib.Path(global_args["project_dir"] or ".").resolve()
+
+    @functools.cached_property
+    def project(self) -> models.CharmcraftProject:
+        project_file = self.project_dir / f"{self.app.name}.yaml"
+        craft_cli.emit.debug(f"Loading project file '{project_file!s}'")
+        return self.app.ProjectClass.from_yaml_file(project_file)
 
     def _get_dispatcher(self) -> craft_cli.Dispatcher:
         """Configure charmcraft, including a fallback to the classic entrypoint.
@@ -104,7 +124,9 @@ def main() -> int:
     """Run craft-application based charmcraft with classic fallback."""
     services = ServiceFactory(  # type: ignore[call-arg]
         app=APP_METADATA,
-        PackageClass=CharmPackageService,
+        LifecycleClass=CharmcraftLifecycleService,
+        PackageClass=CharmcraftPackageService,
+        ProviderClass=CharmcraftProviderService,
     )
 
     plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})

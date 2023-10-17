@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft-specific code to interface with craft-providers."""
-import dataclasses
 import enum
 import os
 import pathlib
@@ -33,9 +32,6 @@ from craft_providers.bases import (
 )
 from craft_providers.errors import BaseConfigurationError
 
-from craft_application import models
-
-import charmcraft.models.charmcraft
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.env import (
     get_managed_environment_log_path,

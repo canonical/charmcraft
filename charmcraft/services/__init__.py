@@ -15,6 +15,8 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Service classes charmcraft."""
 
-from .package import CharmPackageService
+from .lifecycle import CharmcraftLifecycleService
+from .package import CharmcraftPackageService
+from .provider import CharmcraftProviderService
 
-__all__ = ["CharmPackageService"]
+__all__ = ["CharmcraftLifecycleService", "CharmcraftPackageService", "CharmcraftProviderService"]

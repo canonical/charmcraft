@@ -330,7 +330,7 @@ def test_from_yaml_file_success(
             None,
             None,
             CraftError,
-            r"^Could not find charmcraft\.yaml at '[\/]charmcraft\.yaml'$",
+            r"^Could not find charmcraft\.yaml at '.charmcraft\.yaml'$",
             None,
             id="FileNotFound",
         ),

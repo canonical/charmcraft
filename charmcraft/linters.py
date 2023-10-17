@@ -15,46 +15,18 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Analyze and lint charm structures and files."""
-
+import abc
 import ast
-import enum
 import os
 import pathlib
 import shlex
-from collections import namedtuple
-from typing import Generator, List, Union
+from typing import Generator, List, Type, Union
 
 import yaml
 
 from charmcraft import config, utils
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
-
-
-class CheckType(str, enum.Enum):
-    """Type of analyzer, either attribute check or linter.
-
-    More documentation: https://juju.is/docs/sdk/charmcraft-analyzers-and-linters
-    """
-
-    ATTRIBUTE = "attribute"
-    LINT = "lint"
-
-
-# result information from each checker/linter
-CheckResult = namedtuple("CheckResult", "name result url check_type text")
-
-
-class Result(str, enum.Enum):
-    """Check results."""
-
-    OK = "ok"
-    WARNINGS = "warnings"
-    ERRORS = "errors"
-    FATAL = "fatal"
-    IGNORED = "ignored"
-    UNKNOWN = "unknown"
-    NONAPPLICABLE = "nonapplicable"
-
+from charmcraft.models.lint import CheckResult, CheckType, LintResult
 
 # the documentation page for "Analyzers and linters"
 BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
@@ -94,7 +66,34 @@ def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> Union[pathli
     return None
 
 
-class Language:
+class BaseChecker(metaclass=abc.ABCMeta):
+    """Base class for checker classes."""
+
+    check_type: CheckType
+    name: str
+    url: str
+    text: str
+
+    @abc.abstractmethod
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run this checker."""
+        ...
+
+
+class AttributeChecker(BaseChecker, metaclass=abc.ABCMeta):
+    """Base attribute checker."""
+
+    check_type = CheckType.ATTRIBUTE
+
+
+class Linter(BaseChecker, metaclass=abc.ABCMeta):
+    """Base linter class."""
+
+    check_type = CheckType.LINT
+    Result = LintResult
+
+
+class Language(AttributeChecker):
     """Check the language used to write the charm.
 
     Currently only Python is detected, if the following checks are true:
@@ -104,21 +103,23 @@ class Language:
     - the entry point file is executable
     """
 
-    check_type = CheckType.ATTRIBUTE
     name = "language"
     url = BASE_DOCS_URL + "#heading--language"
     text = "The charm is written with Python."
 
-    # different result constants
-    Result = namedtuple("Result", "python unknown")(python="python", unknown=Result.UNKNOWN)
+    class Result:
+        """Possible results for this attribute checker."""
+
+        UNKNOWN = LintResult.UNKNOWN
+        PYTHON = "python"
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         python_entrypoint = check_dispatch_with_python_entrypoint(basedir)
-        return self.Result.unknown if python_entrypoint is None else self.Result.python
+        return self.Result.UNKNOWN if python_entrypoint is None else self.Result.PYTHON
 
 
-class Framework:
+class Framework(AttributeChecker):
     """Check the framework the charm is based on.
 
     Currently it detects if the Operator Framework is used, if...
@@ -134,20 +135,21 @@ class Framework:
     - has a file name that starts with "charms.reactive-" inside the "wheelhouse" directory
     """
 
-    check_type = CheckType.ATTRIBUTE
     name = "framework"
     url = BASE_DOCS_URL + "#heading--framework"
 
-    # different result constants
-    CharmFramework = namedtuple("Result", "operator reactive unknown")(
-        operator="operator", reactive="reactive", unknown=Result.UNKNOWN.value
-    )
+    class Result:
+        """Possible results for this attribute checker."""
+
+        OPERATOR = "operator"
+        REACTIVE = "reactive"
+        UNKNOWN = LintResult.UNKNOWN
 
     # different texts to be exposed as `text` (see the property below)
     result_texts = {
-        CharmFramework.operator: "The charm is based on the Operator Framework.",
-        CharmFramework.reactive: "The charm is based on the Reactive Framework.",
-        CharmFramework.unknown: "The charm is not based on any known Framework.",
+        Result.OPERATOR: "The charm is based on the Operator Framework.",
+        Result.REACTIVE: "The charm is based on the Reactive Framework.",
+        Result.UNKNOWN: "The charm is not based on any known Framework.",
     }
 
     def __init__(self):
@@ -219,16 +221,16 @@ class Framework:
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         if self._check_operator(basedir):
-            result = self.CharmFramework.operator
+            result = self.Result.OPERATOR
         elif self._check_reactive(basedir):
-            result = self.CharmFramework.reactive
+            result = self.Result.REACTIVE
         else:
-            result = self.CharmFramework.unknown
+            result = self.Result.UNKNOWN
         self.result = result
         return result
 
 
-class JujuMetadata:
+class JujuMetadata(Linter):
     """Check that the metadata.yaml file exists and is valid.
 
     The charm is considered to have a valid metadata if the following checks are true:
@@ -238,12 +240,11 @@ class JujuMetadata:
     - it has at least the following fields: name, summary, and description
     """
 
-    check_type = CheckType.LINT
     name = "metadata"
     url = BASE_DOCS_URL + "#heading--metadata"
 
     def __init__(self):
-        self.text = None
+        self.text = ""
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
@@ -251,25 +252,24 @@ class JujuMetadata:
             metadata = read_metadata_yaml(basedir)
         except yaml.YAMLError:
             self.text = "The metadata.yaml file is not a valid YAML file."
-            return Result.ERRORS.value
+            return self.Result.ERRORS
         except Exception:
             self.text = "Cannot read the metadata.yaml file."
-            return Result.ERRORS.value
+            return self.Result.ERRORS
 
         # check required attributes
         missing_fields = {"name", "summary", "description"} - set(metadata)
         if missing_fields:
             missing = utils.humanize_list(missing_fields, "and")
             self.text = f"The metadata.yaml file is missing the following attribute(s): {missing}."
-            return Result.ERRORS.value
+            return self.Result.ERRORS
 
-        return Result.OK.value
+        return self.Result.OK
 
 
-class JujuActions:
+class JujuActions(Linter):
     """Check that the actions.yaml file is valid YAML if it exists."""
 
-    check_type = CheckType.LINT
     name = "juju-actions"
     url = BASE_DOCS_URL + "#heading--juju-actions"
     text = "The actions.yaml file is not a valid YAML file."
@@ -279,18 +279,18 @@ class JujuActions:
         filepath = basedir / "actions.yaml"
         if not filepath.exists():
             # it's optional
-            return Result.OK.value
+            return self.Result.OK
 
         try:
             with filepath.open("rt", encoding="utf8") as fh:
                 yaml.safe_load(fh)
         except Exception:
-            return Result.ERRORS.value
+            return self.Result.ERRORS
 
-        return Result.OK.value
+        return self.Result.OK
 
 
-class JujuConfig:
+class JujuConfig(Linter):
     """Check that the config.yaml file (if it exists) is valid.
 
     The file is considered valid if the following checks are true:
@@ -300,41 +300,40 @@ class JujuConfig:
     - each item inside has the mandatory 'type' key
     """
 
-    check_type = CheckType.LINT
     name = "juju-config"
     url = BASE_DOCS_URL + "#heading--juju-config"
 
     def __init__(self):
-        self.text = None
+        self.text = ""
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         filepath = basedir / "config.yaml"
         if not filepath.exists():
             # it's optional
-            return Result.OK.value
+            return self.Result.OK
 
         try:
             with filepath.open("rt", encoding="utf8") as fh:
                 content = yaml.safe_load(fh)
         except Exception:
             self.text = "The config.yaml file is not a valid YAML file."
-            return Result.ERRORS.value
+            return self.Result.ERRORS
 
         options = content.get("options")
         if not isinstance(options, dict):
             self.text = "Error in config.yaml: must have an 'options' dictionary."
-            return Result.ERRORS.value
+            return self.Result.ERRORS
 
         for value in options.values():
             if "type" not in value:
                 self.text = "Error in config.yaml: items under 'options' must have a 'type' key."
-                return Result.ERRORS.value
+                return self.Result.ERRORS
 
-        return Result.OK.value
+        return self.Result.OK
 
 
-class Entrypoint:
+class Entrypoint(Linter):
     """Check the entrypoint is correct.
 
     It validates that the entrypoint, if used by 'dispatch', ...
@@ -344,38 +343,37 @@ class Entrypoint:
     - is executable
     """
 
-    check_type = CheckType.LINT
     name = "entrypoint"
     url = BASE_DOCS_URL + "#heading--entrypoint"
 
     def __init__(self):
-        self.text = None
+        self.text = ""
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         entrypoint = get_entrypoint_from_dispatch(basedir)
         if entrypoint is None:
             self.text = "Cannot find a proper 'dispatch' script pointing to an entrypoint."
-            return Result.NONAPPLICABLE.value
+            return self.Result.NONAPPLICABLE
 
         if not entrypoint.exists():
             self.text = f"Cannot find the entrypoint file: {str(entrypoint)!r}"
-            return Result.ERRORS.value
+            return self.Result.ERRORS
 
         if not entrypoint.is_file():
             self.text = f"The entrypoint is not a file: {str(entrypoint)!r}"
-            return Result.ERRORS.value
+            return self.Result.ERRORS
 
         if not os.access(entrypoint, os.X_OK):
             self.text = f"The entrypoint file is not executable: {str(entrypoint)!r}"
-            return Result.ERRORS.value
+            return self.Result.ERRORS
 
-        return Result.OK.value
+        return self.Result.OK
 
 
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
-CHECKERS = [
+CHECKERS: List[Type[BaseChecker]] = [
     Language,
     JujuActions,
     JujuConfig,
@@ -404,7 +402,7 @@ def analyze(
                 CheckResult(
                     check_type=cls.check_type,
                     name=cls.name,
-                    result=Result.IGNORED.value,
+                    result=LintResult.IGNORED,
                     url=cls.url,
                     text="",
                 )
@@ -416,9 +414,9 @@ def analyze(
             result = checker.run(basedir)
         except Exception:
             result = (
-                Result.UNKNOWN.value
+                LintResult.UNKNOWN
                 if checker.check_type == CheckType.ATTRIBUTE
-                else Result.FATAL.value
+                else LintResult.FATAL
             )
         all_results.append(
             CheckResult(

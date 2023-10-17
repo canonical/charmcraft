@@ -25,6 +25,7 @@ from craft_cli import CraftError, emit
 
 from charmcraft import linters
 from charmcraft.cmdbase import BaseCommand
+from charmcraft.models.lint import LintResult
 from charmcraft.utils import useful_filepath
 
 
@@ -110,9 +111,9 @@ class AnalyzeCommand(BaseCommand):
             else:
                 # linters
                 group_key = result.result
-                if result.result == linters.Result.OK:
+                if result.result == LintResult.OK:
                     result_info = "no issues found"
-                elif result.result in (linters.Result.FATAL, linters.Result.IGNORED):
+                elif result.result in (LintResult.FATAL, LintResult.IGNORED):
                     result_info = None
                 else:
                     result_info = result.text
@@ -121,11 +122,11 @@ class AnalyzeCommand(BaseCommand):
         # present the results
         titles = [
             ("Attributes", linters.CheckType.ATTRIBUTE),
-            ("Lint Ignored", linters.Result.IGNORED),
-            ("Lint Warnings", linters.Result.WARNINGS),
-            ("Lint Errors", linters.Result.ERRORS),
-            ("Lint Fatal", linters.Result.FATAL),
-            ("Lint OK", linters.Result.OK),
+            ("Lint Ignored", LintResult.IGNORED),
+            ("Lint Warnings", LintResult.WARNINGS),
+            ("Lint Errors", LintResult.ERRORS),
+            ("Lint Fatal", LintResult.FATAL),
+            ("Lint OK", LintResult.OK),
         ]
         for title, key in titles:
             results = grouped.get(key)
@@ -138,11 +139,11 @@ class AnalyzeCommand(BaseCommand):
                         emit.message(f"- {result.name} ({result.url})")
 
         # the return code depends on the presence of different issues
-        if linters.Result.FATAL in grouped:
+        if LintResult.FATAL in grouped:
             retcode = 1
-        elif linters.Result.ERRORS in grouped:
+        elif LintResult.ERRORS in grouped:
             retcode = 2
-        elif linters.Result.WARNINGS in grouped:
+        elif LintResult.WARNINGS in grouped:
             retcode = 3
         else:
             retcode = 0

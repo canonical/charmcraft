@@ -29,7 +29,7 @@ class ReactivePluginProperties(plugins.PluginProperties, plugins.PluginModel):
     """Properties used to pack reactive charms using charm-tools."""
 
     source: str
-    reactive_charm_build_arguments: Optional[List[str]] = []
+    reactive_charm_build_arguments: List[str] = []
 
     @classmethod
     def unmarshal(cls, data: Dict[str, Any]):
@@ -199,7 +199,7 @@ def build(
     cmd = ["charm", "build"]
     if charm_build_arguments:
         cmd.extend(charm_build_arguments)
-    cmd.extend(["-o", build_dir])
+    cmd.extend(["-o", str(build_dir)])
 
     try:
         run_charm_tool(cmd)

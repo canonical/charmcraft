@@ -578,6 +578,7 @@ def test_parthelpers_get_dispatch_entrypoint_no_file(tmp_path):
 # -- tests for part config processing
 
 
+@pytest.mark.usefixtures("new_path")
 def test_partconfig_happy_validation_and_completion():
     data = {
         "plugin": "charm",
@@ -590,7 +591,7 @@ def test_partconfig_happy_validation_and_completion():
         "charm-binary-python-packages": [],
         "charm-entrypoint": "src/charm.py",
         "charm-python-packages": [],
-        "charm-requirements": ["requirements.txt"],
+        "charm-requirements": [],
         "charm-strict-dependencies": False,
     }
 

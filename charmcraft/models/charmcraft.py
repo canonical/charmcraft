@@ -25,8 +25,8 @@ from craft_cli import CraftError
 
 from charmcraft.const import (
     CHARM_METADATA_KEYS,
-    CHARM_METADATA_LEGACY_KEYS,
     METADATA_FILENAME,
+    METADATA_YAML_KEYS,
 )
 from charmcraft.extensions import apply_extensions
 from charmcraft.format import format_pydantic_errors
@@ -309,7 +309,7 @@ class CharmcraftConfig(
             # If metadata.yaml exists, try merge it into config.
             if os.path.isfile(project.dirpath / METADATA_FILENAME):
                 # metadata.yaml exists, so we can't specify metadata keys in charmcraft.yaml.
-                for key in CHARM_METADATA_KEYS.union(CHARM_METADATA_LEGACY_KEYS):
+                for key in CHARM_METADATA_KEYS.union(METADATA_YAML_KEYS):
                     if key in obj:
                         raise CraftError(
                             f"Cannot specify '{key}' in charmcraft.yaml when "

@@ -20,7 +20,8 @@ import contextlib
 import logging
 import pathlib
 import shutil
-from typing import TYPE_CHECKING, Optional
+import typing
+from typing import TYPE_CHECKING, Literal, Optional
 
 import pydantic
 import yaml
@@ -37,7 +38,21 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def parse_actions_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[JujuActions]:
+@typing.overload
+def parse_actions_yaml(
+    charm_dir: pathlib.Path, allow_broken: Literal[False] = False
+) -> JujuActions:
+    ...
+
+
+@typing.overload
+def parse_actions_yaml(
+    charm_dir: pathlib.Path, allow_broken: Literal[True]
+) -> Optional[JujuActions]:
+    ...
+
+
+def parse_actions_yaml(charm_dir, allow_broken=False):
     """Parse project's actions.yaml.
 
     :param charm_dir: Directory to read actions.yaml from.

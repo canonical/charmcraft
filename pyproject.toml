@@ -42,6 +42,7 @@ python_version = "3.8"
 packages = [
     "charmcraft",
 ]
+plugins = ["pydantic.mypy"]
 exclude = [
     "build",
     "results",

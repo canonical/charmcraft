@@ -24,7 +24,7 @@ from typing import Any, Dict, List
 
 from craft_cli import CraftError, emit
 from craft_parts import LifecycleManager, PartsError, Step
-from xdg import BaseDirectory
+from xdg import BaseDirectory  # type: ignore[import]
 
 from charmcraft import charm_builder, instrum
 

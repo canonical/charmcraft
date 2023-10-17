@@ -24,7 +24,7 @@ from craft_parts.parts import PartSpec
 from charmcraft.parts.bundle import BundlePlugin
 from charmcraft.parts.charm import CharmPlugin, CharmPluginProperties
 from charmcraft.parts.lifecycle import PartsLifecycle
-from charmcraft.reactive_plugin import ReactivePlugin, ReactivePluginProperties
+from charmcraft.parts.reactive import ReactivePlugin, ReactivePluginProperties
 
 __all__ = [
     "CharmPlugin",

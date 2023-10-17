@@ -45,4 +45,5 @@ execute: |
   charmcraft pack --verbose
 
   mv *.charm ~/
-  ls -1 ~/*.charm | xargs -n 1 juju deploy
+  # We can only deploy one of the charms in the model, so deploy the first one.
+  ls -1 ~/*.charm | head -n 1 | xargs -n 1 juju deploy

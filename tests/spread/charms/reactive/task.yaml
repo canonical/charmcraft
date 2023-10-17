@@ -26,4 +26,4 @@ execute: |
   charmcraft pack --verbose
 
   mv *.charm ~/
-  juju deploy ~/*.charm
+  ls -1 ~/*.charm | xargs -n 1 juju deploy

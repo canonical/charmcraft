@@ -63,4 +63,4 @@ execute: |
   # Test deploying the bundle.
   # TODO: install juju on the runner and re-enable this.
   mv *.zip ~/
-  juju deploy ~/*.zip
+  juju deploy --trust ~/*.zip

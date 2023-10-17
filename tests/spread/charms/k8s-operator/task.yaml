@@ -34,7 +34,7 @@ prepare: |
   git clone --depth=1 "${CHARM}" charm
 
 restore: |
-  rm ~/*.charm
+  rm -f ~/*.charm
 
   pushd charm
   charmcraft clean
@@ -47,5 +47,4 @@ execute: |
   charmcraft pack --verbose
 
   mv *.charm ~/
-  cd ~
-  juju deploy ./*.charm
+  ls -1 ~/*.charm | xargs -n 1 juju deploy

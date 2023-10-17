@@ -19,7 +19,9 @@ from __future__ import annotations
 import os
 import signal
 import sys
+from typing import Any
 
+import craft_application
 import craft_cli
 from craft_application import Application, AppMetadata
 from craft_parts import plugins
@@ -60,16 +62,30 @@ class Charmcraft(Application):
 
         return [craft_cli.CommandGroup(name, commands_) for name, commands_ in merged.items()]
 
+    def _project_vars(self, yaml_data: dict[str, Any]) -> dict[str, str]:
+        """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
+        return {"version": "unversioned"}
+
     def _configure_services(self, platform: str | None, build_for: str | None) -> None:
-        super()._configure_services(platform, build_for)
+        # super()._configure_services(platform, build_for)
+        self.services.set_kwargs(
+            "lifecycle",
+            cache_dir=self.cache_dir,
+            work_dir=self._work_dir,
+            build_for=build_for,
+        )
+        self.services.set_kwargs(
+            "provider",
+            work_dir=self._work_dir,
+        )
         self.services.set_kwargs(
             "package",
-            work_dir=self._work_dir,
-            prime_dir=self.services.lifecycle.prime_dir,
+            project_dir=self._work_dir,
             platform=platform,
         )
+        self.services.set_kwargs("analysis", project_dir=self._work_dir)
 
-    def _get_dispatcher(self) -> craft_cli.Dispatcher:  # type: ignore[override]
+    def _get_dispatcher(self) -> craft_application.application._Dispatcher:  # type: ignore[override]
         """Configure charmcraft, including a fallback to the classic entrypoint.
 
         Side-effect: This method may exit the process.
@@ -85,7 +101,7 @@ class Charmcraft(Application):
             streaming_brief=True,
         )
 
-        dispatcher = craft_cli.Dispatcher(
+        dispatcher = craft_application.application._Dispatcher(
             self.app.name,
             self.command_groups,
             summary=str(self.app.summary),

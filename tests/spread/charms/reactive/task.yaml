@@ -6,12 +6,14 @@ kill-timeout: 30m
 
 environment:
   CHARM: https://git.launchpad.net/content-cache-charm
+  JUJU_CONTROLLER: lxd
+  JUJU_MODEL: reactive-test
 
 prepare: |
   git clone --depth=1 "${CHARM}" charm
 
 restore: |
-  rm ~/*.charm
+  rm -f ~/*.charm
 
   pushd charm
   charmcraft clean

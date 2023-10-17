@@ -146,7 +146,7 @@ suites:
       fi
     restore-each: |
       if [[ -v JUJU_MODEL ]]; then
-        juju destroy-model --no-prompt --force --no-wait --timeout 15s --destroy-storage $JUJU_MODEL
+        juju destroy-model --no-prompt --force --destroy-storage $JUJU_MODEL
       fi
       rm -f ~/*.charm
   tests/spread/dependencies/:

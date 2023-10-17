@@ -23,6 +23,7 @@ import tempfile
 import zipfile
 from typing import Collection, Dict, List, Mapping, Optional, Sequence
 
+import craft_parts
 import yaml
 from craft_cli import CraftError, emit
 from craft_providers.bases import get_base_alias
@@ -199,7 +200,7 @@ class Builder:
             ignore_local_sources=["*.charm"],
         )
         with charmcraft.instrum.Timer("Lifecycle run"):
-            lifecycle.run(parts.Step.PRIME)
+            lifecycle.run(craft_parts.Step.PRIME)
 
         # skip creation yaml files if using reactive, reactive will create them
         # in a incompatible way
@@ -506,7 +507,7 @@ class Builder:
             ignore_local_sources=[bundle_name + ".zip"],
         )
 
-        lifecycle.run(parts.Step.PRIME)
+        lifecycle.run(craft_parts.Step.PRIME)
 
         # pack everything
         create_manifest(

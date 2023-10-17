@@ -25,10 +25,11 @@ import types
 from typing import Optional
 from unittest.mock import Mock
 
+import craft_parts
 import pytest
 import responses as responses_module
 import yaml
-from craft_parts import callbacks
+from craft_parts import callbacks, plugins
 from craft_providers import Executor, Provider
 
 from charmcraft import deprecations, instrum, parts
@@ -45,6 +46,16 @@ def tmpdir_under_tmpdir(tmpdir_factory):
 @pytest.fixture(autouse=True, scope="session")
 def setup_parts():
     parts.setup_parts()
+
+
+@pytest.fixture()
+def new_path(tmp_path):
+    old_path = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        yield tmp_path
+    finally:
+        os.chdir(old_path)
 
 
 @pytest.fixture()
@@ -354,3 +365,32 @@ def stub_extensions(monkeypatch):
     monkeypatch.setattr(registry, "_EXTENSIONS", extensions_dict)
 
     return extensions_dict
+
+
+@pytest.fixture()
+def charm_plugin(tmp_path):
+    requirement_files = ["reqs1.txt", "reqs2.txt"]
+    for req in requirement_files:
+        (tmp_path / req).write_text("somedep")
+    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+    spec = {
+        "plugin": "charm",
+        "source": str(tmp_path),
+        "charm-entrypoint": "entrypoint",
+        "charm-binary-python-packages": ["pkg1", "pkg2"],
+        "charm-python-packages": ["pkg3", "pkg4"],
+        "charm-requirements": requirement_files,
+    }
+    plugin_properties = parts.CharmPluginProperties.unmarshal(spec)
+    part_spec = plugins.extract_part_properties(spec, plugin_name="charm")
+    part = craft_parts.Part(
+        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+    )
+    project_info = craft_parts.ProjectInfo(
+        application_name="test",
+        project_dirs=project_dirs,
+        cache_dir=tmp_path,
+    )
+    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
+
+    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)

@@ -267,7 +267,7 @@ class CharmPlugin(plugins.Plugin):
                 "python3-devel",
             }
         else:
-            return {}
+            return set()
 
     def get_build_environment(self) -> Dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
@@ -564,7 +564,7 @@ class PartsLifecycle:
                     executor_timer.mark("Context enter")
                     for act in actions:
                         emit.progress(f"Running step {act.step.name} for part {act.part_name!r}")
-                        with instrum.Timer("Running step", step=act.step.name, part=act.part_name):
+                        with instrum.Timer("Running step", step=act.step.name, part=act.part_name):  # type: ignore[arg-type]
                             with emit.open_stream("Execute action") as stream:
                                 aex.execute([act], stdout=stream, stderr=stream)
                     executor_timer.mark("Context exit")

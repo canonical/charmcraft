@@ -22,6 +22,7 @@ from unittest.mock import call, patch
 import craft_parts
 import pydantic
 import pytest
+import pytest_subprocess
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
@@ -134,7 +135,10 @@ def test_validate_environment_with_charm_part(plugin, plugin_properties):
     validator.validate_environment(part_dependencies=["charm-tools"])
 
 
-def test_validate_missing_charm(plugin, plugin_properties):
+def test_validate_missing_charm(
+    fake_process: pytest_subprocess.FakeProcess, plugin, plugin_properties
+):
+    fake_process.register(["/bin/bash", fake_process.any()], returncode=127)
     validator = plugin.validator_class(
         part_name="my-part", env="/foo", properties=plugin_properties
     )

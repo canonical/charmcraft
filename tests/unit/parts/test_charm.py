@@ -23,6 +23,8 @@ from craft_parts import Step
 
 from charmcraft import charm_builder, env, parts
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
+
 
 def test_charmplugin_get_build_package_deb_based(charm_plugin):
     with patch("craft_parts.utils.os_utils.OsRelease.id") as mock_id:

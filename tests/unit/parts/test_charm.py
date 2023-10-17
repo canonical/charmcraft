@@ -19,7 +19,6 @@ from unittest.mock import patch
 
 import pydantic
 import pytest
-
 from craft_parts import Step
 
 from charmcraft import charm_builder, env, parts

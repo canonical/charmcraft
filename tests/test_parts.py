@@ -18,75 +18,15 @@ import pathlib
 import sys
 from unittest.mock import ANY, call, patch
 
-import craft_parts
 import pydantic
 import pytest
 from craft_cli import CraftError
-from craft_parts import Action, ActionType, Step, plugins
+from craft_parts import Action, ActionType, Step
 from craft_parts.errors import PartsError
 
 from charmcraft import parts
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-
-
-# -- tests for bundle plugin
-
-
-@pytest.fixture()
-def bundle_plugin(tmp_path):
-    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
-    spec = {
-        "plugin": "bundle",
-        "source": str(tmp_path),
-    }
-    plugin_properties = parts.BundlePluginProperties.unmarshal(spec)
-    part_spec = plugins.extract_part_properties(spec, plugin_name="bundle")
-    part = craft_parts.Part(
-        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
-    )
-    project_info = craft_parts.ProjectInfo(
-        application_name="test",
-        project_dirs=project_dirs,
-        cache_dir=tmp_path,
-    )
-    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
-
-    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
-
-
-def test_bundleplugin_get_build_package(bundle_plugin):
-    assert bundle_plugin.get_build_packages() == set()
-
-
-def test_bundleplugin_get_build_snaps(bundle_plugin):
-    assert bundle_plugin.get_build_snaps() == set()
-
-
-def test_bundleplugin_get_build_environment(bundle_plugin):
-    assert bundle_plugin.get_build_environment() == {}
-
-
-def test_bundleplugin_get_build_commands(bundle_plugin, tmp_path):
-    if sys.platform == "linux":
-        assert bundle_plugin.get_build_commands() == [
-            f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
-            f'cp --archive --link --no-dereference * "{str(tmp_path)}/parts/foo/install"',
-        ]
-    else:
-        assert bundle_plugin.get_build_commands() == [
-            f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
-            f'cp -R -p -P * "{str(tmp_path)}/parts/foo/install"',
-        ]
-
-
-def test_bundleplugin_invalid_properties():
-    with pytest.raises(pydantic.ValidationError) as raised:
-        parts.BundlePlugin.properties_class.unmarshal({"source": ".", "bundle-invalid": True})
-    err = raised.value.errors()
-    assert len(err) == 1
-    assert err[0]["loc"] == ("bundle-invalid",)
-    assert err[0]["type"] == "value_error.extra"
 
 
 # -- tests for parts lifecycle

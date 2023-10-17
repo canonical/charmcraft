@@ -47,4 +47,5 @@ execute: |
   charmcraft pack --verbose
 
   mv *.charm ~/
-  ls -1 ~/*.charm | xargs -n 1 juju deploy
+  # TODO: pull the referenced OCI images and deploy to juju.
+  # ls -1 ~/*.charm | head -n 1 | xargs -n 1 juju deploy

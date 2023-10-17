@@ -1,38 +1,34 @@
 summary: pack a simple init-created charm for CentOS 7
+# This test should be nearly identical to the basic test, but only runs on 18.04
 systems:
   # CentOS 7 only works in 18.04 because it needs cgroup v1
   - ubuntu-18.04-64
 kill-timeout: 30m
 
+environment:
+  BASE_NAME: centos
+  BASE_CHANNEL: "7"
+
+include:
+  - tests/
+
 prepare: |
+  tests.pkgs install unzip
   charmcraft init --project-dir=charm
-  pushd charm
 
-  cat <<- EOF >> charmcraft.yaml
-  name: basic-centos-7
-  type: charm
-  summary: A basic charm for CentOS 7
-  description: |
-    This is a basic charm for CentOS 7.
-
-  bases:
-    - build-on:
-      - name: centos
-        channel: "7"
-      run-on:
-      - name: centos
-        channel: "7"
-  EOF
-
-  popd
+  sed -i "s/- name: ubuntu/- name: ${BASE_NAME}/g" charm/charmcraft.yaml
+  sed -i "s/channel:.*/channel: '${BASE_CHANNEL}'/g" charm/charmcraft.yaml
 
 restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |
   cd charm
   charmcraft pack --verbose
+  test -f charm*.charm
+  unzip -l charm*.charm | grep "venv/ops/charm.py"
+  test ! -d build

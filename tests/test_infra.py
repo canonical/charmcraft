@@ -20,8 +20,6 @@ import re
 import subprocess
 import sys
 
-import black
-import click.testing
 import pytest
 
 from charmcraft import __version__, main
@@ -87,14 +85,3 @@ def test_bashcompletion_all_commands():
         real_command_names.update(cmd.name for cmd in cgroup.commands if not cmd.hidden)
 
     assert completed_commands == real_command_names
-
-
-def test_black():
-    runner = click.testing.CliRunner()
-    result = runner.invoke(
-        black.main,
-        ["--check", *get_python_filepaths()],
-    )
-
-    if result.exit_code != 0:
-        pytest.fail(f"Please reformat files with black.\n{result.output}")

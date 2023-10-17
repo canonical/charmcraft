@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 import pathlib
+import sys
 from unittest.mock import ANY, call, patch
 
 import pytest
@@ -21,6 +22,8 @@ from craft_cli import CraftError
 from craft_parts import Action, ActionType, PartsError, Step
 
 from charmcraft.parts import lifecycle
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
 
 
 def test_partslifecycle_bad_bootstrap(tmp_path):

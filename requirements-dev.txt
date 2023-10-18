@@ -84,7 +84,7 @@ tox==4.11.3
 types-Deprecated==1.2.9.3
 types-PyYAML==6.0.12.12
 typing_extensions==4.8.0
-urllib3==1.26.17
+urllib3==1.26.18
 virtualenv==20.24.5
 wrapt==1.15.0
 yamllint==1.32.0

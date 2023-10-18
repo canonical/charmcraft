@@ -31,7 +31,7 @@ class ProviderService(services.ProviderService):
         instance_name: str,
         **kwargs: bool | str | None,
     ) -> bases.Base:
-        """Get."""
+        """Get the base. Overridden because of compatibility tag."""
         alias = bases.get_base_alias(base_name)
         base_class = bases.get_base_from_alias(alias)
         kwargs.setdefault("compatibility_tag", f"charmcraft-{base_class.compatibility_tag}.0")

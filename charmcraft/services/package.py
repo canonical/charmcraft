@@ -43,7 +43,7 @@ class PackageService(services.PackageService):
     _project: models.CharmcraftProject  # type: ignore[assignment]
     _services: CharmcraftServiceFactory
 
-    def __init__(  # (too many arguments)
+    def __init__(
         self,
         app: craft_application.AppMetadata,
         project: CharmcraftProject,

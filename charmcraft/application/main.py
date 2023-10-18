@@ -67,7 +67,6 @@ class Charmcraft(Application):
         return {"version": "unversioned"}
 
     def _configure_services(self, platform: str | None, build_for: str | None) -> None:
-        # super()._configure_services(platform, build_for)
         self.services.set_kwargs(
             "lifecycle",
             cache_dir=self.cache_dir,

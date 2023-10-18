@@ -31,6 +31,8 @@ from craft_providers import bases
 from charmcraft.models import project
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 
+from .. import SIMPLE_CHARM
+
 SIMPLE_BASE = Base(name="simple", channel="0.0")
 BASE_WITH_ONE_ARCH = Base(name="arch", channel="1.0", architectures=["amd64"])
 BASE_WITH_MULTIARCH = Base(name="multiarch", channel="2.0", architectures=["arm64", "riscv64"])
@@ -52,13 +54,7 @@ FULL_BASE_CONFIG_DICT = {
     "build-on": [{"channel": "22.04", "name": "ubuntu"}],
     "run-on": [{"channel": "22.04", "name": "ubuntu"}],
 }
-SIMPLE_CHARM = project.Charm(
-    type="charm",
-    name="charmy-mccharmface",
-    summary="Charmy!",
-    description="Very charming!",
-    bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
-)
+
 MINIMAL_CHARMCRAFT_YAML = """\
 type: charm
 bases: [{name: ubuntu, channel: "22.04", architectures: [arm64]}]
@@ -257,14 +253,14 @@ def test_unmarshal_invalid_type(type_):
             None,
             None,
             None,
-            SIMPLE_CHARM,
+            SIMPLE_CHARM.copy(deep=True),
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             None,
             None,
-            SIMPLE_CHARM,
+            SIMPLE_CHARM.copy(deep=True),
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
@@ -314,7 +310,7 @@ def test_from_yaml_file_success(
 
     actual = project.CharmcraftProject.from_yaml_file(pathlib.Path("/charmcraft.yaml"))
 
-    assert actual == expected
+    assert actual.marshal() == expected.marshal()
 
 
 @pytest.mark.parametrize(
@@ -334,8 +330,8 @@ def test_from_yaml_file_success(
             None,
             None,
             CraftError,
-            r"^Error parsing charmcraft\.yaml at '[\\/]charmcraft\.yaml'$",
-            "No such file or directory in the fake filesystem",
+            r"^Could not find charmcraft\.yaml at '.charmcraft\.yaml'$",
+            None,
             id="FileNotFound",
         ),
         pytest.param(
@@ -490,7 +486,15 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
         ),
         (
             "invalid-type.yaml",
-            "Bad charmcraft.yaml content:\n- field type cannot be 'invalid'",
+            dedent(
+                """\
+            Bad invalid-type.yaml content:
+            - unexpected value; permitted: 'charm' (in field 'type')
+            - field name required in top-level configuration
+            - field summary required in top-level configuration
+            - field description required in top-level configuration
+            - field bases required in top-level configuration"""
+            ),
         ),
     ],
 )

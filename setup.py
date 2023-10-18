@@ -68,6 +68,7 @@ type_requires = [
 dev_requires = [
     "coverage",
     "flake8",
+    "freezegun",
     "pydocstyle",
     "pyfakefs",
     "pytest",

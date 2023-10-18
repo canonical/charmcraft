@@ -698,7 +698,7 @@ all_commands = list(itertools.chain(*(cgroup.commands for cgroup in COMMAND_GROU
 
 
 @pytest.mark.parametrize("command", all_commands)
-def test_commands(command):
+def test_legacy_commands(command):
     """Assert commands are valid.
 
     This is done through asking help for it *in real life*, which would mean that the
@@ -716,7 +716,7 @@ def test_commands(command):
         else:
             env["PYTHONPATH"] = ":".join(env_paths)
 
-    external_command = [sys.executable, "-m", "charmcraft", command.name, "-h"]
+    external_command = [sys.executable, "-m", "charmcraft.main", command.name, "-h"]
     subprocess.run(external_command, check=True, env=env, stdout=subprocess.DEVNULL)
 
 

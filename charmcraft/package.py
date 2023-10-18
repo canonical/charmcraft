@@ -44,6 +44,7 @@ from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.manifest import create_manifest
 from charmcraft.metafiles.metadata import create_metadata_yaml
 from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.models.lint import LintResult
 from charmcraft.utils import (
     build_zip,
     collect_charmlib_pydeps,
@@ -135,7 +136,7 @@ class Builder:
         attribute_results = []
         lint_results_by_outcome = {}
         for result in linting_results:
-            if result.result == charmcraft.linters.Result.IGNORED:
+            if result.result == LintResult.IGNORED:
                 continue
             if result.check_type == charmcraft.linters.CheckType.ATTRIBUTE:
                 attribute_results.append(result)
@@ -151,13 +152,13 @@ class Builder:
 
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
-        if charmcraft.linters.Result.WARNINGS in lint_results_by_outcome:
+        if LintResult.WARNINGS.value in lint_results_by_outcome:
             emit.progress("Lint Warnings:", permanent=True)
-            for result in lint_results_by_outcome[charmcraft.linters.Result.WARNINGS]:
+            for result in lint_results_by_outcome[LintResult.WARNINGS.value]:
                 emit.progress(template.format(result), permanent=True)
-        if charmcraft.linters.Result.ERRORS in lint_results_by_outcome:
+        if LintResult.ERRORS.value in lint_results_by_outcome:
             emit.progress("Lint Errors:", permanent=True)
-            for result in lint_results_by_outcome[charmcraft.linters.Result.ERRORS]:
+            for result in lint_results_by_outcome[LintResult.ERRORS.value]:
                 emit.progress(template.format(result), permanent=True)
             if self.force_packing:
                 emit.progress("Packing anyway as requested.", permanent=True)

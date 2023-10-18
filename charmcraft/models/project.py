@@ -227,11 +227,13 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
     @classmethod
     def unmarshal(cls, data: Dict[str, Any]):
         """Create a Charmcraft project from a dictionary of data."""
+        if cls is not CharmcraftProject:
+            return cls.parse_obj(data)
         project_type = data.get("type")
         if project_type == "charm":
-            return Charm.parse_obj(data)
+            return Charm.unmarshal(data)
         if project_type == "bundle":
-            return Bundle.parse_obj(data)
+            return Bundle.unmarshal(data)
         raise ValueError(f"field type cannot be {project_type!r}")
 
     @classmethod
@@ -243,6 +245,8 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
         try:
             with path.open() as file:
                 data = safe_yaml_load(file)
+        except FileNotFoundError:
+            raise CraftError(f"Could not find charmcraft.yaml at '{path}'")
         except OSError as exc:
             raise CraftError(
                 f"Error parsing charmcraft.yaml at '{path}'", details=exc.strerror
@@ -257,9 +261,17 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
                 docs_url="https://juju.is/docs/sdk/charmcraft-yaml",
             )
 
-        charm_dir = path.parent
+        project_dir = path.parent
 
-        metadata_file = charm_dir / METADATA_FILENAME
+        bundle_file = project_dir / "bundle.yaml"
+        if data.get("type") == "bundle":
+            if bundle_file.is_file():
+                with bundle_file.open() as f:
+                    data["bundle"] = safe_yaml_load(f)
+            else:
+                raise CraftError(f"Missing bundle.yaml file: {str(bundle_file)!r}")
+
+        metadata_file = project_dir / METADATA_FILENAME
         if metadata_file.is_file():
             # metadata.yaml exists, so we can't specify metadata keys in charmcraft.yaml.
             overlap_keys = METADATA_YAML_KEYS.intersection(data.keys())
@@ -270,26 +282,26 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
                     details=f"Invalid keys: {sorted(overlap_keys)}",
                     resolution=f"Migrate all keys from {METADATA_FILENAME!r} to 'charmcraft.yaml'",
                 )
-            metadata = parse_charm_metadata_yaml(charm_dir, allow_basic=True)
+            metadata = parse_charm_metadata_yaml(project_dir, allow_basic=True)
             data.update(metadata.dict(include={"name", "summary", "description"}))
 
-        config_file = charm_dir / JUJU_CONFIG_FILENAME
+        config_file = project_dir / JUJU_CONFIG_FILENAME
         if config_file.is_file():
             if "config" in data:
                 raise errors.CraftValidationError(
                     f"Cannot specify 'config' section in 'charmcraft.yaml' when {JUJU_CONFIG_FILENAME!r} exists",
                     resolution=f"Move all data from {JUJU_CONFIG_FILENAME!r} to the 'config' section in 'charmcraft.yaml'",
                 )
-            data["config"] = parse_config_yaml(charm_dir, allow_broken=True)
+            data["config"] = parse_config_yaml(project_dir, allow_broken=True)
 
-        actions_file = charm_dir / JUJU_ACTIONS_FILENAME
+        actions_file = project_dir / JUJU_ACTIONS_FILENAME
         if actions_file.is_file():
             if "actions" in data:
                 raise errors.CraftValidationError(
                     f"Cannot specify 'actions' section in 'charmcraft.yaml' when {JUJU_ACTIONS_FILENAME!r} exists",
                     resolution=f"Move all data from {JUJU_ACTIONS_FILENAME!r} to the 'actions' section in 'charmcraft.yaml'",
                 )
-            data["actions"] = parse_actions_yaml(charm_dir).actions
+            data["actions"] = parse_actions_yaml(project_dir).actions
 
         try:
             project = cls.unmarshal(data)
@@ -310,6 +322,38 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
             raise ValueError("Project type must be declared in charmcraft.yaml.")
 
         return values
+
+    @pydantic.validator("parts", pre=True, always=True, allow_reuse=True)
+    def preprocess_parts(
+        cls, parts: Optional[Dict[str, Dict[str, Any]]], values: Dict[str, Any]
+    ) -> Dict[str, Dict[str, Any]]:
+        """Preprocess parts object for a charm or bundle, creating an implicit part if needed."""
+        if parts is not None and not isinstance(parts, dict):
+            raise TypeError("'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec.")
+        if not parts:
+            if "type" in values:
+                parts = {values["type"]: {"plugin": values["type"]}}
+            else:
+                parts = {}
+        for name, part in parts.items():
+            if not isinstance(part, dict):
+                raise TypeError(f"part {name!r} must be a dictionary.")
+            # implicit plugin fixup
+            if "plugin" not in part:
+                part["plugin"] = name
+
+        for name, part in parts.items():
+            if name == "charm" and part["plugin"] == "charm":
+                part.setdefault("source", ".")
+
+            if name == "bundle" and part["plugin"] == "bundle":
+                part.setdefault("source", ".")
+        return parts
+
+    @pydantic.validator("parts", each_item=True, allow_reuse=True)
+    def validate_each_part(cls, item):
+        """Verify each part in the parts section. Craft-parts will re-validate them."""
+        return process_part_config(item)
 
 
 craft_application.models.Project.register(CharmcraftProject)
@@ -351,36 +395,6 @@ class Charm(CharmcraftProject):
         if "name" not in base:  # Assume long-form base already.
             return cast(LongFormBasesDict, base)
         return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
-
-    @pydantic.validator("parts", pre=True, allow_reuse=True)
-    def preprocess_parts(
-        cls, parts: Optional[Dict[str, Dict[str, Any]]], values: Dict[str, Any]
-    ) -> Dict[str, Dict[str, Any]]:
-        """Preprocess parts object for a charm or bundle, creating an implicit part if needed."""
-        if not isinstance(parts, dict):
-            raise TypeError("'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec.")
-        default_parts = {values["type"]: {"plugin": values["type"]}}
-        if not parts:
-            parts = default_parts
-        for name, part in parts.items():
-            if not isinstance(part, dict):
-                raise TypeError(f"part {name!r} must be a dictionary.")
-            # implicit plugin fixup
-            if "plugin" not in part:
-                part["plugin"] = name
-
-        for name, part in parts.items():
-            if name == "charm" and part["plugin"] == "charm":
-                part.setdefault("source", ".")
-
-            if name == "bundle" and part["plugin"] == "bundle":
-                part.setdefault("source", ".")
-        return parts
-
-    @pydantic.validator("parts", each_item=True, allow_reuse=True)
-    def validate_each_part(cls, item):
-        """Verify each part in the parts section. Craft-parts will re-validate them."""
-        return process_part_config(item)
 
     def get_build_plan(self) -> List[models.BuildInfo]:
         """Get build bases for this charm.
@@ -473,8 +487,17 @@ class Bundle(CharmcraftProject):
     """Model for defining a bundle."""
 
     type: Literal["bundle"]
-    name: Optional[models.ProjectName]
+    bundle: Dict[str, Any] = {}
+    name: Optional[models.ProjectName] = None
     title: Optional[models.ProjectTitle]
     summary: Optional[models.SummaryStr]
     description: Optional[pydantic.StrictStr]
     charmhub: CharmhubConfig = CharmhubConfig()
+
+    @pydantic.root_validator(pre=True)
+    def preprocess_bundle(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Preprocess any values that charmcraft infers, before attribute validation."""
+        if "name" not in values:
+            values["name"] = values.get("bundle", {}).get("name")
+
+        return values

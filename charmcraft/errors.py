@@ -16,9 +16,14 @@
 """Charmcraft error classes."""
 import io
 import pathlib
-from typing import Iterable, Mapping
+from typing import TYPE_CHECKING, Iterable, List, Mapping
 
 from craft_cli import CraftError
+
+if TYPE_CHECKING:
+    from charmcraft.linters import CheckResult
+else:
+    CheckResult = "CheckResult"
 
 
 class ClassicFallback(BaseException):
@@ -101,6 +106,24 @@ class DuplicateCharmsError(CraftError):
             for path in path_iter:
                 print(path_tree_line_format.format(name="", path=path), file=details)
         return details.getvalue()
+
+
+class LintingError(CraftError):
+    """Lint failures."""
+
+    def __init__(self, errors: List[CheckResult], warnings: List[CheckResult]):
+        self.errors = errors
+        self.warnings = warnings
+        detail_lines = ["ERRORS:"]
+        for err in errors:
+            detail_lines.append(f"- {err.name}: {err.text} ({err.url})")
+        for warning in warnings:
+            detail_lines.append(f"- {warning.name}: {warning.text} ({warning.url})")
+
+        super().__init__(
+            f"There were {len(errors)} linting errors and {len(warnings)} warnings."
+            "\n".join(detail_lines)
+        )
 
 
 class DependencyError(CraftError):

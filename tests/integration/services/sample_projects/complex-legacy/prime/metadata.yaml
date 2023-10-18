@@ -1,0 +1,5 @@
+description: |
+  This is intentionally designed to be a fairly complex charm definition. It makes use
+  of every available keyword in charmcraft.yaml, expressing as much as possible.
+name: full-charm
+summary: A fully-defined charm, making use of all the available charm keywords.

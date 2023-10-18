@@ -137,6 +137,8 @@ class BundleMetadata(models.BaseMetadata):
     def from_bundle(cls, bundle: Bundle) -> Self:
         """Turn a populated bundle model into a metadata.yaml model."""
         bundle_dict = bundle.marshal()
+        if "bundle" in bundle_dict:
+            return cls.parse_obj(bundle_dict["bundle"])
         del bundle_dict["type"]
         return cls.parse_obj(bundle_dict)
 

@@ -34,7 +34,8 @@ from craft_cli import (
 )
 
 from charmcraft import config, env, utils
-from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
+from charmcraft.commands import analyze, clean, extensions, pack, store, version
+from charmcraft.application.commands import init
 from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.const import SHARED_CACHE_ENV_VAR
 from charmcraft.parts import setup_parts

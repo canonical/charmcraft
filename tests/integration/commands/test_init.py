@@ -55,6 +55,10 @@ UNKNOWN_AUTHOR_REGEX = re.compile(
 BAD_CHARM_NAME_REGEX = re.compile(
     r" is not a valid charm name. The name must start with a lowercase letter and contain only alphanumeric characters and hyphens.$",
 )
+VALID_AUTHORS = [
+    pytest.param("Author McAuthorFace", id="ascii-author"),
+    pytest.param("فلانة الفلانية", id="non-ascii-author"),
+]
 
 
 @pytest.fixture()
@@ -78,13 +82,7 @@ def create_namespace(
     ],
 )
 @pytest.mark.parametrize("charm_name", ["my-charm", "charm123"])
-@pytest.mark.parametrize(
-    "author",
-    [
-        pytest.param("Author McAuthorFace", id="ascii-author"),
-        pytest.param("فلانة الفلانية", id="non-ascii-author"),
-    ],
-)
+@pytest.mark.parametrize("author", VALID_AUTHORS)
 def test_files_created_correct(
     new_path,
     init_command,
@@ -125,6 +123,25 @@ def test_force(new_path, init_command):
 def test_bad_name(monkeypatch, new_path, init_command, name):
     with pytest.raises(errors.CraftError, match=BAD_CHARM_NAME_REGEX):
         init_command.run(create_namespace(name=name))
+
+
+@pytest.mark.parametrize("author", VALID_AUTHORS)
+def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
+    monkeypatch.setattr(
+        pwd,
+        "getpwuid",
+        mock.Mock(
+            return_value=pwd.struct_passwd(
+                ("user", "pass", 1, 1, f"{author},,,", "homedir", "shell")
+            )
+        ),
+    )
+
+    init_command.run(create_namespace(author=None))
+
+    pytest_check.is_true(
+        re.search(rf"^# Copyright \d+ {author}", (new_path / "tox.ini").read_text())
+    )
 
 
 @pytest.mark.parametrize(

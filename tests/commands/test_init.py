@@ -104,15 +104,6 @@ def test_init_non_ascii_author(tmp_path, config):
     test_init_pep8(tmp_path, config, author="فلانة الفلانية", profile=DEFAULT_PROFILE)
 
 
-
-
-
-def test_bad_name(config):
-    cmd = InitCommand(config)
-    with pytest.raises(CraftError):
-        cmd.run(create_namespace(name="1234"))
-
-
 @pytest.mark.skipif(sys.platform == "win32", reason="mocking for pwd/gecos only")
 def test_no_author_gecos(tmp_path, config, mock_pwd):
     cmd = InitCommand(config)
@@ -152,33 +143,6 @@ def test_tests(tmp_path, config, profile):
     cmd.run(create_namespace(profile=profile))
 
     subprocess.run(["tox", "-v"], cwd=str(tmp_path), check=True, env=env)
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-def test_gecos_missing_in_getpwuid_response(config):
-    """No GECOS field in getpwuid response."""
-    import pwd
-
-    cmd = InitCommand(config)
-
-    with patch("pwd.getpwuid") as mock_pwd:
-        # return a fack passwd struct with an empty gecos (5th parameter)
-        mock_pwd.return_value = pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))
-        msg = "Unable to automatically determine author's name, specify it with --author"
-        with pytest.raises(CraftError, match=msg):
-            cmd.run(create_namespace(author=None))
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-def test_gecos_missing_user_information(config):
-    """No information at all for the requested user."""
-    cmd = InitCommand(config)
-
-    with patch("pwd.getpwuid") as mock_pwd:
-        mock_pwd.side_effect = KeyError("no user")
-        msg = "Unable to automatically determine author's name, specify it with --author"
-        with pytest.raises(CraftError, match=msg):
-            cmd.run(create_namespace(author=None))
 
 
 def test_missing_directory(tmp_path, config):

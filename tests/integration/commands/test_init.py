@@ -17,14 +17,17 @@
 import argparse
 import os
 import pathlib
+import pwd
 import re
 import shutil
 import subprocess
 from typing import Set
+from unittest import mock
 
 import pytest
 
 import charmcraft
+from charmcraft import errors
 from charmcraft.application import commands
 
 
@@ -47,6 +50,12 @@ BASIC_INIT_FILES = frozenset(
         "tests/unit/test_charm.py",
         "tox.ini",
     )
+)
+UNKNOWN_AUTHOR_REGEX = re.compile(
+    r"^Unable to automatically determine author's name, specify it with --author$"
+)
+BAD_CHARM_NAME_REGEX = re.compile(
+    r" is not a valid charm name. The name must start with a lowercase letter and contain only alphanumeric characters and hyphens.$",
 )
 
 
@@ -81,16 +90,44 @@ def test_files_created_correct(
     assert re.search(r"^name: my-charm$", (new_path / "charmcraft.yaml").read_text(), re.MULTILINE)
 
 
-def test_force(tmp_path, init_command):
-    tmp_file = tmp_path / "README.md"
+def test_force(new_path, init_command):
+    tmp_file = new_path / "README.md"
     with tmp_file.open("w") as f:
         f.write("This is a nonsense readme")
 
     init_command.run(create_namespace(force=True))
 
     # Check that init ran
-    assert (tmp_path / "LICENSE").exists()
+    assert (new_path / "LICENSE").exists()
 
     # Check that init did not overwrite files
     with tmp_file.open("r") as f:
         assert f.read() == "This is a nonsense readme"
+
+
+@pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag"])
+def test_bad_name(monkeypatch, new_path, init_command, name):
+    with pytest.raises(errors.CraftError, match=BAD_CHARM_NAME_REGEX):
+        init_command.run(create_namespace(name=name))
+
+
+@pytest.mark.parametrize(
+    ("mock_getpwuid", "error_msg"),
+    [
+        pytest.param(
+            mock.Mock(side_effect=KeyError("no user")),
+            UNKNOWN_AUTHOR_REGEX,
+            id="user-doesnt-exist",
+        ),
+        pytest.param(
+            mock.Mock(return_value=pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))),
+            UNKNOWN_AUTHOR_REGEX,
+            id="user-has-no-name",
+        ),
+    ],
+)
+def test_gecos_bad_detect_author_name(monkeypatch, new_path, init_command, mock_getpwuid, error_msg):
+    monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
+
+    with pytest.raises(errors.CraftError, match=error_msg):
+        init_command.run(create_namespace(author=None))

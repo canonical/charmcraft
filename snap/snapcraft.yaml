@@ -1,4 +1,4 @@
-# Copyright 2020 Canonical Ltd.
+# Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 name: charmcraft
-base: core20
+base: core22
 summary: Charmcraft supports Kubernetes operator development and collaboration
 license: Apache-2.0
 description: |
@@ -39,7 +39,7 @@ description: |
   Windows apps. The universal operator pattern is very exciting for
   multi-cloud application management.
 
-adopt-info: charmcraft  # look for 'snapcraftctl set-*' in the charmcraft part
+adopt-info: charmcraft  # look for 'craftctl set *' in the charmcraft part
 architectures:
   - build-on: s390x
   - build-on: ppc64el
@@ -48,93 +48,69 @@ architectures:
   - build-on: amd64
   # - build-on: i386  # there is no i386 core20
 
+# https://github.com/snapcore/snapcraft/issues/4187
+environment:
+  PATH: "$SNAP/libexec/charmcraft:/snap/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  LD_LIBRARY_PATH: "$SNAP/none"
+
 apps:
   charmcraft:
-    # run Python in unbuffered mode so when it's running internally in the instance it will output
-    # all the information promptly and the external Charmcraft will get all lines quickly and show
-    # proper timestamps on them
-    command: bin/python3 -u $SNAP/bin/charmcraft
+    command: bin/python3 $SNAP/bin/charmcraft
     completer: completion.bash
     environment:
       # have the cache outside of the version dirs (avoids keeping N copies)
       XDG_CACHE_HOME: $SNAP_USER_COMMON/cache
       # same for config
       XDG_CONFIG_HOME: $SNAP_USER_COMMON/config
-      # just drop the logs here for now (this will change; see #53)
-      TMPDIR: $SNAP_USER_COMMON
-      # help git find its stuff
-      GIT_TEMPLATE_DIR: $SNAP/git/templates
-      GIT_EXEC_PATH: $SNAP/git/git-core
-      PATH: $SNAP/libexec/charmcraft:$PATH
 
 grade: stable
 confinement: classic
 
-parts:
-  # The cryptography library (indirect dependency via craft-store) requires rust, but only ships wheels for amd64 and arm64.
-  # As of cryptography 39, it requires rust v1.48.0 or newer, which is available from focal-updates.
-  # This part builds the wheel for cryptography.
-  cryptography-deps:
-    plugin: nil
-    source: .
-    build-packages:
-      - cargo
-      - rustc
-      - pkg-config
-      - python3.8-dev
-      - libpython3.8-dev
-      - libssl-dev
-      - libffi-dev
-      - python3-wheel
-      - python3-pip
-      - python3-setuptools-scm
-    override-build: |
-      # Dirty workaround - builds the cryptography wheel for later installation.
-      # This must be exactly the version referenced in requirements.txt, so this is fragile.
-      pip wheel $(grep '^cryptography[<=>]' requirements.txt)
+build-packages:
+  - cargo
+  - rustc
+  - pkg-config
+  - python3.10-dev
+  - libpython3.10-dev
+  - libssl-dev
+  - libffi-dev
+  - python3-wheel
+  - python3-pip
+  - python3-setuptools-scm
 
-  # Classic core20 snaps require staged python.
+
+parts:
+  # Classic core22 snaps require staged python.
   python3:
-    after: [cryptography-deps]
     plugin: nil
-    build-packages:
-      - python3-dev
+    build-attributes:
+      - enable-patchelf
     stage-packages:
       - libpython3-stdlib
-      - libpython3.8-minimal
-      - libpython3.8-stdlib
-      - python3.8-minimal
+      - libpython3.10-minimal
+      - libpython3.10-stdlib
+      - python3.10-minimal
       - python3-distutils
       - python3-minimal
       - python3-pip
+      - python3-pip-whl
       - python3-setuptools
+      - python3-setuptools-whl
       - python3-venv
       - python3-wheel
     override-build: |
-      snapcraftctl build
-      install -D -m 0755 $SNAPCRAFT_PROJECT_DIR/snap/local/sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
-
-  python-apt:
-    after: [python3]
-    plugin: nil
-    source: .
-    build-packages:
-      - libapt-pkg-dev
-      - python3.8-dev
-      - libpython3.8-dev
-    build-environment:
-      - LDFLAGS: -L/usr/lib/python3.8
-      - CPPFLAGS: -I/usr/include/python3.8
-    override-build: |
-      pip wheel $(cat requirements-focal.txt)
+      craftctl default
+      install -D -m 0755 $CRAFT_PROJECT_DIR/snap/local/sitecustomize.py $CRAFT_PART_INSTALL/usr/lib/python3.10/sitecustomize.py
 
   charmcraft:
-    after: [python3, cryptography-deps, python-apt]
+    after: [python3]
     source: .
     plugin: python
-    requirements:
-      - requirements-focal.txt
+    python-requirements:
+      - requirements-jammy.txt
       - requirements.txt
+    build-attributes:
+      - enable-patchelf
     build-packages:
       - libffi-dev
       - libapt-pkg-dev
@@ -144,38 +120,24 @@ parts:
       - git
       - apt
       - apt-utils
-    # snapcraft uses venv, which doesn't pull in wheel (as opposed to virtualenv)
-    # so then 'pip install PyYAML' gets cross.
     python-packages: [wheel]
     build-environment:
-      - LDFLAGS: -L/usr/lib/python3.8
-      - CPPFLAGS: -I/usr/include/python3.8
+      - LDFLAGS: -L/usr/lib/python3.10
+      - CPPFLAGS: -I/usr/include/python3.10
     override-pull: |
-      # do the usual pull stuff
-      snapcraftctl pull
+      craftctl default
       # Ensure we don't have a dubious ownership error from git with a remote build.
-      git config --global --add safe.directory $SNAPCRAFT_PART_SRC
+      git config --global --add safe.directory $CRAFT_PART_SRC
       # set the version
       version="$(python3 setup.py --version)"
-      snapcraftctl set-version "$version"
+      craftctl set version="${version}"
     override-build: |
-      snapcraftctl build
+      craftctl default
       # why is this needed?
       cp -v completion.bash ../install
-      # python3 fixup symlink (snapcraft bug)
-      ln -sf ../usr/bin/python3.8 $SNAPCRAFT_PART_INSTALL/bin/python3
+      sed -i -e '1 s|^#!/.*|#!/snap/charmcraft/current/bin/python -E|' $CRAFT_PART_INSTALL/bin/craftctl
     organize:
-      # move things around so they're tidier
-      usr/lib/git-core: git/git-core
-      usr/share/git-core/templates: git/templates
-      usr/bin/git: bin/git
-      lib/python3.8/site-packages: lib/
-
-  craftctl:
-    plugin: dump
-    source: libexec
-    organize:
-      craftctl: libexec/charmcraft/craftctl
+      bin/craftctl: libexec/charmcraft/craftctl
 
 hooks:
   configure:

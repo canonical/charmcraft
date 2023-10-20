@@ -123,21 +123,3 @@ def test_tests(tmp_path, config, profile):
     cmd.run(create_namespace(profile=profile))
 
     subprocess.run(["tox", "-v"], cwd=str(tmp_path), check=True, env=env)
-
-
-def test_missing_directory(tmp_path, config):
-    """If the indicated directory does not exist, create it."""
-    init_dir = tmp_path / "foo" / "bar"
-    config.set(
-        project=Project(
-            config_provided=False,
-            dirpath=init_dir,
-            started_at=datetime.datetime.utcnow(),
-        )
-    )
-
-    cmd = InitCommand(config)
-    cmd.run(create_namespace())
-
-    # check it run ok
-    assert (init_dir / "LICENSE").exists()

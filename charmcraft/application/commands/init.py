@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Canonical Ltd.
+#  Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ from typing import Optional
 from craft_cli import CraftError, emit
 
 from charmcraft.application.commands import base
+from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import get_templates_environment, make_executable
 
 try:

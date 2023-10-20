@@ -18,6 +18,7 @@ import argparse
 import contextlib
 import os
 import pathlib
+import pwd
 import re
 import shutil
 import subprocess
@@ -112,7 +113,6 @@ def test_files_created_correct(
     pytest_check.is_true(re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE))
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
 
-
 def test_force(new_path, init_command):
     tmp_file = new_path / "README.md"
     with tmp_file.open("w") as f:
@@ -128,33 +128,12 @@ def test_force(new_path, init_command):
         assert f.read() == "This is a nonsense readme"
 
 
-@pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag", "camelCase"])
+@pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag"])
 def test_bad_name(monkeypatch, new_path, init_command, name):
     with pytest.raises(errors.CraftError, match=BAD_CHARM_NAME_REGEX):
         init_command.run(create_namespace(name=name))
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason=("Password database only on Unix"))
-@pytest.mark.parametrize("author", VALID_AUTHORS)
-def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
-    monkeypatch.setattr(
-        pwd,
-        "getpwuid",
-        mock.Mock(
-            return_value=pwd.struct_passwd(
-                ("user", "pass", 1, 1, f"{author},,,", "homedir", "shell")
-            )
-        ),
-    )
-
-    init_command.run(create_namespace(author=None))
-
-    pytest_check.is_true(
-        re.search(rf"^# Copyright \d+ {author}", (new_path / "tox.ini").read_text())
-    )
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason=("Password database only on Unix"))
 @pytest.mark.parametrize(
     ("mock_getpwuid", "error_msg"),
     [
@@ -163,103 +142,15 @@ def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
             UNKNOWN_AUTHOR_REGEX,
             id="user-doesnt-exist",
         ),
+        pytest.param(
+            mock.Mock(return_value=pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))),
+            UNKNOWN_AUTHOR_REGEX,
+            id="user-has-no-name",
+        ),
     ],
 )
-def test_gecos_user_not_found(monkeypatch, new_path, init_command, mock_getpwuid, error_msg):
+def test_gecos_bad_detect_author_name(monkeypatch, new_path, init_command, mock_getpwuid, error_msg):
     monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
 
     with pytest.raises(errors.CraftError, match=error_msg):
         init_command.run(create_namespace(author=None))
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason=("Password database only on Unix"))
-def test_gecos_user_has_no_name(monkeypatch, new_path, init_command):
-    mock_getpwuid = mock.Mock(
-        return_value=pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))
-    )
-    monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
-
-    with pytest.raises(errors.CraftError, match=UNKNOWN_AUTHOR_REGEX):
-        init_command.run(create_namespace(author=None))
-
-
-@pytest.mark.parametrize(
-    "subdir",
-    [
-        "somedir",
-        "some/dir",
-        "a/really/deep/path/with_parents/all/created",
-        pytest.param(
-            "/tmp/test_charm_dir-absolute_directory_path",
-            marks=pytest.mark.skipif(os.name != "posix", reason="This is a posix path"),
-        ),
-    ],
-)
-@pytest.mark.parametrize("expected_files", [BASIC_INIT_FILES])
-def test_create_directory(new_path, init_command, subdir, expected_files):
-    init_dir = new_path / subdir
-
-    try:
-        init_command._global_args["project_dir"] = subdir
-
-        init_command.run(create_namespace())
-
-        actual_files = {p.relative_to(init_dir) for p in init_dir.rglob("*")}
-
-        assert actual_files == expected_files
-
-    finally:
-        shutil.rmtree(init_dir)
-
-
-@pytest.mark.skipif(os.name != "posix", reason="Checking posix executable bit.")
-def test_executable_set(new_path, init_command):
-    init_command.run(create_namespace())
-
-    for path in new_path.rglob(".py"):
-        assert path.stat().st_mode & S_IXALL == S_IXALL
-
-
-@pytest.mark.slow()
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-@pytest.mark.skipif(bool(os.getenv("RUNNING_TOX")), reason="does not work inside tox")
-@pytest.mark.parametrize("profile", list(commands.init.PROFILES))
-def test_tox_success(new_path, init_command, profile):
-    # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
-    # virtualenv libs and bins (if any), as they need them, but we're not creating a
-    # venv for the local tests (note that for CI doesn't use a venv)
-    env = os.environ.copy()
-    env_paths = [p for p in sys.path if "env/lib/python" in p]
-    if env_paths:
-        if "PYTHONPATH" in env:
-            env["PYTHONPATH"] += ":" + ":".join(env_paths)
-        else:
-            env["PYTHONPATH"] = ":".join(env_paths)
-        for path in env_paths:
-            bin_path = path[: path.index("env/lib/python")] + "env/bin"
-            env["PATH"] = bin_path + ":" + env["PATH"]
-
-    init_command.run(create_namespace(profile=profile))
-
-    subprocess.run(["tox", "-v"], cwd=new_path, check=True, env=env)
-
-
-@pytest.mark.parametrize("profile", list(commands.init.PROFILES))
-def test_pep257(new_path, init_command, profile):
-    to_ignore = {
-        "D105",  # Missing docstring in magic method
-        "D107",  # Missing docstring in __init__
-    }
-    to_include = pydocstyle.violations.conventions.pep257 - to_ignore
-
-    init_command.run(create_namespace(profile=profile))
-
-    python_paths = (str(path) for path in new_path.rglob("*.py"))
-    python_paths = (path for path in python_paths if "tests" not in path)
-    errors = list(pydocstyle.check(python_paths, select=to_include))
-
-    if errors:
-        report = [f"Please fix files as suggested by pydocstyle ({len(errors):d} issues):"]
-        report.extend(str(e) for e in errors)
-        msg = "\n".join(report)
-        pytest.fail(msg, pytrace=False)

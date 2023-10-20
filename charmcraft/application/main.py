@@ -157,7 +157,7 @@ class Charmcraft(Application):
 
         return dispatcher
 
-    def run(self) -> int:  # noqa: PLR0912 (too many branches due to error handling)
+    def run(self) -> int:  # (too many branches due to error handling)
         """Bootstrap and run the application."""
         dispatcher = self._get_dispatcher()
         craft_cli.emit.trace("Preparing application...")
@@ -208,7 +208,7 @@ class Charmcraft(Application):
                 craft_cli.CraftError(err.brief, details=err.details, resolution=err.resolution)
             )
             return_code = 1
-        except Exception as err:  # noqa: BLE001 pylint: disable=broad-except
+        except Exception as err:  # pylint: disable=broad-except
             self._emit_error(craft_cli.CraftError(f"{self.app.name} internal error: {err!r}"))
             if os.getenv("CRAFT_DEBUG") == "1":
                 raise

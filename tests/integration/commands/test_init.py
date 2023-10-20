@@ -133,6 +133,25 @@ def test_bad_name(monkeypatch, new_path, init_command, name):
         init_command.run(create_namespace(name=name))
 
 
+@pytest.mark.parametrize("author", VALID_AUTHORS)
+def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
+    monkeypatch.setattr(
+        pwd,
+        "getpwuid",
+        mock.Mock(
+            return_value=pwd.struct_passwd(
+                ("user", "pass", 1, 1, f"{author},,,", "homedir", "shell")
+            )
+        ),
+    )
+
+    init_command.run(create_namespace(author=None))
+
+    pytest_check.is_true(
+        re.search(rf"^# Copyright \d+ {author}", (new_path / "tox.ini").read_text())
+    )
+
+
 @pytest.mark.parametrize(
     ("mock_getpwuid", "error_msg"),
     [

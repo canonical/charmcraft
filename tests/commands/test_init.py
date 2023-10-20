@@ -70,13 +70,6 @@ def pep257_test(python_filepaths):
         pytest.fail(msg, pytrace=False)
 
 
-@pytest.fixture()
-def mock_pwd():
-    with patch("charmcraft.application.commands.init.pwd", autospec=True) as mock_pwd:
-        mock_pwd.getpwuid.return_value.pw_gecos = "Test Gecos Author Name,,,"
-        yield mock_pwd
-
-
 def create_namespace(*, name="my-charm", author="J Doe", force=False, profile=DEFAULT_PROFILE):
     """Helper to create a valid namespace."""
     return Namespace(name=name, author=author, force=force, profile=profile)
@@ -98,15 +91,6 @@ def test_init_pep8(tmp_path, config, *, author="J Doe", profile):
         roots=[str(tmp_path / "src"), str(tmp_path / "tests")], python_paths=[]
     )
     pep8_test(paths)
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="mocking for pwd/gecos only")
-def test_no_author_gecos(tmp_path, config, mock_pwd):
-    cmd = InitCommand(config)
-    cmd.run(create_namespace(author=None))
-
-    text = (tmp_path / "src" / "charm.py").read_text()
-    assert "Test Gecos Author Name" in text
 
 
 def test_executables(tmp_path, config):

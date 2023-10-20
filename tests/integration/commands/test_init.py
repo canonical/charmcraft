@@ -184,9 +184,7 @@ def test_gecos_bad_detect_author_name(
         "a/really/deep/path/with_parents/all/created",
         pytest.param(
             "/tmp/test_charm_dir-absolute_directory_path",
-            marks=pytest.mark.skipif(
-                os.name != "posix", reason="This is a posix path"
-            ),
+            marks=pytest.mark.skipif(os.name != "posix", reason="This is a posix path"),
         ),
     ],
 )
@@ -205,3 +203,11 @@ def test_create_directory(new_path, init_command, subdir, expected_files):
 
     finally:
         shutil.rmtree(init_dir)
+
+
+@pytest.mark.skipif(os.name != "posix", reason="Checking posix executable bit.")
+def test_executable_set(new_path, init_command):
+    init_command.run(create_namespace())
+
+    for path in new_path.rglob(".py"):
+        assert path.stat().st_mode & S_IXALL == S_IXALL

@@ -25,7 +25,6 @@ from typing import Optional
 from craft_cli import CraftError, emit
 
 from charmcraft.application.commands import base
-from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import get_templates_environment, make_executable
 
 try:

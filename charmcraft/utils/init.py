@@ -17,5 +17,3 @@
 
 
 CHARM_EXECUTABLE_FILES = frozenset(("run_tests", "src/charm.py"))
-
-

@@ -24,6 +24,7 @@ from typing import Container, Dict
 from craft_cli import emit
 from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
+import charmcraft
 from charmcraft.errors import DuplicateCharmsError, InvalidCharmPathError
 from charmcraft.utils.yaml import load_yaml
 

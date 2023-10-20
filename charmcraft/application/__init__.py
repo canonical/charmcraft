@@ -21,3 +21,7 @@ is not available.
 
 Help is (for now) handled by classic charmcraft.
 """
+
+from charmcraft.application.main import APP_METADATA, Charmcraft, main
+
+__all__ = ["APP_METADATA", "Charmcraft", "main"]

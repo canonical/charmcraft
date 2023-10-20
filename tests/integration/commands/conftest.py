@@ -13,4 +13,17 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Configuration for services unit tests."""
+"""Configuration for command unit tests."""
+import argparse
+import os
+import re
+
+import pytest
+
+from charmcraft import application
+from charmcraft.application import commands
+
+
+@pytest.fixture()
+def config(service_factory):
+    return {"app": application.APP_METADATA, "services": service_factory}

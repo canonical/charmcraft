@@ -102,7 +102,7 @@ def global_debug():
 @pytest.fixture()
 def new_path(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
-    yield tmp_path
+    return tmp_path
 
 
 @pytest.fixture(autouse=True, scope="session")

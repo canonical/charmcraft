@@ -55,7 +55,8 @@ environment:
 
 apps:
   charmcraft:
-    command: bin/python3 $SNAP/bin/charmcraft
+    # run Python in unbuffered mode
+    command: bin/python3 -u $SNAP/bin/charmcraft
     completer: completion.bash
     environment:
       # have the cache outside of the version dirs (avoids keeping N copies)

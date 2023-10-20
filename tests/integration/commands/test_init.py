@@ -211,3 +211,27 @@ def test_executable_set(new_path, init_command):
 
     for path in new_path.rglob(".py"):
         assert path.stat().st_mode & S_IXALL == S_IXALL
+
+
+@pytest.mark.slow()
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
+@pytest.mark.skipif(bool(os.getenv("RUNNING_TOX")), reason="does not work inside tox")
+@pytest.mark.parametrize("profile", list(commands.init.PROFILES))
+def test_tox_success(new_path, init_command, profile):
+    # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
+    # virtualenv libs and bins (if any), as they need them, but we're not creating a
+    # venv for the local tests (note that for CI doesn't use a venv)
+    env = os.environ.copy()
+    env_paths = [p for p in sys.path if "env/lib/python" in p]
+    if env_paths:
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] += ":" + ":".join(env_paths)
+        else:
+            env["PYTHONPATH"] = ":".join(env_paths)
+        for path in env_paths:
+            bin_path = path[: path.index("env/lib/python")] + "env/bin"
+            env["PATH"] = bin_path + ":" + env["PATH"]
+
+    init_command.run(create_namespace(profile=profile))
+
+    subprocess.run(["tox", "-v"], cwd=new_path, check=True, env=env)

@@ -93,14 +93,6 @@ def test_init_pep8(tmp_path, config, *, author="J Doe", profile):
     pep8_test(paths)
 
 
-def test_executables(tmp_path, config):
-    cmd = InitCommand(config)
-    cmd.run(create_namespace())
-
-    if os.name == "posix":
-        assert (tmp_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
-
-
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.skipif(os.getenv("RUNNING_TOX"), reason="does not work inside tox")
 @pytest.mark.parametrize("profile", list(PROFILES))

@@ -14,9 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 name: charmcraft
-base: core20
+base: core22
 summary: Charmcraft supports Kubernetes operator development and collaboration
-license: Apache-2.0
 description: |
   Charmcraft enables collaboration between operator developers, and
   publication on Charmhub.io, home of the Open Operator Collection.
@@ -38,15 +37,21 @@ description: |
   beyond Kubernetes with universal operators that drive Linux and
   Windows apps. The universal operator pattern is very exciting for
   multi-cloud application management.
-
 adopt-info: charmcraft  # look for 'snapcraftctl set-*' in the charmcraft part
+confinement: classic
+license: Apache-2.0
+
+# https://github.com/snapcore/snapcraft/issues/4187
+environment:
+  PATH: "$SNAP/libexec/charmcraft:/snap/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  LD_LIBRARY_PATH: "$SNAP/none"
+
 architectures:
   - build-on: s390x
   - build-on: ppc64el
   - build-on: arm64
   - build-on: armhf
   - build-on: amd64
-  # - build-on: i386  # there is no i386 core20
 
 apps:
   charmcraft:
@@ -65,119 +70,120 @@ apps:
       # help git find its stuff
       GIT_TEMPLATE_DIR: $SNAP/git/templates
       GIT_EXEC_PATH: $SNAP/git/git-core
-      PATH: $SNAP/libexec/charmcraft:$PATH
 
-grade: stable
-confinement: classic
+build-packages:
+  - cargo
+  - build-essential
+  - intltool
+  - libapt-pkg-dev
+  - libffi-dev
+  - libssl-dev
+  - libsodium-dev
+  - liblzma-dev
+  - libyaml-dev
+  - patch
+  - pkg-config
+  - python3-dev
+  - rustc
+  - sed
 
 parts:
-  # The cryptography library (indirect dependency via craft-store) requires rust, but only ships wheels for amd64 and arm64.
-  # As of cryptography 39, it requires rust v1.48.0 or newer, which is available from focal-updates.
-  # This part builds the wheel for cryptography.
-  cryptography-deps:
-    plugin: nil
-    source: .
-    build-packages:
-      - cargo
-      - rustc
-      - pkg-config
-      - python3.8-dev
-      - libpython3.8-dev
-      - libssl-dev
-      - libffi-dev
-      - python3-wheel
-      - python3-pip
-      - python3-setuptools-scm
-    override-build: |
-      # Dirty workaround - builds the cryptography wheel for later installation.
-      # This must be exactly the version referenced in requirements.txt, so this is fragile.
-      pip wheel $(grep '^cryptography[<=>]' requirements.txt)
+  bash-completion:
+    source: snap/local
+    plugin: dump
 
-  # Classic core20 snaps require staged python.
-  python3:
-    after: [cryptography-deps]
+  charmcraft-libs:
     plugin: nil
-    build-packages:
-      - python3-dev
     stage-packages:
+      - apt
+      - apt-transport-https
+      - apt-utils
+      - binutils
+      - execstack
+      - gpg
+      - gpgv
+      - libffi7
+      - libsodium23
       - libpython3-stdlib
-      - libpython3.8-minimal
-      - libpython3.8-stdlib
-      - python3.8-minimal
-      - python3-distutils
-      - python3-minimal
+      - libpython3.10-stdlib
+      - libpython3.10-minimal
       - python3-pip
       - python3-setuptools
-      - python3-venv
       - python3-wheel
+      - python3-venv
+      - python3-minimal
+      - python3-distutils
+      - python3-pkg-resources
+      - python3.10-minimal
+      - squashfs-tools
+      - xdelta3
+    build-attributes:
+      - enable-patchelf
     override-build: |
-      snapcraftctl build
-      install -D -m 0755 $SNAPCRAFT_PROJECT_DIR/snap/local/sitecustomize.py $SNAPCRAFT_PART_INSTALL/usr/lib/python3.8/sitecustomize.py
+      ${SNAP}/libexec/snapcraft/craftctl default
 
-  python-apt:
-    after: [python3]
-    plugin: nil
-    source: .
-    build-packages:
-      - libapt-pkg-dev
-      - python3.8-dev
-      - libpython3.8-dev
-    build-environment:
-      - LDFLAGS: -L/usr/lib/python3.8
-      - CPPFLAGS: -I/usr/include/python3.8
-    override-build: |
-      pip wheel $(cat requirements-focal.txt)
+      echo "Create libsodium symlink..."
+      TRIPLET_PATH="$CRAFT_PART_INSTALL/usr/lib/$(gcc -print-multiarch)"
+      LIBSODIUM="$(readlink -n "$TRIPLET_PATH/libsodium.so.23")"
+      # Remove so the link can be recreated on re-builds
+      rm -f "$TRIPLET_PATH/libsodium.so"
+      ln -s "$LIBSODIUM" "$TRIPLET_PATH/libsodium.so"
+
+      # Restore patched files
+      PYTHON_PACKAGE_PATH="${CRAFT_PART_INSTALL}/usr/lib/python3.10/"
+      CTYPES_INIT="ctypes/__init__.py"
+      CTYPES_INIT_ORIG="patched/${CTYPES_INIT}.orig"
+      [ -f "${CTYPES_INIT_ORIG}" ] && mv "${CTYPES_INIT_ORIG}" "${PYTHON_PACKAGE_PATH}/${CTYPES_INIT}"
+
+      # Apply patches
+      echo "Patching ctypes..."
+      patch -s -b "${PYTHON_PACKAGE_PATH}/${CTYPES_INIT}" "${CRAFT_PROJECT_DIR}/snap/local/patches/python/ctypes_init.diff"
+
+      # Save patches to allow rebuilding
+      mkdir -p patched/ctypes
+      if [ -f "${PYTHON_PACKAGE_PATH}/${CTYPES_INIT}.orig" ]; then
+        mv "${PYTHON_PACKAGE_PATH}/${CTYPES_INIT}.orig" patched/ctypes
+      fi
+      # Disable site packages
+      sed -i "${CRAFT_PART_INSTALL}/usr/lib/python3.10/site.py" \
+        -e 's/^ENABLE_USER_SITE = None$/ENABLE_USER_SITE = False/'
 
   charmcraft:
-    after: [python3, cryptography-deps, python-apt]
     source: .
     plugin: python
-    requirements:
+    python-packages:
+      - wheel
+      - pip
+      # Limited to < 66 because we need `pkg_resources` and because `python-apt`
+      # does not build with the latest.
+      - setuptools<66
+    python-constraints:
+      - constraints.txt
+    python-requirements:
       - requirements-focal.txt
       - requirements.txt
-    build-packages:
-      - libffi-dev
-      - libapt-pkg-dev
-      - libssl-dev
-      - git
-    stage-packages:
-      - git
-      - apt
-      - apt-utils
-    # snapcraft uses venv, which doesn't pull in wheel (as opposed to virtualenv)
-    # so then 'pip install PyYAML' gets cross.
-    python-packages: [wheel]
-    build-environment:
-      - LDFLAGS: -L/usr/lib/python3.8
-      - CPPFLAGS: -I/usr/include/python3.8
-    override-pull: |
-      # do the usual pull stuff
-      snapcraftctl pull
-      # Ensure we don't have a dubious ownership error from git with a remote build.
-      git config --global --add safe.directory $SNAPCRAFT_PART_SRC
-      # set the version
-      version="$(python3 setup.py --version)"
-      snapcraftctl set-version "$version"
-    override-build: |
-      snapcraftctl build
-      # why is this needed?
-      cp -v completion.bash ../install
-      # python3 fixup symlink (snapcraft bug)
-      ln -sf ../usr/bin/python3.8 $SNAPCRAFT_PART_INSTALL/bin/python3
     organize:
       # move things around so they're tidier
+      bin/craftctl: libexec/snapcraft/craftctl
       usr/lib/git-core: git/git-core
       usr/share/git-core/templates: git/templates
       usr/bin/git: bin/git
-      lib/python3.8/site-packages: lib/
+    build-attributes:
+      - enable-patchelf
+    build-environment:
+        # Build PyNaCl from source since the wheel files interact
+        # strangely with classic snaps. Well, build it all from source.
+        - "PIP_NO_BINARY": ":all"
+        # Use base image's libsodium for PyNaCl.
+        - "SODIUM_INSTALL": "system"
+        - "CFLAGS": "$(pkg-config python-3.10 yaml-0.1 --cflags)"
+    override-build: |
+      ${SNAP}/libexec/snapcraft/craftctl default
 
-  craftctl:
-    plugin: dump
-    source: libexec
-    organize:
-      craftctl: libexec/charmcraft/craftctl
+      # set the version
+      version="$(python3 setup.py --version)"
+      ${SNAP}/libexec/snapcraft/craftctl set version="$version"
 
-hooks:
-  configure:
-    environment:
-      PATH: "$SNAP/bin:$PATH"
+      # The new implementation still requires this.
+      ln -sf ../usr/bin/python3.10 $CRAFT_PART_INSTALL/bin/python3
+    after: [charmcraft-libs]

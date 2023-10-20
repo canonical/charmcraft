@@ -72,7 +72,7 @@ def pep257_test(python_filepaths):
 
 @pytest.fixture()
 def mock_pwd():
-    with patch("charmcraft.commands.init.pwd", autospec=True) as mock_pwd:
+    with patch("charmcraft.application.commands.init.pwd", autospec=True) as mock_pwd:
         mock_pwd.getpwuid.return_value.pw_gecos = "Test Gecos Author Name,,,"
         yield mock_pwd
 

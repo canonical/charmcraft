@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+#  Copyright 2020-2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for the 'init' command."""
-
+import argparse
 import os
+import pathlib
 import re
 from datetime import date
 from typing import Optional
 
 from craft_cli import CraftError, emit
 
+from charmcraft.application.commands import base
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import get_templates_environment, make_executable
 
@@ -106,7 +108,7 @@ def _get_users_full_name_gecos() -> Optional[str]:
         return None
 
 
-class InitCommand(BaseCommand):
+class InitCommand(base.CharmcraftCommand):
     """Initialize a directory to be a charm project."""
 
     name = "init"
@@ -134,43 +136,43 @@ class InitCommand(BaseCommand):
             help=f"Use the specified project profile (defaults to '{DEFAULT_PROFILE}')",
         )
 
-    def run(self, args):
+    def run(self, parsed_args: argparse.Namespace):
         """Execute command's actual functionality."""
-        init_dirpath = self.config.project.dirpath
+        init_dirpath = pathlib.Path(self._global_args.get("project_dir") or ".").resolve()
         if not init_dirpath.exists():
             init_dirpath.mkdir(parents=True)
-        elif any(init_dirpath.iterdir()) and not args.force:
+        elif any(init_dirpath.iterdir()) and not parsed_args.force:
             tpl = "{!r} is not empty (consider using --force to work on nonempty directories)"
             raise CraftError(tpl.format(str(init_dirpath)))
         emit.debug(f"Using project directory {str(init_dirpath)!r}")
 
-        if args.author is None and pwd is not None:
-            args.author = _get_users_full_name_gecos()
+        if parsed_args.author is None and pwd is not None:
+            parsed_args.author = _get_users_full_name_gecos()
 
-        if not args.author:
+        if not parsed_args.author:
             raise CraftError(
                 "Unable to automatically determine author's name, specify it with --author"
             )
 
-        if not args.name:
-            args.name = init_dirpath.name
-            emit.debug(f"Set project name to '{args.name}'")
+        if not parsed_args.name:
+            parsed_args.name = init_dirpath.name
+            emit.debug(f"Set project name to '{parsed_args.name}'")
 
-        if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", args.name):
+        if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", parsed_args.name):
             raise CraftError(
-                f"{args.name} is not a valid charm name. "
+                f"{parsed_args.name} is not a valid charm name. "
                 "The name must start with a lowercase letter "
                 "and contain only alphanumeric characters and hyphens."
             )
 
         context = {
-            "name": args.name,
-            "author": args.author,
+            "name": parsed_args.name,
+            "author": parsed_args.author,
             "year": date.today().year,
-            "class_name": "".join(re.split(r"\W+", args.name.title())) + "Charm",
+            "class_name": "".join(re.split(r"\W+", parsed_args.name.title())) + "Charm",
         }
 
-        template_directory = PROFILES[args.profile]
+        template_directory = PROFILES[parsed_args.profile]
         env = get_templates_environment(template_directory)
 
         executables = ["run_tests", "src/charm.py"]

@@ -17,20 +17,25 @@
 from __future__ import annotations
 
 import os
+import pathlib
 import signal
 import sys
-from typing import Any
+from typing import Any, cast
 
 import craft_application
 import craft_cli
+import craft_parts
+import craft_providers
 from craft_application import Application, AppMetadata
 from craft_parts import plugins
 
 from charmcraft import errors, models, services
-from charmcraft.application.commands.lifecycle import get_lifecycle_command_group
+from charmcraft.application import commands
+from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
 from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
+from charmcraft.services import CharmcraftServiceFactory
 
 APP_METADATA = AppMetadata(
     name="charmcraft",
@@ -42,15 +47,24 @@ APP_METADATA = AppMetadata(
 class Charmcraft(Application):
     """Charmcraft application definition."""
 
+    def __init__(
+        self,
+        app: AppMetadata,
+        services: CharmcraftServiceFactory,
+    ) -> None:
+        super().__init__(app=app, services=services)
+        self._global_args: dict[str, Any] = {}
+
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
         """Return command groups."""
-        lifecycle_commands = get_lifecycle_command_group()
+        lifecycle_commands = commands.get_lifecycle_command_group()
+        other_commands = craft_application.application.commands.get_other_command_group()
 
         merged: dict[str, list[type[craft_cli.BaseCommand]]] = {}
         all_groups = [
             lifecycle_commands,
-            # other_commands,
+            other_commands,
             *self._command_groups,
         ]
 
@@ -82,6 +96,14 @@ class Charmcraft(Application):
             platform=platform,
         )
         self.services.set_kwargs("analysis", project_dir=self._work_dir)
+
+    def configure(self, global_args: dict[str, Any]) -> None:
+        """Configure the application using any global arguments."""
+        super().configure(global_args)
+        self._global_args = global_args
+        if not self.services.ProviderClass.is_managed():
+            project_dir = pathlib.Path(global_args.get("project_dir") or ".").resolve(strict=True)
+            self._work_dir = project_dir
 
     def _get_dispatcher(self) -> craft_application.application._Dispatcher:  # type: ignore[override]
         """Configure charmcraft, including a fallback to the classic entrypoint.
@@ -135,6 +157,67 @@ class Charmcraft(Application):
 
         return dispatcher
 
+    def run(self) -> int:  # noqa: PLR0912 (too many branches due to error handling)
+        """Bootstrap and run the application."""
+        dispatcher = self._get_dispatcher()
+        craft_cli.emit.trace("Preparing application...")
+
+        return_code = 1  # General error
+        try:
+            command = cast(
+                CharmcraftCommand,
+                dispatcher.load_command(
+                    {"app": self.app, "services": self.services, "global_args": self._global_args}
+                ),
+            )
+            platform = getattr(dispatcher.parsed_args, "platform", None)
+            build_for = getattr(dispatcher.parsed_args, "build_for", None)
+            self._configure_services(platform, build_for)
+
+            if not command.run_managed(dispatcher.parsed_args):
+                # command runs in the outer instance
+                craft_cli.emit.debug(f"Running {self.app.name} {command.name} on host")
+                if command.always_load_project:
+                    self.services.project = self.project
+                return_code = dispatcher.run() or 0
+            elif not self.services.ProviderClass.is_managed():
+                # command runs in inner instance, but this is the outer instance
+                self.services.project = self.project
+                self.run_managed(platform, build_for)
+                return_code = 0
+            else:
+                # command runs in inner instance
+                self.services.project = self.project
+                return_code = dispatcher.run() or 0
+        except craft_cli.ArgumentParsingError as err:
+            print(err, file=sys.stderr)  # to stderr, as argparse normally does
+            craft_cli.emit.ended_ok()
+            return_code = 64  # Command line usage error from sysexits.h
+        except KeyboardInterrupt as err:
+            self._emit_error(craft_cli.CraftError("Interrupted."), cause=err)
+            return_code = 128 + signal.SIGINT
+        except craft_cli.CraftError as err:
+            self._emit_error(err)
+        except craft_parts.PartsError as err:
+            self._emit_error(
+                craft_cli.CraftError(err.brief, details=err.details, resolution=err.resolution)
+            )
+            return_code = 1
+        except craft_providers.ProviderError as err:
+            self._emit_error(
+                craft_cli.CraftError(err.brief, details=err.details, resolution=err.resolution)
+            )
+            return_code = 1
+        except Exception as err:  # noqa: BLE001 pylint: disable=broad-except
+            self._emit_error(craft_cli.CraftError(f"{self.app.name} internal error: {err!r}"))
+            if os.getenv("CRAFT_DEBUG") == "1":
+                raise
+            return_code = 70  # EX_SOFTWARE from sysexits.h
+        else:
+            craft_cli.emit.ended_ok()
+
+        return return_code
+
 
 def main() -> int:
     """Run craft-application based charmcraft with classic fallback."""
@@ -143,6 +226,18 @@ def main() -> int:
     charmcraft_services = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     app = Charmcraft(app=APP_METADATA, services=charmcraft_services)
+
+    app.add_global_argument(
+        craft_cli.GlobalArgument(
+            "project_dir",
+            "option",
+            "-p",
+            "--project-dir",
+            "Specify the project's directory (defaults to current)",
+        )
+    )
+
+    app.add_command_group("Basic", [commands.InitCommand])
 
     try:
         return app.run()

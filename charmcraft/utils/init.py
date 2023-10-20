@@ -13,26 +13,9 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Charmcraft commands."""
+"""Helpers for initialising a new charm."""
 
-from charmcraft.application.commands.init import InitCommand
-from charmcraft.application.commands.lifecycle import (
-    get_lifecycle_command_group,
-    BuildCommand,
-    CleanCommand,
-    PackCommand,
-    PullCommand,
-    PrimeCommand,
-    StageCommand,
-)
 
-__all__ = [
-    "InitCommand",
-    "get_lifecycle_command_group",
-    "BuildCommand",
-    "CleanCommand",
-    "PackCommand",
-    "PrimeCommand",
-    "PullCommand",
-    "StageCommand",
-]
+CHARM_EXECUTABLE_FILES = frozenset(("run_tests", "src/charm.py"))
+
+

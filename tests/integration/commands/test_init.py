@@ -25,6 +25,7 @@ import sys
 from typing import Set
 from unittest import mock
 
+import pydocstyle
 import pytest
 import pytest_check
 
@@ -231,3 +232,24 @@ def test_tox_success(new_path, init_command, profile):
     init_command.run(create_namespace(profile=profile))
 
     subprocess.run(["tox", "-v"], cwd=new_path, check=True, env=env)
+
+
+@pytest.mark.parametrize("profile", list(commands.init.PROFILES))
+def test_pep257(new_path, init_command, profile):
+    to_ignore = {
+        "D105",  # Missing docstring in magic method
+        "D107",  # Missing docstring in __init__
+    }
+    to_include = pydocstyle.violations.conventions.pep257 - to_ignore
+
+    init_command.run(create_namespace(profile=profile))
+
+    python_paths = (str(path) for path in new_path.rglob("*.py"))
+    python_paths = (path for path in python_paths if "/tests/" not in path)
+    errors = list(pydocstyle.check(python_paths, select=to_include))
+
+    if errors:
+        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
+        report.extend(str(e) for e in errors)
+        msg = "\n".join(report)
+        pytest.fail(msg, pytrace=False)

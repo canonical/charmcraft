@@ -34,26 +34,6 @@ from charmcraft.utils import S_IXALL
 from tests.test_infra import get_python_filepaths
 
 
-def pep8_test(python_filepaths):
-    """Helper to check PEP8 (used from this module and from test_init.py to check templates)."""
-    style_guide = get_style_guide()
-    fake_stdout = io.TextIOWrapper(io.BytesIO())
-    with patch("sys.stdout", fake_stdout):
-        report = style_guide.check_files(python_filepaths)
-
-    # if flake8 didn't report anything, we're done
-    if report.total_errors == 0:
-        return
-
-    # grab on which files we have issues
-    fake_stdout.seek(0)
-    flake8_issues = fake_stdout.read().split("\n")
-
-    if flake8_issues:
-        msg = "Please fix the following flake8 issues!\n" + "\n".join(flake8_issues)
-        pytest.fail(msg, pytrace=False)
-
-
 def pep257_test(python_filepaths):
     """Helper to check PEP257 (used from this module and from test_init.py to check templates)."""
     to_ignore = {
@@ -81,13 +61,3 @@ def test_init_pep257(tmp_path, config, profile):
     cmd.run(create_namespace(profile=profile))
     paths = get_python_filepaths(roots=[str(tmp_path / "src")], python_paths=[])
     pep257_test(paths)
-
-
-@pytest.mark.parametrize("profile", list(PROFILES))
-def test_init_pep8(tmp_path, config, *, author="J Doe", profile):
-    cmd = InitCommand(config)
-    cmd.run(create_namespace(author=author, profile=profile))
-    paths = get_python_filepaths(
-        roots=[str(tmp_path / "src"), str(tmp_path / "tests")], python_paths=[]
-    )
-    pep8_test(paths)

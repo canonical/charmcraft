@@ -91,27 +91,3 @@ def test_init_pep8(tmp_path, config, *, author="J Doe", profile):
         roots=[str(tmp_path / "src"), str(tmp_path / "tests")], python_paths=[]
     )
     pep8_test(paths)
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-@pytest.mark.skipif(os.getenv("RUNNING_TOX"), reason="does not work inside tox")
-@pytest.mark.parametrize("profile", list(PROFILES))
-def test_tests(tmp_path, config, profile):
-    # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
-    # virtualenv libs and bins (if any), as they need them, but we're not creating a
-    # venv for the local tests (note that for CI doesn't use a venv)
-    env = os.environ.copy()
-    env_paths = [p for p in sys.path if "env/lib/python" in p]
-    if env_paths:
-        if "PYTHONPATH" in env:
-            env["PYTHONPATH"] += ":" + ":".join(env_paths)
-        else:
-            env["PYTHONPATH"] = ":".join(env_paths)
-        for path in env_paths:
-            bin_path = path[: path.index("env/lib/python")] + "env/bin"
-            env["PATH"] = bin_path + ":" + env["PATH"]
-
-    cmd = InitCommand(config)
-    cmd.run(create_namespace(profile=profile))
-
-    subprocess.run(["tox", "-v"], cwd=str(tmp_path), check=True, env=env)

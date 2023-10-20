@@ -15,16 +15,14 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for init command."""
 import argparse
-import os
 import pathlib
 import pwd
 import re
-import shutil
-import subprocess
 from typing import Set
 from unittest import mock
 
 import pytest
+import pytest_check
 
 import charmcraft
 from charmcraft import errors
@@ -74,20 +72,38 @@ def create_namespace(
 @pytest.mark.parametrize(
     ("profile", "expected_files"),
     [
-        ("simple", BASIC_INIT_FILES),
-        ("machine", BASIC_INIT_FILES),
-        ("kubernetes", BASIC_INIT_FILES),
+        pytest.param("simple", BASIC_INIT_FILES, id="simple"),
+        pytest.param("machine", BASIC_INIT_FILES, id="machine"),
+        pytest.param("kubernetes", BASIC_INIT_FILES, id="kubernetes"),
+    ],
+)
+@pytest.mark.parametrize("charm_name", ["my-charm", "charm123"])
+@pytest.mark.parametrize(
+    "author",
+    [
+        pytest.param("Author McAuthorFace", id="ascii-author"),
+        pytest.param("فلانة الفلانية", id="non-ascii-author"),
     ],
 )
 def test_files_created_correct(
-    new_path, init_command, profile: str, expected_files: Set[pathlib.Path]
+    new_path,
+    init_command,
+    profile: str,
+    expected_files: Set[pathlib.Path],
+    charm_name,
+    author,
 ):
-    init_command.run(create_namespace(profile=profile))
+    params = create_namespace(name=charm_name, author=author, profile=profile)
+    init_command.run(params)
 
     actual_files = {p.relative_to(new_path) for p in new_path.rglob("*")}
 
-    assert actual_files == expected_files
-    assert re.search(r"^name: my-charm$", (new_path / "charmcraft.yaml").read_text(), re.MULTILINE)
+    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text()
+    tox_ini = (new_path / "tox.ini").read_text()
+
+    pytest_check.equal(actual_files, expected_files)
+    pytest_check.is_true(re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE))
+    pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
 
 
 def test_force(new_path, init_command):
@@ -105,7 +121,7 @@ def test_force(new_path, init_command):
         assert f.read() == "This is a nonsense readme"
 
 
-@pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag"])
+@pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag", "camelCase"])
 def test_bad_name(monkeypatch, new_path, init_command, name):
     with pytest.raises(errors.CraftError, match=BAD_CHARM_NAME_REGEX):
         init_command.run(create_namespace(name=name))
@@ -126,7 +142,9 @@ def test_bad_name(monkeypatch, new_path, init_command, name):
         ),
     ],
 )
-def test_gecos_bad_detect_author_name(monkeypatch, new_path, init_command, mock_getpwuid, error_msg):
+def test_gecos_bad_detect_author_name(
+    monkeypatch, new_path, init_command, mock_getpwuid, error_msg
+):
     monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
 
     with pytest.raises(errors.CraftError, match=error_msg):

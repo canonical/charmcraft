@@ -174,3 +174,34 @@ def test_gecos_bad_detect_author_name(
 
     with pytest.raises(errors.CraftError, match=error_msg):
         init_command.run(create_namespace(author=None))
+
+
+@pytest.mark.parametrize(
+    "subdir",
+    [
+        "somedir",
+        "some/dir",
+        "a/really/deep/path/with_parents/all/created",
+        pytest.param(
+            "/tmp/test_charm_dir-absolute_directory_path",
+            marks=pytest.mark.skipif(
+                os.name != "posix", reason="This is a posix path"
+            ),
+        ),
+    ],
+)
+@pytest.mark.parametrize("expected_files", [BASIC_INIT_FILES])
+def test_create_directory(new_path, init_command, subdir, expected_files):
+    init_dir = new_path / subdir
+
+    try:
+        init_command._global_args["project_dir"] = subdir
+
+        init_command.run(create_namespace())
+
+        actual_files = {p.relative_to(init_dir) for p in init_dir.rglob("*")}
+
+        assert actual_files == expected_files
+
+    finally:
+        shutil.rmtree(init_dir)

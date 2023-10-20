@@ -100,10 +100,6 @@ def test_init_pep8(tmp_path, config, *, author="J Doe", profile):
     pep8_test(paths)
 
 
-def test_init_non_ascii_author(tmp_path, config):
-    test_init_pep8(tmp_path, config, author="فلانة الفلانية", profile=DEFAULT_PROFILE)
-
-
 @pytest.mark.skipif(sys.platform == "win32", reason="mocking for pwd/gecos only")
 def test_no_author_gecos(tmp_path, config, mock_pwd):
     cmd = InitCommand(config)

@@ -108,7 +108,6 @@ def test_files_created_correct(
     # Note: we need to specify the encoding here because Windows defaults ta CP-1252.
     charmcraft_yaml = (new_path / "charmcraft.yaml").read_text(encoding="utf-8")
     tox_ini = (new_path / "tox.ini").read_text(encoding="utf-8")
-
     pytest_check.equal(actual_files, expected_files)
     pytest_check.is_true(re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE))
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
@@ -128,7 +127,7 @@ def test_force(new_path, init_command):
         assert f.read() == "This is a nonsense readme"
 
 
-@pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag"])
+@pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag", "camelCase"])
 def test_bad_name(monkeypatch, new_path, init_command, name):
     with pytest.raises(errors.CraftError, match=BAD_CHARM_NAME_REGEX):
         init_command.run(create_namespace(name=name))
@@ -149,7 +148,9 @@ def test_bad_name(monkeypatch, new_path, init_command, name):
         ),
     ],
 )
-def test_gecos_bad_detect_author_name(monkeypatch, new_path, init_command, mock_getpwuid, error_msg):
+def test_gecos_bad_detect_author_name(
+    monkeypatch, new_path, init_command, mock_getpwuid, error_msg
+):
     monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
 
     with pytest.raises(errors.CraftError, match=error_msg):

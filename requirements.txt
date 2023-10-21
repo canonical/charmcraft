@@ -41,7 +41,7 @@ referencing==0.30.2
 requests==2.31.0
 requests-toolbelt==1.0.0
 requests-unixsocket==0.3.0
-rpds-py==0.10.3
+rpds-py==0.10.6
 SecretStorage==3.3.3
 six==1.16.0
 snap-helpers==0.4.2

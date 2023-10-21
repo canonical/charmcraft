@@ -56,7 +56,7 @@ lint_requires = [
 
 type_requires = [
     "mypy[reports]==1.5.1",
-    "pyright==1.1.316",
+    "pyright==1.1.332",
     "types-python-dateutil",
     "types-requests",
     "types-setuptools",

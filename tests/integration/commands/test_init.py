@@ -104,8 +104,9 @@ def test_files_created_correct(
 
     actual_files = {p.relative_to(new_path) for p in new_path.rglob("*")}
 
-    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text()
-    tox_ini = (new_path / "tox.ini").read_text()
+    # Note: we need to specify the encoding here because Windows defaults ta CP-1252.
+    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text(encoding="utf-8")
+    tox_ini = (new_path / "tox.ini").read_text(encoding="utf-8")
 
     pytest_check.equal(actual_files, expected_files)
     pytest_check.is_true(re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE))
@@ -173,8 +174,8 @@ def test_gecos_user_not_found(monkeypatch, new_path, init_command, mock_getpwuid
 
 @pytest.mark.skipif(sys.platform == "win32", reason=("Password database only on Unix"))
 def test_gecos_user_has_no_name(monkeypatch, new_path, init_command):
-    mock_getpwuid = (
-        mock.Mock(return_value=pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))),
+    mock_getpwuid = mock.Mock(
+        return_value=pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))
     )
     monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
 
@@ -254,7 +255,7 @@ def test_pep257(new_path, init_command, profile):
     init_command.run(create_namespace(profile=profile))
 
     python_paths = (str(path) for path in new_path.rglob("*.py"))
-    python_paths = (path for path in python_paths if "/tests/" not in path)
+    python_paths = (path for path in python_paths if "tests" not in path)
     errors = list(pydocstyle.check(python_paths, select=to_include))
 
     if errors:

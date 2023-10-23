@@ -20,7 +20,7 @@ import enum
 import os
 import pathlib
 import sys
-from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple
 
 from craft_cli import CraftError, emit
 from craft_providers import Base, Executor, Provider, ProviderError, lxd, multipass
@@ -64,12 +64,12 @@ class Plan(NamedTuple):
 
 def create_build_plan(
     *,
-    bases: Optional[List[BasesConfiguration]],
-    bases_indices: Optional[List[int]],
+    bases: list[BasesConfiguration] | None,
+    bases_indices: list[int] | None,
     destructive_mode: bool,
     managed_mode: bool,
     provider: "Provider",
-) -> List[Plan]:
+) -> list[Plan]:
     """Determine the build plan based on user inputs and host environment.
 
     Provide a list of bases that are buildable and scoped according to user
@@ -86,7 +86,7 @@ def create_build_plan(
     :returns: List of Plans
     :raises CraftError: if no bases are provided.
     """
-    build_plan: List[Plan] = []
+    build_plan: list[Plan] = []
 
     if not bases:
         raise CraftError("Cannot create build plan because no bases were provided.")
@@ -124,7 +124,7 @@ def create_build_plan(
     return build_plan
 
 
-def get_command_environment(base: Base) -> Dict[str, str]:
+def get_command_environment(base: Base) -> dict[str, str]:
     """Construct the required environment."""
     env = base.default_command_environment()
     env[const.MANAGED_MODE_ENV_VAR] = "1"
@@ -175,7 +175,7 @@ def get_base_configuration(
     *,
     alias: enum.Enum,
     instance_name: str,
-    shared_cache_path: Optional[pathlib.Path] = None,
+    shared_cache_path: pathlib.Path | None = None,
 ) -> Base:
     """Create a Base configuration."""
     # injecting a snap on a non-linux system is not supported, so default to
@@ -233,7 +233,7 @@ def ensure_provider_is_available(provider: "Provider") -> None:
     provider.ensure_provider_is_available()
 
 
-def is_base_available(base: Base) -> Tuple[bool, Union[str, None]]:
+def is_base_available(base: Base) -> tuple[bool, str | None]:
     """Check if provider can provide an environment matching given base.
 
     :param base: Base to check.

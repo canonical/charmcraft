@@ -22,7 +22,6 @@ import os
 import pathlib
 import tempfile
 import types
-from typing import Optional
 from unittest.mock import Mock
 
 import craft_parts
@@ -218,7 +217,7 @@ def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     If content is not given, remove charmcraft.yaml if exists.
     """
 
-    def prepare_charmcraft_yaml(content: Optional[str] = None):
+    def prepare_charmcraft_yaml(content: str | None = None):
         if content is None:
             try:
                 os.remove(tmp_path / const.CHARMCRAFT_FILENAME)
@@ -240,7 +239,7 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
     If content is not given, remove metadata.yaml if exists.
     """
 
-    def prepare_metadata_yaml(content: Optional[str] = None, remove: bool = False):
+    def prepare_metadata_yaml(content: str | None = None, remove: bool = False):
         if content is None:
             try:
                 os.remove(tmp_path / const.METADATA_FILENAME)
@@ -262,7 +261,7 @@ def prepare_actions_yaml(tmp_path: pathlib.Path):
     If content is not given, remove actions.yaml if exists.
     """
 
-    def prepare_actions_yaml(content: Optional[str] = None):
+    def prepare_actions_yaml(content: str | None = None):
         if content is None:
             try:
                 os.remove(tmp_path / const.JUJU_ACTIONS_FILENAME)
@@ -284,7 +283,7 @@ def prepare_config_yaml(tmp_path: pathlib.Path):
     If content is not given, remove config.yaml if exists.
     """
 
-    def prepare_config_yaml(content: Optional[str] = None):
+    def prepare_config_yaml(content: str | None = None):
         if content is None:
             try:
                 os.remove(tmp_path / const.JUJU_CONFIG_FILENAME)

@@ -16,7 +16,7 @@
 
 
 from textwrap import dedent
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 from overrides import override
@@ -33,7 +33,7 @@ class TestExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @override
-    def get_root_snippet(self) -> Dict[str, Any]:
+    def get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to apply."""
         return {"terms": ["https://example.com/test"]}
 
@@ -45,7 +45,7 @@ class TestExtension2(FakeExtension):
     bases = [("ubuntu", "23.04")]
 
     @override
-    def get_root_snippet(self) -> Dict[str, Any]:
+    def get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to apply."""
         return {"terms": ["https://example.com/test2"]}
 

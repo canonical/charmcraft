@@ -16,7 +16,6 @@
 
 """Extension models."""
 
-from typing import Dict, List, Tuple
 
 from charmcraft.models.basic import ModelConfigDefaults
 
@@ -25,9 +24,9 @@ class ExtensionModel(ModelConfigDefaults, frozen=True):
     """Extension model for presentation."""
 
     name: str
-    bases: List[Tuple[str, str]]
+    bases: list[tuple[str, str]]
 
-    def marshal(self) -> Dict[str, str]:
+    def marshal(self) -> dict[str, str]:
         """Marshal model into a dictionary for presentation."""
         return {
             "Extension name": self.name,

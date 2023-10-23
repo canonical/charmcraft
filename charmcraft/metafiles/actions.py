@@ -20,7 +20,7 @@ import contextlib
 import logging
 import pathlib
 import shutil
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pydantic
 import yaml
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def parse_actions_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[JujuActions]:
+def parse_actions_yaml(charm_dir: pathlib.Path, allow_broken=False) -> JujuActions | None:
     """Parse project's actions.yaml.
 
     :param charm_dir: Directory to read actions.yaml from.
@@ -70,7 +70,7 @@ def parse_actions_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[
 def create_actions_yaml(
     basedir: pathlib.Path,
     charmcraft_config: "CharmcraftConfig",
-) -> Optional[pathlib.Path]:
+) -> pathlib.Path | None:
     """Create actions.yaml in basedir for given project configuration.
 
     :param basedir: Directory to create Charm in.

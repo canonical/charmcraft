@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 from craft_cli import CraftError
@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 def create_manifest(
     basedir: pathlib.Path,
     started_at: datetime.datetime,
-    bases_config: Optional[charmcraft.models.charmcraft.BasesConfiguration],
-    linting_results: List[charmcraft.linters.CheckResult],
+    bases_config: charmcraft.models.charmcraft.BasesConfiguration | None,
+    linting_results: list[charmcraft.linters.CheckResult],
 ) -> pathlib.Path:
     """Create manifest.yaml in basedir for given base configuration.
 
@@ -50,7 +50,7 @@ def create_manifest(
 
     :returns: Path to created manifest.yaml.
     """
-    content: Dict[str, Any] = {
+    content: dict[str, Any] = {
         "charmcraft-version": charmcraft.__version__,
         "charmcraft-started-at": started_at.isoformat() + "Z",
     }

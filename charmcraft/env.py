@@ -20,7 +20,6 @@
 import distutils.util
 import os
 import pathlib
-from typing import Optional
 
 import platformdirs
 
@@ -63,7 +62,7 @@ def get_managed_environment_project_path():
     return get_managed_environment_home_path() / "project"
 
 
-def get_managed_environment_snap_channel() -> Optional[str]:
+def get_managed_environment_snap_channel() -> str | None:
     """User-specified channel to use when installing Charmcraft snap from Snap Store.
 
     :returns: Channel string if specified, else None.

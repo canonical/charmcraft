@@ -20,7 +20,7 @@ import ast
 import os
 import pathlib
 import shlex
-from typing import Generator, List, Type, Union
+from collections.abc import Generator
 
 import yaml
 
@@ -32,7 +32,7 @@ from charmcraft.models.lint import CheckResult, CheckType, LintResult
 BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
 
 
-def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
+def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> pathlib.Path | None:
     """Verify if the charm has a dispatch file pointing to a Python entrypoint.
 
     :returns: the entrypoint path if all succeeds, None otherwise.
@@ -55,7 +55,7 @@ def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, N
     return basedir / entrypoint_str
 
 
-def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
+def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> pathlib.Path | None:
     """Verify if the charm has a dispatch file pointing to a Python entrypoint.
 
     :returns: the entrypoint path if all succeeds, None otherwise.
@@ -162,7 +162,7 @@ class Framework(AttributeChecker):
             return None
         return self.result_texts[self.result]
 
-    def _get_imports(self, filepath: pathlib.Path) -> Generator[List[str], None, None]:
+    def _get_imports(self, filepath: pathlib.Path) -> Generator[list[str], None, None]:
         """Parse a Python filepath and yield its imports.
 
         If the file does not exist or cannot be parsed, return empty. Otherwise
@@ -373,7 +373,7 @@ class Entrypoint(Linter):
 
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
-CHECKERS: List[Type[BaseChecker]] = [
+CHECKERS: list[type[BaseChecker]] = [
     Language,
     JujuActions,
     JujuConfig,
@@ -388,7 +388,7 @@ def analyze(
     basedir: pathlib.Path,
     *,
     override_ignore_config: bool = False,
-) -> List[CheckResult]:
+) -> list[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
     for cls in CHECKERS:

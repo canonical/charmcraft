@@ -21,7 +21,7 @@ import shutil
 import subprocess
 import tempfile
 import zipfile
-from typing import Collection, Dict, List, Mapping, Optional, Sequence
+from collections.abc import Collection, Mapping, Sequence
 
 import craft_parts
 import yaml
@@ -77,7 +77,7 @@ def format_charm_file_name(charm_name: str, bases_config: BasesConfiguration) ->
     return "_".join([charm_name, _format_bases_config(bases_config)]) + ".charm"
 
 
-def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
+def launch_shell(*, cwd: pathlib.Path | None = None) -> None:
     """Launch a user shell for debugging environment.
 
     :param cwd: Working directory to start user in.
@@ -257,8 +257,8 @@ class Builder:
 
     @charmcraft.instrum.Timer("Builder run")
     def run(
-        self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
-    ) -> List[str]:
+        self, bases_indices: list[int] | None = None, destructive_mode: bool = False
+    ) -> list[str]:
         """Run build process.
 
         In managed-mode or destructive-mode, build for each bases configuration
@@ -268,7 +268,7 @@ class Builder:
 
         :returns: List of charm files created.
         """
-        charms: List[str] = []
+        charms: list[str] = []
 
         managed_mode = charmcraft.env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
@@ -445,7 +445,7 @@ class Builder:
         zipfh.close()
         return zipname
 
-    def _get_charm_pack_args(self, base_indeces: List[str], destructive_mode: bool) -> List[str]:
+    def _get_charm_pack_args(self, base_indeces: list[str], destructive_mode: bool) -> list[str]:
         """Get the arguments for a charmcraft pack subprocess to run."""
         args = ["charmcraft", "pack", "--verbose"]
         if destructive_mode:
@@ -459,8 +459,8 @@ class Builder:
     def pack_bundle(
         self,
         *,
-        charms: Dict[str, pathlib.Path],
-        base_indeces: List[str],
+        charms: dict[str, pathlib.Path],
+        base_indeces: list[str],
         destructive_mode: bool,
         overwrite: bool = False,
     ) -> OutputFiles:
@@ -523,7 +523,7 @@ class Builder:
 def _subprocess_pack_charms(
     charms: Mapping[str, pathlib.Path],
     command_args: Collection[str],
-) -> Dict[str, pathlib.Path]:
+) -> dict[str, pathlib.Path]:
     """Pack the given charms for a bundle in subprocesses.
 
     :param command_args: The initial arguments

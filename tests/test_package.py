@@ -20,7 +20,6 @@ import subprocess
 import sys
 import zipfile
 from textwrap import dedent
-from typing import List
 from unittest import mock
 from unittest.mock import ANY, MagicMock, call, patch
 
@@ -134,7 +133,7 @@ def basic_project(tmp_path, monkeypatch, prepare_charmcraft_yaml, prepare_metada
 
 @pytest.fixture()
 def basic_project_builder(basic_project, prepare_charmcraft_yaml):
-    def _basic_project_builder(bases_configs: List[BasesConfiguration], **builder_kwargs):
+    def _basic_project_builder(bases_configs: list[BasesConfiguration], **builder_kwargs):
         charmcraft_yaml = dedent(
             """
             type: charm

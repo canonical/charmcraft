@@ -51,7 +51,7 @@ pycparser==2.21
 pydantic==1.10.13
 pydantic-yaml==0.11.2
 pydocstyle==6.3.0
-pyfakefs==5.2.4
+pyfakefs==5.3.0
 pyflakes==3.1.0
 pymacaroons==0.13.0
 PyNaCl==1.5.0

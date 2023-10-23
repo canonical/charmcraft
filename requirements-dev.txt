@@ -9,7 +9,7 @@ click==8.1.7
 codespell==2.2.6
 colorama==0.4.6
 coverage==7.3.2
-craft-cli==2.1.0
+craft-cli==2.3.0
 craft-parts==1.25.1
 craft-providers==1.18.0
 craft-store==2.4.0

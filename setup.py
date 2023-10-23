@@ -50,7 +50,7 @@ install_requires = [
 lint_requires = [
     "black>=23.10.1,<24.0.0",
     "codespell[tomli]>=2.2.6,<3.0.0",
-    "ruff==0.0.282",
+    "ruff~=0.1.1",
     "yamllint>=1.32.0,<2.0.0",
 ]
 

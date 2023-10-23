@@ -15,9 +15,9 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for init command."""
 import argparse
+import contextlib
 import os
 import pathlib
-import pwd
 import re
 import shutil
 import subprocess
@@ -33,6 +33,9 @@ import charmcraft
 from charmcraft import errors
 from charmcraft.application import commands
 from charmcraft.utils import S_IXALL
+
+with contextlib.suppress(ImportError):
+    import pwd
 
 BASIC_INIT_FILES = frozenset(
     pathlib.Path(p)
@@ -130,6 +133,7 @@ def test_bad_name(monkeypatch, new_path, init_command, name):
         init_command.run(create_namespace(name=name))
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason=("Password database only on Unix"))
 @pytest.mark.parametrize("author", VALID_AUTHORS)
 def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
     monkeypatch.setattr(
@@ -149,6 +153,7 @@ def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason=("Password database only on Unix"))
 @pytest.mark.parametrize(
     ("mock_getpwuid", "error_msg"),
     [
@@ -157,19 +162,23 @@ def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
             UNKNOWN_AUTHOR_REGEX,
             id="user-doesnt-exist",
         ),
-        pytest.param(
-            mock.Mock(return_value=pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))),
-            UNKNOWN_AUTHOR_REGEX,
-            id="user-has-no-name",
-        ),
     ],
 )
-def test_gecos_bad_detect_author_name(
-    monkeypatch, new_path, init_command, mock_getpwuid, error_msg
-):
+def test_gecos_user_not_found(monkeypatch, new_path, init_command, mock_getpwuid, error_msg):
     monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
 
     with pytest.raises(errors.CraftError, match=error_msg):
+        init_command.run(create_namespace(author=None))
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason=("Password database only on Unix"))
+def test_gecos_user_has_no_name(monkeypatch, new_path, init_command):
+    mock_getpwuid = (
+        mock.Mock(return_value=pwd.struct_passwd(("user", "pass", 1, 1, "", "dir", "shell"))),
+    )
+    monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
+
+    with pytest.raises(errors.CraftError, match=UNKNOWN_AUTHOR_REGEX):
         init_command.run(create_namespace(author=None))
 
 

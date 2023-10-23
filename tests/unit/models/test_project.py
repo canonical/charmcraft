@@ -71,13 +71,6 @@ SIMPLE_CONFIG_DICT = {
 }
 SIMPLE_ACTIONS_YAML = "snooze: {description: Take a little nap.}"
 SIMPLE_ACTIONS_DICT = {"snooze": {"description": "Take a little nap."}}
-SIMPLE_CHARM = project.Charm(
-    type="charm",
-    name="charmy-mccharmface",
-    summary="Charmy!",
-    description="Very charming!",
-    bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
-)
 
 
 # region CharmPlatform tests

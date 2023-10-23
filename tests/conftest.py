@@ -34,7 +34,7 @@ from craft_parts import callbacks, plugins
 from craft_providers import Executor, Provider
 
 import charmcraft.parts
-from charmcraft import deprecations, instrum, parts, reactive_plugin, services
+from charmcraft import deprecations, instrum, parts, services
 from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
@@ -113,32 +113,6 @@ def tmpdir_under_tmpdir(tmpdir_factory):
 @pytest.fixture(autouse=True, scope="session")
 def setup_parts():
     parts.setup_parts()
-
-
-@pytest.fixture()
-def new_path(tmp_path):
-    old_path = os.getcwd()
-    try:
-        os.chdir(tmp_path)
-        yield tmp_path
-    finally:
-        os.chdir(old_path)
-
-
-@pytest.fixture()
-def fake_path(fs):
-    """chdir to a path on a fake filesystem.
-
-    Similar to new_path, but on a fake filesystem.
-    """
-    old_path = os.getcwd()
-    new_path = pathlib.Path("/tmp/fake_path")
-    fs.create_dir(new_path)
-    try:
-        os.chdir(new_path)
-        yield new_path
-    finally:
-        os.chdir(old_path)
 
 
 @pytest.fixture()

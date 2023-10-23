@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,20 +13,8 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+import sys
 
-"""Expose needed names at main package level."""
+import pytest
 
-from importlib.metadata import version, PackageNotFoundError
-import os
-
-
-def _get_version() -> str:
-    if os.getenv("SNAP_NAME") == "charmcraft":
-        return os.getenv("SNAP_VERSION", "")
-    try:
-        return version("charmcraft")
-    except PackageNotFoundError:
-        return "devel"
-
-
-__version__ = _get_version()
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")

@@ -23,6 +23,7 @@ import tempfile
 import zipfile
 from typing import Collection, Dict, List, Mapping, Optional, Sequence
 
+import craft_parts
 import yaml
 from craft_cli import CraftError, emit
 from craft_providers.bases import get_base_alias
@@ -152,13 +153,13 @@ class Builder:
 
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
-        if LintResult.WARNINGS.value in lint_results_by_outcome:
+        if LintResult.WARNINGS in lint_results_by_outcome:
             emit.progress("Lint Warnings:", permanent=True)
-            for result in lint_results_by_outcome[LintResult.WARNINGS.value]:
+            for result in lint_results_by_outcome[LintResult.WARNINGS]:
                 emit.progress(template.format(result), permanent=True)
-        if LintResult.ERRORS.value in lint_results_by_outcome:
+        if LintResult.ERRORS in lint_results_by_outcome:
             emit.progress("Lint Errors:", permanent=True)
-            for result in lint_results_by_outcome[LintResult.ERRORS.value]:
+            for result in lint_results_by_outcome[LintResult.ERRORS]:
                 emit.progress(template.format(result), permanent=True)
             if self.force_packing:
                 emit.progress("Packing anyway as requested.", permanent=True)
@@ -199,7 +200,7 @@ class Builder:
             ignore_local_sources=["*.charm"],
         )
         with charmcraft.instrum.Timer("Lifecycle run"):
-            lifecycle.run(parts.Step.PRIME)
+            lifecycle.run(craft_parts.Step.PRIME)
 
         # skip creation yaml files if using reactive, reactive will create them
         # in a incompatible way
@@ -506,7 +507,7 @@ class Builder:
             ignore_local_sources=[bundle_name + ".zip"],
         )
 
-        lifecycle.run(parts.Step.PRIME)
+        lifecycle.run(craft_parts.Step.PRIME)
 
         # pack everything
         create_manifest(

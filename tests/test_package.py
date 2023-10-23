@@ -1591,7 +1591,7 @@ def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_
             check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
-            result=LintResult.IGNORED.value,
+            result=LintResult.IGNORED,
         ),
     ]
 
@@ -1636,7 +1636,7 @@ def test_show_linters_attributes(basic_project, emitter, config):
             check_type=linters.CheckType.ATTRIBUTE,
             url="url",
             text="text",
-            result=LintResult.IGNORED.value,
+            result=LintResult.IGNORED,
         ),
     ]
 
@@ -1657,7 +1657,7 @@ def test_show_linters_lint_warnings(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=LintResult.WARNINGS.value,
+            result=LintResult.WARNINGS,
         ),
     ]
 
@@ -1682,7 +1682,7 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=LintResult.ERRORS.value,
+            result=LintResult.ERRORS,
         ),
     ]
 
@@ -1711,7 +1711,7 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=LintResult.ERRORS.value,
+            result=LintResult.ERRORS,
         ),
     ]
 

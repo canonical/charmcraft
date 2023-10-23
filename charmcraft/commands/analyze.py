@@ -111,9 +111,9 @@ class AnalyzeCommand(BaseCommand):
             else:
                 # linters
                 group_key = result.result
-                if result.result == LintResult.OK.value:
+                if result.result == LintResult.OK:
                     result_info = "no issues found"
-                elif result.result in (LintResult.FATAL.value, LintResult.IGNORED.value):
+                elif result.result in (LintResult.FATAL, LintResult.IGNORED):
                     result_info = None
                 else:
                     result_info = result.text
@@ -122,11 +122,11 @@ class AnalyzeCommand(BaseCommand):
         # present the results
         titles = [
             ("Attributes", linters.CheckType.ATTRIBUTE),
-            ("Lint Ignored", LintResult.IGNORED.value),
-            ("Lint Warnings", LintResult.WARNINGS.value),
-            ("Lint Errors", LintResult.ERRORS.value),
-            ("Lint Fatal", LintResult.FATAL.value),
-            ("Lint OK", LintResult.OK.value),
+            ("Lint Ignored", LintResult.IGNORED),
+            ("Lint Warnings", LintResult.WARNINGS),
+            ("Lint Errors", LintResult.ERRORS),
+            ("Lint Fatal", LintResult.FATAL),
+            ("Lint OK", LintResult.OK),
         ]
         for title, key in titles:
             results = grouped.get(key)
@@ -139,11 +139,11 @@ class AnalyzeCommand(BaseCommand):
                         emit.message(f"- {result.name} ({result.url})")
 
         # the return code depends on the presence of different issues
-        if LintResult.FATAL.value in grouped:
+        if LintResult.FATAL in grouped:
             retcode = 1
-        elif LintResult.ERRORS.value in grouped:
+        elif LintResult.ERRORS in grouped:
             retcode = 2
-        elif LintResult.WARNINGS.value in grouped:
+        elif LintResult.WARNINGS in grouped:
             retcode = 3
         else:
             retcode = 0

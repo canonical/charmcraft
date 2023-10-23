@@ -75,9 +75,7 @@ module=[
     "charmcraft.models.config",
     "charmcraft.models.charmcraft",
     "charmcraft.package",
-    "charmcraft.parts",
     "charmcraft.providers",
-    "charmcraft.reactive_plugin",
 ]
 ignore_errors = true
 

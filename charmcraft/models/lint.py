@@ -15,21 +15,25 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Models for linters."""
 import enum
+from typing import final
 
 from pydantic import dataclasses
 
 
+# Making this a str subclass makes it JSON serialisable as that string.
+# This can be replaced with StrEnum once we can drop support for Python < 3.11
 class CheckType(str, enum.Enum):
     """Type of analyzer, either attribute check or linter.
 
-    More documentation: https://juju.is/docs/sdk/charmcraft-analyzers-and-linters
+    More documentation: https://juju.is/docs/sdk/charmcraft-analyzers-and-linters.
     """
 
     ATTRIBUTE = "attribute"
     LINT = "lint"
 
 
-class LintResult(enum.Enum):
+@final
+class LintResult:
     """Check results."""
 
     OK = "ok"

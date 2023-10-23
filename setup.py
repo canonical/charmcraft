@@ -102,6 +102,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
     ],
     entry_points={
         "console_scripts": ["charmcraft = charmcraft.main:main"],

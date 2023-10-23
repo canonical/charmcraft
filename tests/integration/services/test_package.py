@@ -23,16 +23,15 @@ import pytest_check
 
 from charmcraft import models, services
 from charmcraft.application.main import APP_METADATA
-from tests.unit import SIMPLE_CHARM
 
 
 @pytest.fixture()
-def package_service(fake_project_dir, service_factory):
+def package_service(fake_path, service_factory):
+    fake_project_dir = fake_path
     svc = services.PackageService(
         app=APP_METADATA,
-        project=SIMPLE_CHARM.copy(deep=True),
-        # The package service doesn't call other services
-        services=service_factory,  # type: ignore[attr]
+        project=service_factory.project,
+        services=service_factory,
         project_dir=fake_project_dir,
         platform="ubuntu-22.04-arm64",
     )
@@ -44,15 +43,17 @@ def package_service(fake_project_dir, service_factory):
     "project_path", list((pathlib.Path(__file__).parent / "sample_projects").iterdir())
 )
 @freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
-def test_write_metadata(fs, fake_prime_dir, project_path, package_service):
+def test_write_metadata(fs, package_service, project_path):
     fs.add_real_directory(project_path)
+    test_prime_dir = pathlib.Path("/prime")
+    fs.create_dir(test_prime_dir)
     expected_prime_dir = project_path / "prime"
 
     project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
     project._started_at = datetime.datetime.utcnow()
     package_service._project = project
 
-    package_service.write_metadata(fake_prime_dir)
+    package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
-        pytest_check.equal((fake_prime_dir / file.name).read_text(), file.read_text())
+        pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())

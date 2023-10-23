@@ -36,7 +36,19 @@ import charmcraft.parts
 from charmcraft import deprecations, instrum, parts
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
+from charmcraft.models import project
 from charmcraft.models.charmcraft import Base, BasesConfiguration
+
+
+@pytest.fixture()
+def simple_charm():
+    return project.Charm(
+        type="charm",
+        name="charmy-mccharmface",
+        summary="Charmy!",
+        description="Very charming!",
+        bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+    )
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -55,6 +67,22 @@ def new_path(tmp_path):
     try:
         os.chdir(tmp_path)
         yield tmp_path
+    finally:
+        os.chdir(old_path)
+
+
+@pytest.fixture()
+def fake_path(fs):
+    """chdir to a path on a fake filesystem.
+
+    Similar to new_path, but on a fake filesystem.
+    """
+    old_path = os.getcwd()
+    new_path = pathlib.Path("/tmp/fake_path")
+    fs.create_dir(new_path)
+    try:
+        os.chdir(new_path)
+        yield new_path
     finally:
         os.chdir(old_path)
 

@@ -14,30 +14,3 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Configuration for services unit tests."""
-
-import craft_application
-import pytest
-
-from charmcraft import services
-from charmcraft.application.main import APP_METADATA
-
-from .. import SIMPLE_CHARM
-
-
-@pytest.fixture()
-def service_factory(fs, fake_project_dir, fake_prime_dir) -> craft_application.ServiceFactory:
-    factory = craft_application.ServiceFactory(
-        app=APP_METADATA,
-        LifecycleClass=services.LifecycleService,
-        PackageClass=services.PackageService,
-        ProviderClass=services.ProviderService,
-    )
-
-    factory.set_kwargs(
-        "package",
-        project_dir=fake_project_dir,
-    )
-
-    factory.project = SIMPLE_CHARM.copy(deep=True)
-
-    return factory

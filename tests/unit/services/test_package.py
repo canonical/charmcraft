@@ -22,16 +22,16 @@ import pytest
 from charmcraft import models, services
 from charmcraft.application.main import APP_METADATA
 
-from ..models.test_project import SIMPLE_CHARM
-
 SIMPLE_BUILD_BASE = models.charmcraft.Base(name="ubuntu", channel="22.04", architectures=["arm64"])
 
 
 @pytest.fixture()
-def package_service(fake_project_dir):
+def package_service(fake_path, simple_charm):
+    fake_project_dir = fake_path / "project"
+    fake_project_dir.mkdir(parents=True)
     return services.PackageService(
         app=APP_METADATA,
-        project=SIMPLE_CHARM.copy(deep=True),
+        project=simple_charm,
         # The package service doesn't call other services
         services=None,  # type: ignore[attr]
         project_dir=fake_project_dir,
@@ -40,20 +40,17 @@ def package_service(fake_project_dir):
 
 
 @pytest.mark.parametrize(
-    ("project", "metadata"),
+    "metadata",
     [
-        (
-            SIMPLE_CHARM.copy(deep=True),
-            models.CharmMetadata(
-                name="charmy-mccharmface",
-                summary="Charmy!",
-                description="Very charming!",
-            ),
-        )
+        models.CharmMetadata(
+            name="charmy-mccharmface",
+            summary="Charmy!",
+            description="Very charming!",
+        ),
     ],
 )
-def test_get_metadata(package_service, project, metadata):
-    package_service._project = project
+def test_get_metadata(package_service, simple_charm, metadata):
+    package_service._project = simple_charm
 
     assert package_service.metadata == metadata
 
@@ -67,7 +64,8 @@ def test_get_metadata(package_service, project, metadata):
         ),
     ],
 )
-def test_get_charm_path(fake_prime_dir, package_service, bases, expected_name):
+def test_get_charm_path(fake_path, package_service, bases, expected_name):
+    fake_prime_dir = fake_path / "prime"
     charm_path = package_service.get_charm_path(fake_prime_dir)
 
     assert charm_path == fake_prime_dir / expected_name

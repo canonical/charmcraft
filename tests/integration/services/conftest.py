@@ -14,27 +14,24 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Configuration for services integration tests."""
-
 import pytest
 
+from charmcraft import services
 from charmcraft.application.main import APP_METADATA
-from charmcraft.services import CharmcraftServiceFactory
-from tests.unit import SIMPLE_CHARM
 
 
 @pytest.fixture()
-def service_factory(fs, fake_project_dir, fake_prime_dir) -> CharmcraftServiceFactory:
-    factory = CharmcraftServiceFactory(app=APP_METADATA)
+def service_factory(fs, fake_path, simple_charm) -> services.CharmcraftServiceFactory:
+    fake_project_dir = fake_path / "project"
+    fake_project_dir.mkdir()
+    factory = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     factory.set_kwargs(
         "package",
         project_dir=fake_project_dir,
     )
-    factory.set_kwargs(
-        "analysis",
-        project_dir=fake_project_dir,
-    )
+    factory.set_kwargs("analysis", project_dir=fake_project_dir)
 
-    factory.project = SIMPLE_CHARM.copy(deep=True)
+    factory.project = simple_charm
 
     return factory

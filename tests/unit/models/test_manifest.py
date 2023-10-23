@@ -19,18 +19,9 @@ import datetime
 import pytest
 
 from charmcraft.linters import CheckResult, CheckType
-from charmcraft.models import project
 from charmcraft.models.charmcraft import Base
 from charmcraft.models.manifest import Attribute, Manifest
 
-SIMPLE_CHARM = project.Charm(
-    type="charm",
-    name="charmy-mccharmface",
-    summary="Charmy!",
-    description="Very charming!",
-    bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
-)
-SIMPLE_CHARM._started_at = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
 SIMPLE_MANIFEST = Manifest(
     charmcraft_started_at="1970-01-01T00:00:00+00:00",
     bases=[Base(name="ubuntu", channel="22.04", architectures=["arm64"])],
@@ -42,16 +33,17 @@ MANIFEST_WITH_ATTRIBUTE = Manifest(
 
 
 @pytest.mark.parametrize(
-    ("charm", "lint", "expected"),
+    ("lint", "expected"),
     [
-        (SIMPLE_CHARM, [], SIMPLE_MANIFEST),
-        (SIMPLE_CHARM, [CheckResult("lint", "lint", "lint", CheckType.LINT, "")], SIMPLE_MANIFEST),
+        ([], SIMPLE_MANIFEST),
+        ([CheckResult("lint", "lint", "lint", CheckType.LINT, "")], SIMPLE_MANIFEST),
         (
-            SIMPLE_CHARM,
             [CheckResult("boop", "success", "", CheckType.ATTRIBUTE, "")],
             MANIFEST_WITH_ATTRIBUTE,
         ),
     ],
 )
-def test_from_charm_and_lint_success(charm, lint, expected):
-    assert Manifest.from_charm_and_lint(charm, lint) == expected
+def test_from_charm_and_lint_success(simple_charm, lint, expected):
+    simple_charm._started_at = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+
+    assert Manifest.from_charm_and_lint(simple_charm, lint) == expected

@@ -12,14 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# For further info, check https://github.com/canonical/charmcraft
-
-from charmcraft.models import project
-
-SIMPLE_CHARM = project.Charm(
-    type="charm",
-    name="charmy-mccharmface",
-    summary="Charmy!",
-    description="Very charming!",
-    bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
-)

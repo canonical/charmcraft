@@ -30,8 +30,7 @@ from charmcraft import errors, models, services
 from charmcraft.application.commands.lifecycle import get_lifecycle_command_group
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
-from charmcraft.parts import BundlePlugin, CharmPlugin
-from charmcraft.reactive_plugin import ReactivePlugin
+from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
 
 APP_METADATA = AppMetadata(
     name="charmcraft",

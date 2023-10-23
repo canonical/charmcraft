@@ -45,7 +45,7 @@ class AnalysisService(craft_application.BaseService):
     ) -> None:
         super().__init__(app, cast(craft_application.models.Project, project), services)
         self._project_dir = project_dir.resolve(strict=True)
-        self._results: dict[CheckType | LintResult, list[CheckResult]] = {}
+        self._results: dict[str, list[CheckResult]] = {}
         self._lint_run = False
 
     def gen_results(self, override_ignore: bool = False) -> Iterator[CheckResult]:
@@ -68,7 +68,7 @@ class AnalysisService(craft_application.BaseService):
                 check_result = CheckResult(
                     check_type=check_class.check_type,
                     name=check_class.name,
-                    result=LintResult.IGNORED.value,
+                    result=LintResult.IGNORED,
                     url=check_class.url,
                     text="",
                 )
@@ -77,7 +77,7 @@ class AnalysisService(craft_application.BaseService):
                 try:
                     result = checker.run(self._project_dir)
                 except Exception:
-                    result = LintResult.UNKNOWN.value if is_attr else LintResult.FATAL.value
+                    result = LintResult.UNKNOWN if is_attr else LintResult.FATAL
                 check_result = CheckResult(
                     check_type=checker.check_type,
                     name=checker.name,

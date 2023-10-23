@@ -42,23 +42,23 @@ BASIC_BUNDLE_DICT = {
 
 
 @pytest.mark.parametrize(
-    ("charm", "expected"),
+    ("charm_dict", "expected"),
     [
-        (project.Charm(**BASIC_CHARM_DICT), BASIC_CHARM_METADATA_DICT),
+        (BASIC_CHARM_DICT, BASIC_CHARM_METADATA_DICT),
         (
-            project.Charm(**BASIC_CHARM_DICT, links={"documentation": "https://docs.url"}),
+            dict(**BASIC_CHARM_DICT, links={"documentation": "https://docs.url"}),
             {**BASIC_CHARM_METADATA_DICT, "docs": "https://docs.url"},
         ),
         (
-            project.Charm(**BASIC_CHARM_DICT, links={"contact": "someone@company.com"}),
+            dict(**BASIC_CHARM_DICT, links={"contact": "someone@company.com"}),
             {**BASIC_CHARM_METADATA_DICT, "maintainers": ["someone@company.com"]},
         ),
         (
-            project.Charm(**BASIC_CHARM_DICT, links={"contact": ["someone@company.com"]}),
+            dict(**BASIC_CHARM_DICT, links={"contact": ["someone@company.com"]}),
             {**BASIC_CHARM_METADATA_DICT, "maintainers": ["someone@company.com"]},
         ),
         pytest.param(
-            project.Charm(
+            dict(
                 **BASIC_CHARM_DICT,
                 links={"issues": "https://github.com/canonical/charmcraft/issues"},
             ),
@@ -69,22 +69,26 @@ BASIC_BUNDLE_DICT = {
             id="non-transformed-link",
         ),
         (
-            project.Charm(**BASIC_CHARM_DICT, title="Title becomes display name"),
+            dict(**BASIC_CHARM_DICT, title="Title becomes display name"),
             {**BASIC_CHARM_METADATA_DICT, "display-name": "Title becomes display name"},
         ),
     ],
 )
-def test_charm_metadata_from_charm_success(charm, expected):
+def test_charm_metadata_from_charm_success(charm_dict, expected):
+    charm = project.Charm.unmarshal(charm_dict)
+
     assert json.loads(json.dumps(metadata.CharmMetadata.from_charm(charm).marshal())) == expected
 
 
 @pytest.mark.parametrize(
-    ("bundle", "expected"),
+    ("bundle_dict", "expected"),
     [
-        (project.Bundle.parse_obj(BASIC_BUNDLE_DICT), BASIC_BUNDLE_METADATA_DICT),
+        (BASIC_BUNDLE_DICT, BASIC_BUNDLE_METADATA_DICT),
     ],
 )
-def test_bundle_metadata_from_bundle(bundle, expected):
+def test_bundle_metadata_from_bundle(bundle_dict, expected):
+    bundle = project.Bundle.unmarshal(BASIC_BUNDLE_DICT)
+
     assert (
         json.loads(json.dumps(metadata.BundleMetadata.from_bundle(bundle).marshal())) == expected
     )

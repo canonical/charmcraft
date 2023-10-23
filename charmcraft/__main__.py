@@ -18,6 +18,6 @@
 
 import sys
 
-from charmcraft.application import main
+from charmcraft.application.main import main
 
-sys.exit(main.main())
+sys.exit(main())

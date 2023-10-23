@@ -31,8 +31,6 @@ from craft_providers import bases
 from charmcraft.models import project
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 
-from .. import SIMPLE_CHARM
-
 SIMPLE_BASE = Base(name="simple", channel="0.0")
 BASE_WITH_ONE_ARCH = Base(name="arch", channel="1.0", architectures=["amd64"])
 BASE_WITH_MULTIARCH = Base(name="multiarch", channel="2.0", architectures=["arm64", "riscv64"])
@@ -246,60 +244,58 @@ def test_unmarshal_invalid_type(type_):
 
 
 @pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml", "config_yaml", "actions_yaml", "expected"),
+    ("charmcraft_yaml", "metadata_yaml", "config_yaml", "actions_yaml", "expected_diff"),
     [
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
             None,
-            SIMPLE_CHARM.copy(deep=True),
+            {},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             None,
             None,
-            SIMPLE_CHARM.copy(deep=True),
+            {},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             SIMPLE_CONFIG_YAML,
             None,
-            project.Charm(
-                **SIMPLE_CHARM.marshal(),
-                config=SIMPLE_CONFIG_DICT,
-            ),
+            {"config": SIMPLE_CONFIG_DICT},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
             SIMPLE_ACTIONS_YAML,
-            project.Charm(**SIMPLE_CHARM.marshal(), actions=SIMPLE_ACTIONS_DICT),
+            {"actions": SIMPLE_ACTIONS_DICT},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             SIMPLE_CONFIG_YAML,
             SIMPLE_ACTIONS_YAML,
-            project.Charm(
-                **SIMPLE_CHARM.marshal(),
-                actions=SIMPLE_ACTIONS_DICT,
-                config=SIMPLE_CONFIG_DICT,
-            ),
+            {"actions": SIMPLE_ACTIONS_DICT, "config": SIMPLE_CONFIG_DICT},
         ),
     ],
 )
 def test_from_yaml_file_success(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
+    simple_charm,
     charmcraft_yaml: str,
     metadata_yaml: Optional[str],
     config_yaml: Optional[str],
     actions_yaml: Optional[str],
-    expected: project.CharmcraftProject,
+    expected_diff: Dict[str, Any],
 ):
+    expected_dict = simple_charm.marshal()
+    expected_dict.update(expected_diff)
+    expected = project.Charm.unmarshal(expected_dict)
+
     fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
     if metadata_yaml:
         fs.create_file("/metadata.yaml", contents=metadata_yaml)

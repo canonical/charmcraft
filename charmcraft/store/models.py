@@ -277,12 +277,3 @@ class ChannelData:
         """Get the channel name as a string."""
         risk = self.risk.name.lower()
         return "/".join(i for i in (self.track, risk, self.branch) if i is not None)
-
-
-@dataclasses.dataclass(frozen=True)
-class CharmhubConfig:
-    """Definition of Charmhub endpoint configuration."""
-
-    api_url: str = "https://api.charmhub.io"
-    storage_url: str = "https://storage.snapcraftcontent.com"
-    registry_url: str = "https://registry.jujucharms.com"

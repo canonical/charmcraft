@@ -18,8 +18,6 @@
 
 from craft_providers.bases import BaseName
 
-from charmcraft.store.models import CharmhubConfig
-
 METADATA_FILENAME = "metadata.yaml"
 JUJU_ACTIONS_FILENAME = "actions.yaml"
 JUJU_CONFIG_FILENAME = "config.yaml"
@@ -27,6 +25,7 @@ JUJU_CONFIG_FILENAME = "config.yaml"
 IMAGE_INFO_ENV_VAR = "CHARMCRAFT_IMAGE_INFO"
 
 SHARED_CACHE_ENV_VAR = "CRAFT_SHARED_CACHE"
+STORE_ENV_VAR = "CHARMCRAFT_STORE_CONFIG"
 
 WORK_DIRNAME = "work_dir"
 BUILD_DIRNAME = "build"
@@ -169,10 +168,3 @@ CHARM_METADATA_KEYS = frozenset(
 )
 
 CHARM_METADATA_KEYS_ALIAS = frozenset(("extra_bindings",))
-
-DEFAULT_CHARMHUB_CONFIG = CharmhubConfig()
-STAGING_CHARMHUB_CONFIG = CharmhubConfig(
-    api_url="https://api.staging.charmhub.io",
-    storage_url="https://storage.staging.snapcraftcontent.com",
-    registry_url="https://registry.staging.jujucharms.com",
-)

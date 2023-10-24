@@ -35,9 +35,9 @@ from craft_cli import (
 
 from charmcraft import config, env, utils
 from charmcraft.commands import analyze, clean, extensions, pack, store, version
-from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.const import SHARED_CACHE_ENV_VAR
 from charmcraft.parts import setup_parts
+from charmcraft.store.client import ALTERNATE_AUTH_ENV_VAR
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
 for lib_name in ("craft_providers", "craft_parts", "craft_store"):

@@ -35,8 +35,8 @@ from craft_store.errors import CraftStoreError
 
 from charmcraft import utils
 from charmcraft.cmdbase import FORMAT_HELP_STR, JSON_FORMAT, BaseCommand
-from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.main import COMMAND_GROUPS, _get_system_details, main
+from charmcraft.store.client import ALTERNATE_AUTH_ENV_VAR
 
 # --- Tests for the main entry point
 

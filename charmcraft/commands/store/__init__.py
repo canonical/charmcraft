@@ -40,8 +40,8 @@ from tabulate import tabulate
 from charmcraft.cmdbase import BaseCommand
 from charmcraft import parts, utils
 
-from charmcraft.commands.store.registry import ImageHandler, OCIRegistry, LocalDockerdInterface
-from charmcraft.commands.store.store import Store, Entity
+from charmcraft.store import ImageHandler, OCIRegistry, LocalDockerdInterface, Store
+from charmcraft.store.models import Entity
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace

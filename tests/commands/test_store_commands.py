@@ -54,7 +54,9 @@ from charmcraft.commands.store import (
     WhoamiCommand,
     get_name_from_zip,
 )
-from charmcraft.commands.store.store import (
+from charmcraft.main import ArgumentParsingError
+from charmcraft.models.charmcraft import CharmhubConfig
+from charmcraft.store.models import (
     Account,
     Base,
     Channel,
@@ -70,8 +72,6 @@ from charmcraft.commands.store.store import (
     Revision,
     Uploaded,
 )
-from charmcraft.main import ArgumentParsingError
-from charmcraft.models.charmcraft import CharmhubConfig
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
@@ -982,7 +982,7 @@ def test_upload_call_login_expired(mocker, monkeypatch, config, tmp_path, format
     """Simple upload but login expired."""
     monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode(b"credentials").decode())
     mock_whoami = mocker.patch("craft_store.base_client.HTTPClient.request")
-    push_file_mock = mocker.patch("charmcraft.commands.store.store.Client.push_file")
+    push_file_mock = mocker.patch("charmcraft.store.Client.push_file")
 
     mock_whoami.side_effect = StoreServerError(_fake_response(401, json={}))
 

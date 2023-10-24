@@ -15,13 +15,11 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """The Store API handling."""
-import dataclasses
-import datetime
 import os
 import platform
 import time
 from functools import wraps
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import craft_store
 from craft_cli import CraftError, emit
@@ -29,198 +27,34 @@ from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
 from dateutil import parser
 
-from charmcraft.commands.store.client import (
+from charmcraft.store.client import (
     ALTERNATE_AUTH_ENV_VAR,
     AnonymousClient,
     Client,
 )
-
+from charmcraft.store.models import (
+    Account,
+    Base,
+    Channel,
+    Entity,
+    Error,
+    Library,
+    MacaroonInfo,
+    Package,
+    RegistryCredentials,
+    Release,
+    Resource,
+    ResourceRevision,
+    Revision,
+    Uploaded,
+)
 
 # helpers to build responses from this layer
-@dataclasses.dataclass(frozen=True)
-class Account:
-    """Charmcraft-specific store account model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    name: str
-    username: str
-    id: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Package:
-    """Charmcraft-specific store package model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    id: Optional[str]
-    name: str
-    type: Literal["charm", "bundle"]
-
-
-@dataclasses.dataclass(frozen=True)
-class MacaroonInfo:
-    """Charmcraft-specific macaroon information model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    account: Account
-    channels: Optional[List[str]]
-    packages: Optional[List[Package]]
-    permissions: List[str]
-
-
-@dataclasses.dataclass(frozen=True)
-class Entity:
-    """Charmcraft-specific store entity model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    entity_type: Literal["charm", "bundle"]
-    name: str
-    private: bool
-    status: str
-    publisher_display_name: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Error:
-    """Charmcraft-specific store error model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    message: str
-    code: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Uploaded:
-    """Charmcraft-specific store upload result model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    ok: bool
-    status: int
-    revision: int
-    errors: List[Error]
 
 
 # XXX Facundo 2020-07-23: Need to do a massive rename to call `revno` to the "revision as
 # the number" inside the "revision as the structure", this gets super confusing in the code with
 # time, and now it's the moment to do it (also in Release below!)
-@dataclasses.dataclass(frozen=True)
-class Base:
-    """Charmcraft-specific store object base model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    architecture: str
-    channel: str
-    name: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Revision:
-    """Charmcraft-specific store name revision model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    revision: int
-    version: Optional
-    created_at: datetime.datetime
-    status: str
-    errors: List[Error]
-    bases: List[Base]
-
-
-@dataclasses.dataclass(frozen=True)
-class Resource:
-    """Charmcraft-specific store name resource model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    name: str
-    optional: bool
-    revision: int
-    resource_type: str
-
-
-@dataclasses.dataclass(frozen=True)
-class ResourceRevision:
-    """Charmcraft-specific store resource revision model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    revision: int
-    created_at: datetime.datetime
-    size: int
-
-
-@dataclasses.dataclass(frozen=True)
-class Release:
-    """Charmcraft-specific store release model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    revision: int
-    channel: str
-    expires_at: datetime.datetime
-    resources: List[Resource]
-    base: Base
-
-
-@dataclasses.dataclass(frozen=True)
-class Channel:
-    """Charmcraft-specific store channel model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    name: str
-    fallback: str
-    track: str
-    risk: str
-    branch: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Library:
-    """Charmcraft-specific store library model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    lib_id: str
-    lib_name: str
-    charm_name: str
-    api: int
-    patch: int
-    content: Optional[str]
-    content_hash: str
-
-
-@dataclasses.dataclass(frozen=True)
-class RegistryCredentials:
-    """Charmcraft-specific store registry credential model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    image_name: str
-    username: str
-    password: str
 
 
 # those statuses after upload that flag that the review ended (and if it ended successfully or not)

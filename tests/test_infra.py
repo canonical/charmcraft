@@ -67,7 +67,7 @@ def test_setup_version():
     assert output.strip() == __version__
 
 
-@pytest.mark.xfail(reason="Should fail while migrating commands")
+@pytest.mark.xfail(strict=True, reason="Should fail while migrating commands")
 def test_bashcompletion_all_commands():
     """Verify that all commands are represented in the bash completion file."""
     # get the line where all commands are specified in the completion file; this is custom

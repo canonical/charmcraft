@@ -267,7 +267,7 @@ def main() -> int:
             commands.ListResourcesCommand,
             commands.ListResourceRevisionsCommand,
             commands.UploadResourceCommand,
-        ]
+        ],
     )
 
     try:

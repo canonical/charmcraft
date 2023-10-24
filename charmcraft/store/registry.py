@@ -28,7 +28,7 @@ from typing import Any, Dict, Union
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
-import requests_unixsocket
+import requests_unixsocket  # type: ignore[import-untyped]
 from craft_cli import CraftError, emit
 
 # some mimetypes

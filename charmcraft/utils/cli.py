@@ -19,7 +19,7 @@ import enum
 import json
 import sys
 from dataclasses import dataclass
-from typing import Iterable, Optional, Any, Dict, Union
+from typing import Iterable, Optional, Union
 
 from craft_cli import emit
 

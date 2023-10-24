@@ -120,7 +120,7 @@ class Revision:
     """
 
     revision: int
-    version: Optional
+    version: Optional[str]
     created_at: datetime.datetime
     status: str
     errors: List[Error]

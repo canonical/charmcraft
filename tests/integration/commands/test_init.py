@@ -112,6 +112,7 @@ def test_files_created_correct(
     pytest_check.is_true(re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE))
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
 
+
 def test_force(new_path, init_command):
     tmp_file = new_path / "README.md"
     with tmp_file.open("w") as f:
@@ -258,7 +259,7 @@ def test_pep257(new_path, init_command, profile):
     errors = list(pydocstyle.check(python_paths, select=to_include))
 
     if errors:
-        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
+        report = [f"Please fix files as suggested by pydocstyle ({len(errors):d} issues):"]
         report.extend(str(e) for e in errors)
         msg = "\n".join(report)
         pytest.fail(msg, pytrace=False)

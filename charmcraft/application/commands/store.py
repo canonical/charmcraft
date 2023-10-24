@@ -247,7 +247,7 @@ class WhoamiCommand(CharmcraftCommand):
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}
-                emit.message(cli.format_content( info, parsed_args.format))
+                emit.message(cli.format_content(info, parsed_args.format))
             else:
                 emit.message("You are not logged in to Charmhub.")
             return
@@ -1100,7 +1100,7 @@ class StatusCommand(CharmcraftCommand):
         channel_map, channels, revisions = store.list_releases(parsed_args.name)
         if not channel_map:
             if parsed_args.format:
-                emit.message(cli.format_content( {}, parsed_args.format))
+                emit.message(cli.format_content({}, parsed_args.format))
             else:
                 emit.message("Nothing has been released yet.")
             return

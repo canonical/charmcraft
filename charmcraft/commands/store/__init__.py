@@ -23,8 +23,8 @@ import shutil
 import string
 import tempfile
 import textwrap
+import typing
 import zipfile
-from collections import namedtuple
 from operator import attrgetter
 from typing import Dict, List, Optional, TYPE_CHECKING
 
@@ -46,9 +46,20 @@ from charmcraft.commands.store.store import Store, Entity
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
 
+
 # some types
-EntityType = namedtuple("EntityType", "charm bundle")(charm="charm", bundle="bundle")
-ResourceType = namedtuple("ResourceType", "file oci_image")(file="file", oci_image="oci-image")
+class _EntityType(typing.NamedTuple):
+    charm: str = "charm"
+    bundle: str = "bundle"
+
+
+class _ResourceType(typing.NamedTuple):
+    file: str = "file"
+    oci_image: str = "oci-image"
+
+
+EntityType = _EntityType()
+ResourceType = _ResourceType()
 
 # the list of valid attenuations to restrict login credentials
 VALID_ATTENUATIONS = {getattr(attenuations, x) for x in dir(attenuations) if x.isupper()}
@@ -637,7 +648,7 @@ class ListRevisionsCommand(BaseCommand):
         for item in sorted(result, key=attrgetter("revision"), reverse=True):
             # use just the status or include error message/code in it (if exist)
             if item.errors:
-                errors = ("{0.message} [{0.code}]".format(e) for e in item.errors)
+                errors = (f"{e.message} [{e.code}]" for e in item.errors)
                 status = "{}: {}".format(item.status, "; ".join(errors))
             else:
                 status = item.status
@@ -1154,7 +1165,7 @@ class StatusCommand(BaseCommand):
                     shown_base = "-"
                     prog_base = None
                 else:
-                    shown_base = "{0.name} {0.channel} ({0.architecture})".format(base)
+                    shown_base = f"{base.name} {base.channel} ({base.architecture})"
                     prog_base = {
                         "name": base.name,
                         "channel": base.channel,
@@ -1367,7 +1378,7 @@ class PublishLibCommand(BaseCommand):
             lib_data = utils.get_lib_info(full_name=parsed_args.library)
             if not lib_data.path.exists():
                 raise CraftError(
-                    "The specified library was not found at path {!r}.".format(str(lib_data.path))
+                    f"The specified library was not found at path {str(lib_data.path)!r}."
                 )
             if lib_data.charm_name != charm_name:
                 raise CraftError(

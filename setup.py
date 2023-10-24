@@ -27,7 +27,7 @@ with open("README.md", encoding="utf8") as fh:
 
 install_requires = [
     "craft-application@git+https://github.com/canonical/craft-application.git@4c3162b6ec5bdc1b85227bd777dc0005415604d7",
-    "craft-cli",
+    "craft-cli>=2.3.0",
     "craft-parts>=1.18",
     "craft-providers",
     "craft-store>=2.4",
@@ -35,7 +35,7 @@ install_requires = [
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
-    "pydantic>=1.9",
+    "pydantic>=1.10,<2.0",
     "python-dateutil",
     "pyyaml",
     "requests",
@@ -49,15 +49,15 @@ install_requires = [
 ]
 
 lint_requires = [
-    "black>=23.7.0,<24.0.0",
-    "codespell[tomli]>=2.2.5,<3.0.0",
-    "ruff==0.0.282",
+    "black>=23.10.1,<24.0.0",
+    "codespell[tomli]>=2.2.6,<3.0.0",
+    "ruff~=0.1.1",
     "yamllint>=1.32.0,<2.0.0",
 ]
 
 type_requires = [
-    "mypy[reports]==1.5.1",
-    "pyright==1.1.316",
+    "mypy[reports]~=1.5",
+    "pyright==1.1.332",
     "types-python-dateutil",
     "types-requests",
     "types-setuptools",

@@ -129,7 +129,7 @@ def get_pip_command(
 
 def get_pip_version(pip_cmd: str) -> Tuple[int, ...]:
     """Get the version of pip available from a specific pip command."""
-    result = subprocess.run([pip_cmd, "--version"], text=True, capture_output=True)
+    result = subprocess.run([pip_cmd, "--version"], text=True, capture_output=True, check=True)
     version_data = result.stdout.split(" ")
     if len(version_data) < 2:
         raise ValueError("Unknown pip version")

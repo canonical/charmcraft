@@ -862,7 +862,7 @@ def test_get_name_charm_bad_metadata(tmp_path, yaml_content):
         get_name_from_zip(bad_zip)
     assert str(cm.value) == (
         "Bad 'metadata.yaml' file inside charm zip "
-        "'{}': must be a valid YAML with a 'name' key.".format(bad_zip)
+        f"'{bad_zip}': must be a valid YAML with a 'name' key."
     )
     assert cm.value.__cause__ is not None
 
@@ -893,8 +893,8 @@ def test_get_name_bundle_bad_data(tmp_path, yaml_content):
     with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
     assert str(cm.value) == (
-        "Bad 'bundle.yaml' file inside bundle zip '{}': "
-        "must be a valid YAML with a 'name' key.".format(bad_zip)
+        f"Bad 'bundle.yaml' file inside bundle zip '{bad_zip}': "
+        "must be a valid YAML with a 'name' key."
     )
     assert cm.value.__cause__ is not None
 

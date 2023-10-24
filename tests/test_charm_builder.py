@@ -1223,7 +1223,7 @@ def test_processrun_crashed(tmp_path):
 
     # get a real exception to build the message as its internal text varies across OSes
     try:
-        subprocess.run([nonexistent])
+        subprocess.run([nonexistent], check=True)
     except Exception as exc:
         exc_text = repr(exc)
 

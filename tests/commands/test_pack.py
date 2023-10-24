@@ -770,8 +770,8 @@ def test_prime_extra_missing(tmp_path, bundle_yaml, bundle_config):
         with pytest.raises(CraftError) as err:
             PackCommand(bundle_config).run(noargs)
     assert str(err.value) == (
-        "Parts processing error: Failed to copy '{}/build/stage/f2.txt': "
-        "no such file or directory.".format(tmp_path)
+        f"Parts processing error: Failed to copy '{tmp_path}/build/stage/f2.txt': "
+        "no such file or directory."
     )
 
 

@@ -23,10 +23,16 @@ import pytest_check
 @pytest.mark.parametrize("command", ["pack"])
 def test_compare_command_and_legacy_options(command):
     command_help = subprocess.run(
-        [sys.executable, "-m", "charmcraft", command, "-h"], text=True, capture_output=True
+        [sys.executable, "-m", "charmcraft", command, "-h"],
+        text=True,
+        capture_output=True,
+        check=True,
     )
     legacy_help = subprocess.run(
-        [sys.executable, "-m", "charmcraft.main", command, "-h"], text=True, capture_output=True
+        [sys.executable, "-m", "charmcraft.main", command, "-h"],
+        text=True,
+        capture_output=True,
+        check=True,
     )
 
     past_options = False

@@ -259,7 +259,7 @@ def test_pep257(new_path, init_command, profile):
     errors = list(pydocstyle.check(python_paths, select=to_include))
 
     if errors:
-        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
+        report = [f"Please fix files as suggested by pydocstyle ({len(errors):d} issues):"]
         report.extend(str(e) for e in errors)
         msg = "\n".join(report)
         pytest.fail(msg, pytrace=False)

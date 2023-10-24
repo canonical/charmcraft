@@ -486,7 +486,7 @@ class Builder:
         if not bundle_name:
             raise CraftError(
                 "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
-                "file {!r}.".format(str(bundle_filepath))
+                f"file {str(bundle_filepath)!r}."
             )
 
         if charms:

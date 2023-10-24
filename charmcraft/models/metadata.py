@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Union
 import pydantic
 from craft_cli import CraftError
 
-from charmcraft.const import METADATA_FILENAME
+from charmcraft import const
 
 
 class CharmMetadataLegacy(
@@ -71,7 +71,7 @@ class CharmMetadataLegacy(
         # convert undocumented "maintainer" to documented "maintainers"
         if "maintainer" in obj and "maintainers" in obj:
             raise CraftError(
-                f"Cannot specify both 'maintainer' and 'maintainers' in {METADATA_FILENAME}"
+                f"Cannot specify both 'maintainer' and 'maintainers' in {const.METADATA_FILENAME}"
             )
 
         if "maintainer" in obj:

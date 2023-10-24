@@ -24,7 +24,7 @@ from typing import Generator, List, Type, Union
 
 import yaml
 
-from charmcraft import config, utils
+from charmcraft import config, const, utils
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
 
@@ -38,7 +38,7 @@ def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, N
     :returns: the entrypoint path if all succeeds, None otherwise.
     """
     # get the entrypoint from the last useful dispatch line
-    dispatch = basedir / "dispatch"
+    dispatch = basedir / const.DISPATCH_FILENAME
     entrypoint_str = ""
     try:
         with dispatch.open("rt", encoding="utf8") as fh:
@@ -188,7 +188,7 @@ class Framework(AttributeChecker):
         if python_entrypoint is None:
             return False
 
-        opsdir = basedir / "venv" / "ops"
+        opsdir = basedir / const.VENV_DIRNAME / "ops"
         if not opsdir.exists() or not opsdir.is_dir():
             return False
 
@@ -276,7 +276,7 @@ class JujuActions(Linter):
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        filepath = basedir / "actions.yaml"
+        filepath = basedir / const.JUJU_ACTIONS_FILENAME
         if not filepath.exists():
             # it's optional
             return self.Result.OK
@@ -308,7 +308,7 @@ class JujuConfig(Linter):
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        filepath = basedir / "config.yaml"
+        filepath = basedir / const.JUJU_CONFIG_FILENAME
         if not filepath.exists():
             # it's optional
             return self.Result.OK

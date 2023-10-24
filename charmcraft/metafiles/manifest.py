@@ -28,7 +28,7 @@ from craft_cli import CraftError
 
 import charmcraft.linters
 import charmcraft.models.charmcraft
-from charmcraft.const import IMAGE_INFO_ENV_VAR
+from charmcraft import const
 
 logger = logging.getLogger(__name__)
 
@@ -76,15 +76,16 @@ def create_manifest(
     content["analysis"] = {"attributes": attributes_info}
 
     # include the image info, if present
-    image_info_raw = os.environ.get(IMAGE_INFO_ENV_VAR)
+    image_info_raw = os.environ.get(const.IMAGE_INFO_ENV_VAR)
     if image_info_raw:
         try:
             image_info = json.loads(image_info_raw)
         except json.decoder.JSONDecodeError as exc:
-            msg = f"Failed to parse the content of {IMAGE_INFO_ENV_VAR} environment variable"
-            raise CraftError(msg) from exc
+            raise CraftError(
+                f"Failed to parse the content of {const.IMAGE_INFO_ENV_VAR} environment variable"
+            ) from exc
         content["image-info"] = image_info
 
-    filepath = basedir / "manifest.yaml"
+    filepath = basedir / const.MANIFEST_FILENAME
     filepath.write_text(yaml.dump(content))
     return filepath

@@ -22,12 +22,12 @@ from typing import Dict, List
 import yaml
 from craft_cli import ArgumentParsingError, CraftError, emit
 
-from charmcraft import env, instrum, package
+from charmcraft import const, env, instrum, package
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import find_charm_sources, get_charm_name_from_path, load_yaml
 
 # the minimum set of files in a bundle
-MANDATORY_FILES = ["bundle.yaml", "README.md"]
+MANDATORY_FILES = [const.BUNDLE_FILENAME, "README.md"]
 
 _overview = """
 Build and pack a charm operator package or a bundle.
@@ -155,7 +155,7 @@ class PackCommand(BaseCommand):
             if parsed_args.shell:
                 package.launch_shell()
                 return
-            bundle_filepath = self.config.project.dirpath / "bundle.yaml"
+            bundle_filepath = self.config.project.dirpath / const.BUNDLE_FILENAME
             bundle = load_yaml(bundle_filepath)
             if bundle is None:
                 raise CraftError(f"Missing or invalid main bundle file: {str(bundle_filepath)!r}.")

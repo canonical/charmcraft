@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import pytest
 from overrides import override
 
-from charmcraft import errors, extensions
+from charmcraft import const, errors, extensions
 from charmcraft.config import load
 from charmcraft.extensions.extension import Extension
 
@@ -117,7 +117,7 @@ def test_experimental_with_env(fake_extensions, tmp_path, monkeypatch):
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
         "extensions": [ExperimentalExtension.name],
     }
-    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
     project_root = tmp_path
     extensions.apply_extensions(project_root, charmcraft_config)
 

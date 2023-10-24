@@ -26,7 +26,7 @@ import pydantic
 import yaml
 from craft_cli import CraftError, emit
 
-from charmcraft.const import JUJU_ACTIONS_FILENAME
+from charmcraft import const
 from charmcraft.format import format_pydantic_errors
 from charmcraft.metafiles import read_yaml
 from charmcraft.models.actions import JujuActions
@@ -47,22 +47,22 @@ def parse_actions_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[
     :raises: CraftError if actions.yaml is not valid.
     """
     try:
-        actions = read_yaml(charm_dir / JUJU_ACTIONS_FILENAME)
+        actions = read_yaml(charm_dir / const.JUJU_ACTIONS_FILENAME)
     except FileNotFoundError:
         return None
     except OSError as exc:
-        raise CraftError(f"Cannot read the {JUJU_ACTIONS_FILENAME} file: {exc!r}") from exc
+        raise CraftError(f"Cannot read the {const.JUJU_ACTIONS_FILENAME} file: {exc!r}") from exc
 
-    emit.debug(f"Validating {JUJU_ACTIONS_FILENAME}")
+    emit.debug(f"Validating {const.JUJU_ACTIONS_FILENAME}")
     try:
         return JujuActions.parse_obj({"actions": actions})
     except pydantic.ValidationError as error:
         if allow_broken:
             emit.progress(
-                format_pydantic_errors(error.errors(), file_name=JUJU_ACTIONS_FILENAME),
+                format_pydantic_errors(error.errors(), file_name=const.JUJU_ACTIONS_FILENAME),
                 permanent=True,
             )
-            emit.debug(f"Ignoring {JUJU_ACTIONS_FILENAME}")
+            emit.debug(f"Ignoring {const.JUJU_ACTIONS_FILENAME}")
             return None
         raise
 
@@ -78,8 +78,8 @@ def create_actions_yaml(
 
     :returns: Path to created actions.yaml.
     """
-    original_file_path = charmcraft_config.project.dirpath / JUJU_ACTIONS_FILENAME
-    target_file_path = basedir / JUJU_ACTIONS_FILENAME
+    original_file_path = charmcraft_config.project.dirpath / const.JUJU_ACTIONS_FILENAME
+    target_file_path = basedir / const.JUJU_ACTIONS_FILENAME
 
     # Copy actions.yaml if it exists, otherwise create it from CharmcraftConfig.
     if original_file_path.exists():

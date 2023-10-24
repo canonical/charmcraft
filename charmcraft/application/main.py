@@ -105,7 +105,7 @@ class Charmcraft(Application):
             project_dir = pathlib.Path(global_args.get("project_dir") or ".").resolve(strict=True)
             self._work_dir = project_dir
 
-    def _get_dispatcher(self) -> craft_application.application._Dispatcher:  # type: ignore[override]
+    def _get_dispatcher(self) -> craft_cli.Dispatcher:  # type: ignore[override]
         """Configure charmcraft, including a fallback to the classic entrypoint.
 
         Side-effect: This method may exit the process.
@@ -121,7 +121,7 @@ class Charmcraft(Application):
             streaming_brief=True,
         )
 
-        dispatcher = craft_application.application._Dispatcher(
+        dispatcher = craft_cli.Dispatcher(
             self.app.name,
             self.command_groups,
             summary=str(self.app.summary),
@@ -174,7 +174,7 @@ class Charmcraft(Application):
             build_for = getattr(dispatcher.parsed_args, "build_for", None)
             self._configure_services(platform, build_for)
 
-            if not command.run_managed(dispatcher.parsed_args):
+            if not command.run_managed(dispatcher.parsed_args()):
                 # command runs in the outer instance
                 craft_cli.emit.debug(f"Running {self.app.name} {command.name} on host")
                 if command.always_load_project:
@@ -238,6 +238,37 @@ def main() -> int:
     )
 
     app.add_command_group("Basic", [commands.InitCommand])
+    app.add_command_group(
+        "Store",
+        [
+            # auth
+            commands.LoginCommand,
+            commands.LogoutCommand,
+            commands.WhoamiCommand,
+            # name handling
+            commands.RegisterCharmNameCommand,
+            commands.RegisterBundleNameCommand,
+            commands.UnregisterNameCommand,
+            commands.ListNamesCommand,
+            # pushing files and checking revisions
+            commands.UploadCommand,
+            commands.ListRevisionsCommand,
+            # release process, and show status
+            commands.ReleaseCommand,
+            commands.PromoteBundleCommand,
+            commands.StatusCommand,
+            commands.CloseCommand,
+            # libraries support
+            commands.CreateLibCommand,
+            commands.PublishLibCommand,
+            commands.ListLibCommand,
+            commands.FetchLibCommand,
+            # resources support
+            commands.ListResourcesCommand,
+            commands.ListResourceRevisionsCommand,
+            commands.UploadResourceCommand,
+        ]
+    )
 
     try:
         return app.run()

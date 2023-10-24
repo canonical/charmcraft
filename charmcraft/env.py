@@ -18,13 +18,16 @@
 
 
 import distutils.util
+import json
 import os
 import pathlib
 from typing import Optional
 
 import platformdirs
 
+from charmcraft import const, errors
 from charmcraft.const import SHARED_CACHE_ENV_VAR
+from charmcraft.store import models
 
 
 def get_host_shared_cache_path():
@@ -86,3 +89,21 @@ def is_charmcraft_running_in_managed_mode():
     """Check if charmcraft is running in a managed environment."""
     managed_flag = os.getenv("CHARMCRAFT_MANAGED_MODE", "n")
     return distutils.util.strtobool(managed_flag) == 1
+
+
+def get_store_config() -> const.CharmhubConfig:
+    """Get the appropriate configuration for the store."""
+    config_str = os.getenv("CHARMCRAFT_STORE_CONFIG", "")
+    if not config_str:
+        return const.DEFAULT_CHARMHUB_CONFIG
+    if config_str.lower() == "staging":
+        return const.STAGING_CHARMHUB_CONFIG
+    try:
+        return models.CharmhubConfig(**json.loads(config_str))
+    except Exception as exc:
+        raise errors.InvalidEnvironmentVariableError(
+            "CHARMCRAFT_STORE_CONFIG",
+            details="Variable should be unset, a valid store config as JSON, or 'staging'",
+            resolution="Set a valid charmhub config.",
+            docs_url="https://juju.is/docs/sdk/charmcraft-yaml#heading--charmhub",
+        ) from exc

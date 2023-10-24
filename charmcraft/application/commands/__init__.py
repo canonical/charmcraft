@@ -25,6 +25,34 @@ from charmcraft.application.commands.lifecycle import (
     PrimeCommand,
     StageCommand,
 )
+from charmcraft.application.commands.store import (
+    # auth
+    LoginCommand,
+    LogoutCommand,
+    WhoamiCommand,
+    # name handling
+    RegisterCharmNameCommand,
+    RegisterBundleNameCommand,
+    UnregisterNameCommand,
+    ListNamesCommand,
+    # pushing files and checking revisions
+    UploadCommand,
+    ListRevisionsCommand,
+    # release process, and show status
+    ReleaseCommand,
+    PromoteBundleCommand,
+    StatusCommand,
+    CloseCommand,
+    # libraries support
+    CreateLibCommand,
+    PublishLibCommand,
+    ListLibCommand,
+    FetchLibCommand,
+    # resources support
+    ListResourcesCommand,
+    ListResourceRevisionsCommand,
+    UploadResourceCommand,
+)
 
 __all__ = [
     "InitCommand",
@@ -35,4 +63,24 @@ __all__ = [
     "PrimeCommand",
     "PullCommand",
     "StageCommand",
+    "LoginCommand",
+    "LogoutCommand",
+    "WhoamiCommand",
+    "RegisterCharmNameCommand",
+    "RegisterBundleNameCommand",
+    "UnregisterNameCommand",
+    "ListNamesCommand",
+    "UploadCommand",
+    "ListRevisionsCommand",
+    "ReleaseCommand",
+    "PromoteBundleCommand",
+    "StatusCommand",
+    "CloseCommand",
+    "CreateLibCommand",
+    "PublishLibCommand",
+    "ListLibCommand",
+    "FetchLibCommand",
+    "ListResourcesCommand",
+    "ListResourceRevisionsCommand",
+    "UploadResourceCommand",
 ]

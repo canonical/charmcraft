@@ -16,7 +16,7 @@
 """Charmcraft error classes."""
 import io
 import pathlib
-from typing import TYPE_CHECKING, Iterable, List, Mapping
+from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional
 
 from craft_cli import CraftError
 
@@ -31,6 +31,19 @@ class ClassicFallback(BaseException):
 
     Only used during the transition to craft-application.
     """
+
+class InvalidEnvironmentVariableError(CraftError):
+    """A Charmcraft-related environment variable value is invalid."""
+
+    def __init__(self, variable: str, *, details: str, resolution: str, docs_url: Optional[str] = None):
+        super().__init__(
+            f"Environment variable {variable!r} contains an invalid value.",
+            details=details,
+            resolution=resolution,
+            docs_url=docs_url,
+            reportable=False,
+            retcode=65,  # Data format error
+        )
 
 
 class BadLibraryPathError(CraftError):

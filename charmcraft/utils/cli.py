@@ -15,9 +15,11 @@
 # For further info, check https://github.com/canonical/charmcraft
 """CLI-related utilities for Charmcraft."""
 import datetime
+import enum
+import json
 import sys
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Any, Dict, Union
 
 from craft_cli import emit
 
@@ -141,3 +143,22 @@ def format_timestamp(dt: datetime.datetime) -> str:
         # timezone naive, assume it's UTC
         dtz = dt
     return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+class OutputFormat(enum.Enum):
+    """Output format options for commands."""
+
+    DEFAULT = None
+    JSON = "json"
+
+
+def format_content(content: Union[list, dict, None], fmt: Union[OutputFormat, str, None] = None):
+    """Format command output."""
+    if not isinstance(fmt, OutputFormat):
+        fmt = OutputFormat(fmt)
+
+    if fmt == OutputFormat.DEFAULT:
+        return str(content)
+    if fmt == OutputFormat.JSON:
+        return json.dumps(content, indent=4)
+    raise ValueError(f"Unknown output format {str(fmt)}")

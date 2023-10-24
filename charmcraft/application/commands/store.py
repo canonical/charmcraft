@@ -26,10 +26,10 @@ import textwrap
 import typing
 import zipfile
 from operator import attrgetter
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import yaml
-from craft_cli import emit, ArgumentParsingError
+from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_parts import Step
 from craft_store import attenuations
@@ -37,11 +37,13 @@ from craft_store.errors import CredentialsUnavailable
 from humanize import naturalsize
 from tabulate import tabulate
 
-from charmcraft.cmdbase import BaseCommand
-from charmcraft import parts, utils
-
-from charmcraft.store import ImageHandler, OCIRegistry, LocalDockerdInterface, Store
+import charmcraft.store.models
+from charmcraft import env, parts, utils
+from charmcraft.application.commands.base import CharmcraftCommand
+from charmcraft.models import project
+from charmcraft.store import ImageHandler, LocalDockerdInterface, OCIRegistry, Store
 from charmcraft.store.models import Entity
+from charmcraft.utils import cli
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
@@ -60,12 +62,11 @@ class _ResourceType(typing.NamedTuple):
 
 EntityType = _EntityType()
 ResourceType = _ResourceType()
-
 # the list of valid attenuations to restrict login credentials
 VALID_ATTENUATIONS = {getattr(attenuations, x) for x in dir(attenuations) if x.isupper()}
 
 
-class LoginCommand(BaseCommand):
+class LoginCommand(CharmcraftCommand):
     """Login to Charmhub."""
 
     name = "login"
@@ -185,7 +186,8 @@ class LoginCommand(BaseCommand):
                 kwargs[arg_name] = namespace_value
 
         ephemeral = parsed_args.export is not None
-        store = Store(self.config.charmhub, ephemeral=ephemeral)
+        store_config = env.get_store_config()
+        store = Store(store_config, ephemeral=ephemeral)
         credentials = store.login(**kwargs)
         if parsed_args.export is None:
             macaroon_info = store.whoami()
@@ -195,7 +197,7 @@ class LoginCommand(BaseCommand):
             emit.message(f"Login successful. Credentials exported to {str(parsed_args.export)!r}.")
 
 
-class LogoutCommand(BaseCommand):
+class LogoutCommand(CharmcraftCommand):
     """Clear Charmhub token."""
 
     name = "logout"
@@ -215,7 +217,7 @@ class LogoutCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         try:
             store.logout()
             emit.message("Charmhub token cleared.")
@@ -223,7 +225,7 @@ class LogoutCommand(BaseCommand):
             emit.message("You are not logged in to Charmhub.")
 
 
-class WhoamiCommand(BaseCommand):
+class WhoamiCommand(CharmcraftCommand):
     """Show login information."""
 
     name = "whoami"
@@ -235,20 +237,17 @@ class WhoamiCommand(BaseCommand):
         See also `charmcraft login` and `charmcraft logout`.
     """
     )
-
-    def fill_parser(self, parser):
-        """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+    format_option = True
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         try:
             macaroon_info = store.whoami()
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}
-                emit.message(self.format_content(parsed_args.format, info))
+                emit.message(cli.format_content( info, parsed_args.format))
             else:
                 emit.message("You are not logged in to Charmhub.")
             return
@@ -293,13 +292,13 @@ class WhoamiCommand(BaseCommand):
             prog_info["channels"] = macaroon_info.channels
 
         if parsed_args.format:
-            emit.message(self.format_content(parsed_args.format, prog_info))
+            emit.message(cli.format_content(prog_info, parsed_args.format))
         else:
             for msg in human_msgs:
                 emit.message(msg)
 
 
-class RegisterCharmNameCommand(BaseCommand):
+class RegisterCharmNameCommand(CharmcraftCommand):
     """Register a charm name in Charmhub."""
 
     name = "register"
@@ -334,12 +333,12 @@ class RegisterCharmNameCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         store.register_name(parsed_args.name, EntityType.charm)
         emit.message(f"You are now the publisher of charm {parsed_args.name!r} in Charmhub.")
 
 
-class RegisterBundleNameCommand(BaseCommand):
+class RegisterBundleNameCommand(CharmcraftCommand):
     """Register a bundle name in the Store."""
 
     name = "register-bundle"
@@ -373,12 +372,12 @@ class RegisterBundleNameCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         store.register_name(parsed_args.name, EntityType.bundle)
         emit.message(f"You are now the publisher of bundle {parsed_args.name!r} in Charmhub.")
 
 
-class UnregisterNameCommand(BaseCommand):
+class UnregisterNameCommand(CharmcraftCommand):
     """Unregister a name in the Store."""
 
     name = "unregister"
@@ -407,12 +406,12 @@ class UnregisterNameCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub, needs_auth=True)
+        store = Store(env.get_store_config(), needs_auth=True)
         store.unregister_name(parsed_args.name)
         emit.message(f"Name {parsed_args.name!r} has been removed from Charmhub.")
 
 
-class ListNamesCommand(BaseCommand):
+class ListNamesCommand(CharmcraftCommand):
     """List the entities registered in Charmhub."""
 
     name = "names"
@@ -437,10 +436,11 @@ class ListNamesCommand(BaseCommand):
     """
     )
     common = True
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument(
             "--include-collaborations",
             action="store_true",
@@ -449,7 +449,7 @@ class ListNamesCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         with_collab = parsed_args.include_collaborations
         result = store.list_registered_names(include_collaborations=with_collab)
 
@@ -474,7 +474,7 @@ class ListNamesCommand(BaseCommand):
 
         if parsed_args.format:
             info = [dict(zip(prog_keys, item)) for item in data]
-            emit.message(self.format_content(parsed_args.format, info))
+            emit.message(cli.format_content(info, parsed_args.format))
             return
 
         if not result:
@@ -520,7 +520,7 @@ def get_name_from_zip(filepath):
     return name
 
 
-class UploadCommand(BaseCommand):
+class UploadCommand(CharmcraftCommand):
     """Upload a charm or bundle to Charmhub."""
 
     name = "upload"
@@ -541,10 +541,11 @@ class UploadCommand(BaseCommand):
     """
     )
     common = True
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
 
         parser.add_argument(
             "filepath", type=utils.useful_filepath, help="The charm or bundle to upload"
@@ -576,14 +577,14 @@ class UploadCommand(BaseCommand):
             name = parsed_args.name
         else:
             name = get_name_from_zip(parsed_args.filepath)
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         result = store.upload(name, parsed_args.filepath)
 
         if not result.ok:
             if parsed_args.format:
                 errors = [{"code": err.code, "message": err.message} for err in result.errors]
                 info = {"errors": errors}
-                emit.message(self.format_content(parsed_args.format, info))
+                emit.message(cli.format_content(info, parsed_args.format))
             else:
                 emit.message(f"Upload failed with status {result.status!r}:")
                 for error in result.errors:
@@ -596,7 +597,7 @@ class UploadCommand(BaseCommand):
 
         if parsed_args.format:
             info = {"revision": result.revision}
-            emit.message(self.format_content(parsed_args.format, info))
+            emit.message(cli.format_content(info, parsed_args.format))
         else:
             emit.message(f"Revision {result.revision} of {str(name)!r} created")
             if parsed_args.release:
@@ -611,7 +612,7 @@ class UploadCommand(BaseCommand):
         return 0
 
 
-class ListRevisionsCommand(BaseCommand):
+class ListRevisionsCommand(CharmcraftCommand):
     """List revisions for a charm or a bundle."""
 
     name = "revisions"
@@ -630,15 +631,16 @@ class ListRevisionsCommand(BaseCommand):
     """
     )
     common = True
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument("name", help="The name of the charm or bundle")
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         result = store.list_revisions(parsed_args.name)
 
         # build the structure that we need for both human and programmatic output
@@ -674,7 +676,7 @@ class ListRevisionsCommand(BaseCommand):
             prog_data.append(prog_info)
 
         if parsed_args.format:
-            emit.message(self.format_content(parsed_args.format, prog_data))
+            emit.message(cli.format_content(prog_data, parsed_args.format))
             return
 
         if not result:
@@ -686,7 +688,7 @@ class ListRevisionsCommand(BaseCommand):
             emit.message(line)
 
 
-class ReleaseCommand(BaseCommand):
+class ReleaseCommand(CharmcraftCommand):
     """Release a charm or bundle revision to specific channels."""
 
     name = "release"
@@ -762,7 +764,7 @@ class ReleaseCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         store.release(
             parsed_args.name,
             parsed_args.revision,
@@ -778,7 +780,7 @@ class ReleaseCommand(BaseCommand):
         emit.message(msg.format(*args))
 
 
-class PromoteBundleCommand(BaseCommand):
+class PromoteBundleCommand(CharmcraftCommand):
     """Promote a bundle in the Store."""
 
     name = "promote-bundle"
@@ -791,6 +793,7 @@ class PromoteBundleCommand(BaseCommand):
         promoted.
         """
     )
+    always_load_project = True
 
     def fill_parser(self, parser: "ArgumentParser") -> None:
         """Add promote-bundle parameters to the general parser."""
@@ -820,14 +823,12 @@ class PromoteBundleCommand(BaseCommand):
 
     def run(self, parsed_args: "Namespace") -> None:
         """Run the command."""
-        self._check_config(config_file=True)
-        # Validation...
-        if self.config.type != EntityType.bundle:
+        if not isinstance(self._services.project, project.Bundle):
             raise CraftError("promote-bundle must be run on a bundle.")
 
         # Check snapcraft for equiv logic
-        from_channel = utils.ChannelData.from_str(parsed_args.from_channel)
-        to_channel = utils.ChannelData.from_str(parsed_args.to_channel)
+        from_channel = charmcraft.store.models.ChannelData.from_str(parsed_args.from_channel)
+        to_channel = charmcraft.store.models.ChannelData.from_str(parsed_args.to_channel)
 
         if to_channel == from_channel:
             raise CraftError("Cannot promote from a channel to the same channel.")
@@ -841,7 +842,7 @@ class PromoteBundleCommand(BaseCommand):
             if parsed_args.output_bundle:
                 command_parts.extend(["--output-bundle", parsed_args.output_bundle])
             for exclusion in parsed_args.exclude:
-                command_parts.extend(["--exclude"], exclusion)
+                command_parts.extend(["--exclude", exclusion])
             command = " ".join(command_parts)
             raise CraftError(
                 f"Target channel ({to_channel.name}) must be lower risk "
@@ -873,7 +874,8 @@ class PromoteBundleCommand(BaseCommand):
                     raise CraftError(f"Bundle output directory not writable: {str(parent)}")
 
         # Load bundle
-        bundle_path = self.config.project.dirpath / "bundle.yaml"
+        # TODO: When this goes into the StoreService, use the service's own project_path
+        bundle_path = self._services.package.project_dir / "bundle.yaml"
         bundle_config = utils.load_yaml(bundle_path)
         if bundle_config is None:
             raise CraftError(f"Missing or invalid main bundle file: {(str(bundle_path))}")
@@ -897,7 +899,7 @@ class PromoteBundleCommand(BaseCommand):
                 f"Bundle does not contain the following excluded charms: {bad_charms}"
             )
 
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         registered_names: List[Entity] = store.list_registered_names(include_collaborations=True)
         name_map = {entity.name: entity for entity in registered_names}
 
@@ -959,8 +961,8 @@ class PromoteBundleCommand(BaseCommand):
             application["channel"] = to_channel.name
 
         if parsed_args.output_bundle:
-            with parsed_args.output_bundle.open("w+") as output_bundle:
-                yaml.dump(bundle_config, output_bundle)
+            with parsed_args.output_bundle.open("w+") as bundle_file:
+                yaml.dump(bundle_config, bundle_file)
 
         for charm_name, charm_revision in charm_revisions.items():
             store.release(
@@ -973,7 +975,7 @@ class PromoteBundleCommand(BaseCommand):
         # Export a temporary bundle file with the charms in the target channel
         with tempfile.TemporaryDirectory(prefix="charmcraft-") as bundle_dir:
             bundle_dir_path = pathlib.Path(bundle_dir) / bundle_name
-            shutil.copytree(self.config.project.dirpath, bundle_dir_path)
+            shutil.copytree(self._services.package.project_dir, bundle_dir_path)
             bundle_path = bundle_dir_path / "bundle.yaml"
             with bundle_path.open("w+") as bundle_file:
                 yaml.dump(bundle_config, bundle_file)
@@ -993,11 +995,8 @@ class PromoteBundleCommand(BaseCommand):
                 emit.debug(f"Error when running PRIME step: {error}")
                 raise
 
-            from charmcraft.metafiles.metadata import create_metadata_yaml
-            from charmcraft.metafiles.manifest import create_manifest
+            self._services.package.write_metadata(lifecycle.prime_dir)
 
-            create_metadata_yaml(lifecycle.prime_dir, self.config)
-            create_manifest(lifecycle.prime_dir, self.config.project.started_at, None, [])
             zipname = bundle_dir_path / (bundle_name + ".zip")
             utils.build_zip(zipname, lifecycle.prime_dir)
 
@@ -1013,7 +1012,7 @@ class PromoteBundleCommand(BaseCommand):
         )
 
 
-class CloseCommand(BaseCommand):
+class CloseCommand(CharmcraftCommand):
     """Close a channel for a charm or bundle."""
 
     name = "close"
@@ -1042,7 +1041,7 @@ class CloseCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         revision = None  # revision None will actually close the channel
         channels = [parsed_args.channel]  # the API accepts multiple channels, we have only one
         resources = []  # not really used when closing channels
@@ -1050,7 +1049,7 @@ class CloseCommand(BaseCommand):
         emit.message(f"Closed {parsed_args.channel!r} channel for {parsed_args.name!r}.")
 
 
-class StatusCommand(BaseCommand):
+class StatusCommand(CharmcraftCommand):
     """Show channel status for a charm or bundle."""
 
     name = "status"
@@ -1076,10 +1075,11 @@ class StatusCommand(BaseCommand):
     """
     )
     common = True
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument("name", help="The name of the charm or bundle")
 
     def _build_resources_repr(self, resources):
@@ -1096,11 +1096,11 @@ class StatusCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         channel_map, channels, revisions = store.list_releases(parsed_args.name)
         if not channel_map:
             if parsed_args.format:
-                emit.message(self.format_content(parsed_args.format, {}))
+                emit.message(cli.format_content( {}, parsed_args.format))
             else:
                 emit.message("Nothing has been released yet.")
             return
@@ -1241,14 +1241,14 @@ class StatusCommand(BaseCommand):
                     )
 
         if parsed_args.format:
-            emit.message(self.format_content(parsed_args.format, prog_data))
+            emit.message(cli.format_content(prog_data, parsed_args.format))
         else:
             table = tabulate(human_data, headers=headers, tablefmt="plain", numalign="left")
             for line in table.splitlines():
                 emit.message(line)
 
 
-class CreateLibCommand(BaseCommand):
+class CreateLibCommand(CharmcraftCommand):
     """Create a charm library."""
 
     name = "create-lib"
@@ -1275,10 +1275,11 @@ class CreateLibCommand(BaseCommand):
         Creating a charm library will take you through login if needed.
     """
     )
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument("name", help="The name of the library file (e.g. 'db')")
 
     def run(self, parsed_args):
@@ -1292,7 +1293,7 @@ class CreateLibCommand(BaseCommand):
                 "characters and underscore, starting with alpha."
             )
 
-        charm_name = self.config.name or utils.get_name_from_metadata()
+        charm_name = self._services.project.name or utils.get_name_from_metadata()
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1311,12 +1312,12 @@ class CreateLibCommand(BaseCommand):
             raise CraftError(f"This library already exists: {str(lib_path)!r}.")
 
         emit.progress(f"Creating library {lib_name}.")
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         lib_id = store.create_library_id(charm_name, lib_name)
 
         # create the new library file from the template
-        env = utils.get_templates_environment("charmlibs")
-        template = env.get_template("new_library.py.j2")
+        environment = utils.get_templates_environment("charmlibs")
+        template = environment.get_template("new_library.py.j2")
         context = {"lib_id": lib_id}
         try:
             lib_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1326,13 +1327,13 @@ class CreateLibCommand(BaseCommand):
 
         if parsed_args.format:
             info = {"library_id": lib_id}
-            emit.message(self.format_content(parsed_args.format, info))
+            emit.message(cli.format_content(info, parsed_args.format))
         else:
             emit.message(f"Library {full_name} created with id {lib_id}.")
             emit.message(f"Consider 'git add {lib_path}'.")
 
 
-class PublishLibCommand(BaseCommand):
+class PublishLibCommand(CharmcraftCommand):
     """Publish one or more charm libraries."""
 
     name = "publish-lib"
@@ -1355,10 +1356,11 @@ class PublishLibCommand(BaseCommand):
         charm (a status that can be requested via Discourse).
     """
     )
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument(
             "library",
             nargs="?",
@@ -1367,7 +1369,7 @@ class PublishLibCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        charm_name = self.config.name or utils.get_name_from_metadata()
+        charm_name = self._services.project.name or utils.get_name_from_metadata()
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1394,7 +1396,7 @@ class PublishLibCommand(BaseCommand):
             emit.debug(f"Libraries found under {str(charmlib_path)!r}: {found_libs}")
 
         # check if something needs to be done
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         to_query = [{"lib_id": lib.lib_id, "api": lib.api} for lib in local_libs_data]
         libs_tips = store.get_libraries_tips(to_query)
         analysis = []
@@ -1480,10 +1482,10 @@ class PublishLibCommand(BaseCommand):
                 else:
                     datum["error_message"] = error_message
                 output_data.append(datum)
-            emit.message(self.format_content(parsed_args.format, output_data))
+            emit.message(cli.format_content(output_data, parsed_args.format))
 
 
-class FetchLibCommand(BaseCommand):
+class FetchLibCommand(CharmcraftCommand):
     """Fetch one or more charm libraries."""
 
     name = "fetch-lib"
@@ -1507,10 +1509,11 @@ class FetchLibCommand(BaseCommand):
         downloaded libraries.
     """
     )
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument(
             "library",
             nargs="?",
@@ -1527,7 +1530,7 @@ class FetchLibCommand(BaseCommand):
             emit.debug(f"Libraries found under 'lib/charms': {found_libs}")
 
         # get tips from the Store
-        store = Store(self.config.charmhub, needs_auth=False)
+        store = Store(env.get_store_config(), needs_auth=False)
         to_query = []
         for lib in local_libs_data:
             if lib.lib_id is None:
@@ -1628,10 +1631,10 @@ class FetchLibCommand(BaseCommand):
                 else:
                     datum["error_message"] = error_message
                 output_data.append(datum)
-            emit.message(self.format_content(parsed_args.format, output_data))
+            emit.message(cli.format_content(output_data, parsed_args.format))
 
 
-class ListLibCommand(BaseCommand):
+class ListLibCommand(CharmcraftCommand):
     """List all libraries belonging to a charm."""
 
     name = "list-lib"
@@ -1654,10 +1657,11 @@ class ListLibCommand(BaseCommand):
         To fetch one of the shown libraries you can use the `fetch-lib` command.
     """
     )
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument(
             "name",
             nargs="?",
@@ -1681,7 +1685,7 @@ class ListLibCommand(BaseCommand):
                 )
 
         # get tips from the Store
-        store = Store(self.config.charmhub, needs_auth=False)
+        store = Store(env.get_store_config(), needs_auth=False)
         to_query = [{"charm_name": charm_name}]
         libs_tips = store.get_libraries_tips(to_query)
 
@@ -1700,7 +1704,7 @@ class ListLibCommand(BaseCommand):
                 }
                 for item in libs_data
             ]
-            emit.message(self.format_content(parsed_args.format, info))
+            emit.message(cli.format_content(info, parsed_args.format))
             return
 
         if not libs_tips:
@@ -1715,7 +1719,7 @@ class ListLibCommand(BaseCommand):
             emit.message(line)
 
 
-class ListResourcesCommand(BaseCommand):
+class ListResourcesCommand(CharmcraftCommand):
     """List the resources associated with a given charm in Charmhub."""
 
     name = "resources"
@@ -1728,15 +1732,16 @@ class ListResourcesCommand(BaseCommand):
 
     """
     )
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument("charm_name", metavar="charm-name", help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         result = store.list_resources(parsed_args.charm_name)
 
         if parsed_args.format:
@@ -1749,7 +1754,7 @@ class ListResourcesCommand(BaseCommand):
                 }
                 for item in result
             ]
-            emit.message(self.format_content(parsed_args.format, info))
+            emit.message(cli.format_content(info, parsed_args.format))
             return
 
         if not result:
@@ -1771,7 +1776,7 @@ class ListResourcesCommand(BaseCommand):
             emit.message(line)
 
 
-class UploadResourceCommand(BaseCommand):
+class UploadResourceCommand(CharmcraftCommand):
     """Upload a resource to Charmhub."""
 
     name = "upload-resource"
@@ -1794,10 +1799,11 @@ class UploadResourceCommand(BaseCommand):
     """
     )
     common = True
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument(
             "charm_name",
             metavar="charm-name",
@@ -1820,7 +1826,7 @@ class UploadResourceCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
 
         if parsed_args.filepath:
             resource_filepath = parsed_args.filepath
@@ -1840,7 +1846,7 @@ class UploadResourceCommand(BaseCommand):
 
             # build the image handler and dockerd interface
             registry = OCIRegistry(
-                self.config.charmhub.registry_url,
+                env.get_store_config().registry_url,
                 image_name,
                 username=credentials.username,
                 password=credentials.password,
@@ -1902,7 +1908,7 @@ class UploadResourceCommand(BaseCommand):
         if result.ok:
             if parsed_args.format:
                 info = {"revision": result.revision}
-                emit.message(self.format_content(parsed_args.format, info))
+                emit.message(cli.format_content(info, parsed_args.format))
             else:
                 emit.message(
                     f"Revision {result.revision} created of resource "
@@ -1916,7 +1922,7 @@ class UploadResourceCommand(BaseCommand):
                         {"code": error.code, "message": error.message} for error in result.errors
                     ]
                 }
-                emit.message(self.format_content(parsed_args.format, info))
+                emit.message(cli.format_content(info, parsed_args.format))
             else:
                 emit.message(f"Upload failed with status {result.status!r}:")
                 for error in result.errors:
@@ -1925,7 +1931,7 @@ class UploadResourceCommand(BaseCommand):
         return retcode
 
 
-class ListResourceRevisionsCommand(BaseCommand):
+class ListResourceRevisionsCommand(CharmcraftCommand):
     """List revisions for a resource of a charm."""
 
     name = "resource-revisions"
@@ -1943,10 +1949,11 @@ class ListResourceRevisionsCommand(BaseCommand):
         Listing revisions will take you through login if needed.
     """
     )
+    format_option = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        self.include_format_option(parser)
+        super().fill_parser(parser)
         parser.add_argument(
             "charm_name",
             metavar="charm-name",
@@ -1956,7 +1963,7 @@ class ListResourceRevisionsCommand(BaseCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(self.config.charmhub)
+        store = Store(env.get_store_config())
         result = store.list_resource_revisions(parsed_args.charm_name, parsed_args.resource_name)
 
         if parsed_args.format:
@@ -1968,7 +1975,7 @@ class ListResourceRevisionsCommand(BaseCommand):
                 }
                 for item in result
             ]
-            emit.message(self.format_content(parsed_args.format, info))
+            emit.message(cli.format_content(info, parsed_args.format))
             return
 
         if not result:

@@ -20,6 +20,9 @@ line_length = 88
 minversion = "7.0"
 testpaths = "tests"
 xfail_strict = true
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 
 [tool.coverage.run]
 branch = true

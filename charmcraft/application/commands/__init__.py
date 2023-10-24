@@ -15,7 +15,8 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Charmcraft commands."""
 
-from .lifecycle import (
+from charmcraft.application.commands.init import InitCommand
+from charmcraft.application.commands.lifecycle import (
     get_lifecycle_command_group,
     BuildCommand,
     CleanCommand,
@@ -26,6 +27,7 @@ from .lifecycle import (
 )
 
 __all__ = [
+    "InitCommand",
     "get_lifecycle_command_group",
     "BuildCommand",
     "CleanCommand",

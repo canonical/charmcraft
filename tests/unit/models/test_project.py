@@ -196,7 +196,7 @@ def test_build_info_from_build_on_run_on_multi_arch(run_on, expected):
             ],
             [
                 project.CharmBuildInfo(
-                    platform="arch-1.0-amd64",
+                    platform="arch-1.0-amd64",  # mypy: ignore[assignment]
                     build_on="amd64",
                     build_for="amd64",
                     base=ONE_ARCH_BASENAME,
@@ -368,7 +368,7 @@ def test_from_yaml_file_exception(
     metadata_yaml: Optional[str],
     config_yaml: Optional[str],
     actions_yaml: Optional[str],
-    exc_class: Type[Exception],
+    exc_class: Type[CraftError],
     match: str,
     details: str,
 ):
@@ -381,10 +381,10 @@ def test_from_yaml_file_exception(
     if actions_yaml:
         fs.create_file("/actions.yaml", contents=actions_yaml)
 
-    with pytest.raises(exc_class, match=match) as exc_class:
+    with pytest.raises(exc_class, match=match) as exc:
         project.CharmcraftProject.from_yaml_file(pathlib.Path("/charmcraft.yaml"))
 
-    assert exc_class.value.details == details
+    assert exc.value.details == details
 
 
 # endregion

@@ -2796,7 +2796,9 @@ def test_createlib_simple(
     assert created_lib_file.read_text() == expected_newlib_content
 
 
-@pytest.mark.xfail(raises=pydantic.ValidationError, reason="Store commands need refactor.")
+@pytest.mark.xfail(
+    strict=True, raises=pydantic.ValidationError, reason="Store commands need refactor."
+)
 def test_createlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     args = Namespace(name="testlib", format=None)
@@ -3084,6 +3086,7 @@ def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkey
 
 
 @pytest.mark.xfail(
+    strict=True,
     raises=pydantic.ValidationError,
     reason="Store commands need refactoring to not need a project.",
 )

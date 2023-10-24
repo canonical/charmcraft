@@ -13,15 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Craft-application based entrypoint for charmcraft.
+"""Helpers for initialising a new charm."""
 
-This submodule contains what's needed to run charmcraft with the
-craft-application framework, falling back to "classic" charmcraft when a command
-is not available.
 
-Help is (for now) handled by classic charmcraft.
-"""
-
-from charmcraft.application.main import APP_METADATA, Charmcraft, main
-
-__all__ = ["APP_METADATA", "Charmcraft", "main"]
+CHARM_EXECUTABLE_FILES = frozenset(("run_tests", "src/charm.py"))

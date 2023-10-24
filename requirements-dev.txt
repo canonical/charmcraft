@@ -10,7 +10,7 @@ codespell==2.2.5
 colorama==0.4.6
 coverage==7.3.1
 craft-application@git+https://github.com/canonical/craft-application.git
-craft-cli==2.1.0
+craft-cli==2.3.0
 craft-parts==1.25.1
 craft-providers==1.18.0
 craft-store==2.4.0

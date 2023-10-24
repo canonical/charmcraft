@@ -26,9 +26,10 @@ import platformdirs
 
 from charmcraft import const, errors
 
+
 def get_host_shared_cache_path():
     """Path for host shared cache."""
-    shared_cache_env = os.getenv(errors.SHARED_CACHE_ENV_VAR)
+    shared_cache_env = os.getenv(const.SHARED_CACHE_ENV_VAR)
     if shared_cache_env is not None:
         cache_path = pathlib.Path(shared_cache_env).expanduser().resolve()
         cache_path.mkdir(parents=True, exist_ok=True)

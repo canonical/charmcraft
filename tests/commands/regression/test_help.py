@@ -20,13 +20,34 @@ import pytest
 import pytest_check
 
 
-@pytest.mark.parametrize("command", [
-    "pack", "clean", "init", "version",
-    "login", "logout", "whoami", "register", "register-bundle", "unregister",
-    "names", "upload", "revisions", "release", "promote-bundle", "close", "status",
-    "create-lib", "publish-lib", "fetch-lib", "list-lib", "resources", "upload-resource"
-    "resource-revisions"
-])
+@pytest.mark.parametrize(
+    "command",
+    [
+        "pack",
+        "clean",
+        "init",
+        "version",
+        "login",
+        "logout",
+        "whoami",
+        "register",
+        "register-bundle",
+        "unregister",
+        "names",
+        "upload",
+        "revisions",
+        "release",
+        "promote-bundle",
+        "close",
+        "status",
+        "create-lib",
+        "publish-lib",
+        "fetch-lib",
+        "list-lib",
+        "resources",
+        "upload-resourceresource-revisions",
+    ],
+)
 def test_compare_command_and_legacy_options(command):
     command_help = subprocess.run(
         [sys.executable, "-m", "charmcraft", command, "-h"],

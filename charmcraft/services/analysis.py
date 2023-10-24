@@ -30,7 +30,7 @@ from charmcraft.models.lint import CheckResult, CheckType, LintResult
 from charmcraft.models.project import CharmcraftProject
 
 
-class AnalysisService(craft_application.BaseService):
+class AnalysisService(craft_application.ProjectService):
     """Business logic for creating packages."""
 
     _project: models.CharmcraftProject  # type: ignore[assignment]
@@ -43,7 +43,7 @@ class AnalysisService(craft_application.BaseService):
         *,
         project_dir: pathlib.Path,
     ) -> None:
-        super().__init__(app, cast(craft_application.models.Project, project), services)
+        super().__init__(app, services, project=cast(craft_application.models.Project, project))
         self._project_dir = project_dir.resolve(strict=True)
         self._results: dict[str, list[CheckResult]] = {}
         self._lint_run = False

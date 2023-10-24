@@ -26,7 +26,7 @@ with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [
-    "craft-application@git+https://github.com/canonical/craft-application.git@4c3162b6ec5bdc1b85227bd777dc0005415604d7",
+    "craft-application@git+https://github.com/canonical/craft-application.git@a9392316470927da4f3db1a4850c93dae049a757",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
     "craft-providers",

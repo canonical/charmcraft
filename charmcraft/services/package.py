@@ -52,7 +52,7 @@ class PackageService(services.PackageService):
         project_dir: pathlib.Path,
         platform: str | None,
     ) -> None:
-        super().__init__(app, cast(craft_application.models.Project, project), services)
+        super().__init__(app, services, project=cast(craft_application.models.Project, project))
         self.project_dir = project_dir.resolve(strict=True)
         self._platform = platform
 

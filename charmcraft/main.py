@@ -34,8 +34,7 @@ from craft_cli import (
 )
 
 from charmcraft import config, env, utils
-from charmcraft.application.commands import store
-from charmcraft.commands import analyze, clean, extensions, pack, version
+from charmcraft.commands import analyze, clean, extensions, init, pack, version, store
 from charmcraft.const import SHARED_CACHE_ENV_VAR
 from charmcraft.parts import setup_parts
 from charmcraft.store.client import ALTERNATE_AUTH_ENV_VAR
@@ -63,6 +62,7 @@ See https://charmhub.io/publishing for more information.
 _basic_commands = [
     analyze.AnalyzeCommand,
     clean.CleanCommand,
+    init.InitCommand,
     pack.PackCommand,
     version.VersionCommand,
 ]

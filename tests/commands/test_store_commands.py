@@ -30,7 +30,7 @@ import yaml
 from craft_cli import CraftError
 from craft_store.errors import CredentialsUnavailable, StoreServerError
 
-from charmcraft.application.commands.store import (
+from charmcraft.commands.store import (
     CloseCommand,
     CreateLibCommand,
     EntityType,

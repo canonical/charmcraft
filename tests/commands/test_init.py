@@ -14,23 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import datetime
-import io
-import os
-import re
-import subprocess
-import sys
 from argparse import Namespace
-from unittest.mock import patch
 
 import pydocstyle
 import pytest
-from craft_cli import CraftError
-from flake8.api.legacy import get_style_guide
 
 from charmcraft.commands.init import DEFAULT_PROFILE, PROFILES, InitCommand
-from charmcraft.models.charmcraft import Project
-from charmcraft.utils import S_IXALL
 from tests.test_infra import get_python_filepaths
 
 

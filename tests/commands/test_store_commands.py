@@ -30,6 +30,7 @@ import yaml
 from craft_cli import CraftError
 from craft_store.errors import CredentialsUnavailable, StoreServerError
 
+from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands.store import (
     CloseCommand,
     CreateLibCommand,
@@ -53,7 +54,6 @@ from charmcraft.commands.store import (
     WhoamiCommand,
     get_name_from_zip,
 )
-from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.main import ArgumentParsingError
 from charmcraft.models.charmcraft import CharmhubConfig
 from charmcraft.store.models import (

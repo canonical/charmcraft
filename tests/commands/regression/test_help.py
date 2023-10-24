@@ -45,7 +45,8 @@ import pytest_check
         "fetch-lib",
         "list-lib",
         "resources",
-        "upload-resource", "resource-revisions",
+        "upload-resource",
+        "resource-revisions",
     ],
 )
 def test_compare_command_and_legacy_options(command):

@@ -378,9 +378,10 @@ class Builder:
                 allow_unstable = False
             else:
                 allow_unstable = True
-                emit.message(
+                emit.progress(
                     f"Warning: non-LTS Ubuntu releases {build_on.channel} are "
-                    "intended for experimental use only."
+                    "intended for experimental use only.",
+                    permanent=True,
                 )
         else:
             allow_unstable = True

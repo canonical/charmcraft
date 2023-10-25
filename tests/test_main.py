@@ -16,6 +16,7 @@
 
 import argparse
 import ast
+import datetime
 import itertools
 import os
 import subprocess
@@ -33,16 +34,54 @@ from craft_cli import (
 )
 from craft_store.errors import CraftStoreError
 
-from charmcraft import utils
+from charmcraft import models, utils
+from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import FORMAT_HELP_STR, JSON_FORMAT, BaseCommand
-from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.main import COMMAND_GROUPS, _get_system_details, main
+from charmcraft.models.charmcraft import BasesConfiguration
+from charmcraft.store.client import ALTERNATE_AUTH_ENV_VAR
 
 # --- Tests for the main entry point
 
 # In all the test methods below we patch Dispatcher.run so we don't really exercise any
 # command machinery, even if we call to main using a real command (which is to just
 # make argument parsing system happy).
+
+
+@pytest.fixture()
+def config(tmp_path):
+    """Provide a config class with an extra set method for the test to change it."""
+
+    class TestConfig(models.charmcraft.CharmcraftConfig, frozen=False):
+        """The Config, but with a method to set test values."""
+
+        def set(self, prime=None, **kwargs):
+            # prime is special, so we don't need to write all this structure in all tests
+            if prime is not None:
+                if self.parts is None:
+                    self.parts = {}
+                self.parts["charm"] = {"plugin": "charm", "prime": prime}
+
+            # the rest is direct
+            for k, v in kwargs.items():
+                object.__setattr__(self, k, v)
+
+    project = models.charmcraft.Project(
+        dirpath=tmp_path,
+        started_at=datetime.datetime.utcnow(),
+        config_provided=True,
+    )
+
+    base = BasesConfiguration(**{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]})
+
+    return TestConfig(
+        type="charm",
+        bases=[base],
+        project=project,
+        name="test-charm",
+        summary="test summary",
+        description="test description",
+    )
 
 
 def test_main_ok():

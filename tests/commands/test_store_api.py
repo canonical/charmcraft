@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Tests for the Store API layer (code in store/store.py)."""
+"""Tests for the Store API layer (code in store/models___)."""
 
 import base64
 import platform
@@ -33,15 +33,15 @@ from craft_store.errors import (
 )
 from dateutil import parser
 
-from charmcraft.commands.store.client import AnonymousClient, Client
-from charmcraft.commands.store.store import (
+from charmcraft.store import (
     AUTH_DEFAULT_PERMISSIONS,
     AUTH_DEFAULT_TTL,
-    Base,
-    Library,
+    AnonymousClient,
+    Client,
     Store,
-    _store_client_wrapper,
 )
+from charmcraft.store.models import Base, Library
+from charmcraft.store.store import _store_client_wrapper
 from charmcraft.utils import ResourceOption
 from tests.commands.test_store_client import FakeResponse
 
@@ -51,9 +51,7 @@ def client_mock(monkeypatch):
     """Fixture to provide a mocked client."""
     monkeypatch.setattr(platform, "node", lambda: "fake-host")
     client_mock = MagicMock(spec=Client)
-    with patch(
-        "charmcraft.commands.store.store.Client", lambda api, storage, ephemeral=True: client_mock
-    ):
+    with patch("charmcraft.store.store.Client", lambda api, storage, ephemeral=True: client_mock):
         yield client_mock
 
 
@@ -62,7 +60,7 @@ def anonymous_client_mock(monkeypatch):
     """Fixture to provide a mocked anonymous client."""
     anonymous_client_mock = MagicMock(spec=AnonymousClient)
     with patch(
-        "charmcraft.commands.store.store.AnonymousClient",
+        "charmcraft.store.store.AnonymousClient",
         lambda api, storage: anonymous_client_mock,
     ):
         yield anonymous_client_mock
@@ -73,7 +71,7 @@ def anonymous_client_mock(monkeypatch):
 
 def test_client_init(config):
     """Check that the client is initiated ok even without config."""
-    with patch("charmcraft.commands.store.store.Client") as client_mock:
+    with patch("charmcraft.store.store.Client") as client_mock:
         Store(config.charmhub)
     assert client_mock.mock_calls == [
         call(config.charmhub.api_url, config.charmhub.storage_url, ephemeral=False),
@@ -82,7 +80,7 @@ def test_client_init(config):
 
 def test_client_init_ephemeral(config):
     """Check that the client is initiated with no keyring."""
-    with patch("charmcraft.commands.store.store.Client") as client_mock:
+    with patch("charmcraft.store.store.Client") as client_mock:
         Store(config.charmhub, ephemeral=True)
     assert client_mock.mock_calls == [
         call(config.charmhub.api_url, config.charmhub.storage_url, ephemeral=True),
@@ -94,7 +92,7 @@ def test_client_init_ephemeral(config):
 
 def test_anonymous_client_init(config):
     """Check that the client is initiated ok even without config."""
-    with patch("charmcraft.commands.store.store.AnonymousClient") as anonymous_client_mock:
+    with patch("charmcraft.store.store.AnonymousClient") as anonymous_client_mock:
         Store(config.charmhub, needs_auth=False)
     assert anonymous_client_mock.mock_calls == [
         call(config.charmhub.api_url, config.charmhub.storage_url),
@@ -722,7 +720,7 @@ def test_upload_straightforward(client_mock, emitter, config):
     fake_statuses = {test_status_ok: test_status_resolution}
     test_filepath = "test-filepath"
     test_endpoint = "/v1/test/revisions/endpoint/"
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
         result = store._upload(test_endpoint, test_filepath)
 
     # check all client calls
@@ -780,8 +778,8 @@ def test_upload_polls_status_ok(client_mock, emitter, config):
 
     test_status_resolution = "clean and crispy"
     fake_statuses = {test_status_ok: test_status_resolution}
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
-        with patch("charmcraft.commands.store.store.POLL_DELAYS", [0.1] * 5):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+        with patch("charmcraft.store.store.POLL_DELAYS", [0.1] * 5):
             result = store._upload("/test/endpoint/", "some-filepath")
 
     # check the status-checking client calls (kept going until third one)
@@ -837,8 +835,8 @@ def test_upload_polls_status_timeout(client_mock, emitter, config):
 
     test_status_resolution = "clean and crispy"
     fake_statuses = {test_status_ok: test_status_resolution}
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
-        with patch("charmcraft.commands.store.store.POLL_DELAYS", [0.1] * 2):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+        with patch("charmcraft.store.store.POLL_DELAYS", [0.1] * 2):
             with pytest.raises(CraftError) as cm:
                 store._upload("/test/endpoint/", "some-filepath")
     assert str(cm.value) == "Timeout polling Charmhub for upload status (after 0.2s)."
@@ -879,7 +877,7 @@ def test_upload_error(client_mock, config):
     test_status_resolution = "test-ok-or-not"
     fake_statuses = {test_status_bad: test_status_resolution}
     test_filepath = "test-filepath"
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
         result = store._upload("/test/endpoint/", test_filepath)
 
     # check result
@@ -950,7 +948,7 @@ def test_upload_including_extra_parameters(client_mock, emitter, config):
     test_filepath = "test-filepath"
     test_endpoint = "/v1/test/revisions/endpoint/"
     extra_fields = {"extra-key": "1", "more": "2"}
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
         store._upload(test_endpoint, test_filepath, extra_fields=extra_fields)
 
     # check all client calls

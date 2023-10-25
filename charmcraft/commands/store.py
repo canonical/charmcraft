@@ -26,10 +26,10 @@ import textwrap
 import typing
 import zipfile
 from operator import attrgetter
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import yaml
-from craft_cli import emit, ArgumentParsingError
+from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_parts import Step
 from craft_store import attenuations
@@ -37,11 +37,10 @@ from craft_store.errors import CredentialsUnavailable
 from humanize import naturalsize
 from tabulate import tabulate
 
-from charmcraft.cmdbase import BaseCommand
 from charmcraft import parts, utils
-
-from charmcraft.commands.store.registry import ImageHandler, OCIRegistry, LocalDockerdInterface
-from charmcraft.commands.store.store import Store, Entity
+from charmcraft.cmdbase import BaseCommand
+from charmcraft.store.registry import ImageHandler, LocalDockerdInterface, OCIRegistry
+from charmcraft.store.store import Entity, Store
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
@@ -993,8 +992,8 @@ class PromoteBundleCommand(BaseCommand):
                 emit.debug(f"Error when running PRIME step: {error}")
                 raise
 
-            from charmcraft.metafiles.metadata import create_metadata_yaml
             from charmcraft.metafiles.manifest import create_manifest
+            from charmcraft.metafiles.metadata import create_metadata_yaml
 
             create_metadata_yaml(lifecycle.prime_dir, self.config)
             create_manifest(lifecycle.prime_dir, self.config.project.started_at, None, [])

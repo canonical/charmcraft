@@ -56,7 +56,6 @@ from charmcraft.utils.project import (
     get_charm_name_from_path,
     get_templates_environment,
 )
-from charmcraft.utils.store import ChannelData, Risk
 from charmcraft.utils.yaml import load_yaml
 
 __all__ = [
@@ -87,8 +86,6 @@ __all__ = [
     "get_pip_version",
     "get_requirements_file_package_names",
     "validate_strict_dependencies",
-    "ChannelData",
-    "Risk",
     "SingleOptionEnsurer",
     "ResourceOption",
     "confirm_with_user",

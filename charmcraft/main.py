@@ -34,10 +34,10 @@ from craft_cli import (
 )
 
 from charmcraft import config, env, utils
-from charmcraft.commands import analyze, clean, extensions, pack, store, version
-from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
+from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
 from charmcraft.const import SHARED_CACHE_ENV_VAR
 from charmcraft.parts import setup_parts
+from charmcraft.store.client import ALTERNATE_AUTH_ENV_VAR
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
 for lib_name in ("craft_providers", "craft_parts", "craft_store"):
@@ -62,6 +62,7 @@ See https://charmhub.io/publishing for more information.
 _basic_commands = [
     analyze.AnalyzeCommand,
     clean.CleanCommand,
+    init.InitCommand,
     pack.PackCommand,
     version.VersionCommand,
 ]

@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Constants used in charmcraft."""
+
 from craft_providers.bases import BaseName
 
 METADATA_FILENAME = "metadata.yaml"
@@ -24,6 +25,7 @@ JUJU_CONFIG_FILENAME = "config.yaml"
 IMAGE_INFO_ENV_VAR = "CHARMCRAFT_IMAGE_INFO"
 
 SHARED_CACHE_ENV_VAR = "CRAFT_SHARED_CACHE"
+STORE_ENV_VAR = "CHARMCRAFT_STORE_CONFIG"
 
 WORK_DIRNAME = "work_dir"
 BUILD_DIRNAME = "build"

@@ -26,11 +26,7 @@ import pydantic
 import yaml
 from craft_cli import CraftError, emit
 
-from charmcraft.const import (
-    CHARM_METADATA_KEYS,
-    CHARM_METADATA_KEYS_ALIAS,
-    METADATA_FILENAME,
-)
+from charmcraft import const
 from charmcraft.format import format_pydantic_errors
 from charmcraft.models.metadata import BundleMetadataLegacy, CharmMetadataLegacy
 
@@ -45,7 +41,7 @@ def read_metadata_yaml(charm_dir: pathlib.Path) -> Dict[str, Any]:
 
     :returns: the YAML decoded metadata.yaml content
     """
-    metadata_path = charm_dir / METADATA_FILENAME
+    metadata_path = charm_dir / const.METADATA_FILENAME
     emit.debug(f"Reading {str(metadata_path)!r}")
     with metadata_path.open("rt", encoding="utf8") as fh:
         return yaml.safe_load(fh)
@@ -65,7 +61,7 @@ def parse_charm_metadata_yaml(
     except OSError as exc:
         raise CraftError(f"Cannot read the metadata.yaml file: {exc!r}") from exc
     if not isinstance(metadata, dict):
-        raise CraftError(f"The {charm_dir / METADATA_FILENAME} file is not valid YAML.")
+        raise CraftError(f"The {charm_dir / const.METADATA_FILENAME} file is not valid YAML.")
 
     emit.debug("Validating metadata keys")
     try:
@@ -73,7 +69,8 @@ def parse_charm_metadata_yaml(
     except pydantic.ValidationError as error:
         if allow_basic:
             emit.progress(
-                format_pydantic_errors(error.errors(), file_name=METADATA_FILENAME), permanent=True
+                format_pydantic_errors(error.errors(), file_name=const.METADATA_FILENAME),
+                permanent=True,
             )
             emit.debug("Falling back to basic metadata.yaml")
             metadata_basic = {
@@ -95,7 +92,7 @@ def parse_bundle_metadata_yaml(charm_dir: pathlib.Path) -> BundleMetadataLegacy:
     except OSError as exc:
         raise CraftError(f"Cannot read the metadata.yaml file: {exc!r}") from exc
     if not isinstance(metadata, dict):
-        raise CraftError(f"The {charm_dir / METADATA_FILENAME} file is not valid YAML.")
+        raise CraftError(f"The {charm_dir / const.METADATA_FILENAME} file is not valid YAML.")
 
     emit.debug("Validating metadata keys")
     return BundleMetadataLegacy.unmarshal(metadata)
@@ -114,8 +111,8 @@ def create_metadata_yaml(
 
     :returns: Path to created metadata.yaml.
     """
-    original_file_path = charmcraft_config.project.dirpath / METADATA_FILENAME
-    target_file_path = charm_dir / METADATA_FILENAME
+    original_file_path = charmcraft_config.project.dirpath / const.METADATA_FILENAME
+    target_file_path = charm_dir / const.METADATA_FILENAME
 
     # Copy metadata.yaml if it exists, otherwise create it from CharmcraftConfig.
     if original_file_path.exists():
@@ -125,7 +122,7 @@ def create_metadata_yaml(
     else:
         # metadata.yaml not exists, create it from config
         metadata = charmcraft_config.dict(
-            include=CHARM_METADATA_KEYS.union(CHARM_METADATA_KEYS_ALIAS),
+            include=const.CHARM_METADATA_KEYS.union(const.CHARM_METADATA_KEYS_ALIAS),
             exclude_none=True,
             by_alias=True,
         )

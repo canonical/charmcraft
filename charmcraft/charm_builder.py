@@ -29,16 +29,7 @@ import subprocess
 import sys
 from typing import List
 
-from charmcraft import instrum
-from charmcraft.const import (
-    DEPENDENCIES_HASH_FILENAME,
-    DISPATCH_CONTENT,
-    DISPATCH_FILENAME,
-    HOOKS_DIRNAME,
-    MANDATORY_HOOK_NAMES,
-    STAGING_VENV_DIRNAME,
-    VENV_DIRNAME,
-)
+from charmcraft import const, instrum
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.errors import DependencyError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
@@ -83,7 +74,7 @@ class CharmBuilder:
         self.requirement_paths = requirements
         self.strict_dependencies = strict_dependencies
         self.ignore_rules = self._load_juju_ignore()
-        self.ignore_rules.extend_patterns([f"/{STAGING_VENV_DIRNAME}"])
+        self.ignore_rules.extend_patterns([f"/{const.STAGING_VENV_DIRNAME}"])
 
         self.charmlib_deps = collect_charmlib_pydeps(builddir)
         print("Collected charmlib dependencies:", self.charmlib_deps)
@@ -188,10 +179,10 @@ class CharmBuilder:
     def handle_dispatcher(self, linked_entrypoint):
         """Handle modern and classic dispatch mechanisms."""
         # dispatch mechanism, create one if wasn't provided by the project
-        dispatch_path = self.installdir / DISPATCH_FILENAME
+        dispatch_path = self.installdir / const.DISPATCH_FILENAME
         if not dispatch_path.exists():
             print("Creating the dispatch mechanism")
-            dispatch_content = DISPATCH_CONTENT.format(
+            dispatch_content = const.DISPATCH_CONTENT.format(
                 entrypoint_relative_path=linked_entrypoint.relative_to(self.installdir)
             )
             with dispatch_path.open("wt", encoding="utf8") as fh:
@@ -201,7 +192,7 @@ class CharmBuilder:
         # bunch of symlinks, to support old juju: verify that any of the already included hooks
         # in the directory is not linking directly to the entrypoint, and also check all the
         # mandatory ones are present
-        dest_hookpath = self.installdir / HOOKS_DIRNAME
+        dest_hookpath = self.installdir / const.HOOKS_DIRNAME
         if not dest_hookpath.exists():
             dest_hookpath.mkdir()
 
@@ -215,7 +206,7 @@ class CharmBuilder:
                 print(f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint")
 
         # include the mandatory ones and those we need to replace
-        hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
+        hooknames = const.MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
         for hookname in hooknames:
             print(f"Creating the {hookname!r} hook script pointing to dispatch")
             dest_hook = dest_hookpath / hookname
@@ -325,8 +316,8 @@ class CharmBuilder:
             print("No dependencies to handle")
             return
 
-        staging_venv_dir = self.builddir / STAGING_VENV_DIRNAME
-        hash_file = self.builddir / DEPENDENCIES_HASH_FILENAME
+        staging_venv_dir = self.builddir / const.STAGING_VENV_DIRNAME
+        hash_file = self.builddir / const.DEPENDENCIES_HASH_FILENAME
 
         # find out if current dependencies are the same than the last run.
         current_deps_hash = self._calculate_dependencies_hash()
@@ -357,9 +348,9 @@ class CharmBuilder:
             hash_file.write_text(current_deps_hash, encoding="utf8")
 
         # always copy the virtualvenv site-packages directory to /venv in charm
-        basedir = pathlib.Path(STAGING_VENV_DIRNAME)
+        basedir = pathlib.Path(const.STAGING_VENV_DIRNAME)
         site_packages_dir = _find_venv_site_packages(basedir)
-        shutil.copytree(site_packages_dir, self.installdir / VENV_DIRNAME)
+        shutil.copytree(site_packages_dir, self.installdir / const.VENV_DIRNAME)
 
 
 def _find_venv_bin(basedir: pathlib.Path, exec_base: str) -> pathlib.Path:

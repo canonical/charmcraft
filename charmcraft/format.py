@@ -18,6 +18,8 @@
 
 from typing import Tuple
 
+from charmcraft import const
+
 
 def format_pydantic_error_location(loc) -> str:
     """Format location."""
@@ -68,7 +70,7 @@ def printable_field_location_split(location: str) -> Tuple[str, str]:
     return field_name, "top-level"
 
 
-def format_pydantic_errors(errors, *, file_name: str = "charmcraft.yaml") -> str:
+def format_pydantic_errors(errors, *, file_name: str = const.CHARMCRAFT_FILENAME) -> str:
     """Format errors.
 
     Example 1: Single error.

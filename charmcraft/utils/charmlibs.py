@@ -26,6 +26,7 @@ from typing import List, Optional, Set
 import yaml
 from craft_cli import CraftError
 
+from charmcraft import const
 from charmcraft.errors import BadLibraryNameError, BadLibraryPathError
 
 
@@ -59,7 +60,7 @@ class LibInternals:
 def get_name_from_metadata() -> Optional[str]:
     """Return the name if present and plausible in metadata.yaml."""
     try:
-        with open("metadata.yaml", "rb") as fh:
+        with open(const.METADATA_FILENAME, "rb") as fh:
             metadata = yaml.safe_load(fh)
         charm_name = metadata["name"]
     except (yaml.error.YAMLError, OSError, KeyError):

@@ -30,11 +30,9 @@ from requests_toolbelt import (  # type: ignore[import]
     MultipartEncoderMonitor,
 )
 
-from charmcraft import __version__, utils
+from charmcraft import __version__, const, utils
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
-
-ALTERNATE_AUTH_ENV_VAR = "CHARMCRAFT_AUTH"
 
 
 def build_user_agent():
@@ -86,24 +84,24 @@ class Client(craft_store.StoreClient):
             endpoints=endpoints.CHARMHUB,
             application_name="charmcraft",
             user_agent=build_user_agent(),
-            environment_auth=ALTERNATE_AUTH_ENV_VAR,
+            environment_auth=const.ALTERNATE_AUTH_ENV_VAR,
             ephemeral=ephemeral,
         )
 
     def login(self, *args, **kwargs):
         """Intercept regular login functionality to forbid it when using alternate auth."""
-        if os.getenv(ALTERNATE_AUTH_ENV_VAR) is not None:
+        if os.getenv(const.ALTERNATE_AUTH_ENV_VAR) is not None:
             raise CraftError(
-                f"Cannot login when using alternative auth through {ALTERNATE_AUTH_ENV_VAR} "
+                f"Cannot login when using alternative auth through {const.ALTERNATE_AUTH_ENV_VAR} "
                 "environment variable."
             )
         return super().login(*args, **kwargs)
 
     def logout(self, *args, **kwargs):
         """Intercept regular logout functionality to forbid it when using alternate auth."""
-        if os.getenv(ALTERNATE_AUTH_ENV_VAR) is not None:
+        if os.getenv(const.ALTERNATE_AUTH_ENV_VAR) is not None:
             raise CraftError(
-                f"Cannot logout when using alternative auth through {ALTERNATE_AUTH_ENV_VAR} "
+                f"Cannot logout when using alternative auth through {const.ALTERNATE_AUTH_ENV_VAR} "
                 "environment variable."
             )
         return super().logout(*args, **kwargs)

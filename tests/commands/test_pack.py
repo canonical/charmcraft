@@ -28,7 +28,7 @@ import pytest
 import yaml
 from craft_cli import ArgumentParsingError, CraftError
 
-from charmcraft import parts
+from charmcraft import const, parts
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands import pack
@@ -76,7 +76,7 @@ noargs = get_namespace()
 @pytest.fixture()
 def bundle_yaml(tmp_path):
     """Create an empty bundle.yaml, with the option to set values to it."""
-    bundle_path = tmp_path / "bundle.yaml"
+    bundle_path = tmp_path / const.BUNDLE_FILENAME
     bundle_path.write_text("{}")
     content = {}
 
@@ -215,8 +215,8 @@ def test_bundle_simple_successful_build(
     # check
     zipname = tmp_path / "testbundle.zip"
     zf = zipfile.ZipFile(zipname)
-    assert "charmcraft.yaml" not in [x.filename for x in zf.infolist()]
-    assert zf.read("bundle.yaml") == content.encode("ascii")
+    assert const.CHARMCRAFT_FILENAME not in [x.filename for x in zf.infolist()]
+    assert zf.read(const.BUNDLE_FILENAME) == content.encode("ascii")
     assert zf.read("README.md") == b"test readme"
 
     if formatted:
@@ -226,11 +226,11 @@ def test_bundle_simple_successful_build(
         emitter.assert_message(expected)
 
     # check the manifest is present and with particular values that depend on given info
-    manifest = yaml.safe_load(zf.read("manifest.yaml"))
+    manifest = yaml.safe_load(zf.read(const.MANIFEST_FILENAME))
     assert manifest["charmcraft-started-at"] == bundle_config.project.started_at.isoformat() + "Z"
 
     # verify that the manifest was not leftover in user's project
-    assert not (tmp_path / "manifest.yaml").exists()
+    assert not (tmp_path / const.MANIFEST_FILENAME).exists()
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -304,7 +304,7 @@ def test_bundle_missing_bundle_file(tmp_path, bundle_config):
     with pytest.raises(CraftError) as cm:
         PackCommand(bundle_config).run(noargs)
     assert str(cm.value) == (
-        "Missing or invalid main bundle file: '{}'.".format(tmp_path / "bundle.yaml")
+        f"Missing or invalid main bundle file: '{tmp_path / const.BUNDLE_FILENAME}'."
     )
 
 
@@ -331,7 +331,7 @@ def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
     assert str(cm.value) == (
         "Invalid bundle config; "
         "missing a 'name' field indicating the bundle's name in file '{}'.".format(
-            tmp_path / "bundle.yaml"
+            tmp_path / const.BUNDLE_FILENAME
         )
     )
 
@@ -439,7 +439,7 @@ def test_bundle_parts_not_defined(
 
     config = load(tmp_path)
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
 
     mock_parts.PartsLifecycle.side_effect = SystemExit()
     with pytest.raises(SystemExit):
@@ -451,7 +451,7 @@ def test_bundle_parts_not_defined(
                 "plugin": "bundle",
                 "source": str(tmp_path),
                 "prime": [
-                    "bundle.yaml",
+                    const.BUNDLE_FILENAME,
                     "README.md",
                 ],
             }
@@ -526,7 +526,7 @@ def test_bundle_parts_with_bundle_part(
 
     config = load(tmp_path)
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     mock_parts.PartsLifecycle.side_effect = SystemExit()
 
     with pytest.raises(SystemExit):
@@ -540,7 +540,7 @@ def test_bundle_parts_with_bundle_part(
                         "source": str(tmp_path),
                         "prime": [
                             "my_extra_file.txt",
-                            "bundle.yaml",
+                            const.BUNDLE_FILENAME,
                             "README.md",
                         ],
                     }
@@ -614,7 +614,7 @@ def test_bundle_parts_without_bundle_part(
 
     config = load(tmp_path)
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     mock_parts.PartsLifecycle.side_effect = SystemExit()
     with pytest.raises(SystemExit):
         PackCommand(config).run(get_namespace(shell_after=True))
@@ -696,7 +696,7 @@ def test_bundle_parts_with_bundle_part_with_plugin(
 
     config = load(tmp_path)
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     mock_parts.PartsLifecycle.side_effect = SystemExit()
     with pytest.raises(SystemExit):
         PackCommand(config).run(get_namespace(shell_after=True))
@@ -826,7 +826,7 @@ def test_prime_extra_wildcards_not_found(tmp_path, bundle_yaml, bundle_config):
 
     zf = zipfile.ZipFile(tmp_path / "testbundle.zip")
     zipped_files = [x.filename for x in zf.infolist()]
-    assert zipped_files == ["manifest.yaml"]
+    assert zipped_files == [const.MANIFEST_FILENAME]
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

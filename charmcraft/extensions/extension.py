@@ -24,7 +24,7 @@ from typing import Any, Dict, Final, List, Optional, Sequence, Tuple, final
 
 from craft_cli import emit
 
-from charmcraft import errors
+from charmcraft import const, errors
 
 
 class Extension(abc.ABC):
@@ -86,7 +86,7 @@ class Extension(abc.ABC):
                 build_base = (build_on["name"], build_on["channel"])
 
                 if self.is_experimental(build_base) and not os.getenv(
-                    "CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS"
+                    const.EXPERIMENTAL_EXTENSIONS_ENV_VAR
                 ):
                     raise errors.ExtensionError(
                         f"Extension is experimental: {extension_name!r}",

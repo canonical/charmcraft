@@ -32,6 +32,7 @@ from craft_providers.bases import (
 )
 from craft_providers.errors import BaseConfigurationError
 
+from charmcraft import const
 from charmcraft.bases import check_if_base_matches_host
 from charmcraft.env import (
     get_managed_environment_log_path,
@@ -126,7 +127,7 @@ def create_build_plan(
 def get_command_environment(base: Base) -> Dict[str, str]:
     """Construct the required environment."""
     env = base.default_command_environment()
-    env["CHARMCRAFT_MANAGED_MODE"] = "1"
+    env[const.MANAGED_MODE_ENV_VAR] = "1"
 
     # Pass-through host environment that target may need.
     for env_key in ["http_proxy", "https_proxy", "no_proxy"]:
@@ -292,7 +293,7 @@ def get_provider():
     provider = None
 
     if is_charmcraft_running_in_developer_mode():
-        provider = os.getenv("CHARMCRAFT_PROVIDER")
+        provider = os.getenv(const.PROVIDER_ENV_VAR)
 
     if provider is None and is_charmcraft_running_from_snap():
         snap_config = get_snap_configuration()

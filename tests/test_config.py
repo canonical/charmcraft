@@ -24,7 +24,7 @@ from unittest.mock import patch
 import pytest
 from craft_cli import CraftError
 
-from charmcraft import linters
+from charmcraft import const, linters
 from charmcraft.config import load
 from charmcraft.models.charmcraft import Base, BasesConfiguration, CharmhubConfig
 from charmcraft.utils import get_host_architecture
@@ -88,7 +88,7 @@ def test_load_current_directory(
 def test_load_managed_mode_directory(monkeypatch, tmp_path):
     """Validate managed-mode default directory is /root/project."""
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
 
     # Patch out Config (and Project) to prevent directory validation checks.
     with patch("charmcraft.config.CharmcraftConfig"):

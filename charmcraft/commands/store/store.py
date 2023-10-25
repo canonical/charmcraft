@@ -29,11 +29,8 @@ from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
 from dateutil import parser
 
-from charmcraft.commands.store.client import (
-    ALTERNATE_AUTH_ENV_VAR,
-    AnonymousClient,
-    Client,
-)
+from charmcraft import const
+from charmcraft.commands.store.client import AnonymousClient, Client
 
 
 # helpers to build responses from this layer
@@ -310,7 +307,7 @@ def _store_client_wrapper(auto_login=True):
             try:
                 return method(self, *args, **kwargs)
             except craft_store.errors.CredentialsUnavailable:
-                if os.getenv(ALTERNATE_AUTH_ENV_VAR):
+                if os.getenv(const.ALTERNATE_AUTH_ENV_VAR):
                     raise RuntimeError(
                         "Charmcraft error: internal inconsistency detected "
                         "(CredentialsUnavailable error while having user provided credentials)."
@@ -320,7 +317,7 @@ def _store_client_wrapper(auto_login=True):
                 emit.progress("Credentials not found. Trying to log in...")
             except craft_store.errors.StoreServerError as error:
                 if error.response.status_code == 401:
-                    if os.getenv(ALTERNATE_AUTH_ENV_VAR):
+                    if os.getenv(const.ALTERNATE_AUTH_ENV_VAR):
                         raise CraftError(
                             "Provided credentials are no longer valid for Charmhub. "
                             "Regenerate them and try again."

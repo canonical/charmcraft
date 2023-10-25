@@ -29,6 +29,7 @@ import yaml
 from craft_cli import CraftError
 from craft_store.errors import CredentialsUnavailable, StoreServerError
 
+from charmcraft import const
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands.store import (
     CloseCommand,
@@ -838,7 +839,7 @@ def test_get_name_charm_ok(tmp_path):
     """Get the name from a charm file, all ok."""
     test_zip = tmp_path / "some.zip"
     test_name = "whatever"
-    _build_zip_with_yaml(test_zip, "metadata.yaml", content={"name": test_name})
+    _build_zip_with_yaml(test_zip, const.METADATA_FILENAME, content={"name": test_name})
 
     name = get_name_from_zip(test_zip)
     assert name == test_name
@@ -855,7 +856,7 @@ def test_get_name_charm_ok(tmp_path):
 def test_get_name_charm_bad_metadata(tmp_path, yaml_content):
     """Get the name from a charm file, but with a wrong metadata.yaml."""
     bad_zip = tmp_path / "badstuff.zip"
-    _build_zip_with_yaml(bad_zip, "metadata.yaml", raw_yaml=yaml_content)
+    _build_zip_with_yaml(bad_zip, const.METADATA_FILENAME, raw_yaml=yaml_content)
 
     with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
@@ -870,7 +871,7 @@ def test_get_name_bundle_ok(tmp_path):
     """Get the name from a bundle file, all ok."""
     test_zip = tmp_path / "some.zip"
     test_name = "whatever"
-    _build_zip_with_yaml(test_zip, "bundle.yaml", content={"name": test_name})
+    _build_zip_with_yaml(test_zip, const.BUNDLE_FILENAME, content={"name": test_name})
 
     name = get_name_from_zip(test_zip)
     assert name == test_name
@@ -887,7 +888,7 @@ def test_get_name_bundle_ok(tmp_path):
 def test_get_name_bundle_bad_data(tmp_path, yaml_content):
     """Get the name from a bundle file, but with a bad bundle.yaml."""
     bad_zip = tmp_path / "badstuff.zip"
-    _build_zip_with_yaml(bad_zip, "bundle.yaml", raw_yaml=yaml_content)
+    _build_zip_with_yaml(bad_zip, const.BUNDLE_FILENAME, raw_yaml=yaml_content)
 
     with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
@@ -928,7 +929,7 @@ def test_upload_call_ok(emitter, store_mock, config, tmp_path, formatted):
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
     retcode = UploadCommand(config).run(args)
     assert retcode == 0
@@ -953,7 +954,7 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path, formatted):
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
     retcode = UploadCommand(config).run(args)
     assert retcode == 1
@@ -979,14 +980,14 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path, formatted):
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_upload_call_login_expired(mocker, monkeypatch, config, tmp_path, formatted):
     """Simple upload but login expired."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode(b"credentials").decode())
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, base64.b64encode(b"credentials").decode())
     mock_whoami = mocker.patch("craft_store.base_client.HTTPClient.request")
     push_file_mock = mocker.patch("charmcraft.commands.store.store.Client.push_file")
 
     mock_whoami.side_effect = StoreServerError(_fake_response(401, json={}))
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
 
     with pytest.raises(CraftError) as cm:
@@ -1004,7 +1005,7 @@ def test_upload_call_ok_including_release(emitter, store_mock, config, tmp_path,
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(
         filepath=test_charm, release=["edge"], resource=[], name=None, format=formatted
     )
@@ -1031,7 +1032,7 @@ def test_upload_call_ok_including_release_multiple(emitter, store_mock, config, 
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(
         filepath=test_charm, release=["edge", "stable"], resource=[], name=None, format=False
     )
@@ -1055,7 +1056,7 @@ def test_upload_including_release_with_resources(emitter, store_mock, config, tm
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     r1 = ResourceOption(name="foo", revision=3)
     r2 = ResourceOption(name="bar", revision=17)
     args = Namespace(
@@ -1094,7 +1095,7 @@ def test_upload_call_error_including_release(emitter, store_mock, config, tmp_pa
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=["edge"], name=None, format=False)
     UploadCommand(config).run(args)
 
@@ -1108,7 +1109,7 @@ def test_upload_with_different_name_than_in_metadata(emitter, store_mock, config
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[], name="foo-mycharm", format=False)
     retcode = UploadCommand(config).run(args)
     assert retcode == 0

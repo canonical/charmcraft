@@ -26,7 +26,7 @@ from craft_cli import CraftError, emit
 from craft_parts import LifecycleManager, PartsError, Step
 from xdg import BaseDirectory  # type: ignore[import]
 
-from charmcraft import charm_builder, instrum
+from charmcraft import const, instrum
 
 
 class PartsLifecycle:
@@ -121,7 +121,7 @@ class PartsLifecycle:
 
 def _get_dispatch_entrypoint(dirname: pathlib.Path) -> str:
     """Read the entrypoint from the dispatch file."""
-    dispatch = dirname / charm_builder.DISPATCH_FILENAME
+    dispatch = dirname / const.DISPATCH_FILENAME
     entrypoint_str = ""
     try:
         with dispatch.open("rt", encoding="utf8") as fh:

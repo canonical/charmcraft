@@ -26,6 +26,7 @@ import pytest_subprocess
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
+from charmcraft import const
 from charmcraft.parts import reactive
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -164,7 +165,7 @@ def test_validate_broken_charm(plugin, plugin_properties, broken_charm_exe):
 
 @pytest.fixture()
 def build_dir(tmp_path):
-    build_dir = tmp_path / "build"
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     return build_dir

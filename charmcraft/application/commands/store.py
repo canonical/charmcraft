@@ -76,7 +76,7 @@ class LoginCommand(CharmcraftCommand):
         Login to Charmhub.
 
         Charmcraft will provide a URL for the Charmhub login. When you have
-        successfully logged in, charmcraft will store a token for ongoing
+        successfully logged in, Charmcraft will store a token for ongoing
         access to Charmhub at the CLI (if `--export` option was not used
         otherwise it will only save the credentials in the indicated file).
 

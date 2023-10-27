@@ -53,6 +53,7 @@ from charmcraft.application.commands.store import (
     ListResourceRevisionsCommand,
     UploadResourceCommand,
 )
+from charmcraft.application.commands.version import Version
 
 __all__ = [
     "InitCommand",

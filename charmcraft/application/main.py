@@ -59,12 +59,10 @@ class Charmcraft(Application):
     def command_groups(self) -> list[craft_cli.CommandGroup]:
         """Return command groups."""
         lifecycle_commands = commands.get_lifecycle_command_group()
-        other_commands = craft_application.application.commands.get_other_command_group()
 
         merged: dict[str, list[type[craft_cli.BaseCommand]]] = {}
         all_groups = [
             lifecycle_commands,
-            other_commands,
             *self._command_groups,
         ]
 
@@ -130,10 +128,7 @@ class Charmcraft(Application):
 
         try:
             craft_cli.emit.trace("pre-parsing arguments...")
-            if "--version" in sys.argv or "-V" in sys.argv:
-                raise errors.ClassicFallback  # noqa: TRY301 (This is temporary)
-            else:
-                global_args = dispatcher.pre_parse_args(sys.argv[1:])
+            global_args = dispatcher.pre_parse_args(sys.argv[1:])
         except KeyboardInterrupt as err:
             self._emit_error(craft_cli.CraftError("Interrupted."), cause=err)
             sys.exit(128 + signal.SIGINT)
@@ -268,6 +263,12 @@ def main() -> int:
             commands.ListResourceRevisionsCommand,
             commands.UploadResourceCommand,
         ],
+    )
+    app.add_command_group(
+        "Other",
+        [
+            commands.Version,
+        ]
     )
 
     try:

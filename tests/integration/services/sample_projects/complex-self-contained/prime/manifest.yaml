@@ -26,4 +26,4 @@ analysis:
   - name: language
     result: unknown
   - name: framework
-    result: unknown
+    result: ignored

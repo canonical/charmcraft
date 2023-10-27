@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Charmcraft commands."""
 
+from charmcraft.application.commands.analyse import Analyse, Analyze
 from charmcraft.application.commands.init import InitCommand
 from charmcraft.application.commands.lifecycle import (
     get_lifecycle_command_group,
@@ -56,6 +57,8 @@ from charmcraft.application.commands.store import (
 from charmcraft.application.commands.version import Version
 
 __all__ = [
+    "Analyse",
+    "Analyze",
     "InitCommand",
     "get_lifecycle_command_group",
     "BuildCommand",

@@ -69,6 +69,7 @@ import pytest_check
         "resources",
         "upload-resource",
         "resource-revisions",
+        "analyze",
     ],
 )
 def test_compare_command_and_legacy_options(command):
@@ -100,4 +101,3 @@ def test_compare_command_and_legacy_options(command):
         option = line.strip().split(":", maxsplit=1)[0]
 
         pytest_check.is_in(option, command_help, msg=f"Missing: {option}")
-

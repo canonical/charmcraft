@@ -20,7 +20,7 @@ import ast
 import os
 import pathlib
 import shlex
-from typing import Generator, List, Type, Union
+from typing import Generator, List, Type, Union, final
 
 import yaml
 
@@ -74,22 +74,51 @@ class BaseChecker(metaclass=abc.ABCMeta):
     url: str
     text: str
 
+    exception_result: str
+
     @abc.abstractmethod
     def run(self, basedir: pathlib.Path) -> str:
         """Run this checker."""
         ...
+
+    @final
+    def get_result(self, base_dir: pathlib.Path) -> CheckResult:
+        """Get the result of a single checker."""
+        try:
+            result = self.run(base_dir)
+        except Exception:
+            result = self.exception_result
+        return CheckResult(
+            check_type=self.check_type,
+            name=self.name,
+            url=self.url,
+            text=self.text,
+            result=result,
+        )
+
+    @final
+    def get_ignore_result(self) -> CheckResult:
+        return CheckResult(
+            check_type=self.check_type,
+            name=self.name,
+            url=self.url,
+            text="",
+            result=LintResult.IGNORED
+        )
 
 
 class AttributeChecker(BaseChecker, metaclass=abc.ABCMeta):
     """Base attribute checker."""
 
     check_type = CheckType.ATTRIBUTE
+    exception_result = LintResult.UNKNOWN
 
 
 class Linter(BaseChecker, metaclass=abc.ABCMeta):
     """Base linter class."""
 
     check_type = CheckType.LINT
+    exception_result = LintResult.FATAL
     Result = LintResult
 
 
@@ -116,7 +145,10 @@ class Language(AttributeChecker):
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         python_entrypoint = check_dispatch_with_python_entrypoint(basedir)
-        return self.Result.UNKNOWN if python_entrypoint is None else self.Result.PYTHON
+        if python_entrypoint is None:
+            self.text = "Charm language unknown"
+            return self.Result.UNKNOWN
+        return self.Result.PYTHON
 
 
 class Framework(AttributeChecker):
@@ -252,17 +284,17 @@ class JujuMetadata(Linter):
             metadata = read_metadata_yaml(basedir)
         except yaml.YAMLError:
             self.text = "The metadata.yaml file is not a valid YAML file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
         except Exception:
             self.text = "Cannot read the metadata.yaml file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         # check required attributes
         missing_fields = {"name", "summary", "description"} - set(metadata)
         if missing_fields:
             missing = utils.humanize_list(missing_fields, "and")
             self.text = f"The metadata.yaml file is missing the following attribute(s): {missing}."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         return self.Result.OK
 
@@ -278,6 +310,7 @@ class JujuActions(Linter):
         """Run the proper verifications."""
         filepath = basedir / "actions.yaml"
         if not filepath.exists():
+            self.text = ""
             # it's optional
             return self.Result.OK
 
@@ -285,8 +318,9 @@ class JujuActions(Linter):
             with filepath.open("rt", encoding="utf8") as fh:
                 yaml.safe_load(fh)
         except Exception:
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
+        self.text = "Valid actions.yaml file."
         return self.Result.OK
 
 
@@ -318,17 +352,17 @@ class JujuConfig(Linter):
                 content = yaml.safe_load(fh)
         except Exception:
             self.text = "The config.yaml file is not a valid YAML file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         options = content.get("options")
         if not isinstance(options, dict):
             self.text = "Error in config.yaml: must have an 'options' dictionary."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         for value in options.values():
             if "type" not in value:
                 self.text = "Error in config.yaml: items under 'options' must have a 'type' key."
-                return self.Result.ERRORS
+                return self.Result.ERROR
 
         return self.Result.OK
 
@@ -358,15 +392,15 @@ class Entrypoint(Linter):
 
         if not entrypoint.exists():
             self.text = f"Cannot find the entrypoint file: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         if not entrypoint.is_file():
             self.text = f"The entrypoint is not a file: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         if not os.access(entrypoint, os.X_OK):
             self.text = f"The entrypoint file is not executable: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         return self.Result.OK
 

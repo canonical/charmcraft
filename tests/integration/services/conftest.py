@@ -30,7 +30,23 @@ def service_factory(fs, fake_path, simple_charm) -> services.CharmcraftServiceFa
         "package",
         project_dir=fake_project_dir,
     )
-    factory.set_kwargs("analysis", project_dir=fake_project_dir)
+    factory.set_kwargs("analysis")
+
+    factory.set_kwargs(
+        "lifecycle",
+        cache_dir=fake_path / "cache",
+        work_dir=fake_project_dir,
+        build_for=None,
+    )
+    factory.set_kwargs(
+        "provider",
+        work_dir=fake_project_dir,
+    )
+    factory.set_kwargs(
+        "package",
+        project_dir=fake_project_dir,
+        platform=None,
+    )
 
     factory.project = simple_charm
 

@@ -594,7 +594,7 @@ def test_jujumetadata_missing_file(tmp_path):
     """No metadata.yaml file at all."""
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.ERRORS
+    assert result == JujuMetadata.Result.ERROR
     assert linter.text == "Cannot read the metadata.yaml file."
 
 
@@ -604,7 +604,7 @@ def test_jujumetadata_file_corrupted(tmp_path):
     metadata_file.write_text(" - \n-")
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.ERRORS
+    assert result == JujuMetadata.Result.ERROR
     assert linter.text == "The metadata.yaml file is not a valid YAML file."
 
 
@@ -623,7 +623,7 @@ def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
     metadata_file.write_text(content)
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.ERRORS
+    assert result == JujuMetadata.Result.ERROR
     assert linter.text == (
         f"The metadata.yaml file is missing the following attribute(s): '{missing}'."
     )
@@ -640,7 +640,7 @@ def test_jujumetadata_missing_field_multiple(tmp_path):
     )
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.ERRORS
+    assert result == JujuMetadata.Result.ERROR
     assert linter.text == (
         "The metadata.yaml file is missing the following attribute(s): "
         "'description' and 'summary'."
@@ -874,7 +874,7 @@ def test_jujuactions_file_corrupted(tmp_path):
     actions_file = tmp_path / "actions.yaml"
     actions_file.write_text(" - \n-")
     result = JujuActions().run(tmp_path)
-    assert result == JujuActions.Result.ERRORS
+    assert result == JujuActions.Result.ERROR
 
 
 # --- tests for JujuConfig checker
@@ -906,7 +906,7 @@ def test_jujuconfig_file_corrupted(tmp_path):
     config_file.write_text(" - \n-")
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "The config.yaml file is not a valid YAML file."
 
 
@@ -920,7 +920,7 @@ def test_jujuconfig_no_options(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
@@ -934,7 +934,7 @@ def test_jujuconfig_empty_options(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
@@ -950,7 +950,7 @@ def test_jujuconfig_options_not_dict(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
@@ -966,7 +966,7 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
 
 
@@ -999,7 +999,7 @@ def test_entrypoint_missing(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.ERRORS
+    assert result == Entrypoint.Result.ERROR
     assert linter.text == f"Cannot find the entrypoint file: {str(entrypoint)!r}"
 
 
@@ -1010,7 +1010,7 @@ def test_entrypoint_directory(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.ERRORS
+    assert result == Entrypoint.Result.ERROR
     assert linter.text == f"The entrypoint is not a file: {str(entrypoint)!r}"
 
 
@@ -1022,5 +1022,5 @@ def test_entrypoint_non_exec(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.ERRORS
+    assert result == Entrypoint.Result.ERROR
     assert linter.text == f"The entrypoint file is not executable: {str(entrypoint)!r}"

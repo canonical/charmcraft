@@ -123,8 +123,8 @@ class AnalyzeCommand(BaseCommand):
         titles = [
             ("Attributes", linters.CheckType.ATTRIBUTE),
             ("Lint Ignored", LintResult.IGNORED),
-            ("Lint Warnings", LintResult.WARNINGS),
-            ("Lint Errors", LintResult.ERRORS),
+            ("Lint Warnings", LintResult.WARNING),
+            ("Lint Errors", LintResult.ERROR),
             ("Lint Fatal", LintResult.FATAL),
             ("Lint OK", LintResult.OK),
         ]
@@ -141,9 +141,9 @@ class AnalyzeCommand(BaseCommand):
         # the return code depends on the presence of different issues
         if LintResult.FATAL in grouped:
             retcode = 1
-        elif LintResult.ERRORS in grouped:
+        elif LintResult.ERROR in grouped:
             retcode = 2
-        elif LintResult.WARNINGS in grouped:
+        elif LintResult.WARNING in grouped:
             retcode = 3
         else:
             retcode = 0

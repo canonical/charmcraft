@@ -18,35 +18,27 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Iterator, cast
+import tempfile
+import zipfile
+from typing import Container, Iterator, Tuple
 
 import craft_application
 from craft_cli import emit
 
-from charmcraft import models
-from charmcraft.errors import LintingError
+from charmcraft import linters, models
 from charmcraft.linters import CHECKERS
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
-from charmcraft.models.project import CharmcraftProject
 
 
-class AnalysisService(craft_application.ProjectService):
+class AnalysisService(craft_application.AppService):
     """Business logic for creating packages."""
 
     _project: models.CharmcraftProject  # type: ignore[assignment]
 
     def __init__(  # (too many arguments)
-        self,
-        app: craft_application.AppMetadata,
-        project: CharmcraftProject,
-        services: craft_application.ServiceFactory,
-        *,
-        project_dir: pathlib.Path,
+        self, app: craft_application.AppMetadata, services: craft_application.ServiceFactory
     ) -> None:
-        super().__init__(app, services, project=cast(craft_application.models.Project, project))
-        self._project_dir = project_dir.resolve(strict=True)
-        self._results: dict[str, list[CheckResult]] = {}
-        self._lint_run = False
+        super().__init__(app, services)
 
     def gen_results(self, override_ignore: bool = False) -> Iterator[CheckResult]:
         """Generate linting results.
@@ -105,9 +97,9 @@ class AnalysisService(craft_application.ProjectService):
                     f"({result.text}; see more at {result.url}."
                 )
                 continue
-            if result.result == LintResult.ERRORS:
+            if result.result == LintResult.ERROR:
                 headline = "ERROR"
-            elif result.result == LintResult.WARNINGS:
+            elif result.result == LintResult.WARNING:
                 headline = "WARNING"
             else:
                 continue
@@ -117,23 +109,47 @@ class AnalysisService(craft_application.ProjectService):
 
         return results
 
-    def check_success(self) -> None:
-        """Check whether all linters succeeded.
+    def lint_directory(
+        self, path: pathlib.Path, *, ignore: Container[str] = (), include_ignored: bool = True
+    ) -> Iterator[CheckResult]:
+        """Lint an unpacked charm in the given directory."""
+        # TODO: Get the stuff to ignore
+        for checker, run in self._gen_checkers(ignore=ignore):
+            if run:
+                yield checker.get_result(path)
+            elif include_ignored:
+                yield checker.get_ignore_result()
 
-        Returns: None if all linters succeeded
-        Raises: LintingError if any linters errored.
+    def lint_file(
+        self, path: pathlib.Path, *, ignore: Container[str] = (), include_ignored: bool = True
+    ) -> Iterator[CheckResult]:
+        """Lint a packed charm.
+
+        :param path: The path to the file
+        :param ignore: a list of checker names to ignore.
+        :param include_ignored: Whether to include ignored values in the output
+
+        raises: FileNotFoundError if the file doesn't exist
         """
-        if not self._lint_run:
-            for _ in self.gen_results():
-                pass
-        if LintResult.ERRORS in self._results:
-            raise LintingError(
-                self._results[LintResult.ERRORS], self._results.get(LintResult.WARNINGS, [])
-            )
+        path = path.resolve(strict=True)
 
-    def get_result_groups(self):
-        """Get a dictionary of grouped results."""
-        if not self._lint_run:
-            for _ in self.gen_results():
-                pass
-        return self._results
+        with tempfile.TemporaryDirectory(prefix=f"charmcraft_{path.name}_") as directory:
+            directory_path = pathlib.Path(directory)
+            with zipfile.ZipFile(path) as zip_file:
+                zip_file.extractall(directory_path)
+                # fix permissions as extractall does not keep them (see https://bugs.python.org/issue15795)
+                for name in zip_file.namelist():
+                    info = zip_file.getinfo(name)
+                    inside_zip_mode = info.external_attr >> 16
+                    extracted_file = directory_path / name
+                    current_mode = extracted_file.stat().st_mode
+                    if current_mode != inside_zip_mode:
+                        extracted_file.chmod(inside_zip_mode)
+            yield from self.lint_directory(directory_path, ignore=ignore, include_ignored=include_ignored)
+
+    @staticmethod
+    def _gen_checkers(ignore: Container[str]) -> Iterator[Tuple[linters.BaseChecker, bool]]:
+        """Generate the checker classes to run, in their correct order."""
+        for cls in linters.CHECKERS:
+            run_linter = cls.name not in ignore
+            yield cls(), run_linter

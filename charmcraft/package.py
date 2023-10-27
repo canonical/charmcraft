@@ -153,13 +153,13 @@ class Builder:
 
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
-        if LintResult.WARNINGS in lint_results_by_outcome:
+        if LintResult.WARNING in lint_results_by_outcome:
             emit.progress("Lint Warnings:", permanent=True)
-            for result in lint_results_by_outcome[LintResult.WARNINGS]:
+            for result in lint_results_by_outcome[LintResult.WARNING]:
                 emit.progress(template.format(result), permanent=True)
-        if LintResult.ERRORS in lint_results_by_outcome:
+        if LintResult.ERROR in lint_results_by_outcome:
             emit.progress("Lint Errors:", permanent=True)
-            for result in lint_results_by_outcome[LintResult.ERRORS]:
+            for result in lint_results_by_outcome[LintResult.ERROR]:
                 emit.progress(template.format(result), permanent=True)
             if self.force_packing:
                 emit.progress("Packing anyway as requested.", permanent=True)

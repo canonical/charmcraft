@@ -125,7 +125,17 @@ class PackageService(services.PackageService):
         :param path: The path to the prime directory.
         """
         if isinstance(self._project, Charm):
-            lint_results = self._services.analysis.emit_results()
+            if self._project.analysis is not None:
+                ignore_checkers = {
+                    *self._project.analysis.ignore.linters,
+                    *self._project.analysis.ignore.attributes,
+                }
+            else:
+                ignore_checkers = set()
+            lint_results = self._services.analysis.lint_directory(
+                self._services.lifecycle.prime_dir,
+                ignore=ignore_checkers
+            )
             manifest = Manifest.from_charm_and_lint(self._project, lint_results)
             manifest.to_yaml_file(path / "manifest.yaml")
 

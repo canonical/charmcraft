@@ -93,7 +93,6 @@ class Charmcraft(Application):
             project_dir=self._work_dir,
             platform=platform,
         )
-        self.services.set_kwargs("analysis", project_dir=self._work_dir)
 
     def configure(self, global_args: dict[str, Any]) -> None:
         """Configure the application using any global arguments."""
@@ -267,6 +266,8 @@ def main() -> int:
     app.add_command_group(
         "Other",
         [
+            commands.Analyse,
+            commands.Analyze,
             commands.Version,
         ]
     )

@@ -40,10 +40,11 @@ def package_service(fake_path, service_factory):
 
 
 @pytest.mark.parametrize(
-    "project_path", [
-        pytest.param(path, id=path.name) for path in
-        (pathlib.Path(__file__).parent / "sample_projects").iterdir()
-        ]
+    "project_path",
+    [
+        pytest.param(path, id=path.name)
+        for path in (pathlib.Path(__file__).parent / "sample_projects").iterdir()
+    ],
 )
 @freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
 def test_write_metadata(fs, package_service, project_path):

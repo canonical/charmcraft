@@ -133,8 +133,7 @@ class PackageService(services.PackageService):
             else:
                 ignore_checkers = set()
             lint_results = self._services.analysis.lint_directory(
-                self._services.lifecycle.prime_dir,
-                ignore=ignore_checkers
+                self._services.lifecycle.prime_dir, ignore=ignore_checkers
             )
             manifest = Manifest.from_charm_and_lint(self._project, lint_results)
             manifest.to_yaml_file(path / "manifest.yaml")

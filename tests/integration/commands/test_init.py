@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Unit tests for init command."""
+"""Tests for init command."""
 import argparse
 import contextlib
 import os

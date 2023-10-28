@@ -22,7 +22,8 @@ import subprocess
 import textwrap
 from typing import TYPE_CHECKING
 
-from craft_cli import ArgumentParsingError, CommandGroup, CraftError, emit
+import craft_cli
+from craft_cli import ArgumentParsingError, CraftError, emit
 from typing_extensions import override
 
 from charmcraft.application.commands.base import CharmcraftCommand
@@ -33,9 +34,9 @@ if TYPE_CHECKING:  # pragma: no cover
 BUNDLE_MANDATORY_FILES = ["bundle.yaml", "README.md"]
 
 
-def get_lifecycle_command_group() -> CommandGroup:
+def get_lifecycle_commands() -> list[type[craft_cli.BaseCommand]]:
     """Return the lifecycle related command group."""
-    commands: list[type[_LifecycleCommand]] = [
+    return [
         CleanCommand,
         PullCommand,
         BuildCommand,
@@ -43,11 +44,6 @@ def get_lifecycle_command_group() -> CommandGroup:
         PrimeCommand,
         PackCommand,
     ]
-
-    return CommandGroup(
-        "Lifecycle",
-        commands,  # type: ignore[arg-type] # https://github.com/canonical/craft-cli/pull/157
-    )
 
 
 class _LifecycleCommand(CharmcraftCommand):

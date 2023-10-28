@@ -120,7 +120,9 @@ def test_lint_directory_ignores(monkeypatch, analysis_service, checkers, ignore)
     monkeypatch.setattr(linters, "CHECKERS", checkers)
     checker_names = {checker.name for checker in checkers}
 
-    results = list(analysis_service.lint_directory(pathlib.Path(), ignore=ignore, include_ignored=False))
+    results = list(
+        analysis_service.lint_directory(pathlib.Path(), ignore=ignore, include_ignored=False)
+    )
     checkers_run = {r.name for r in results}
 
     pytest_check.is_true(checkers_run.isdisjoint(ignore), f"{checkers_run & ignore}")

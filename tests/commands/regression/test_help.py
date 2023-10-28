@@ -13,13 +13,6 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-import subprocess
-import sys
-
-import pytest
-import pytest_check
-
-
 # Copyright 2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,13 +63,13 @@ import pytest_check
         "upload-resource",
         "resource-revisions",
         "analyze",
+        "list-extensions",
+        "expand-extensions",
     ],
 )
 def test_compare_command_and_legacy_options(command):
     help_cmd = subprocess.Popen(
-        [sys.executable, "-m", "charmcraft", command, "-h"],
-        text=True,
-        stderr=subprocess.PIPE
+        [sys.executable, "-m", "charmcraft", command, "-h"], text=True, stderr=subprocess.PIPE
     )
     legacy_help = subprocess.run(
         [sys.executable, "-m", "charmcraft.main", command, "-h"],

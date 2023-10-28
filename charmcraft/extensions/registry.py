@@ -16,12 +16,12 @@
 
 """Extension registry."""
 
-from typing import Dict, List
+from typing import Any, Dict, List, Type
 
 from charmcraft import errors
 from charmcraft.extensions.extension import Extension
 
-_EXTENSIONS: Dict[str, Extension] = {}
+_EXTENSIONS: Dict[str, Type[Extension]] = {}
 
 
 def get_extension_names() -> List[str]:
@@ -34,10 +34,10 @@ def get_extension_names() -> List[str]:
     return list(_EXTENSIONS.keys())
 
 
-def get_extension_class(extension_name: str) -> Extension:
+def get_extension_class(extension_name: str) -> Type[Extension]:
     """Obtain a extension class given the name.
 
-    :param name: The extension name.
+    :param extension_name: The extension name.
     :return: The extension class.
     :raises ExtensionError: If the extension name is invalid.
     """
@@ -50,7 +50,30 @@ def get_extension_class(extension_name: str) -> Extension:
         ) from None
 
 
-def register(extension_name: str, extension_class: Extension) -> None:
+def get_extensions() -> List[Dict[str, Any]]:
+    """Get metadata about registered extensions."""
+    return sorted(
+        (
+            {
+                "name": name,
+                "bases": [
+                    "@".join(base)
+                    for base in cls.get_supported_bases()
+                    if not cls.is_experimental(base)
+                ],
+                "experimental_bases": [
+                    "@".join(base)
+                    for base in cls.get_supported_bases()
+                    if cls.is_experimental(base)
+                ],
+            }
+            for name, cls in _EXTENSIONS.items()
+        ),
+        key=lambda d: d["name"],
+    )
+
+
+def register(extension_name: str, extension_class: Type[Extension]) -> None:
     """Register extension.
 
     :param extension_name: the name to register.

@@ -98,12 +98,13 @@ class BaseChecker(metaclass=abc.ABCMeta):
 
     @final
     def get_ignore_result(self) -> CheckResult:
+        """Get the result presuming the checker is ignored."""
         return CheckResult(
             check_type=self.check_type,
             name=self.name,
             url=self.url,
             text="",
-            result=LintResult.IGNORED
+            result=LintResult.IGNORED,
         )
 
 

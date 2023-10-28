@@ -14,11 +14,17 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Charmcraft commands."""
+import craft_application
 
 from charmcraft.application.commands.analyse import Analyse, Analyze
+from charmcraft.application.commands.extensions import (
+    ListExtensionsCommand,
+    ExtensionsCommand,
+    ExpandExtensionsCommand,
+)
 from charmcraft.application.commands.init import InitCommand
 from charmcraft.application.commands.lifecycle import (
-    get_lifecycle_command_group,
+    get_lifecycle_commands,
     BuildCommand,
     CleanCommand,
     PackCommand,
@@ -56,11 +62,72 @@ from charmcraft.application.commands.store import (
 )
 from charmcraft.application.commands.version import Version
 
+
+def fill_command_groups(app: craft_application.Application) -> None:
+    """Fill in all the command groups for Charmcraft."""
+    app.add_command_group("Basic", [InitCommand])
+    app.add_command_group("Lifecycle", get_lifecycle_commands())
+    app.add_command_group(
+        "Store (account)",
+        [
+            # auth
+            LoginCommand,
+            LogoutCommand,
+            WhoamiCommand,
+            # name handling
+            RegisterCharmNameCommand,
+            RegisterBundleNameCommand,
+            UnregisterNameCommand,
+            ListNamesCommand,
+        ],
+    )
+    app.add_command_group(
+        "Store (charm or bundle)",
+        [
+            # pushing files and checking revisions
+            UploadCommand,
+            ListRevisionsCommand,
+            # release process, and show status
+            ReleaseCommand,
+            PromoteBundleCommand,
+            StatusCommand,
+            CloseCommand,
+            # resources support
+            ListResourcesCommand,
+            ListResourceRevisionsCommand,
+            UploadResourceCommand,
+        ],
+    )
+    app.add_command_group(
+        "Store (libraries)",
+        [
+            CreateLibCommand,
+            PublishLibCommand,
+            ListLibCommand,
+            FetchLibCommand,
+        ],
+    )
+    app.add_command_group(
+        "Extensions", [ExpandExtensionsCommand, ExtensionsCommand, ListExtensionsCommand]
+    )
+    app.add_command_group(
+        "Other",
+        [
+            Analyse,
+            Analyze,
+            Version,
+        ],
+    )
+
+
 __all__ = [
     "Analyse",
     "Analyze",
+    "ListExtensionsCommand",
+    "ExpandExtensionsCommand",
+    "ExtensionsCommand",
     "InitCommand",
-    "get_lifecycle_command_group",
+    "get_lifecycle_commands",
     "BuildCommand",
     "CleanCommand",
     "PackCommand",

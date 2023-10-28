@@ -23,7 +23,7 @@ import craft_cli
 from craft_cli import emit
 from pydantic.json import pydantic_encoder
 
-from charmcraft import linters, errors
+from charmcraft import errors, linters
 from charmcraft.application.commands import base
 from charmcraft.models import lint
 
@@ -62,7 +62,7 @@ class Analyse(base.CharmcraftCommand):
                 f"Charm file not found: {str(parsed_args.filepath)}",
                 retcode=1,
                 reportable=False,
-                logpath_report=False
+                logpath_report=False,
             )
 
         ignore = parsed_args.ignore.split(",") if parsed_args.ignore else []
@@ -82,7 +82,9 @@ class Analyse(base.CharmcraftCommand):
         with emit.progress_bar(
             f"Linting {filepath.name}...", total=len(linters.CHECKERS)
         ) as progress:
-            for result in self._services.analysis.lint_file(filepath, ignore=ignore, include_ignored=False):
+            for result in self._services.analysis.lint_file(
+                filepath, ignore=ignore, include_ignored=False
+            ):
                 emit.progress(str(result), permanent=True)
                 if result.level > max_level:
                     max_level = result.level

@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+"""Version command."""
 import argparse
 import json
 
@@ -30,9 +31,7 @@ class Version(base.CharmcraftCommand):
     common = True
     format_option = True
 
-    def run(
-        self, parsed_args: argparse.Namespace
-    ) -> None:
+    def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
         if parsed_args.format.lower() == "json":
             emit.message(
@@ -41,7 +40,7 @@ class Version(base.CharmcraftCommand):
                         "application": self._app.name,
                         "version": self._app.version,
                     },
-                    indent=4
+                    indent=4,
                 )
             )
             return

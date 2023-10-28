@@ -17,10 +17,12 @@
 import datetime
 import enum
 import json
+import numbers
 import sys
 from dataclasses import dataclass
-from typing import Iterable, Optional, Union
+from typing import Dict, Iterable, Literal, Optional, Union, overload
 
+import tabulate
 from craft_cli import emit
 
 from charmcraft.env import is_charmcraft_running_in_managed_mode
@@ -150,15 +152,31 @@ class OutputFormat(enum.Enum):
 
     DEFAULT = None
     JSON = "json"
+    TABLE = "table"
 
 
-def format_content(content: Union[list, dict, None], fmt: Union[OutputFormat, str, None] = None):
+@overload
+def format_content(content: Dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str:
+    ...
+
+
+@overload
+def format_content(
+    content: Union[str, numbers.Real, list, dict], fmt: Union[OutputFormat, str, None]
+) -> str:
+    ...
+
+
+def format_content(content, fmt=None):
     """Format command output."""
     if not isinstance(fmt, OutputFormat):
-        fmt = OutputFormat(fmt)
+        try:
+            fmt = OutputFormat(fmt)
+        except ValueError:
+            raise ValueError(f"Unknown output format {str(fmt)}")
 
-    if fmt == OutputFormat.DEFAULT:
-        return str(content)
     if fmt == OutputFormat.JSON:
         return json.dumps(content, indent=4)
-    raise ValueError(f"Unknown output format {str(fmt)}")
+    if fmt == OutputFormat.TABLE:
+        return tabulate.tabulate(content, headers="keys")
+    return str(content)

@@ -22,7 +22,6 @@ import signal
 import sys
 from typing import Any, cast
 
-import craft_application
 import craft_cli
 import craft_parts
 import craft_providers
@@ -58,20 +57,7 @@ class Charmcraft(Application):
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
         """Return command groups."""
-        lifecycle_commands = commands.get_lifecycle_command_group()
-
-        merged: dict[str, list[type[craft_cli.BaseCommand]]] = {}
-        all_groups = [
-            lifecycle_commands,
-            *self._command_groups,
-        ]
-
-        # Merge the default command groups with those provided by the application,
-        # so that we don't get multiple groups with the same name.
-        for group in all_groups:
-            merged.setdefault(group.name, []).extend(group.commands)
-
-        return [craft_cli.CommandGroup(name, commands_) for name, commands_ in merged.items()]
+        return self._command_groups
 
     def _project_vars(self, yaml_data: dict[str, Any]) -> dict[str, str]:
         """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
@@ -231,46 +217,7 @@ def main() -> int:
         )
     )
 
-    app.add_command_group("Basic", [commands.InitCommand])
-    app.add_command_group(
-        "Store",
-        [
-            # auth
-            commands.LoginCommand,
-            commands.LogoutCommand,
-            commands.WhoamiCommand,
-            # name handling
-            commands.RegisterCharmNameCommand,
-            commands.RegisterBundleNameCommand,
-            commands.UnregisterNameCommand,
-            commands.ListNamesCommand,
-            # pushing files and checking revisions
-            commands.UploadCommand,
-            commands.ListRevisionsCommand,
-            # release process, and show status
-            commands.ReleaseCommand,
-            commands.PromoteBundleCommand,
-            commands.StatusCommand,
-            commands.CloseCommand,
-            # libraries support
-            commands.CreateLibCommand,
-            commands.PublishLibCommand,
-            commands.ListLibCommand,
-            commands.FetchLibCommand,
-            # resources support
-            commands.ListResourcesCommand,
-            commands.ListResourceRevisionsCommand,
-            commands.UploadResourceCommand,
-        ],
-    )
-    app.add_command_group(
-        "Other",
-        [
-            commands.Analyse,
-            commands.Analyze,
-            commands.Version,
-        ]
-    )
+    commands.fill_command_groups(app)
 
     try:
         return app.run()

@@ -4,7 +4,7 @@ systems:
   - ubuntu-22.04-64
 # Run these earlier since they can take a very long time
 priority: 100
-kill-timeout: 60m
+kill-timeout: 90m
 
 environment:
   BUNDLE/argo: https://github.com/canonical/argo-operators
@@ -61,6 +61,5 @@ execute: |
   fi
 
   # Test deploying the bundle.
-  # TODO: install juju on the runner and re-enable this.
   mv *.zip ~/
   juju deploy --trust ~/*.zip

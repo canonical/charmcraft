@@ -25,7 +25,6 @@ import types
 from typing import Optional
 from unittest.mock import Mock
 
-import craft_application
 import craft_parts
 import pytest
 import responses as responses_module
@@ -56,7 +55,7 @@ def simple_charm():
 @pytest.fixture()
 def service_factory(
     fs, fake_project_dir, fake_prime_dir, simple_charm
-) -> craft_application.ServiceFactory:
+) -> services.CharmcraftServiceFactory:
     factory = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     factory.set_kwargs(

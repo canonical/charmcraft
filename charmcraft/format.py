@@ -16,8 +16,6 @@
 
 """Reformat pydantic errors."""
 
-from typing import Tuple
-
 from charmcraft import const
 
 
@@ -48,7 +46,7 @@ def format_pydantic_error_message(msg: str) -> str:
     return msg.replace("str type expected", "string type expected")
 
 
-def printable_field_location_split(location: str) -> Tuple[str, str]:
+def printable_field_location_split(location: str) -> tuple[str, str]:
     """Return split field location.
 
     If top-level, location is returned as unquoted "top-level".

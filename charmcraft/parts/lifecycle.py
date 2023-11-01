@@ -20,7 +20,7 @@ PENDING DEPRECATION: we're moving this to a craft-application LifecycleService
 import os
 import pathlib
 import shlex
-from typing import Any, Dict, List
+from typing import Any
 
 from craft_cli import CraftError, emit
 from craft_parts import LifecycleManager, PartsError, Step
@@ -41,12 +41,12 @@ class PartsLifecycle:
 
     def __init__(
         self,
-        all_parts: Dict[str, Any],
+        all_parts: dict[str, Any],
         *,
         work_dir: pathlib.Path,
         project_dir: pathlib.Path,
         project_name: str,
-        ignore_local_sources: List[str],
+        ignore_local_sources: list[str],
     ):
         self._all_parts = all_parts.copy()
         self._project_dir = project_dir

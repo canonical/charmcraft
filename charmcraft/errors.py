@@ -16,7 +16,7 @@
 """Charmcraft error classes."""
 import io
 import pathlib
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 from craft_cli import CraftError
 

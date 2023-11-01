@@ -19,8 +19,9 @@
 import abc
 import os
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, Final, List, Optional, Sequence, Tuple, final
+from typing import Any, Final, final
 
 from craft_cli import emit
 
@@ -40,32 +41,32 @@ class Extension(abc.ABC):
         self,
         *,
         project_root: Path,
-        yaml_data: Dict[str, Any],
+        yaml_data: dict[str, Any],
     ) -> None:
         """Create a new Extension."""
         self.project_root = project_root
-        self.yaml_data: Final[Dict[str, Any]] = yaml_data
+        self.yaml_data: Final[dict[str, Any]] = yaml_data
 
     @staticmethod
     @abc.abstractmethod
-    def get_supported_bases() -> List[Tuple[str, ...]]:
+    def get_supported_bases() -> list[tuple[str, ...]]:
         """Return a list of tuple of supported bases."""
 
     @staticmethod
     @abc.abstractmethod
-    def is_experimental(base: Optional[Tuple[str, ...]]) -> bool:
+    def is_experimental(base: tuple[str, ...] | None) -> bool:
         """Return whether or not this extension is unstable for given base."""
 
     @abc.abstractmethod
-    def get_root_snippet(self) -> Dict[str, Any]:
+    def get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to apply."""
 
     @abc.abstractmethod
-    def get_part_snippet(self) -> Dict[str, Any]:
+    def get_part_snippet(self) -> dict[str, Any]:
         """Return the part snippet to apply to existing parts."""
 
     @abc.abstractmethod
-    def get_parts_snippet(self) -> Dict[str, Any]:
+    def get_parts_snippet(self) -> dict[str, Any]:
         """Return the parts to add to parts."""
 
     @final
@@ -79,7 +80,7 @@ class Extension(abc.ABC):
             # There is nothing to validate, the extension will set the preferred base.
             return
 
-        bases: List = self.yaml_data["bases"]
+        bases: list = self.yaml_data["bases"]
 
         for base in bases:
             for build_on in base.get("build-on", []):

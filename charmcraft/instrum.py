@@ -19,7 +19,7 @@
 import json
 import uuid
 from time import time
-from typing import Any, Dict
+from typing import Any
 
 # the base time of the started process: all the recorded times will be relative to
 # this one (they will be easier to read and simple to understand the time passed since
@@ -40,7 +40,7 @@ class _Measurements:
         # id and each value holds all it info
         self.measurements = {}
 
-    def start(self, msg: str, extra_info: Dict[str, Any]):
+    def start(self, msg: str, extra_info: dict[str, Any]):
         """Start a measurement."""
         this_id = uuid.uuid4().hex
         parent_id = self.parents[-1]
@@ -126,7 +126,7 @@ class Timer:
             ...
     """
 
-    def __init__(self, msg: str, **extra_info: Dict[str, Any]):
+    def __init__(self, msg: str, **extra_info: dict[str, Any]):
         self.msg = msg
         self.extra_info = extra_info
         self.measurement_id = None
@@ -138,7 +138,7 @@ class Timer:
     def __exit__(self, *exc):
         _measurements.end(self.measurement_id)
 
-    def mark(self, msg: str, **extra_info: Dict[str, Any]):
+    def mark(self, msg: str, **extra_info: dict[str, Any]):
         """Mark middle measurements inside a contextual one."""
         # close the previous one, and start a new measure
         _measurements.end(self.measurement_id)

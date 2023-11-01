@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Bundle plugin for craft-parts."""
 import sys
-from typing import Any, Dict, List, Set
+from typing import Any
 
 from craft_parts import plugins
 
@@ -26,7 +26,7 @@ class BundlePluginProperties(plugins.PluginProperties, plugins.PluginModel):
     source: str
 
     @classmethod
-    def unmarshal(cls, data: Dict[str, Any]):
+    def unmarshal(cls, data: dict[str, Any]):
         """Populate bundle properties from the part specification.
 
         :param data: A dictionary containing part properties.
@@ -51,19 +51,19 @@ class BundlePlugin(plugins.Plugin):
     properties_class = BundlePluginProperties
 
     @classmethod
-    def get_build_snaps(cls) -> Set[str]:
+    def get_build_snaps(cls) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
 
-    def get_build_packages(self) -> Set[str]:
+    def get_build_packages(self) -> set[str]:
         """Return a set of required packages to install in the build environment."""
         return set()
 
-    def get_build_environment(self) -> Dict[str, str]:
+    def get_build_environment(self) -> dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
         return {}
 
-    def get_build_commands(self) -> List[str]:
+    def get_build_commands(self) -> list[str]:
         """Return a list of commands to run during the build step."""
         install_dir = self._part_info.part_install_dir
         if sys.platform == "linux":

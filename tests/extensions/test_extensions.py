@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 from textwrap import dedent
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import pytest
 from overrides import override
@@ -32,24 +32,24 @@ class FakeExtension(Extension):
     bases = [("ubuntu", "22.04")]
 
     @classmethod
-    def get_supported_bases(cls) -> List[Tuple[str, ...]]:
+    def get_supported_bases(cls) -> list[tuple[str, ...]]:
         """Return a list of tuple of supported bases."""
         return cls.bases
 
     @staticmethod
-    def is_experimental(_base: Optional[Tuple[str, ...]]) -> bool:
+    def is_experimental(_base: tuple[str, ...] | None) -> bool:
         """Return whether or not this extension is unstable for given base."""
         return False
 
-    def get_root_snippet(self) -> Dict[str, Any]:
+    def get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to apply."""
         return {}
 
-    def get_part_snippet(self) -> Dict[str, Any]:
+    def get_part_snippet(self) -> dict[str, Any]:
         """Return the part snippet to apply to existing parts."""
         return {}
 
-    def get_parts_snippet(self) -> Dict[str, Any]:
+    def get_parts_snippet(self) -> dict[str, Any]:
         """Return the parts to add to parts."""
         return {}
 
@@ -61,7 +61,7 @@ class ExperimentalExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(_base: Optional[str]) -> bool:
+    def is_experimental(_base: str | None) -> bool:
         return True
 
 
@@ -72,7 +72,7 @@ class InvalidPartExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @override
-    def get_parts_snippet(self) -> Dict[str, Any]:
+    def get_parts_snippet(self) -> dict[str, Any]:
         return {"bad-name": {"plugin": "dump", "source": None}}
 
 
@@ -83,19 +83,19 @@ class FullExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @override
-    def get_root_snippet(self) -> Dict[str, Any]:
+    def get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to apply."""
         return {
             "terms": ["https://example.com/terms", "https://example.com/terms2"],
         }
 
     @override
-    def get_part_snippet(self) -> Dict[str, Any]:
+    def get_part_snippet(self) -> dict[str, Any]:
         """Return the part snippet to apply to existing parts."""
         return {"stage-packages": ["new-package-1"]}
 
     @override
-    def get_parts_snippet(self) -> Dict[str, Any]:
+    def get_parts_snippet(self) -> dict[str, Any]:
         """Return the parts to add to parts."""
         return {"full-extension/new-part": {"plugin": "nil", "source": None}}
 

@@ -18,7 +18,7 @@
 import datetime
 import os
 import pathlib
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 
 import pydantic
 from craft_cli import CraftError
@@ -55,7 +55,7 @@ class Base(ModelConfigDefaults):
 
     name: pydantic.StrictStr
     channel: pydantic.StrictStr
-    architectures: List[pydantic.StrictStr] = [get_host_architecture()]
+    architectures: list[pydantic.StrictStr] = [get_host_architecture()]
 
 
 class BasesConfiguration(
@@ -64,8 +64,8 @@ class BasesConfiguration(
 ):
     """Definition of build-on/run-on combinations."""
 
-    build_on: List[Base]
-    run_on: List[Base]
+    build_on: list[Base]
+    run_on: list[Base]
 
 
 class Project(ModelConfigDefaults):
@@ -84,8 +84,8 @@ class Project(ModelConfigDefaults):
 class Ignore(ModelConfigDefaults):
     """Definition of `analysis.ignore` configuration."""
 
-    attributes: List[AttributeName] = []
-    linters: List[LinterName] = []
+    attributes: list[AttributeName] = []
+    linters: list[LinterName] = []
 
 
 class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
@@ -97,11 +97,11 @@ class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
 class Links(ModelConfigDefaults):
     """Definition of `links` in metadata."""
 
-    contact: Optional[Union[pydantic.StrictStr, List[pydantic.StrictStr]]]
-    documentation: Optional[pydantic.AnyHttpUrl]
-    issues: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    source: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    website: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+    contact: pydantic.StrictStr | list[pydantic.StrictStr] | None
+    documentation: pydantic.AnyHttpUrl | None
+    issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
 
 
 class CharmcraftConfig(
@@ -117,28 +117,28 @@ class CharmcraftConfig(
     metadata_legacy: bool = False
 
     type: Literal["bundle", "charm"]
-    name: Optional[pydantic.StrictStr]
-    summary: Optional[pydantic.StrictStr]
-    description: Optional[pydantic.StrictStr]
+    name: pydantic.StrictStr | None
+    summary: pydantic.StrictStr | None
+    description: pydantic.StrictStr | None
     charmhub: CharmhubConfig = CharmhubConfig()
-    parts: Optional[Dict[str, Any]]
-    bases: Optional[List[BasesConfiguration]]
+    parts: dict[str, Any] | None
+    bases: list[BasesConfiguration] | None
     analysis: AnalysisConfig = AnalysisConfig()
-    actions: Optional[JujuActions]
-    assumes: Optional[List[Union[str, Dict[str, Union[List, Dict]]]]]
-    containers: Optional[Dict[str, Any]]
-    devices: Optional[Dict[str, Any]]
-    title: Optional[pydantic.StrictStr]
-    extra_bindings: Optional[Dict[str, Any]]
-    peers: Optional[Dict[str, Any]]
-    provides: Optional[Dict[str, Any]]
-    requires: Optional[Dict[str, Any]]
-    resources: Optional[Dict[str, Any]]
-    storage: Optional[Dict[str, Any]]
-    subordinate: Optional[bool]
-    terms: Optional[List[str]]
-    links: Optional[Links]
-    config: Optional[JujuConfig]
+    actions: JujuActions | None
+    assumes: list[str | dict[str, list | dict]] | None
+    containers: dict[str, Any] | None
+    devices: dict[str, Any] | None
+    title: pydantic.StrictStr | None
+    extra_bindings: dict[str, Any] | None
+    peers: dict[str, Any] | None
+    provides: dict[str, Any] | None
+    requires: dict[str, Any] | None
+    resources: dict[str, Any] | None
+    storage: dict[str, Any] | None
+    subordinate: bool | None
+    terms: list[str] | None
+    links: Links | None
+    config: JujuConfig | None
 
     @pydantic.validator("name", pre=True, always=True)
     def validate_name(cls, name, values):
@@ -255,7 +255,7 @@ class CharmcraftConfig(
             return JujuConfig.parse_obj(config)
 
     @classmethod
-    def expand_short_form_bases(cls, bases: List[Dict[str, Any]]) -> None:
+    def expand_short_form_bases(cls, bases: list[dict[str, Any]]) -> None:
         """Expand short-form base configuration into long-form in-place."""
         for index, base in enumerate(bases):
             # Skip if already long-form. Account for common typos in case user
@@ -279,7 +279,7 @@ class CharmcraftConfig(
             base["run-on"] = [converted_base.dict()]
 
     @classmethod
-    def unmarshal(cls, obj: Dict[str, Any], project: Project):
+    def unmarshal(cls, obj: dict[str, Any], project: Project):
         """Unmarshal object with necessary translations and error handling.
 
         (1) Perform any necessary translations.
@@ -349,7 +349,7 @@ class CharmcraftConfig(
             raise CraftError(format_pydantic_errors(error.errors()))
 
     @classmethod
-    def schema(cls, **kwargs) -> Dict[str, Any]:
+    def schema(cls, **kwargs) -> dict[str, Any]:
         """Perform any schema fixups required to hide internal details."""
         schema = super().schema(**kwargs)
 

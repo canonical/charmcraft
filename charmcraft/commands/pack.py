@@ -17,7 +17,6 @@
 """Infrastructure for the 'pack' command."""
 import argparse
 import pathlib
-from typing import Dict, List
 
 import yaml
 from craft_cli import ArgumentParsingError, CraftError, emit
@@ -163,7 +162,7 @@ class PackCommand(BaseCommand):
                 charm_names = bundle.get("applications", {}).keys()
                 charms = find_charm_sources(self.config.project.dirpath, charm_names)
             elif parsed_args.include_charm:
-                charms: Dict[str, pathlib.Path] = {}
+                charms: dict[str, pathlib.Path] = {}
                 for path in parsed_args.include_charm:
                     if not path.is_absolute():
                         path = self.config.project.dirpath / path
@@ -195,7 +194,7 @@ class PackCommand(BaseCommand):
             if bases_index >= len_configured_bases:
                 raise CraftError(msg.format(bases_index))
 
-    def _pack_charm(self, parsed_args, builder: package.Builder) -> List[pathlib.Path]:
+    def _pack_charm(self, parsed_args, builder: package.Builder) -> list[pathlib.Path]:
         """Pack a charm."""
         self._validate_bases_indices(parsed_args.bases_index)
 
@@ -222,7 +221,7 @@ class PackCommand(BaseCommand):
     def _pack_bundle(
         self,
         parsed_args: argparse.Namespace,
-        charms: Dict[str, pathlib.Path],
+        charms: dict[str, pathlib.Path],
         builder: package.Builder,
         overwrite_bundle: bool = False,
     ) -> None:

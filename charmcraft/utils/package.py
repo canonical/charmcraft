@@ -36,7 +36,7 @@ def get_pypi_packages(*requirements: Iterable[str]) -> set[str]:
     for req in requirements:
         for line in req:
             line = line.strip()
-            if line[0] not in valid_package_start_chars:
+            if not line or line[0] not in valid_package_start_chars:
                 continue
             if PACKAGE_LINE_REGEX.match(line):
                 packages.add(line)

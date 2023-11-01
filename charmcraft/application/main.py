@@ -85,7 +85,9 @@ class Charmcraft(Application):
         super().configure(global_args)
         self._global_args = global_args
         if not self.services.ProviderClass.is_managed():
-            project_dir = pathlib.Path(global_args.get("project_dir") or ".").resolve(strict=True)
+            # Do not do strict resolution here, as commands such as `init` will create
+            # the project directory.
+            project_dir = pathlib.Path(global_args.get("project_dir") or ".").resolve()
             self._work_dir = project_dir
 
     def _get_dispatcher(self) -> craft_cli.Dispatcher:  # type: ignore[override]

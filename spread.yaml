@@ -59,9 +59,6 @@ backends:
       multipass exec "$instance_name" -- \
         sudo systemctl restart ssh
 
-      multipass exec "$instance_name" -- sudo snap refresh --channel=latest/stable lxd
-      multipass exec "$instance_name" -- sudo lxd init --auto
-
       # Get the IP from the instance
       ip=$(multipass info --format csv "$instance_name" | tail -1 | cut -d\, -f3)
       ADDRESS "$ip"
@@ -75,7 +72,6 @@ backends:
           workers: 1
       - ubuntu-22.04-64:
           workers: 4
-
 prepare: |
   set -e
 
@@ -127,29 +123,63 @@ suites:
     summary: simple charmcraft commands
   tests/spread/charms/:
     summary: real charm building tests
+    prepare: |
+      snap install juju --channel=3.2/stable
+      snap install microk8s --channel=1.28-strict/stable
+      # Set up Juju controllers for the charms
+      lxc network set lxdbr0 ipv6.address none
+      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
+      microk8s enable hostpath-storage
+      microk8s enable dns
+      snap alias microk8s.kubectl kubectl
+
+      if ! juju controllers | grep -q k8s; then
+        juju bootstrap microk8s k8s
+      fi
+      if ! juju controllers | grep -q lxd; then
+        juju bootstrap localhost lxd
+      fi
+    prepare-each: |
+      if [[ -v JUJU_MODEL ]] && ! juju add-model "${JUJU_MODEL}"; then
+        juju destroy-model --force --no-prompt --destroy-storage "${JUJU_MODEL}" || true
+        juju add-model "${JUJU_MODEL}"
+      fi
+    restore-each: |
+      if [[ -v JUJU_MODEL ]]; then
+        juju destroy-model --no-prompt --force --destroy-storage $JUJU_MODEL
+      fi
+      rm -f ~/*.charm
   tests/spread/dependencies/:
     summary: test charm dependencies
     systems:
       - ubuntu-22.04-64
     prepare: |
-      snap install lxd || true
-      snap install juju || true
-      lxd init --auto
+      snap install juju --channel=3.2/stable
+      snap install microk8s --channel=1.28-strict/stable
+      # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
-      mkdir -p ~/.local/share
-      # This should better detect the controller
-      juju bootstrap localhost test-controller || true
+      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
+      microk8s enable hostpath-storage
+      microk8s enable dns
+      snap alias microk8s.kubectl kubectl
+
+      if ! juju controllers | grep -q k8s; then
+        juju bootstrap microk8s k8s
+      fi
+      if ! juju controllers | grep -q lxd; then
+        juju bootstrap localhost lxd
+      fi
     prepare-each: |
-      if ! juju add-model test-model; then
-        juju destroy-model --force --no-prompt --destroy-storage test-model
-        juju add-model test-model
+      if [[ -v JUJU_MODEL ]] && ! juju add-model "${JUJU_MODEL}"; then
+        juju destroy-model --force --no-prompt --destroy-storage "${JUJU_MODEL}" || true
+        juju add-model "${JUJU_MODEL}"
       fi
     restore-each: |
-      rm -rf charm
-
-      juju destroy-model --force --no-prompt --destroy-storage --no-wait test-model
+      if [[ -v JUJU_MODEL ]]; then
+        juju destroy-model --no-prompt --force --no-wait --timeout 15s --destroy-storage $JUJU_MODEL
+      fi
       rm -f ~/*.charm
-
+      rm -rf charm
   tests/spread/smoketests/:
     summary: basic charm builds in different combinations
     systems:
@@ -208,4 +238,3 @@ suites:
       # in staging Charmhub authenticating with the configured credentials
       CHARM_DEFAULT_NAME: "$(HOST: echo ${CHARM_DEFAULT_NAME:-$USER-test-charm})"
       BUNDLE_DEFAULT_NAME: "$(HOST: echo ${BUNDLE_DEFAULT_NAME:-$USER-test-bundle})"
-

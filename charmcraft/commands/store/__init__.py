@@ -26,7 +26,7 @@ import textwrap
 import typing
 import zipfile
 from operator import attrgetter
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import yaml
 from craft_cli import emit, ArgumentParsingError
@@ -854,7 +854,7 @@ class PromoteBundleCommand(BaseCommand):
                 f"{from_channel.track} to {to_channel.track})"
             )
 
-        output_bundle: Optional[pathlib.Path] = parsed_args.output_bundle
+        output_bundle: pathlib.Path | None = parsed_args.output_bundle
         if output_bundle is not None and output_bundle.exists():
             if output_bundle.is_file() or output_bundle.is_symlink():
                 emit.verbose(f"Overwriting existing bundle file: {str(output_bundle)}")
@@ -898,7 +898,7 @@ class PromoteBundleCommand(BaseCommand):
             )
 
         store = Store(self.config.charmhub)
-        registered_names: List[Entity] = store.list_registered_names(include_collaborations=True)
+        registered_names: list[Entity] = store.list_registered_names(include_collaborations=True)
         name_map = {entity.name: entity for entity in registered_names}
 
         if bundle_name not in name_map:
@@ -938,8 +938,8 @@ class PromoteBundleCommand(BaseCommand):
             raise CraftError("Cannot find a bundle released to the given source channel.")
 
         # Get source channel charms
-        charm_revisions: Dict[str, int] = {}
-        charm_resources: Dict[str, List[str]] = collections.defaultdict(list)
+        charm_revisions: dict[str, int] = {}
+        charm_resources: dict[str, list[str]] = collections.defaultdict(list)
         error_charms = []
         for charm_name in charms:
             channel_map, *_ = store.list_releases(charm_name)

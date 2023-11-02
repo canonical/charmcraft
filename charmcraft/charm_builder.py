@@ -27,7 +27,6 @@ import pathlib
 import shutil
 import subprocess
 import sys
-from typing import List
 
 from charmcraft import const, instrum
 from charmcraft.env import get_charm_builder_metrics_path
@@ -60,9 +59,9 @@ class CharmBuilder:
         installdir: pathlib.Path,
         entrypoint: pathlib.Path,
         allow_pip_binary: bool = None,
-        binary_python_packages: List[str] = None,
-        python_packages: List[str] = None,
-        requirements: List[pathlib.Path] = None,
+        binary_python_packages: list[str] = None,
+        python_packages: list[str] = None,
+        requirements: list[pathlib.Path] = None,
         strict_dependencies: bool = False,
     ) -> None:
         self.builddir = builddir
@@ -375,7 +374,7 @@ def _find_venv_site_packages(basedir):
     return basedir / "lib" / f"python{major}.{minor}" / "site-packages"
 
 
-def _process_run(cmd: List[str]) -> None:
+def _process_run(cmd: list[str]) -> None:
     """Run an external command logging its output.
 
     :raises CraftError: if execution crashes or ends with return code not zero.

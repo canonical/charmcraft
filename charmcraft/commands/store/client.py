@@ -19,7 +19,7 @@
 import os
 import platform
 from json.decoder import JSONDecodeError
-from typing import Any, Dict
+from typing import Any
 
 import craft_store
 import requests
@@ -59,7 +59,7 @@ class AnonymousClient:
         """Return a request.Response to a urlpath."""
         return self._http_client.request(method, self.api_base_url + urlpath, *args, **kwargs).text
 
-    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> Dict[str, Any]:
+    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> dict[str, Any]:
         """Return .json() from a request.Response to a urlpath."""
         response = self._http_client.request(method, self.api_base_url + urlpath, *args, **kwargs)
 
@@ -110,7 +110,7 @@ class Client(craft_store.StoreClient):
         """Return a request.Response to a urlpath."""
         return super().request(method, self.api_base_url + urlpath, *args, **kwargs).text
 
-    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> Dict[str, Any]:
+    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> dict[str, Any]:
         """Return .json() from a request.Response to a urlpath."""
         response = super().request(method, self.api_base_url + urlpath, *args, **kwargs)
 

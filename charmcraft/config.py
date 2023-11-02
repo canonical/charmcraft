@@ -72,7 +72,6 @@ Object with the following properties:
 
 import datetime
 import pathlib
-from typing import Optional
 
 from charmcraft import const
 from charmcraft.env import (
@@ -83,7 +82,7 @@ from charmcraft.models.charmcraft import CharmcraftConfig, Project
 from charmcraft.utils import load_yaml
 
 
-def load(dirpath: Optional[str]) -> CharmcraftConfig:
+def load(dirpath: str | None) -> CharmcraftConfig:
     """Load the config from charmcraft.yaml in the indicated directory."""
     if dirpath is None:
         if is_charmcraft_running_in_managed_mode():

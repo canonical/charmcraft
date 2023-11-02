@@ -20,7 +20,7 @@ import contextlib
 import logging
 import pathlib
 import shutil
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 import pydantic
 import yaml
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def read_metadata_yaml(charm_dir: pathlib.Path) -> Dict[str, Any]:
+def read_metadata_yaml(charm_dir: pathlib.Path) -> dict[str, Any]:
     """Parse project's metadata.yaml.
 
     :returns: the YAML decoded metadata.yaml content

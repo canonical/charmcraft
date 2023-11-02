@@ -20,7 +20,7 @@ import sys
 import zipfile
 from argparse import Namespace
 from textwrap import dedent
-from typing import Any, Dict, List, Optional
+from typing import Any
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
@@ -48,8 +48,8 @@ def get_namespace(
     format=None,
     measure=None,
     include_all_charms: bool = False,
-    include_charm: Optional[List[pathlib.Path]] = None,
-    output_bundle: Optional[pathlib.Path] = None,
+    include_charm: list[pathlib.Path] | None = None,
+    output_bundle: pathlib.Path | None = None,
 ):
     if bases_index is None:
         bases_index = []
@@ -80,7 +80,7 @@ def bundle_yaml(tmp_path):
     bundle_path.write_text("{}")
     content = {}
 
-    def func(*, name, base_content: Optional[Dict[str, Any]] = None):
+    def func(*, name, base_content: dict[str, Any] | None = None):
         if base_content:
             content.update(base_content)
         content["name"] = name

@@ -63,7 +63,7 @@ def test_expand_extensions_simple(tmp_path, prepare_charmcraft_yaml, fake_extens
     cmd.run([])
     emitter.assert_message(
         dedent(
-            """\
+            f"""\
             analysis:
               ignore:
                 attributes: []
@@ -74,7 +74,15 @@ def test_expand_extensions_simple(tmp_path, prepare_charmcraft_yaml, fake_extens
               storage-url: https://storage.snapcraftcontent.com
             description: test-description
             name: test-charm-name
-            parts: {}
+            parts:
+              charm:
+                charm-binary-python-packages: []
+                charm-entrypoint: src/charm.py
+                charm-python-packages: []
+                charm-requirements: []
+                charm-strict-dependencies: false
+                plugin: charm
+                source: {tmp_path}
             summary: test-summary
             terms:
             - https://example.com/test

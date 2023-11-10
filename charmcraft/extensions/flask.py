@@ -16,7 +16,7 @@
 
 """The flask extension."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from overrides import override
 
@@ -87,20 +87,22 @@ OPTIONS = {
 
 
 class Flask(Extension):
+    """Extension for 12-factor Flask applications."""
+
     @staticmethod
     @override
-    def get_supported_bases() -> List[Tuple[str, ...]]:
+    def get_supported_bases() -> list[tuple[str, ...]]:
         """Return supported bases."""
         return [("ubuntu", "22.04")]
 
     @staticmethod
     @override
-    def is_experimental(base: Optional[Tuple[str, ...]]) -> bool:
+    def is_experimental(_base: tuple[str, ...] | None) -> bool:
         """Check if the extension is in an experimental state."""
         return True
 
     @override
-    def get_root_snippet(self) -> Dict[str, Any]:
+    def get_root_snippet(self) -> dict[str, Any]:
         """Fill in some required root components for Flask."""
         protected_fields = {
             "type": "charm",
@@ -122,7 +124,7 @@ class Flask(Extension):
             },
             "peers": {"secret-storage": {"interface": "secret-storage"}},
         }
-        merging_fields = {
+        merging_fields: dict[str, dict[str, Any]] = {
             "actions": ACTIONS,
             "requires": {
                 "logging": {"interface": "loki_push_api"},
@@ -139,7 +141,7 @@ class Flask(Extension):
                 raise ExtensionError(
                     f"the flask extension is incompatible with the field {incompatible_field!r}"
                 )
-        snippet = protected_fields
+        snippet: dict[str, Any] = protected_fields
         for protected, protected_value in protected_fields.items():
             if protected in self.yaml_data and self.yaml_data[protected] != protected_value:
                 raise ExtensionError(
@@ -150,7 +152,7 @@ class Flask(Extension):
             if merging_field not in self.yaml_data:
                 snippet[merging_field] = merging_field_value
                 continue
-            user_provided = self.yaml_data[merging_field]
+            user_provided: dict[str, Any] = self.yaml_data[merging_field]
             overlap = user_provided.keys() & merging_field_value.keys()
             if overlap:
                 raise ExtensionError(
@@ -176,11 +178,11 @@ class Flask(Extension):
         return snippet
 
     @override
-    def get_part_snippet(self) -> Dict[str, Any]:
+    def get_part_snippet(self) -> dict[str, Any]:
         """Return the part snippet to apply to existing parts."""
         return {}
 
     @override
-    def get_parts_snippet(self) -> Dict[str, Any]:
+    def get_parts_snippet(self) -> dict[str, Any]:
         """Return the parts to add to parts."""
         return {}

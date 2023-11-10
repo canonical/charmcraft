@@ -29,7 +29,7 @@ def input_yaml_fixture(monkeypatch, tmp_path):
         "summary": "test summary",
         "description": "test description",
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
-        "extensions": ["flask"],
+        "extensions": ["flask-framework"],
     }
 
 
@@ -45,9 +45,17 @@ def test_flask_extension(input_yaml, tmp_path):
         },
         "description": "test description",
         "name": "test-flask",
-        "options": OPTIONS,
+        "config": {"options": OPTIONS},
         "parts": {},
         "peers": {"secret-storage": {"interface": "secret-storage"}},
+        "provides": {
+            "metrics-endpoint": {"interface": "prometheus_scrape"},
+            "grafana-dashboard": {"interface": "grafana_dashboard"},
+        },
+        "requires": {
+            "logging": {"interface": "loki_push_api"},
+            "ingress": {"interface": "ingress", "limit": 1},
+        },
         "resources": {
             "flask-app-image": {"description": "Flask application image.", "type": "oci-image"},
             "statsd-prometheus-exporter-image": {
@@ -78,9 +86,9 @@ def test_flask_protected_fields(modification, input_yaml, tmp_path):
 
 def test_flask_merge_options(input_yaml, tmp_path):
     added_options = {"api_secret": {"type": "string"}}
-    input_yaml["options"] = added_options
+    input_yaml["config"] = {"options": added_options}
     applied = apply_extensions(tmp_path, input_yaml)
-    assert applied["options"] == {**OPTIONS, **added_options}
+    assert applied["config"] == {"options": {**OPTIONS, **added_options}}
 
 
 def test_flask_merge_action(input_yaml, tmp_path):
@@ -90,10 +98,40 @@ def test_flask_merge_action(input_yaml, tmp_path):
     assert applied["actions"] == {**ACTIONS, **added_actions}
 
 
+def test_flask_merge_relation(input_yaml, tmp_path):
+    new_provides = {"provides-foobar": {"interface": "foobar"}}
+    new_requires = {"requires-foobar": {"interface": "foobar"}}
+    input_yaml["provides"] = new_provides
+    input_yaml["requires"] = new_requires
+    applied = apply_extensions(tmp_path, input_yaml)
+    assert applied["provides"] == {
+        "metrics-endpoint": {"interface": "prometheus_scrape"},
+        "grafana-dashboard": {"interface": "grafana_dashboard"},
+        **new_provides,
+    }
+    assert applied["requires"] == {
+        "logging": {"interface": "loki_push_api"},
+        "ingress": {"interface": "ingress", "limit": 1},
+        **new_requires,
+    }
+
+
 INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
     pytest.param({"devices": {"gpu": {"type": "gpu"}}}, id="devices"),
     pytest.param({"extra-bindings": {"foobar": {}}}, id="extra-bindings"),
     pytest.param({"storage": {"foobar": {"type": "filesystem"}}}, id="storage"),
+    pytest.param(
+        {"config": {"options": {"webserver_wsgi_path": {"type": "string"}}}},
+        id="duplicate-options",
+    ),
+    pytest.param(
+        {"requires": {"ingress": {"interface": "ingress"}}},
+        id="duplicate-requires",
+    ),
+    pytest.param(
+        {"provides": {"metrics-endpoint": {"interface": "prometheus_scrape"}}},
+        id="duplicate-provides",
+    ),
 ]
 
 

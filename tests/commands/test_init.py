@@ -28,6 +28,7 @@ import pytest
 from craft_cli import CraftError
 from flake8.api.legacy import get_style_guide
 
+from charmcraft import const
 from charmcraft.commands.init import DEFAULT_PROFILE, PROFILES, InitCommand
 from charmcraft.models.charmcraft import Project
 from charmcraft.utils import S_IXALL
@@ -64,7 +65,7 @@ def pep257_test(python_filepaths):
     errors = list(pydocstyle.check(python_filepaths, select=to_include))
 
     if errors:
-        report = ["Please fix files as suggested by pydocstyle ({:d} issues):".format(len(errors))]
+        report = [f"Please fix files as suggested by pydocstyle ({len(errors):d} issues):"]
         report.extend(str(e) for e in errors)
         msg = "\n".join(report)
         pytest.fail(msg, pytrace=False)
@@ -109,7 +110,7 @@ def test_all_the_files_simple_unified(tmp_path, config):
     cmd.run(create_namespace(profile="simple"))
     assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
         ".gitignore",
-        "charmcraft.yaml",
+        const.CHARMCRAFT_FILENAME,
         "CONTRIBUTING.md",
         "LICENSE",
         "pyproject.toml",
@@ -125,7 +126,9 @@ def test_all_the_files_simple_unified(tmp_path, config):
         "tox.ini",
     }
 
-    assert re.search(r"^name: my-charm$", (tmp_path / "charmcraft.yaml").read_text(), re.MULTILINE)
+    assert re.search(
+        r"^name: my-charm$", (tmp_path / const.CHARMCRAFT_FILENAME).read_text(), re.MULTILINE
+    )
 
 
 def test_all_the_files_kubernetes_unified(tmp_path, config):
@@ -133,7 +136,7 @@ def test_all_the_files_kubernetes_unified(tmp_path, config):
     cmd.run(create_namespace(profile="kubernetes"))
     assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
         ".gitignore",
-        "charmcraft.yaml",
+        const.CHARMCRAFT_FILENAME,
         "CONTRIBUTING.md",
         "LICENSE",
         "pyproject.toml",
@@ -149,7 +152,9 @@ def test_all_the_files_kubernetes_unified(tmp_path, config):
         "tox.ini",
     }
 
-    assert re.search(r"^name: my-charm$", (tmp_path / "charmcraft.yaml").read_text(), re.MULTILINE)
+    assert re.search(
+        r"^name: my-charm$", (tmp_path / const.CHARMCRAFT_FILENAME).read_text(), re.MULTILINE
+    )
 
 
 def test_all_the_files_machine_unified(tmp_path, config):
@@ -157,7 +162,7 @@ def test_all_the_files_machine_unified(tmp_path, config):
     cmd.run(create_namespace(profile="machine"))
     assert {str(p.relative_to(tmp_path)) for p in tmp_path.glob("**/*")} == {
         ".gitignore",
-        "charmcraft.yaml",
+        const.CHARMCRAFT_FILENAME,
         "CONTRIBUTING.md",
         "LICENSE",
         "pyproject.toml",
@@ -173,7 +178,9 @@ def test_all_the_files_machine_unified(tmp_path, config):
         "tox.ini",
     }
 
-    assert re.search(r"^name: my-charm$", (tmp_path / "charmcraft.yaml").read_text(), re.MULTILINE)
+    assert re.search(
+        r"^name: my-charm$", (tmp_path / const.CHARMCRAFT_FILENAME).read_text(), re.MULTILINE
+    )
 
 
 def test_force(tmp_path, config):

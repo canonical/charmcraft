@@ -16,8 +16,8 @@
 """CLI-related utilities for Charmcraft."""
 import datetime
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Optional
 
 from craft_cli import emit
 
@@ -59,8 +59,8 @@ class ResourceOption:
         parser.add_argument('--resource',  type=ResourceOption())
     """
 
-    name: Optional[str] = None
-    revision: Optional[int] = None
+    name: str | None = None
+    revision: int | None = None
 
     def __call__(self, value):
         """Run by argparse to validate and convert the given argument."""

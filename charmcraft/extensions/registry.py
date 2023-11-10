@@ -24,7 +24,7 @@ from charmcraft.extensions.extension import Extension
 _EXTENSIONS: Dict[str, Type[Extension]] = {}
 
 
-def get_extension_names() -> List[str]:
+def get_extension_names() -> list[str]:
     """Obtain a extension class given the name.
 
     :param name: The extension name.

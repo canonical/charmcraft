@@ -25,24 +25,16 @@ from unittest.mock import call, patch
 
 import pytest
 
-from charmcraft import charm_builder
-from charmcraft.charm_builder import (
-    DEPENDENCIES_HASH_FILENAME,
-    DISPATCH_CONTENT,
-    STAGING_VENV_DIRNAME,
-    VENV_DIRNAME,
-    CharmBuilder,
-    _process_run,
-)
-from charmcraft.const import BUILD_DIRNAME, DISPATCH_FILENAME, METADATA_FILENAME
+from charmcraft import charm_builder, const
+from charmcraft.charm_builder import CharmBuilder, _process_run
 
 
 def test_build_generics_simple_files(tmp_path):
     """Check transferred metadata and simple entrypoint, also return proper linked entrypoint."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
 
     entrypoint = tmp_path / "crazycharm.py"
@@ -57,7 +49,7 @@ def test_build_generics_simple_files(tmp_path):
 
     # check files are there, are files, and are really hard links (so no
     # check for permissions needed)
-    built_metadata = build_dir / METADATA_FILENAME
+    built_metadata = build_dir / const.METADATA_FILENAME
     assert built_metadata.is_file()
     assert built_metadata.stat().st_ino == metadata.stat().st_ino
 
@@ -71,11 +63,11 @@ def test_build_generics_simple_files(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_simple_dir(tmp_path):
     """Check transferred any directory, with proper permissions."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
 
     somedir = tmp_path / "somedir"
@@ -95,9 +87,9 @@ def test_build_generics_simple_dir(tmp_path):
 
 def test_build_generics_ignored_file(tmp_path, assert_output):
     """Don't include ignored filed."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
 
     # create two files (and the needed entrypoint)
@@ -127,9 +119,9 @@ def test_build_generics_ignored_file(tmp_path, assert_output):
 
 def test_build_generics_ignored_dir(tmp_path, assert_output):
     """Don't include ignored dir."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
 
     # create two files (and the needed entrypoint)
@@ -158,7 +150,7 @@ def test_build_generics_ignored_dir(tmp_path, assert_output):
 
 
 def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     # create this structure:
@@ -174,7 +166,7 @@ def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
     #    └─ dir5
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     file1 = tmp_path / "file1.txt"
     file1.touch()
@@ -265,10 +257,10 @@ def test_build_generics_tree_xdev(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_file(tmp_path):
     """Respects a symlinked file."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
@@ -292,10 +284,10 @@ def test_build_generics_symlink_file(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_dir(tmp_path):
     """Respects a symlinked dir."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
@@ -326,10 +318,10 @@ def test_build_generics_symlink_dir(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_deep(tmp_path):
     """Correctly re-links a symlink across deep dirs."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
     entrypoint = tmp_path / "crazycharm.py"
     entrypoint.touch()
@@ -363,9 +355,9 @@ def test_build_generics_symlink_file_outside(tmp_path, assert_output):
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
-    metadata = project_dir / METADATA_FILENAME
+    metadata = project_dir / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = project_dir / BUILD_DIRNAME
+    build_dir = project_dir / const.BUILD_DIRNAME
     build_dir.mkdir()
     entrypoint = project_dir / "crazycharm.py"
     entrypoint.touch()
@@ -393,9 +385,9 @@ def test_build_generics_symlink_directory_outside(tmp_path, assert_output):
     project_dir = tmp_path / "test-project"
     project_dir.mkdir()
 
-    metadata = project_dir / METADATA_FILENAME
+    metadata = project_dir / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = project_dir / BUILD_DIRNAME
+    build_dir = project_dir / const.BUILD_DIRNAME
     build_dir.mkdir()
     entrypoint = project_dir / "crazycharm.py"
     entrypoint.touch()
@@ -424,9 +416,9 @@ def test_build_generics_different_filetype(tmp_path, assert_output, monkeypatch)
     # will be too long for mac os
     monkeypatch.chdir(tmp_path)
 
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = pathlib.Path(BUILD_DIRNAME)
+    build_dir = pathlib.Path(const.BUILD_DIRNAME)
     build_dir.mkdir()
     entrypoint = pathlib.Path("crazycharm.py")
     entrypoint.touch()
@@ -450,9 +442,9 @@ def test_build_generics_different_filetype(tmp_path, assert_output, monkeypatch)
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
     """The dispatcher script is properly built."""
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     linked_entrypoint = build_dir / "somestuff.py"
@@ -464,21 +456,23 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     )
     builder.handle_dispatcher(linked_entrypoint)
 
-    included_dispatcher = build_dir / DISPATCH_FILENAME
+    included_dispatcher = build_dir / const.DISPATCH_FILENAME
     with included_dispatcher.open("rt", encoding="utf8") as fh:
         dispatcher_code = fh.read()
-    assert dispatcher_code == DISPATCH_CONTENT.format(entrypoint_relative_path="somestuff.py")
+    assert dispatcher_code == const.DISPATCH_CONTENT.format(
+        entrypoint_relative_path="somestuff.py"
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_respected(tmp_path):
     """The already included dispatcher script is left untouched."""
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
-    already_present_dispatch = build_dir / DISPATCH_FILENAME
+    already_present_dispatch = build_dir / const.DISPATCH_FILENAME
     with already_present_dispatch.open("wb") as fh:
         fh.write(b"abc")
 
@@ -496,38 +490,38 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     """The mandatory classic hooks are implemented ok if not present."""
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     linked_entrypoint = build_dir / "somestuff.py"
-    included_dispatcher = build_dir / DISPATCH_FILENAME
+    included_dispatcher = build_dir / const.DISPATCH_FILENAME
 
     builder = CharmBuilder(
         builddir=tmp_path,
         installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
-    with patch("charmcraft.charm_builder.MANDATORY_HOOK_NAMES", {"testhook"}):
+    with patch("charmcraft.const.MANDATORY_HOOK_NAMES", {"testhook"}):
         builder.handle_dispatcher(linked_entrypoint)
 
-    test_hook = build_dir / "hooks" / "testhook"
+    test_hook = build_dir / const.HOOKS_DIRNAME / "testhook"
     assert test_hook.is_symlink()
     assert test_hook.resolve() == included_dispatcher
     real_link = os.readlink(str(test_hook))
-    assert real_link == os.path.join("..", DISPATCH_FILENAME)
+    assert real_link == os.path.join("..", const.DISPATCH_FILENAME)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
     """The already included mandatory classic hooks are left untouched."""
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
-    built_hooks_dir = build_dir / "hooks"
+    built_hooks_dir = build_dir / const.DISPATCH_FILENAME
     built_hooks_dir.mkdir()
     test_hook = built_hooks_dir / "testhook"
     with test_hook.open("wb") as fh:
@@ -540,7 +534,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
         installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
     )
-    with patch("charmcraft.charm_builder.MANDATORY_HOOK_NAMES", {"testhook"}):
+    with patch("charmcraft.const.MANDATORY_HOOK_NAMES", {"testhook"}):
         builder.handle_dispatcher(linked_entrypoint)
 
     with test_hook.open("rb") as fh:
@@ -550,9 +544,9 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_output):
     """Hooks that are just a symlink to the entrypoint are replaced."""
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     # simple source code
@@ -563,12 +557,12 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_
         fh.write(b"all the magic")
 
     # a test hook, just a symlink to the charm
-    built_hooks_dir = build_dir / "hooks"
+    built_hooks_dir = build_dir / const.HOOKS_DIRNAME
     built_hooks_dir.mkdir()
     test_hook = built_hooks_dir / "somehook"
     test_hook.symlink_to(built_charm_script)
 
-    included_dispatcher = build_dir / DISPATCH_FILENAME
+    included_dispatcher = build_dir / const.DISPATCH_FILENAME
 
     builder = CharmBuilder(
         builddir=tmp_path,
@@ -589,7 +583,7 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_
 
 def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
     """A virtualenv is created with the specified requirements file."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     reqs_file = tmp_path / "reqs.txt"
@@ -610,21 +604,23 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "install", f"--requirement={reqs_file}"]),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
 def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
     """A virtualenv is created with multiple requirements files."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     reqs_file_1 = tmp_path / "reqs.txt"
@@ -647,9 +643,9 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
     assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
         call(
             [
                 pip_cmd,
@@ -660,14 +656,16 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
         ),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
 def test_build_dependencies_virtualenv_none(tmp_path, assert_output):
     """The virtualenv is NOT created if no needed."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     builder = CharmBuilder(
@@ -688,7 +686,7 @@ def test_build_dependencies_virtualenv_none(tmp_path, assert_output):
 
 def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
     """A virtualenv is created with the specified packages."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     builder = CharmBuilder(
@@ -706,21 +704,23 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "install", "--no-binary=pkg1,pkg2", "pkg1", "pkg2"]),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
 def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
     """A virtualenv is created with the specified packages."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     builder = CharmBuilder(
@@ -738,21 +738,23 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "install", "pkg1", "pkg2"]),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
 def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
     """A virtualenv is created with the specified packages."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     reqs_file_1 = tmp_path / "reqs.txt"
@@ -776,10 +778,10 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
         call(
             [
                 pip_cmd,
@@ -797,14 +799,16 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
         ),
     ]
 
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
 def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     """Dependencies are built again because installation dir was not found."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     builder = CharmBuilder(
@@ -815,7 +819,7 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
         python_packages=["ops"],
         requirements=[],
     )
-    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+    staging_venv_dir = tmp_path / const.STAGING_VENV_DIRNAME
 
     # patch the dependencies installation method so it skips all subprocessing but actually
     # creates the directory, to simplify testing
@@ -832,8 +836,10 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # remove the site venv directory
     staging_venv_dir.rmdir()
@@ -849,13 +855,15 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     assert staging_venv_dir.exists()
 
     # installation directory copied *again* to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output):
     """Dependencies are built again because previous hash file was not found."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     builder = CharmBuilder(
@@ -866,7 +874,7 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
         python_packages=["ops"],
         requirements=[],
     )
-    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+    staging_venv_dir = tmp_path / const.STAGING_VENV_DIRNAME
 
     # patch the dependencies installation method so it skips all subprocessing but actually
     # creates the directory, to simplify testing
@@ -883,11 +891,13 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # remove the hash file
-    (tmp_path / DEPENDENCIES_HASH_FILENAME).unlink()
+    (tmp_path / const.DEPENDENCIES_HASH_FILENAME).unlink()
 
     # second run!
     with patch("shutil.copytree") as mock_copytree:
@@ -900,13 +910,15 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
     assert staging_venv_dir.exists()
 
     # installation directory copied *again* to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_output):
     """Dependencies are built again because having problems to read the previous hash file."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     builder = CharmBuilder(
@@ -917,7 +929,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
         python_packages=["ops"],
         requirements=[],
     )
-    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+    staging_venv_dir = tmp_path / const.STAGING_VENV_DIRNAME
 
     # patch the dependencies installation method so it skips all subprocessing but actually
     # creates the directory, to simplify testing
@@ -934,11 +946,13 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # avoid the file to be read successfully
-    (tmp_path / DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
+    (tmp_path / const.DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
 
     # second run!
     with patch("shutil.copytree") as mock_copytree:
@@ -954,8 +968,10 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     assert staging_venv_dir.exists()
 
     # installation directory copied *again* to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 @pytest.mark.parametrize(
@@ -971,7 +987,7 @@ def test_build_dependencies_no_reused_different_dependencies(
     tmp_path, assert_output, new_reqs_content, new_pypackages, new_pybinaries, new_charmlibdeps
 ):
     """Dependencies are built again because changed from previous run."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     # prepare some dependencies for the first call (and some content for the second one)
@@ -991,7 +1007,7 @@ def test_build_dependencies_no_reused_different_dependencies(
         requirements=requirements,
     )
     builder.charmlib_deps = charmlib_deps
-    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+    staging_venv_dir = tmp_path / const.STAGING_VENV_DIRNAME
 
     # patch the dependencies installation method so it skips all subprocessing but actually
     # creates the directory, to simplify testing
@@ -1008,8 +1024,10 @@ def test_build_dependencies_no_reused_different_dependencies(
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # for the second call, default new dependencies to first ones so only one is changed at a time
     if new_reqs_content is not None:
@@ -1033,13 +1051,15 @@ def test_build_dependencies_no_reused_different_dependencies(
     assert staging_venv_dir.exists()
 
     # installation directory copied *again* to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 def test_build_dependencies_reused(tmp_path, assert_output):
     """Happy case to reuse dependencies from last run."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     reqs_file = tmp_path / "reqs.txt"
@@ -1053,7 +1073,7 @@ def test_build_dependencies_reused(tmp_path, assert_output):
         python_packages=[],
         requirements=[reqs_file],
     )
-    staging_venv_dir = tmp_path / STAGING_VENV_DIRNAME
+    staging_venv_dir = tmp_path / const.STAGING_VENV_DIRNAME
 
     # patch the dependencies installation method so it skips all subprocessing but actually
     # creates the directory, to simplify testing; note that we specifically are calling mkdir
@@ -1071,8 +1091,10 @@ def test_build_dependencies_reused(tmp_path, assert_output):
     assert staging_venv_dir.exists()
 
     # installation directory copied to the build directory
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # second run!
     with patch("shutil.copytree") as mock_copytree:
@@ -1083,8 +1105,10 @@ def test_build_dependencies_reused(tmp_path, assert_output):
 
     # installation directory copied *again* to the build directory (this is always done as
     # buildpath is cleaned)
-    site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / VENV_DIRNAME)]
+    site_packages_dir = charm_builder._find_venv_site_packages(
+        pathlib.Path(const.STAGING_VENV_DIRNAME)
+    )
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 # -- tests about juju ignore
@@ -1092,9 +1116,9 @@ def test_build_dependencies_reused(tmp_path, assert_output):
 
 def test_builder_without_jujuignore(tmp_path):
     """Without a .jujuignore we still have a default set of ignores"""
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     builder = CharmBuilder(
@@ -1110,9 +1134,9 @@ def test_builder_without_jujuignore(tmp_path):
 
 def test_builder_with_jujuignore(tmp_path):
     """With a .jujuignore we will include additional ignores."""
-    metadata = tmp_path / METADATA_FILENAME
+    metadata = tmp_path / const.METADATA_FILENAME
     metadata.write_text("name: crazycharm")
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
     with (tmp_path / ".jujuignore").open("w", encoding="utf-8") as ignores:
         ignores.write("*.py\n/h\xef.txt\n")
@@ -1223,7 +1247,7 @@ def test_processrun_crashed(tmp_path):
 
     # get a real exception to build the message as its internal text varies across OSes
     try:
-        subprocess.run([nonexistent])
+        subprocess.run([nonexistent], check=True)
     except Exception as exc:
         exc_text = repr(exc)
 

@@ -33,4 +33,4 @@ __all__ = [
     "unregister",
 ]
 
-register("flask", Flask)
+register("flask-framework", Flask)

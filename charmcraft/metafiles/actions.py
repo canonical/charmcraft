@@ -88,6 +88,7 @@ def create_actions_yaml(
             shutil.copyfile(original_file_path, target_file_path)
     else:
         if charmcraft_config.actions:
+            basedir.mkdir(exist_ok=True)
             target_file_path.write_text(
                 yaml.dump(
                     charmcraft_config.actions.dict(

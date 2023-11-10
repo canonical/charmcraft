@@ -124,7 +124,14 @@ class Flask(Extension):
         }
         merging_fields = {
             "actions": ACTIONS,
-            "config": {"options": OPTIONS},
+            "requires": {
+                "logging": {"interface": "loki_push_api"},
+                "ingress": {"interface": "ingress", "limit": 1},
+            },
+            "provides": {
+                "metrics-endpoint": {"interface": "prometheus_scrape"},
+                "grafana-dashboard": {"interface": "grafana_dashboard"},
+            },
         }
         incompatible_fields = ("devices", "extra-bindings", "storage")
         for incompatible_field in incompatible_fields:
@@ -151,6 +158,21 @@ class Flask(Extension):
                     f"which conflict with the flask extension, please rename or remove it"
                 )
             snippet[merging_field] = {**merging_field_value, **user_provided}
+        if "config" not in self.yaml_data or "options" not in self.yaml_data["config"]:
+            snippet["config"] = self.yaml_data.get("config", {})
+            snippet["config"]["options"] = OPTIONS
+        else:
+            user_provided = self.yaml_data["config"]["options"]
+            overlap = user_provided.keys() & OPTIONS.keys()
+            if overlap:
+                raise ExtensionError(
+                    f"overlapping keys {overlap} in config.options of charmcraft.yaml "
+                    f"which conflict with the flask extension, please rename or remove it"
+                )
+            snippet_config = snippet.get("config", {})
+            snippet_config["options"] = {**OPTIONS, **user_provided}
+            snippet["config"] = snippet_config
+
         return snippet
 
     @override

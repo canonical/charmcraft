@@ -97,7 +97,7 @@ class Flask(Extension):
 
     @staticmethod
     @override
-    def is_experimental(_base: tuple[str, ...] | None) -> bool:
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
         return True
 

@@ -124,11 +124,11 @@ def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, m
         "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
         "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
         "https_proxy=https_proxy_value no_proxy=no_proxy_value "
-        "{python} -u -I "
-        "{charm_builder} "
-        "--builddir {work_dir}/parts/foo/build "
-        "--installdir {work_dir}/parts/foo/install "
-        "--entrypoint {work_dir}/parts/foo/build/entrypoint "
+        f"{sys.executable} -u -I "
+        f"{charm_builder.__file__} "
+        f"--builddir {str(tmp_path)}/parts/foo/build "
+        f"--installdir {str(tmp_path)}/parts/foo/install "
+        f"--entrypoint {str(tmp_path)}/parts/foo/build/entrypoint "
         "-p pip "
         "-p setuptools "
         "-p wheel "
@@ -137,11 +137,7 @@ def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, m
         "-p pkg3 "
         "-p pkg4 "
         "-r reqs1.txt "
-        "-r reqs2.txt".format(
-            python=sys.executable,
-            charm_builder=charm_builder.__file__,
-            work_dir=str(tmp_path),
-        )
+        "-r reqs2.txt"
     ]
 
     # check the callback is properly registered for running own method after build
@@ -170,11 +166,11 @@ def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker,
         "SNAP=snap_value SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
         "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
         "https_proxy=https_proxy_value no_proxy=no_proxy_value "
-        "{python} -u -I "
-        "{charm_builder} "
-        "--builddir {work_dir}/parts/foo/build "
-        "--installdir {work_dir}/parts/foo/install "
-        "--entrypoint {work_dir}/parts/foo/build/entrypoint "
+        f"{sys.executable} -u -I "
+        f"{charm_builder.__file__} "
+        f"--builddir {str(tmp_path)}/parts/foo/build "
+        f"--installdir {str(tmp_path)}/parts/foo/install "
+        f"--entrypoint {str(tmp_path)}/parts/foo/build/entrypoint "
         "-b pip "
         "-b setuptools "
         "-b wheel "
@@ -186,11 +182,7 @@ def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker,
         "-p pkg3 "
         "-p pkg4 "
         "-r reqs1.txt "
-        "-r reqs2.txt".format(
-            python=sys.executable,
-            charm_builder=charm_builder.__file__,
-            work_dir=str(tmp_path),
-        )
+        "-r reqs2.txt"
     ]
 
     # check the callback is properly registered for running own method after build

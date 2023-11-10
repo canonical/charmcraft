@@ -17,7 +17,6 @@
 import enum
 import functools
 from dataclasses import dataclass
-from typing import Optional
 
 from craft_cli import CraftError
 
@@ -47,9 +46,9 @@ class Risk(enum.Enum):
 class ChannelData:
     """Data class for a craft store channel."""
 
-    track: Optional[str]
+    track: str | None
     risk: Risk
-    branch: Optional[str]
+    branch: str | None
 
     @classmethod
     def from_str(cls, name: str):
@@ -59,8 +58,8 @@ class ChannelData:
         """
         invalid_channel_error = CraftError(f"Invalid channel name: {name!r}")
         parts = name.split("/")
-        track: Optional[str] = None
-        branch: Optional[str] = None
+        track: str | None = None
+        branch: str | None = None
         if len(parts) == 1:  # Just the risk, e.g. "stable"
             try:
                 risk = Risk[parts[0].upper()]

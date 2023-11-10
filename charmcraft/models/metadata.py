@@ -16,12 +16,12 @@
 
 """Charmcraft metadata pydantic model."""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pydantic
 from craft_cli import CraftError
 
-from charmcraft.const import METADATA_FILENAME
+from charmcraft import const
 
 
 class CharmMetadataLegacy(
@@ -42,26 +42,26 @@ class CharmMetadataLegacy(
     name: pydantic.StrictStr
     summary: pydantic.StrictStr
     description: pydantic.StrictStr
-    assumes: Optional[List[Union[str, Dict[str, Union[List, Dict]]]]]
-    containers: Optional[Dict[str, Any]]
-    devices: Optional[Dict[str, Any]]
-    display_name: Optional[pydantic.StrictStr]
-    docs: Optional[pydantic.AnyHttpUrl]
-    extra_bindings: Optional[Dict[str, Any]]
-    issues: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    maintainers: Optional[List[pydantic.StrictStr]]
-    peers: Optional[Dict[str, Any]]
-    provides: Optional[Dict[str, Any]]
-    requires: Optional[Dict[str, Any]]
-    resources: Optional[Dict[str, Any]]
-    source: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    storage: Optional[Dict[str, Any]]
-    subordinate: Optional[bool]
-    terms: Optional[List[pydantic.StrictStr]]
-    website: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+    assumes: list[str | dict[str, list | dict]] | None
+    containers: dict[str, Any] | None
+    devices: dict[str, Any] | None
+    display_name: pydantic.StrictStr | None
+    docs: pydantic.AnyHttpUrl | None
+    extra_bindings: dict[str, Any] | None
+    issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    maintainers: list[pydantic.StrictStr] | None
+    peers: dict[str, Any] | None
+    provides: dict[str, Any] | None
+    requires: dict[str, Any] | None
+    resources: dict[str, Any] | None
+    source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    storage: dict[str, Any] | None
+    subordinate: bool | None
+    terms: list[pydantic.StrictStr] | None
+    website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
 
     @classmethod
-    def unmarshal(cls, obj: Dict[str, Any]):
+    def unmarshal(cls, obj: dict[str, Any]):
         """Unmarshal object with necessary translations and error handling.
 
         :returns: valid CharmMetadataLegacy object.
@@ -71,7 +71,7 @@ class CharmMetadataLegacy(
         # convert undocumented "maintainer" to documented "maintainers"
         if "maintainer" in obj and "maintainers" in obj:
             raise CraftError(
-                f"Cannot specify both 'maintainer' and 'maintainers' in {METADATA_FILENAME}"
+                f"Cannot specify both 'maintainer' and 'maintainers' in {const.METADATA_FILENAME}"
             )
 
         if "maintainer" in obj:
@@ -96,10 +96,10 @@ class BundleMetadataLegacy(
     """
 
     name: pydantic.StrictStr
-    description: Optional[pydantic.StrictStr]
+    description: pydantic.StrictStr | None
 
     @classmethod
-    def unmarshal(cls, obj: Dict[str, Any]):
+    def unmarshal(cls, obj: dict[str, Any]):
         """Unmarshal object with necessary translations and error handling.
 
         :returns: valid BundleMetadataLegacy.

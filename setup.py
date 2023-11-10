@@ -26,7 +26,7 @@ with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [
-    "craft-cli",
+    "craft-cli>=2.3.0",
     "craft-parts>=1.18",
     "craft-providers",
     "craft-store>=2.4",
@@ -34,7 +34,7 @@ install_requires = [
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
-    "pydantic>=1.9",
+    "pydantic>=1.10,<2.0",
     "python-dateutil",
     "pyyaml",
     "requests",
@@ -48,15 +48,15 @@ install_requires = [
 ]
 
 lint_requires = [
-    "black>=23.7.0,<24.0.0",
-    "codespell[tomli]>=2.2.5,<3.0.0",
-    "ruff==0.0.282",
+    "black>=23.10.1,<24.0.0",
+    "codespell[tomli]>=2.2.6,<3.0.0",
+    "ruff~=0.1.1",
     "yamllint>=1.32.0,<2.0.0",
 ]
 
 type_requires = [
-    "mypy[reports]==1.5.1",
-    "pyright==1.1.316",
+    "mypy[reports]~=1.5",
+    "pyright==1.1.332",
     "types-python-dateutil",
     "types-requests",
     "types-setuptools",
@@ -102,6 +102,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
     ],
     entry_points={
         "console_scripts": ["charmcraft = charmcraft.main:main"],

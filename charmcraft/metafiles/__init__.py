@@ -17,7 +17,7 @@
 """Submodule for handling the all extra yaml files."""
 
 import pathlib
-from typing import Any, Dict
+from typing import Any
 
 import yaml
 
@@ -26,7 +26,7 @@ from craft_cli import emit
 __all__ = ["actions", "manifest", "metadata", "config", "read_yaml"]
 
 
-def read_yaml(yaml_file_path: pathlib.Path) -> Dict[str, Any]:
+def read_yaml(yaml_file_path: pathlib.Path) -> dict[str, Any]:
     """Parse yaml file.
 
     :returns: the YAML decoded yaml content

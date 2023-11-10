@@ -33,7 +33,7 @@ def get_extension_names() -> list[str]:
     return list(_EXTENSIONS.keys())
 
 
-def get_extension_class(extension_name: str) -> Type[Extension]:
+def get_extension_class(extension_name: str) -> Extension:
     """Obtain a extension class given the name.
 
     :param name: The extension name.
@@ -49,7 +49,7 @@ def get_extension_class(extension_name: str) -> Type[Extension]:
         ) from None
 
 
-def register(extension_name: str, extension_class: Type[Extension]) -> None:
+def register(extension_name: str, extension_class: Extension) -> None:
     """Register extension.
 
     :param extension_name: the name to register.

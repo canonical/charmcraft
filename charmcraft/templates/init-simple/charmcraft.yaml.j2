@@ -5,7 +5,7 @@
 # The charm package name, no spaces
 # See https://juju.is/docs/sdk/naming#heading--naming-charms for guidance.
 name: {{ name }}
- 
+
 
 # (Required)
 # The charm type, either 'charm' or 'bundle'.
@@ -61,7 +61,7 @@ resources:
   httpbin-image:
     type: oci-image
     description: OCI image for httpbin
-    # The upstream-source field is ignored by Juju. It is included here as a 
+    # The upstream-source field is ignored by Juju. It is included here as a
     # reference so the integration testing suite knows which image to deploy
     # during testing. This field is also used by the 'canonical/charming-actions'
     # Github action for automated releasing.
@@ -77,7 +77,7 @@ config:
     # An example config option to customise the log level of the workload
     log-level:
       description: |
-        Configures the log level of gunicorn. 
+        Configures the log level of gunicorn.
 
         Acceptable values are: "info", "debug", "warning", "error" and "critical"
       default: "info"

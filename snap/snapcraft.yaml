@@ -46,7 +46,6 @@ architectures:
   - build-on: arm64
   - build-on: armhf
   - build-on: amd64
-  # - build-on: i386  # there is no i386 core20
 
 # https://github.com/snapcore/snapcraft/issues/4187
 environment:
@@ -73,58 +72,53 @@ build-packages:
   - pkg-config
   - python3.10-dev
   - libpython3.10-dev
+  - libsodium-dev
   - libssl-dev
   - libffi-dev
   - python3-wheel
   - python3-pip
   - python3-setuptools-scm
+  - python3-dev
+  - libapt-pkg-dev
+  - liblzma-dev
+  - libxml2-dev
+  - libxslt1-dev
+  - libyaml-dev
 
 
 parts:
-  # Classic core22 snaps require staged python.
-  python3:
+  charmcraft-libs:
     plugin: nil
+    stage-packages:
+      - libffi7      # Python3 foreign functions - used for rust modules
+      - libsodium23  # PyNaCl uses this
+      - libpython3-stdlib
+      - libpython3.10-stdlib
+      - libpython3.10-minimal
+      - python3-pip
+      - python3-setuptools
+      - python3-wheel
+      - python3-venv
+      - python3-minimal
+      - python3-distutils
+      - python3-pkg-resources
+      - python3.10-minimal
     build-attributes:
       - enable-patchelf
-    stage-packages:
-      - libpython3-stdlib
-      - libpython3.10-minimal
-      - libpython3.10-stdlib
-      - python3.10-minimal
-      - python3-distutils
-      - python3-minimal
-      - python3-pip
-      - python3-pip-whl
-      - python3-setuptools
-      - python3-setuptools-whl
-      - python3-venv
-      - python3-wheel
-    override-build: |
-      craftctl default
-      install -D -m 0755 $CRAFT_PROJECT_DIR/snap/local/sitecustomize.py $CRAFT_PART_INSTALL/usr/lib/python3.10/sitecustomize.py
-
   charmcraft:
-    after: [python3]
+    after: [charmcraft-libs]
     source: .
     plugin: python
     python-requirements:
       - requirements-jammy.txt
       - requirements.txt
-    build-attributes:
-      - enable-patchelf
-    build-packages:
-      - libffi-dev
-      - libapt-pkg-dev
-      - libssl-dev
-      - git
-    stage-packages:
-      - git
-      - apt
-      - apt-utils
-    python-packages: [wheel]
     build-environment:
-      - LDFLAGS: -L/usr/lib/python3.10
-      - CPPFLAGS: -I/usr/include/python3.10
+      # CFLAGS for Python 3.10 and libyaml. Allows cryptography and pyyaml to find
+      # the appropriate system libraries.
+      - CFLAGS: "$(pkg-config python-3.10 yaml-0.1 --cflags)"
+      # Build all packages from source. Prevents issues like #1369.
+      # https://github.com/canonical/charmcraft/issues/1369
+      - PIP_NO_BINARY: ":all:"
     override-pull: |
       craftctl default
       # Ensure we don't have a dubious ownership error from git with a remote build.
@@ -134,7 +128,6 @@ parts:
       craftctl set version="${version}"
     override-build: |
       craftctl default
-      # why is this needed?
       cp -v completion.bash ../install
       sed -i -e '1 s|^#!/.*|#!/snap/charmcraft/current/bin/python -E|' $CRAFT_PART_INSTALL/bin/craftctl
     organize:

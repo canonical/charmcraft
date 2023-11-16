@@ -26,16 +26,14 @@ pass_env =
 [testenv:format]
 description = Apply coding style standards to code
 deps =
-    black
     ruff
 commands =
-    black {[vars]all_path}
+    ruff format {[vars]all_path}
     ruff --fix {[vars]all_path}
 
 [testenv:lint]
 description = Check code against coding style standards
 deps =
-    black
     ruff
     codespell
 commands =
@@ -44,7 +42,7 @@ commands =
     # codespell {[vars]lib_path}
     codespell {tox_root}
     ruff {[vars]all_path}
-    black --check --diff {[vars]all_path}
+    ruff format --check --diff {[vars]all_path}
 
 [testenv:unit]
 description = Run unit tests

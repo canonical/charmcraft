@@ -25,16 +25,17 @@ from typing import Any, cast
 import craft_cli
 import craft_parts
 import craft_providers
-from craft_application import Application, AppMetadata
+from craft_application import Application, AppMetadata, util
 from craft_parts import plugins
 
-from charmcraft import errors, models, services
+from charmcraft import errors, models, services, const
 from charmcraft.application import commands
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
 from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
 from charmcraft.services import CharmcraftServiceFactory
+from charmcraft.utils import humanize_list
 
 APP_METADATA = AppMetadata(
     name="charmcraft",
@@ -62,6 +63,37 @@ class Charmcraft(Application):
     def _project_vars(self, yaml_data: dict[str, Any]) -> dict[str, str]:
         """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
         return {"version": "unversioned"}
+
+    def _extra_yaml_transform(self, yaml_data: dict[str, Any]) -> dict[str, Any]:
+        yaml_data = yaml_data.copy()
+
+        metadata_path = pathlib.Path(self._work_dir / "metadata.yaml")
+        if metadata_path.exists():
+
+            with metadata_path.open() as file:
+                metadata_yaml = util.safe_yaml_load(file)
+            if not isinstance(metadata_yaml, dict):
+                raise errors.CraftError(
+                    "Invalid file: 'metadata.yaml'",
+                    resolution="Ensure metadata.yaml is valid.",
+                    docs_url="https://juju.is/docs/sdk/metadata-yaml",
+                    retcode=65,  # Data error, per sysexits.h
+                )
+            duplicate_fields = []
+            for field in const.METADATA_YAML_MIGRATE_FIELDS:
+                if field in yaml_data and field in metadata_yaml:
+                    duplicate_fields.append(field)
+            if duplicate_fields:
+                raise errors.CraftError(
+                    "Fields in charmcraft.yaml cannot be duplicated in metadata.yaml",
+                    details=f"Duplicate fields: {humanize_list(duplicate_fields, 'and')}",
+                    resolution="Remove the duplicate fields from metadata.yaml.",
+                    retcode=65,  # Data error. per sysexits.h
+                )
+            for field in const.METADATA_YAML_MIGRATE_FIELDS:
+                yaml_data.setdefault(field, metadata_yaml.get(field))
+
+        return yaml_data
 
     def _configure_services(self, platform: str | None, build_for: str | None) -> None:
         self.services.set_kwargs(

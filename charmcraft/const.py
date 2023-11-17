@@ -168,3 +168,6 @@ CHARM_METADATA_KEYS = frozenset(
 )
 
 CHARM_METADATA_KEYS_ALIAS = frozenset(("extra_bindings",))
+
+METADATA_YAML_MIGRATE_FIELDS = ("name", "summary", "description")
+"""Fields that can exist in metadata.yaml or charmcraft.yaml, but not both."""

@@ -173,7 +173,7 @@ class CharmcraftConfig(
             # extra error here, it gets confusing to the user)
             return None
 
-        if parts is None:
+        if not parts:
             # no parts indicated, default to the type of package
             parts = {values["type"]: {}}
 

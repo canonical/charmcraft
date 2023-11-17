@@ -2,7 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - "feature/**"
 
   pull_request:
 
@@ -46,10 +48,8 @@ jobs:
     strategy:
       matrix:
         os: [macos-11, macos-12, windows-2019, windows-2022]
-        python-version: [3.8, "3.10", "3.11"]
+        python-version: ["3.10", "3.11"]
         include:
-          - os: ubuntu-20.04
-            python-version: "3.8"
           - os: ubuntu-22.04
             python-version: "3.10"
 
@@ -72,18 +72,12 @@ jobs:
         run: |
           pip install -U wheel setuptools
       - name: Install Ubuntu-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
-      - name: Install Ubuntu 20.04-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
-        run: |
-          pip install -U -r requirements-focal.txt
-      - name: Install Ubuntu 22.04-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
-        run: |
-          pip install -U -r requirements-jammy.txt
+          export $(cat /etc/os-release | grep VERSION_CODENAME)
+          pip install -U -r "requirements-${VERSION_CODENAME}.txt"
       - name: Install charmcraft and dependencies
         run: |
           pip install -U -r requirements-dev.txt
@@ -107,6 +101,24 @@ jobs:
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
+      - name: Get branch name
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]
+          then
+            echo "branch=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+          else
+            branch=$(echo ${GITHUB_REF#refs/*/} | sed -e 's|feature/\(.*\)|\1|')
+            echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish feature branch to edge/${{ steps.vars.outputs.branch }}
+        if: ${{ env.SNAPCRAFT_STORE_CREDENTIALS != '' }}
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: edge/${{ steps.vars.outputs.branch }}
 
 # Commented out until we can provide the necessary launchpad credentials.
 #  snap-remote-build:

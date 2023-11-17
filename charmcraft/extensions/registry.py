@@ -16,15 +16,14 @@
 
 """Extension registry."""
 
-from typing import Dict, List
 
 from charmcraft import errors
 from charmcraft.extensions.extension import Extension
 
-_EXTENSIONS: Dict[str, Extension] = {}
+_EXTENSIONS: dict[str, Extension] = {}
 
 
-def get_extension_names() -> List[str]:
+def get_extension_names() -> list[str]:
     """Obtain a extension class given the name.
 
     :param name: The extension name.

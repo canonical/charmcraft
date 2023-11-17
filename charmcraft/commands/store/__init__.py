@@ -26,7 +26,7 @@ import textwrap
 import typing
 import zipfile
 from operator import attrgetter
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import yaml
 from craft_cli import emit, ArgumentParsingError
@@ -38,7 +38,7 @@ from humanize import naturalsize
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand
-from charmcraft import parts, utils
+from charmcraft import parts, utils, const
 
 from charmcraft.commands.store.registry import ImageHandler, OCIRegistry, LocalDockerdInterface
 from charmcraft.commands.store.store import Store, Entity
@@ -495,17 +495,17 @@ def get_name_from_zip(filepath):
 
     # get the name from the given file (trying first if it's a charm, then a bundle,
     # otherwise it's an error)
-    if "metadata.yaml" in zf.namelist():
+    if const.METADATA_FILENAME in zf.namelist():
         try:
-            name = yaml.safe_load(zf.read("metadata.yaml"))["name"]
+            name = yaml.safe_load(zf.read(const.METADATA_FILENAME))["name"]
         except Exception as err:
             raise CraftError(
                 "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
                 "a 'name' key.".format(str(filepath))
             ) from err
-    elif "bundle.yaml" in zf.namelist():
+    elif const.BUNDLE_FILENAME in zf.namelist():
         try:
-            name = yaml.safe_load(zf.read("bundle.yaml"))["name"]
+            name = yaml.safe_load(zf.read(const.BUNDLE_FILENAME))["name"]
         except Exception as err:
             raise CraftError(
                 "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
@@ -854,18 +854,18 @@ class PromoteBundleCommand(BaseCommand):
                 f"{from_channel.track} to {to_channel.track})"
             )
 
-        output_bundle: Optional[pathlib.Path] = parsed_args.output_bundle
+        output_bundle: pathlib.Path | None = parsed_args.output_bundle
         if output_bundle is not None and output_bundle.exists():
             if output_bundle.is_file() or output_bundle.is_symlink():
                 emit.verbose(f"Overwriting existing bundle file: {str(output_bundle)}")
             elif output_bundle.is_dir():
                 emit.debug(f"Creating bundle file in {str(output_bundle)}")
-                output_bundle /= "bundle.yaml"
+                output_bundle /= const.BUNDLE_FILENAME
             else:
                 raise CraftError(f"Not a valid bundle output path: {str(output_bundle)}")
         elif output_bundle is not None:
             if not output_bundle.suffix:
-                output_bundle /= "bundle.yaml"
+                output_bundle /= const.BUNDLE_FILENAME
             for parent in output_bundle.parents:
                 if parent.exists():
                     if os.access(parent, os.W_OK):
@@ -873,7 +873,7 @@ class PromoteBundleCommand(BaseCommand):
                     raise CraftError(f"Bundle output directory not writable: {str(parent)}")
 
         # Load bundle
-        bundle_path = self.config.project.dirpath / "bundle.yaml"
+        bundle_path = self.config.project.dirpath / const.BUNDLE_FILENAME
         bundle_config = utils.load_yaml(bundle_path)
         if bundle_config is None:
             raise CraftError(f"Missing or invalid main bundle file: {(str(bundle_path))}")
@@ -898,7 +898,7 @@ class PromoteBundleCommand(BaseCommand):
             )
 
         store = Store(self.config.charmhub)
-        registered_names: List[Entity] = store.list_registered_names(include_collaborations=True)
+        registered_names: list[Entity] = store.list_registered_names(include_collaborations=True)
         name_map = {entity.name: entity for entity in registered_names}
 
         if bundle_name not in name_map:
@@ -938,8 +938,8 @@ class PromoteBundleCommand(BaseCommand):
             raise CraftError("Cannot find a bundle released to the given source channel.")
 
         # Get source channel charms
-        charm_revisions: Dict[str, int] = {}
-        charm_resources: Dict[str, List[str]] = collections.defaultdict(list)
+        charm_revisions: dict[str, int] = {}
+        charm_resources: dict[str, list[str]] = collections.defaultdict(list)
         error_charms = []
         for charm_name in charms:
             channel_map, *_ = store.list_releases(charm_name)
@@ -974,7 +974,7 @@ class PromoteBundleCommand(BaseCommand):
         with tempfile.TemporaryDirectory(prefix="charmcraft-") as bundle_dir:
             bundle_dir_path = pathlib.Path(bundle_dir) / bundle_name
             shutil.copytree(self.config.project.dirpath, bundle_dir_path)
-            bundle_path = bundle_dir_path / "bundle.yaml"
+            bundle_path = bundle_dir_path / const.BUNDLE_FILENAME
             with bundle_path.open("w+") as bundle_file:
                 yaml.dump(bundle_config, bundle_file)
 
@@ -982,7 +982,7 @@ class PromoteBundleCommand(BaseCommand):
             emit.verbose(f"Packing temporary bundle in {bundle_dir}...")
             lifecycle = parts.PartsLifecycle(
                 {},
-                work_dir=bundle_dir_path / "build",
+                work_dir=bundle_dir_path / const.BUILD_DIRNAME,
                 project_dir=bundle_dir_path,
                 project_name=bundle_name,
                 ignore_local_sources=[bundle_name + ".zip"],

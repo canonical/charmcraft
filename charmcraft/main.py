@@ -33,10 +33,8 @@ from craft_cli import (
     emit,
 )
 
-from charmcraft import __version__, config, env, utils
+from charmcraft import __version__, config, const, env, utils
 from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
-from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
-from charmcraft.const import SHARED_CACHE_ENV_VAR
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -106,7 +104,7 @@ COMMAND_GROUPS = [
 ]
 
 # non-charmcraft useful environment variables to log
-EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP", SHARED_CACHE_ENV_VAR)
+EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP", const.SHARED_CACHE_ENV_VAR)
 
 
 def _get_system_details():
@@ -118,8 +116,8 @@ def _get_system_details():
         for name, value in os.environ.items()
         if name.startswith("CHARMCRAFT") or name in EXTRA_ENVIRONMENT
     }
-    if ALTERNATE_AUTH_ENV_VAR in useful_env:
-        useful_env[ALTERNATE_AUTH_ENV_VAR] = "<hidden>"
+    if const.ALTERNATE_AUTH_ENV_VAR in useful_env:
+        useful_env[const.ALTERNATE_AUTH_ENV_VAR] = "<hidden>"
     env_string = ", ".join(f"{name}={value!r}" for name, value in sorted(useful_env.items()))
     if not env_string:
         env_string = "None"

@@ -27,6 +27,7 @@ import requests
 from craft_cli import CraftError
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
+from charmcraft import const
 from charmcraft.commands.store.client import (
     AnonymousClient,
     Client,
@@ -150,7 +151,7 @@ def test_client_init():
         endpoints=craft_store.endpoints.CHARMHUB,
         application_name="charmcraft",
         user_agent=user_agent,
-        environment_auth="CHARMCRAFT_AUTH",
+        environment_auth=const.ALTERNATE_AUTH_ENV_VAR,
         ephemeral=False,
     )
 
@@ -334,7 +335,7 @@ def test_storage_push_succesful(client_class):
 
 def test_alternate_auth_login_forbidden(client_class, monkeypatch):
     """Login functionality cannot be used if alternate auth is present."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", ENCODED_CREDENTIALS)
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, ENCODED_CREDENTIALS)
     client = client_class("http://api.test", "http://storage.test")
     with pytest.raises(CraftError) as cm:
         client.login()
@@ -346,7 +347,7 @@ def test_alternate_auth_login_forbidden(client_class, monkeypatch):
 
 def test_alternate_auth_logout_forbidden(client_class, monkeypatch):
     """Logout functionality cannot be used if alternate auth is present."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", ENCODED_CREDENTIALS)
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, ENCODED_CREDENTIALS)
     client = client_class("http://api.test", "http://storage.test")
     with pytest.raises(CraftError) as cm:
         client.logout()

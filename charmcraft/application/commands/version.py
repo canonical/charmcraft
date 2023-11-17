@@ -33,7 +33,8 @@ class Version(base.CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
-        if parsed_args.format.lower() == "json":
+        format_value = parsed_args.format or ""
+        if format_value.lower() == "json":
             emit.message(
                 json.dumps(
                     {

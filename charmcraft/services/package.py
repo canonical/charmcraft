@@ -66,7 +66,7 @@ class PackageService(services.PackageService):
         if self._project.type == "charm":
             return [self.pack_charm(prime_dir, dest)]
         if self._project.type == "bundle":
-            raise NotImplementedError("Bundle packing not done yet (CRAFT-2144)")
+            return [self.pack_bundle(prime_dir, dest)]
         raise NotImplementedError("No general packing available yet.")
 
     def pack_bundle(self, prime_dir: pathlib.Path, dest_dir: pathlib.Path) -> pathlib.Path:

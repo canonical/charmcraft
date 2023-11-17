@@ -22,17 +22,4 @@ from craft_providers import bases
 
 
 class ProviderService(services.ProviderService):
-    """Business logic for creating packages."""
-
-    def get_base(
-        self,
-        base_name: bases.BaseName | tuple[str, str],
-        *,
-        instance_name: str,
-        **kwargs: bool | str | None,
-    ) -> bases.Base:
-        """Get the base. Overridden because of compatibility tag."""
-        alias = bases.get_base_alias(base_name)
-        base_class = bases.get_base_from_alias(alias)
-        kwargs.setdefault("compatibility_tag", f"charmcraft-{base_class.compatibility_tag}.0")
-        return super().get_base(base_name, instance_name=instance_name, **kwargs)
+    """Business logic for getting providers."""

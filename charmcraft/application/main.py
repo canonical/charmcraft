@@ -28,7 +28,7 @@ import craft_providers
 from craft_application import Application, AppMetadata, util
 from craft_parts import plugins
 
-from charmcraft import errors, models, services, const
+from charmcraft import errors, models, services, const, env
 from charmcraft.application import commands
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.main import GENERAL_SUMMARY
@@ -121,6 +121,8 @@ class Charmcraft(Application):
             # the project directory.
             project_dir = pathlib.Path(global_args.get("project_dir") or ".").resolve()
             self._work_dir = project_dir
+        else:
+            self._work_dir = env.get_managed_environment_project_path()
 
     def _get_dispatcher(self) -> craft_cli.Dispatcher:  # type: ignore[override]
         """Configure charmcraft, including a fallback to the classic entrypoint.

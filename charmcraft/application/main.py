@@ -28,7 +28,7 @@ import craft_providers
 from craft_application import Application, AppMetadata, util
 from craft_parts import plugins
 
-from charmcraft import errors, models, services, const, env
+from charmcraft import const, env, errors, models, services
 from charmcraft.application import commands
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.main import GENERAL_SUMMARY
@@ -69,7 +69,6 @@ class Charmcraft(Application):
 
         metadata_path = pathlib.Path(self._work_dir / "metadata.yaml")
         if metadata_path.exists():
-
             with metadata_path.open() as file:
                 metadata_yaml = util.safe_yaml_load(file)
             if not isinstance(metadata_yaml, dict):

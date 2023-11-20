@@ -18,7 +18,6 @@
 from __future__ import annotations
 
 from craft_application import services
-from craft_providers import bases
 
 
 class ProviderService(services.ProviderService):

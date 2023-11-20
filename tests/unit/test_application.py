@@ -16,7 +16,6 @@
 """Unit tests for application class."""
 import contextlib
 import pathlib
-import sys
 import textwrap
 
 import pyfakefs.fake_filesystem
@@ -51,7 +50,8 @@ def test_configure(
     [
         (
             {},
-            textwrap.dedent("""\
+            textwrap.dedent(
+                """\
                 name: test-charm
                 summary: A test charm
                 description: A charm for testing!"""
@@ -59,33 +59,43 @@ def test_configure(
         ),
         (
             {"name": "test-charm"},
-            textwrap.dedent("""\
+            textwrap.dedent(
+                """\
                 summary: A test charm
                 description: A charm for testing!"""
             ),
         ),
         (
             {"name": "test-charm", "summary": "A test charm"},
-            textwrap.dedent("""\
+            textwrap.dedent(
+                """\
                 description: A charm for testing!"""
             ),
         ),
         (
-            {"name": "test-charm", "summary": "A test charm", "description": "A charm for testing!"},
-            textwrap.dedent("""\
+            {
+                "name": "test-charm",
+                "summary": "A test charm",
+                "description": "A charm for testing!",
+            },
+            textwrap.dedent(
+                """\
                 something-else: yes
                 """
             ),
         ),
-
-    ]
+    ],
 )
 @pytest.mark.parametrize(
     "expected",
     [{"name": "test-charm", "summary": "A test charm", "description": "A charm for testing!"}],
 )
 def test_extra_yaml_transform_success(
-    fs: pyfakefs.fake_filesystem.FakeFilesystem, service_factory, charmcraft_dict, metadata_yaml, expected
+    fs: pyfakefs.fake_filesystem.FakeFilesystem,
+    service_factory,
+    charmcraft_dict,
+    metadata_yaml,
+    expected,
 ):
     """Test that _extra_yaml_transform correctly transforms the data."""
     fs.create_file("metadata.yaml", contents=metadata_yaml)
@@ -100,23 +110,36 @@ def test_extra_yaml_transform_success(
     ("charmcraft_dict", "metadata_yaml", "message"),
     [
         (
-            {"name": "test-charm", "summary": "A test charm", "description": "A charm for testing!"},
+            {
+                "name": "test-charm",
+                "summary": "A test charm",
+                "description": "A charm for testing!",
+            },
             "",
             "Invalid file: 'metadata.yaml'",
         ),
         (
-            {"name": "test-charm", "summary": "A test charm", "description": "A charm for testing!"},
-            textwrap.dedent("""\
+            {
+                "name": "test-charm",
+                "summary": "A test charm",
+                "description": "A charm for testing!",
+            },
+            textwrap.dedent(
+                """\
                 name: test-charm
                 summary: A test charm
                 description: A charm for testing!"""
             ),
             "Fields in charmcraft.yaml cannot be duplicated in metadata.yaml",
-        )
+        ),
     ],
 )
 def test_extra_yaml_transform_failure(
-    fs: pyfakefs.fake_filesystem.FakeFilesystem, service_factory, charmcraft_dict, metadata_yaml, message
+    fs: pyfakefs.fake_filesystem.FakeFilesystem,
+    service_factory,
+    charmcraft_dict,
+    metadata_yaml,
+    message,
 ):
     fs.create_file("metadata.yaml", contents=metadata_yaml)
     app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)

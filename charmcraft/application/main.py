@@ -74,7 +74,7 @@ class Charmcraft(Application):
             if not isinstance(metadata_yaml, dict):
                 raise errors.CraftError(
                     "Invalid file: 'metadata.yaml'",
-                    resolution="Ensure metadata.yaml is valid.",
+                    resolution="Ensure metadata.yaml meets the juju metadata.yaml specification.",
                     docs_url="https://juju.is/docs/sdk/metadata-yaml",
                     retcode=65,  # Data error, per sysexits.h
                 )

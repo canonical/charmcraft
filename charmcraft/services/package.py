@@ -20,7 +20,7 @@ from __future__ import annotations
 import os
 import pathlib
 import shutil
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast, Iterable
 
 import craft_application
 import yaml
@@ -66,10 +66,24 @@ class PackageService(services.PackageService):
         :returns: A list of paths to created packages.
         """
         if self._project.type == "charm":
-            return [self.pack_charm(prime_dir, dest)]
-        if self._project.type == "bundle":
-            return [self.pack_bundle(prime_dir, dest)]
-        raise NotImplementedError("No general packing available yet.")
+            packages = [self.pack_charm(prime_dir, dest)]
+        elif self._project.type == "bundle":
+            packages = [self.pack_bundle(prime_dir, dest)]
+        else:
+            raise NotImplementedError(f"Unknown package type {self._project.type}")
+
+        self._write_package_paths(packages)
+        return packages
+
+    def _write_package_paths(self, packages: Iterable[pathlib.Path]) -> None:
+        """Write the paths of packages to a hidden file in the project directory.
+
+        This allows Charmcraft to output the packages to arbitrary directories on the host.
+        """
+        packages_file = self.project_dir / ".charmcraft_output_packages.txt"
+
+        with packages_file.open("at") as file:
+            file.writelines(f"{package.name}\n" for package in packages)
 
     def pack_bundle(self, prime_dir: pathlib.Path, dest_dir: pathlib.Path) -> pathlib.Path:
         """Pack a prime directory as a bundle."""

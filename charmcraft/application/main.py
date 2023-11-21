@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import shutil
 import signal
 import sys
 from typing import Any, cast
@@ -54,6 +55,7 @@ class Charmcraft(Application):
     ) -> None:
         super().__init__(app=app, services=services)
         self._global_args: dict[str, Any] = {}
+        self._dispatcher: craft_cli.Dispatcher | None = None
 
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
@@ -138,6 +140,29 @@ class Charmcraft(Application):
         config = super().app_config
         config.setdefault("global_args", self._global_args)
         return config
+
+    def _get_dispatcher(self) -> craft_cli.Dispatcher:
+        """Get the dispatcher, with a charmcraft-specific side-effect of storing it on the app."""
+        self._dispatcher = super()._get_dispatcher()
+        return self._dispatcher
+
+    def run_managed(self, platform: str | None, build_for: str | None) -> None:
+        """Managed runner for charmcraft, allowing pre- and post-run."""
+        dispatcher = self._dispatcher or self._get_dispatcher()
+        command = dispatcher.load_command(self.app_config)
+
+        super().run_managed(platform, build_for)
+
+        if not self.is_managed() and isinstance(command, commands.PackCommand):
+            if output_dir := getattr(dispatcher.parsed_args(), "output", None):
+                output_path = pathlib.Path(output_dir).resolve()
+                output_path.mkdir(parents=True, exist_ok=True)
+                package_file_path = (self._work_dir / ".charmcraft_output_packages.txt")
+                if package_file_path.exists():
+                    package_files = package_file_path.read_text().splitlines(keepends=False)
+                    package_file_path.unlink(missing_ok=True)
+                    for filename in package_files:
+                        shutil.move(self._work_dir / filename, output_path / filename)
 
 
 def main() -> int:

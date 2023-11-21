@@ -16,22 +16,17 @@
 """New entrypoint for charmcraft."""
 from __future__ import annotations
 
-import os
 import pathlib
 import shutil
-import signal
 import sys
 from typing import Any, cast
 
 import craft_cli
-import craft_parts
-import craft_providers
 from craft_application import Application, AppMetadata, util
 from craft_parts import plugins
 
 from charmcraft import const, env, errors, models, services
 from charmcraft.application import commands
-from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
 from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
@@ -137,6 +132,7 @@ class Charmcraft(Application):
 
     @property
     def app_config(self) -> dict[str, Any]:
+        """Charmcraft-specific application config to send to commands."""
         config = super().app_config
         config.setdefault("global_args", self._global_args)
         return config
@@ -147,7 +143,11 @@ class Charmcraft(Application):
         return self._dispatcher
 
     def run_managed(self, platform: str | None, build_for: str | None) -> None:
-        """Managed runner for charmcraft, allowing pre- and post-run."""
+        """Run charmcraft in managed mode.
+
+        Overrides the craft-application managed mode runner to move packed files
+        as needed.
+        """
         dispatcher = self._dispatcher or self._get_dispatcher()
         command = dispatcher.load_command(self.app_config)
 
@@ -157,12 +157,12 @@ class Charmcraft(Application):
             if output_dir := getattr(dispatcher.parsed_args(), "output", None):
                 output_path = pathlib.Path(output_dir).resolve()
                 output_path.mkdir(parents=True, exist_ok=True)
-                package_file_path = (self._work_dir / ".charmcraft_output_packages.txt")
+                package_file_path = self._work_dir / ".charmcraft_output_packages.txt"
                 if package_file_path.exists():
                     package_files = package_file_path.read_text().splitlines(keepends=False)
                     package_file_path.unlink(missing_ok=True)
                     for filename in package_files:
-                        shutil.move(self._work_dir / filename, output_path / filename)
+                        shutil.move(str(self._work_dir / filename), output_path / filename)
 
 
 def main() -> int:

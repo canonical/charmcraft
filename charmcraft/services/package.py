@@ -17,10 +17,9 @@
 """Service class for packing."""
 from __future__ import annotations
 
-import os
 import pathlib
 import shutil
-from typing import TYPE_CHECKING, Optional, cast, Iterable
+from typing import TYPE_CHECKING, Iterable, Optional, cast
 
 import craft_application
 import yaml
@@ -28,7 +27,7 @@ from craft_application import services
 from craft_cli import emit
 from craft_providers import bases
 
-from charmcraft import models, utils, errors
+from charmcraft import errors, models, utils
 from charmcraft.models.manifest import Manifest
 from charmcraft.models.metadata import BundleMetadata, CharmMetadata
 from charmcraft.models.project import Bundle, Charm, CharmcraftProject
@@ -118,7 +117,6 @@ class PackageService(services.PackageService):
         raise errors.CraftError(
             "Current machine is not a valid build platform for this charm.",
         )
-
 
     @property
     def metadata(self) -> BundleMetadata | CharmMetadata:

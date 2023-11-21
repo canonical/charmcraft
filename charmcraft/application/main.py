@@ -60,6 +60,16 @@ class Charmcraft(Application):
         """Return command groups."""
         return self._command_groups
 
+    def get_project(  # type: ignore[override]
+        self, project_dir: pathlib.Path | None = None
+    ) -> models.CharmcraftProject:
+        """Get the charmcraft project."""
+        if self.is_managed():
+            project_dir = env.get_managed_environment_project_path()
+        elif project_dir is None:
+            project_dir = pathlib.Path(self._global_args.get("project_dir") or ".")
+        return cast(models.CharmcraftProject, super().get_project(project_dir))
+
     def _project_vars(self, yaml_data: dict[str, Any]) -> dict[str, str]:
         """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
         return {"version": "unversioned"}

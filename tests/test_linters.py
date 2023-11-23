@@ -648,6 +648,26 @@ def test_jujumetadata_missing_field_multiple(tmp_path):
     )
 
 
+def test_jujumetadata_series_is_deprecated(tmp_path):
+    """A deprecated field is included in the metadata file"""
+    metadata_file = tmp_path / const.METADATA_FILENAME
+    metadata_file.write_text(
+        """
+        name: foobar
+        summary: summary
+        description: desc
+        series: focal
+    """
+    )
+    linter = JujuMetadata()
+    result = linter.run(tmp_path)
+    assert result == JujuMetadata.Result.WARNINGS
+    assert linter.text == (
+        "The metadata.yaml file contains the deprecated attribute: series."
+        "This attribute will be rejected starting in Juju 4.0."
+    )
+
+
 # --- tests for analyze function
 
 

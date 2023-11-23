@@ -264,6 +264,13 @@ class JujuMetadata(Linter):
             self.text = f"The metadata.yaml file is missing the following attribute(s): {missing}."
             return self.Result.ERRORS
 
+        if "series" in metadata:
+            self.text = (
+                "The metadata.yaml file contains the deprecated attribute: series."
+                "This attribute will be rejected starting in Juju 4.0."
+            )
+            return self.Result.WARNINGS
+
         return self.Result.OK
 
 

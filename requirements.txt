@@ -5,7 +5,7 @@ charset-normalizer==3.3.1
 craft-cli==2.4.0
 craft-parts==1.25.1
 craft-providers==1.19.2
-craft-store==2.4.0
+craft-store==2.5.0
 cryptography==41.0.4
 Deprecated==1.2.14
 distro==1.8.0

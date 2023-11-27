@@ -19,14 +19,15 @@ from __future__ import annotations
 
 import pathlib
 import shutil
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, Iterable, Optional, cast
 
 import craft_application
 import yaml
 from craft_application import services
 from craft_cli import emit
+from craft_providers import bases
 
-from charmcraft import models, utils
+from charmcraft import errors, models, utils
 from charmcraft.models.manifest import Manifest
 from charmcraft.models.metadata import BundleMetadata, CharmMetadata
 from charmcraft.models.project import Bundle, Charm, CharmcraftProject
@@ -64,10 +65,24 @@ class PackageService(services.PackageService):
         :returns: A list of paths to created packages.
         """
         if self._project.type == "charm":
-            return [self.pack_charm(prime_dir, dest)]
-        if self._project.type == "bundle":
-            return [self.pack_bundle(prime_dir, dest)]
-        raise NotImplementedError("No general packing available yet.")
+            packages = [self.pack_charm(prime_dir, dest)]
+        elif self._project.type == "bundle":
+            packages = [self.pack_bundle(prime_dir, dest)]
+        else:
+            raise NotImplementedError(f"Unknown package type {self._project.type}")
+
+        self._write_package_paths(packages)
+        return packages
+
+    def _write_package_paths(self, packages: Iterable[pathlib.Path]) -> None:
+        """Write the paths of packages to a hidden file in the project directory.
+
+        This allows Charmcraft to output the packages to arbitrary directories on the host.
+        """
+        packages_file = self.project_dir / ".charmcraft_output_packages.txt"
+
+        with packages_file.open("at") as file:
+            file.writelines(f"{package.name}\n" for package in packages)
 
     def pack_bundle(self, prime_dir: pathlib.Path, dest_dir: pathlib.Path) -> pathlib.Path:
         """Pack a prime directory as a bundle."""
@@ -86,7 +101,22 @@ class PackageService(services.PackageService):
 
     def get_charm_path(self, dest_dir: pathlib.Path) -> pathlib.Path:
         """Get a charm file name for the appropriate set of run-on bases."""
-        return dest_dir / f"{self._project.name}_{self._platform}.charm"
+        if self._platform:
+            return dest_dir / f"{self._project.name}_{self._platform}.charm"
+        build_plan = cast(Charm, self._project).get_build_plan()
+        platform = utils.get_os_platform()
+        build_on_base = bases.BaseName(name=platform.system, version=platform.release)
+        host_arch = utils.get_host_architecture()
+        for build_info in build_plan:
+            print(build_info)
+            if build_info.build_on != host_arch:
+                continue
+            if build_info.base == build_on_base:
+                return dest_dir / f"{self._project.name}_{build_info.platform}.charm"
+
+        raise errors.CraftError(
+            "Current machine is not a valid build platform for this charm.",
+        )
 
     @property
     def metadata(self) -> BundleMetadata | CharmMetadata:

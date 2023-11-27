@@ -16,21 +16,17 @@
 """New entrypoint for charmcraft."""
 from __future__ import annotations
 
-import os
 import pathlib
-import signal
+import shutil
 import sys
 from typing import Any, cast
 
 import craft_cli
-import craft_parts
-import craft_providers
 from craft_application import Application, AppMetadata, util
 from craft_parts import plugins
 
 from charmcraft import const, env, errors, models, services
 from charmcraft.application import commands
-from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
 from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
@@ -54,11 +50,22 @@ class Charmcraft(Application):
     ) -> None:
         super().__init__(app=app, services=services)
         self._global_args: dict[str, Any] = {}
+        self._dispatcher: craft_cli.Dispatcher | None = None
 
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
         """Return command groups."""
         return self._command_groups
+
+    def get_project(  # type: ignore[override]
+        self, project_dir: pathlib.Path | None = None
+    ) -> models.CharmcraftProject:
+        """Get the charmcraft project."""
+        if self.is_managed():
+            project_dir = env.get_managed_environment_project_path()
+        elif project_dir is None:
+            project_dir = pathlib.Path(self._global_args.get("project_dir") or ".")
+        return cast(models.CharmcraftProject, super().get_project(project_dir))
 
     def _project_vars(self, yaml_data: dict[str, Any]) -> dict[str, str]:
         """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
@@ -123,115 +130,39 @@ class Charmcraft(Application):
         else:
             self._work_dir = env.get_managed_environment_project_path()
 
-    def _get_dispatcher(self) -> craft_cli.Dispatcher:  # type: ignore[override]
-        """Configure charmcraft, including a fallback to the classic entrypoint.
+    @property
+    def app_config(self) -> dict[str, Any]:
+        """Charmcraft-specific application config to send to commands."""
+        config = super().app_config
+        config.setdefault("global_args", self._global_args)
+        return config
 
-        Side-effect: This method may exit the process.
-        Raises: ClassicFallback() to fall back to the classic interface.
+    def _get_dispatcher(self) -> craft_cli.Dispatcher:
+        """Get the dispatcher, with a charmcraft-specific side-effect of storing it on the app."""
+        self._dispatcher = super()._get_dispatcher()
+        return self._dispatcher
 
-        :returns: A ready-to-run Dispatcher object
+    def run_managed(self, platform: str | None, build_for: str | None) -> None:
+        """Run charmcraft in managed mode.
+
+        Overrides the craft-application managed mode runner to move packed files
+        as needed.
         """
-        craft_cli.emit.init(
-            mode=craft_cli.EmitterMode.BRIEF,
-            appname=self.app.name,
-            greeting=f"Starting {self.app.name}",
-            log_filepath=self.log_path,
-            streaming_brief=True,
-        )
+        dispatcher = self._dispatcher or self._get_dispatcher()
+        command = dispatcher.load_command(self.app_config)
 
-        dispatcher = craft_cli.Dispatcher(
-            self.app.name,
-            self.command_groups,
-            summary=str(self.app.summary),
-            extra_global_args=self._global_arguments,
-        )
+        super().run_managed(platform, build_for)
 
-        try:
-            craft_cli.emit.trace("pre-parsing arguments...")
-            global_args = dispatcher.pre_parse_args(sys.argv[1:])
-        except KeyboardInterrupt as err:
-            self._emit_error(craft_cli.CraftError("Interrupted."), cause=err)
-            sys.exit(128 + signal.SIGINT)
-        except craft_cli.ProvideHelpException as err:
-            print(err, file=sys.stderr)  # to stderr, as argparse normally does
-            craft_cli.emit.ended_ok()
-            sys.exit(0)
-        except craft_cli.ArgumentParsingError as err:
-            print(err, file=sys.stderr)  # to stderr, as argparse normally does
-            craft_cli.emit.ended_ok()
-            sys.exit(64)  # Command line usage error from sysexits.h
-        except Exception as err:
-            self._emit_error(
-                craft_cli.CraftError(f"Internal error while loading {self.app.name}: {err!r}")
-            )
-            if os.getenv("CRAFT_DEBUG") == "1":
-                raise
-            sys.exit(70)  # EX_SOFTWARE from sysexits.h
-        craft_cli.emit.trace("Preparing application...")
-        self.configure(global_args)
-
-        return dispatcher
-
-    def run(self) -> int:  # (too many branches due to error handling)
-        """Bootstrap and run the application."""
-        dispatcher = self._get_dispatcher()
-        craft_cli.emit.trace("Preparing application...")
-
-        return_code = 1  # General error
-        try:
-            command = cast(
-                CharmcraftCommand,
-                dispatcher.load_command(
-                    {"app": self.app, "services": self.services, "global_args": self._global_args}
-                ),
-            )
-            platform = getattr(dispatcher.parsed_args, "platform", None)
-            build_for = getattr(dispatcher.parsed_args, "build_for", None)
-            self._configure_services(platform, build_for)
-
-            if not command.run_managed(dispatcher.parsed_args()):
-                # command runs in the outer instance
-                craft_cli.emit.debug(f"Running {self.app.name} {command.name} on host")
-                if command.always_load_project:
-                    self.services.project = self.project
-                return_code = dispatcher.run() or 0
-            elif not self.services.ProviderClass.is_managed():
-                # command runs in inner instance, but this is the outer instance
-                self.services.project = self.project
-                self.run_managed(platform, build_for)
-                return_code = 0
-            else:
-                # command runs in inner instance
-                self.services.project = self.project
-                return_code = dispatcher.run() or 0
-        except craft_cli.ArgumentParsingError as err:
-            print(err, file=sys.stderr)  # to stderr, as argparse normally does
-            craft_cli.emit.ended_ok()
-            return_code = 64  # Command line usage error from sysexits.h
-        except KeyboardInterrupt as err:
-            self._emit_error(craft_cli.CraftError("Interrupted."), cause=err)
-            return_code = 128 + signal.SIGINT
-        except craft_cli.CraftError as err:
-            self._emit_error(err)
-        except craft_parts.PartsError as err:
-            self._emit_error(
-                craft_cli.CraftError(err.brief, details=err.details, resolution=err.resolution)
-            )
-            return_code = 1
-        except craft_providers.ProviderError as err:
-            self._emit_error(
-                craft_cli.CraftError(err.brief, details=err.details, resolution=err.resolution)
-            )
-            return_code = 1
-        except Exception as err:  # pylint: disable=broad-except
-            self._emit_error(craft_cli.CraftError(f"{self.app.name} internal error: {err!r}"))
-            if os.getenv("CRAFT_DEBUG") == "1":
-                raise
-            return_code = 70  # EX_SOFTWARE from sysexits.h
-        else:
-            craft_cli.emit.ended_ok()
-
-        return return_code
+        if not self.is_managed() and isinstance(command, commands.PackCommand):
+            if output_dir := getattr(dispatcher.parsed_args(), "output", None):
+                output_path = pathlib.Path(output_dir).resolve()
+                output_path.mkdir(parents=True, exist_ok=True)
+                package_file_path = self._work_dir / ".charmcraft_output_packages.txt"
+                if package_file_path.exists():
+                    package_files = package_file_path.read_text().splitlines(keepends=False)
+                    package_file_path.unlink(missing_ok=True)
+                    for filename in package_files:
+                        shutil.move(str(self._work_dir / filename), output_path / filename)
 
 
 def main() -> int:

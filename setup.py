@@ -57,7 +57,7 @@ type_requires = [
     "mypy[reports]~=1.5",
     "pyright==1.1.332",
     "types-python-dateutil",
-    "types-requests",
+    "types-requests<2.31.0.7",  # Frozen until we can get urllib3 v2
     "types-setuptools",
     "types-tabulate",
     "types-urllib3",

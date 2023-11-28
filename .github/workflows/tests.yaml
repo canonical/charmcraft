@@ -15,6 +15,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Begin snap installs
+        run: |
+          echo "Installing snaps in the background while running apt and pip..."
+          sudo snap install --no-wait shellcheck ruff
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -26,10 +30,6 @@ jobs:
           cache: 'pip'
       - name: Configure environment
         run: |
-          echo "::group::Begin snap install"
-          echo "Installing snaps in the background while running apt and pip..."
-          sudo snap install --no-wait shellcheck
-          echo "::endgroup::"
           echo "::group::pip install"
           python -m pip install tox
           echo "::endgroup::"

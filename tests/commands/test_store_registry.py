@@ -29,6 +29,7 @@ import pytest
 import requests
 from craft_cli import CraftError
 
+from charmcraft import const
 from charmcraft.store import registry
 from charmcraft.store.registry import (
     CONFIG_MIMETYPE,
@@ -1095,7 +1096,7 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
     test_manifest_content = json.dumps(
         [
             {
-                "Config": "config.yaml",
+                "Config": const.JUJU_CONFIG_FILENAME,
                 "Layers": ["layer1.bin", "layer2.bin"],
             }
         ]
@@ -1103,7 +1104,7 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
     tar_file = tarfile.TarFile(test_tar_image, "w")
     tar_content = [
         ("manifest.json", test_manifest_content),
-        ("config.yaml", test_tar_config_content),
+        (const.JUJU_CONFIG_FILENAME, test_tar_config_content),
         ("layer1.bin", test_tar_layer1_content),
         ("layer2.bin", test_tar_layer2_content),
     ]

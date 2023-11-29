@@ -15,16 +15,15 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Extension registry."""
-
-from typing import Any, Dict, List, Type
+from typing import Any
 
 from charmcraft import errors
 from charmcraft.extensions.extension import Extension
 
-_EXTENSIONS: Dict[str, Type[Extension]] = {}
+_EXTENSIONS: dict[str, type[Extension]] = {}
 
 
-def get_extension_names() -> List[str]:
+def get_extension_names() -> list[str]:
     """Obtain a extension class given the name.
 
     :param name: The extension name.
@@ -34,7 +33,7 @@ def get_extension_names() -> List[str]:
     return list(_EXTENSIONS.keys())
 
 
-def get_extension_class(extension_name: str) -> Type[Extension]:
+def get_extension_class(extension_name: str) -> type[Extension]:
     """Obtain a extension class given the name.
 
     :param extension_name: The extension name.
@@ -50,7 +49,7 @@ def get_extension_class(extension_name: str) -> Type[Extension]:
         ) from None
 
 
-def get_extensions() -> List[Dict[str, Any]]:
+def get_extensions() -> list[dict[str, Any]]:
     """Get metadata about registered extensions."""
     return sorted(
         (
@@ -73,7 +72,7 @@ def get_extensions() -> List[Dict[str, Any]]:
     )
 
 
-def register(extension_name: str, extension_class: Type[Extension]) -> None:
+def register(extension_name: str, extension_class: type[Extension]) -> None:
     """Register extension.
 
     :param extension_name: the name to register.

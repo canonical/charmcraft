@@ -22,7 +22,6 @@ import os
 import pathlib
 import tempfile
 import types
-from typing import Optional
 from unittest.mock import Mock
 
 import craft_parts
@@ -33,7 +32,7 @@ from craft_parts import callbacks, plugins
 from craft_providers import Executor, Provider
 
 import charmcraft.parts
-from charmcraft import deprecations, instrum, parts, services
+from charmcraft import const, deprecations, instrum, parts, services
 from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
@@ -273,14 +272,14 @@ def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     If content is not given, remove charmcraft.yaml if exists.
     """
 
-    def prepare_charmcraft_yaml(content: Optional[str] = None):
+    def prepare_charmcraft_yaml(content: str | None = None):
         if content is None:
             try:
-                os.remove(tmp_path / "charmcraft.yaml")
+                os.remove(tmp_path / const.CHARMCRAFT_FILENAME)
             except OSError:
                 pass
         else:
-            charmcraft_yaml_file = tmp_path / "charmcraft.yaml"
+            charmcraft_yaml_file = tmp_path / const.CHARMCRAFT_FILENAME
             charmcraft_yaml_file.write_text(content)
 
         return tmp_path
@@ -295,14 +294,14 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
     If content is not given, remove metadata.yaml if exists.
     """
 
-    def prepare_metadata_yaml(content: Optional[str] = None, remove: bool = False):
+    def prepare_metadata_yaml(content: str | None = None, remove: bool = False):
         if content is None:
             try:
-                os.remove(tmp_path / "metadata.yaml")
+                os.remove(tmp_path / const.METADATA_FILENAME)
             except OSError:
                 pass
         else:
-            metadata_yaml_file = tmp_path / "metadata.yaml"
+            metadata_yaml_file = tmp_path / const.METADATA_FILENAME
             metadata_yaml_file.write_text(content)
 
         return tmp_path
@@ -317,14 +316,14 @@ def prepare_actions_yaml(tmp_path: pathlib.Path):
     If content is not given, remove actions.yaml if exists.
     """
 
-    def prepare_actions_yaml(content: Optional[str] = None):
+    def prepare_actions_yaml(content: str | None = None):
         if content is None:
             try:
-                os.remove(tmp_path / "actions.yaml")
+                os.remove(tmp_path / const.JUJU_ACTIONS_FILENAME)
             except OSError:
                 pass
         else:
-            actions_yaml_file = tmp_path / "actions.yaml"
+            actions_yaml_file = tmp_path / const.JUJU_ACTIONS_FILENAME
             actions_yaml_file.write_text(content)
 
         return tmp_path
@@ -339,14 +338,14 @@ def prepare_config_yaml(tmp_path: pathlib.Path):
     If content is not given, remove config.yaml if exists.
     """
 
-    def prepare_config_yaml(content: Optional[str] = None):
+    def prepare_config_yaml(content: str | None = None):
         if content is None:
             try:
-                os.remove(tmp_path / "config.yaml")
+                os.remove(tmp_path / const.JUJU_CONFIG_FILENAME)
             except OSError:
                 pass
         else:
-            config_yaml_file = tmp_path / "config.yaml"
+            config_yaml_file = tmp_path / const.JUJU_CONFIG_FILENAME
             config_yaml_file.write_text(content)
 
         return tmp_path
@@ -404,9 +403,9 @@ def build_charm_directory():
             expected[name] = full_path
             full_path.mkdir(parents=True)
             metadata_yaml = {"name": name}
-            with (full_path / "charmcraft.yaml").open("w") as yaml_file:
+            with (full_path / const.CHARMCRAFT_FILENAME).open("w") as yaml_file:
                 yaml.safe_dump(charmcraft_yaml, yaml_file)
-            with (full_path / "metadata.yaml").open("w") as yaml_file:
+            with (full_path / const.METADATA_FILENAME).open("w") as yaml_file:
                 yaml.safe_dump(metadata_yaml, yaml_file)
         return expected
 

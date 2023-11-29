@@ -34,12 +34,11 @@ from craft_cli import (
 )
 from craft_store.errors import CraftStoreError
 
-from charmcraft import models, utils
+from charmcraft import const, models, utils
 from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import FORMAT_HELP_STR, JSON_FORMAT, BaseCommand
 from charmcraft.main import COMMAND_GROUPS, _get_system_details, main
 from charmcraft.models.charmcraft import BasesConfiguration
-from charmcraft.store.client import ALTERNATE_AUTH_ENV_VAR
 
 # --- Tests for the main entry point
 
@@ -100,7 +99,7 @@ def test_main_ok():
 
 def test_main_managed_instance_init(monkeypatch):
     """Init emitter with a specific log filepath."""
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
 
     with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
@@ -122,7 +121,7 @@ def test_main_managed_instance_init(monkeypatch):
 )
 def test_main_managed_instance_error(monkeypatch, side_effect, config):
     """The managed instance will not expose the "internal" log filepath."""
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
 
     with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.pre_parse_args") as d_mock:
@@ -719,7 +718,7 @@ def test_systemdetails_charmcraft_environment():
 
 def test_systemdetails_hidden_auth():
     """System details specifically hiding secrets."""
-    with patch("os.environ", {ALTERNATE_AUTH_ENV_VAR: "supersecret"}):
+    with patch("os.environ", {const.ALTERNATE_AUTH_ENV_VAR: "supersecret"}):
         with patch("charmcraft.utils.get_os_platform") as platform_mock:
             platform_mock.return_value = utils.OSPlatform(
                 system="test-system", release="test-release", machine="test-machine"
@@ -727,7 +726,7 @@ def test_systemdetails_hidden_auth():
             result = _get_system_details()
     assert result == (
         "System details: OSPlatform(system='test-system', release='test-release', "
-        f"machine='test-machine'); Environment: {ALTERNATE_AUTH_ENV_VAR}='<hidden>'"
+        f"machine='test-machine'); Environment: {const.ALTERNATE_AUTH_ENV_VAR}='<hidden>'"
     )
 
 
@@ -746,7 +745,7 @@ def test_legacy_commands(command):
     env = os.environ.copy()
 
     # Bypass unsupported environment error.
-    env["CHARMCRAFT_DEVELOPER"] = "1"
+    env[const.DEVELOPER_MODE_ENV_VAR] = "1"
 
     env_paths = [p for p in sys.path if "env/lib/python" in p]
     if env_paths:

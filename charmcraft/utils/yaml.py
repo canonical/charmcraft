@@ -14,13 +14,13 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """YAML-related utilities for Charmcraft."""
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 from craft_cli import emit
 
 
-def load_yaml(fpath) -> Optional[Dict[str, Any]]:
+def load_yaml(fpath) -> dict[str, Any] | None:
     """Return the content of a YAML file."""
     if not fpath.is_file():
         emit.debug(f"Couldn't find config file {str(fpath)!r}")

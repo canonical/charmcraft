@@ -18,14 +18,14 @@ import pathlib
 import re
 import string
 import subprocess
-from typing import Collection, Iterable, List, Set, Tuple
+from collections.abc import Collection, Iterable
 
 from charmcraft import errors
 
 PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)( *[~<>=!]==?)?")
 
 
-def get_pypi_packages(*requirements: Iterable[str]) -> Set[str]:
+def get_pypi_packages(*requirements: Iterable[str]) -> set[str]:
     """Get a set of pypi packages from requirements files.
 
     :param requirements: An iterable of strings for each requirement.
@@ -36,7 +36,7 @@ def get_pypi_packages(*requirements: Iterable[str]) -> Set[str]:
     for req in requirements:
         for line in req:
             line = line.strip()
-            if line[0] not in valid_package_start_chars:
+            if not line or line[0] not in valid_package_start_chars:
                 continue
             if PACKAGE_LINE_REGEX.match(line):
                 packages.add(line)
@@ -44,7 +44,7 @@ def get_pypi_packages(*requirements: Iterable[str]) -> Set[str]:
     return packages
 
 
-def get_package_names(packages: Iterable[str]) -> Set[str]:
+def get_package_names(packages: Iterable[str]) -> set[str]:
     """Get just the names of packages from an iterable of package lines.
 
     :param packages: An iterable of package lines (e.g. ["abc==1.0.0", "def"])
@@ -58,7 +58,7 @@ def get_package_names(packages: Iterable[str]) -> Set[str]:
     return names
 
 
-def get_requirements_file_package_names(*requirements_files: pathlib.Path) -> Set[str]:
+def get_requirements_file_package_names(*requirements_files: pathlib.Path) -> set[str]:
     """Get all the package names from one or more requirements files as a single set."""
     packages = set()
     for file in requirements_files:
@@ -68,7 +68,7 @@ def get_requirements_file_package_names(*requirements_files: pathlib.Path) -> Se
     return packages
 
 
-def exclude_packages(requirements: Set[str], *, excluded: Collection[str]) -> Set[str]:
+def exclude_packages(requirements: set[str], *, excluded: Collection[str]) -> set[str]:
     """Filter a set of requirements lines by a collection of package names.
 
     :param requirements: A set of requirements lines (e.g. {"abc==1.0.0", "def>=1.0"})
@@ -90,7 +90,7 @@ def get_pip_command(
     *,
     source_deps: Collection[str] = (),
     binary_deps: Collection[str] = (),
-) -> List[str]:
+) -> list[str]:
     """Build a pip command based on requirements files and dependencies.
 
     :param prefix: The pip command and any earlier arguments.
@@ -127,7 +127,7 @@ def get_pip_command(
     ]
 
 
-def get_pip_version(pip_cmd: str) -> Tuple[int, ...]:
+def get_pip_version(pip_cmd: str) -> tuple[int, ...]:
     """Get the version of pip available from a specific pip command."""
     result = subprocess.run([pip_cmd, "--version"], text=True, capture_output=True, check=True)
     version_data = result.stdout.split(" ")
@@ -151,7 +151,7 @@ def validate_strict_dependencies(
     """
     dependency_names = get_package_names(dependencies)
 
-    extra_packages: Set[str] = set()
+    extra_packages: set[str] = set()
 
     for package_set in other_packages:
         other_names = get_package_names(package_set)

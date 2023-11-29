@@ -17,7 +17,7 @@
 import json
 import pathlib
 from textwrap import dedent
-from typing import Any, Dict, Optional, Type
+from typing import Any
 
 import pydantic
 import pyfakefs.fake_filesystem
@@ -287,10 +287,10 @@ def test_from_yaml_file_success(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
     simple_charm,
     charmcraft_yaml: str,
-    metadata_yaml: Optional[str],
-    config_yaml: Optional[str],
-    actions_yaml: Optional[str],
-    expected_diff: Dict[str, Any],
+    metadata_yaml: str | None,
+    config_yaml: str | None,
+    actions_yaml: str | None,
+    expected_diff: dict[str, Any],
 ):
     expected_dict = simple_charm.marshal()
     expected_dict.update(expected_diff)
@@ -364,11 +364,11 @@ def test_from_yaml_file_success(
 )
 def test_from_yaml_file_exception(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
-    charmcraft_yaml: Optional[str],
-    metadata_yaml: Optional[str],
-    config_yaml: Optional[str],
-    actions_yaml: Optional[str],
-    exc_class: Type[CraftError],
+    charmcraft_yaml: str | None,
+    metadata_yaml: str | None,
+    config_yaml: str | None,
+    actions_yaml: str | None,
+    exc_class: type[CraftError],
     match: str,
     details: str,
 ):
@@ -399,7 +399,7 @@ def test_from_yaml_file_exception(
         ),
     ],
 )
-def test_instantiate_charm_success(values: Dict[str, Any], expected_changes: Dict[str, Any]):
+def test_instantiate_charm_success(values: dict[str, Any], expected_changes: dict[str, Any]):
     """Various successful instantiations of a charm project."""
     values.update(
         {
@@ -446,7 +446,7 @@ def test_instantiate_charm_success(values: Dict[str, Any], expected_changes: Dic
     ],
 )
 def test_instantiate_charm_error(
-    values: Dict[str, Any], error_cls: Type[Exception], error_match: str
+    values: dict[str, Any], error_cls: type[Exception], error_match: str
 ):
     with pytest.raises(error_cls, match=error_match):
         project.Charm(**values)

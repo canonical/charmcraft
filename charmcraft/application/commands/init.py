@@ -20,7 +20,6 @@ import os
 import pathlib
 import re
 from datetime import date
-from typing import Optional
 
 from craft_cli import CraftError, emit
 
@@ -99,7 +98,7 @@ README.md
 """
 
 
-def _get_users_full_name_gecos() -> Optional[str]:
+def _get_users_full_name_gecos() -> str | None:
     """Get user's full name from Gecos (/etc/passwd)."""
     try:
         return pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]

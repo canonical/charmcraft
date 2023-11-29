@@ -17,7 +17,7 @@
 import argparse
 import json
 import pathlib
-from typing import Container
+from collections.abc import Container
 
 import craft_cli
 from craft_cli import emit

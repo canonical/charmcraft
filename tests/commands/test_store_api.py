@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""Tests for the Store API layer (code in store/models___)."""
+"""Tests for the Store API layer (code in store/store.py)."""
 
 import base64
 import platform
@@ -33,6 +33,7 @@ from craft_store.errors import (
 )
 from dateutil import parser
 
+from charmcraft import const
 from charmcraft.store import (
     AUTH_DEFAULT_PERMISSIONS,
     AUTH_DEFAULT_TTL,
@@ -142,7 +143,7 @@ def test_relogin_on_401_regular_auth(emitter):
 
 def test_relogin_on_401_alternate_auth(monkeypatch):
     """Got a 401, but alternate auth is used, so no re-login is done and user is informed."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "credentials")
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
     with pytest.raises(CraftError) as cm:
@@ -167,7 +168,7 @@ def test_relogin_on_401_disable_auto_login():
 
 def test_relogin_on_401_alternate_auth_disable_auto_login(monkeypatch):
     """Don't try to re-login after receiving 401 NOT AUTHORIZED from server."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "credentials")
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
     with pytest.raises(CraftError) as cm:
@@ -223,7 +224,7 @@ def test_not_logged_in_warns_regular_auth(emitter):
 
 def test_not_logged_in_warns_alternate_auth(monkeypatch):
     """Capture an indication of not being logged in, which should never happen."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "credentials")
     api = _FakeAPI(
         [CredentialsUnavailable(application="charmcraft", host="api.charmhub.io"), None]
     )
@@ -253,7 +254,7 @@ def test_not_logged_in_disable_auto_login():
 
 def test_not_logged_in_alternate_auth_disable_auto_login(monkeypatch):
     """Don't try to relogin if not already logged in."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "credentials")
     api = _FakeAPI(
         [CredentialsUnavailable(application="charmcraft", host="api.charmhub.io"), None]
     )
@@ -273,13 +274,15 @@ def test_not_logged_in_alternate_auth_disable_auto_login(monkeypatch):
 
 def test_auth_valid_credentials(config, monkeypatch):
     """No errors raised when initializing Store with valid credentials."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode(b"good_credentials").decode())
+    monkeypatch.setenv(
+        const.ALTERNATE_AUTH_ENV_VAR, base64.b64encode(b"good_credentials").decode()
+    )
     Store(config.charmhub)
 
 
 def test_auth_bad_credentials(config, monkeypatch):
     """CraftError raised when initializing Store with bad credentials."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "bad_credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "bad_credentials")
     with pytest.raises(craft_store.errors.CredentialsNotParseable) as error:
         Store(config.charmhub)
 

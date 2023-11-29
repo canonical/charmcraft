@@ -26,8 +26,7 @@ with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [
-    # craft-application~=1.1",
-    "craft-application@git+https://github.com/canonical/craft-application.git@aml/1.1-candidate",
+    "craft-application~=1.1",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
     "craft-providers",
@@ -52,7 +51,6 @@ install_requires = [
 lint_requires = [
     "black>=23.10.1,<24.0.0",
     "codespell[tomli]>=2.2.6,<3.0.0",
-    "ruff~=0.1.1",
     "yamllint>=1.32.0,<2.0.0",
 ]
 
@@ -60,7 +58,7 @@ type_requires = [
     "mypy[reports]~=1.5",
     "pyright==1.1.332",
     "types-python-dateutil",
-    "types-requests",
+    "types-requests<2.31.0.7",  # Frozen until we can get urllib3 v2
     "types-setuptools",
     "types-tabulate",
     "types-urllib3",
@@ -106,6 +104,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
     ],
     entry_points={
         "console_scripts": ["charmcraft = charmcraft.application.main:main"],

@@ -20,7 +20,7 @@ import datetime
 import enum
 import functools
 from dataclasses import dataclass
-from typing import List, Literal, Optional
+from typing import Literal
 
 from craft_cli import CraftError
 
@@ -44,7 +44,7 @@ class Package:
     Deprecated in favour of implementation in craft-store.
     """
 
-    id: Optional[str]
+    id: str | None
     name: str
     type: Literal["charm", "bundle"]
 
@@ -57,9 +57,9 @@ class MacaroonInfo:
     """
 
     account: Account
-    channels: Optional[List[str]]
-    packages: Optional[List[Package]]
-    permissions: List[str]
+    channels: list[str] | None
+    packages: list[Package] | None
+    permissions: list[str]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -97,7 +97,7 @@ class Uploaded:
     ok: bool
     status: int
     revision: int
-    errors: List[Error]
+    errors: list[Error]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -120,11 +120,11 @@ class Revision:
     """
 
     revision: int
-    version: Optional[str]
+    version: str | None
     created_at: datetime.datetime
     status: str
-    errors: List[Error]
-    bases: List[Base]
+    errors: list[Error]
+    bases: list[Base]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -162,7 +162,7 @@ class Release:
     revision: int
     channel: str
     expires_at: datetime.datetime
-    resources: List[Resource]
+    resources: list[Resource]
     base: Base
 
 
@@ -192,7 +192,7 @@ class Library:
     charm_name: str
     api: int
     patch: int
-    content: Optional[str]
+    content: str | None
     content_hash: str
 
 
@@ -233,9 +233,9 @@ class Risk(enum.Enum):
 class ChannelData:
     """Data class for a craft store channel."""
 
-    track: Optional[str]
+    track: str | None
     risk: Risk
-    branch: Optional[str]
+    branch: str | None
 
     @classmethod
     def from_str(cls, name: str):
@@ -245,8 +245,8 @@ class ChannelData:
         """
         invalid_channel_error = CraftError(f"Invalid channel name: {name!r}")
         parts = name.split("/")
-        track: Optional[str] = None
-        branch: Optional[str] = None
+        track: str | None = None
+        branch: str | None = None
         if len(parts) == 1:  # Just the risk, e.g. "stable"
             try:
                 risk = Risk[parts[0].upper()]

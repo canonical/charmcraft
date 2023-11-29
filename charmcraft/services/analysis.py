@@ -20,7 +20,7 @@ from __future__ import annotations
 import pathlib
 import tempfile
 import zipfile
-from typing import Container, Iterator
+from collections.abc import Container, Iterator
 
 import craft_application
 

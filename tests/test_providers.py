@@ -25,7 +25,7 @@ from craft_cli import CraftError
 from craft_providers import ProviderError, bases, lxd, multipass
 from craft_providers.actions.snap_installer import Snap
 
-from charmcraft import providers
+from charmcraft import const, providers
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.snap import CharmcraftSnapConfiguration
 
@@ -467,7 +467,7 @@ def test_get_command_environment_minimal(monkeypatch):
     env = providers.get_command_environment(bases.ubuntu.BuilddBase)
 
     assert env == {
-        "CHARMCRAFT_MANAGED_MODE": "1",
+        const.MANAGED_MODE_ENV_VAR: "1",
         "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
     }
 
@@ -482,7 +482,7 @@ def test_get_command_environment_all_opts(monkeypatch):
     env = providers.get_command_environment(bases.ubuntu.BuilddBase)
 
     assert env == {
-        "CHARMCRAFT_MANAGED_MODE": "1",
+        const.MANAGED_MODE_ENV_VAR: "1",
         "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
         "http_proxy": "test-http-proxy",
         "https_proxy": "test-https-proxy",
@@ -761,12 +761,12 @@ def test_get_provider_developer_mode_env(
     mock_snap_config, mock_is_developer_mode, mock_is_snap, monkeypatch
 ):
     mock_is_developer_mode.return_value = True
-    monkeypatch.setenv("CHARMCRAFT_PROVIDER", "lxd")
+    monkeypatch.setenv(const.PROVIDER_ENV_VAR, "lxd")
     provider = providers.get_provider()
     assert isinstance(provider, lxd.LXDProvider)
     assert provider.lxd_project == "charmcraft"
 
-    monkeypatch.setenv("CHARMCRAFT_PROVIDER", "multipass")
+    monkeypatch.setenv(const.PROVIDER_ENV_VAR, "multipass")
     assert isinstance(providers.get_provider(), multipass.MultipassProvider)
 
 

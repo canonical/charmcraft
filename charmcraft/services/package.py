@@ -166,7 +166,9 @@ class PackageService(services.PackageService):
                 self._services.lifecycle.prime_dir, ignore=ignore_checkers
             )
             manifest = Manifest.from_charm_and_lint(self._project, lint_results)
-            manifest.to_yaml_file(path / "manifest.yaml")
+            (path / "manifest.yaml").write_text(
+                utils.dump_yaml(manifest.dict(by_alias=True, exclude_unset=False))
+            )
 
         project_dict = self._project.marshal()
 

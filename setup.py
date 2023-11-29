@@ -50,7 +50,6 @@ install_requires = [
 lint_requires = [
     "black>=23.10.1,<24.0.0",
     "codespell[tomli]>=2.2.6,<3.0.0",
-    "ruff~=0.1.1",
     "yamllint>=1.32.0,<2.0.0",
 ]
 
@@ -58,7 +57,7 @@ type_requires = [
     "mypy[reports]~=1.5",
     "pyright==1.1.332",
     "types-python-dateutil",
-    "types-requests",
+    "types-requests<2.31.0.7",  # Frozen until we can get urllib3 v2
     "types-setuptools",
     "types-tabulate",
     "types-urllib3",

@@ -28,7 +28,7 @@ from craft_cli import CraftError, emit
 
 from charmcraft import const
 from charmcraft.format import format_pydantic_errors
-from charmcraft.models.metadata import CharmMetadataLegacy, BundleMetadata
+from charmcraft.models.metadata import BundleMetadata, CharmMetadataLegacy
 
 if TYPE_CHECKING:
     from charmcraft.models.charmcraft import CharmcraftConfig

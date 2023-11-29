@@ -6,6 +6,7 @@ environment:
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
   PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
   CRAFT_DEBUG: 1  # Show exception tracebacks.
+  CHARMCRAFT_STORE_CONFIG: staging
 
 exclude:
   - .git
@@ -169,17 +170,6 @@ suites:
       iptables -P FORWARD ACCEPT
 
       # Ensure that the reused charms and bundles are registered if necessary.
-      cat <<- EOF > charmcraft.yaml
-      name: store_config_charm
-      type: charm
-      summary: Charmcraft.yaml file for using the staging store.
-      description: Charmcraft.yaml file for using the staging store.
-      charmhub:
-        api-url: https://api.staging.charmhub.io
-        storage-url: https://storage.staging.snapcraftcontent.com
-        registry-url: https://registry.staging.jujucharms.com
-      EOF
-
       if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
         charmcraft register $CHARM_DEFAULT_NAME || ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
       fi

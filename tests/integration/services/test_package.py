@@ -21,6 +21,7 @@ import freezegun
 import pytest
 import pytest_check
 
+import charmcraft
 from charmcraft import models, services
 from charmcraft.application.main import APP_METADATA
 
@@ -47,7 +48,8 @@ def package_service(fake_path, service_factory):
     ],
 )
 @freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
-def test_write_metadata(fs, package_service, project_path):
+def test_write_metadata(monkeypatch, fs, package_service, project_path):
+    monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
     fs.add_real_directory(project_path)
     test_prime_dir = pathlib.Path("/prime")
     fs.create_dir(test_prime_dir)

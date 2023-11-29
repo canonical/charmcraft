@@ -54,6 +54,7 @@ class Manifest(models.BaseMetadata):
         """Generate a manifest from a Charmcraft project."""
         attributes: List[Attribute] = []
         params = {
+            "charmcraft-version": charmcraft.__version__,
             "charmcraft-started-at": charm.started_at.isoformat(),
             "bases": list(itertools.chain.from_iterable(base.run_on for base in charm.bases)),
             "analysis": {"attributes": attributes},

@@ -167,7 +167,9 @@ class PackageService(services.PackageService):
             )
             manifest = Manifest.from_charm_and_lint(self._project, lint_results)
             (path / "manifest.yaml").write_text(
-                utils.dump_yaml(manifest.dict(by_alias=True, exclude_unset=False))
+                utils.dump_yaml(
+                    manifest.dict(by_alias=True, exclude_unset=False, exclude_none=True)
+                )
             )
 
         project_dict = self._project.marshal()

@@ -16,7 +16,8 @@
 """Charmcraft error classes."""
 import io
 import pathlib
-from typing import TYPE_CHECKING, Iterable, List, Mapping, Optional
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING
 
 from craft_cli import CraftError
 
@@ -37,7 +38,7 @@ class InvalidEnvironmentVariableError(CraftError):
     """A Charmcraft-related environment variable value is invalid."""
 
     def __init__(
-        self, variable: str, *, details: str, resolution: str, docs_url: Optional[str] = None
+        self, variable: str, *, details: str, resolution: str, docs_url: str | None = None
     ):
         super().__init__(
             f"Environment variable {variable!r} contains an invalid value.",
@@ -127,7 +128,7 @@ class DuplicateCharmsError(CraftError):
 class LintingError(CraftError):
     """Lint failures."""
 
-    def __init__(self, errors: List[CheckResult], warnings: List[CheckResult]):
+    def __init__(self, errors: list[CheckResult], warnings: list[CheckResult]):
         self.errors = errors
         self.warnings = warnings
         detail_lines = ["ERRORS:"]

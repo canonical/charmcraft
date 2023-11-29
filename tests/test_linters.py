@@ -23,6 +23,7 @@ from unittest.mock import patch
 
 import pytest
 
+from charmcraft import const
 from charmcraft.linters import (
     CHECKERS,
     BaseChecker,
@@ -50,7 +51,7 @@ PYTHONPATH=lib:venv ./charm.py
 
 def test_epfromdispatch_ok(tmp_path):
     """An entrypoint is found in the dispatch."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
     result = get_entrypoint_from_dispatch(tmp_path)
@@ -65,7 +66,7 @@ def test_epfromdispatch_no_dispatch(tmp_path):
 
 def test_epfromdispatch_inaccessible_dispatch(tmp_path):
     """The charm has a dispatch we can't use."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.touch()
     dispatch.chmod(0o000)
     result = get_entrypoint_from_dispatch(tmp_path)
@@ -74,7 +75,7 @@ def test_epfromdispatch_inaccessible_dispatch(tmp_path):
 
 def test_epfromdispatch_broken_dispatch(tmp_path):
     """The charm has a dispatch which we can't decode."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_bytes(b"\xC0\xC0")
     result = get_entrypoint_from_dispatch(tmp_path)
     assert result is None
@@ -82,7 +83,7 @@ def test_epfromdispatch_broken_dispatch(tmp_path):
 
 def test_epfromdispatch_empty_dispatch(tmp_path):
     """The charm dispatch is empty."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text("")
     result = get_entrypoint_from_dispatch(tmp_path)
     assert result is None
@@ -114,7 +115,7 @@ def test_checkdispatchpython_nothing_from_dispatch(tmp_path):
 
 def test_checkdispatchpython_entrypoint_is_not_python(tmp_path):
     """The charm entrypoint has not a .py extension."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text(
         """
         #!/bin/sh
@@ -131,7 +132,7 @@ def test_checkdispatchpython_entrypoint_is_not_python(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_checkdispatchpython_entrypoint_no_exec(tmp_path):
     """The charm entrypoint is not executable."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
@@ -209,7 +210,7 @@ def test_framework_operator_used_ok(tmp_path, import_line):
     entrypoint.write_text(f"{import_line}")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = tmp_path / const.VENV_DIRNAME / "ops"
     opsdir.mkdir(parents=True)
 
     # check
@@ -227,7 +228,7 @@ def test_framework_operator_language_not_python(tmp_path):
     entrypoint.write_text("no python :)")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = tmp_path / const.VENV_DIRNAME / "ops"
     opsdir.mkdir(parents=True)
 
     # check
@@ -257,7 +258,7 @@ def test_framework_operator_no_venv_ops_directory(tmp_path):
     entrypoint.write_text("import ops")
 
     # an empty venv
-    venvdir = tmp_path / "venv"
+    venvdir = tmp_path / const.VENV_DIRNAME
     venvdir.mkdir()
 
     # check
@@ -274,7 +275,7 @@ def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path):
     entrypoint.write_text("import ops")
 
     # an ops *file* inside venv
-    opsfile = tmp_path / "venv" / "ops"
+    opsfile = tmp_path / const.VENV_DIRNAME / "ops"
     opsfile.parent.mkdir()
     opsfile.touch()
 
@@ -292,7 +293,7 @@ def test_framework_operator_corrupted_entrypoint(tmp_path):
     entrypoint.write_text("xx --")  # not really Python
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = tmp_path / const.VENV_DIRNAME / "ops"
     opsdir.mkdir(parents=True)
 
     # check
@@ -318,7 +319,7 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     entrypoint.write_text(f"{import_line}")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = tmp_path / const.VENV_DIRNAME / "ops"
     opsdir.mkdir(parents=True)
 
     # check
@@ -446,7 +447,7 @@ def test_framework_reactive_no_metadata(tmp_path, monkeypatch):
 def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
     """Missing entrypoint file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # the reactive lib is used
@@ -463,7 +464,7 @@ def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
 def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
     """Cannot read the entrypoint file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -485,7 +486,7 @@ def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
 def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
     """The entrypoint is not really a Python file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -506,7 +507,7 @@ def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
 def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
     """The wheelhouse directory does not exist."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -522,7 +523,7 @@ def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
 def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
     """The wheelhouse directory has no reactive lib."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -554,7 +555,7 @@ def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
 def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_line):
     """Different imports that are NOT importing the Reactive Framework."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -578,7 +579,7 @@ def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_l
 def test_jujumetadata_all_ok(tmp_path):
     """All conditions ok for JujuMetadata to result ok."""
     # metadata file with proper fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text(
         """
         name: foobar
@@ -600,7 +601,7 @@ def test_jujumetadata_missing_file(tmp_path):
 
 def test_jujumetadata_file_corrupted(tmp_path):
     """The metadata.yaml file is not valid YAML."""
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text(" - \n-")
     linter = JujuMetadata()
     result = linter.run(tmp_path)
@@ -618,7 +619,7 @@ def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
     missing = included_fields.pop(to_miss)
 
     # metadata file with not all fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     content = "\n".join(f"{field}: some text" for field in included_fields)
     metadata_file.write_text(content)
     linter = JujuMetadata()
@@ -632,7 +633,7 @@ def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
 def test_jujumetadata_missing_field_multiple(tmp_path):
     """More than one required field is missing in the metadata file."""
     # metadata file with not all fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text(
         """
         name: foobar
@@ -644,6 +645,26 @@ def test_jujumetadata_missing_field_multiple(tmp_path):
     assert linter.text == (
         "The metadata.yaml file is missing the following attribute(s): "
         "'description' and 'summary'."
+    )
+
+
+def test_jujumetadata_series_is_deprecated(tmp_path):
+    """A deprecated field is included in the metadata file"""
+    metadata_file = tmp_path / const.METADATA_FILENAME
+    metadata_file.write_text(
+        """
+        name: foobar
+        summary: summary
+        description: desc
+        series: focal
+    """
+    )
+    linter = JujuMetadata()
+    result = linter.run(tmp_path)
+    assert result == JujuMetadata.Result.WARNING
+    assert linter.text == (
+        "The metadata.yaml file contains the deprecated attribute: series."
+        "This attribute will be rejected starting in Juju 4.0."
     )
 
 
@@ -857,7 +878,7 @@ def test_analyze_all_can_be_ignored(config):
 
 def test_jujuactions_ok(tmp_path):
     """The actions.yaml file is valid."""
-    actions_file = tmp_path / "actions.yaml"
+    actions_file = tmp_path / const.JUJU_ACTIONS_FILENAME
     actions_file.write_text("stuff: foobar")
     result = JujuActions().run(tmp_path)
     assert result == JujuActions.Result.OK
@@ -871,7 +892,7 @@ def test_jujuactions_missing_file(tmp_path):
 
 def test_jujuactions_file_corrupted(tmp_path):
     """The actions.yaml file is not valid YAML."""
-    actions_file = tmp_path / "actions.yaml"
+    actions_file = tmp_path / const.JUJU_ACTIONS_FILENAME
     actions_file.write_text(" - \n-")
     result = JujuActions().run(tmp_path)
     assert result == JujuActions.Result.ERROR
@@ -882,7 +903,7 @@ def test_jujuactions_file_corrupted(tmp_path):
 
 def test_jujuconfig_ok(tmp_path):
     """The config.yaml file is valid."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         options:
@@ -902,7 +923,7 @@ def test_jujuconfig_missing_file(tmp_path):
 
 def test_jujuconfig_file_corrupted(tmp_path):
     """The config.yaml file is not valid YAML."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(" - \n-")
     linter = JujuConfig()
     result = linter.run(tmp_path)
@@ -912,7 +933,7 @@ def test_jujuconfig_file_corrupted(tmp_path):
 
 def test_jujuconfig_no_options(tmp_path):
     """The config.yaml file does not have an options key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         summary: Small text.
@@ -926,7 +947,7 @@ def test_jujuconfig_no_options(tmp_path):
 
 def test_jujuconfig_empty_options(tmp_path):
     """The config.yaml file has an empty options key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         options:
@@ -940,7 +961,7 @@ def test_jujuconfig_empty_options(tmp_path):
 
 def test_jujuconfig_options_not_dict(tmp_path):
     """The config.yaml file has an options key that is not a dict."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         options:
@@ -956,7 +977,7 @@ def test_jujuconfig_options_not_dict(tmp_path):
 
 def test_jujuconfig_no_type_in_options_items(tmp_path):
     """The items under 'options' must have a 'type' key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         options:

@@ -19,7 +19,8 @@ from __future__ import annotations
 
 import pathlib
 import shutil
-from typing import TYPE_CHECKING, Iterable, Optional, cast
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, cast
 
 import craft_application
 import yaml
@@ -171,7 +172,7 @@ class PackageService(services.PackageService):
         project_dict = self._project.marshal()
 
         self._write_file_or_object(self.metadata.marshal(), "metadata.yaml", path)
-        if actions := cast(Optional[dict], project_dict.get("actions")):
+        if actions := cast(dict | None, project_dict.get("actions")):
             self._write_file_or_object(actions, "actions.yaml", path)
-        if config := cast(Optional[dict], project_dict.get("config")):
+        if config := cast(dict | None, project_dict.get("config")):
             self._write_file_or_object(config, "config.yaml", path)

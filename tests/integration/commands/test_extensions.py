@@ -16,7 +16,6 @@
 """Tests for extension commands."""
 import argparse
 import textwrap
-from typing import List, Optional, Tuple
 
 import pytest
 
@@ -29,11 +28,11 @@ def create_extension(ext_name, bases, experimental):
         name = ext_name
 
         @staticmethod
-        def get_supported_bases() -> List[Tuple[str, str]]:
+        def get_supported_bases() -> list[tuple[str, str]]:
             return bases + experimental
 
         @staticmethod
-        def is_experimental(base: Optional[Tuple[str, str]]) -> bool:
+        def is_experimental(base: tuple[str, str] | None) -> bool:
             return base in experimental
 
     return FakeExtension

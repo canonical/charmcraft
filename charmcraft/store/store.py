@@ -19,7 +19,7 @@ import os
 import platform
 import time
 from functools import wraps
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import craft_store
 from craft_cli import CraftError, emit
@@ -27,8 +27,8 @@ from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
 from dateutil import parser
 
+from charmcraft import const
 from charmcraft.store.client import (
-    ALTERNATE_AUTH_ENV_VAR,
     AnonymousClient,
     Client,
 )
@@ -79,7 +79,7 @@ def _build_errors(item):
     return [Error(message=e["message"], code=e["code"]) for e in (item["errors"] or [])]
 
 
-def _build_revision(item: Dict[str, Any]) -> Revision:
+def _build_revision(item: dict[str, Any]) -> Revision:
     """Build a Revision from a response item."""
     bases = [(None if base is None else Base(**base)) for base in item["bases"]]
     return Revision(
@@ -144,7 +144,7 @@ def _store_client_wrapper(auto_login=True):
             try:
                 return method(self, *args, **kwargs)
             except craft_store.errors.CredentialsUnavailable:
-                if os.getenv(ALTERNATE_AUTH_ENV_VAR):
+                if os.getenv(const.ALTERNATE_AUTH_ENV_VAR):
                     raise RuntimeError(
                         "Charmcraft error: internal inconsistency detected "
                         "(CredentialsUnavailable error while having user provided credentials)."
@@ -154,7 +154,7 @@ def _store_client_wrapper(auto_login=True):
                 emit.progress("Credentials not found. Trying to log in...")
             except craft_store.errors.StoreServerError as error:
                 if error.response.status_code == 401:
-                    if os.getenv(ALTERNATE_AUTH_ENV_VAR):
+                    if os.getenv(const.ALTERNATE_AUTH_ENV_VAR):
                         raise CraftError(
                             "Provided credentials are no longer valid for Charmhub. "
                             "Regenerate them and try again."
@@ -275,7 +275,7 @@ class Store:
         self._client.unregister_name(name)
 
     @_store_client_wrapper()
-    def list_registered_names(self, include_collaborations: bool) -> List[Entity]:
+    def list_registered_names(self, include_collaborations: bool) -> list[Entity]:
         """Return names registered by the authenticated user."""
         endpoint = "/v1/charm"
         if include_collaborations:
@@ -348,7 +348,7 @@ class Store:
         return [_build_revision(item) for item in response["revisions"]]
 
     @_store_client_wrapper()
-    def release(self, name: str, revision: int, channels: List[str], resources) -> Dict[str, Any]:
+    def release(self, name: str, revision: int, channels: list[str], resources) -> dict[str, Any]:
         """Release one or more revisions for a package."""
         endpoint = f"/v1/charm/{name}/releases"
         resources = [{"name": res.name, "revision": res.revision} for res in resources]
@@ -360,7 +360,7 @@ class Store:
         return self._client.request_urlpath_json("POST", endpoint, json=items)
 
     @_store_client_wrapper()
-    def list_releases(self, name: str) -> Tuple[List[Release], List[Channel], List[Revision]]:
+    def list_releases(self, name: str) -> tuple[list[Release], list[Channel], list[Revision]]:
         """List current releases for a package."""
         endpoint = f"/v1/charm/{name}/releases"
         response = self._client.request_urlpath_json("GET", endpoint)

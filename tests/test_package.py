@@ -20,7 +20,6 @@ import subprocess
 import sys
 import zipfile
 from textwrap import dedent
-from typing import List
 from unittest import mock
 from unittest.mock import ANY, MagicMock, call, patch
 
@@ -29,11 +28,10 @@ import yaml
 from craft_cli import CraftError, EmitterMode, emit
 from craft_providers import bases
 
-from charmcraft import instrum, linters
+from charmcraft import const, instrum, linters
 from charmcraft.bases import get_host_as_base
 from charmcraft.charm_builder import relativise
 from charmcraft.config import load
-from charmcraft.const import BUILD_DIRNAME
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 from charmcraft.models.lint import LintResult
 from charmcraft.package import (
@@ -72,7 +70,7 @@ def get_builder(
 @pytest.fixture()
 def basic_project(tmp_path, monkeypatch, prepare_charmcraft_yaml, prepare_metadata_yaml):
     """Create a basic Charmcraft project."""
-    build_dir = tmp_path / BUILD_DIRNAME
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     # a lib dir
@@ -135,7 +133,7 @@ def basic_project(tmp_path, monkeypatch, prepare_charmcraft_yaml, prepare_metada
 
 @pytest.fixture()
 def basic_project_builder(basic_project, prepare_charmcraft_yaml):
-    def _basic_project_builder(bases_configs: List[BasesConfiguration], **builder_kwargs):
+    def _basic_project_builder(bases_configs: list[BasesConfiguration], **builder_kwargs):
         charmcraft_yaml = dedent(
             """
             type: charm
@@ -241,7 +239,7 @@ def mock_is_base_available():
 
 def test_build_error_without_metadata_yaml(basic_project):
     """Validate error if trying to build project without metadata.yaml."""
-    metadata = basic_project / "metadata.yaml"
+    metadata = basic_project / const.METADATA_FILENAME
     metadata.unlink()
 
     with pytest.raises(CraftError) as exc_info:
@@ -281,7 +279,7 @@ def test_build_with_charmcraft_yaml_destructive_mode(basic_project_builder, emit
 def test_build_with_charmcraft_yaml_managed_mode(
     basic_project_builder, emitter, monkeypatch, tmp_path
 ):
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     host_base = get_host_as_base()
     builder = basic_project_builder(
         [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})],
@@ -464,7 +462,7 @@ def test_build_multiple_with_charmcraft_yaml_managed_mode(
         force=True,
     )
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         zipnames = builder.run()
 
@@ -995,7 +993,7 @@ def test_build_bases_index_scenarios_managed_mode(basic_project_builder, monkeyp
         force=True,
     )
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         zipnames = builder.run([0])
     assert zipnames == [
@@ -1067,7 +1065,7 @@ def test_build_error_no_match_with_charmcraft_yaml(
     builder = get_builder(config)
 
     # Managed bases build.
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     with pytest.raises(
         CraftError,
         match=r"No suitable 'build-on' environment found in any 'bases' configuration.",
@@ -1191,7 +1189,7 @@ def test_build_package_tree_structure(tmp_path, config):
     """The zip file is properly built internally."""
     # the metadata
     metadata_data = {"name": "test-charm-name-from-metadata-yaml"}
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     with metadata_file.open("wt", encoding="ascii") as fh:
         yaml.dump(metadata_data, fh)
 
@@ -1202,7 +1200,7 @@ def test_build_package_tree_structure(tmp_path, config):
     file_outside_2 = tmp_path / "file_outside_2"
     with file_outside_2.open("wb") as fh:
         fh.write(b"content_out_2")
-    to_be_zipped_dir = tmp_path / BUILD_DIRNAME
+    to_be_zipped_dir = tmp_path / const.BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
     # ...also outside a dir with a file...
@@ -1295,7 +1293,7 @@ def test_build_package_name(
     expected_zipname,
 ):
     """The zip file name comes from the config."""
-    to_be_zipped_dir = tmp_path / BUILD_DIRNAME
+    to_be_zipped_dir = tmp_path / const.BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
     prepare_charmcraft_yaml(charmcraft_yaml)
@@ -1364,7 +1362,7 @@ def test_build_postlifecycle_validation_is_properly_called(
     entrypoint = basic_project / "my_entrypoint.py"
     entrypoint.touch(mode=0o700)
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     with patch("charmcraft.parts.PartsLifecycle") as mock_lifecycle:
         mock_lifecycle.return_value = mock_lifecycle_instance = MagicMock()
         mock_lifecycle_instance.prime_dir = basic_project
@@ -1427,7 +1425,7 @@ def test_build_part_from_config(
     config = load(basic_project)
     builder = get_builder(config, force=True)
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
         mock_lifecycle.side_effect = SystemExit()
         with pytest.raises(SystemExit):
@@ -1456,14 +1454,14 @@ def test_build_part_from_config(
     )
     assert set(mock_lifecycle.call_args_list[0][0][0]["charm"]["prime"]) == {
         "src",
-        "venv",
-        "hooks",
-        "dispatch",
+        const.VENV_DIRNAME,
+        const.HOOKS_DIRNAME,
+        const.DISPATCH_FILENAME,
         "LICENSE",
         "README.md",
         "icon.svg",
         "lib",
-        "metadata.yaml",
+        const.METADATA_FILENAME,
     }
 
 
@@ -1527,7 +1525,7 @@ def test_build_part_include_venv_pydeps(
     config = load(basic_project)
     builder = get_builder(config, force=True)
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     with patch("charmcraft.parts.PartsLifecycle", autospec=True) as mock_lifecycle:
         mock_lifecycle.side_effect = SystemExit()
         with pytest.raises(SystemExit):
@@ -1557,14 +1555,14 @@ def test_build_part_include_venv_pydeps(
 
     assert set(mock_lifecycle.call_args_list[0][0][0]["charm"]["prime"]) == {
         "src",
-        "venv",
-        "hooks",
-        "dispatch",
+        const.VENV_DIRNAME,
+        const.HOOKS_DIRNAME,
+        const.DISPATCH_FILENAME,
         "LICENSE",
         "README.md",
         "icon.svg",
         "lib",
-        "metadata.yaml",
+        const.METADATA_FILENAME,
     }
 
 
@@ -1595,7 +1593,7 @@ def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_
         ),
     ]
 
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
     with patch("charmcraft.env.get_managed_environment_home_path", return_value=tmp_path / "root"):
         with patch("charmcraft.linters.analyze") as mock_analyze:
             with patch.object(Builder, "show_linting_results") as mock_show_lint:
@@ -1608,7 +1606,7 @@ def test_build_using_linters_attributes(basic_project_builder, monkeypatch, tmp_
 
     # the manifest should have all the results (including the ignored one)
     zf = zipfile.ZipFile(zipnames[0])
-    manifest = yaml.safe_load(zf.read("manifest.yaml"))
+    manifest = yaml.safe_load(zf.read(const.MANIFEST_FILENAME))
     expected = {
         "attributes": [
             {"name": "check-name-1", "result": "check-result-1"},

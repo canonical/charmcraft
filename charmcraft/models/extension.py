@@ -13,10 +13,8 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
 """Extension models."""
-
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 from charmcraft.models.basic import ModelConfigDefaults
 
@@ -26,9 +24,9 @@ class ExtensionModel(ModelConfigDefaults, frozen=True):  # type: ignore[misc]
     """Extension model for presentation."""
 
     name: str
-    bases: List[Tuple[str, str]]
+    bases: list[tuple[str, str]]
 
-    def marshal(self) -> Dict[str, Union[str, List[str], Dict[str, Any]]]:
+    def marshal(self) -> dict[str, str | list[str] | dict[str, Any]]:
         """Marshal model into a dictionary for presentation."""
         return {
             "Extension name": self.name,

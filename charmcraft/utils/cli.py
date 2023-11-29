@@ -19,8 +19,9 @@ import enum
 import json
 import numbers
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, Literal, Optional, Union, overload
+from typing import Literal, overload
 
 import tabulate
 from craft_cli import emit
@@ -63,8 +64,8 @@ class ResourceOption:
         parser.add_argument('--resource',  type=ResourceOption())
     """
 
-    name: Optional[str] = None
-    revision: Optional[int] = None
+    name: str | None = None
+    revision: int | None = None
 
     def __call__(self, value):
         """Run by argparse to validate and convert the given argument."""
@@ -156,13 +157,13 @@ class OutputFormat(enum.Enum):
 
 
 @overload
-def format_content(content: Dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str:
+def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str:
     ...
 
 
 @overload
 def format_content(
-    content: Union[str, numbers.Real, list, dict], fmt: Union[OutputFormat, str, None]
+    content: str | (numbers.Real | (list | dict)), fmt: OutputFormat | (str | None)
 ) -> str:
     ...
 

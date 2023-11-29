@@ -36,6 +36,7 @@ from charmcraft.utils.package import (
         pytest.param([], set(), id="empty"),
         pytest.param(["abc==1.0.0"], {"abc==1.0.0"}, id="simple"),
         pytest.param(["-e ."], set(), id="editable-ignored"),
+        pytest.param([""], set(), id="empty-line"),
     ],
 )
 def test_get_pypi_packages(requirements, expected):

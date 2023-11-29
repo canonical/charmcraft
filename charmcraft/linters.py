@@ -20,11 +20,12 @@ import ast
 import os
 import pathlib
 import shlex
-from typing import Generator, List, Type, Union, final
+from collections.abc import Generator
+from typing import final
 
 import yaml
 
-from charmcraft import config, utils
+from charmcraft import config, const, utils
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
 
@@ -32,13 +33,13 @@ from charmcraft.models.lint import CheckResult, CheckType, LintResult
 BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
 
 
-def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
+def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> pathlib.Path | None:
     """Verify if the charm has a dispatch file pointing to a Python entrypoint.
 
     :returns: the entrypoint path if all succeeds, None otherwise.
     """
     # get the entrypoint from the last useful dispatch line
-    dispatch = basedir / "dispatch"
+    dispatch = basedir / const.DISPATCH_FILENAME
     entrypoint_str = ""
     try:
         with dispatch.open("rt", encoding="utf8") as fh:
@@ -55,7 +56,7 @@ def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, N
     return basedir / entrypoint_str
 
 
-def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
+def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> pathlib.Path | None:
     """Verify if the charm has a dispatch file pointing to a Python entrypoint.
 
     :returns: the entrypoint path if all succeeds, None otherwise.
@@ -195,7 +196,7 @@ class Framework(AttributeChecker):
             return None
         return self.result_texts[self.result]
 
-    def _get_imports(self, filepath: pathlib.Path) -> Generator[List[str], None, None]:
+    def _get_imports(self, filepath: pathlib.Path) -> Generator[list[str], None, None]:
         """Parse a Python filepath and yield its imports.
 
         If the file does not exist or cannot be parsed, return empty. Otherwise
@@ -221,7 +222,7 @@ class Framework(AttributeChecker):
         if python_entrypoint is None:
             return False
 
-        opsdir = basedir / "venv" / "ops"
+        opsdir = basedir / const.VENV_DIRNAME / "ops"
         if not opsdir.exists() or not opsdir.is_dir():
             return False
 
@@ -297,6 +298,13 @@ class JujuMetadata(Linter):
             self.text = f"The metadata.yaml file is missing the following attribute(s): {missing}."
             return self.Result.ERROR
 
+        if "series" in metadata:
+            self.text = (
+                "The metadata.yaml file contains the deprecated attribute: series."
+                "This attribute will be rejected starting in Juju 4.0."
+            )
+            return self.Result.WARNING
+
         return self.Result.OK
 
 
@@ -309,7 +317,7 @@ class JujuActions(Linter):
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        filepath = basedir / "actions.yaml"
+        filepath = basedir / const.JUJU_ACTIONS_FILENAME
         if not filepath.exists():
             self.text = ""
             # it's optional
@@ -343,7 +351,7 @@ class JujuConfig(Linter):
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        filepath = basedir / "config.yaml"
+        filepath = basedir / const.JUJU_CONFIG_FILENAME
         if not filepath.exists():
             # it's optional
             return self.Result.OK
@@ -408,7 +416,7 @@ class Entrypoint(Linter):
 
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
-CHECKERS: List[Type[BaseChecker]] = [
+CHECKERS: list[type[BaseChecker]] = [
     Language,
     JujuActions,
     JujuConfig,
@@ -423,7 +431,7 @@ def analyze(
     basedir: pathlib.Path,
     *,
     override_ignore_config: bool = False,
-) -> List[CheckResult]:
+) -> list[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
     for cls in CHECKERS:

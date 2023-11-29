@@ -22,7 +22,6 @@ import re
 import shutil
 import subprocess
 import sys
-from typing import Set
 from unittest import mock
 
 import pydocstyle
@@ -95,7 +94,7 @@ def test_files_created_correct(
     new_path,
     init_command,
     profile: str,
-    expected_files: Set[pathlib.Path],
+    expected_files: set[pathlib.Path],
     charm_name,
     author,
 ):

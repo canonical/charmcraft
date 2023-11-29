@@ -21,6 +21,7 @@ import pydantic
 import pytest
 from craft_cli import CraftError
 
+from charmcraft import const
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
 
 # tests for parsing metadata
@@ -28,7 +29,7 @@ from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metada
 
 def test_parse_metadata_yaml_complete(tmp_path):
     """Example of parsing with all the optional attributes."""
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text(
         """
         name: test-name
@@ -102,7 +103,7 @@ def test_parse_metadata_yaml_error_missing(tmp_path):
 
 def test_read_metadata_yaml_complete(tmp_path):
     """Example of parsing with all the optional attributes."""
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text(
         """
         name: test-name
@@ -117,7 +118,7 @@ def test_read_metadata_yaml_complete(tmp_path):
 
 def test_read_metadata_yaml_error_invalid(tmp_path):
     """Open a metadata.yaml that would fail verification."""
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("- whatever")
     metadata = read_metadata_yaml(tmp_path)
     assert metadata == ["whatever"]

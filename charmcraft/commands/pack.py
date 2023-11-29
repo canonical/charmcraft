@@ -17,17 +17,16 @@
 """Infrastructure for the 'pack' command."""
 import argparse
 import pathlib
-from typing import Dict, List
 
 import yaml
 from craft_cli import ArgumentParsingError, CraftError, emit
 
-from charmcraft import env, instrum, package
+from charmcraft import const, env, instrum, package
 from charmcraft.cmdbase import BaseCommand
 from charmcraft.utils import find_charm_sources, get_charm_name_from_path, load_yaml
 
 # the minimum set of files in a bundle
-MANDATORY_FILES = ["bundle.yaml", "README.md"]
+MANDATORY_FILES = [const.BUNDLE_FILENAME, "README.md"]
 
 _overview = """
 Build and pack a charm operator package or a bundle.
@@ -155,7 +154,7 @@ class PackCommand(BaseCommand):
             if parsed_args.shell:
                 package.launch_shell()
                 return
-            bundle_filepath = self.config.project.dirpath / "bundle.yaml"
+            bundle_filepath = self.config.project.dirpath / const.BUNDLE_FILENAME
             bundle = load_yaml(bundle_filepath)
             if bundle is None:
                 raise CraftError(f"Missing or invalid main bundle file: {str(bundle_filepath)!r}.")
@@ -163,7 +162,7 @@ class PackCommand(BaseCommand):
                 charm_names = bundle.get("applications", {}).keys()
                 charms = find_charm_sources(self.config.project.dirpath, charm_names)
             elif parsed_args.include_charm:
-                charms: Dict[str, pathlib.Path] = {}
+                charms: dict[str, pathlib.Path] = {}
                 for path in parsed_args.include_charm:
                     if not path.is_absolute():
                         path = self.config.project.dirpath / path
@@ -195,7 +194,7 @@ class PackCommand(BaseCommand):
             if bases_index >= len_configured_bases:
                 raise CraftError(msg.format(bases_index))
 
-    def _pack_charm(self, parsed_args, builder: package.Builder) -> List[pathlib.Path]:
+    def _pack_charm(self, parsed_args, builder: package.Builder) -> list[pathlib.Path]:
         """Pack a charm."""
         self._validate_bases_indices(parsed_args.bases_index)
 
@@ -222,7 +221,7 @@ class PackCommand(BaseCommand):
     def _pack_bundle(
         self,
         parsed_args: argparse.Namespace,
-        charms: Dict[str, pathlib.Path],
+        charms: dict[str, pathlib.Path],
         builder: package.Builder,
         overwrite_bundle: bool = False,
     ) -> None:

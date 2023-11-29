@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 import contextlib
-from typing import List, Optional, Tuple
 
 import pytest
 
@@ -28,11 +27,11 @@ class FakeExtension1(Extension):
     name = "fake-extension-1"
 
     @staticmethod
-    def get_supported_bases() -> List[Tuple[str, str]]:
+    def get_supported_bases() -> list[tuple[str, str]]:
         return [("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(_base: Optional[Tuple[str, str]]) -> bool:
+    def is_experimental(_base: tuple[str, str] | None) -> bool:
         return False
 
 
@@ -42,11 +41,11 @@ class FakeExtension2(Extension):
     name = "fake-extension-2"
 
     @staticmethod
-    def get_supported_bases() -> List[Tuple[str, str]]:
+    def get_supported_bases() -> list[tuple[str, str]]:
         return [("ubuntu", "24.04"), ("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(base: Optional[Tuple[str, str]]) -> bool:
+    def is_experimental(base: tuple[str, str] | None) -> bool:
         return base == ("ubuntu", "24.04")
 
 

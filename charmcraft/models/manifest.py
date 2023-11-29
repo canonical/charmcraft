@@ -17,7 +17,8 @@
 import itertools
 import json
 import os
-from typing import Any, Dict, Iterable, List, Literal, Optional
+from collections.abc import Iterable
+from typing import Any, Literal
 
 from craft_application import models
 from craft_cli import CraftError
@@ -45,14 +46,14 @@ class Manifest(models.BaseMetadata):
 
     charmcraft_version: str = charmcraft.__version__
     charmcraft_started_at: str
-    bases: Optional[List[Base]]
-    analysis: Dict[Literal["attributes"], List[Attribute]] = {"attributes": []}
-    image_info: Optional[Any]
+    bases: list[Base] | None
+    analysis: dict[Literal["attributes"], list[Attribute]] = {"attributes": []}
+    image_info: Any | None
 
     @classmethod
     def from_charm_and_lint(cls, charm: Charm, lint_results: Iterable[CheckResult]) -> Self:
         """Generate a manifest from a Charmcraft project."""
-        attributes: List[Attribute] = []
+        attributes: list[Attribute] = []
         params = {
             "charmcraft-started-at": charm.started_at.isoformat(),
             "bases": list(itertools.chain.from_iterable(base.run_on for base in charm.bases)),

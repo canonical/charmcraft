@@ -17,16 +17,10 @@
 import abc
 import datetime
 import pathlib
+from collections.abc import Iterable, Iterator
 from typing import (
     Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
     Literal,
-    Optional,
-    Type,
-    Union,
     cast,
 )
 
@@ -66,11 +60,11 @@ class BaseDict(TypedDict, total=False):
 
     name: str
     channel: str
-    architectures: List[str]
+    architectures: list[str]
 
 
 LongFormBasesDict = TypedDict(
-    "LongFormBasesDict", {"build-on": List[BaseDict], "run-on": List[BaseDict]}
+    "LongFormBasesDict", {"build-on": list[BaseDict], "run-on": list[BaseDict]}
 )
 
 
@@ -94,7 +88,7 @@ class CharmPlatform(pydantic.ConstrainedStr):
     _host_arch = get_host_architecture()
 
     @classmethod
-    def from_bases(cls: Type[Self], bases: Iterable[charmcraft.Base]) -> Self:
+    def from_bases(cls: type[Self], bases: Iterable[charmcraft.Base]) -> Self:
         """Generate a platform name from a list of charm bases."""
         base_strings = []
         for base in bases:
@@ -115,7 +109,7 @@ class CharmBuildInfo(models.BuildInfo):
 
     platform: CharmPlatform
 
-    build_for_bases: List[charmcraft.Base]
+    build_for_bases: list[charmcraft.Base]
     """Charmcraft base to build for, including potentially multiple architectures."""
     bases_index: int
     """Index of the base configuration in charmcraft.yaml."""
@@ -124,10 +118,10 @@ class CharmBuildInfo(models.BuildInfo):
 
     @classmethod
     def from_build_on_run_on(
-        cls: Type[Self],
+        cls: type[Self],
         build_on_base: charmcraft.Base,
         build_on_arch: str,
-        run_on: List[charmcraft.Base],
+        run_on: list[charmcraft.Base],
         *,
         bases_index: int,
         build_on_index: int,
@@ -162,7 +156,7 @@ class CharmBuildInfo(models.BuildInfo):
 
     @classmethod
     def gen_from_bases_configurations(
-        cls: Type[Self], *bases_configs: charmcraft.BasesConfiguration
+        cls: type[Self], *bases_configs: charmcraft.BasesConfiguration
     ) -> Iterator[Self]:
         """Generate CharmBuildInfo objects from a BasesConfiguration object.
 
@@ -194,25 +188,25 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
     """
 
     type: Literal["charm", "bundle"]
-    name: Optional[models.ProjectName]
-    title: Optional[models.ProjectTitle]
-    summary: Optional[models.SummaryStr]
-    description: Optional[str]
+    name: models.ProjectName | None
+    title: models.ProjectTitle | None
+    summary: models.SummaryStr | None
+    description: str | None
 
-    analysis: Optional[AnalysisConfig]
-    charmhub: Optional[CharmhubConfig]
-    parts: Optional[Dict[str, Dict[str, Any]]]  # parts are handled by craft-parts
+    analysis: AnalysisConfig | None
+    charmhub: CharmhubConfig | None
+    parts: dict[str, dict[str, Any]] | None  # parts are handled by craft-parts
 
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
-    version: Optional[None] = None
-    base: Optional[None] = None
-    license: Optional[None] = None
+    version: None = None
+    base: None = None
+    license: None = None
     # These are inside the "links" child model.
-    contact: Optional[None] = None
-    issues: Optional[None] = None
-    source_code: Optional[None] = None
+    contact: None = None
+    issues: None = None
+    source_code: None = None
 
     # These private attributes are not part of the project model but are attached here
     # because Charmcraft uses this metadata.
@@ -225,7 +219,7 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
         return self._started_at
 
     @classmethod
-    def unmarshal(cls, data: Dict[str, Any]):
+    def unmarshal(cls, data: dict[str, Any]):
         """Create a Charmcraft project from a dictionary of data."""
         if cls is not CharmcraftProject:
             return cls.parse_obj(data)
@@ -316,7 +310,7 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
         return project
 
     @pydantic.root_validator(pre=True, allow_reuse=True)
-    def preprocess(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Preprocess any values that charmcraft infers, before attribute validation."""
         if "type" not in values:
             raise ValueError("Project type must be declared in charmcraft.yaml.")
@@ -325,8 +319,8 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
 
     @pydantic.validator("parts", pre=True, always=True, allow_reuse=True)
     def preprocess_parts(
-        cls, parts: Optional[Dict[str, Dict[str, Any]]], values: Dict[str, Any]
-    ) -> Dict[str, Dict[str, Any]]:
+        cls, parts: dict[str, dict[str, Any]] | None, values: dict[str, Any]
+    ) -> dict[str, dict[str, Any]]:
         """Preprocess parts object for a charm or bundle, creating an implicit part if needed."""
         if parts is not None and not isinstance(parts, dict):
             raise TypeError("'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec.")
@@ -370,33 +364,33 @@ class Charm(CharmcraftProject):
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydontic issues. This appears to be
     # solved with Pydantic 2.
-    bases: List[BasesConfiguration] = pydantic.Field(min_items=1)
+    bases: list[BasesConfiguration] = pydantic.Field(min_items=1)
 
-    parts: Dict[str, Dict[str, Any]] = {"charm": {"plugin": "charm", "source": "."}}
+    parts: dict[str, dict[str, Any]] = {"charm": {"plugin": "charm", "source": "."}}
 
-    actions: Optional[Dict[str, Any]]
-    assumes: Optional[List[Union[str, Dict[str, Union[List, Dict]]]]]
-    containers: Optional[Dict[str, Any]]
-    devices: Optional[Dict[str, Any]]
-    extra_bindings: Optional[Dict[str, Any]]
-    peers: Optional[Dict[str, Any]]
-    provides: Optional[Dict[str, Any]]
-    requires: Optional[Dict[str, Any]]
-    resources: Optional[Dict[str, Any]]
-    storage: Optional[Dict[str, Any]]
-    subordinate: Optional[bool]
-    terms: Optional[List[str]]
-    links: Optional[Links]
-    config: Optional[Dict[str, Any]]
+    actions: dict[str, Any] | None
+    assumes: list[str | dict[str, list | dict]] | None
+    containers: dict[str, Any] | None
+    devices: dict[str, Any] | None
+    extra_bindings: dict[str, Any] | None
+    peers: dict[str, Any] | None
+    provides: dict[str, Any] | None
+    requires: dict[str, Any] | None
+    resources: dict[str, Any] | None
+    storage: dict[str, Any] | None
+    subordinate: bool | None
+    terms: list[str] | None
+    links: Links | None
+    config: dict[str, Any] | None
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
-    def expand_base(cls, base: Union[BaseDict, LongFormBasesDict]) -> LongFormBasesDict:
+    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
         """Expand short-form bases into long-form bases."""
         if "name" not in base:  # Assume long-form base already.
             return cast(LongFormBasesDict, base)
         return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
 
-    def get_build_plan(self) -> List[models.BuildInfo]:
+    def get_build_plan(self) -> list[models.BuildInfo]:
         """Get build bases for this charm.
 
         This method provides a flattened version of every way to build the charm, unfiltered.
@@ -487,15 +481,15 @@ class Bundle(CharmcraftProject):
     """Model for defining a bundle."""
 
     type: Literal["bundle"]
-    bundle: Dict[str, Any] = {}
-    name: Optional[models.ProjectName] = None
-    title: Optional[models.ProjectTitle]
-    summary: Optional[models.SummaryStr]
-    description: Optional[pydantic.StrictStr]
+    bundle: dict[str, Any] = {}
+    name: models.ProjectName | None = None
+    title: models.ProjectTitle | None
+    summary: models.SummaryStr | None
+    description: pydantic.StrictStr | None
     charmhub: CharmhubConfig = CharmhubConfig()
 
     @pydantic.root_validator(pre=True)
-    def preprocess_bundle(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess_bundle(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Preprocess any values that charmcraft infers, before attribute validation."""
         if "name" not in values:
             values["name"] = values.get("bundle", {}).get("name")

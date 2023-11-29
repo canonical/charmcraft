@@ -87,7 +87,8 @@ class PackageService(services.PackageService):
 
     def pack_bundle(self, prime_dir: pathlib.Path, dest_dir: pathlib.Path) -> pathlib.Path:
         """Pack a prime directory as a bundle."""
-        bundle_path = dest_dir / f"{self._project.name}.zip"
+        name = self._project.name or "bundle"
+        bundle_path = dest_dir / f"{name}.zip"
         emit.progress(f"Packing bundle {bundle_path.name}")
         utils.build_zip(bundle_path, prime_dir)
         return bundle_path

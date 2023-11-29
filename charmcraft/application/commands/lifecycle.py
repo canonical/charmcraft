@@ -26,6 +26,7 @@ import craft_cli
 from craft_cli import ArgumentParsingError, CraftError, emit
 from typing_extensions import override
 
+from charmcraft import utils
 from charmcraft.application.commands.base import CharmcraftCommand
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -371,6 +372,17 @@ class PackCommand(PrimeCommand):
                 raise CraftError(msg.format(bases_index))
             if bases_index >= len_configured_bases:
                 raise CraftError(msg.format(bases_index))
+
+    def run_managed(self, parsed_args: argparse.Namespace) -> bool:
+        """Whether to run this command in managed mode.
+
+        If we're packing a bundle, run unmanaged. Otherwise, do what other lifecycle
+        commands do.
+        """
+        charmcraft_yaml = utils.load_yaml(pathlib.Path("charmcraft.yaml"))
+        if charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
+            return False
+        return super().run_managed(parsed_args)
 
 
 class CleanCommand(_LifecyclePartsCommand):

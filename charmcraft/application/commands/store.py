@@ -1276,6 +1276,7 @@ class CreateLibCommand(CharmcraftCommand):
     """
     )
     format_option = True
+    always_load_project = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -1357,6 +1358,7 @@ class PublishLibCommand(CharmcraftCommand):
     """
     )
     format_option = True
+    always_load_project = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -1510,6 +1512,7 @@ class FetchLibCommand(CharmcraftCommand):
     """
     )
     format_option = True
+    always_load_project = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

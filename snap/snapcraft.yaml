@@ -112,6 +112,8 @@ parts:
     python-requirements:
       - requirements-jammy.txt
       - requirements.txt
+    build-attributes:
+      - enable-patchelf
     build-environment:
       # CFLAGS for Python 3.10 and libyaml. Allows cryptography and pyyaml to find
       # the appropriate system libraries.

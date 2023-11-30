@@ -63,7 +63,7 @@ apps:
       # same for config
       XDG_CONFIG_HOME: $SNAP_USER_COMMON/config
 
-grade: stable
+grade: devel
 confinement: classic
 
 build-packages:
@@ -126,6 +126,9 @@ parts:
       # set the version
       version="$(python3 setup.py --version)"
       craftctl set version="${version}"
+      if echo $version | grep "post"; then
+        craftctl set grade=stable
+      fi
     override-build: |
       craftctl default
       cp -v completion.bash ../install

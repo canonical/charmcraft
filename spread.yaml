@@ -6,7 +6,10 @@ environment:
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
   PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
   CRAFT_DEBUG: 1  # Show exception tracebacks.
-  CHARMCRAFT_STORE_CONFIG: staging
+  # Use the staging store for tests:
+  CHARMCRAFT_STORE_API_URL: https://api.staging.charmhub.io
+  CHARMCRAFT_UPLOAD_URL: https://storage.staging.snapcraftcontent.com
+  CHARMCRAFT_REGISTRY_URL: https://registry.staging.jujucharms.com
 
 exclude:
   - .git
@@ -199,7 +202,6 @@ suites:
       # https://github.com/canonical/lxd-cloud/blob/f20a64a8af42485440dcbfd370faf14137d2f349/test/includes/lxd.sh#L13-L23
       iptables -P FORWARD ACCEPT
 
-      # Ensure that the reused charms and bundles are registered if necessary.
       if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
         charmcraft register $CHARM_DEFAULT_NAME || ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
       fi

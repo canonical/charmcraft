@@ -17,13 +17,12 @@
 """Charmcraft environment utilities."""
 import dataclasses
 import distutils.util
-import json
 import os
 import pathlib
 
 import platformdirs
 
-from charmcraft import const, errors
+from charmcraft import const
 
 
 def get_host_shared_cache_path():
@@ -97,26 +96,11 @@ class CharmhubConfig:
 
 
 DEFAULT_CHARMHUB_CONFIG = CharmhubConfig()
-STAGING_CHARMHUB_CONFIG = CharmhubConfig(
-    api_url="https://api.staging.charmhub.io",
-    storage_url="https://storage.staging.snapcraftcontent.com",
-    registry_url="https://registry.staging.jujucharms.com",
-)
 
 
 def get_store_config() -> CharmhubConfig:
     """Get the appropriate configuration for the store."""
-    config_str = os.getenv("CHARMCRAFT_STORE_CONFIG", "")
-    if not config_str:
-        return DEFAULT_CHARMHUB_CONFIG
-    if config_str.lower() == "staging":
-        return STAGING_CHARMHUB_CONFIG
-    try:
-        return CharmhubConfig(**json.loads(config_str))
-    except Exception as exc:
-        raise errors.InvalidEnvironmentVariableError(
-            const.STORE_ENV_VAR,
-            details="Variable should be unset, a valid store config as JSON, or 'staging'",
-            resolution="Set a valid charmhub config.",
-            docs_url="https://juju.is/docs/sdk/charmcraft-yaml#heading--charmhub",
-        ) from exc
+    api_url = os.getenv(const.STORE_API_ENV_VAR, DEFAULT_CHARMHUB_CONFIG.api_url)
+    storage_url = os.getenv(const.STORE_STORAGE_ENV_VAR, DEFAULT_CHARMHUB_CONFIG.storage_url)
+    registry_url = os.getenv(const.STORE_REGISTRY_ENV_VAR, DEFAULT_CHARMHUB_CONFIG.registry_url)
+    return CharmhubConfig(api_url=api_url, storage_url=storage_url, registry_url=registry_url)

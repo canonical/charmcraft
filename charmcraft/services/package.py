@@ -166,6 +166,13 @@ class PackageService(services.PackageService):
                 self._services.lifecycle.prime_dir, ignore=ignore_checkers
             )
             manifest = Manifest.from_charm_and_lint(self._project, lint_results)
+            # Converting the manifest to a dictionary here is fairly fragile.
+            # We need to include unset/default values in order to ensure that the
+            # architecture is included on each base in the manifest, even when the
+            # architectures are inferred. However, we also need to exclude Nones so that
+            # image-info isn't included in manifest.yaml if it doesn't exist.
+            # Tread carefully when changing this next line. Treat it like an antique
+            # crystal wine glass.
             (path / "manifest.yaml").write_text(
                 utils.dump_yaml(
                     manifest.dict(by_alias=True, exclude_unset=False, exclude_none=True)

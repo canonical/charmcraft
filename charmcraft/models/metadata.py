@@ -127,7 +127,7 @@ class CharmMetadataLegacy(CharmMetadata):
 class BundleMetadata(models.BaseMetadata):
     """metadata.yaml for a bundle zip."""
 
-    name: models.ProjectName
+    name: models.ProjectName | None
     description: pydantic.StrictStr | None
 
     @classmethod

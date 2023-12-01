@@ -143,6 +143,7 @@ class PackageService(services.PackageService):
         """
         if not model:
             return
+        dest_dir.mkdir(parents=True, exist_ok=True)
         source_path = self.project_dir / filename
         dest_path = dest_dir / filename
         if source_path.is_file():

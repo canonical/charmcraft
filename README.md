@@ -1,3 +1,8 @@
+[![charmcraft](https://snapcraft.io/charmcraft/badge.svg)](https://snapcraft.io/charmcraft)
+[![Tests](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml)
+[![Spread](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml)
+[![Large Manual Spread](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml)
+
 # Charmcraft is for Kubernetes and machine operator developers
 
 Charmcraft supports Kubernetes and machine operator development.
@@ -38,12 +43,12 @@ There are multiple channels other than `stable`. See the full list with
 for everyday charming. With the snap you will always be up to date as
 Charmhub services and APIs evolve.
 
-You can also install `charmcraft` from PyPI, but some system packages 
-(`libffi-dev`, `libapt-pkg-dev` and `libssl-dev`) and a Python package 
-need to be installed first (`python-apt`). For the later in Ubuntu 
-systems you need to check the 
-[Python APT library page](https://launchpad.net/ubuntu/+source/python-apt) 
-and choose the source file that matches your system (e.g. for Impish 
+You can also install `charmcraft` from PyPI, but some system packages
+(`libffi-dev`, `libapt-pkg-dev` and `libssl-dev`) and a Python package
+need to be installed first (`python-apt`). For the later in Ubuntu
+systems you need to check the
+[Python APT library page](https://launchpad.net/ubuntu/+source/python-apt)
+and choose the source file that matches your system (e.g. for Impish
 it's `python-apt_2.2.1.tar.xz`). So the instructions would be:
 
     $ sudo apt install -y libffi-dev libapt-pkg-dev libssl-dev

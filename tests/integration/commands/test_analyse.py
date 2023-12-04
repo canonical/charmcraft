@@ -18,14 +18,13 @@ import json
 import sys
 import zipfile
 from argparse import ArgumentParser, Namespace
-from unittest.mock import ANY, patch
 
 import pytest
 from craft_cli import CraftError
 
 from charmcraft import linters
-from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.application.commands.analyse import Analyse
+from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.models.lint import LintResult
 
 
@@ -71,9 +70,7 @@ def test_corrupt_charm(fake_project_dir, config):
     args = Namespace(filepath=charm_file, force=None, format=None, ignore=None)
     with pytest.raises(CraftError) as cm:
         Analyse(config).run(args)
-    assert str(cm.value) == (
-        f"Cannot open charm file '{charm_file}': File is not a zip file"
-    )
+    assert str(cm.value) == (f"Cannot open charm file '{charm_file}': File is not a zip file")
 
 
 def create_a_valid_zip(tmp_path):
@@ -90,11 +87,16 @@ def test_integration_linters(fake_project_dir, emitter, config, monkeypatch):
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
     Analyse(config).run(args)
 
-    emitter.assert_progress("language: Charm language unknown (https://juju.is/docs/sdk/charmcraft-analyzers-and-linters#heading--language)", permanent=True)
+    emitter.assert_progress(
+        "language: Charm language unknown (https://juju.is/docs/sdk/charmcraft-analyzers-and-linters#heading--language)",
+        permanent=True,
+    )
 
 
 @pytest.mark.parametrize("indicated_format", [None, JSON_FORMAT])
-def test_complete_set_of_results(check, emitter, service_factory, config, monkeypatch, fake_project_dir, indicated_format):
+def test_complete_set_of_results(
+    check, emitter, service_factory, config, monkeypatch, fake_project_dir, indicated_format
+):
     """Show a complete basic case of results."""
     # fake results from the analyzer
     linting_results = [
@@ -151,7 +153,9 @@ def test_complete_set_of_results(check, emitter, service_factory, config, monkey
 
     fake_charm = create_a_valid_zip(fake_project_dir)
     args = Namespace(filepath=fake_charm, force=None, format=indicated_format, ignore=None)
-    monkeypatch.setattr(service_factory.analysis, "lint_directory", lambda *a, **k: linting_results)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
     Analyse(config).run(args)
 
     if indicated_format is None:
@@ -169,41 +173,55 @@ def test_complete_set_of_results(check, emitter, service_factory, config, monkey
                 emitter.assert_progress(line, permanent=True)
     else:
         expected = [
-            {'check_type': 'lint',
-             'name': 'check-lint-01',
-             'result': 'warning',
-             'text': 'text-01',
-             'url': 'url-01'},
-            {'check_type': 'lint',
-             'name': 'check-lint-02',
-             'result': 'ok',
-             'text': 'text-02',
-             'url': 'url-02'},
-            {'check_type': 'lint',
-             'name': 'check-lint-03',
-             'result': 'error',
-             'text': 'text-03',
-             'url': 'url-03'},
-            {'check_type': 'attribute',
-             'name': 'check-attribute-04',
-             'result': 'check-result-04',
-             'text': 'text-04',
-             'url': 'url-04'},
-            {'check_type': 'attribute',
-             'name': 'check-attribute-05',
-             'result': 'ignored',
-             'text': 'text-05',
-             'url': 'url-05'},
-            {'check_type': 'lint',
-             'name': 'check-lint-06',
-             'result': 'ignored',
-             'text': 'text-06',
-             'url': 'url-06'},
-            {'check_type': 'lint',
-             'name': 'check-lint-07',
-             'result': 'fatal',
-             'text': 'text-07',
-             'url': 'url-07'}
+            {
+                "check_type": "lint",
+                "name": "check-lint-01",
+                "result": "warning",
+                "text": "text-01",
+                "url": "url-01",
+            },
+            {
+                "check_type": "lint",
+                "name": "check-lint-02",
+                "result": "ok",
+                "text": "text-02",
+                "url": "url-02",
+            },
+            {
+                "check_type": "lint",
+                "name": "check-lint-03",
+                "result": "error",
+                "text": "text-03",
+                "url": "url-03",
+            },
+            {
+                "check_type": "attribute",
+                "name": "check-attribute-04",
+                "result": "check-result-04",
+                "text": "text-04",
+                "url": "url-04",
+            },
+            {
+                "check_type": "attribute",
+                "name": "check-attribute-05",
+                "result": "ignored",
+                "text": "text-05",
+                "url": "url-05",
+            },
+            {
+                "check_type": "lint",
+                "name": "check-lint-06",
+                "result": "ignored",
+                "text": "text-06",
+                "url": "url-06",
+            },
+            {
+                "check_type": "lint",
+                "name": "check-lint-07",
+                "result": "fatal",
+                "text": "text-07",
+                "url": "url-07",
+            },
         ]
         text = emitter.assert_message(r"\[.*\]", regex=True)
         assert expected == json.loads(text)
@@ -224,7 +242,9 @@ def test_only_attributes(emitter, service_factory, config, monkeypatch, fake_pro
 
     fake_charm = create_a_valid_zip(fake_project_dir)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
-    monkeypatch.setattr(service_factory.analysis, "lint_directory", lambda *a, **k: linting_results)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
     retcode = Analyse(config).run(args)
 
     emitter.assert_progress("check-attribute: [CHECK-RESULT] text (url)", permanent=True)
@@ -246,7 +266,9 @@ def test_only_warnings(emitter, service_factory, config, monkeypatch, fake_proje
 
     fake_charm = create_a_valid_zip(fake_project_dir)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
-    monkeypatch.setattr(service_factory.analysis, "lint_directory", lambda *a, **k: linting_results)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
     retcode = Analyse(config).run(args)
 
     emitter.assert_progress("check-lint: [WARNING] text (url)", permanent=True)
@@ -268,7 +290,9 @@ def test_only_errors(emitter, service_factory, config, monkeypatch, fake_project
 
     fake_charm = create_a_valid_zip(fake_project_dir)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
-    monkeypatch.setattr(service_factory.analysis, "lint_directory", lambda *a, **k: linting_results)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
     retcode = Analyse(config).run(args)
 
     emitter.assert_progress("check-lint: [ERROR] text (url)", permanent=True)
@@ -297,7 +321,9 @@ def test_both_errors_and_warnings(emitter, service_factory, config, monkeypatch,
 
     fake_charm = create_a_valid_zip(fake_project_dir)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
-    monkeypatch.setattr(service_factory.analysis, "lint_directory", lambda *a, **k: linting_results)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
     retcode = Analyse(config).run(args)
 
     emitter.assert_progress("check-lint-1: [ERROR] text-1 (url-1)", permanent=True)
@@ -320,7 +346,9 @@ def test_only_lint_ok(emitter, service_factory, config, monkeypatch, fake_projec
 
     fake_charm = create_a_valid_zip(fake_project_dir)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
-    monkeypatch.setattr(service_factory.analysis, "lint_directory", lambda *a, **k: linting_results)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
     retcode = Analyse(config).run(args)
 
     emitter.assert_progress("check-lint: [OK] text (url)", permanent=True)
@@ -339,7 +367,9 @@ def test_only_fatal(emitter, service_factory, config, monkeypatch, fake_project_
             result=LintResult.FATAL,
         ),
     ]
-    monkeypatch.setattr(service_factory.analysis, "lint_directory", lambda *a, **k: linting_results)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
 
     fake_charm = create_a_valid_zip(fake_project_dir)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)

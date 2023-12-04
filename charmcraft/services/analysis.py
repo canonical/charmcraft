@@ -24,7 +24,7 @@ from collections.abc import Container, Iterator
 
 import craft_application
 
-from charmcraft import linters, models, errors
+from charmcraft import errors, linters, models
 from charmcraft.models.lint import CheckResult
 
 

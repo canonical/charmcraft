@@ -73,8 +73,7 @@ def test_bashcompletion_all_commands():
     # get the line where all commands are specified in the completion file; this is custom
     # to our file, but simple and good enough
     app = application.Charmcraft(
-        application.APP_METADATA,
-        services.CharmcraftServiceFactory(application.APP_METADATA)
+        application.APP_METADATA, services.CharmcraftServiceFactory(application.APP_METADATA)
     )
     commands.fill_command_groups(app)
 

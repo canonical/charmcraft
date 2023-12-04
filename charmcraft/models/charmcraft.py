@@ -23,7 +23,7 @@ from typing import Any, Literal
 import pydantic
 from craft_cli import CraftError
 
-from charmcraft import const
+from charmcraft import const, parts
 from charmcraft.extensions import apply_extensions
 from charmcraft.format import format_pydantic_errors
 from charmcraft.metafiles.actions import parse_actions_yaml
@@ -35,7 +35,6 @@ from charmcraft.metafiles.metadata import (
 from charmcraft.models.actions import JujuActions
 from charmcraft.models.basic import AttributeName, LinterName, ModelConfigDefaults
 from charmcraft.models.config import JujuConfig
-from charmcraft.parts import process_part_config
 from charmcraft.utils import get_host_architecture
 
 
@@ -201,7 +200,7 @@ class CharmcraftConfig(
     @pydantic.validator("parts", each_item=True)
     def validate_each_part(cls, item):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
-        return process_part_config(item)
+        return parts.process_part_config(item)
 
     @pydantic.validator("bases", pre=True)
     def validate_bases_presence(cls, bases, values):
@@ -305,7 +304,7 @@ class CharmcraftConfig(
             # If metadata.yaml exists, try merge it into config.
             if os.path.isfile(project.dirpath / const.METADATA_FILENAME):
                 # metadata.yaml exists, so we can't specify metadata keys in charmcraft.yaml.
-                for key in const.CHARM_METADATA_KEYS.union(const.CHARM_METADATA_LEGACY_KEYS):
+                for key in const.CHARM_METADATA_KEYS.union(const.METADATA_YAML_KEYS):
                     if key in obj:
                         raise CraftError(
                             f"Cannot specify '{key}' in charmcraft.yaml when "

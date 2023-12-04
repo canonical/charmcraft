@@ -32,10 +32,75 @@ from craft_parts import callbacks, plugins
 from craft_providers import Executor, Provider
 
 import charmcraft.parts
-from charmcraft import const, deprecations, instrum, parts
+from charmcraft import const, deprecations, instrum, parts, services
+from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
+from charmcraft.models import project
 from charmcraft.models.charmcraft import Base, BasesConfiguration
+
+
+@pytest.fixture()
+def simple_charm():
+    return project.Charm(
+        type="charm",
+        name="charmy-mccharmface",
+        summary="Charmy!",
+        description="Very charming!",
+        bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+    )
+
+
+@pytest.fixture()
+def service_factory(
+    fs, fake_project_dir, fake_prime_dir, simple_charm
+) -> services.CharmcraftServiceFactory:
+    factory = services.CharmcraftServiceFactory(app=APP_METADATA)
+
+    factory.set_kwargs(
+        "package",
+        project_dir=fake_project_dir,
+    )
+    factory.set_kwargs(
+        "analysis",
+        project_dir=fake_project_dir,
+    )
+
+    factory.project = simple_charm
+
+    return factory
+
+
+@pytest.fixture()
+def fake_project_dir(fs) -> pathlib.Path:
+    project_dir = pathlib.Path("/root/project")
+    fs.create_dir(project_dir)
+    return project_dir
+
+
+@pytest.fixture()
+def fake_prime_dir(fs) -> pathlib.Path:
+    prime_dir = pathlib.Path("/root/prime")
+    fs.create_dir(prime_dir)
+    return prime_dir
+
+
+@pytest.fixture()
+def fake_path(fs) -> pathlib.Path:
+    """Like tmp_path, but with a fake filesystem."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        yield pathlib.Path(tmp_dir)
+
+
+@pytest.fixture()
+def global_debug():
+    os.environ["CRAFT_DEBUG"] = "1"
+
+
+@pytest.fixture()
+def new_path(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -46,16 +111,6 @@ def tmpdir_under_tmpdir(tmpdir_factory):
 @pytest.fixture(autouse=True, scope="session")
 def setup_parts():
     parts.setup_parts()
-
-
-@pytest.fixture()
-def new_path(tmp_path):
-    old_path = os.getcwd()
-    try:
-        os.chdir(tmp_path)
-        yield tmp_path
-    finally:
-        os.chdir(old_path)
 
 
 @pytest.fixture()

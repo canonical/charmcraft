@@ -15,17 +15,34 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for CLI-related utilities."""
 import datetime
+import json
 from unittest.mock import call, patch
 
 import dateutil.parser
 import pytest
+import tabulate
+from hypothesis import given, strategies
 
 from charmcraft.utils.cli import (
+    OutputFormat,
     ResourceOption,
     SingleOptionEnsurer,
     confirm_with_user,
+    format_content,
     format_timestamp,
     humanize_list,
+)
+
+OUTPUT_VALUES_STRATEGY = strategies.one_of(
+    strategies.none(), strategies.integers(), strategies.text()
+)
+BASIC_LISTS_STRATEGY = strategies.lists(OUTPUT_VALUES_STRATEGY)
+BASIC_DICTS_STRATEGY = strategies.dictionaries(
+    strategies.one_of(OUTPUT_VALUES_STRATEGY), strategies.one_of(OUTPUT_VALUES_STRATEGY)
+)
+COMPOUND_DICTS_STRATEGY = strategies.dictionaries(
+    strategies.one_of(OUTPUT_VALUES_STRATEGY),
+    strategies.one_of(OUTPUT_VALUES_STRATEGY, BASIC_DICTS_STRATEGY),
 )
 
 
@@ -192,3 +209,53 @@ def test_humanize_list_empty():
     """Calling to humanize an empty list is an error that should be explicit."""
     with pytest.raises(ValueError):
         humanize_list([], "whatever")
+
+
+@given(
+    strategies.one_of(
+        strategies.none(),
+        strategies.integers(),
+        strategies.text(),
+        strategies.dates(),
+    )
+)
+def test_format_content_string(content):
+    assert format_content(content, None) == str(content)
+
+
+@given(
+    strategies.one_of(
+        strategies.none(),
+        strategies.integers(),
+        strategies.floats(),
+        strategies.text(),
+        BASIC_LISTS_STRATEGY,
+        COMPOUND_DICTS_STRATEGY,
+    )
+)
+def test_format_content_json(content):
+    assert format_content(content, "json") == json.dumps(content, indent=4)
+
+
+@given(
+    strategies.lists(
+        strategies.fixed_dictionaries(
+            {
+                "first column": OUTPUT_VALUES_STRATEGY,
+                "Column 2": OUTPUT_VALUES_STRATEGY,
+                3: OUTPUT_VALUES_STRATEGY,
+                None: OUTPUT_VALUES_STRATEGY,
+            }
+        )
+    )
+)
+def test_format_content_table(content):
+    assert format_content(content, OutputFormat.TABLE) == tabulate.tabulate(
+        content, headers="keys"
+    )
+
+
+@pytest.mark.parametrize("fmt", ["yolo", 0])
+def test_format_content_invalid(fmt):
+    with pytest.raises(ValueError, match="^Unknown output format "):
+        format_content(None, fmt)

@@ -26,6 +26,7 @@ with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()
 
 install_requires = [
+    "craft-application~=1.1",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
     "craft-providers",
@@ -66,6 +67,8 @@ type_requires = [
 dev_requires = [
     "coverage",
     "flake8",
+    "freezegun",
+    "hypothesis~=6.0",
     "pydocstyle",
     "pyfakefs",
     "pytest",
@@ -104,7 +107,7 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     entry_points={
-        "console_scripts": ["charmcraft = charmcraft.main:main"],
+        "console_scripts": ["charmcraft = charmcraft.application.main:main"],
     },
     python_requires=">=3",
     install_requires=install_requires,

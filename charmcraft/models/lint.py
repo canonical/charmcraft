@@ -37,12 +37,42 @@ class LintResult:
     """Check results."""
 
     OK = "ok"
-    WARNINGS = "warnings"
-    ERRORS = "errors"
+    WARNING = "warning"
+    ERROR = "error"
     FATAL = "fatal"
     IGNORED = "ignored"
     UNKNOWN = "unknown"
     NONAPPLICABLE = "nonapplicable"
+
+
+class ResultLevel(enum.IntEnum):
+    """The level of a lint result."""
+
+    UNKNOWN = -1
+    OK = 0
+    IGNORED = 1
+    WARNING = 2
+    ERROR = 3
+    FATAL = 4
+
+    @classmethod
+    def from_result(cls, result: str) -> "ResultLevel":
+        """Convert a linting result string to a ResultLevel."""
+        try:
+            return cls[result.upper()]
+        except KeyError:
+            return cls.UNKNOWN
+
+    @property
+    def return_code(self) -> int:
+        """Get an application return code for this lint level."""
+        if self == self.FATAL:
+            return 1
+        if self == self.ERROR:
+            return 2
+        if self == self.WARNING:
+            return 3
+        return 0
 
 
 @dataclasses.dataclass(frozen=True)
@@ -54,3 +84,20 @@ class CheckResult:
     url: str
     check_type: CheckType
     text: str
+
+    @property
+    def level(self) -> ResultLevel:
+        """Get the error level of the result."""
+        return ResultLevel.from_result(self.result)
+
+    def __str__(self) -> str:
+        if self.result == LintResult.IGNORED or not self.result:
+            info = ""
+        elif self.result == LintResult.UNKNOWN:
+            info = self.text
+        else:
+            info = f"[{self.result.upper()}] {self.text}".strip()
+
+        if info:
+            return f"{self.name}: {info} ({self.url})"
+        return f"{self.name}: ({self.url}) {info}"

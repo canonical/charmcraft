@@ -7,6 +7,7 @@ kill-timeout: 30m
 
 prepare: |
   tests.pkgs install unzip
+  rm -rf charm
   charmcraft init --project-dir=charm
   cd charm
   echo "ignore me" > secrets.txt
@@ -38,7 +39,9 @@ execute: |
   cd charm
   charmcraft pack --verbose
   test -f charm*.charm
-  unzip -c charm*.charm hello.txt | MATCH "^Hello, world!"
-  unzip -l charm*.charm | MATCH "venv/ops/charm.py"
+  # Charmcraft 3.0 uses the craft-parts standard prime keyword that only
+  # includes the specifically mentioned files
+  unzip -c charm*.charm hello.txt | grep "^Hello, world!"
+  unzip -l charm*.charm | NOMATCH "venv/ops/charm.py"
   unzip -l charm*.charm | MATCH extra_file.txt
   unzip -l charm*.charm | NOMATCH secrets.txt

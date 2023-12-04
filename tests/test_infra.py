@@ -22,7 +22,8 @@ import sys
 
 import pytest
 
-from charmcraft import __version__, main
+from charmcraft import __version__, application, services
+from charmcraft.application import commands
 
 
 def get_python_filepaths(*, roots=None, python_paths=None):
@@ -71,6 +72,12 @@ def test_bashcompletion_all_commands():
     """Verify that all commands are represented in the bash completion file."""
     # get the line where all commands are specified in the completion file; this is custom
     # to our file, but simple and good enough
+    app = application.Charmcraft(
+        application.APP_METADATA,
+        services.CharmcraftServiceFactory(application.APP_METADATA)
+    )
+    commands.fill_command_groups(app)
+
     completed_commands = None
     with open("completion.bash", encoding="utf8") as fh:
         completion_text = fh.read()
@@ -81,7 +88,7 @@ def test_bashcompletion_all_commands():
         pytest.fail("Failed to find commands in the bash completion file")
 
     real_command_names = set()
-    for cgroup in main.COMMAND_GROUPS:
+    for cgroup in app.command_groups:
         real_command_names.update(cmd.name for cmd in cgroup.commands if not cmd.hidden)
 
     assert completed_commands == real_command_names

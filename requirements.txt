@@ -3,9 +3,9 @@ certifi==2023.7.22
 cffi==1.16.0
 charset-normalizer==3.3.1
 craft-application==1.1.0
-craft-cli==2.4.0
-craft-parts==1.25.1
-craft-providers==1.20.0
+craft-cli==2.5.0
+craft-parts==1.26.0
+craft-providers==1.20.1
 craft-store==2.5.0
 cryptography==41.0.6
 Deprecated==1.2.14

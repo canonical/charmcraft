@@ -24,7 +24,7 @@ from collections.abc import Container, Iterator
 
 import craft_application
 
-from charmcraft import linters, models
+from charmcraft import linters, models, errors
 from charmcraft.models.lint import CheckResult
 
 
@@ -63,16 +63,23 @@ class AnalysisService(craft_application.AppService):
 
         with tempfile.TemporaryDirectory(prefix=f"charmcraft_{path.name}_") as directory:
             directory_path = pathlib.Path(directory)
-            with zipfile.ZipFile(path) as zip_file:
-                zip_file.extractall(directory_path)
-                # fix permissions as extractall does not keep them (see https://bugs.python.org/issue15795)
-                for name in zip_file.namelist():
-                    info = zip_file.getinfo(name)
-                    inside_zip_mode = info.external_attr >> 16
-                    extracted_file = directory_path / name
-                    current_mode = extracted_file.stat().st_mode
-                    if current_mode != inside_zip_mode:
-                        extracted_file.chmod(inside_zip_mode)
+            try:
+                with zipfile.ZipFile(path) as zip_file:
+                    zip_file.extractall(directory_path)
+                    # fix permissions as extractall does not keep them (see https://bugs.python.org/issue15795)
+                    for name in zip_file.namelist():
+                        info = zip_file.getinfo(name)
+                        inside_zip_mode = info.external_attr >> 16
+                        extracted_file = directory_path / name
+                        current_mode = extracted_file.stat().st_mode
+                        if current_mode != inside_zip_mode:
+                            extracted_file.chmod(inside_zip_mode)
+            except zipfile.BadZipfile as exc:
+                raise errors.CraftError(
+                    f"Cannot open charm file '{path}': {exc.args[0]}",
+                    resolution=f"Check the charm file at {path}",
+                    reportable=False,
+                )
             yield from self.lint_directory(
                 directory_path, ignore=ignore, include_ignored=include_ignored
             )

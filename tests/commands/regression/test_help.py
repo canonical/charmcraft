@@ -62,7 +62,6 @@ import pytest_check
         "resources",
         "upload-resource",
         "resource-revisions",
-        "analyze",
         "list-extensions",
         "expand-extensions",
     ],

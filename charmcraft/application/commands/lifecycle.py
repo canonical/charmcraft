@@ -23,6 +23,7 @@ import textwrap
 from typing import TYPE_CHECKING
 
 import craft_cli
+from craft_application.commands.lifecycle import CleanCommand
 from craft_cli import ArgumentParsingError, CraftError, emit
 from typing_extensions import override
 
@@ -383,43 +384,6 @@ class PackCommand(PrimeCommand):
         if charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
             return False
         return super().run_managed(parsed_args)
-
-
-class CleanCommand(_LifecyclePartsCommand):
-    """Command to remove part assets."""
-
-    name = "clean"
-    help_msg = "Remove a part's assets"
-    overview = textwrap.dedent(
-        """
-        Clean up artifacts belonging to parts. If no parts are specified,
-        remove the packing environment.
-        """
-    )
-
-    @override
-    def run(self, parsed_args: argparse.Namespace) -> None:
-        """Run the clean command."""
-        super().run(parsed_args)
-
-        if parsed_args.destructive_mode or not self._should_clean_instances(parsed_args):
-            self._services.lifecycle.clean(parsed_args.parts)
-        else:
-            self._services.provider.clean_instances()
-
-    @override
-    def run_managed(self, parsed_args: argparse.Namespace) -> bool:
-        if parsed_args.destructive_mode:
-            # In destructive mode, always run on the host.
-            return False
-
-        # "clean" should run managed if cleaning specific parts.
-        # otherwise, should run on the host to clean the build provider.
-        return not self._should_clean_instances(parsed_args)
-
-    @staticmethod
-    def _should_clean_instances(parsed_args: argparse.Namespace) -> bool:
-        return not bool(parsed_args.parts)
 
 
 def _launch_shell() -> None:

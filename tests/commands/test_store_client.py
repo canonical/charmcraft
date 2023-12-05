@@ -42,7 +42,7 @@ def test_useragent_linux(monkeypatch):
     """Construct a user-agent as a patched Linux machine"""
     monkeypatch.setenv("TRAVIS_TESTING", "1")
     os_platform = OSPlatform(system="Arch Linux", release="5.10.10-arch1-1", machine="x86_64")
-    with patch("charmcraft.store.client.__version__", "1.2.3"), patch(
+    with patch("charmcraft.store.store_client.__version__", "1.2.3"), patch(
         "charmcraft.utils.get_os_platform", return_value=os_platform
     ), patch("platform.system", return_value="Linux"), patch(
         "platform.machine", return_value="x86_64"
@@ -56,7 +56,7 @@ def test_useragent_linux(monkeypatch):
 def test_useragent_windows(monkeypatch):
     """Construct a user-agent as a patched Windows machine"""
     monkeypatch.setenv("TRAVIS_TESTING", "1")
-    with patch("charmcraft.store.client.__version__", "1.2.3"), patch(
+    with patch("charmcraft.store.store_client.__version__", "1.2.3"), patch(
         "platform.system", return_value="Windows"
     ), patch("platform.release", return_value="10"), patch(
         "platform.machine", return_value="AMD64"
@@ -138,7 +138,7 @@ def test_client_init():
     storage_url = "http://storage.test"
     user_agent = "Super User Agent"
     with patch("craft_store.StoreClient.__init__") as mock_client_init:
-        with patch("charmcraft.store.client.build_user_agent") as mock_ua:
+        with patch("charmcraft.store.store_client.build_user_agent") as mock_ua:
             mock_ua.return_value = user_agent
             Client(api_url, storage_url)
     mock_client_init.assert_called_with(
@@ -359,7 +359,7 @@ def test_anonymous_client_init():
     storage_url = "http://storage.test"
     user_agent = "Super User Agent"
     with patch("craft_store.http_client.HTTPClient.__init__") as mock_client_init:
-        with patch("charmcraft.store.client.build_user_agent") as mock_ua:
+        with patch("charmcraft.store.store_client.build_user_agent") as mock_ua:
             mock_ua.return_value = user_agent
             mock_client_init.return_value = None
             AnonymousClient(api_url, storage_url)

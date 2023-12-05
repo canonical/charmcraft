@@ -28,10 +28,6 @@ from craft_store.errors import CredentialsAlreadyAvailable
 from dateutil import parser
 
 from charmcraft import const
-from charmcraft.store.client import (
-    AnonymousClient,
-    Client,
-)
 from charmcraft.store.models import (
     Account,
     Base,
@@ -47,6 +43,10 @@ from charmcraft.store.models import (
     ResourceRevision,
     Revision,
     Uploaded,
+)
+from charmcraft.store.store_client import (
+    AnonymousClient,
+    Client,
 )
 
 # helpers to build responses from this layer

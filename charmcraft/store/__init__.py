@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Store module for Charmcraft."""
 
-from charmcraft.store.client import build_user_agent, AnonymousClient, Client
+from charmcraft.store.store_client import build_user_agent, AnonymousClient, Client
 from charmcraft.store import models
 from charmcraft.store.registry import (
     OCIRegistry,

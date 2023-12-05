@@ -1,5 +1,115 @@
+[project]
+name = "charmcraft"
+dynamic = ["version", "readme"]
+dependencies = [
+    "craft-application~=1.1",
+    "craft-cli>=2.3.0",
+    "craft-parts>=1.18",
+    "craft-providers",
+    "craft-store>=2.4",
+    "distro>=1.3.0",
+    "humanize>=2.6.0",
+    "jsonschema",
+    "jinja2",
+    "pydantic>=1.10,<2.0",
+    "python-dateutil",
+    "pyyaml",
+    "requests",
+    "requests-toolbelt",
+    "requests-unixsocket",
+    "snap-helpers",
+    "tabulate",
+    # Needed until requests-unixsocket supports urllib3 v2
+    # https://github.com/msabramo/requests-unixsocket/pull/69
+    "urllib3<2.0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+]
+requires-python = ">=3.10"
+
+[project.scripts]
+charmcraft = "charmcraft.application.main:main"
+
+[project.optional-dependencies]
+dev = [
+    "coverage",
+    "flake8",
+    "freezegun",
+    "hypothesis~=6.0",
+    "pydocstyle",
+    "pyfakefs",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-check",
+    "pytest-subprocess",
+    "responses",
+    "tox",
+]
+lint = [
+    "black>=23.10.1,<24.0.0",
+    "codespell[tomli]>=2.2.6,<3.0.0",
+    "yamllint>=1.32.0,<2.0.0",
+]
+types = [
+    "mypy[reports]~=1.5",
+    "pyright==1.1.332",
+    "types-python-dateutil",
+    "types-requests<2.31.0.7",  # Frozen until we can get urllib3 v2
+    "types-setuptools",
+    "types-tabulate",
+    "types-urllib3",
+]
+docs = [
+    "furo==2023.9.10",
+    "sphinx>=7.1.2,<8",
+    "sphinx-autobuild==2021.3.14",
+    "sphinx-copybutton==0.5.2",
+    "sphinx-design==0.5.0",
+    "sphinx-pydantic==0.1.1",
+    "sphinx-toolbox==3.5.0",
+    "sphinx-lint==0.9.0",
+]
+
+[build-system]
+requires = [
+    "setuptools==67.7.2",
+    "setuptools_scm[toml]>=7.1"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+readme = {file = "README.md"}
+
+[tool.setuptools_scm]
+write_to = "charmcraft/_version.py"
+# the version comes from the latest annotated git tag formatted as 'X.Y.Z'
+# version scheme:
+#   - X.Y.Z.post<commits since tag>+g<hash>.d<%Y%m%d>
+# parts of scheme:
+#   - X.Y.Z - most recent git tag
+#   - post<commits since tag>+g<hash> - present when current commit is not tagged
+#   - .d<%Y%m%d> - present when working dir is dirty
+# version scheme when no tags exist:
+#   - 0.0.post<total commits>+g<hash>
+version_scheme = "post-release"
+# deviations from the default 'git describe' command:
+# - only match annotated tags
+# - only match tags formatted as 'X.Y.Z'
+git_describe_command = "git describe --dirty --long --match '[0-9]*.[0-9]*.[0-9]*' --exclude '*[^0-9.]*'"
+
+[tool.setuptools.packages.find]
+include = ["*craft*"]
+namespaces = false
+
 [tool.black]
-target-version = ["py310", "py311"]
+target-version = ["py310", "py311", "py312"]
 line-length = 99
 
 [tool.codespell]

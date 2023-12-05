@@ -34,7 +34,7 @@ def get_python_filepaths(*, roots=None, python_paths=None):
     for root in roots:
         for dirpath, dirnames, filenames in os.walk(root):
             for filename in filenames:
-                if filename.endswith(".py"):
+                if filename.endswith(".py") and filename != "_version.py":
                     python_paths.append(os.path.join(dirpath, filename))
     return python_paths
 

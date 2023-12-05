@@ -16,17 +16,9 @@
 
 """Expose needed names at main package level."""
 
-from importlib.metadata import version, PackageNotFoundError
-import os
+from ._version import __version__, __version_tuple__
 
-
-def _get_version() -> str:
-    if os.getenv("SNAP_NAME") == "charmcraft":
-        return os.getenv("SNAP_VERSION", "")
-    try:
-        return version("charmcraft")
-    except PackageNotFoundError:
-        return "devel"
-
-
-__version__ = _get_version()
+__all__ = [
+    "__version__",
+    "__version_tuple__",
+]

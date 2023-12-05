@@ -49,12 +49,12 @@ class Extension(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def get_supported_bases() -> list[tuple[str, ...]]:
+    def get_supported_bases() -> list[tuple[str, str]]:
         """Return a list of tuple of supported bases."""
 
     @staticmethod
     @abc.abstractmethod
-    def is_experimental(base: tuple[str, ...] | None) -> bool:
+    def is_experimental(base: tuple[str, str] | None) -> bool:
         """Return whether or not this extension is unstable for given base."""
 
     @abc.abstractmethod

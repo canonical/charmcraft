@@ -30,8 +30,8 @@ import requests
 from craft_cli import CraftError
 
 from charmcraft import const
-from charmcraft.commands.store import registry
-from charmcraft.commands.store.registry import (
+from charmcraft.store import registry
+from charmcraft.store.registry import (
     CONFIG_MIMETYPE,
     LAYER_MIMETYPE,
     MANIFEST_V2_MIMETYPE,

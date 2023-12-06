@@ -53,6 +53,9 @@ def parse_config_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[J
     except OSError as exc:
         raise CraftError(f"Cannot read the {JUJU_CONFIG_FILENAME} file: {exc!r}") from exc
 
+    if allow_broken and (not isinstance(config, dict) or not config.get("options")):
+        return None
+
     emit.debug(f"Validating {JUJU_CONFIG_FILENAME}")
     try:
         return JujuConfig.parse_obj(config)

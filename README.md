@@ -77,7 +77,7 @@ Read our [user documentation](https://juju.is/docs/sdk/charmcraft), which also i
 ### Chat with us
 
 Read our [Code of conduct](https://ubuntu.com/community/code-of-conduct) and:
-- Join our chat: [Mattermost](https://chat.charmhub.io/charmhub/channels/charmcraft)
+- Join our chat: [Matrix](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com)
 - Join our forum: [Discourse](https://discourse.charmhub.io/)
 
 ### File an issue

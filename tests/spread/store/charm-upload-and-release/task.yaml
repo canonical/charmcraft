@@ -42,10 +42,20 @@ execute: |
   # release that last revision to edge
   charmcraft release $CHARM_DEFAULT_NAME -r $uploaded_revno -c edge
 
-  # validate the channel map
-  edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
-  edge_revision=$(echo $edge_release | jq -r .revision)
-  # check that the current release greater or equal than what was
-  # uploaded, because other tests running concurrently may have
-  # also released (but for sure cannot be a previous revision)
-  test $edge_revision -ge $uploaded_revno
+  # Releases may have some delay in the craft store, so sleep for a bit before trying and try up to 10 times.
+  for i in {1..10}
+  do
+    sleep 2
+    # validate the channel map
+    edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
+    edge_revision=$(echo $edge_release | jq -r .revision)
+    # check that the current release greater or equal than what was
+    # uploaded, because other tests running concurrently may have
+    # also released (but for sure cannot be a previous revision)
+    if [ $edge_revision -ge $uploaded_revno ]; then
+      break
+    fi
+  done
+  if [ $edge_revision -lt $uploaded_revno ]; then
+    ERROR "Revision wasn't released. Uploaded revision: $uploaded_revno; Currently on edge: $edge_revision"
+  fi

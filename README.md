@@ -1,3 +1,8 @@
+[![charmcraft](https://snapcraft.io/charmcraft/badge.svg)](https://snapcraft.io/charmcraft)
+[![Tests](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml)
+[![Spread](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml)
+[![Large Manual Spread](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml)
+
 # Charmcraft -- easily initialise, pack, and publish your charms
 
 Charmcraft is a CLI tool that makes it easy and quick to initialise, package, and publish Kubernetes and machine charms. It is an official component of the Charm SDK, itself a part of [the Juju universe](https://juju.is/).
@@ -29,24 +34,32 @@ cd my-new-charm
 charmcraft init
 ```
 
-This has created a standard charm directory structure. Poke around.
-
-Note that the `metadata.yaml` file shows that what we have is an example charm called `my-new-charm`, which uses an OCI image resource `httpbin` from `kennethreitz/httpbin`.
-
-Note that there are already a few other YAML files describing various things about the example charm as well as Python files containing development and testing code related to the example charm.
-
-The YAML files include a `charmcraft.yaml` file, with content as below. This file tells Charmcraft how to pack the charm -- in this example case it should be able to build and run on Ubuntu 22.04.
+This has created a standard charm directory structure:
 
 ```
-type: charm
-bases:
-  - build-on:
-    - name: ubuntu
-      channel: "22.04"
-    run-on:
-    - name: ubuntu
-      channel: "22.04"
+$ ls -R
+.:
+CONTRIBUTING.md  README.md        pyproject.toml    src    tox.ini
+LICENSE          charmcraft.yaml  requirements.txt  tests
+
+./src:
+charm.py
+
+./tests:
+integration  unit
+
+./tests/integration:
+test_charm.py
+
+./tests/unit:
+test_charm.py
 ```
+
+Poke around: 
+
+Note that the `charmcraft.yaml` file shows that what we have is an example charm called `my-new-charm`, which builds on Ubuntu 22.04 and which uses an OCI image resource `httpbin` from `kennethreitz/httpbin`.
+
+Note that the `src/charm.py` file contains code scaffolding featuring the Charm SDK's Ops library for writing charms.
 
 Explore further, start editing the files, or skip ahead and pack the charm: 
 

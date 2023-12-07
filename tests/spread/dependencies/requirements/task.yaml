@@ -6,6 +6,7 @@ environment:
   REQUIREMENTS_FILE/hash,hash_deps,hash_pydeps,hash_deps_pydeps: requirements-hashes.txt
   CHARMCRAFT_YAML/deps,deps_pydeps,hash_deps,hash_deps_pydeps: charmcraft-python-packages.yaml
   PYDEPS/pydeps,hash_pydeps,deps_pydeps,hash_deps_pydeps: '["cosl", "pydantic"]'
+  JUJU_MODEL: requirements-test
 
 include:
   - tests/spread/dependencies
@@ -36,6 +37,8 @@ execute: |
   juju deploy ~/*.charm
 
 restore: |
+  rm ~/*.charm
+
   pushd charm
   charmcraft clean
   popd

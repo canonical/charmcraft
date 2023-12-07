@@ -29,8 +29,10 @@ from charmcraft.utils.charmlibs import (
 )
 from charmcraft.utils.cli import (
     SingleOptionEnsurer,
+    OutputFormat,
     ResourceOption,
     confirm_with_user,
+    format_content,
     format_timestamp,
     humanize_list,
 )
@@ -56,8 +58,7 @@ from charmcraft.utils.project import (
     get_charm_name_from_path,
     get_templates_environment,
 )
-from charmcraft.utils.store import ChannelData, Risk
-from charmcraft.utils.yaml import load_yaml
+from charmcraft.utils.yaml import dump_yaml, load_yaml
 
 __all__ = [
     "LibData",
@@ -87,14 +88,15 @@ __all__ = [
     "get_pip_version",
     "get_requirements_file_package_names",
     "validate_strict_dependencies",
-    "ChannelData",
-    "Risk",
     "SingleOptionEnsurer",
+    "OutputFormat",
     "ResourceOption",
     "confirm_with_user",
+    "format_content",
     "humanize_list",
     "find_charm_sources",
     "get_charm_name_from_path",
     "get_templates_environment",
+    "dump_yaml",
     "load_yaml",
 ]

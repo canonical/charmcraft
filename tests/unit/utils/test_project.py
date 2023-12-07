@@ -18,6 +18,7 @@ import pathlib
 import pytest
 import yaml
 
+from charmcraft import const
 from charmcraft.errors import DuplicateCharmsError, InvalidCharmPathError
 from charmcraft.utils.project import find_charm_sources, get_charm_name_from_path
 
@@ -142,9 +143,9 @@ def test_get_charm_name_from_path_bundle(tmp_path, build_charm_directory, name, 
 @pytest.mark.parametrize(
     ("name", "path", "del_file"),
     [
-        ("test1", "test1", "charmcraft.yaml"),
-        ("test1", "charms/test1", "metadata.yaml"),
-        ("test1", "operators/test1", "charmcraft.yaml"),
+        ("test1", "test1", const.CHARMCRAFT_FILENAME),
+        ("test1", "charms/test1", const.METADATA_FILENAME),
+        ("test1", "operators/test1", const.CHARMCRAFT_FILENAME),
     ],
 )
 def test_get_charm_name_from_path_missing_file(
@@ -171,7 +172,7 @@ def test_get_charm_name_from_path_missing_file(
 def test_get_charm_name_from_path_wrong_name(tmp_path, build_charm_directory, name, path):
     build_charm_directory(tmp_path, {name: path}, file_type="bundle")
     full_path = tmp_path / path
-    with (full_path / "metadata.yaml").open("w") as file:
+    with (full_path / const.METADATA_FILENAME).open("w") as file:
         yaml.safe_dump({"naam": "not a name"}, file)
 
     with pytest.raises(InvalidCharmPathError) as exc_info:

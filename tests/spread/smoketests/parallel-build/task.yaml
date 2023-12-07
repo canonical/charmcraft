@@ -2,7 +2,7 @@ summary: pack 3 charms at same time and check that they are built successfully
 
 kill-timeout: 60m
 
-include: 
+include:
   - tests/
 
 prepare: |

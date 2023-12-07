@@ -1,12 +1,13 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
-include: 
+include:
   - tests/
 
 kill-timeout: 30m
 
 prepare: |
   tests.pkgs install unzip
+  rm -rf charm
   charmcraft init --project-dir=charm
   cd charm
   echo "ignore me" > secrets.txt
@@ -31,14 +32,16 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |
   cd charm
   charmcraft pack --verbose
   test -f charm*.charm
+  # Charmcraft 3.0 uses the craft-parts standard prime keyword that only
+  # includes the specifically mentioned files
   unzip -c charm*.charm hello.txt | grep "^Hello, world!"
-  unzip -l charm*.charm | grep "venv/ops/charm.py"
-  unzip -l charm*.charm | grep extra_file.txt
-  ! unzip -l charm*.charm | grep secrets.txt
+  unzip -l charm*.charm | NOMATCH "venv/ops/charm.py"
+  unzip -l charm*.charm | MATCH extra_file.txt
+  unzip -l charm*.charm | NOMATCH secrets.txt

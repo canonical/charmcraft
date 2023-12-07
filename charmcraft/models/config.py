@@ -16,7 +16,7 @@
 
 """Charmcraft Juju Config pydantic model."""
 
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import pydantic
 
@@ -29,11 +29,15 @@ class JujuConfig(ModelConfigDefaults):
     See also: https://juju.is/docs/sdk/config
     """
 
-    options: Optional[Dict[str, Dict]]
+    options: Optional[Dict[str, Dict[str, Any]]]
 
     @pydantic.validator("options", pre=True)
     def validate_actions(cls, options):
         """Verify options section."""
+        if options is None:
+            return None
+        if not isinstance(options, dict):
+            raise ValueError("'options' is not a dictionary")
         for name, option in options.items():
             if not isinstance(option, dict):
                 raise ValueError(f"'{name}' is not a dictionary")

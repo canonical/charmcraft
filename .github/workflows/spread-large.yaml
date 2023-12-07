@@ -1,4 +1,4 @@
-name: Large Manual Spread
+name: Weekly Spread
 on:
   schedule:
     # At 00:00 on Wednesday and Sunday.

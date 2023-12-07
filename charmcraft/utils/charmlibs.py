@@ -21,23 +21,22 @@ import hashlib
 import os
 import pathlib
 from dataclasses import dataclass
-from typing import List, Optional, Set
 
 import yaml
 from craft_cli import CraftError
 
-from charmcraft.errors import BadLibraryNameError, BadLibraryPathError
+from charmcraft import const, errors
 
 
 @dataclass(frozen=True)
 class LibData:
     """All data fields for a library, including external ones."""
 
-    lib_id: Optional[str]
+    lib_id: str | None
     api: int
     patch: int
-    content: Optional[str]
-    content_hash: Optional[str]
+    content: str | None
+    content_hash: str | None
     full_name: str
     path: pathlib.Path
     lib_name: str
@@ -51,15 +50,15 @@ class LibInternals:
     lib_id: str
     api: int
     patch: int
-    pydeps: List[str]
+    pydeps: list[str]
     content_hash: str
     content: str
 
 
-def get_name_from_metadata() -> Optional[str]:
+def get_name_from_metadata() -> str | None:
     """Return the name if present and plausible in metadata.yaml."""
     try:
-        with open("metadata.yaml", "rb") as fh:
+        with open(const.METADATA_FILENAME, "rb") as fh:
             metadata = yaml.safe_load(fh)
         charm_name = metadata["name"]
     except (yaml.error.YAMLError, OSError, KeyError):
@@ -184,9 +183,9 @@ def get_lib_info(*, full_name=None, lib_path=None):
         try:
             libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
         except ValueError:
-            raise BadLibraryPathError(lib_path)
+            raise errors.BadLibraryPathError(lib_path)
         if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":
-            raise BadLibraryPathError(lib_path)
+            raise errors.BadLibraryPathError(lib_path)
         full_name = ".".join((charmsdir, importable_charm_name, v_api, lib_path.stem))
 
     else:
@@ -196,13 +195,13 @@ def get_lib_info(*, full_name=None, lib_path=None):
         try:
             charmsdir, charm_name, v_api, libfile = full_name.split(".")
         except ValueError:
-            raise BadLibraryNameError(full_name)
+            raise errors.BadLibraryNameError(full_name)
 
         # the lib full_name includes the charm_name which might not be importable (dashes)
         importable_charm_name = create_importable_name(charm_name)
 
         if charmsdir != "charms":
-            raise BadLibraryNameError(full_name)
+            raise errors.BadLibraryNameError(full_name)
         path = pathlib.Path("lib")
         lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + ".py")
 
@@ -252,8 +251,8 @@ def get_lib_info(*, full_name=None, lib_path=None):
 
 
 def get_libs_from_tree(
-    charm_name: Optional[str] = None, root: Optional[pathlib.Path] = None
-) -> List[LibData]:
+    charm_name: str | None = None, root: pathlib.Path | None = None
+) -> list[LibData]:
     """Get library info from the directories tree (for a specific charm if specified).
 
     It only follows/uses the directories/files for a correct charmlibs
@@ -285,7 +284,7 @@ def get_libs_from_tree(
     return local_libs_data
 
 
-def collect_charmlib_pydeps(basedir: pathlib.Path) -> Set[str]:
+def collect_charmlib_pydeps(basedir: pathlib.Path) -> set[str]:
     """Collect the Python dependencies from all the project's charm libraries."""
     all_libs_data = get_libs_from_tree(root=basedir)
     charmlib_deps = set()

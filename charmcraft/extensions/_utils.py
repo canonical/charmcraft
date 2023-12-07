@@ -18,13 +18,13 @@
 
 import copy
 from pathlib import Path
-from typing import Any, Dict, List, Set, Union, cast
+from typing import Any, cast
 
 from charmcraft.extensions.extension import Extension
 from charmcraft.extensions.registry import get_extension_class
 
 
-def apply_extensions(project_root: Path, yaml_data: Dict[str, Any]) -> Dict[str, Any]:
+def apply_extensions(project_root: Path, yaml_data: dict[str, Any]) -> dict[str, Any]:
     """Apply all extensions.
 
     :param dict yaml_data: Loaded, unprocessed charmcraft.yaml
@@ -32,7 +32,7 @@ def apply_extensions(project_root: Path, yaml_data: Dict[str, Any]) -> Dict[str,
     """
     # Don't modify the dict passed in
     yaml_data = copy.deepcopy(yaml_data)
-    declared_extensions: List[str] = cast(List[str], yaml_data.get("extensions", []))
+    declared_extensions: list[str] = cast(list[str], yaml_data.get("extensions", []))
     if not declared_extensions:
         return yaml_data
 
@@ -48,7 +48,7 @@ def apply_extensions(project_root: Path, yaml_data: Dict[str, Any]) -> Dict[str,
 
 
 def _apply_extension(
-    yaml_data: Dict[str, Any],
+    yaml_data: dict[str, Any],
     extension: Extension,
 ) -> None:
     # Apply the root components of the extension (if any)
@@ -78,8 +78,8 @@ def _apply_extension(
 
 
 def _apply_extension_property(
-    existing_property: Union[Dict, List], extension_property: Union[Dict, List]
-) -> Union[Dict, List]:
+    existing_property: dict | list, extension_property: dict | list
+) -> dict | list:
     if existing_property:
         # If the property is not scalar, merge them
         if isinstance(existing_property, list) and isinstance(extension_property, list):
@@ -102,10 +102,10 @@ def _apply_extension_property(
     return extension_property
 
 
-def _remove_list_duplicates(seq: List[str]) -> List[str]:
+def _remove_list_duplicates(seq: list[str]) -> list[str]:
     """De-dupe string list maintaining ordering."""
-    seen: Set[str] = set()
-    deduped: List[str] = []
+    seen: set[str] = set()
+    deduped: list[str] = []
 
     for item in seq:
         if item not in seen:

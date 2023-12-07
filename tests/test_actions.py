@@ -19,6 +19,7 @@ from textwrap import dedent
 
 import yaml
 
+from charmcraft import const
 from charmcraft.config import load
 from charmcraft.metafiles.actions import create_actions_yaml
 
@@ -93,4 +94,4 @@ def test_create_actions_yaml_none(tmp_path, prepare_charmcraft_yaml):
     actions_file = create_actions_yaml(tmp_path, config)
 
     assert actions_file is None
-    assert not os.path.exists(tmp_path / "actions.yaml")
+    assert not os.path.exists(tmp_path / const.JUJU_ACTIONS_FILENAME)

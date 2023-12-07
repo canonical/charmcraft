@@ -18,7 +18,6 @@
 
 import keyword
 import re
-from typing import Dict, Optional
 
 import pydantic
 
@@ -32,7 +31,7 @@ class JujuActions(ModelConfigDefaults):
     """
 
     _action_name_regex = re.compile(r"^[a-zA-Z_][a-zA-Z0-9-_]*$")
-    actions: Optional[Dict[str, Dict]]
+    actions: dict[str, dict] | None
 
     @pydantic.validator("actions")
     def validate_actions(cls, actions):

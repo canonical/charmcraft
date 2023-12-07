@@ -1,9 +1,9 @@
 [tool.black]
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ["py310", "py311"]
 line-length = 99
 
 [tool.codespell]
-ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented"
+ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread"
 skip = ".tox,.git,build,.*_cache,__pycache__,*.tar,*.snap,*.png,./node_modules,./docs/_build,.direnv,.venv,venv,.vscode,charmcraft.spec"
 quiet-level = 3
 check-filenames = true
@@ -20,6 +20,9 @@ line_length = 88
 minversion = "7.0"
 testpaths = "tests"
 xfail_strict = true
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 
 [tool.coverage.run]
 branch = true
@@ -32,16 +35,15 @@ skip_empty = true
 
 [tool.pyright]
 strict = ["charmcraft"]
-pythonVersion = "3.8"
+pythonVersion = "3.10"
 pythonPlatform = "Linux"
-venvPath = ".tox"
-venv = "py38"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 packages = [
     "charmcraft",
 ]
+plugins = ["pydantic.mypy"]
 exclude = [
     "build",
     "results",
@@ -64,8 +66,8 @@ module=[
     "charmcraft.commands.extensions",
     "charmcraft.commands.pack",
     "charmcraft.commands.store",
-    "charmcraft.commands.store.registry",
-    "charmcraft.commands.store.store",
+    "charmcraft.store.registry",
+    "charmcraft.store.store",
     "charmcraft.config",
     "charmcraft.extensions._utils",
     "charmcraft.linters",
@@ -89,7 +91,7 @@ strict = false
 
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py310"
 extend-exclude = [
     "docs",
     "__pycache__",

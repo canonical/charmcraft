@@ -35,7 +35,7 @@ PROFILES = {
     "simple": "init-simple",
     "kubernetes": "init-kubernetes",
     "machine": "init-machine",
-    "flask-framework": "init-flask-framework"
+    "flask-framework": "init-flask-framework",
 }
 DEFAULT_PROFILE = "simple"
 

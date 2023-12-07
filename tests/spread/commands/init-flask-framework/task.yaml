@@ -15,6 +15,7 @@ execute: |
   test -f *.charm
 
 restore: |
+  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
   pushd test-init
   charmcraft clean
   popd

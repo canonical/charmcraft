@@ -10,3 +10,4 @@ rules:
   octal-values: enable
   truthy:
     check-keys: false
+  indentation: disable  # We have a lot of files with weird indentation right now.

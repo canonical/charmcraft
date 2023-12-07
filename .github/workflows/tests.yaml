@@ -41,9 +41,9 @@ jobs:
           echo "::endgroup::"
       - name: Run Linters
         # Currently picking specific linters that pass until we can enable them all.
-        # Still missing: pyright, yamllint
+        # Still missing: pyright
         # run: tox run --skip-pkg-install --no-list-dependencies -m lint
-        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy
+        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy,lint-yaml
   run-tests:
     strategy:
       matrix:
@@ -120,27 +120,27 @@ jobs:
           snap: ${{ steps.snapcraft.outputs.snap }}
           release: edge/${{ steps.vars.outputs.branch }}
 
-# Commented out until we can provide the necessary launchpad credentials.
-#  snap-remote-build:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Start installing snapcraft
-#        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
-#        id: install
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 0
-#      - name: Remote-build snap
-#        id: snapcraft
-#        run: |
-#          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
-#          snapcraft remote-build --launchpad-accept-public-upload
-#      - name: Upload snap artifacts
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: snap
-#          path: ./*.snap
+  # Commented out until we can provide the necessary launchpad credentials.
+  #  snap-remote-build:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - name: Start installing snapcraft
+  #        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
+  #        id: install
+  #      - name: Checkout code
+  #        uses: actions/checkout@v3
+  #        with:
+  #          fetch-depth: 0
+  #      - name: Remote-build snap
+  #        id: snapcraft
+  #        run: |
+  #          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
+  #          snapcraft remote-build --launchpad-accept-public-upload
+  #      - name: Upload snap artifacts
+  #        uses: actions/upload-artifact@v3
+  #        with:
+  #          name: snap
+  #          path: ./*.snap
 
   snap-tests:
     needs: [snap-build]

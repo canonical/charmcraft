@@ -83,8 +83,11 @@ class ExpandExtensionsCommand(BaseCommand):
     help_msg = "Expand extensions in charmcraft.yaml"
     overview = dedent(
         """
-        Extensions listed charmcraft.yaml will be
-        expanded and shown as output.
+        Expand charmcraft.yaml using the extensions specified in the file and
+        output the resulting configuration to the terminal.
+
+        This allows you to see how the extensions used modify your existing
+        charmcraft.yaml file.
         """
     )
 

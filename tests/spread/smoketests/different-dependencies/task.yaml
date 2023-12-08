@@ -1,6 +1,6 @@
 summary: pack a charm with different dependencies specified
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -21,13 +21,13 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |
   cd charm
   charmcraft pack --verbose
   test -f charm*.charm
-  unzip -l charm*.charm | grep "venv/pytest/__init__.py"
-  unzip -l charm*.charm | grep "venv/bumpversion/__init__.py"
-  unzip -l charm*.charm | grep "venv/fades/__init__.py"
+  unzip -l charm*.charm | MATCH "venv/pytest/__init__.py"
+  unzip -l charm*.charm | MATCH "venv/bumpversion/__init__.py"
+  unzip -l charm*.charm | MATCH "venv/fades/__init__.py"

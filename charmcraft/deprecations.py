@@ -23,7 +23,6 @@ When a new deprecation has occurred, write a Deprecation Notice for it here
 
 Then add that ID along with the deprecation title in the list below.
 """
-from typing import Dict
 
 from craft_cli import emit
 
@@ -31,7 +30,7 @@ from charmcraft.env import is_charmcraft_running_in_managed_mode
 
 # the message to show for each deprecation ID (this needs to be in sync with the
 # documentation)
-_DEPRECATION_MESSAGES: Dict[str, str] = {
+_DEPRECATION_MESSAGES: dict[str, str] = {
     # example of item in this structure when something is deprecated:
 }
 

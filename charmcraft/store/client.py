@@ -19,7 +19,7 @@
 import os
 import platform
 from json.decoder import JSONDecodeError
-from typing import Any, Dict
+from typing import Any
 
 import craft_store
 import requests
@@ -30,11 +30,9 @@ from requests_toolbelt import (  # type: ignore[import]
     MultipartEncoderMonitor,
 )
 
-from charmcraft import __version__, utils
+from charmcraft import __version__, const, utils
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
-
-ALTERNATE_AUTH_ENV_VAR = "CHARMCRAFT_AUTH"
 
 
 def build_user_agent():
@@ -61,7 +59,7 @@ class AnonymousClient:
         """Return a request.Response to a urlpath."""
         return self._http_client.request(method, self.api_base_url + urlpath, *args, **kwargs).text
 
-    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> Dict[str, Any]:
+    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> dict[str, Any]:
         """Return .json() from a request.Response to a urlpath."""
         response = self._http_client.request(method, self.api_base_url + urlpath, *args, **kwargs)
 
@@ -86,24 +84,24 @@ class Client(craft_store.StoreClient):
             endpoints=endpoints.CHARMHUB,
             application_name="charmcraft",
             user_agent=build_user_agent(),
-            environment_auth=ALTERNATE_AUTH_ENV_VAR,
+            environment_auth=const.ALTERNATE_AUTH_ENV_VAR,
             ephemeral=ephemeral,
         )
 
     def login(self, *args, **kwargs):
         """Intercept regular login functionality to forbid it when using alternate auth."""
-        if os.getenv(ALTERNATE_AUTH_ENV_VAR) is not None:
+        if os.getenv(const.ALTERNATE_AUTH_ENV_VAR) is not None:
             raise CraftError(
-                f"Cannot login when using alternative auth through {ALTERNATE_AUTH_ENV_VAR} "
+                f"Cannot login when using alternative auth through {const.ALTERNATE_AUTH_ENV_VAR} "
                 "environment variable."
             )
         return super().login(*args, **kwargs)
 
     def logout(self, *args, **kwargs):
         """Intercept regular logout functionality to forbid it when using alternate auth."""
-        if os.getenv(ALTERNATE_AUTH_ENV_VAR) is not None:
+        if os.getenv(const.ALTERNATE_AUTH_ENV_VAR) is not None:
             raise CraftError(
-                f"Cannot logout when using alternative auth through {ALTERNATE_AUTH_ENV_VAR} "
+                f"Cannot logout when using alternative auth through {const.ALTERNATE_AUTH_ENV_VAR} "
                 "environment variable."
             )
         return super().logout(*args, **kwargs)
@@ -112,7 +110,7 @@ class Client(craft_store.StoreClient):
         """Return a request.Response to a urlpath."""
         return super().request(method, self.api_base_url + urlpath, *args, **kwargs).text
 
-    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> Dict[str, Any]:
+    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> dict[str, Any]:
         """Return .json() from a request.Response to a urlpath."""
         response = super().request(method, self.api_base_url + urlpath, *args, **kwargs)
 

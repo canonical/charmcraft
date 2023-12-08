@@ -3,7 +3,7 @@ summary: test snap configure hook of charmcraft
 systems:
   - ubuntu-22.04-64
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -14,7 +14,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
   snap remove charmcraft
 

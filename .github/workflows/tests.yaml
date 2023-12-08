@@ -2,7 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - "feature/**"
 
   pull_request:
 
@@ -13,6 +15,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Begin snap installs
+        run: |
+          echo "Installing snaps in the background while running apt and pip..."
+          sudo snap install --no-wait shellcheck ruff
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -24,10 +30,6 @@ jobs:
           cache: 'pip'
       - name: Configure environment
         run: |
-          echo "::group::Begin snap install"
-          echo "Installing snaps in the background while running apt and pip..."
-          sudo snap install --no-wait shellcheck
-          echo "::endgroup::"
           echo "::group::pip install"
           python -m pip install tox
           echo "::endgroup::"
@@ -39,17 +41,15 @@ jobs:
           echo "::endgroup::"
       - name: Run Linters
         # Currently picking specific linters that pass until we can enable them all.
-        # Still missing: pyright, yamllint
+        # Still missing: pyright
         # run: tox run --skip-pkg-install --no-list-dependencies -m lint
-        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy
+        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy,lint-yaml
   run-tests:
     strategy:
       matrix:
         os: [macos-11, macos-12, windows-2019, windows-2022]
-        python-version: [3.8, "3.10", "3.11"]
+        python-version: ["3.10", "3.11"]
         include:
-          - os: ubuntu-20.04
-            python-version: "3.8"
           - os: ubuntu-22.04
             python-version: "3.10"
 
@@ -72,18 +72,12 @@ jobs:
         run: |
           pip install -U wheel setuptools
       - name: Install Ubuntu-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
-      - name: Install Ubuntu 20.04-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
-        run: |
-          pip install -U -r requirements-focal.txt
-      - name: Install Ubuntu 22.04-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
-        run: |
-          pip install -U -r requirements-jammy.txt
+          export $(cat /etc/os-release | grep VERSION_CODENAME)
+          pip install -U -r "requirements-${VERSION_CODENAME}.txt"
       - name: Install charmcraft and dependencies
         run: |
           pip install -U -r requirements-dev.txt
@@ -107,28 +101,46 @@ jobs:
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
+      - name: Get branch name
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]
+          then
+            echo "branch=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+          else
+            branch=$(echo ${GITHUB_REF#refs/*/} | sed -e 's|feature/\(.*\)|\1|')
+            echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish feature branch to edge/${{ steps.vars.outputs.branch }}
+        if: ${{ env.SNAPCRAFT_STORE_CREDENTIALS != '' }}
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: edge/${{ steps.vars.outputs.branch }}
 
-# Commented out until we can provide the necessary launchpad credentials.
-#  snap-remote-build:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Start installing snapcraft
-#        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
-#        id: install
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 0
-#      - name: Remote-build snap
-#        id: snapcraft
-#        run: |
-#          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
-#          snapcraft remote-build --launchpad-accept-public-upload
-#      - name: Upload snap artifacts
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: snap
-#          path: ./*.snap
+  # Commented out until we can provide the necessary launchpad credentials.
+  #  snap-remote-build:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - name: Start installing snapcraft
+  #        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
+  #        id: install
+  #      - name: Checkout code
+  #        uses: actions/checkout@v3
+  #        with:
+  #          fetch-depth: 0
+  #      - name: Remote-build snap
+  #        id: snapcraft
+  #        run: |
+  #          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
+  #          snapcraft remote-build --launchpad-accept-public-upload
+  #      - name: Upload snap artifacts
+  #        uses: actions/upload-artifact@v3
+  #        with:
+  #          name: snap
+  #          path: ./*.snap
 
   snap-tests:
     needs: [snap-build]
@@ -188,6 +200,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pyinstaller -r requirements.txt
+          pip install .
       - name: Build
         run: |
           pyinstaller charmcraft.spec

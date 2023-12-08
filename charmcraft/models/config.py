@@ -16,7 +16,7 @@
 
 """Charmcraft Juju Config pydantic model."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 import pydantic
 
@@ -29,7 +29,7 @@ class JujuConfig(ModelConfigDefaults):
     See also: https://juju.is/docs/sdk/config
     """
 
-    options: Optional[Dict[str, Dict[str, Any]]]
+    options: dict[str, dict[str, Any]] | None
 
     @pydantic.validator("options", pre=True)
     def validate_actions(cls, options):

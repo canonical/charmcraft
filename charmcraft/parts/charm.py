@@ -20,7 +20,7 @@ import re
 import shlex
 import sys
 from contextlib import suppress
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, cast
 
 import pydantic
 from craft_parts import Step, callbacks, plugins
@@ -43,9 +43,9 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
 
     source: str
     charm_entrypoint: str = "src/charm.py"
-    charm_binary_python_packages: List[str] = []
-    charm_python_packages: List[str] = []
-    charm_requirements: List[str] = []
+    charm_binary_python_packages: list[str] = []
+    charm_python_packages: list[str] = []
+    charm_requirements: list[str] = []
     charm_strict_dependencies: bool = False
     """Whether to select strict dependencies only.
 
@@ -105,7 +105,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
 
     @pydantic.validator("charm_strict_dependencies")
     def validate_strict_dependencies(
-        cls, charm_strict_dependencies: bool, values: Dict[str, Any]
+        cls, charm_strict_dependencies: bool, values: dict[str, Any]
     ) -> bool:
         """Validate basic requirements if strict dependencies are enabled.
 
@@ -152,7 +152,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
         return charm_strict_dependencies
 
     @classmethod
-    def unmarshal(cls, data: Dict[str, Any]):
+    def unmarshal(cls, data: dict[str, Any]):
         """Populate charm properties from the part specification.
 
         :param data: A dictionary containing part properties.
@@ -208,11 +208,11 @@ class CharmPlugin(plugins.Plugin):
     properties_class = CharmPluginProperties
 
     @classmethod
-    def get_build_snaps(cls) -> Set[str]:
+    def get_build_snaps(cls) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
 
-    def get_build_packages(self) -> Set[str]:
+    def get_build_packages(self) -> set[str]:
         """Return a set of required packages to install in the build environment."""
         if platform.is_deb_based():
             return {
@@ -263,7 +263,7 @@ class CharmPlugin(plugins.Plugin):
         else:
             return set()
 
-    def get_build_environment(self) -> Dict[str, str]:
+    def get_build_environment(self) -> dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
         os_special_paths = self._get_os_special_priority_paths()
         if os_special_paths:
@@ -271,7 +271,7 @@ class CharmPlugin(plugins.Plugin):
 
         return {}
 
-    def get_build_commands(self) -> List[str]:
+    def get_build_commands(self) -> list[str]:
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
 
@@ -326,7 +326,7 @@ class CharmPlugin(plugins.Plugin):
 
         return commands
 
-    def _get_strict_dependencies_parameters(self) -> List[str]:
+    def _get_strict_dependencies_parameters(self) -> list[str]:
         """Get the parameters to pass to the charm builder if strict dependencies are enabled."""
         options = cast(CharmPluginProperties, self._options)
         return [
@@ -335,7 +335,7 @@ class CharmPlugin(plugins.Plugin):
             *(f"--requirement={reqs}" for reqs in options.charm_requirements),
         ]
 
-    def _get_legacy_dependencies_parameters(self) -> List[str]:
+    def _get_legacy_dependencies_parameters(self) -> list[str]:
         """Get the parameters to pass to the charm builder with strict dependencies disabled."""
         options = cast(CharmPluginProperties, self._options)
         parameters = []
@@ -376,7 +376,7 @@ class CharmPlugin(plugins.Plugin):
         """Collect metrics left by charm_builder.py."""
         instrum.merge_from(env.get_charm_builder_metrics_path())
 
-    def _get_os_special_priority_paths(self) -> Optional[str]:
+    def _get_os_special_priority_paths(self) -> str | None:
         """Return a str of PATH for special OS."""
         with suppress(OsReleaseIdError, OsReleaseVersionIdError):
             os_release = os_utils.OsRelease()

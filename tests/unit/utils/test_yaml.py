@@ -14,10 +14,11 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 import sys
+import textwrap
 
 import pytest
 
-from charmcraft.utils.yaml import load_yaml
+from charmcraft.utils.yaml import dump_yaml, load_yaml
 
 
 def test_load_yaml_success(tmp_path):
@@ -78,3 +79,27 @@ def test_load_yaml_file_problem(tmp_path, emitter):
 
     expected = f"Failed to read/parse config file {str(test_file)!r}.*PermissionError.*"
     emitter.assert_debug(expected, regex=True)
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        (None, "null\n...\n"),
+        (1, "1\n...\n"),
+        ("Stringy!", "Stringy!\n...\n"),
+        (
+            {"thing": "multi\nline\nstring\n", "single": "single line string"},
+            textwrap.dedent(
+                """\
+            thing: |
+              multi
+              line
+              string
+            single: single line string
+            """
+            ),
+        ),
+    ],
+)
+def test_dump_yaml(data, expected):
+    assert dump_yaml(data) == expected

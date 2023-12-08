@@ -21,6 +21,7 @@ import pytest
 from craft_cli import CraftError
 from craft_parts import Action, ActionType, PartsError, Step
 
+from charmcraft import const
 from charmcraft.parts import lifecycle
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
@@ -72,7 +73,7 @@ def test_partslifecycle_run_new_entrypoint(tmp_path, monkeypatch):
     # create dispatcher from previous run
     prime_dir = tmp_path / "prime"
     prime_dir.mkdir()
-    dispatch = prime_dir / "dispatch"
+    dispatch = prime_dir / const.DISPATCH_FILENAME
     dispatch.write_text(
         'JUJU_DISPATCH_PATH="${JUJU_DISPATCH_PATH:-$0}" PYTHONPATH=lib:venv ./src/charm.py'
     )
@@ -106,7 +107,7 @@ def test_partslifecycle_run_same_entrypoint(tmp_path, monkeypatch):
     # create dispatcher from previous run
     prime_dir = tmp_path / "prime"
     prime_dir.mkdir()
-    dispatch = prime_dir / "dispatch"
+    dispatch = prime_dir / const.DISPATCH_FILENAME
     dispatch.write_text(
         'JUJU_DISPATCH_PATH="${JUJU_DISPATCH_PATH:-$0}" PYTHONPATH=lib:venv ./src/charm.py'
     )
@@ -189,7 +190,7 @@ def test_partslifecycle_run_actions_progress(tmp_path, monkeypatch, emitter):
 
 
 def test_parthelpers_get_dispatch_entrypoint(tmp_path):
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text(
         'JUJU_DISPATCH_PATH="${JUJU_DISPATCH_PATH:-$0}" PYTHONPATH=lib:venv ./my/entrypoint'
     )

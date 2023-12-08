@@ -37,7 +37,7 @@ execute: |
   juju deploy ~/*.charm
 
 restore: |
-  rm ~/*.charm
+  rm -f ~/*.charm
 
   pushd charm
   charmcraft clean

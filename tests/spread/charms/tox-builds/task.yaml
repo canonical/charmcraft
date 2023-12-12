@@ -1,0 +1,39 @@
+summary: pack external charms that use tox
+manual: true
+systems:
+  - ubuntu-22.04-64
+kill-timeout: 60m
+
+environment:
+  CHARM/mysql: https://github.com/canonical/mysql-operator
+  CHARM/mysql_k8s: https://github.com/canonical/mysql-k8s-operator
+  CHARM/postgresql: https://github.com/canonical/postgresql-operator
+  CHARM/postgresql_k8s: https://github.com/canonical/postgresql-k8s-operator
+  JUJU_CONTROLLER: k8s
+  JUJU_MODEL: k8s-operator-test
+
+
+prepare: |
+  git clone --depth=1 "${CHARM}" charm
+  pip install tox poetry
+  cd charm
+  tox run -e pack-wrapper
+
+restore: |
+  rm -f ~/*.charm
+
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  cd charm
+
+
+  charmcraft pack --verbose
+
+  mv *.charm ~/
+  # TODO: pull the referenced OCI images and deploy to juju.
+  # ls -1 ~/*.charm | head -n 1 | xargs -n 1 juju deploy

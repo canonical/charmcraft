@@ -14,13 +14,9 @@ environment:
   CHARM/minio: https://github.com/canonical/minio-operator
   CHARM/mlflow: https://github.com/canonical/mlflow-operator
   CHARM/mongodb: https://github.com/canonical/mongodb-operator
-  # Disabled because it uses a tox-based workflow
-  # CHARM/mysql: https://github.com/canonical/mysql-operator
-  # Doesn't use charmcraft
-  # CHARM/nats: https://github.com/canonical/nats-operator
+  CHARM/nats: https://github.com/canonical/nats-operator
   CHARM/opensearch: https://github.com/canonical/opensearch-operator
   CHARM/pgbouncer: https://github.com/canonical/pgbouncer-operator
-  CHARM/postgresql: https://github.com/canonical/postgresql-operator
   CHARM/saml_integrator: https://github.com/canonical/saml-integrator-operator
   CHARM/seldon_core: https://github.com/canonical/seldon-core-operator
   CHARM/tls_certificates: https://github.com/canonical/tls-certificates-operator

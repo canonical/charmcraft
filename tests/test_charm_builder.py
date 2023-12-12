@@ -29,6 +29,7 @@ from charmcraft import charm_builder
 from charmcraft.charm_builder import (
     DEPENDENCIES_HASH_FILENAME,
     DISPATCH_CONTENT,
+    KNOWN_GOOD_PIP_URL,
     STAGING_VENV_DIRNAME,
     VENV_DIRNAME,
     CharmBuilder,
@@ -614,6 +615,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
         call([pip_cmd, "install", f"--requirement={reqs_file}"]),
     ]
 
@@ -650,6 +652,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / STAGING_VENV_DIRNAME, "pip"))
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
         call(
             [
                 pip_cmd,
@@ -710,6 +713,7 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
         call([pip_cmd, "install", "--no-binary=pkg1,pkg2", "pkg1", "pkg2"]),
     ]
 
@@ -742,6 +746,7 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
         call([pip_cmd, "install", "pkg1", "pkg2"]),
     ]
 
@@ -780,6 +785,7 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
         call(
             [
                 pip_cmd,

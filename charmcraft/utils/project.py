@@ -19,18 +19,19 @@ import os
 import pathlib
 import sys
 from collections import defaultdict
-from typing import Container, Dict
+from collections.abc import Container
 
 from craft_cli import emit
 from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
+from charmcraft import const
 from charmcraft.errors import DuplicateCharmsError, InvalidCharmPathError
 from charmcraft.utils.yaml import load_yaml
 
 
 def find_charm_sources(
     base_path: pathlib.Path, charm_names: Container[str]
-) -> Dict[str, pathlib.Path]:
+) -> dict[str, pathlib.Path]:
     """Find all charm directories matching the given names under a base path.
 
     :param base_path: The base directory under which to look.
@@ -39,13 +40,15 @@ def find_charm_sources(
     :raises: DuplicateCharmsError if a charm is found in multiple directories.
     """
     duplicate_charms = defaultdict(list)
-    charm_paths: Dict[str, pathlib.Path] = {}
+    charm_paths: dict[str, pathlib.Path] = {}
     outer_potential_paths = itertools.chain(
         (p.parent.resolve() for p in base_path.glob("charms/*/metadata.yaml")),
         (p.parent.resolve() for p in base_path.glob("operators/*/metadata.yaml")),
         (p.parent.resolve() for p in base_path.glob("*/metadata.yaml")),
     )
-    potential_paths = filter(lambda p: (p / "charmcraft.yaml").exists(), outer_potential_paths)
+    potential_paths = filter(
+        lambda p: (p / const.CHARMCRAFT_FILENAME).exists(), outer_potential_paths
+    )
     for path in potential_paths:
         if path in charm_paths.values():  # Symlinks can cause ignorable duplicate paths.
             continue
@@ -74,10 +77,10 @@ def get_charm_name_from_path(path: pathlib.Path) -> str:
     :returns: The name of the charm in this path
     :raises: InvalidCharmPathError if the path given is not a valid charm source.
     """
-    charmcraft_yaml = load_yaml(path / "charmcraft.yaml")
+    charmcraft_yaml = load_yaml(path / const.CHARMCRAFT_FILENAME)
     if charmcraft_yaml is None or charmcraft_yaml.get("type") != "charm":
         raise InvalidCharmPathError(path)
-    metadata_yaml = load_yaml(path / "metadata.yaml")
+    metadata_yaml = load_yaml(path / const.METADATA_FILENAME)
     if metadata_yaml is None or "name" not in metadata_yaml:
         raise InvalidCharmPathError(path)
     return metadata_yaml["name"]

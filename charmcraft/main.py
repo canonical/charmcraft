@@ -33,10 +33,8 @@ from craft_cli import (
     emit,
 )
 
-from charmcraft import __version__, config, env, utils
+from charmcraft import config, const, env, utils
 from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
-from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
-from charmcraft.const import SHARED_CACHE_ENV_VAR
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -62,8 +60,8 @@ See https://charmhub.io/publishing for more information.
 _basic_commands = [
     analyze.AnalyzeCommand,
     clean.CleanCommand,
-    pack.PackCommand,
     init.InitCommand,
+    pack.PackCommand,
     version.VersionCommand,
 ]
 _charmhub_commands = [
@@ -106,7 +104,7 @@ COMMAND_GROUPS = [
 ]
 
 # non-charmcraft useful environment variables to log
-EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP", SHARED_CACHE_ENV_VAR)
+EXTRA_ENVIRONMENT = ("DESKTOP_SESSION", "XDG_CURRENT_DESKTOP", const.SHARED_CACHE_ENV_VAR)
 
 
 def _get_system_details():
@@ -118,8 +116,8 @@ def _get_system_details():
         for name, value in os.environ.items()
         if name.startswith("CHARMCRAFT") or name in EXTRA_ENVIRONMENT
     }
-    if ALTERNATE_AUTH_ENV_VAR in useful_env:
-        useful_env[ALTERNATE_AUTH_ENV_VAR] = "<hidden>"
+    if const.ALTERNATE_AUTH_ENV_VAR in useful_env:
+        useful_env[const.ALTERNATE_AUTH_ENV_VAR] = "<hidden>"
     env_string = ", ".join(f"{name}={value!r}" for name, value in sorted(useful_env.items()))
     if not env_string:
         env_string = "None"
@@ -142,22 +140,9 @@ def _emit_error(error, cause=None):
     emit.error(error)
 
 
-def main(argv=None):
+def main(argv):
     """Provide the main entry point."""
-    if env.is_charmcraft_running_in_managed_mode():
-        logpath = env.get_managed_environment_log_path()
-    else:
-        logpath = None
-
-    emit.init(
-        EmitterMode.BRIEF,
-        "charmcraft",
-        f"Starting charmcraft version {__version__}",
-        log_filepath=logpath,
-    )
-
-    if argv is None:
-        argv = sys.argv
+    emit.debug("Starting classic fallback.")
 
     extra_global_options = [
         GlobalArgument(
@@ -221,4 +206,15 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    if env.is_charmcraft_running_in_managed_mode():
+        logpath = env.get_managed_environment_log_path()
+    else:
+        logpath = None
+
+    emit.init(
+        EmitterMode.BRIEF,
+        "charmcraft",
+        "Starting legacy charmcraft entrypoint",
+        log_filepath=logpath,
+    )
     sys.exit(main(sys.argv))

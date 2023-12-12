@@ -27,11 +27,8 @@ import requests
 from craft_cli import CraftError
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
-from charmcraft.commands.store.client import (
-    AnonymousClient,
-    Client,
-    build_user_agent,
-)
+from charmcraft import const
+from charmcraft.store import AnonymousClient, Client, build_user_agent
 from charmcraft.utils import OSPlatform
 
 # something well formed as tests exercise the internal machinery
@@ -45,7 +42,7 @@ def test_useragent_linux(monkeypatch):
     """Construct a user-agent as a patched Linux machine"""
     monkeypatch.setenv("TRAVIS_TESTING", "1")
     os_platform = OSPlatform(system="Arch Linux", release="5.10.10-arch1-1", machine="x86_64")
-    with patch("charmcraft.commands.store.client.__version__", "1.2.3"), patch(
+    with patch("charmcraft.store.client.__version__", "1.2.3"), patch(
         "charmcraft.utils.get_os_platform", return_value=os_platform
     ), patch("platform.system", return_value="Linux"), patch(
         "platform.machine", return_value="x86_64"
@@ -59,7 +56,7 @@ def test_useragent_linux(monkeypatch):
 def test_useragent_windows(monkeypatch):
     """Construct a user-agent as a patched Windows machine"""
     monkeypatch.setenv("TRAVIS_TESTING", "1")
-    with patch("charmcraft.commands.store.client.__version__", "1.2.3"), patch(
+    with patch("charmcraft.store.client.__version__", "1.2.3"), patch(
         "platform.system", return_value="Windows"
     ), patch("platform.release", return_value="10"), patch(
         "platform.machine", return_value="AMD64"
@@ -141,7 +138,7 @@ def test_client_init():
     storage_url = "http://storage.test"
     user_agent = "Super User Agent"
     with patch("craft_store.StoreClient.__init__") as mock_client_init:
-        with patch("charmcraft.commands.store.client.build_user_agent") as mock_ua:
+        with patch("charmcraft.store.client.build_user_agent") as mock_ua:
             mock_ua.return_value = user_agent
             Client(api_url, storage_url)
     mock_client_init.assert_called_with(
@@ -150,7 +147,7 @@ def test_client_init():
         endpoints=craft_store.endpoints.CHARMHUB,
         application_name="charmcraft",
         user_agent=user_agent,
-        environment_auth="CHARMCRAFT_AUTH",
+        environment_auth=const.ALTERNATE_AUTH_ENV_VAR,
         ephemeral=False,
     )
 
@@ -334,7 +331,7 @@ def test_storage_push_succesful(client_class):
 
 def test_alternate_auth_login_forbidden(client_class, monkeypatch):
     """Login functionality cannot be used if alternate auth is present."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", ENCODED_CREDENTIALS)
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, ENCODED_CREDENTIALS)
     client = client_class("http://api.test", "http://storage.test")
     with pytest.raises(CraftError) as cm:
         client.login()
@@ -346,7 +343,7 @@ def test_alternate_auth_login_forbidden(client_class, monkeypatch):
 
 def test_alternate_auth_logout_forbidden(client_class, monkeypatch):
     """Logout functionality cannot be used if alternate auth is present."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", ENCODED_CREDENTIALS)
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, ENCODED_CREDENTIALS)
     client = client_class("http://api.test", "http://storage.test")
     with pytest.raises(CraftError) as cm:
         client.logout()
@@ -362,7 +359,7 @@ def test_anonymous_client_init():
     storage_url = "http://storage.test"
     user_agent = "Super User Agent"
     with patch("craft_store.http_client.HTTPClient.__init__") as mock_client_init:
-        with patch("charmcraft.commands.store.client.build_user_agent") as mock_ua:
+        with patch("charmcraft.store.client.build_user_agent") as mock_ua:
             mock_ua.return_value = user_agent
             mock_client_init.return_value = None
             AnonymousClient(api_url, storage_url)

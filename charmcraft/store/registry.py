@@ -24,11 +24,11 @@ import json
 import os
 import tarfile
 import tempfile
-from typing import Any, Dict, Union
+from typing import Any
 from urllib.request import parse_http_list, parse_keqv_list
 
 import requests
-import requests_unixsocket
+import requests_unixsocket  # type: ignore[import-untyped]
 from craft_cli import CraftError, emit
 
 # some mimetypes
@@ -50,7 +50,7 @@ CHUNK_SIZE = 2**20
 
 def assert_response_ok(
     response: requests.Response, expected_status: int = 200
-) -> Union[Dict[str, Any], None]:
+) -> dict[str, Any] | None:
     """Assert the response is ok."""
     if response.status_code != expected_status:
         ct = response.headers.get("Content-Type", "")
@@ -286,7 +286,7 @@ class LocalDockerdInterface:
     def __init__(self):
         self.session = requests_unixsocket.Session()
 
-    def get_image_info_from_id(self, image_id: str) -> Union[dict, None]:
+    def get_image_info_from_id(self, image_id: str) -> dict | None:
         """Get the info for a specific image using its id.
 
         Returns None to flag that the requested id was not found for any reason.
@@ -311,7 +311,7 @@ class LocalDockerdInterface:
             return None
         return None
 
-    def get_image_info_from_digest(self, digest: str) -> Union[dict, None]:
+    def get_image_info_from_digest(self, digest: str) -> dict | None:
         """Get the info for a specific image using its digest.
 
         Returns None to flag that the requested digest was not found for any reason.
@@ -396,7 +396,7 @@ class ImageHandler:
         # finally remove the temp filepath
         os.unlink(filepath)
 
-    def upload_from_local(self, image_info: Dict[str, Any]) -> Union[str, None]:
+    def upload_from_local(self, image_info: dict[str, Any]) -> str | None:
         """Upload the image from the local registry.
 
         Returns the new remote digest.

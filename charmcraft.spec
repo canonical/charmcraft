@@ -8,7 +8,7 @@ data = [
 ]
 
 a = Analysis(
-    ["charmcraft\\__main__.py"],
+    ["charmcraft/__main__.py"],
     pathex=[],
     binaries=[],
     datas=data,

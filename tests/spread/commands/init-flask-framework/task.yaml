@@ -1,10 +1,12 @@
 summary: test charmcraft init with flask-framework profile
 
+environment:
+  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
+
 execute: |
   mkdir -p test-init
   cd test-init
   charmcraft init --profile flask-framework
-  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
   charmcraft fetch-lib charms.traefik_k8s.v2.ingress
   charmcraft fetch-lib charms.observability_libs.v0.juju_topology
   charmcraft fetch-lib charms.grafana_k8s.v0.grafana_dashboard
@@ -15,7 +17,6 @@ execute: |
   test -f *.charm
 
 restore: |
-  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
   pushd test-init
   charmcraft clean
   popd

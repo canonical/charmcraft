@@ -12,7 +12,7 @@ Deprecated==1.2.14
 distro==1.8.0
 humanize==4.8.0
 idna==3.4
-importlib-metadata==6.8.0
+importlib-metadata==7.0.0
 jaraco.classes==3.3.0
 jeepney==0.8.0
 Jinja2==3.1.2

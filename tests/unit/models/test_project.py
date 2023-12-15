@@ -474,22 +474,22 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             dedent(
                 """\
                 Bad basic.yaml content:
-                - field name required in top-level configuration
-                - field summary required in top-level configuration
-                - field description required in top-level configuration
-                - field bases required in top-level configuration"""
+                - field 'name' required in top-level configuration
+                - field 'summary' required in top-level configuration
+                - field 'description' required in top-level configuration
+                - field 'bases' required in top-level configuration"""
             ),
         ),
         (
             "invalid-type.yaml",
             dedent(
                 """\
-            Bad invalid-type.yaml content:
-            - unexpected value; permitted: 'charm' (in field 'type')
-            - field name required in top-level configuration
-            - field summary required in top-level configuration
-            - field description required in top-level configuration
-            - field bases required in top-level configuration"""
+                Bad invalid-type.yaml content:
+                - unexpected value; permitted: 'charm' (in field 'type')
+                - field 'name' required in top-level configuration
+                - field 'summary' required in top-level configuration
+                - field 'description' required in top-level configuration
+                - field 'bases' required in top-level configuration"""
             ),
         ),
     ],

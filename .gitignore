@@ -133,3 +133,4 @@ dmypy.json
 
 # backups
 *~
+/charmcraft/_version.py

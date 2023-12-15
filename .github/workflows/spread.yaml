@@ -42,8 +42,13 @@ jobs:
       - name: Checkout charmcraft
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           submodules: true
+
+      - name: Install Spread
+        run: |
+          sudo snap install go
+          go install github.com/snapcore/spread/cmd/spread@latest
 
       - name: Download snap artifact
         uses: actions/download-artifact@v3

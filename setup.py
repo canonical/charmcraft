@@ -35,7 +35,10 @@ install_requires = [
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
+    # Pydantic will need to be updated all at once with our libraries.
+    # When you update it, remove the pydantic constraints from renovate.
     "pydantic>=1.10,<2.0",
+    "pydantic-yaml<1.0",
     "python-dateutil",
     "pyyaml",
     "requests",

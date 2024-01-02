@@ -42,7 +42,7 @@ from charmcraft.const import (
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml
-from charmcraft.models import charmcraft
+from charmcraft.models import charmcraft, basic
 from charmcraft.models.charmcraft import (
     AnalysisConfig,
     BasesConfiguration,
@@ -174,6 +174,12 @@ class CharmBuildInfo(models.BuildInfo):
                         bases_index=bases_index,
                         build_on_index=build_on_index,
                     )
+
+
+class CharmLib(models.CraftBaseModel):
+    """Model for describing a charm library in chramcraft.yaml."""
+    lib: basic.PythonModuleName
+    version: models.VersionStr
 
 
 class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
@@ -382,6 +388,7 @@ class Charm(CharmcraftProject):
     terms: list[str] | None
     links: Links | None
     config: dict[str, Any] | None
+    charm_libs: list[CharmLib] | None
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
     def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:

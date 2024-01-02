@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft basic pydantic model."""
+import re
+
 import craft_application.models
 import pydantic
 
@@ -28,6 +30,13 @@ class ModelConfigDefaults(
 ):
     """Define Charmcraft's defaults for the BaseModel configuration."""
 
+
+class PythonModuleName(pydantic.ConstrainedStr):
+    """A valid Python module name."""
+    strip_whitespace = True
+    strict = True
+    min_length = 1
+    regex = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*\.)*[A-Za-z_][A-Za-z0-9_]*$")
 
 class CustomStrictStr(pydantic.StrictStr):
     """Generic class to create custom strict strings validated by pydantic."""

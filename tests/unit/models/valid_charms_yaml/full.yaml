@@ -176,3 +176,8 @@ config:
       default: false
       type: boolean
       description: turn on debugging features of mediawiki
+charm-libs:
+  - lib: postgresql.postgres_client
+    version: "1"
+  - lib: postgresql.postgres_client
+    version: "0.1"

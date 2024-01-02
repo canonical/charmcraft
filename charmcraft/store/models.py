@@ -141,18 +141,6 @@ class Resource:
 
 
 @dataclasses.dataclass(frozen=True)
-class ResourceRevision:
-    """Charmcraft-specific store resource revision model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    revision: int
-    created_at: datetime.datetime
-    size: int
-
-
-@dataclasses.dataclass(frozen=True)
 class Release:
     """Charmcraft-specific store release model.
 

@@ -18,6 +18,7 @@
 import os
 import platform
 import time
+from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
@@ -25,6 +26,7 @@ import craft_store
 from craft_cli import CraftError, emit
 from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
+from craft_store.models.resource_revision_model import CharmResourceRevision
 from dateutil import parser
 
 from charmcraft import const
@@ -44,7 +46,6 @@ from charmcraft.store.models import (
     RegistryCredentials,
     Release,
     Resource,
-    ResourceRevision,
     Revision,
     Uploaded,
 )
@@ -92,15 +93,6 @@ def _build_revision(item: dict[str, Any]) -> Revision:
     )
 
 
-def _build_resource_revision(item):
-    """Build a Revision from a response item."""
-    return ResourceRevision(
-        revision=item["revision"],
-        created_at=parser.parse(item["created-at"]),
-        size=item["size"],
-    )
-
-
 def _build_library(resp):
     """Build a Library from a response."""
     return Library(
@@ -132,7 +124,7 @@ def _get_hostname() -> str:
     return hostname
 
 
-def _store_client_wrapper(auto_login=True):
+def _store_client_wrapper(auto_login: bool = True) -> Callable[[Callable], Callable]:
     """Decorate method to handle store error and login scenarios."""
 
     def store_client_wrapper_decorator(method):
@@ -463,11 +455,11 @@ class Store:
         return [_build_resource(item) for item in response["resources"]]
 
     @_store_client_wrapper()
-    def list_resource_revisions(self, charm_name, resource_name):
+    def list_resource_revisions(
+        self, charm_name: str, resource_name: str
+    ) -> list[CharmResourceRevision]:
         """Return revisions for the indicated charm resource."""
-        endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/revisions"
-        response = self._client.request_urlpath_json("GET", endpoint)
-        return [_build_resource_revision(item) for item in response["revisions"]]
+        return self._client.list_resource_revisions(charm_name, resource_name)
 
     @_store_client_wrapper()
     def get_oci_registry_credentials(self, charm_name, resource_name):

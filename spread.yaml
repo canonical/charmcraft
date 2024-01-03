@@ -22,7 +22,7 @@ backends:
     key: '$(HOST: echo "$SPREAD_GOOGLE_KEY")'
     location: snapd-spread/us-east1-b
     halt-timeout: 2h
-    systems:
+    systems:  # If you change this, change .github/workflows/spread.yaml to match.
       - ubuntu-18.04-64:
           workers: 2
           storage: 40G

@@ -90,7 +90,6 @@ _charmhub_commands = [
     # resources support
     store.ListResourcesCommand,
     store.UploadResourceCommand,
-    store.ListResourceRevisionsCommand,
 ]
 _extensions_commands = [
     extensions.ExtensionsCommand,

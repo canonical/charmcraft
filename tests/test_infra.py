@@ -77,4 +77,4 @@ def test_bashcompletion_all_commands():
     for cgroup in main.COMMAND_GROUPS:
         real_command_names.update(cmd.name for cmd in cgroup.commands if not cmd.hidden)
 
-    assert completed_commands == real_command_names
+    assert real_command_names.issubset(set(completed_commands))

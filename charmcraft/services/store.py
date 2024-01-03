@@ -16,7 +16,6 @@
 """Service class for store interaction."""
 from __future__ import annotations
 
-import functools
 import platform
 from collections.abc import Sequence
 

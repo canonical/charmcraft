@@ -38,6 +38,7 @@ classifiers = [
 requires-python = ">=3.10"
 
 [project.scripts]
+charmcraft = "charmcraft.application.main:main"
 
 [project.optional-dependencies]
 dev = [

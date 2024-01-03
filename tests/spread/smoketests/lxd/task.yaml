@@ -28,6 +28,12 @@ execute: |
   charmcraft pack --verbose
   test -f charm*.charm
 
+  # Check that deleting the instance and recreating it from base after deleting
+  # the cache directory succeeds.
+  charmcraft clean
+  rm -rf ~/snap/charmcraft/common/cache/charmcraft/
+  charmcraft pack
+
   # there should be two instances, sorted alphabetically:
   # - base-instance-charmcraft...
   # - charmcraft-charm-...

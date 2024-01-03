@@ -61,7 +61,12 @@ import pytest_check
         "list-lib",
         "resources",
         "upload-resource",
-        "resource-revisions",
+        pytest.param(
+            "resource-revisions",
+            marks=pytest.mark.skipif(
+                sys.platform == "win32", reason="This test in particular is flaky on Windows"
+            ),
+        ),
         "analyze",
         "list-extensions",
         "expand-extensions",

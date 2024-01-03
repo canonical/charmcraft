@@ -1846,7 +1846,9 @@ class UploadResourceCommand(CharmcraftCommand):
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
             emit.progress(f"Uploading resource directly from file {str(resource_filepath)!r}.")
-            bases = [{"name": "all", "channel": "all", "architectures": parsed_args.arch}]
+            bases = [
+                {"name": "all", "channel": "all", "architectures": parsed_args.arch or ["all"]}
+            ]
         elif parsed_args.image:
             credentials = store.get_oci_registry_credentials(
                 parsed_args.charm_name, parsed_args.resource_name

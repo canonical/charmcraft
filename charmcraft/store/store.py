@@ -16,6 +16,7 @@
 
 """The Store API handling."""
 import os
+import pathlib
 import platform
 import time
 from collections.abc import Callable
@@ -26,7 +27,9 @@ import craft_store
 from craft_cli import CraftError, emit
 from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
-from craft_store.models.resource_revision_model import CharmResourceRevision
+from craft_store.models.resource_revision_model import (
+    CharmResourceRevision,
+)
 from dateutil import parser
 
 from charmcraft import const
@@ -328,10 +331,23 @@ class Store:
         return self._upload(endpoint, filepath)
 
     @_store_client_wrapper()
-    def upload_resource(self, charm_name, resource_name, resource_type, filepath):
+    def upload_resource(
+        self,
+        charm_name: str,
+        resource_name: str,
+        resource_type,
+        filepath: pathlib.Path,
+        bases: list[dict[str, Any]] | None = None,
+    ):
         """Upload the content of filepath to the indicated resource."""
+        if bases is None:
+            bases = [{"architectures": ["all"]}]
+        extra_fields = {
+            "type": resource_type,
+            "bases": bases,
+        }
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/revisions"
-        return self._upload(endpoint, filepath, extra_fields={"type": resource_type})
+        return self._upload(endpoint, filepath, extra_fields=extra_fields)
 
     @_store_client_wrapper()
     def list_revisions(self, name):

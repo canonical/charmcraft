@@ -31,6 +31,7 @@ from craft_store.errors import (
     NetworkError,
     StoreServerError,
 )
+from craft_store.models import RequestCharmResourceBase
 from dateutil import parser
 
 from charmcraft import const
@@ -918,7 +919,9 @@ def test_upload_resources_endpoint(config):
         result = store.upload_resource("test-charm", "test-resource", "test-type", "test-filepath")
     expected_endpoint = "/v1/charm/test-charm/resources/test-resource/revisions"
     mock.assert_called_once_with(
-        expected_endpoint, "test-filepath", extra_fields={"type": "test-type"}
+        expected_endpoint,
+        "test-filepath",
+        extra_fields={"type": "test-type", "bases": [RequestCharmResourceBase()]},
     )
     assert result == test_results
 

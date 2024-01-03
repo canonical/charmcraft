@@ -79,6 +79,8 @@ execute: |
   # release and check full status
   charmcraft release $CHARM_DEFAULT_NAME -r $last_charm_revno -c edge --resource=example-file:$last_file_revno --resource=example-image:$last_image_revno
   edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
-  test $last_charm_revno == $(echo $edge_release | jq -r .revision)
-  test $last_file_revno == $(echo $edge_release | jq '.resources | .[] | select(.name=="example-file").revision')
-  test $last_image_revno == $(echo $edge_release | jq '.resources | .[] | select(.name=="example-image").revision')
+  # These are <= rather than == because it's possible another test bumped the revision
+  # before we got the status.
+  test $last_charm_revno -le $(echo $edge_release | jq -r .revision)
+  test $last_file_revno -le $(echo $edge_release | jq '.resources | .[] | select(.name=="example-file").revision')
+  test $last_image_revno -le $(echo $edge_release | jq '.resources | .[] | select(.name=="example-image").revision')

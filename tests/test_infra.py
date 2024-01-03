@@ -44,6 +44,8 @@ def test_ensure_copyright():
     for filepath in get_python_filepaths():
         if os.stat(filepath).st_size == 0:
             continue
+        if filepath.endswith("charmcraft/_version.py"):
+            continue
 
         with open(filepath, encoding="utf8") as fh:
             for line in itertools.islice(fh, 5):

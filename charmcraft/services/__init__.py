@@ -25,6 +25,7 @@ from .analysis import AnalysisService
 from .lifecycle import LifecycleService
 from .package import PackageService
 from .provider import ProviderService
+from .store import StoreService
 from .. import models
 
 
@@ -36,6 +37,7 @@ class CharmcraftServiceFactory(ServiceFactory):
     LifecycleClass: type[LifecycleService] = LifecycleService
     ProviderClass: type[ProviderService] = ProviderService
     AnalysisClass: type[AnalysisService] = AnalysisService
+    StoreClass: type[StoreService] = StoreService
 
     if TYPE_CHECKING:
         # Cheeky hack that lets static type checkers report the correct types.
@@ -45,6 +47,7 @@ class CharmcraftServiceFactory(ServiceFactory):
         lifecycle: LifecycleService = None  # type: ignore[assignment]
         provider: ProviderService = None  # type: ignore[assignment]
         project: models.CharmcraftProject = None  # type: ignore[assignment]
+        store: StoreService = None  # type: ignore[assignment]
 
 
 __all__ = [

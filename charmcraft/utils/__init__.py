@@ -58,6 +58,7 @@ from charmcraft.utils.project import (
     get_charm_name_from_path,
     get_templates_environment,
 )
+from charmcraft.utils.store import get_packages
 from charmcraft.utils.yaml import dump_yaml, load_yaml
 
 __all__ = [
@@ -97,6 +98,7 @@ __all__ = [
     "find_charm_sources",
     "get_charm_name_from_path",
     "get_templates_environment",
+    "get_packages",
     "dump_yaml",
     "load_yaml",
 ]

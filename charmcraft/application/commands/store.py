@@ -176,8 +176,6 @@ class LoginCommand(CharmcraftCommand):
         restrictive_options_map = [
             ("ttl", parsed_args.ttl),
             ("channels", parsed_args.channel),
-            ("charms", parsed_args.charm),
-            ("bundles", parsed_args.bundle),
             ("permissions", parsed_args.permission),
         ]
         kwargs = {}
@@ -185,16 +183,16 @@ class LoginCommand(CharmcraftCommand):
             if namespace_value is not None:
                 kwargs[arg_name] = namespace_value
 
-        ephemeral = parsed_args.export is not None
-        store_config = env.get_store_config()
-        store = Store(store_config, ephemeral=ephemeral)
-        credentials = store.login(**kwargs)
-        if parsed_args.export is None:
-            macaroon_info = store.whoami()
-            emit.message(f"Logged in as '{macaroon_info.account.username}'.")
-        else:
+        packages = utils.get_packages(charms=parsed_args.charm, bundles=parsed_args.bundle) or None
+
+        if parsed_args.export:
+            credentials = self._services.store.get_credentials(packages=packages, **kwargs)
             parsed_args.export.write_text(credentials)
             emit.message(f"Login successful. Credentials exported to {str(parsed_args.export)!r}.")
+        else:
+            self._services.store.login(packages=packages, **kwargs)
+            username = self._services.store.get_account_info()["username"]
+            emit.message(f"Logged in as {username!r}.")
 
 
 class LogoutCommand(CharmcraftCommand):
@@ -217,9 +215,8 @@ class LogoutCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(env.get_store_config())
         try:
-            store.logout()
+            self._services.store.logout()
             emit.message("Charmhub token cleared.")
         except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
@@ -241,9 +238,8 @@ class WhoamiCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(env.get_store_config())
         try:
-            macaroon_info = store.whoami()
+            macaroon_info = self._services.store.client.whoami()
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}
@@ -255,22 +251,22 @@ class WhoamiCommand(CharmcraftCommand):
         human_msgs = []
         prog_info = {"logged": True}
 
-        human_msgs.append(f"name: {macaroon_info.account.name}")
-        prog_info["name"] = macaroon_info.account.name
-        human_msgs.append(f"username: {macaroon_info.account.username}")
-        prog_info["username"] = macaroon_info.account.username
-        human_msgs.append(f"id: {macaroon_info.account.id}")
-        prog_info["id"] = macaroon_info.account.id
+        human_msgs.append(f"name: {macaroon_info['account']['display-name']}")
+        prog_info["name"] = macaroon_info["account"]["display-name"]
+        human_msgs.append(f"username: {macaroon_info['account']['username']}")
+        prog_info["username"] = macaroon_info["account"]["username"]
+        human_msgs.append(f"id: {macaroon_info['account']['id']}")
+        prog_info["id"] = macaroon_info["account"]["id"]
 
-        if macaroon_info.permissions:
+        if permissions := macaroon_info.get("permissions"):
             human_msgs.append("permissions:")
-            for item in macaroon_info.permissions:
+            for item in permissions:
                 human_msgs.append(f"- {item}")
-            prog_info["permissions"] = macaroon_info.permissions
+            prog_info["permissions"] = permissions
 
-        if macaroon_info.packages:
+        if packages := macaroon_info.get("packages"):
             grouped = {}
-            for package in macaroon_info.packages:
+            for package in packages:
                 grouped.setdefault(package.type, []).append(package)
             for package_type, title in [("charm", "charms"), ("bundle", "bundles")]:
                 if package_type in grouped:
@@ -285,11 +281,11 @@ class WhoamiCommand(CharmcraftCommand):
                             pkg_info.append({"id": item.id})
                     prog_info[title] = pkg_info
 
-        if macaroon_info.channels:
+        if channels := macaroon_info.get("channels"):
             human_msgs.append("channels:")
-            for item in macaroon_info.channels:
+            for item in channels:
                 human_msgs.append(f"- {item}")
-            prog_info["channels"] = macaroon_info.channels
+            prog_info["channels"] = channels
 
         if parsed_args.format:
             emit.message(cli.format_content(prog_info, parsed_args.format))

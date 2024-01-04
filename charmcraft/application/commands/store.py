@@ -1826,7 +1826,6 @@ class UploadResourceCommand(CharmcraftCommand):
         parser.add_argument(
             "--arch",
             type=utils.ChoicesList(const.SUPPORTED_ARCHITECTURES | {"all"}),
-            default=["all"],
             help="The architectures valid for this file resource. If none are provided, the resource is uploaded without architecture information.",
         )
 
@@ -1839,7 +1838,7 @@ class UploadResourceCommand(CharmcraftCommand):
                 raise ArgumentParsingError(
                     "Cannot specify an architecture for an OCI image. OCI images contain architecture metadata that is used."
                 )
-            architectures = parsed_args.arch
+            architectures = parsed_args.arch or ["amd64"]
             utils.validate_architectures(architectures, allow_all=True)
 
         if parsed_args.filepath:

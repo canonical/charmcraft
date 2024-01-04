@@ -107,7 +107,7 @@ class StoreService(craft_application.AppService):
             raise errors.CraftError(
                 "Cannot login because credentials were found in your system "
                 "(which may be no longer valid, though).",
-                resolution="Please logout first, then login again.",
+                resolution="Please log out first, then log in again.",
             ) from exc
 
     def logout(self) -> None:

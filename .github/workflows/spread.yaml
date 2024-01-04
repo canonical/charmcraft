@@ -30,6 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # from the backends defined in the top-level `spread.yaml`
         spread:
           - "google:ubuntu-18.04-64"
           - "google:ubuntu-20.04-64"

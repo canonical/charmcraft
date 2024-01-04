@@ -1826,6 +1826,7 @@ class UploadResourceCommand(CharmcraftCommand):
         parser.add_argument(
             "--arch",
             type=utils.ChoicesList(const.SUPPORTED_ARCHITECTURES | {"all"}),
+            default=["all"],
             help="The architectures valid for this file resource. If none are provided, the resource is uploaded without architecture information.",
         )
 
@@ -1838,7 +1839,7 @@ class UploadResourceCommand(CharmcraftCommand):
                 raise ArgumentParsingError(
                     "Cannot specify an architecture for an OCI image. OCI images contain architecture metadata that is used."
                 )
-            architectures = parsed_args.arch or ["all"]
+            architectures = parsed_args.arch
             utils.validate_architectures(architectures, allow_all=True)
 
         if parsed_args.filepath:
@@ -1846,9 +1847,7 @@ class UploadResourceCommand(CharmcraftCommand):
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
             emit.progress(f"Uploading resource directly from file {str(resource_filepath)!r}.")
-            bases = [
-                {"name": "all", "channel": "all", "architectures": parsed_args.arch or ["all"]}
-            ]
+            bases = [{"name": "all", "channel": "all", "architectures": architectures}]
         elif parsed_args.image:
             credentials = store.get_oci_registry_credentials(
                 parsed_args.charm_name, parsed_args.resource_name

@@ -24,6 +24,7 @@ dependencies = [
     "tabulate",
     # Needed until requests-unixsocket supports urllib3 v2
     # https://github.com/msabramo/requests-unixsocket/pull/69
+    # When updating, remove the urllib3 constraint from renovate config.
     "urllib3<2.0",
 ]
 classifiers = [
@@ -41,7 +42,7 @@ requires-python = ">=3.10"
 charmcraft = "charmcraft.application.main:main"
 
 [project.optional-dependencies]
-dev = [
+dev = [  # When updating these, also update the dev/lint/types groups in renovate.
     "coverage",
     "flake8",
     "freezegun",

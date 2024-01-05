@@ -34,7 +34,6 @@ from craft_cli.errors import CraftError
 from craft_parts import Step
 from craft_store import attenuations
 from craft_store.errors import CredentialsUnavailable
-from humanize import naturalsize
 from tabulate import tabulate
 
 from charmcraft import const, parts, utils
@@ -1922,70 +1921,3 @@ class UploadResourceCommand(BaseCommand):
                     emit.message(f"- {error.code}: {error.message}")
             retcode = 1
         return retcode
-
-
-class ListResourceRevisionsCommand(BaseCommand):
-    """List revisions for a resource of a charm."""
-
-    name = "resource-revisions"
-    help_msg = "List revisions for a resource associated to a charm in Charmhub"
-    overview = textwrap.dedent(
-        """
-        Show size and date for each resource revision in Charmhub.
-
-        For example:
-
-           $ charmcraft resource-revisions my-charm my-resource
-           Revision    Created at               Size
-           1           2020-11-15 T11:13:15Z  183151
-
-        Listing revisions will take you through login if needed.
-    """
-    )
-
-    def fill_parser(self, parser):
-        """Add own parameters to the general parser."""
-        self.include_format_option(parser)
-        parser.add_argument(
-            "charm_name",
-            metavar="charm-name",
-            help="The charm name to associate the resource",
-        )
-        parser.add_argument("resource_name", metavar="resource-name", help="The resource name")
-
-    def run(self, parsed_args):
-        """Run the command."""
-        store = Store(self.config.charmhub)
-        result = store.list_resource_revisions(parsed_args.charm_name, parsed_args.resource_name)
-
-        if parsed_args.format:
-            info = [
-                {
-                    "revision": item.revision,
-                    "created at": utils.format_timestamp(item.created_at),
-                    "size": item.size,
-                }
-                for item in result
-            ]
-            emit.message(self.format_content(parsed_args.format, info))
-            return
-
-        if not result:
-            emit.message("No revisions found.")
-            return
-
-        headers = ["Revision", "Created at", "Size"]
-        custom_alignment = ["left", "left", "right"]
-        result.sort(key=attrgetter("revision"), reverse=True)
-        data = [
-            (
-                item.revision,
-                utils.format_timestamp(item.created_at),
-                naturalsize(item.size, gnu=True),
-            )
-            for item in result
-        ]
-
-        table = tabulate(data, headers=headers, tablefmt="plain", colalign=custom_alignment)
-        for line in table.splitlines():
-            emit.message(line)

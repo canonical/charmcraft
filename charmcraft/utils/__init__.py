@@ -31,6 +31,7 @@ from charmcraft.utils.cli import (
     SingleOptionEnsurer,
     OutputFormat,
     ResourceOption,
+    ChoicesList,
     confirm_with_user,
     format_content,
     format_timestamp,
@@ -41,6 +42,7 @@ from charmcraft.utils.platform import (
     OSPlatform,
     get_host_architecture,
     get_os_platform,
+    validate_architectures,
 )
 from charmcraft.utils.file import S_IRALL, S_IXALL, make_executable, useful_filepath, build_zip
 from charmcraft.utils.package import (
@@ -74,6 +76,7 @@ __all__ = [
     "ARCH_TRANSLATIONS",
     "OSPlatform",
     "get_os_platform",
+    "validate_architectures",
     "get_host_architecture",
     "S_IRALL",
     "S_IXALL",
@@ -92,6 +95,7 @@ __all__ = [
     "SingleOptionEnsurer",
     "OutputFormat",
     "ResourceOption",
+    "ChoicesList",
     "confirm_with_user",
     "format_content",
     "humanize_list",

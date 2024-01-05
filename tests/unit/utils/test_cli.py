@@ -24,6 +24,7 @@ import tabulate
 from hypothesis import given, strategies
 
 from charmcraft.utils.cli import (
+    ChoicesList,
     OutputFormat,
     ResourceOption,
     SingleOptionEnsurer,
@@ -107,6 +108,26 @@ def test_resourceoption_convert_error(value):
     assert str(cm.value) == (
         "the resource format must be <name>:<revision> (revision being a non-negative integer)"
     )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("abc", ["abc"]),
+        ("abc,def", ["abc", "def"]),
+    ],
+)
+def test_choices_list_success(value, expected):
+    choices_list = ChoicesList(["abc", "def", "ghi"])
+
+    assert choices_list(value) == expected
+
+
+def test_choices_list_invalid_values():
+    choices_list = ChoicesList({})
+
+    with pytest.raises(ValueError, match="^invalid values: abc$"):
+        choices_list("abc")
 
 
 def test_confirm_with_user_defaults_with_tty(mock_input, mock_isatty):

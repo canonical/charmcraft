@@ -34,11 +34,12 @@ from craft_cli.errors import CraftError
 from craft_parts import Step
 from craft_store import attenuations
 from craft_store.errors import CredentialsUnavailable
+from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
 from tabulate import tabulate
 
 import charmcraft.store.models
-from charmcraft import env, parts, utils
+from charmcraft import const, env, parts, utils
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.models import project
 from charmcraft.store import ImageHandler, LocalDockerdInterface, OCIRegistry, Store
@@ -1822,16 +1823,32 @@ class UploadResourceCommand(CharmcraftCommand):
                 'The digest (remote or local) or id (local, exclude "sha256:") of the OCI image'
             ),
         )
+        parser.add_argument(
+            "--arch",
+            type=utils.ChoicesList(const.SUPPORTED_ARCHITECTURES | {"all"}),
+            help="The architectures valid for this file resource. If none are provided, the resource is uploaded without architecture information.",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(env.get_store_config())
+
+        if parsed_args.arch:
+            if parsed_args.image:
+                raise ArgumentParsingError(
+                    "Cannot specify an architecture for an OCI image. OCI images contain architecture metadata that is used."
+                )
+            architectures = parsed_args.arch
+            utils.validate_architectures(architectures, allow_all=True)
+        else:
+            architectures = ["amd64"]
 
         if parsed_args.filepath:
             resource_filepath = parsed_args.filepath
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
             emit.progress(f"Uploading resource directly from file {str(resource_filepath)!r}.")
+            bases = [{"name": "all", "channel": "all", "architectures": architectures}]
         elif parsed_args.image:
             credentials = store.get_oci_registry_credentials(
                 parsed_args.charm_name, parsed_args.resource_name
@@ -1893,11 +1910,16 @@ class UploadResourceCommand(CharmcraftCommand):
             resource_filepath_is_temp = True
             resource_type = ResourceType.oci_image
 
+            image_arch = image_info.get("Architecture", "all")
+            image_arch = utils.ARCH_TRANSLATIONS.get(image_arch, image_arch)
+            bases = [{"name": "all", "channel": "all", "architectures": [image_arch]}]
+
         result = store.upload_resource(
             parsed_args.charm_name,
             parsed_args.resource_name,
             resource_type,
             resource_filepath,
+            bases=bases,
         )
 
         # clean the filepath if needed
@@ -1971,6 +1993,7 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
                     "revision": item.revision,
                     "created at": utils.format_timestamp(item.created_at),
                     "size": item.size,
+                    "bases": [base.dict() for base in item.bases],
                 }
                 for item in result
             ]
@@ -1981,7 +2004,7 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
             emit.message("No revisions found.")
             return
 
-        headers = ["Revision", "Created at", "Size"]
+        headers = ["Revision", "Created at", "Size", "Architectures"]
         custom_alignment = ["left", "left", "right"]
         result.sort(key=attrgetter("revision"), reverse=True)
         data = [
@@ -1989,6 +2012,7 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
                 item.revision,
                 utils.format_timestamp(item.created_at),
                 naturalsize(item.size, gnu=True),
+                ",".join(_get_architectures_from_bases(item.bases)),
             )
             for item in result
         ]
@@ -1996,3 +2020,12 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
         table = tabulate(data, headers=headers, tablefmt="plain", colalign=custom_alignment)
         for line in table.splitlines():
             emit.message(line)
+
+
+def _get_architectures_from_bases(bases: typing.Iterable[ResponseCharmResourceBase]) -> list[str]:
+    """Get a list of all architectures from an iterable of resource bases."""
+    architectures = set()
+    for base in bases:
+        for architecture in base.architectures:
+            architectures.add(architecture)
+    return sorted(architectures)

@@ -19,7 +19,7 @@ import enum
 import json
 import numbers
 import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 from typing import Literal, overload
 
@@ -88,14 +88,14 @@ class ResourceOption:
 
 @dataclass(frozen=True)
 class ChoicesList:
-    """Argparse helper to make a list argument from a list of choices.
+    """Argparse helper to make a list argument from a collection of choices.
 
     For example, a list of digits might look like:
 
         parser.add_argument("--digits", type=ChoicesList(string.digits))
     """
 
-    choices: Sequence
+    choices: Collection
 
     def __call__(self, value: str) -> list[str]:
         """Validate and get the chosen list of choices.

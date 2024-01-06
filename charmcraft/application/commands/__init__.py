@@ -58,6 +58,7 @@ from charmcraft.application.commands.store import (
     # resources support
     ListResourcesCommand,
     ListResourceRevisionsCommand,
+    SetResourceArchitecturesCommand,
     UploadResourceCommand,
 )
 from charmcraft.application.commands.version import Version
@@ -95,6 +96,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
             # resources support
             ListResourcesCommand,
             ListResourceRevisionsCommand,
+            SetResourceArchitecturesCommand,
             UploadResourceCommand,
         ],
     )
@@ -153,5 +155,6 @@ __all__ = [
     "FetchLibCommand",
     "ListResourcesCommand",
     "ListResourceRevisionsCommand",
+    "SetResourceArchitecturesCommand",
     "UploadResourceCommand",
 ]

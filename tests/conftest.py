@@ -22,9 +22,11 @@ import os
 import pathlib
 import tempfile
 import types
+from unittest import mock
 from unittest.mock import Mock
 
 import craft_parts
+import craft_store
 import pytest
 import responses as responses_module
 import yaml
@@ -67,6 +69,8 @@ def service_factory(
     )
 
     factory.project = simple_charm
+
+    factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
 
     return factory
 

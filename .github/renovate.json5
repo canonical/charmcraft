@@ -2,8 +2,11 @@
   // Configuration file for RenovateBot: https://docs.renovatebot.com/configuration-options
   extends: ["config:base"],
   ignoreDeps: [
+    // Each ignore is probably connected with an ignore in pyproject.toml.
+    // Ensure you change this and those simultaneously.
     "pydantic",  // Needs to wait for libraries.
     "pydantic-yaml", // Needs to wait for pydantic
+    "urllib3",
   ],
   labels: ["dependencies"],  // For convenient searching in GitHub
   pip_requirements: {
@@ -81,7 +84,7 @@
       matchPackagePrefixes: ["docs"],
     },
     {
-      // Other major dependencies get deprioritised below minor dev dependencies.
+          // Other major dependencies get deprioritised below minor dev dependencies.
       matchUpdateTypes: ["major"],
       prPriority: -2
     },
@@ -92,6 +95,12 @@
       matchDepTypes: ["devDependencies"],
       matchUpdateTypes: ["major"],
       prPriority: -3
+    },
+    {
+      // Pyright makes regular breaking changes in patch releases, so we separate these
+      // and do them independently.
+      matchPackageNames: ["pyright"],
+      prPriority: -4
     }
   ],
   regexManagers: [
@@ -120,5 +129,6 @@
   prNotPendingHours: 4, // ...unless the status checks have been running for 4+ hours.
   prHourlyLimit: 1, // No more than 1 PR per hour.
   stabilityDays: 2, // Wait 2 days from release before updating.
-  automergeStrategy: "squash" // Squash & rebase when auto-merging.
+  automergeStrategy: "squash", // Squash & rebase when auto-merging.
+  semanticCommitType: "build"  // use `build` as commit header type (i.e. `build(deps): <description>`)
 }

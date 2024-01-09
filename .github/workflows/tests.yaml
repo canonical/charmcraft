@@ -88,7 +88,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: snapcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
@@ -128,7 +128,7 @@ jobs:
   #          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
   #          snapcraft remote-build --launchpad-accept-public-upload
   #      - name: Upload snap artifacts
-  #        uses: actions/upload-artifact@v3
+  #        uses: actions/upload-artifact@v4
   #        with:
   #          name: snap
   #          path: ./*.snap
@@ -142,7 +142,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
           path: snap-artifacts
@@ -196,9 +196,9 @@ jobs:
         run: |
           pyinstaller charmcraft.spec
       - name: Upload unsigned exe
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: snap
+          name: windows-exe
           path: dist\charmcraft.exe
       - name: Smoke test executable
         run: |
@@ -235,7 +235,7 @@ jobs:
           echo "Test signing charmcraft msix installer..."
           & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
       - name: Upload installer(s)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: installers
           path: |

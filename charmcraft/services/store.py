@@ -162,7 +162,7 @@ class StoreService(BaseStoreService):
     def set_resource_revisions_architectures(
         self, name: str, resource_name: str, updates: dict[int, list[str]]
     ) -> Collection[models.resource_revision_model.CharmResourceRevision]:
-        """Set the metadata for one or more resource revisions.
+        """Set the architectures for one or more resource revisions.
 
         :param name: The name of the charm in the store
         :param resource_name: The name of the specific resource

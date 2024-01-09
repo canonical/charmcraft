@@ -145,6 +145,22 @@ def test_logout(store):
                 )
             ],
         ),
+        pytest.param(
+            {
+                123: ["amd64", "riscv64"],
+                456: ["all"],
+            },
+            [
+                models.CharmResourceRevisionUpdateRequest(
+                    revision=123,
+                    bases=[models.RequestCharmResourceBase(architectures=["amd64", "riscv64"])],
+                ),
+                models.CharmResourceRevisionUpdateRequest(
+                    revision=456,
+                    bases=[models.RequestCharmResourceBase(architectures=["all"])],
+                ),
+            ],
+        ),
     ],
 )
 def test_set_resource_revisions_architectures_request_form(store, updates, expected_request):

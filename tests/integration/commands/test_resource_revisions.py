@@ -54,7 +54,7 @@ def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
         CharmResourceRevision(
             revision=1,
             size=pydantic.ByteSize(50),
-            created_at=datetime.datetime(2020, 7, 3, 2, 30, 40),
+            created_at=datetime.datetime(2020, 7, 3, 2, 30, 40, tzinfo=datetime.timezone.utc),
             bases=[ResponseCharmResourceBase()],
             name="testresource",
             sha256="",
@@ -76,7 +76,7 @@ def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
         expected = [
             {
                 "revision": 1,
-                "created at": "2020-07-03T02:30:40Z",
+                "created at": "2020-07-03T02:30:40+00:00",
                 "size": 50,
                 "bases": [{"name": "all", "channel": "all", "architectures": ["all"]}],
             },
@@ -110,7 +110,7 @@ def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, form
     """Results are presented ordered by revision in the table."""
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
-    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40, tzinfo=datetime.timezone.utc)
     store_response = [
         CharmResourceRevision(
             revision=1,
@@ -170,18 +170,23 @@ def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, form
         expected = [
             {
                 "revision": 1,
-                "created at": "2020-07-03T20:30:40Z",
+                "created at": "2020-07-03T20:30:40+00:00",
                 "size": 5000,
                 "bases": [],
             },
-            {"revision": 3, "created at": "2020-07-03T20:30:40Z", "size": 34450520, "bases": []},
+            {
+                "revision": 3,
+                "created at": "2020-07-03T20:30:40+00:00",
+                "size": 34450520,
+                "bases": [],
+            },
             {
                 "revision": 4,
-                "created at": "2020-07-03T20:30:40Z",
+                "created at": "2020-07-03T20:30:40+00:00",
                 "size": 876543,
                 "bases": [{"name": "all", "channel": "all", "architectures": ["amd64", "arm64"]}],
             },
-            {"revision": 2, "created at": "2020-07-03T20:30:40Z", "size": 50, "bases": []},
+            {"revision": 2, "created at": "2020-07-03T20:30:40+00:00", "size": 50, "bases": []},
         ]
         emitter.assert_json_output(expected)
     else:

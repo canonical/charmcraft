@@ -17,17 +17,21 @@
 from __future__ import annotations
 
 import platform
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 
 import craft_application
 import craft_store
+from craft_store import models
 
 from charmcraft import const, env, errors
 from charmcraft.store import AUTH_DEFAULT_PERMISSIONS, AUTH_DEFAULT_TTL
 
 
-class StoreService(craft_application.AppService):
-    """Business logic for interacting with the store."""
+class BaseStoreService(craft_application.AppService):
+    """Business logic for interacting with the store.
+
+    This service should be easily adjustable for craft-application.
+    """
 
     client: craft_store.StoreClient
     _endpoints: craft_store.endpoints.Endpoints = craft_store.endpoints.CHARMHUB
@@ -150,3 +154,31 @@ class StoreService(craft_application.AppService):
             packages=packages,
             channels=channels,
         )
+
+
+class StoreService(BaseStoreService):
+    """A Store service specifically for Charmcraft."""
+
+    def set_resource_revisions_architectures(
+        self, name: str, resource_name: str, updates: dict[int, list[str]]
+    ) -> Collection[models.resource_revision_model.CharmResourceRevision]:
+        """Set the architectures for one or more resource revisions.
+
+        :param name: The name of the charm in the store
+        :param resource_name: The name of the specific resource
+        :param updates: A mapping of resource revision to its architectures.
+        :returns: The updated revisions, as craft_store CharmResourceRevision objects.
+        """
+        self.client.update_resource_revisions(
+            *(
+                models.CharmResourceRevisionUpdateRequest(
+                    revision=revision,
+                    bases=[models.RequestCharmResourceBase(architectures=architectures)],
+                )
+                for revision, architectures in updates.items()
+            ),
+            name=name,
+            resource_name=resource_name,
+        )
+        new_revisions = self.client.list_resource_revisions(name=name, resource_name=resource_name)
+        return [rev for rev in new_revisions if int(rev.revision) in updates]

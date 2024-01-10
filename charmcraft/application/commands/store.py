@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Commands related to Charmhub."""
+import argparse
 import collections
 import dataclasses
 import os
@@ -25,6 +26,7 @@ import tempfile
 import textwrap
 import typing
 import zipfile
+from collections.abc import Collection
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
@@ -32,7 +34,7 @@ import yaml
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_parts import Step
-from craft_store import attenuations
+from craft_store import attenuations, models
 from craft_store.errors import CredentialsUnavailable
 from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
@@ -1841,7 +1843,7 @@ class UploadResourceCommand(CharmcraftCommand):
             architectures = parsed_args.arch
             utils.validate_architectures(architectures, allow_all=True)
         else:
-            architectures = ["amd64"]
+            architectures = ["all"]
 
         if parsed_args.filepath:
             resource_filepath = parsed_args.filepath
@@ -1952,6 +1954,107 @@ class UploadResourceCommand(CharmcraftCommand):
         return retcode
 
 
+class SetResourceArchitecturesCommand(CharmcraftCommand):
+    """Set the architectures for a resource revision."""
+
+    name = "set-resource-architectures"
+    help_msg = "Set the architectures for a resource revision in Charmhub"
+    overview = textwrap.dedent(
+        """
+        Set the architectures for a resource revision in Charmhub.
+
+        Each resource revision is tagged with one or more architectures. If a
+        revision is incorrectly tagged, this command can modify the architecture
+        tags for that resource revision.
+
+        For example:
+
+            $ charmcraft resource-revisions my-charm my-resource
+            Revision    Created at               Size  Architectures
+            1           2020-11-15 T11:13:15Z  183151  riscv64
+            $ charmcraft set-resource-architectures my-charm my-resource --revision=1 arm64,armhf
+            Revision 1 of 'my-resource' on charm 'my-charm' set to architectures: arm64,armhf
+            $ charmcraft resource-revisions my-charm my-resource
+            Revision    Created at               Size  Architectures
+            1           2020-11-15 T11:13:15Z  183151  arm64,armhf
+        """
+    )
+    format_option = True
+
+    def fill_parser(self, parser) -> None:
+        """Add set-resource-architectures specific command parameters."""
+        super().fill_parser(parser)
+        parser.add_argument(
+            "charm_name",
+            metavar="charm-name",
+            help="The name of the charm",
+        )
+        parser.add_argument("resource_name", metavar="resource-name", help="The resource name")
+        parser.add_argument(
+            "--revision",
+            dest="revisions",
+            action="append",
+            type=int,
+            required=True,
+            help="A revision to update",
+        )
+        parser.add_argument(
+            "arch",
+            type=utils.ChoicesList(const.SUPPORTED_ARCHITECTURES | {"all"}),
+            help="Comma-separated list of architectures",
+        )
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Run the command."""
+        store = self._services.store
+
+        updates = store.set_resource_revisions_architectures(
+            name=parsed_args.charm_name,
+            resource_name=parsed_args.resource_name,
+            updates={revision: parsed_args.arch for revision in parsed_args.revisions},
+        )
+
+        fmt = parsed_args.format or cli.OutputFormat.TABLE
+        self.write_output(fmt, updates)
+
+    @staticmethod
+    def write_output(
+        fmt: cli.OutputFormat,
+        updates: Collection[models.resource_revision_model.CharmResourceRevision],
+    ) -> None:
+        """Write formatted output for this command to the terminal."""
+        if fmt == cli.OutputFormat.TABLE:
+            if not updates:
+                emit.message("No revisions updated.")
+                return
+
+            emit.progress(f"{len(updates)} revision(s) updated.", permanent=True)
+
+            updates_dicts = [
+                {
+                    "Revision": update.revision,
+                    "Updated At": utils.format_timestamp(update.updated_at)
+                    if update.updated_at is not None
+                    else "--",
+                    "Architectures": ",".join(_get_architectures_from_bases(update.bases)),
+                }
+                for update in sorted(updates, key=lambda rev: int(rev.revision), reverse=True)
+            ]
+        else:
+            updates_dicts = [
+                {
+                    "revision": update.revision,
+                    "updated_at": update.updated_at.isoformat()
+                    if update.updated_at is not None
+                    else None,
+                    "architectures": _get_architectures_from_bases(update.bases),
+                }
+                for update in updates
+            ]
+
+        emit.message(cli.format_content(updates_dicts, fmt))
+
+
 class ListResourceRevisionsCommand(CharmcraftCommand):
     """List revisions for a resource of a charm."""
 
@@ -1991,7 +2094,7 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
             info = [
                 {
                     "revision": item.revision,
-                    "created at": utils.format_timestamp(item.created_at),
+                    "created at": item.created_at.isoformat(),
                     "size": item.size,
                     "bases": [base.dict() for base in item.bases],
                 }

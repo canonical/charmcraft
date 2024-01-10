@@ -21,14 +21,23 @@ from unittest import mock
 import craft_store
 import distro
 import pytest
+from craft_store import models
 from hypothesis import given, strategies
 
 import charmcraft
 from charmcraft import application, errors, services
+from tests import get_fake_revision
+
+
+@pytest.fixture()
+def store():
+    store = services.StoreService(app=application.APP_METADATA, services=None)
+    store.client = mock.Mock(spec_set=craft_store.StoreClient)
+    return store
 
 
 @pytest.fixture(scope="module")
-def store():
+def reusable_store():
     store = services.StoreService(app=application.APP_METADATA, services=None)
     store.client = mock.Mock(spec_set=craft_store.StoreClient)
     return store
@@ -84,8 +93,8 @@ def test_get_description_default(monkeypatch, store):
 
 
 @given(text=strategies.text())
-def test_get_description_override(store, text):
-    assert store._get_description(text) == text
+def test_get_description_override(reusable_store, text):
+    assert reusable_store._get_description(text) == text
 
 
 @given(
@@ -94,11 +103,13 @@ def test_get_description_override(store, text):
     ttl=strategies.integers(min_value=1),
     channels=strategies.lists(strategies.text()),
 )
-def test_login(store, permissions, description, ttl, channels):
-    client = cast(mock.Mock, store.client)
+def test_login(reusable_store, permissions, description, ttl, channels):
+    client = cast(mock.Mock, reusable_store.client)
     client.reset_mock(return_value=True, side_effect=True)
 
-    store.login(permissions=permissions, description=description, ttl=ttl, channels=channels)
+    reusable_store.login(
+        permissions=permissions, description=description, ttl=ttl, channels=channels
+    )
 
     client.login.assert_called_once_with(
         permissions=permissions, description=description, ttl=ttl, packages=None, channels=channels
@@ -107,7 +118,6 @@ def test_login(store, permissions, description, ttl, channels):
 
 def test_login_failure(store):
     client = cast(mock.Mock, store.client)
-    client.reset_mock(return_value=True, side_effect=True)
     client.login.side_effect = craft_store.errors.CredentialsAlreadyAvailable("charmcraft", "host")
 
     with pytest.raises(errors.CraftError, match="Cannot login because credentials were found"):
@@ -120,6 +130,73 @@ def test_logout(store):
     store.logout()
 
     client.logout.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    ("updates", "expected_request"),
+    [
+        pytest.param({}, [], id="empty"),
+        pytest.param(
+            {123: ["amd64", "riscv64"]},
+            [
+                models.CharmResourceRevisionUpdateRequest(
+                    revision=123,
+                    bases=[models.RequestCharmResourceBase(architectures=["amd64", "riscv64"])],
+                )
+            ],
+        ),
+        pytest.param(
+            {
+                123: ["amd64", "riscv64"],
+                456: ["all"],
+            },
+            [
+                models.CharmResourceRevisionUpdateRequest(
+                    revision=123,
+                    bases=[models.RequestCharmResourceBase(architectures=["amd64", "riscv64"])],
+                ),
+                models.CharmResourceRevisionUpdateRequest(
+                    revision=456,
+                    bases=[models.RequestCharmResourceBase(architectures=["all"])],
+                ),
+            ],
+        ),
+    ],
+)
+def test_set_resource_revisions_architectures_request_form(store, updates, expected_request):
+    store.client.list_resource_revisions.return_value = []
+
+    store.set_resource_revisions_architectures("my-charm", "my-file", updates)
+
+    store.client.update_resource_revisions.assert_called_once_with(
+        *expected_request,
+        name="my-charm",
+        resource_name="my-file",
+    )
+
+
+@pytest.mark.parametrize(
+    ("updates", "store_response", "expected"),
+    [
+        ({}, [], []),
+        (
+            {123: ["all"]},
+            [
+                get_fake_revision(bases=[models.ResponseCharmResourceBase()], revision=0),
+                get_fake_revision(bases=[models.ResponseCharmResourceBase()], revision=123),
+            ],
+            [get_fake_revision(bases=[models.ResponseCharmResourceBase()], revision=123)],
+        ),
+    ],
+)
+def test_set_resource_revisions_architectures_response_form(
+    store, updates, store_response, expected
+):
+    store.client.list_resource_revisions.return_value = store_response
+
+    actual = store.set_resource_revisions_architectures("my-charm", "my-file", updates)
+
+    assert actual == expected
 
 
 def test_get_credentials(monkeypatch, store):

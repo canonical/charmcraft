@@ -18,6 +18,7 @@
 
 import os
 import platform
+from collections.abc import Collection
 from json.decoder import JSONDecodeError
 from typing import Any
 
@@ -30,7 +31,8 @@ from requests_toolbelt import (  # type: ignore[import]
     MultipartEncoderMonitor,
 )
 
-from charmcraft import __version__, const, utils
+from charmcraft import __version__, const, utils, store
+from charmcraft.store import models
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
@@ -74,16 +76,25 @@ class AnonymousClient:
 class Client(craft_store.StoreClient):
     """Lightweight layer above StoreClient."""
 
-    def __init__(self, api_base_url: str, storage_base_url: str, ephemeral: bool = False):
+    def __init__(
+        self,
+        api_base_url: str,
+        storage_base_url: str,
+        ephemeral: bool = False,
+        application_name: str = "charmcraft",
+        user_agent: str | None = None
+    ):
         self.api_base_url = api_base_url.rstrip("/")
         self.storage_base_url = storage_base_url.rstrip("/")
+
+        user_agent = user_agent or build_user_agent()
 
         super().__init__(
             base_url=api_base_url,
             storage_base_url=storage_base_url,
             endpoints=endpoints.CHARMHUB,
-            application_name="charmcraft",
-            user_agent=build_user_agent(),
+            application_name=application_name,
+            user_agent=user_agent,
             environment_auth=const.ALTERNATE_AUTH_ENV_VAR,
             ephemeral=ephemeral,
         )
@@ -152,3 +163,80 @@ class Client(craft_store.StoreClient):
             headers={"Content-Type": monitor.content_type, "Accept": "application/json"},
             data=monitor,
         )
+
+    # region Libraries
+    def register_library(self, name: str, *, library_name: str) -> str:
+        """Register a library for a name.
+
+        :param name: The name onto which to attach the library.
+        :param library_name: The name of the library to register.
+
+        :returns: The library ID from the store.
+
+        Charmhub docs: http://api.staging.charmhub.io/docs/libraries.html#register_library
+        """
+        endpoint = f"/v1/{self._endpoints.namespace}/libraries/{name}"
+        response = self.request(
+            "POST",
+            self._base_url + endpoint,
+            json={"library-name": library_name}
+        )
+
+        return response.json()["library-id"]
+
+    def push_library(
+        self,
+        name: str,
+        *,
+        library_id: str,
+        api_version: int,
+        patch_version: int,
+        content: str,
+        content_hash: str,
+    ) -> models.Library:
+        """Create a new revision of the specified library.
+
+        :param name: Name of the project (charm, snap, etc.) to which the library is attached
+        :param library_id: The ID of the library to update
+        :param api_version: Major version of the library
+        :param patch_version: Patch version of the library
+        :param content: Library source as a string
+        :param content_hash: SHA256 of the library source code
+        :returns: The content of the library itself.
+
+        Charmhub: http://api.staging.charmhub.io/docs/libraries.html#push_library_revision
+        Information about libraries: https://juju.is/docs/sdk/library
+        """
+        endpoint = f"/v1/{self._endpoints.namespace}/libraries/{name}/{library_id}"
+        payload = {
+            "api": api_version,
+            "patch": patch_version,
+            "content": content,
+            "hash": content_hash,
+        }
+        response = self.request("POST", self._base_url + endpoint, json=payload).json()
+        response["content"] = None
+        return models.Library.parse_obj(response)
+
+    def get_library(self, name: str, *, library_id: str) -> models.Library:
+        """Download a library by ID.
+
+        :param name: The name of the charm to which the library is attached.
+        :param library_id: The ID of the library.
+        :returns: The contents and metadata of the library.
+        """
+        endpoint = f"/v1/{self._endpoints.namespace}/libraries/{name}/{library_id}"
+        response = self.request("GET", self._base_url + endpoint).json()
+        return models.Library.parse_obj(response)
+
+    def get_libraries_metadata(self, *libraries: models.LibraryRequest) -> Collection[models.Library]:
+        """Download the metadata for one or more libraries."""
+        endpoint = f"/v1/{self._endpoints.namespace}/libraries/bulk"
+        response = self.request(
+            "POST", self._base_url + endpoint, json=[library.dict(exclude_unset=True, by_alias=True) for library in libraries]
+        )
+        response_libs = response.json()["libraries"]
+        # raise ValueError(response_libs)
+        return [models.Library.parse_obj(lib) for lib in response_libs]
+    # endregion
+

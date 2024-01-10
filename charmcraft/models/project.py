@@ -199,6 +199,7 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
     summary: models.SummaryStr | None
     description: str | None
 
+    charm_libs: list[CharmLib] | None
     analysis: AnalysisConfig | None
     charmhub: CharmhubConfig | None
     parts: dict[str, dict[str, Any]] | None  # parts are handled by craft-parts

@@ -20,9 +20,14 @@ import datetime
 import enum
 import functools
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, TYPE_CHECKING, Self
 
+import pydantic
+from craft_application import models
 from craft_cli import CraftError
+
+if TYPE_CHECKING:
+    from charmcraft.models import CharmLib
 
 
 @dataclasses.dataclass(frozen=True)
@@ -168,20 +173,50 @@ class Channel:
     branch: str
 
 
-@dataclasses.dataclass(frozen=True)
-class Library:
-    """Charmcraft-specific store library model.
+class Library(models.CraftBaseModel, extra="ignore", allow_population_by_field_name=True):
+    """Charmcraft-specific store library model."""
 
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    lib_id: str
-    lib_name: str
+    lib_id: str = pydantic.Field(alias="library-id")
+    lib_name: str = pydantic.Field(alias="library-name")
     charm_name: str
     api: int
     patch: int
-    content: str | None
-    content_hash: str
+    content: str | None = None
+    content_hash: str = pydantic.Field(alias="hash")
+
+
+class LibraryRequest(models.CraftBaseModel):
+    """A request object for a library, used for bulk querying libraries.
+
+    A library request requires an API version and either a library ID or both
+    a charm name and the library name.
+    """
+    api: int
+    library_id: str | None = None
+    charm_name: str | None = None
+    lib_name: str | None = pydantic.Field(alias="library-name")
+
+    @pydantic.root_validator()
+    def _validate(cls, values: dict[str, str | int]) -> dict[str, str | int]:
+        """Validate the library request per store rules."""
+        if "library_id" not in values:
+            assert "charm_name" in values and "lib_name" in values
+        return values
+
+    @classmethod
+    def from_charmlib(cls, charmlib: "CharmLib") -> Self:
+        """Convert a charmcraft.yaml charmlib model to a LibraryRequest."""
+        api, _, patch = charmlib.version.partition(".")
+        if patch:
+            raise NotImplementedError(
+                "There is currently no way to query a library by its patch version."
+            )
+        charm_name, lib_name = charmlib.lib.split(".", maxsplit=1)
+        return cls(
+            api=api,
+            charm_name=charm_name,
+            lib_name=lib_name
+        )
 
 
 @dataclasses.dataclass(frozen=True)

@@ -16,14 +16,16 @@
 """Service class for store interaction."""
 from __future__ import annotations
 
+import pathlib
 import platform
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Sequence, Iterable
 
 import craft_application
 import craft_store
 from craft_store import models
 
-from charmcraft import const, env, errors
+from charmcraft import const, env, errors, store, utils
+from charmcraft.models import project
 from charmcraft.store import AUTH_DEFAULT_PERMISSIONS, AUTH_DEFAULT_TTL
 
 
@@ -73,6 +75,10 @@ class BaseStoreService(craft_application.AppService):
         """Set up the store service."""
         super().setup()
 
+        self._init_client()
+
+    def _init_client(self) -> None:
+        """Initialise the store client."""
         self.client = craft_store.StoreClient(
             application_name=self._app.name,
             base_url=self._base_url,
@@ -159,6 +165,16 @@ class BaseStoreService(craft_application.AppService):
 class StoreService(BaseStoreService):
     """A Store service specifically for Charmcraft."""
 
+    client: store.Client
+
+    def _init_client(self) -> None:
+        """Initialise the store client."""
+        self.client = store.Client(
+            api_base_url=self._base_url,
+            storage_base_url=self._storage_url,
+            user_agent=self._user_agent,
+        )
+
     def set_resource_revisions_architectures(
         self, name: str, resource_name: str, updates: dict[int, list[str]]
     ) -> Collection[models.resource_revision_model.CharmResourceRevision]:
@@ -182,3 +198,26 @@ class StoreService(BaseStoreService):
         )
         new_revisions = self.client.list_resource_revisions(name=name, resource_name=resource_name)
         return [rev for rev in new_revisions if int(rev.revision) in updates]
+
+    def get_libraries_metadata(
+        self, libraries: Collection[project.CharmLib]
+    ) -> Collection[store.models.Library]:
+        """Get the metadata of one or more store libraries.
+
+        :param libraries: the libraries whose metadata we need.
+        :returns: A collection of those libraries' metadata (but not their content).
+        """
+        return self.client.get_libraries_metadata(
+            *(store.models.LibraryRequest.from_charmlib(lib) for lib in libraries)
+        )
+
+    def fetch_libraries(
+        self, libraries: Collection[project.CharmLib],
+    ) -> Iterable[store.models.Library]:
+        """Fetch one or more charm libraries from the store.
+
+        :param libraries: The libraries to download.
+        :yields: Each library from the store.
+        """
+        for lib in self.get_libraries_metadata(libraries):
+            yield self.client.get_library(lib.charm_name, library_id=lib.lib_id)

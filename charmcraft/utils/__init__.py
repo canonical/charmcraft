@@ -24,6 +24,7 @@ from charmcraft.utils.charmlibs import (
     create_importable_name,
     get_lib_internals,
     get_lib_info,
+    get_lib_path,
     get_libs_from_tree,
     collect_charmlib_pydeps,
 )
@@ -71,6 +72,7 @@ __all__ = [
     "create_importable_name",
     "get_lib_internals",
     "get_lib_info",
+    "get_lib_path",
     "get_libs_from_tree",
     "collect_charmlib_pydeps",
     "ARCH_TRANSLATIONS",

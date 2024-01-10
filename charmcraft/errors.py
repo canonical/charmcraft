@@ -50,6 +50,43 @@ class InvalidEnvironmentVariableError(CraftError):
         )
 
 
+class ProjectError(CraftError):
+    """Errors about a project not being configured for use with a command.
+
+    This is only for use with projects that are otherwise valid. Invalid projects should
+    be handled using pydantic.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        details: str | None = None,
+        resolution: str | None = None,
+        docs_url: str | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            details=details,
+            resolution=resolution,
+            docs_url=docs_url,
+            logpath_report=False,
+            reportable=False,
+            retcode=65,  # Data format error from sysexits.h
+        )
+
+
+class NoCharmLibsError(ProjectError):
+    """Error if no charm-libs are provided despite being needed."""
+    def __init__(self, command: str):
+        super().__init__(
+            message="No 'charm-libs' provided in charmcraft.yaml.",
+            details=f"The {command!r} command requires a 'charm-libs' section in charmcraft.yaml.",
+            resolution="Provide a 'charm-libs' section in charmcraft.ymal.",
+            docs_url="https://juju.is/docs/sdk/charmcraft-yaml#heading--charm-libs",
+        )
+
+
 class BadLibraryPathError(CraftError):
     """Subclass to provide a specific error for a bad library path."""
 

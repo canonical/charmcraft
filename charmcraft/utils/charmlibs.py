@@ -20,12 +20,13 @@ import ast
 import hashlib
 import os
 import pathlib
+from collections.abc import Collection
 from dataclasses import dataclass
 
 import yaml
 from craft_cli import CraftError
 
-from charmcraft import const, errors
+from charmcraft import const, errors, store
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,19 @@ class LibInternals:
     content: str
 
 
+@dataclass
+class LibsDiff:
+    """A collection of libraries sorted into how they differ on-disk vs. in the store.
+
+    Generated using get_libs_local_status
+    """
+    changed_locally: list[store.models.Library]
+    missing: list[store.models.Library]
+    renamed: list[tuple[store.models.Library, LibData]]
+    up_to_date: list[store.models.Library]
+    updatable: list[store.models.Library]
+
+
 def get_name_from_metadata() -> str | None:
     """Return the name if present and plausible in metadata.yaml."""
     try:
@@ -75,6 +89,19 @@ def create_charm_name_from_importable(charm_name: str) -> str:
     """Convert a charm name from the importable form to the real form."""
     # _ is invalid in charm names, so we know it's intended to be '-'
     return charm_name.replace("_", "-")
+
+
+def get_lib_path(root: pathlib.Path, charm_name: str, lib_name: str, api_version: int) -> pathlib.Path:
+    """Get the path to a charm library file from relevant metadata.
+
+    :param root: The root path containing charm libs. (Normally "lib/charms" under a charmcraft project)
+    :param charm_name: The name of the charm this library is attached to.
+    :param lib_name: The name of the specific library.
+    :param api_version: The major version of the charm library.
+    :returns: The path to the library Python file.
+    """
+    importable_charm_name = create_importable_name(charm_name)
+    return root / importable_charm_name / f"v{api_version}" / (lib_name + ".py")
 
 
 def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
@@ -187,6 +214,7 @@ def get_lib_info(*, full_name=None, lib_path=None):
         if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":
             raise errors.BadLibraryPathError(lib_path)
         full_name = ".".join((charmsdir, importable_charm_name, v_api, lib_path.stem))
+        charm_name = create_charm_name_from_importable(importable_charm_name)
 
     else:
         # build the path! convert a lib name with dots to the full path, including lib
@@ -197,17 +225,9 @@ def get_lib_info(*, full_name=None, lib_path=None):
         except ValueError:
             raise errors.BadLibraryNameError(full_name)
 
-        # the lib full_name includes the charm_name which might not be importable (dashes)
-        importable_charm_name = create_importable_name(charm_name)
-
         if charmsdir != "charms":
             raise errors.BadLibraryNameError(full_name)
-        path = pathlib.Path("lib")
-        lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + ".py")
-
-    # charm names in the path can contain '_' to be importable
-    # these should be '-', so change them back
-    charm_name = create_charm_name_from_importable(importable_charm_name)
+        lib_path = get_lib_path(pathlib.Path("lib", charmsdir), charm_name, libfile, v_api)
 
     if v_api[0] != "v" or not v_api[1:].isdigit():
         raise CraftError("The API version in the library path must be 'vN' where N is an integer.")
@@ -282,6 +302,42 @@ def get_libs_from_tree(
     finally:
         os.chdir(current_directory)
     return local_libs_data
+
+
+def get_libs_local_status(
+    store_libs: Collection[store.models.Library],
+    root: pathlib.Path
+):
+    """Get the local FS status of a collection of libraries from the store."""
+    local_libs = get_libs_from_tree(root=root)
+    local_libs_map = {lib.lib_id: lib for lib in local_libs}
+    updatable: list[store.models.Library] = []
+    missing: list[store.models.Library] = []
+    up_to_date: list[store.models.Library] = []
+    changed_locally: list[store.models.Library] = []
+    renamed: list[tuple[store.models.Library, LibData]] = []
+    for lib in store_libs:
+        if lib.lib_id not in local_libs_map:
+            missing.append(lib)
+            continue
+        local_lib = local_libs_map[lib.lib_id]
+        if lib.charm_name != local_lib.charm_name or lib.lib_name != local_lib.lib_name:
+            renamed.append((lib, local_lib))
+        elif lib.api > local_lib.api:
+            updatable.append(lib)
+        elif lib.api == local_lib.api and lib.patch > local_lib.patch:
+            updatable.append(lib)
+        elif lib.content_hash != local_lib.content_hash:
+            changed_locally.append(lib)
+        else:
+            up_to_date.append(lib)
+    return LibsDiff(
+        changed_locally=changed_locally,
+        missing=missing,
+        renamed=renamed,
+        up_to_date=up_to_date,
+        updatable=updatable,
+    )
 
 
 def collect_charmlib_pydeps(basedir: pathlib.Path) -> set[str]:

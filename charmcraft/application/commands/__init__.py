@@ -23,6 +23,7 @@ from charmcraft.application.commands.extensions import (
     ExpandExtensionsCommand,
 )
 from charmcraft.application.commands.init import InitCommand
+from charmcraft.application.commands.libraries import FetchLibsCommand
 from charmcraft.application.commands.lifecycle import (
     get_lifecycle_commands,
     BuildCommand,
@@ -107,6 +108,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
             PublishLibCommand,
             ListLibCommand,
             FetchLibCommand,
+            FetchLibsCommand,
         ],
     )
     app.add_command_group(

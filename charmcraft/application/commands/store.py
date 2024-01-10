@@ -1493,7 +1493,7 @@ class FetchLibCommand(CharmcraftCommand):
     help_msg = "Fetch one or more charm libraries"
     overview = textwrap.dedent(
         """
-        Fetch charm libraries.
+        (Deprecated) Fetch charm libraries.
 
         The first time a library is downloaded the command will create the needed
         directories to place it, subsequent fetches will just update the local copy.
@@ -1512,6 +1512,7 @@ class FetchLibCommand(CharmcraftCommand):
     )
     format_option = True
     always_load_project = True
+    hidden = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -1524,6 +1525,10 @@ class FetchLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        emit.progress(
+            "WARNING: The 'fetch-lib' command is deprecated. Use 'fetch-libs' instead.",
+            permanent=True
+        )
         if parsed_args.library:
             local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
         else:

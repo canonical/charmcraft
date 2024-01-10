@@ -28,6 +28,7 @@ from typing_extensions import override
 
 from charmcraft import utils
 from charmcraft.application.commands.base import CharmcraftCommand
+from charmcraft.utils import charmlibs
 
 if TYPE_CHECKING:  # pragma: no cover
     import argparse
@@ -148,6 +149,68 @@ class _LifecycleStepCommand(_LifecyclePartsCommand):
     @override
     def run(self, parsed_args: argparse.Namespace, step_name: str | None = None) -> None:
         """Run a lifecycle step command."""
+        # TODO: When lifecycle commands are replaced with craft-application ExtensibleCommands
+        # this conditional fetch should become a run prologue for LifecycleStepCommand
+        if charm_libs := self._services.project.charm_libs:
+            libs_metadata = self._services.store.get_libraries_metadata(charm_libs)
+            project_path = pathlib.Path(self._global_args.get("project_dir") or ".")
+            charms_path = project_path / "lib" / "charms"
+            libs_status = charmlibs.get_libs_local_status(
+                libs_metadata, project_path,
+            )
+            if libs_status.missing:
+                fresh_store_libraries = (
+                    self._services.store.client.get_library(lib.charm_name, library_id=lib.lib_id)
+                    for lib in libs_status.missing
+                )
+                with emit.progress_bar(
+                    f"Fetching {len(libs_status.missing)} libraries", len(libs_status.missing)
+                ) as bar:
+                    for fresh_lib in fresh_store_libraries:
+                        lib_path = utils.get_lib_path(
+                            charms_path, fresh_lib.charm_name, fresh_lib.lib_name, fresh_lib.api
+                        )
+                        lib_path.parent.mkdir(parents=True, exist_ok=True)
+                        lib_path.write_text(str(fresh_lib.content))
+                        bar.advance(1)
+            instructions = None
+            libs_progress = []
+            if libs_status.updatable:
+                updatable = "\n".join(sorted(
+                    f"- '{lib.charm_name}.{lib.lib_name}': {lib.api}.{lib.patch}"
+                    for lib in libs_status.updatable
+                ))
+                emit.verbose(f"Updatable libraries:\n{updatable}")
+                instructions = "Run 'charmcraft fetch-libs' to update."
+                libs_progress.append(
+                    f"{len(libs_status.updatable)} libraries have updates"
+                )
+            else:
+                emit.verbose("0 libraries have updates")
+            if libs_status.renamed:
+                renamed = "\n".join(sorted(
+                    f"- '{local_lib.charm_name}.{local_lib.lib_name}' -> '{store_lib.charm_name}.{store_lib.lib_name}'"
+                    for store_lib, local_lib in libs_status.renamed
+                ))
+                emit.verbose(f"Renamed libraries:\n{renamed}")
+                instructions = "Rename libraries in 'charmcraft.yaml' and run 'charmcraft fetch-libs' to update."
+                libs_progress.append(
+                    f"{len(libs_status.renamed)} renamed in the store",
+                )
+            else:
+                emit.verbose("0 libraries renamed in the store")
+            emit.debug(f"{len(libs_status.up_to_date)} libraries up to date")
+            if libs_status.changed_locally:
+                emit.verbose(
+                    f"{len(libs_status.changed_locally)} modified locally"
+                )
+            if libs_progress:
+                emit.progress(", ".join(libs_progress), permanent=True)
+            if instructions:
+                emit.progress(instructions, permanent=True)
+
+        # End conditional fetch logic
+
         super().run(parsed_args)
 
         shell = getattr(parsed_args, "shell", False)

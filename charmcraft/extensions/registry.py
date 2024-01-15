@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Extension registry."""
-
+from typing import Any
 
 from charmcraft import errors
 from charmcraft.extensions.extension import Extension
@@ -36,7 +36,7 @@ def get_extension_names() -> list[str]:
 def get_extension_class(extension_name: str) -> type[Extension]:
     """Obtain a extension class given the name.
 
-    :param name: The extension name.
+    :param extension_name: The extension name.
     :return: The extension class.
     :raises ExtensionError: If the extension name is invalid.
     """
@@ -47,6 +47,29 @@ def get_extension_class(extension_name: str) -> type[Extension]:
             f"Extension {extension_name!r} does not exist",
             details=f"Registered extensions: {get_extension_names()}",
         ) from None
+
+
+def get_extensions() -> list[dict[str, Any]]:
+    """Get metadata about registered extensions."""
+    return sorted(
+        (
+            {
+                "name": name,
+                "bases": [
+                    "@".join(base)
+                    for base in cls.get_supported_bases()
+                    if not cls.is_experimental(base)
+                ],
+                "experimental_bases": [
+                    "@".join(base)
+                    for base in cls.get_supported_bases()
+                    if cls.is_experimental(base)
+                ],
+            }
+            for name, cls in _EXTENSIONS.items()
+        ),
+        key=lambda d: d["name"],
+    )
 
 
 def register(extension_name: str, extension_class: type[Extension]) -> None:

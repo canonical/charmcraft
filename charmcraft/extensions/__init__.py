@@ -18,16 +18,20 @@
 
 from charmcraft.extensions._utils import apply_extensions
 from charmcraft.extensions.flask import Flask
+from charmcraft.extensions.extension import Extension
 from charmcraft.extensions.registry import (
     get_extension_class,
     get_extension_names,
+    get_extensions,
     register,
     unregister,
 )
 
 __all__ = [
+    "Extension",
     "get_extension_class",
     "get_extension_names",
+    "get_extensions",
     "apply_extensions",
     "register",
     "unregister",

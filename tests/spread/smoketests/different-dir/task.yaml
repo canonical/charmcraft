@@ -7,7 +7,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""The flask extension."""
+"""The 12-factor flask extension."""
 
 from typing import Any
 

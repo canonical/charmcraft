@@ -51,6 +51,7 @@ class Charmcraft(Application):
         super().__init__(app=app, services=services)
         self._global_args: dict[str, Any] = {}
         self._dispatcher: craft_cli.Dispatcher | None = None
+        self._project_dir = pathlib.Path().resolve()
 
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
@@ -114,7 +115,7 @@ class Charmcraft(Application):
         )
         self.services.set_kwargs(
             "package",
-            project_dir=self._work_dir,
+            project_dir=self._project_dir,
             platform=platform,
         )
 
@@ -122,13 +123,8 @@ class Charmcraft(Application):
         """Configure the application using any global arguments."""
         super().configure(global_args)
         self._global_args = global_args
-        if not self.services.ProviderClass.is_managed():
-            # Do not do strict resolution here, as commands such as `init` will create
-            # the project directory.
-            project_dir = pathlib.Path(global_args.get("project_dir") or ".").resolve()
-            self._work_dir = project_dir
-        else:
-            self._work_dir = env.get_managed_environment_project_path()
+        if global_args["project_dir"]:
+            self._project_dir = pathlib.Path(global_args["project_dir"]).resolve(strict=False)
 
     @property
     def app_config(self) -> dict[str, Any]:

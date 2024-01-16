@@ -31,3 +31,4 @@ execute: |
   test -f charm*.charm
   unzip -l charm*.charm | MATCH "venv/ops/charm.py"
   test ! -d build
+  [[ ! -d prime ]]  # Ensure the prime directory isn't in the project dir.

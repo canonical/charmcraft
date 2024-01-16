@@ -42,7 +42,7 @@ def test_configure(
 
     app.configure(global_args)
 
-    assert app._work_dir == pathlib.Path(expected_project_dir).resolve()
+    assert app._project_dir == pathlib.Path(expected_project_dir).resolve()
 
 
 @pytest.mark.parametrize(

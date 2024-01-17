@@ -685,6 +685,9 @@ def test_analyze_run_everything(config):
     FakeChecker2 = create_fake_checker(
         check_type=CheckType.LINT, name="name2", url="url2", text="text2", result="result2"
     )
+    FakeChecker3 = create_fake_checker(
+        check_type=CheckType.LINT, name="returns_none", url="url3", text=None, result="result3"
+    )
 
     # hack the first fake checker to validate that it receives the indicated path
     def dir_validator(self, basedir):
@@ -693,10 +696,10 @@ def test_analyze_run_everything(config):
 
     FakeChecker1.run = dir_validator
 
-    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]):
         result = analyze(config, pathlib.Path("test-buildpath"))
 
-    r1, r2 = result
+    r1, r2, r3 = result
     assert r1.check_type == "attribute"
     assert r1.name == "name1"
     assert r1.url == "url1"
@@ -707,6 +710,10 @@ def test_analyze_run_everything(config):
     assert r2.url == "url2"
     assert r2.text == "text2"
     assert r2.result == "result2"
+    assert r3.name == "returns_none"
+    assert r3.url == "url3"
+    assert r3.text == "n/a"
+    assert r3.result == "result3"
 
 
 def test_analyze_ignore_attribute(config):

@@ -1,5 +1,9 @@
 summary: pack a simple reactive charm
 
+environment:
+  CHARM_SNAP_CHANNEL/stable: stable
+  CHARM_SNAP_CHANNEL/two: 2.x/stable
+
 prepare: |
   snap install charm --classic
   charm create reactivecharm
@@ -25,15 +29,18 @@ prepare: |
     charm:
       source: .
       plugin: reactive
-      build-snaps: [charm]
+      build-snaps:
+        - charm/CHARM_SNAP_CHANNEL
       build-packages: [python3-dev]
   EOF
+
+  sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
 
 restore: |
   pushd reactivecharm
   charmcraft clean
   popd
-  
+
   rm -rf reactivecharm
 
 execute: |

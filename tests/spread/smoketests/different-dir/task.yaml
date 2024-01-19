@@ -2,6 +2,7 @@ summary: pack a init-created charm from a different directory
 
 prepare: |
   charmcraft init --project-dir=charm
+  sudo chown $USER .  # Ensure the current directory has the correct perms
 
 restore: |
   pushd charm

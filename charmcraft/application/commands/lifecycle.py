@@ -324,10 +324,17 @@ class PackCommand(PrimeCommand):
             raise RuntimeError(f"Step name {step_name} passed to pack command.")
         super().run(parsed_args, step_name="prime")
 
+        # Workaround so the package service writes to the correct output directory.
+        if self._services.ProviderClass.is_managed():
+            output_dir = pathlib.Path("/root/output")
+        else:
+            output_dir = parsed_args.output
+
         emit.progress("Packing...")
-        packages = self._services.package.pack(
-            self._services.lifecycle.prime_dir, parsed_args.output
-        )
+        try:
+            packages = self._services.package.pack(self._services.lifecycle.prime_dir, output_dir)
+        except PermissionError:
+            emit.progress("", permanent=True)
 
         if not packages:
             emit.message("No packages created.")

@@ -17,13 +17,29 @@
 """Service class for creating providers."""
 from __future__ import annotations
 
+import contextlib
 import os
+import pathlib
+from collections.abc import Generator
 
-from craft_application import services
+import craft_application
+import craft_providers
+from craft_application import models
 
 
-class ProviderService(services.ProviderService):
+class ProviderService(craft_application.ProviderService):
     """Business logic for getting providers."""
+
+    def __init__(
+        self,
+        app: craft_application.AppMetadata,
+        services: craft_application.ServiceFactory,
+        *,
+        project: models.Project,
+        work_dir: pathlib.Path,
+    ):
+        super().__init__(app, services, project=project, work_dir=work_dir)
+        self.output_dir = pathlib.Path.cwd()
 
     def setup(self) -> None:
         """Set up the provider service for Charmcraft."""
@@ -33,3 +49,21 @@ class ProviderService(services.ProviderService):
         for env_key in ["http_proxy", "https_proxy", "no_proxy"]:
             if env_key in os.environ:
                 self.environment[env_key] = os.environ[env_key]
+
+    @contextlib.contextmanager
+    def instance(
+        self,
+        build_info: models.BuildInfo,
+        *,
+        work_dir: pathlib.Path,
+        allow_unstable: bool = True,
+        **kwargs: bool | str | None,
+    ) -> Generator[craft_providers.Executor, None, None]:
+        """Get an instance for charmcraft."""
+        with super().instance(
+            build_info, work_dir=work_dir, allow_unstable=allow_unstable, **kwargs
+        ) as instance:
+            # Mount the output directory in the instance so the package service can
+            instance.mount(host_source=self.output_dir, target=pathlib.PurePath("/root/output"))
+
+            yield instance

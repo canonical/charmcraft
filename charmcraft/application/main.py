@@ -51,7 +51,6 @@ class Charmcraft(Application):
         super().__init__(app=app, services=services)
         self._global_args: dict[str, Any] = {}
         self._dispatcher: craft_cli.Dispatcher | None = None
-        self._project_dir = pathlib.Path().resolve()
 
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
@@ -115,16 +114,17 @@ class Charmcraft(Application):
         )
         self.services.set_kwargs(
             "package",
-            project_dir=self._project_dir,
+            project_dir=self._work_dir,
             platform=platform,
         )
 
     def configure(self, global_args: dict[str, Any]) -> None:
         """Configure the application using any global arguments."""
+        if global_args["project_dir"]:
+            self._work_dir = pathlib.Path(global_args["project_dir"]).resolve(strict=False)
+
         super().configure(global_args)
         self._global_args = global_args
-        if global_args["project_dir"]:
-            self._project_dir = pathlib.Path(global_args["project_dir"]).resolve(strict=False)
 
     @property
     def app_config(self) -> dict[str, Any]:

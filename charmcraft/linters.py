@@ -20,6 +20,7 @@ import ast
 import os
 import pathlib
 import shlex
+import typing
 from collections.abc import Generator
 from typing import final
 
@@ -65,6 +66,27 @@ def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> pathlib.Path
     if entrypoint and entrypoint.suffix == ".py" and os.access(entrypoint, os.X_OK):
         return entrypoint
     return None
+
+
+def check_naming_convention(names: typing.Iterable[str], scope: str) -> tuple[str, str]:
+    snake_keys = [key for key in names if "_" in key]
+
+    if snake_keys:
+        hyphen_keys = [key for key in names if "-" in key]
+
+        if hyphen_keys:
+            text = (
+                f"Some config {scope} ({', '.join(snake_keys)}) are in snake case, "
+                f"while others  ({', '.join(hyphen_keys)}) are with hyphens."
+            )
+            return LintResult.ERROR, text
+        else:
+            text = (
+                f"Some {scope} ({', '.join(snake_keys)}) are using "
+                "snake case naming convention."
+            )
+            return LintResult.WARNING, text
+    return LintResult.OK, ""
 
 
 class BaseChecker(metaclass=abc.ABCMeta):
@@ -325,9 +347,41 @@ class JujuActions(Linter):
 
         try:
             with filepath.open("rt", encoding="utf8") as fh:
-                yaml.safe_load(fh)
+                content = dict(yaml.safe_load(fh))
         except Exception:
             return self.Result.ERROR
+
+        actions_names = list(content.keys())
+
+        result_actions, text_actions = check_naming_convention(actions_names, "actions")
+
+        actions_params = [
+            param
+            for action in content.values()
+            if isinstance(action, dict)
+            for param in action.get("params", [])
+        ]
+
+        result_params, text_params = check_naming_convention(actions_params, "action params")
+
+        if result_actions == self.Result.ERROR or result_params == self.Result.ERROR:
+            self.text = " ".join([
+                text_actions,
+                text_params,
+                "Make sure to be consistent and consider to switch to hyphens."
+                "For more information refer to https://juju.is/docs/sdk/styleguide."
+            ])
+            return self.Result.ERROR
+
+        if result_actions == self.Result.WARNING or result_params == self.Result.WARNING:
+            self.text = text_params
+            self.text = " ".join([
+                text_actions,
+                text_params,
+                "Please consider to switch to hyphens."
+                "For more information refer to https://juju.is/docs/sdk/styleguide."
+            ])
+            return self.Result.WARNING
 
         self.text = "Valid actions.yaml file."
         return self.Result.OK
@@ -372,6 +426,24 @@ class JujuConfig(Linter):
             if "type" not in value:
                 self.text = "Error in config.yaml: items under 'options' must have a 'type' key."
                 return self.Result.ERROR
+
+        result, text = check_naming_convention(options.keys(), "configs")
+
+        if result == self.Result.ERROR:
+            self.text = " ".join([
+                text,
+                "Make sure to be consistent and consider to switch to hyphens."
+                "For more information refer to https://juju.is/docs/sdk/styleguide."
+            ])
+            return self.Result.ERROR
+
+        if result == self.Result.WARNING:
+            self.text = " ".join([
+                text,
+                "Please consider to switch to hyphens."
+                "For more information refer to https://juju.is/docs/sdk/styleguide."
+            ])
+            return self.Result.WARNING
 
         return self.Result.OK
 

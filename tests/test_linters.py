@@ -22,6 +22,7 @@ from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
+import yaml
 
 from charmcraft import const
 from charmcraft.linters import (
@@ -45,6 +46,7 @@ EXAMPLE_DISPATCH = """
 
 PYTHONPATH=lib:venv ./charm.py
 """
+
 
 # --- tests for helper functions
 
@@ -898,6 +900,63 @@ def test_jujuactions_file_corrupted(tmp_path):
     assert result == JujuActions.Result.ERROR
 
 
+def test_jujuactions_snake_case_action_params(tmp_path):
+    """The actions.yaml file has consistent snake case convention."""
+    actions_file = tmp_path / const.JUJU_ACTIONS_FILENAME
+    actions_file.write_text(
+        """
+        my_action:
+            params:
+                my_first_param:
+                    type: str
+                    description: foo
+                my_second_param:
+                    type: str
+                    description: bar
+        """
+    )
+    result = JujuActions().run(tmp_path)
+    assert result == JujuActions.Result.WARNING
+
+
+def test_jujuactions_mixed_convention_action_params(tmp_path):
+    """The actions.yaml file mixes snake case convention and hyphens."""
+    actions_file = tmp_path / const.JUJU_ACTIONS_FILENAME
+    actions_file.write_text(
+        """
+        my_action:
+            params:
+                my_first_param:
+                    type: str
+                    description: foo
+                my-second-param:
+                    type: str
+                    description: bar
+        """
+    )
+    result = JujuActions().run(tmp_path)
+    assert result == JujuActions.Result.ERROR
+
+
+def test_jujuactions_naming_convention_ok(tmp_path):
+    """The actions.yaml file is valid YAML using hyphens."""
+    actions_file = tmp_path / const.JUJU_ACTIONS_FILENAME
+    actions_file.write_text(
+        """
+        my-action:
+            params:
+                my-first-param:
+                    type: str
+                    description: foo
+                my-second-param:
+                    type: str
+                    description: bar
+        """
+    )
+    result = JujuActions().run(tmp_path)
+    assert result == JujuActions.Result.OK
+
+
 # --- tests for JujuConfig checker
 
 
@@ -989,6 +1048,61 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     result = linter.run(tmp_path)
     assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
+
+
+def test_jujuconfig_snake_case_action_params(tmp_path):
+    """The conig.yaml file has consistent snake case convention."""
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
+    config_file.write_text(
+        """
+        options:
+            my_first_param:
+                type: str
+                description: foo
+            my_second_param:
+                type: str
+                description: bar
+        """
+    )
+    result = JujuConfig().run(tmp_path)
+    assert result == JujuConfig.Result.WARNING
+
+
+def test_jujuconfig_mixed_convention_action_params(tmp_path):
+    """The config.yaml file mixes snake case convention and hyphens."""
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
+    config_file.write_text(
+        """
+        options:
+            my_first_param:
+                type: str
+                description: foo
+            my-second-param:
+                type: str
+                description: bar
+        """
+    )
+    result = JujuConfig().run(tmp_path)
+    assert result == JujuConfig.Result.ERROR
+
+
+def test_jujuconfig_naming_convention_ok(tmp_path):
+    """The config.yaml file is valid YAML using hyphens."""
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
+    config_file.write_text(
+        """
+        options:
+            my-first-param:
+                type: str
+                description: foo
+            my-second-param:
+                type: str
+                description: bar
+        """
+    )
+    result = JujuConfig().run(tmp_path)
+    assert result == JujuConfig.Result.OK
+
 
 
 # --- tests for Entrypoint checker

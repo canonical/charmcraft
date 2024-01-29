@@ -1655,7 +1655,7 @@ def test_show_linters_lint_warnings(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=LintResult.WARNINGS,
+            result=LintResult.WARNING,
         ),
     ]
 
@@ -1680,7 +1680,7 @@ def test_show_linters_lint_errors_normal(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=LintResult.ERRORS,
+            result=LintResult.ERROR,
         ),
     ]
 
@@ -1709,7 +1709,7 @@ def test_show_linters_lint_errors_forced(basic_project, emitter, config):
             check_type=linters.CheckType.LINT,
             url="check-url",
             text="Some text",
-            result=LintResult.ERRORS,
+            result=LintResult.ERROR,
         ),
     ]
 

@@ -19,7 +19,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
@@ -32,7 +32,6 @@ jobs:
       matrix:
         spread:
           - "google:"
-#          - "google:ubuntu-22.04-64:tests/spread/charms/k8s-operator:prometheus"
 
     steps:
       - name: Cleanup job workspace
@@ -47,7 +46,7 @@ jobs:
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
 
@@ -86,7 +85,7 @@ jobs:
 
       - if: steps.decisions.outputs.RUN == 'true'
         name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
 
@@ -98,4 +97,3 @@ jobs:
           BUNDLE_DEFAULT_NAME: gh-ci-charmcraft-bundle
         run: |
           spread google:ubuntu-22.04-64:tests/spread/store/
-

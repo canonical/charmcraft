@@ -5,6 +5,11 @@ environment:
   PROJECT_PATH: /charmcraft
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
   PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
+  CRAFT_DEBUG: 1  # Show exception tracebacks.
+  # Use the staging store for tests:
+  CHARMCRAFT_STORE_API_URL: https://api.staging.charmhub.io
+  CHARMCRAFT_UPLOAD_URL: https://storage.staging.snapcraftcontent.com
+  CHARMCRAFT_REGISTRY_URL: https://registry.staging.jujucharms.com
 
 exclude:
   - .git
@@ -27,11 +32,6 @@ backends:
       - ubuntu-22.04-64:
           workers: 4
           storage: 40G
-      # Fedora is disabled until it runs kernel 6.0.7 due to squashfs bug
-      # (https://forum.snapcraft.io/t/unsupported-version-0-of-verneed-record-linux-6-0/32160/14)
-      #- fedora-35-64:
-      #    workers: 2
-      #    storage: 40G
 
   multipass:
     type: adhoc
@@ -198,17 +198,6 @@ suites:
       iptables -P FORWARD ACCEPT
 
       # Ensure that the reused charms and bundles are registered if necessary.
-      cat <<- EOF > charmcraft.yaml
-      name: store_config_charm
-      type: charm
-      summary: Charmcraft.yaml file for using the staging store.
-      description: Charmcraft.yaml file for using the staging store.
-      charmhub:
-        api-url: https://api.staging.charmhub.io
-        storage-url: https://storage.staging.snapcraftcontent.com
-        registry-url: https://registry.staging.jujucharms.com
-      EOF
-
       if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
         charmcraft register $CHARM_DEFAULT_NAME || ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
       fi

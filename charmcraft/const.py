@@ -16,6 +16,8 @@
 
 """Constants used in charmcraft."""
 
+from craft_providers.bases import BaseName
+
 # region Environment variables
 ALTERNATE_AUTH_ENV_VAR = "CHARMCRAFT_AUTH"
 DEVELOPER_MODE_ENV_VAR = "CHARMCRAFT_DEVELOPER"
@@ -23,7 +25,9 @@ EXPERIMENTAL_EXTENSIONS_ENV_VAR = "CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS"
 IMAGE_INFO_ENV_VAR = "CHARMCRAFT_IMAGE_INFO"
 PROVIDER_ENV_VAR = "CHARMCRAFT_PROVIDER"
 SHARED_CACHE_ENV_VAR = "CRAFT_SHARED_CACHE"
-
+STORE_API_ENV_VAR = "CHARMCRAFT_STORE_API_URL"
+STORE_STORAGE_ENV_VAR = "CHARMCRAFT_UPLOAD_URL"
+STORE_REGISTRY_ENV_VAR = "CHARMCRAFT_REGISTRY_URL"
 # These are only for use within the managed environment
 MANAGED_MODE_ENV_VAR = "CHARMCRAFT_MANAGED_MODE"
 SNAP_CHANNEL_ENV_VAR = "CHARMCRAFT_INSTALL_SNAP_CHANNEL"
@@ -32,9 +36,10 @@ SNAP_CHANNEL_ENV_VAR = "CHARMCRAFT_INSTALL_SNAP_CHANNEL"
 CHARMCRAFT_FILENAME = "charmcraft.yaml"
 BUNDLE_FILENAME = "bundle.yaml"
 MANIFEST_FILENAME = "manifest.yaml"
+JUJU_CONFIG_FILENAME = "config.yaml"
 METADATA_FILENAME = "metadata.yaml"
 JUJU_ACTIONS_FILENAME = "actions.yaml"
-JUJU_CONFIG_FILENAME = "config.yaml"
+
 WORK_DIRNAME = "work_dir"
 BUILD_DIRNAME = "build"
 VENV_DIRNAME = "venv"
@@ -47,6 +52,31 @@ DISPATCH_FILENAME = "dispatch"
 HOOKS_DIRNAME = "hooks"
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = frozenset(("install", "start", "upgrade-charm"))
+
+SUPPORTED_BASES = frozenset(
+    (
+        BaseName("ubuntu", "18.04"),
+        BaseName("ubuntu", "20.04"),
+        BaseName("ubuntu", "22.04"),
+        BaseName("ubuntu", "23.04"),
+        BaseName("ubuntu", "devel"),
+        BaseName("centos", "7"),
+        BaseName("almalinux", "9"),
+    )
+)
+
+SUPPORTED_OSES = frozenset(base.name for base in SUPPORTED_BASES)
+
+SUPPORTED_ARCHITECTURES = frozenset(
+    (
+        "amd64",
+        "arm64",
+        "armhf",
+        "ppc64el",
+        "riscv64",
+        "s390x",
+    )
+)
 
 # The minimum set of files for a charm to be considered valid
 CHARM_MANDATORY_FILES = frozenset(
@@ -96,7 +126,7 @@ UBUNTU_LTS_STABLE = frozenset(
 )
 
 # Metadata keys that are defined in the metadata.yaml file, for backwards compatible
-CHARM_METADATA_LEGACY_KEYS = frozenset(
+METADATA_YAML_KEYS = frozenset(
     (
         "assumes",
         "containers",
@@ -152,3 +182,6 @@ CHARM_METADATA_KEYS = frozenset(
 )
 
 CHARM_METADATA_KEYS_ALIAS = frozenset(("extra_bindings",))
+
+METADATA_YAML_MIGRATE_FIELDS = ("name", "summary", "description")
+"""Fields that can exist in metadata.yaml or charmcraft.yaml, but not both."""

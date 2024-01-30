@@ -466,7 +466,7 @@ def analyze(
                 check_type=checker.check_type,
                 name=checker.name,
                 url=checker.url,
-                text=checker.text,
+                text=checker.text or "n/a",
                 result=result,
             )
         )

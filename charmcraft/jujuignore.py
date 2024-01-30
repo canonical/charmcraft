@@ -140,6 +140,7 @@ class _Matcher:
         Returns
         -------
             Can return one of KEEP, SKIP, FORCEKEEP
+
         """
         if self.only_dirs and not is_dir:
             return KEEP
@@ -204,6 +205,7 @@ class JujuIgnore:
         ------
             A boolean indicating whether the ignore rules matched the given path (thus the path
             should be ignored).
+
         """
         if not path.startswith("/"):
             path = "/" + path

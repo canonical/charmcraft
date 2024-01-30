@@ -182,15 +182,13 @@ class OutputFormat(enum.Enum):
 
 
 @overload
-def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str:
-    ...
+def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str: ...
 
 
 @overload
 def format_content(
     content: str | (numbers.Real | (list | dict)), fmt: OutputFormat | (str | None)
-) -> str:
-    ...
+) -> str: ...
 
 
 def format_content(content, fmt=None):

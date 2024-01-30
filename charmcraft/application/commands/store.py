@@ -2033,9 +2033,11 @@ class SetResourceArchitecturesCommand(CharmcraftCommand):
             updates_dicts = [
                 {
                     "Revision": update.revision,
-                    "Updated At": utils.format_timestamp(update.updated_at)
-                    if update.updated_at is not None
-                    else "--",
+                    "Updated At": (
+                        utils.format_timestamp(update.updated_at)
+                        if update.updated_at is not None
+                        else "--"
+                    ),
                     "Architectures": ",".join(_get_architectures_from_bases(update.bases)),
                 }
                 for update in sorted(updates, key=lambda rev: int(rev.revision), reverse=True)
@@ -2044,9 +2046,9 @@ class SetResourceArchitecturesCommand(CharmcraftCommand):
             updates_dicts = [
                 {
                     "revision": update.revision,
-                    "updated_at": update.updated_at.isoformat()
-                    if update.updated_at is not None
-                    else None,
+                    "updated_at": (
+                        update.updated_at.isoformat() if update.updated_at is not None else None
+                    ),
                     "architectures": _get_architectures_from_bases(update.bases),
                 }
                 for update in updates

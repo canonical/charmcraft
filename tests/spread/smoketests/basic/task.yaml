@@ -5,8 +5,9 @@ environment:
   BASE_CHANNEL/focal: 20.04
   BASE_CHANNEL/jammy: 22.04
   BASE_CHANNEL/lunar: 23.04  # Non-LTS
-  BASE_NAME/alma: almalinux
-  BASE_CHANNEL/alma: 9
+  # Alma Linux is disabled temporarily: https://github.com/canonical/charmcraft/issues/1496
+  #BASE_NAME/alma: almalinux
+  #BASE_CHANNEL/alma: 9
 
 include:
   - tests/

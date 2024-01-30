@@ -63,22 +63,34 @@ execute: |
   test $last_charm_resources = "example-file,example-image"
 
   # upload and verify the file resource
-  charmcraft upload-resource $CHARM_DEFAULT_NAME example-file --file=resourcefile.txt
-  last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-file --format=json | jq -r .[0])
+  upload_revision_number=$(charmcraft upload-resource $CHARM_DEFAULT_NAME example-file --format=json --file=resourcefile.txt --arch=amd64,riscv64 | jq -r '.revision')
+  revisions_json=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-file --format=json)
+  upload_revision=$(echo "$revisions_json" | jq -c ".[] | select(.revision == $upload_revision_number)" )
+  upload_revision_architectures=$(echo "$upload_revision" | jq -c '.bases[0].architectures')
+  [[ "$upload_revision_architectures" = '["amd64","riscv64"]' ]]
+  last_revision=$(echo "$revisions_json" | jq -r .[-1])
   last_file_revno=$(echo $last_revision | jq .revision)
+  [[ "$upload_revision_number" -le "$last_file_revno" ]]
   last_revision_created=$(echo $last_revision | jq -r .created_at)
   [[ $start_datetime < $last_revision_created ]]
+
+  # change architectures for uploaded revision
+  new_architectures=$(charmcraft set-resource-architectures $CHARM_DEFAULT_NAME example-file --format=json --revision=$upload_revision_number arm64,armhf | jq -c '.[0].architectures')
+  [[ "$new_architectures" == '["arm64","armhf"]' ]]
+  new_architectures=$(charmcraft set-resource-architectures $CHARM_DEFAULT_NAME example-file --format=json --revision=$upload_revision_number all | jq -c '.[0].architectures')
+  [[ "$new_architectures" == '["all"]' ]]
 
   # upload and verify the OCI image resource
   charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
   last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-image --format=json | jq -r .[0])
   last_image_revno=$(echo $last_revision | jq .revision)
-  last_revision_created=$(echo $last_revision | jq -r .created_at)
-  [[ $start_datetime < $last_revision_created ]]
+  last_revision_created=$(echo $last_revision | jq -r '.["created at"]')
 
   # release and check full status
   charmcraft release $CHARM_DEFAULT_NAME -r $last_charm_revno -c edge --resource=example-file:$last_file_revno --resource=example-image:$last_image_revno
   edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
-  test $last_charm_revno == $(echo $edge_release | jq -r .revision)
-  test $last_file_revno == $(echo $edge_release | jq '.resources | .[] | select(.name=="example-file").revision')
-  test $last_image_revno == $(echo $edge_release | jq '.resources | .[] | select(.name=="example-image").revision')
+  # These are <= rather than == because it's possible another test bumped the revision
+  # before we got the status.
+  test $last_charm_revno -le $(echo $edge_release | jq -r .revision)
+  test $last_file_revno -le $(echo $edge_release | jq '.resources | .[] | select(.name=="example-file").revision')
+  test $last_image_revno -le $(echo $edge_release | jq '.resources | .[] | select(.name=="example-image").revision')

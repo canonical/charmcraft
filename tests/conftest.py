@@ -22,10 +22,11 @@ import os
 import pathlib
 import tempfile
 import types
-from typing import Optional
+from unittest import mock
 from unittest.mock import Mock
 
 import craft_parts
+import craft_store
 import pytest
 import responses as responses_module
 import yaml
@@ -33,10 +34,77 @@ from craft_parts import callbacks, plugins
 from craft_providers import Executor, Provider
 
 import charmcraft.parts
-from charmcraft import deprecations, instrum, parts
+from charmcraft import const, deprecations, instrum, parts, services
+from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
+from charmcraft.models import project
 from charmcraft.models.charmcraft import Base, BasesConfiguration
+
+
+@pytest.fixture()
+def simple_charm():
+    return project.Charm(
+        type="charm",
+        name="charmy-mccharmface",
+        summary="Charmy!",
+        description="Very charming!",
+        bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+    )
+
+
+@pytest.fixture()
+def service_factory(
+    fs, fake_project_dir, fake_prime_dir, simple_charm
+) -> services.CharmcraftServiceFactory:
+    factory = services.CharmcraftServiceFactory(app=APP_METADATA)
+
+    factory.set_kwargs(
+        "package",
+        project_dir=fake_project_dir,
+    )
+    factory.set_kwargs(
+        "analysis",
+        project_dir=fake_project_dir,
+    )
+
+    factory.project = simple_charm
+
+    factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
+
+    return factory
+
+
+@pytest.fixture()
+def fake_project_dir(fs) -> pathlib.Path:
+    project_dir = pathlib.Path("/root/project")
+    fs.create_dir(project_dir)
+    return project_dir
+
+
+@pytest.fixture()
+def fake_prime_dir(fs) -> pathlib.Path:
+    prime_dir = pathlib.Path("/root/prime")
+    fs.create_dir(prime_dir)
+    return prime_dir
+
+
+@pytest.fixture()
+def fake_path(fs) -> pathlib.Path:
+    """Like tmp_path, but with a fake filesystem."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        yield pathlib.Path(tmp_dir)
+
+
+@pytest.fixture()
+def global_debug():
+    os.environ["CRAFT_DEBUG"] = "1"
+
+
+@pytest.fixture()
+def new_path(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -47,16 +115,6 @@ def tmpdir_under_tmpdir(tmpdir_factory):
 @pytest.fixture(autouse=True, scope="session")
 def setup_parts():
     parts.setup_parts()
-
-
-@pytest.fixture()
-def new_path(tmp_path):
-    old_path = os.getcwd()
-    try:
-        os.chdir(tmp_path)
-        yield tmp_path
-    finally:
-        os.chdir(old_path)
 
 
 @pytest.fixture()
@@ -218,14 +276,14 @@ def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     If content is not given, remove charmcraft.yaml if exists.
     """
 
-    def prepare_charmcraft_yaml(content: Optional[str] = None):
+    def prepare_charmcraft_yaml(content: str | None = None):
         if content is None:
             try:
-                os.remove(tmp_path / "charmcraft.yaml")
+                os.remove(tmp_path / const.CHARMCRAFT_FILENAME)
             except OSError:
                 pass
         else:
-            charmcraft_yaml_file = tmp_path / "charmcraft.yaml"
+            charmcraft_yaml_file = tmp_path / const.CHARMCRAFT_FILENAME
             charmcraft_yaml_file.write_text(content)
 
         return tmp_path
@@ -240,14 +298,14 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
     If content is not given, remove metadata.yaml if exists.
     """
 
-    def prepare_metadata_yaml(content: Optional[str] = None, remove: bool = False):
+    def prepare_metadata_yaml(content: str | None = None, remove: bool = False):
         if content is None:
             try:
-                os.remove(tmp_path / "metadata.yaml")
+                os.remove(tmp_path / const.METADATA_FILENAME)
             except OSError:
                 pass
         else:
-            metadata_yaml_file = tmp_path / "metadata.yaml"
+            metadata_yaml_file = tmp_path / const.METADATA_FILENAME
             metadata_yaml_file.write_text(content)
 
         return tmp_path
@@ -262,14 +320,14 @@ def prepare_actions_yaml(tmp_path: pathlib.Path):
     If content is not given, remove actions.yaml if exists.
     """
 
-    def prepare_actions_yaml(content: Optional[str] = None):
+    def prepare_actions_yaml(content: str | None = None):
         if content is None:
             try:
-                os.remove(tmp_path / "actions.yaml")
+                os.remove(tmp_path / const.JUJU_ACTIONS_FILENAME)
             except OSError:
                 pass
         else:
-            actions_yaml_file = tmp_path / "actions.yaml"
+            actions_yaml_file = tmp_path / const.JUJU_ACTIONS_FILENAME
             actions_yaml_file.write_text(content)
 
         return tmp_path
@@ -284,14 +342,14 @@ def prepare_config_yaml(tmp_path: pathlib.Path):
     If content is not given, remove config.yaml if exists.
     """
 
-    def prepare_config_yaml(content: Optional[str] = None):
+    def prepare_config_yaml(content: str | None = None):
         if content is None:
             try:
-                os.remove(tmp_path / "config.yaml")
+                os.remove(tmp_path / const.JUJU_CONFIG_FILENAME)
             except OSError:
                 pass
         else:
-            config_yaml_file = tmp_path / "config.yaml"
+            config_yaml_file = tmp_path / const.JUJU_CONFIG_FILENAME
             config_yaml_file.write_text(content)
 
         return tmp_path
@@ -349,9 +407,9 @@ def build_charm_directory():
             expected[name] = full_path
             full_path.mkdir(parents=True)
             metadata_yaml = {"name": name}
-            with (full_path / "charmcraft.yaml").open("w") as yaml_file:
+            with (full_path / const.CHARMCRAFT_FILENAME).open("w") as yaml_file:
                 yaml.safe_dump(charmcraft_yaml, yaml_file)
-            with (full_path / "metadata.yaml").open("w") as yaml_file:
+            with (full_path / const.METADATA_FILENAME).open("w") as yaml_file:
                 yaml.safe_dump(metadata_yaml, yaml_file)
         return expected
 

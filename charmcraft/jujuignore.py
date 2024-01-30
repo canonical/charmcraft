@@ -155,7 +155,7 @@ class JujuIgnore:
     """Track a set of ignore patterns from a .jujuignore file."""
 
     def __init__(self, patterns: typing.Iterable[str]):
-        self._matchers: typing.List[_Matcher] = []
+        self._matchers: list[_Matcher] = []
         self._compile_from(patterns)
 
     def extend_patterns(self, patterns: typing.Iterable[str]) -> None:

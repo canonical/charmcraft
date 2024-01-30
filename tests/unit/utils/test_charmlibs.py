@@ -22,6 +22,7 @@ import sys
 import pytest
 from craft_cli import CraftError
 
+from charmcraft import const
 from charmcraft.utils.charmlibs import (
     collect_charmlib_pydeps,
     get_lib_info,
@@ -37,7 +38,7 @@ def test_get_name_from_metadata_ok(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # put a valid metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     with metadata_file.open("wb") as fh:
         fh.write(b"name: test-name")
 
@@ -57,7 +58,7 @@ def test_get_name_from_metadata_bad_content_garbage(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # put a broken metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     with metadata_file.open("wb") as fh:
         fh.write(b"\b00\bff -- not a really yaml stuff")
 
@@ -70,7 +71,7 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # put a broken metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     with metadata_file.open("wb") as fh:
         fh.write(b"{}")
 

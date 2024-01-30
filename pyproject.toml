@@ -1,9 +1,115 @@
+[project]
+name = "charmcraft"
+description = "The main tool to build, upload, and develop in general the Juju charms."
+dynamic = ["version", "readme"]
+dependencies = [
+    "craft-application~=1.1",
+    "craft-cli>=2.3.0",
+    "craft-parts>=1.18",
+    "craft-providers",
+    "craft-store>=2.4",
+    "distro>=1.3.0",
+    "humanize>=2.6.0",
+    "jsonschema",
+    "jinja2",
+    # Pydantic will need to be updated all at once with our libraries.
+    # When you update it, remove the pydantic constraints from renovate.
+    "pydantic>=1.10,<2.0",
+    "python-dateutil",
+    "pyyaml",
+    "requests",
+    "requests-toolbelt",
+    "requests-unixsocket",
+    "snap-helpers",
+    "tabulate",
+    # Needed until requests-unixsocket supports urllib3 v2
+    # https://github.com/msabramo/requests-unixsocket/pull/69
+    # When updating, remove the urllib3 constraint from renovate config.
+    "urllib3<2.0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+]
+requires-python = ">=3.10"
+
+[project.scripts]
+charmcraft = "charmcraft.application.main:main"
+
+[project.optional-dependencies]
+dev = [  # When updating these, also update the dev/lint/types groups in renovate.
+    "coverage",
+    "flake8",
+    "freezegun",
+    "hypothesis~=6.0",
+    "pydocstyle",
+    "pyfakefs",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-check",
+    "pytest-subprocess",
+    "responses",
+]
+lint = [
+    "black>=23.10.1,<24.0.0",
+    "codespell[tomli]>=2.2.6,<3.0.0",
+    "yamllint>=1.32.0,<2.0.0",
+]
+types = [
+    "mypy[reports]~=1.5",
+    "pyright==1.1.332",
+    "types-python-dateutil",
+    "types-requests<2.31.0.7",  # Frozen until we can get urllib3 v2
+    "types-setuptools",
+    "types-tabulate",
+    "types-urllib3",
+]
+apt = [
+    "python-apt>=2.4.0;sys_platform=='linux'"
+]
+
+[build-system]
+requires = [
+    "setuptools>=67.7.2",
+    "setuptools_scm[toml]>=7.1"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+readme = {file = "README.md"}
+
+[tool.setuptools_scm]
+write_to = "charmcraft/_version.py"
+# the version comes from the latest annotated git tag formatted as 'X.Y.Z'
+# standard version scheme:
+#   'X.Y.Z.post<commits since tag>+g<hash>'
+# scheme when no tags exist:
+#   '0.0.post<total commits>+g<hash>
+# scheme when no tags exist and working dir is dirty:
+#   '0.0.post<total commits>+g<hash>.d<date formatted as %Y%m%d>'
+version_scheme = "post-release"
+# deviations from the default 'git describe' command:
+# - only match annotated tags
+# - only match tags formatted as 'X.Y.Z'
+# - exclude '+dirty<hash>' suffix
+git_describe_command = "git describe --long --match '[0-9]*.[0-9]*.[0-9]*' --exclude '*[^0-9.]*'"
+
+[tool.setuptools.packages.find]
+include = ["*craft*"]
+namespaces = false
+
 [tool.black]
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ["py310", "py311"]
 line-length = 99
 
 [tool.codespell]
-ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented"
+ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread"
 skip = ".tox,.git,build,.*_cache,__pycache__,*.tar,*.snap,*.png,./node_modules,./docs/_build,.direnv,.venv,venv,.vscode,charmcraft.spec"
 quiet-level = 3
 check-filenames = true
@@ -20,6 +126,9 @@ line_length = 88
 minversion = "7.0"
 testpaths = "tests"
 xfail_strict = true
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 
 [tool.coverage.run]
 branch = true
@@ -32,16 +141,15 @@ skip_empty = true
 
 [tool.pyright]
 strict = ["charmcraft"]
-pythonVersion = "3.8"
+pythonVersion = "3.10"
 pythonPlatform = "Linux"
-venvPath = ".tox"
-venv = "py38"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 packages = [
     "charmcraft",
 ]
+plugins = ["pydantic.mypy"]
 exclude = [
     "build",
     "results",
@@ -64,8 +172,8 @@ module=[
     "charmcraft.commands.extensions",
     "charmcraft.commands.pack",
     "charmcraft.commands.store",
-    "charmcraft.commands.store.registry",
-    "charmcraft.commands.store.store",
+    "charmcraft.store.registry",
+    "charmcraft.store.store",
     "charmcraft.config",
     "charmcraft.extensions._utils",
     "charmcraft.linters",
@@ -89,12 +197,13 @@ strict = false
 
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py310"
 extend-exclude = [
     "docs",
     "__pycache__",
     "tools",
     "snap/local",
+    "charmcraft/_version.py",  # setuptools_scm generates old-style type annotations.
 ]
 # Follow ST063 - Maintaining and updating linting specifications for updating these.
 select = [  # Base linting rule selections.

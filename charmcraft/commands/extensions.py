@@ -17,7 +17,6 @@
 """Infrastructure for the 'extensions' command."""
 import argparse
 from textwrap import dedent
-from typing import Dict
 
 import tabulate
 import yaml
@@ -46,7 +45,7 @@ class ListExtensionsCommand(BaseCommand):
 
     def run(self, parsed_args: argparse.Namespace):
         """Print the list of available extensions and their bases."""
-        extension_presentation: Dict[str, ExtensionModel] = {}
+        extension_presentation: dict[str, ExtensionModel] = {}
 
         for extension_name in extensions.registry.get_extension_names():
             extension_class = extensions.registry.get_extension_class(extension_name)

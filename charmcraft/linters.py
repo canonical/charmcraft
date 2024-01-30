@@ -20,11 +20,12 @@ import ast
 import os
 import pathlib
 import shlex
-from typing import Generator, List, Type, Union
+from collections.abc import Generator
+from typing import final
 
 import yaml
 
-from charmcraft import config, utils
+from charmcraft import config, const, utils
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
 
@@ -32,13 +33,13 @@ from charmcraft.models.lint import CheckResult, CheckType, LintResult
 BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
 
 
-def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
+def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> pathlib.Path | None:
     """Verify if the charm has a dispatch file pointing to a Python entrypoint.
 
     :returns: the entrypoint path if all succeeds, None otherwise.
     """
     # get the entrypoint from the last useful dispatch line
-    dispatch = basedir / "dispatch"
+    dispatch = basedir / const.DISPATCH_FILENAME
     entrypoint_str = ""
     try:
         with dispatch.open("rt", encoding="utf8") as fh:
@@ -55,7 +56,7 @@ def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> Union[pathlib.Path, N
     return basedir / entrypoint_str
 
 
-def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> Union[pathlib.Path, None]:
+def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> pathlib.Path | None:
     """Verify if the charm has a dispatch file pointing to a Python entrypoint.
 
     :returns: the entrypoint path if all succeeds, None otherwise.
@@ -74,22 +75,52 @@ class BaseChecker(metaclass=abc.ABCMeta):
     url: str
     text: str
 
+    exception_result: str
+
     @abc.abstractmethod
     def run(self, basedir: pathlib.Path) -> str:
         """Run this checker."""
         ...
+
+    @final
+    def get_result(self, base_dir: pathlib.Path) -> CheckResult:
+        """Get the result of a single checker."""
+        try:
+            result = self.run(base_dir)
+        except Exception:
+            result = self.exception_result
+        return CheckResult(
+            check_type=self.check_type,
+            name=self.name,
+            url=self.url,
+            text=self.text,
+            result=result,
+        )
+
+    @final
+    def get_ignore_result(self) -> CheckResult:
+        """Get the result presuming the checker is ignored."""
+        return CheckResult(
+            check_type=self.check_type,
+            name=self.name,
+            url=self.url,
+            text="",
+            result=LintResult.IGNORED,
+        )
 
 
 class AttributeChecker(BaseChecker, metaclass=abc.ABCMeta):
     """Base attribute checker."""
 
     check_type = CheckType.ATTRIBUTE
+    exception_result = LintResult.UNKNOWN
 
 
 class Linter(BaseChecker, metaclass=abc.ABCMeta):
     """Base linter class."""
 
     check_type = CheckType.LINT
+    exception_result = LintResult.FATAL
     Result = LintResult
 
 
@@ -116,7 +147,10 @@ class Language(AttributeChecker):
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         python_entrypoint = check_dispatch_with_python_entrypoint(basedir)
-        return self.Result.UNKNOWN if python_entrypoint is None else self.Result.PYTHON
+        if python_entrypoint is None:
+            self.text = "Charm language unknown"
+            return self.Result.UNKNOWN
+        return self.Result.PYTHON
 
 
 class Framework(AttributeChecker):
@@ -162,7 +196,7 @@ class Framework(AttributeChecker):
             return None
         return self.result_texts[self.result]
 
-    def _get_imports(self, filepath: pathlib.Path) -> Generator[List[str], None, None]:
+    def _get_imports(self, filepath: pathlib.Path) -> Generator[list[str], None, None]:
         """Parse a Python filepath and yield its imports.
 
         If the file does not exist or cannot be parsed, return empty. Otherwise
@@ -188,7 +222,7 @@ class Framework(AttributeChecker):
         if python_entrypoint is None:
             return False
 
-        opsdir = basedir / "venv" / "ops"
+        opsdir = basedir / const.VENV_DIRNAME / "ops"
         if not opsdir.exists() or not opsdir.is_dir():
             return False
 
@@ -252,17 +286,24 @@ class JujuMetadata(Linter):
             metadata = read_metadata_yaml(basedir)
         except yaml.YAMLError:
             self.text = "The metadata.yaml file is not a valid YAML file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
         except Exception:
             self.text = "Cannot read the metadata.yaml file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         # check required attributes
         missing_fields = {"name", "summary", "description"} - set(metadata)
         if missing_fields:
             missing = utils.humanize_list(missing_fields, "and")
             self.text = f"The metadata.yaml file is missing the following attribute(s): {missing}."
-            return self.Result.ERRORS
+            return self.Result.ERROR
+
+        if "series" in metadata:
+            self.text = (
+                "The metadata.yaml file contains the deprecated attribute: series."
+                "This attribute will be rejected starting in Juju 4.0."
+            )
+            return self.Result.WARNING
 
         return self.Result.OK
 
@@ -276,8 +317,9 @@ class JujuActions(Linter):
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        filepath = basedir / "actions.yaml"
+        filepath = basedir / const.JUJU_ACTIONS_FILENAME
         if not filepath.exists():
+            self.text = ""
             # it's optional
             return self.Result.OK
 
@@ -285,8 +327,9 @@ class JujuActions(Linter):
             with filepath.open("rt", encoding="utf8") as fh:
                 yaml.safe_load(fh)
         except Exception:
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
+        self.text = "Valid actions.yaml file."
         return self.Result.OK
 
 
@@ -308,7 +351,7 @@ class JujuConfig(Linter):
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
-        filepath = basedir / "config.yaml"
+        filepath = basedir / const.JUJU_CONFIG_FILENAME
         if not filepath.exists():
             # it's optional
             return self.Result.OK
@@ -318,17 +361,17 @@ class JujuConfig(Linter):
                 content = yaml.safe_load(fh)
         except Exception:
             self.text = "The config.yaml file is not a valid YAML file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         options = content.get("options")
         if not isinstance(options, dict):
             self.text = "Error in config.yaml: must have an 'options' dictionary."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         for value in options.values():
             if "type" not in value:
                 self.text = "Error in config.yaml: items under 'options' must have a 'type' key."
-                return self.Result.ERRORS
+                return self.Result.ERROR
 
         return self.Result.OK
 
@@ -358,22 +401,22 @@ class Entrypoint(Linter):
 
         if not entrypoint.exists():
             self.text = f"Cannot find the entrypoint file: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         if not entrypoint.is_file():
             self.text = f"The entrypoint is not a file: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         if not os.access(entrypoint, os.X_OK):
             self.text = f"The entrypoint file is not executable: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         return self.Result.OK
 
 
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
-CHECKERS: List[Type[BaseChecker]] = [
+CHECKERS: list[type[BaseChecker]] = [
     Language,
     JujuActions,
     JujuConfig,
@@ -388,7 +431,7 @@ def analyze(
     basedir: pathlib.Path,
     *,
     override_ignore_config: bool = False,
-) -> List[CheckResult]:
+) -> list[CheckResult]:
     """Run all checkers and linters."""
     all_results = []
     for cls in CHECKERS:

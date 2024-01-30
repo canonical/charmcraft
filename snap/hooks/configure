@@ -26,7 +26,7 @@ from datetime import datetime
 from charmcraft import snap
 
 PROJECT_NAME = "charmcraft"
-MINIMAL_BASE_VERISON = "2.0"
+MINIMAL_BASE_VERISON = "3.0"
 
 # We need get image info tuple from regex
 # (craft base metadata version, remote image provider, remote image os, remote image version)

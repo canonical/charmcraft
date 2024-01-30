@@ -15,10 +15,15 @@
 # For further info, check https://github.com/canonical/charmcraft
 """CLI-related utilities for Charmcraft."""
 import datetime
+import enum
+import json
+import numbers
 import sys
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Literal, overload
 
+import tabulate
 from craft_cli import emit
 
 from charmcraft.env import is_charmcraft_running_in_managed_mode
@@ -59,8 +64,8 @@ class ResourceOption:
         parser.add_argument('--resource',  type=ResourceOption())
     """
 
-    name: Optional[str] = None
-    revision: Optional[int] = None
+    name: str | None = None
+    revision: int | None = None
 
     def __call__(self, value):
         """Run by argparse to validate and convert the given argument."""
@@ -79,6 +84,31 @@ class ResourceOption:
             "the resource format must be <name>:<revision> (revision being a non-negative integer)"
         )
         raise ValueError(msg)
+
+
+@dataclass(frozen=True)
+class ChoicesList:
+    """Argparse helper to make a list argument from a collection of choices.
+
+    For example, a list of digits might look like:
+
+        parser.add_argument("--digits", type=ChoicesList(string.digits))
+    """
+
+    choices: Collection
+
+    def __call__(self, value: str) -> list[str]:
+        """Validate and get the chosen list of choices.
+
+        :param value: The list as a comma-separated string from the CLI
+        :returns: A list of string values.
+        :raises ValueError: if any invalid choices are in the list.
+        """
+        values = value.split(",")
+        invalid_values = set(values) - set(self.choices)
+        if invalid_values:
+            raise ValueError(f"invalid values: {', '.join(invalid_values)}")
+        return values
 
 
 def confirm_with_user(prompt, default=False) -> bool:
@@ -141,3 +171,38 @@ def format_timestamp(dt: datetime.datetime) -> str:
         # timezone naive, assume it's UTC
         dtz = dt
     return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+class OutputFormat(enum.Enum):
+    """Output format options for commands."""
+
+    DEFAULT = None
+    JSON = "json"
+    TABLE = "table"
+
+
+@overload
+def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str:
+    ...
+
+
+@overload
+def format_content(
+    content: str | (numbers.Real | (list | dict)), fmt: OutputFormat | (str | None)
+) -> str:
+    ...
+
+
+def format_content(content, fmt=None):
+    """Format command output."""
+    if not isinstance(fmt, OutputFormat):
+        try:
+            fmt = OutputFormat(fmt)
+        except ValueError:
+            raise ValueError(f"Unknown output format {str(fmt)}")
+
+    if fmt == OutputFormat.JSON:
+        return json.dumps(content, indent=4)
+    if fmt == OutputFormat.TABLE:
+        return tabulate.tabulate(content, headers="keys")
+    return str(content)

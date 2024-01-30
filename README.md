@@ -1,155 +1,104 @@
-# Charmcraft is for Kubernetes and machine operator developers
+[![charmcraft](https://snapcraft.io/charmcraft/badge.svg)](https://snapcraft.io/charmcraft)
+[![Tests](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml)
+[![Spread](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml)
+[![Weekly Spread](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml)
 
-Charmcraft supports Kubernetes and machine operator development.
+# Charmcraft -- easily initialise, pack, and publish your charms
 
-Charmcraft enables collaboration between charmed operator developers, and
-publication on [Charmhub](https://charmhub.io/), home of the Charmed Operator
-Collection.
+Charmcraft is a CLI tool that makes it easy and quick to initialise, package, and publish Kubernetes and machine charms. It is an official component of the Charm SDK, itself a part of [the Juju universe](https://juju.is/).
 
-Use `charmcraft` to:
-
-- Init a new charmed operator file structure
-- Build your operator into a charmed operator for distribution
-- Register your charmed operator name on Charmhub
-- Upload your charmed operators to Charmhub
-- Release your charmed operators into channels
-
-You can use charmcraft with operators written in any language but we
-recommend the [Python Operator Framework on
-Github](https://github.com/canonical/operator) which is also [on
-PyPI](https://pypi.org/project/ops/) for ease of development and
-collaboration.
-
-Charmcraft and the Charmed Operator Framework extend the operator pattern
-beyond Kubernetes or machine deployments with [universal
-operators](https://juju.is/universal-operators) that drive Linux and
-Windows apps. The universal operator pattern is very exciting for
-multi-cloud application management.
+||||
+|-|-|- |
+|| [Juju](https://juju.is/docs/juju) | Learn how to quickly deploy, integrate, and manage charms on any cloud with Juju. <br>  _It's as simple as `juju deploy foo`, `juju integrate foo bar`, ..., on any cloud._ |
+||||
+|| [Charmhub](https://charmhub.io/) | Sample our existing charms on Charmhub. <br> _A charm can be a cluster ([OpenStack](https://charmhub.io/openstack-base), [Kubernetes](https://charmhub.io/charmed-kubernetes)), a data platform ([PostgreSQL](https://charmhub.io/postgresql-k8s), [MongoDB](https://charmhub.io/mongodb), etc.), an observability stack ([Canonical Observability Stack](https://charmhub.io/cos-lite)), an MLOps solution ([Kubeflow](https://charmhub.io/kubeflow)), and so much more._ |
+||||
+|:point_right:| [Charm SDK](https://juju.is/docs/sdk) | Write your own charm! <br> _Juju is written in Go, but our SDK supports easy charm development in Python._  |
 
 
-## Install
+## Give it a try
 
-The recommended way to install `charmcraft` is from the stable channel with
+Let's use Charmcraft to initialise and pack a Kubernetes charm:
 
-    sudo snap install charmcraft --classic
+### Set up
 
-There are multiple channels other than `stable`. See the full list with
-`snap info charmcraft`. We recommend either `latest/stable` or `latest/beta`
-for everyday charming. With the snap you will always be up to date as
-Charmhub services and APIs evolve.
+> See [Charm SDK | Set up your development environment automatically > Set up an Ubuntu `charm-dev` VM with Multipass](https://juju.is/docs/sdk/dev-setup#heading--automatic-set-up-an-ubuntu-charm-dev-vm-with-multipass). <br> Choose the MicroK8s track. 
 
-You can also install `charmcraft` from PyPI, but some system packages 
-(`libffi-dev`, `libapt-pkg-dev` and `libssl-dev`) and a Python package 
-need to be installed first (`python-apt`). For the later in Ubuntu 
-systems you need to check the 
-[Python APT library page](https://launchpad.net/ubuntu/+source/python-apt) 
-and choose the source file that matches your system (e.g. for Impish 
-it's `python-apt_2.2.1.tar.xz`). So the instructions would be:
+### Initialise and pack your charm
 
-    $ sudo apt install -y libffi-dev libapt-pkg-dev libssl-dev
-    $ python3 -m venv env
-    $ source env/bin/activate
-    (env)$ pip install https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/python-apt/2.2.1/python-apt_2.2.1.tar.xz
-    (env)$ pip install charmcraft
+In your Multipass VM shell, create a charm directory and use Charmcraft to initialise your charm file structure:
 
-
-## Initialize a charm operator package file structure
-
-Use `charmcraft init` to create a new template charm operator file tree:
-
-```bash
-$ mkdir my-new-charm; cd my-new-charm
-$ charmcraft init
-Charm operator package file and directory tree initialized.
-
-Now edit the following package files to provide fundamental charm metadata and other information:
-
-metadata.yaml
-config.yaml
-src/charm.py
-README.md
+```
+mkdir my-new-charm
+cd my-new-charm
+charmcraft init
 ```
 
-You will now have all the essential files for a charmed operator, including
-the actual `src/charm.py` skeleton and various items of metadata. Charmcraft
-assumes you want to work in Python so it will add `requirements.txt` with
-the Python operator framework `ops`, and other conventional development
-support files.
+This has created a standard charm directory structure:
 
-## Build your charm
+```
+$ ls -R
+.:
+CONTRIBUTING.md  README.md        pyproject.toml    src    tox.ini
+LICENSE          charmcraft.yaml  requirements.txt  tests
 
-With a correct `metadata.yaml` and with `ops` in `requirements.txt` you can
-build a charmed operator with:
+./src:
+charm.py
 
-```text
-$ charmcraft pack
-Created 'test-charm.charm'.
+./tests:
+integration  unit
+
+./tests/integration:
+test_charm.py
+
+./tests/unit:
+test_charm.py
 ```
 
-`charmcraft pack` will fetch additional files into the tree from PyPI based
-on `requirements.txt` and will compile modules using a virtualenv.
+Poke around: 
 
-The charmed operator is just a zipfile with metadata and the operator code
-itself:
+Note that the `charmcraft.yaml` file shows that what we have is an example charm called `my-new-charm`, which builds on Ubuntu 22.04 and which uses an OCI image resource `httpbin` from `kennethreitz/httpbin`.
 
-```text
-$ unzip -l test-charm.charm
-Archive:  test-charm.charm
-  Length      Date    Time    Name
----------  ---------- -----   ----
-      221  2020-11-15 08:10   metadata.yaml
-[...]
-    25304  2020-11-15 08:14   venv/yaml/__pycache__/scanner.cpython-38.pyc
----------                     -------
-   812617                     84 files
+Note that the `src/charm.py` file contains code scaffolding featuring the Charm SDK's Ops library for writing charms.
+
+Explore further, start editing the files, or skip ahead and pack the charm: 
+
+```
+charmcraft pack
 ```
 
-Now, if you have a Kubernetes cluster with the Juju OLM accessible you can issue
-`juju deploy ./my-new-charm.charm --resource httpbin-image=kennethreitz/httpbin`.
-For classic machine deployments you can issue `juju deploy ./my-new-charm.charm`.
-You do not need to publish your operator on Charmhub, you can pass the charmed
-operator file around directly to users, or for CI/CD purposes.
+If you didn't take any wrong turn or simply left the charm exactly as it was, this should work and yield a file called `my-new-charm_ubuntu-22.04-amd64.charm` (the architecture bit may be different depending on your system's architecture). Use this name and the resource from the `metadata.yaml` to deploy your example charm to your local MicroK8s cloud with Juju:
 
-## Charmhub login and charm name reservations
-
-[Charmhub](https://charmhub.io/) is the world's largest repository of
-operators. It makes it easy to share and collaborate on operators. The
-community are interested in operators for a very wide range of purposes,
-including infrastructure-as-code and legacy application management, and of
-course Kubernetes operators.
-
-Use `charmcraft login` and `charmcraft logout` to sign into Charmhub.
-
-## Charmhub name registration
-
-You can register operator names in Charmhub with `charmcraft register <name>`.
-Many common names have been reserved, you are encouraged to discuss your
-interest in leading or collaborating on a charmed operator in
-[Charmhub Discourse](https://discourse.charmhub.io/).
-
-Charmhub naming policy is the principle of least surprise - a well-known
-name should map to an operator that most people would expect to get for that
-name.
-
-Operators in Charmhub can be renamed as needed, so feel free to register a
-temporary name, such as <username>-<charmname> as a placeholder.
-
-## Operator upload and release
-
-Charmhub operators are published in channels, like:
-
-```text
-latest/stable
-latest/candidate
-latest/beta
-latest/edge
-1.3/beta
-1.3/edge
-1.2/stable
-1.2/candidate
-1.0/stable
+```
+juju deploy ./my-new-charm_ubuntu-22.04-amd64.charm --resource httpbin-image=kennethreitz/httpbin
 ```
 
-Use `charmcraft upload` to get a new revision number for your freshly built
-charmed operator, and `charmcraft release` to release a revision into any
-particular channel for your users.
+Congratulations, you’ve just initialised and packed your first Kubernetes charm using Charmcraft!
+
+But Charmcraft goes far beyond `init` and `pack`. For example, when you're ready to share your charm with the world, you can use Charmcraft to publish your charm on Charmhub. Run `charmcraft help` to preview more.
+
+### Clean up
+
+> See [Charm SDK | Set up your development environment automatically > Clean up](https://juju.is/docs/sdk/dev-setup#heading--automatic-set-up-an-ubuntu-charm-dev-vm-with-multipass).
+
+## Next steps
+
+### Learn more
+
+Read our [user documentation](https://juju.is/docs/sdk/charmcraft), which also includes other guides showing Charmcraft in action
+
+### Chat with us
+
+Read our [Code of conduct](https://ubuntu.com/community/code-of-conduct) and:
+- Join our chat: [Matrix](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com)
+- Join our forum: [Discourse](https://discourse.charmhub.io/)
+
+### File an issue
+
+- Report a Charmcraft bug on [GitHub](https://github.com/canonical/charmcraft/issues)
+- Raise a general https://juju.is/docs documentation issue on [GitHub | juju/docs](https://github.com/juju/docs)
+
+### Make your mark
+
+- Read our [documentation contributor guidelines](https://discourse.charmhub.io/t/documentation-guidelines-for-contributors/1245) and help improve a doc 
+- Read our [codebase contributor guidelines](https://github.com/canonical/charmcraft/blob/main/CONTRIBUTING.md) and help improve the codebase

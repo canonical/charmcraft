@@ -18,12 +18,8 @@ from textwrap import dedent
 
 import yaml
 
+from charmcraft import const
 from charmcraft.config import load
-from charmcraft.const import (
-    JUJU_ACTIONS_FILENAME,
-    JUJU_CONFIG_FILENAME,
-    METADATA_FILENAME,
-)
 from charmcraft.metafiles.actions import create_actions_yaml
 from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.metadata import create_metadata_yaml
@@ -158,7 +154,7 @@ def test_dump_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
 
     create_metadata_yaml(tmp_path, config)
 
-    metadata = yaml.safe_load((tmp_path / METADATA_FILENAME).read_text())
+    metadata = yaml.safe_load((tmp_path / const.METADATA_FILENAME).read_text())
 
     assert metadata == {
         "name": "test-charm-name",
@@ -376,7 +372,7 @@ def test_copy_metadata_from_metadata_yaml(
 
     create_metadata_yaml(tmp_path / "new", config)
 
-    metadata_yaml = (tmp_path / "new" / METADATA_FILENAME).read_text()
+    metadata_yaml = (tmp_path / "new" / const.METADATA_FILENAME).read_text()
 
     # Copy will preserve the TEST-COPY comment
     assert "TEST-COPY" in metadata_yaml
@@ -596,7 +592,7 @@ def test_copy_metadata_from_metadata_yaml_with_arbitrary_keys(
 
     create_metadata_yaml(tmp_path / "new", config)
 
-    metadata_yaml = (tmp_path / "new" / METADATA_FILENAME).read_text()
+    metadata_yaml = (tmp_path / "new" / const.METADATA_FILENAME).read_text()
 
     # Copy will preserve the TEST-COPY comment
     assert "TEST-COPY" in metadata_yaml
@@ -793,7 +789,7 @@ def test_copy_bundle_metadata_from_metadata_yaml(
 
     create_metadata_yaml(tmp_path / "new", config)
 
-    metadata_yaml = (tmp_path / "new" / METADATA_FILENAME).read_text()
+    metadata_yaml = (tmp_path / "new" / const.METADATA_FILENAME).read_text()
 
     # Copy will preserve the TEST-COPY comment
     assert "TEST-COPY" in metadata_yaml
@@ -846,7 +842,7 @@ def test_dump_actions_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
 
     create_actions_yaml(tmp_path, config)
 
-    actions = yaml.safe_load((tmp_path / JUJU_ACTIONS_FILENAME).read_text())
+    actions = yaml.safe_load((tmp_path / const.JUJU_ACTIONS_FILENAME).read_text())
 
     assert actions == {
         "pause": {"description": "Pause the database."},
@@ -928,7 +924,7 @@ def test_copy_actions_from_actions_yaml(tmp_path, prepare_charmcraft_yaml, prepa
 
     create_actions_yaml(tmp_path / "new", config)
 
-    actions_yaml = (tmp_path / "new" / JUJU_ACTIONS_FILENAME).read_text()
+    actions_yaml = (tmp_path / "new" / const.JUJU_ACTIONS_FILENAME).read_text()
 
     # Copy will preserve the TEST-COPY comment
     assert "TEST-COPY" in actions_yaml
@@ -998,7 +994,7 @@ def test_dump_config_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
 
     create_config_yaml(tmp_path, config)
 
-    config_data = yaml.safe_load((tmp_path / JUJU_CONFIG_FILENAME).read_text())
+    config_data = yaml.safe_load((tmp_path / const.JUJU_CONFIG_FILENAME).read_text())
 
     assert config_data == {
         "options": {
@@ -1050,7 +1046,7 @@ def test_copy_config_from_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare
 
     create_config_yaml(tmp_path / "new", config)
 
-    config_yaml = (tmp_path / "new" / JUJU_CONFIG_FILENAME).read_text()
+    config_yaml = (tmp_path / "new" / const.JUJU_CONFIG_FILENAME).read_text()
 
     # Copy will preserve the TEST-COPY comment
     assert "TEST-COPY" in config_yaml

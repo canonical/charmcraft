@@ -20,13 +20,13 @@ import contextlib
 import logging
 import pathlib
 import shutil
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pydantic
 import yaml
 from craft_cli import CraftError, emit
 
-from charmcraft.const import JUJU_CONFIG_FILENAME
+from charmcraft import const
 from charmcraft.format import format_pydantic_errors
 from charmcraft.metafiles import read_yaml
 from charmcraft.models.config import JujuConfig
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def parse_config_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[JujuConfig]:
+def parse_config_yaml(charm_dir: pathlib.Path, allow_broken=False) -> JujuConfig | None:
     """Parse project's config.yaml.
 
     :param charm_dir: Directory to read config.yaml from.
@@ -47,30 +47,30 @@ def parse_config_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[J
     :raises: CraftError if config.yaml is not valid.
     """
     try:
-        config = read_yaml(charm_dir / JUJU_CONFIG_FILENAME)
+        config = read_yaml(charm_dir / const.JUJU_CONFIG_FILENAME)
     except FileNotFoundError:
         return None
     except OSError as exc:
-        raise CraftError(f"Cannot read the {JUJU_CONFIG_FILENAME} file: {exc!r}") from exc
+        raise CraftError(f"Cannot read the {const.JUJU_CONFIG_FILENAME} file: {exc!r}") from exc
 
     if allow_broken and (not isinstance(config, dict) or not config.get("options")):
         emit.progress(
             "'config.yaml' is not a valid config file.",
             permanent=True,
         )
-        emit.debug(f"Ignoring {JUJU_CONFIG_FILENAME}")
+        emit.debug(f"Ignoring {const.JUJU_CONFIG_FILENAME}")
         return None
 
-    emit.debug(f"Validating {JUJU_CONFIG_FILENAME}")
+    emit.debug(f"Validating {const.JUJU_CONFIG_FILENAME}")
     try:
         return JujuConfig.parse_obj(config)
     except pydantic.ValidationError as error:
         if allow_broken:
             emit.progress(
-                format_pydantic_errors(error.errors(), file_name=JUJU_CONFIG_FILENAME),
+                format_pydantic_errors(error.errors(), file_name=const.JUJU_CONFIG_FILENAME),
                 permanent=True,
             )
-            emit.debug(f"Ignoring {JUJU_CONFIG_FILENAME}")
+            emit.debug(f"Ignoring {const.JUJU_CONFIG_FILENAME}")
             return None
         raise
 
@@ -78,7 +78,7 @@ def parse_config_yaml(charm_dir: pathlib.Path, allow_broken=False) -> Optional[J
 def create_config_yaml(
     basedir: pathlib.Path,
     charmcraft_config: "CharmcraftConfig",
-) -> Optional[pathlib.Path]:
+) -> pathlib.Path | None:
     """Create actions.yaml in basedir for given project configuration.
 
     :param basedir: Directory to create Charm in.
@@ -86,8 +86,8 @@ def create_config_yaml(
 
     :returns: Path to created config.yaml.
     """
-    original_file_path = charmcraft_config.project.dirpath / JUJU_CONFIG_FILENAME
-    target_file_path = basedir / JUJU_CONFIG_FILENAME
+    original_file_path = charmcraft_config.project.dirpath / const.JUJU_CONFIG_FILENAME
+    target_file_path = basedir / const.JUJU_CONFIG_FILENAME
 
     # Copy config.yaml if it exists, otherwise create it from CharmcraftConfig.
     if original_file_path.exists():

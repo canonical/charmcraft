@@ -7,11 +7,15 @@ kill-timeout: 30m
 environment:
   CHARM/content_cache: https://git.launchpad.net/content-cache-charm
   CHARM/ceph_fs: https://git.launchpad.net/charm-ceph-fs
+  JUJU_CONTROLLER: lxd
+  JUJU_MODEL: reactive-test
 
 prepare: |
   git clone --depth=1 "${CHARM}" charm
 
 restore: |
+  rm -f ~/*.charm
+
   pushd charm
   charmcraft clean
   popd
@@ -21,3 +25,6 @@ restore: |
 execute: |
   cd charm
   charmcraft pack --verbose
+
+  mv *.charm ~/
+  juju deploy ~/20.04-amd64.charm

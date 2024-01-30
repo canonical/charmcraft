@@ -33,15 +33,16 @@ from craft_store.errors import (
 )
 from dateutil import parser
 
-from charmcraft.commands.store.client import AnonymousClient, Client
-from charmcraft.commands.store.store import (
+from charmcraft import const
+from charmcraft.store import (
     AUTH_DEFAULT_PERMISSIONS,
     AUTH_DEFAULT_TTL,
-    Base,
-    Library,
+    AnonymousClient,
+    Client,
     Store,
-    _store_client_wrapper,
 )
+from charmcraft.store.models import Base, Library
+from charmcraft.store.store import _store_client_wrapper
 from charmcraft.utils import ResourceOption
 from tests.commands.test_store_client import FakeResponse
 
@@ -51,9 +52,7 @@ def client_mock(monkeypatch):
     """Fixture to provide a mocked client."""
     monkeypatch.setattr(platform, "node", lambda: "fake-host")
     client_mock = MagicMock(spec=Client)
-    with patch(
-        "charmcraft.commands.store.store.Client", lambda api, storage, ephemeral=True: client_mock
-    ):
+    with patch("charmcraft.store.store.Client", lambda api, storage, ephemeral=True: client_mock):
         yield client_mock
 
 
@@ -62,7 +61,7 @@ def anonymous_client_mock(monkeypatch):
     """Fixture to provide a mocked anonymous client."""
     anonymous_client_mock = MagicMock(spec=AnonymousClient)
     with patch(
-        "charmcraft.commands.store.store.AnonymousClient",
+        "charmcraft.store.store.AnonymousClient",
         lambda api, storage: anonymous_client_mock,
     ):
         yield anonymous_client_mock
@@ -73,7 +72,7 @@ def anonymous_client_mock(monkeypatch):
 
 def test_client_init(config):
     """Check that the client is initiated ok even without config."""
-    with patch("charmcraft.commands.store.store.Client") as client_mock:
+    with patch("charmcraft.store.store.Client") as client_mock:
         Store(config.charmhub)
     assert client_mock.mock_calls == [
         call(config.charmhub.api_url, config.charmhub.storage_url, ephemeral=False),
@@ -82,7 +81,7 @@ def test_client_init(config):
 
 def test_client_init_ephemeral(config):
     """Check that the client is initiated with no keyring."""
-    with patch("charmcraft.commands.store.store.Client") as client_mock:
+    with patch("charmcraft.store.store.Client") as client_mock:
         Store(config.charmhub, ephemeral=True)
     assert client_mock.mock_calls == [
         call(config.charmhub.api_url, config.charmhub.storage_url, ephemeral=True),
@@ -94,7 +93,7 @@ def test_client_init_ephemeral(config):
 
 def test_anonymous_client_init(config):
     """Check that the client is initiated ok even without config."""
-    with patch("charmcraft.commands.store.store.AnonymousClient") as anonymous_client_mock:
+    with patch("charmcraft.store.store.AnonymousClient") as anonymous_client_mock:
         Store(config.charmhub, needs_auth=False)
     assert anonymous_client_mock.mock_calls == [
         call(config.charmhub.api_url, config.charmhub.storage_url),
@@ -144,7 +143,7 @@ def test_relogin_on_401_regular_auth(emitter):
 
 def test_relogin_on_401_alternate_auth(monkeypatch):
     """Got a 401, but alternate auth is used, so no re-login is done and user is informed."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "credentials")
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
     with pytest.raises(CraftError) as cm:
@@ -169,7 +168,7 @@ def test_relogin_on_401_disable_auto_login():
 
 def test_relogin_on_401_alternate_auth_disable_auto_login(monkeypatch):
     """Don't try to re-login after receiving 401 NOT AUTHORIZED from server."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "credentials")
     api = _FakeAPI([StoreServerError(FakeResponse("auth", 401)), None])
 
     with pytest.raises(CraftError) as cm:
@@ -225,7 +224,7 @@ def test_not_logged_in_warns_regular_auth(emitter):
 
 def test_not_logged_in_warns_alternate_auth(monkeypatch):
     """Capture an indication of not being logged in, which should never happen."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "credentials")
     api = _FakeAPI(
         [CredentialsUnavailable(application="charmcraft", host="api.charmhub.io"), None]
     )
@@ -255,7 +254,7 @@ def test_not_logged_in_disable_auto_login():
 
 def test_not_logged_in_alternate_auth_disable_auto_login(monkeypatch):
     """Don't try to relogin if not already logged in."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "credentials")
     api = _FakeAPI(
         [CredentialsUnavailable(application="charmcraft", host="api.charmhub.io"), None]
     )
@@ -275,13 +274,15 @@ def test_not_logged_in_alternate_auth_disable_auto_login(monkeypatch):
 
 def test_auth_valid_credentials(config, monkeypatch):
     """No errors raised when initializing Store with valid credentials."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode(b"good_credentials").decode())
+    monkeypatch.setenv(
+        const.ALTERNATE_AUTH_ENV_VAR, base64.b64encode(b"good_credentials").decode()
+    )
     Store(config.charmhub)
 
 
 def test_auth_bad_credentials(config, monkeypatch):
     """CraftError raised when initializing Store with bad credentials."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", "bad_credentials")
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, "bad_credentials")
     with pytest.raises(craft_store.errors.CredentialsNotParseable) as error:
         Store(config.charmhub)
 
@@ -722,7 +723,7 @@ def test_upload_straightforward(client_mock, emitter, config):
     fake_statuses = {test_status_ok: test_status_resolution}
     test_filepath = "test-filepath"
     test_endpoint = "/v1/test/revisions/endpoint/"
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
         result = store._upload(test_endpoint, test_filepath)
 
     # check all client calls
@@ -780,8 +781,8 @@ def test_upload_polls_status_ok(client_mock, emitter, config):
 
     test_status_resolution = "clean and crispy"
     fake_statuses = {test_status_ok: test_status_resolution}
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
-        with patch("charmcraft.commands.store.store.POLL_DELAYS", [0.1] * 5):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+        with patch("charmcraft.store.store.POLL_DELAYS", [0.1] * 5):
             result = store._upload("/test/endpoint/", "some-filepath")
 
     # check the status-checking client calls (kept going until third one)
@@ -837,8 +838,8 @@ def test_upload_polls_status_timeout(client_mock, emitter, config):
 
     test_status_resolution = "clean and crispy"
     fake_statuses = {test_status_ok: test_status_resolution}
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
-        with patch("charmcraft.commands.store.store.POLL_DELAYS", [0.1] * 2):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+        with patch("charmcraft.store.store.POLL_DELAYS", [0.1] * 2):
             with pytest.raises(CraftError) as cm:
                 store._upload("/test/endpoint/", "some-filepath")
     assert str(cm.value) == "Timeout polling Charmhub for upload status (after 0.2s)."
@@ -879,7 +880,7 @@ def test_upload_error(client_mock, config):
     test_status_resolution = "test-ok-or-not"
     fake_statuses = {test_status_bad: test_status_resolution}
     test_filepath = "test-filepath"
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
         result = store._upload("/test/endpoint/", test_filepath)
 
     # check result
@@ -917,7 +918,9 @@ def test_upload_resources_endpoint(config):
         result = store.upload_resource("test-charm", "test-resource", "test-type", "test-filepath")
     expected_endpoint = "/v1/charm/test-charm/resources/test-resource/revisions"
     mock.assert_called_once_with(
-        expected_endpoint, "test-filepath", extra_fields={"type": "test-type"}
+        expected_endpoint,
+        "test-filepath",
+        extra_fields={"type": "test-type", "bases": [{"architectures": ["all"]}]},
     )
     assert result == test_results
 
@@ -950,7 +953,7 @@ def test_upload_including_extra_parameters(client_mock, emitter, config):
     test_filepath = "test-filepath"
     test_endpoint = "/v1/test/revisions/endpoint/"
     extra_fields = {"extra-key": "1", "more": "2"}
-    with patch.dict("charmcraft.commands.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
+    with patch.dict("charmcraft.store.store.UPLOAD_ENDING_STATUSES", fake_statuses):
         store._upload(test_endpoint, test_filepath, extra_fields=extra_fields)
 
     # check all client calls
@@ -1792,99 +1795,6 @@ def test_list_resources_several(client_mock, config):
     assert item2.optional is False
     assert item2.revision == 678
     assert item2.resource_type == "file"
-
-
-# -- tests for list resource revisions
-
-
-def test_list_resource_revisions_ok(client_mock, config):
-    """One resource revision ok."""
-    store = Store(config.charmhub)
-    client_mock.request_urlpath_json.return_value = {
-        "revisions": [
-            {
-                "created-at": "2021-02-11T13:43:22.396606",
-                "name": "otherstuff",
-                "revision": 1,
-                "sha256": "1bf0399c2de1240777ba73785f1ff1de5331f12853765a0",
-                "sha3-384": "deb9369cb2b9e86ad44160e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89",
-                "sha384": "eaaba6aa119da415e6ad778358a8530c47fefbe3ceced258e8c25530107dc7908e",
-                "sha512": (
-                    "b8cfe885d49285d8546885167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09d"
-                ),
-                "size": 500,
-            },
-        ]
-    }
-
-    result = store.list_resource_revisions("charm-name", "resource-name")
-
-    assert client_mock.mock_calls == [
-        call.request_urlpath_json("GET", "/v1/charm/charm-name/resources/resource-name/revisions")
-    ]
-
-    (item,) = result
-    assert item.revision == 1
-    assert item.created_at == parser.parse("2021-02-11T13:43:22.396606")
-    assert item.size == 500
-
-
-def test_list_resource_revisions_empty(client_mock, config):
-    """No resource revisions listed."""
-    store = Store(config.charmhub)
-    client_mock.request_urlpath_json.return_value = {"revisions": []}
-
-    result = store.list_resource_revisions("charm-name", "resource-name")
-
-    assert client_mock.mock_calls == [
-        call.request_urlpath_json("GET", "/v1/charm/charm-name/resources/resource-name/revisions")
-    ]
-    assert result == []
-
-
-def test_list_resource_revisions_several(client_mock, config):
-    """Several items returned."""
-    client_mock.request_urlpath_json.return_value = {
-        "revisions": [
-            {
-                "created-at": "2021-02-11T13:43:22.396606",
-                "name": "otherstuff",
-                "revision": 1,
-                "sha256": "1bf0399c2de1240777ba73785f1ff1de5331f12853765a0",
-                "sha3-384": "deb9369cb2b9e86ad44160e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89",
-                "sha384": "eaaba6aa119da415e6ad778358a8530c47fefbe3ceced258e8c25530107dc7908e",
-                "sha512": (
-                    "b8cfe885d49285d8546885167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09d"
-                ),
-                "size": 500,
-            },
-            {
-                "created-at": "2021-02-11T14:23:55.659148",
-                "name": "otherstuff",
-                "revision": 2,
-                "sha256": "73785f1ff1de5331f12853765a01bf0399c2de1240777ba",
-                "sha3-384": "60e93da43d240e6388c5dc67b8e2a5a3c2a36a26fe4c89deb9369cb2b5e86ad441",
-                "sha384": "778358a8530c47fefbe3ceced258e8c25530107dc7908eeaaba6aa119dad15e6ad",
-                "sha512": (
-                    "05167a72fd56ea23480e17c9cdd8e06b45239d79b774c6d6fc09db8cfe885d49285d8547c"
-                ),
-                "size": 420,
-            },
-        ]
-    }
-
-    store = Store(config.charmhub)
-    result = store.list_resource_revisions("charm-name", "resource-name")
-
-    (item1, item2) = result
-
-    assert item1.revision == 1
-    assert item1.created_at == parser.parse("2021-02-11T13:43:22.396606")
-    assert item1.size == 500
-
-    assert item2.revision == 2
-    assert item2.created_at == parser.parse("2021-02-11T14:23:55.659148")
-    assert item2.size == 420
 
 
 # -- tests for OCI related functions

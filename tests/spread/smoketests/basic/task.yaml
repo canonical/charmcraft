@@ -30,5 +30,5 @@ execute: |
   cd charm
   charmcraft pack --verbose
   test -f charm*.charm
-  unzip -l charm*.charm | grep "venv/ops/charm.py"
+  unzip -l charm*.charm | MATCH "venv/ops/charm.py"
   test ! -d build

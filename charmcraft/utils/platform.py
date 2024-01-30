@@ -17,8 +17,13 @@
 import dataclasses
 import pathlib
 import platform
+from collections.abc import Iterable
 
 import distro
+from craft_application import errors
+from craft_parts.utils.formatting_utils import humanize_list
+
+from charmcraft import const
 
 
 @dataclasses.dataclass(frozen=True)
@@ -64,3 +69,20 @@ def get_host_architecture():
     """Get host architecture in deb format suitable for base definition."""
     os_platform = get_os_platform()
     return ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)
+
+
+def validate_architectures(architectures: Iterable[str], *, allow_all: bool = False) -> None:
+    """Validate that all architectures provided are valid architecture names."""
+    architectures = set(architectures)
+    if allow_all and "all" in architectures:
+        if architectures == {"all"}:
+            return
+        raise errors.CraftValidationError(
+            "If 'all' is defined for architectures, it must be the only architecture."
+        )
+    invalid = architectures - const.SUPPORTED_ARCHITECTURES
+    if invalid:
+        raise errors.CraftValidationError(
+            f"Invalid architecture(s): {', '.join(invalid)}",
+            details=f"Valid architecture values are: {humanize_list(sorted(const.SUPPORTED_ARCHITECTURES), 'and')}",
+        )

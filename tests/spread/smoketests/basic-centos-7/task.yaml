@@ -4,6 +4,9 @@ systems:
   # CentOS 7 only works in 18.04 because it needs cgroup v1
   - ubuntu-18.04-64
 kill-timeout: 30m
+# Disabling auto-run until we can resolve linuxcontainers.org issue.
+# https://github.com/canonical/charmcraft/issues/1496
+manual: true
 
 environment:
   BASE_NAME: centos

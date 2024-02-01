@@ -39,7 +39,6 @@ from charmcraft.const import (
     METADATA_FILENAME,
     METADATA_YAML_KEYS,
 )
-from charmcraft.extensions import apply_extensions
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml
@@ -230,21 +229,6 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
         if project_type == "bundle":
             return Bundle.unmarshal(data)
         raise ValueError(f"field type cannot be {project_type!r}")
-
-    @classmethod
-    def from_yaml_data(cls, data: dict[str, Any], filepath: pathlib.Path) -> Self:
-        """Instantiate this model from already-loaded YAML data.
-
-        :param data: The dict of model properties.
-        :param filepath: The filepath corresponding to ``data``, for error reporting.
-        """
-        data = apply_extensions(filepath.parent, data)
-
-        try:
-            return cls.unmarshal(data)
-        except pydantic.ValidationError as err:
-            cls.transform_pydantic_error(err)
-            raise errors.CraftValidationError.from_pydantic(err, file_name=filepath.name) from None
 
     @classmethod
     def from_yaml_file(cls, path: pathlib.Path) -> Self:

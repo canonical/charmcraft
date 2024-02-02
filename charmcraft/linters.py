@@ -369,7 +369,7 @@ class JujuActions(Linter):
                 text_actions,
                 text_params,
                 "Make sure to be consistent and consider to switch to hyphens."
-                "For more information refer to https://juju.is/docs/sdk/styleguide."
+                "For more information refer to https://juju.is/docs/sdk/styleguide#heading--naming"
             ])
             return self.Result.ERROR
 

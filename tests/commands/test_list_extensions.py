@@ -26,7 +26,7 @@ from charmcraft.commands.extensions import ListExtensionsCommand
 from tests.extensions.test_extensions import FakeExtension
 
 
-class TestExtension(FakeExtension):
+class MyFakeExtension(FakeExtension):
     """A fake test Extension that has complete behavior"""
 
     name = "test-extension"
@@ -38,7 +38,7 @@ class TestExtension(FakeExtension):
         return {"terms": ["https://example.com/test"]}
 
 
-class TestExtension2(FakeExtension):
+class YourFakeExtension(FakeExtension):
     """A fake test Extension that has complete behavior"""
 
     name = "test-extension-2"
@@ -52,8 +52,8 @@ class TestExtension2(FakeExtension):
 
 @pytest.fixture()
 def fake_extensions(stub_extensions):
-    extensions.register(TestExtension.name, TestExtension)
-    extensions.register(TestExtension2.name, TestExtension2)
+    extensions.register(MyFakeExtension.name, MyFakeExtension)
+    extensions.register(YourFakeExtension.name, YourFakeExtension)
 
 
 def test_expand_extensions_simple(fake_extensions, emitter):

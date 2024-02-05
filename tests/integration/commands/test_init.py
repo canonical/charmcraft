@@ -240,7 +240,16 @@ def test_tox_success(new_path, init_command, profile):
 
     init_command.run(create_namespace(profile=profile))
 
-    subprocess.run(["tox", "-v"], cwd=new_path, check=True, env=env)
+    result = subprocess.run(
+        ["tox", "-v"],
+        cwd=new_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    assert result.returncode == 0, "Tox run failed:\n" + result.stdout
 
 
 @pytest.mark.parametrize("profile", list(commands.init.PROFILES))

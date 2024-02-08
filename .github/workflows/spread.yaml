@@ -10,6 +10,8 @@ on:
 jobs:
   snap-build:
     runs-on: ubuntu-22.04
+    outputs:
+      spread-groups: ${{ steps.spreadgroups.outputs.groups }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,6 +25,9 @@ jobs:
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
+      - id: spreadgroups
+        run: |
+          find tests/spread -name task.yaml | cut -f1,2,3 -d/|sort|uniq|grep -v -E '^(store|charms)$' | awk '{print "google:" $0 "/"}' | jq --raw-input --slurp --compact-output 'split("\n") | map(select(length > 0))' | awk '{print "groups=" $0}' >> $GITHUB_OUTPUT
 
   snap-tests:
     runs-on: self-hosted
@@ -30,8 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        spread:
-          - "google:"
+        spread: ${{ fromJson(needs.snap-build.outputs.spread-groups) }}
 
     steps:
       - name: Cleanup job workspace

@@ -1,0 +1,51 @@
+summary: Minimal charm test
+
+systems:
+  - ubuntu-22.04
+  - ubuntu-20.04
+
+environment:
+  PROVIDER: lxd
+  JUJU_CHANNEL/alt1,alt2: 3.3/stable
+  JUJU_CHANNEL/alt3: 3.1/stable
+  CHARMCRAFT_CHANNEL/alt1,alt3: latest/stable
+  CHARMCRAFT_CHANNEL/alt2: latest/candidate
+
+# This creates 3 test variants:
+# - alt1: with juju 3.3 and charmcraft stable
+# - alt2: with juju 3.3 and charmcraft candidate
+# - alt3: with juju 3.1 and charmcraft stable
+
+prepare: |
+  . "$CRAFT_TEST_PATH"/funcs.sh
+
+  apt update -y
+  apt install -y python3-pip
+  pip3 install tox
+
+  install_lxd
+  snap install charmcraft --classic --channel "$CHARMCRAFT_CHANNEL"
+  snap install juju --classic --channel "$JUJU_CHANNEL"
+  mkdir -p "$HOME"/.local/share/juju
+
+  bootstrap_juju
+
+  juju add-model testing
+
+restore: |
+  . "$CRAFT_TEST_PATH"/funcs.sh
+
+  rm -f "$PROJECT_PATH"/*.charm
+  charmcraft clean -p "$PROJECT_PATH"
+
+  restore_juju
+
+  snap stop juju
+  snap remove --purge juju
+  snap remove --purge charmcraft
+  snap remove --purge lxd
+
+execute: |
+  tox -e integration
+
+kill-timeout: 30m

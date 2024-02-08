@@ -1,0 +1,32 @@
+
+export PATH=/snap/bin:$PROJECT_PATH/tests/spread/lib/tools:$PATH
+export CONTROLLER_NAME="craft-test-$PROVIDER"
+
+
+install_lxd() {
+    snap install lxd --channel "$LXD_CHANNEL"
+    lxd waitready
+    lxd init --auto
+    chmod a+wr /var/snap/lxd/common/lxd/unix.socket
+    lxc network set lxdbr0 ipv6.address none
+    usermod -a -G lxd "$USER"
+
+    # Work-around clash between docker and lxd on jammy
+    # https://github.com/docker/for-linux/issues/1034
+    iptables -F FORWARD
+    iptables -P FORWARD ACCEPT
+}
+
+
+bootstrap_juju() {
+    juju bootstrap --verbose "$PROVIDER" "$CONTROLLER_NAME" \
+      $JUJU_BOOTSTRAP_OPTIONS $JUJU_EXTRA_BOOTSTRAP_OPTIONS \
+      --bootstrap-constraints=$JUJU_BOOTSTRAP_CONSTRAINTS
+}
+
+
+restore_juju() {
+     juju controllers --refresh ||:
+     juju destroy-controller -v --no-prompt --show-log \
+       --destroy-storage --destroy-all-models "$CONTROLLER_NAME"
+}

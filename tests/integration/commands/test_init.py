@@ -18,7 +18,6 @@ import argparse
 import contextlib
 import os
 import pathlib
-import platform
 import re
 import shutil
 import subprocess
@@ -222,10 +221,6 @@ def test_executable_set(new_path, init_command):
 
 @pytest.mark.slow()
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-@pytest.mark.xfail(
-    platform.system() == "Darwin" and platform.platform().startswith("macOS-11."),
-    reason="Currently failing on macos 11, see https://github.com/canonical/charmcraft/issues/1508",
-)
 @pytest.mark.skipif(bool(os.getenv("RUNNING_TOX")), reason="does not work inside tox")
 @pytest.mark.parametrize("profile", list(commands.init.PROFILES))
 def test_tox_success(new_path, init_command, profile):
@@ -245,7 +240,16 @@ def test_tox_success(new_path, init_command, profile):
 
     init_command.run(create_namespace(profile=profile))
 
-    subprocess.run(["tox", "-v"], cwd=new_path, check=True, env=env)
+    result = subprocess.run(
+        ["tox", "-v"],
+        cwd=new_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    assert result.returncode == 0, "Tox run failed:\n" + result.stdout
 
 
 @pytest.mark.parametrize("profile", list(commands.init.PROFILES))

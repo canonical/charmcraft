@@ -31,6 +31,7 @@ This command will run charm test suites using the spread tool. See
 the spread documentation for further information.
 """
 
+
 class TestCommand(base.CharmcraftCommand):
     """Initialize a directory to be a charm project."""
 
@@ -39,7 +40,7 @@ class TestCommand(base.CharmcraftCommand):
     overview = _overview
     common = True
 
-    arguments = []
+    arguments: list[str] = []
 
     def fill_parser(self, parser):
         """Specify command's specific parameters."""
@@ -52,4 +53,4 @@ class TestCommand(base.CharmcraftCommand):
             with emit.pause():
                 subprocess.run([cmd, "-v", *self.arguments], check=True)
         except subprocess.CalledProcessError as err:
-            raise CraftError(err)
+            raise CraftError(f"test error: {err}")

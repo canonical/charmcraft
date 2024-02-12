@@ -393,7 +393,7 @@ class NamingConventions(Linter):
 
     @staticmethod
     def check_naming_convention(names: typing.Iterable[str], scope: str) -> str | None:
-        """Check adherance to naming convention.
+        """Check adherence to naming convention.
 
         :returns: string with warning if present, otherwise None
         """
@@ -424,7 +424,7 @@ class NamingConventions(Linter):
             return warnings
 
         with config_file.open("rt", encoding="utf8") as fh:
-            options = yaml.safe_load(fh).get("options")
+            options = content.get("options", {}) if (content := yaml.safe_load(fh)) else {}
 
         if check := NamingConventions.check_naming_convention(options.keys(), "config-options"):
             warnings.append(check)

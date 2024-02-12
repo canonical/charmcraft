@@ -1112,6 +1112,20 @@ def test_jujuconfig_naming_convention(tmp_path, config_file_content, expected_re
     assert result == expected_result
 
 
+@pytest.mark.parametrize(
+    "file",
+    [
+        pytest.param(const.JUJU_CONFIG_FILENAME, id="config"),
+        pytest.param(const.JUJU_ACTIONS_FILENAME, id="action")
+    ],
+)
+def test_empty_file(tmp_path, file):
+    file = tmp_path / const.JUJU_CONFIG_FILENAME
+    file.write_text("")
+    result = NamingConventions().run(tmp_path)
+    assert result == LintResult.OK
+
+
 # --- tests for Entrypoint checker
 
 

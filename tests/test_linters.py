@@ -916,7 +916,8 @@ def test_jujuactions_file_corrupted(tmp_path):
                             description: bar
             """
             ),
-            LintResult.WARNING, id="snake_case"
+            LintResult.WARNING,
+            id="snake_case",
         ),
         pytest.param(
             dedent(
@@ -931,7 +932,8 @@ def test_jujuactions_file_corrupted(tmp_path):
                             description: bar
             """
             ),
-            LintResult.WARNING, id="convention_mismatch"
+            LintResult.WARNING,
+            id="convention_mismatch",
         ),
         pytest.param(
             dedent(
@@ -946,7 +948,8 @@ def test_jujuactions_file_corrupted(tmp_path):
                             description: bar
             """
             ),
-            LintResult.OK, id="ok"
+            LintResult.OK,
+            id="ok",
         ),
     ],
 )
@@ -1066,7 +1069,8 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
                     description: bar
             """
             ),
-            LintResult.WARNING, id="snake_case"
+            LintResult.WARNING,
+            id="snake_case",
         ),
         pytest.param(
             dedent(
@@ -1080,7 +1084,8 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
                     description: bar
             """
             ),
-            LintResult.WARNING, id="convention_mismatch"
+            LintResult.WARNING,
+            id="convention_mismatch",
         ),
         pytest.param(
             dedent(
@@ -1094,7 +1099,8 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
                     description: bar
             """
             ),
-            LintResult.OK, id="ok"
+            LintResult.OK,
+            id="ok",
         ),
     ],
 )

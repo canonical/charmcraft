@@ -4,9 +4,9 @@ environment:
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
 
 execute: |
-  unset $CHARMCRAFT_STORE_API_URL
-  unset $CHARMCRAFT_UPLOAD_URL
-  unset $CHARMCRAFT_REGISTRY_URL
+  unset CHARMCRAFT_STORE_API_URL
+  unset CHARMCRAFT_UPLOAD_URL
+  unset CHARMCRAFT_REGISTRY_URL
   mkdir -p test-init
   cd test-init
   charmcraft init --profile flask-framework

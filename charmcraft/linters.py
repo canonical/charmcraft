@@ -68,27 +68,6 @@ def check_dispatch_with_python_entrypoint(basedir: pathlib.Path) -> pathlib.Path
     return None
 
 
-def check_naming_convention(names: typing.Iterable[str], scope: str) -> tuple[str, str]:
-    snake_keys = [key for key in names if "_" in key]
-
-    if snake_keys:
-        hyphen_keys = [key for key in names if "-" in key]
-
-        if hyphen_keys:
-            text = (
-                f"Some config {scope} ({', '.join(snake_keys)}) are in snake case, "
-                f"while others  ({', '.join(hyphen_keys)}) are with hyphens."
-            )
-            return LintResult.ERROR, text
-        else:
-            text = (
-                f"Some {scope} ({', '.join(snake_keys)}) are using "
-                "snake case naming convention."
-            )
-            return LintResult.WARNING, text
-    return LintResult.OK, ""
-
-
 class BaseChecker(metaclass=abc.ABCMeta):
     """Base class for checker classes."""
 
@@ -347,41 +326,9 @@ class JujuActions(Linter):
 
         try:
             with filepath.open("rt", encoding="utf8") as fh:
-                content = dict(yaml.safe_load(fh))
+                yaml.safe_load(fh)
         except Exception:
             return self.Result.ERROR
-
-        actions_names = list(content.keys())
-
-        result_actions, text_actions = check_naming_convention(actions_names, "actions")
-
-        actions_params = [
-            param
-            for action in content.values()
-            if isinstance(action, dict)
-            for param in action.get("params", [])
-        ]
-
-        result_params, text_params = check_naming_convention(actions_params, "action params")
-
-        if result_actions == self.Result.ERROR or result_params == self.Result.ERROR:
-            self.text = " ".join([
-                text_actions,
-                text_params,
-                "Make sure to be consistent and consider to switch to hyphens."
-                "For more information refer to https://juju.is/docs/sdk/styleguide#heading--naming"
-            ])
-            return self.Result.ERROR
-
-        if result_actions == self.Result.WARNING or result_params == self.Result.WARNING:
-            self.text = text_params
-            self.text = " ".join([
-                text_actions,
-                text_params,
-                "Please consider to switch to hyphens."
-                "For more information refer to https://juju.is/docs/sdk/styleguide."
-            ])
-            return self.Result.WARNING
 
         self.text = "Valid actions.yaml file."
         return self.Result.OK
@@ -427,23 +374,105 @@ class JujuConfig(Linter):
                 self.text = "Error in config.yaml: items under 'options' must have a 'type' key."
                 return self.Result.ERROR
 
-        result, text = check_naming_convention(options.keys(), "configs")
+        return self.Result.OK
 
-        if result == self.Result.ERROR:
-            self.text = " ".join([
-                text,
-                "Make sure to be consistent and consider to switch to hyphens."
-                "For more information refer to https://juju.is/docs/sdk/styleguide."
-            ])
-            return self.Result.ERROR
 
-        if result == self.Result.WARNING:
-            self.text = " ".join([
-                text,
-                "Please consider to switch to hyphens."
-                "For more information refer to https://juju.is/docs/sdk/styleguide."
-            ])
-            return self.Result.WARNING
+class NamingConventions(Linter):
+    """Check that charm follows naming conventions.
+
+    More information can be found at https://juju.is/docs/sdk/styleguide#heading--naming.
+    """
+
+    name = "naming-conventions"
+    url = "https://juju.is/docs/sdk/styleguide#heading--naming"
+
+    exception_result = LintResult.WARNING
+
+    def __init__(self):
+        self.text = ""
+
+    @staticmethod
+    def check_naming_convention(names: typing.Iterable[str], scope: str) -> str | None:
+        """Check adherance to naming convention.
+
+        :returns: string with warning if present, otherwise None
+        """
+        snake_keys = [key for key in names if "_" in key]
+
+        if snake_keys:
+            hyphen_keys = [key for key in names if "-" in key]
+
+            if hyphen_keys:
+                return (
+                    f"Some {scope} ({', '.join(snake_keys)}) are in snake case, "
+                    f"while others  ({', '.join(hyphen_keys)}) are with hyphens."
+                )
+            else:
+                return (
+                    f"Some {scope} ({', '.join(snake_keys)}) are using "
+                    "snake case naming convention."
+                )
+
+        return None
+
+    @staticmethod
+    def _config_options_check(config_file: pathlib.Path) -> list[str]:
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        warnings = []
+
+        if not config_file.exists():
+            return warnings
+
+        with config_file.open("rt", encoding="utf8") as fh:
+            options = yaml.safe_load(fh).get("options")
+
+        if check := NamingConventions.check_naming_convention(options.keys(), "config-options"):
+            warnings.append(check)
+
+        return warnings
+
+    @staticmethod
+    def _actions_check(action_file: pathlib.Path) -> list[str]:
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        warnings = []
+
+        if not action_file.exists():
+            return warnings
+
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        with action_file.open("rt", encoding="utf8") as fh:
+            if content := yaml.safe_load(fh):
+                actions_names = list(dict(content).keys())
+            else:
+                actions_names = []
+
+        if check := NamingConventions.check_naming_convention(actions_names, "actions"):
+            warnings.append(check)
+
+        actions_params = [
+            param
+            for action_name in actions_names
+            if isinstance(content[action_name], dict)
+            for param in content.get(action_name, {}).get("params", [])
+        ]
+
+        if check := NamingConventions.check_naming_convention(actions_params, "action params"):
+            warnings.append(check)
+
+        return warnings
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        # Check naming convention on config options
+
+        warnings = NamingConventions._config_options_check(
+            basedir / const.JUJU_CONFIG_FILENAME
+        ) + NamingConventions._actions_check(basedir / const.JUJU_ACTIONS_FILENAME)
+
+        if warnings:
+            all_warning_string = "\n".join(warnings)
+            self.text = f"Naming conventions breaks:\n{all_warning_string}"
+            return self.exception_result
 
         return self.Result.OK
 
@@ -493,6 +522,7 @@ CHECKERS: list[type[BaseChecker]] = [
     JujuActions,
     JujuConfig,
     JujuMetadata,
+    NamingConventions,
     Framework,
     Entrypoint,
 ]

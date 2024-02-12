@@ -41,13 +41,13 @@ logger = logging.getLogger(__name__)
 @typing.overload
 def parse_actions_yaml(
     charm_dir: pathlib.Path, allow_broken: Literal[False] = False
-) -> JujuActions:
-    ...
+) -> JujuActions: ...
 
 
 @typing.overload
-def parse_actions_yaml(charm_dir: pathlib.Path, allow_broken: Literal[True]) -> JujuActions | None:
-    ...
+def parse_actions_yaml(
+    charm_dir: pathlib.Path, allow_broken: Literal[True]
+) -> JujuActions | None: ...
 
 
 def parse_actions_yaml(charm_dir, allow_broken=False):

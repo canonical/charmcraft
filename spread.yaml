@@ -163,17 +163,10 @@ suites:
       - ubuntu-22.04-64
     prepare: |
       snap install juju --channel=3.2/stable
-      snap install microk8s --channel=1.28-strict/stable
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
-      microk8s enable hostpath-storage
-      microk8s enable dns
-      snap alias microk8s.kubectl kubectl
 
-      if ! juju controllers | grep -q k8s; then
-        juju bootstrap microk8s k8s
-      fi
       if ! juju controllers | grep -q lxd; then
         juju bootstrap localhost lxd
       fi

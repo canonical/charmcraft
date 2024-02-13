@@ -7,6 +7,7 @@
     "pydantic",  // Needs to wait for libraries.
     "pydantic-yaml", // Needs to wait for pydantic
     "urllib3",
+    "windows",  // We'll update Windows versions manually.
   ],
   labels: ["dependencies"],  // For convenient searching in GitHub
   pip_requirements: {

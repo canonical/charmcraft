@@ -1116,7 +1116,7 @@ def test_jujuconfig_naming_convention(tmp_path, config_file_content, expected_re
     "file",
     [
         pytest.param(const.JUJU_CONFIG_FILENAME, id="config"),
-        pytest.param(const.JUJU_ACTIONS_FILENAME, id="action")
+        pytest.param(const.JUJU_ACTIONS_FILENAME, id="action"),
     ],
 )
 def test_empty_file(tmp_path, file):

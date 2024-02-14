@@ -5,8 +5,8 @@ charset-normalizer==3.3.2
 coverage==7.4.1
 craft-application==1.2.1
 craft-cli==2.5.1
-craft-parts==1.26.1
-craft-providers==1.21.0
+craft-parts==1.26.2
+craft-providers==1.22.0
 craft-store==2.6.0
 cryptography==42.0.1
 Deprecated==1.2.14
@@ -14,7 +14,7 @@ distro==1.9.0
 flake8==7.0.0
 freezegun==1.4.0
 humanize==4.9.0
-hypothesis==6.97.1
+hypothesis==6.98.3
 idna==3.6
 importlib-metadata==7.0.1
 iniconfig==2.0.0

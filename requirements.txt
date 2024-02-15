@@ -4,8 +4,8 @@ cffi==1.16.0
 charset-normalizer==3.3.2
 craft-application==1.2.1
 craft-cli==2.5.1
-craft-parts==1.26.1
-craft-providers==1.21.0
+craft-parts==1.26.2
+craft-providers==1.22.0
 craft-store==2.6.0
 cryptography==42.0.1
 Deprecated==1.2.14

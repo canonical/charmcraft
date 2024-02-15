@@ -63,10 +63,6 @@ def service_factory(
         "package",
         project_dir=fake_project_dir,
     )
-    factory.set_kwargs(
-        "analysis",
-        project_dir=fake_project_dir,
-    )
 
     factory.project = simple_charm
 

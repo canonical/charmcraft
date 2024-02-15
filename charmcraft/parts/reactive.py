@@ -158,7 +158,9 @@ def run_charm_tool(args: list[str]):
         result_classification = "WARNING"
         print(f"charm tool execution {result_classification}: returncode={exc.returncode}")
     else:
-        print(f"charm tool execution {result_classification}: returncode={completed_process.returncode}")
+        print(
+            f"charm tool execution {result_classification}: returncode={completed_process.returncode}"
+        )
 
 
 def build(

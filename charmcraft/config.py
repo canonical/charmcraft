@@ -98,7 +98,7 @@ def load(dirpath: str | None) -> CharmcraftConfig:
     if content is None:
         # configuration is mandatory only for some commands; when not provided, it will
         # be initialized all with defaults (but marked as not provided for later verification)
-        return CharmcraftConfig(
+        return CharmcraftConfig(  # pyright: ignore[reportCallIssue]
             type="charm",
             project=Project(
                 dirpath=path,

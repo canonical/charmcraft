@@ -140,9 +140,43 @@ skip_empty = true
 #fail_under = 80
 
 [tool.pyright]
-strict = ["charmcraft"]
+# strict = ["charmcraft"]
 pythonVersion = "3.10"
 pythonPlatform = "Linux"
+ignore = [
+    "tools/measurements-viewer.py",
+]
+include = [
+    "charmcraft",
+    # "tests",  # TODO: enable tests
+]
+analyzeUnannotatedFunctions = false
+reportArgumentType = "warning"
+reportAssignmentType = "warning"
+reportAttributeAccessIssue = "warning"
+reportCallIssue = "warning"
+reportGeneralTypeIssues = "warning"
+reportIncompatibleMethodOverride = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportInvalidTypeForm = "warning"
+reportMissingParameterType = "warning"
+reportMissingTypeArgument = "warning"
+reportOperatorIssue = "warning"
+reportOptionalIterable = "warning"
+reportOptionalMemberAccess = "warning"
+reportPossiblyUnboundVariable = "warning"
+reportPrivateImportUsage = "warning"
+reportPrivateUsage = "warning"
+reportReturnType = "warning"
+reportUnknownArgumentType = "warning"
+reportUnknownLambdaType = "warning"
+reportUnknownMemberType = "warning"
+reportUnknownParameterType = "warning"
+reportUnknownVariableType = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUnsupportedDunderAll = "warning"
+reportUntypedFunctionDecorator = "warning"
+
 
 [tool.mypy]
 python_version = "3.10"

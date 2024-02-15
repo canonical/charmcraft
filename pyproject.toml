@@ -206,7 +206,7 @@ extend-exclude = [
     "charmcraft/_version.py",  # setuptools_scm generates old-style type annotations.
 ]
 # Follow ST063 - Maintaining and updating linting specifications for updating these.
-select = [  # Base linting rule selections.
+lint.select = [  # Base linting rule selections.
     # See the internal document for discussion:
     # https://docs.google.com/document/d/1i1n8pDmFmWi4wTDpk-JfnWCVUThPJiggyPi2DYwBBu4/edit
     # All sections here are stable in ruff and shouldn't randomly introduce
@@ -243,11 +243,11 @@ select = [  # Base linting rule selections.
     "PL",  # Pylint
     "TRY",  # Cleaner try/except,
 ]
-extend-select = [
+lint.extend-select = [
     # Pyupgrade: https://github.com/charliermarsh/ruff#pyupgrade-up
     "UP00", "UP01", "UP02", "UP030", "UP032", "UP033",
     # "UP034",  # Very new, not yet enabled in ruff 0.0.227
-    # Annotations: https://github.com/charliermarsh/ruff#flake8-annotations-ann
+    # Annotations: https://github.com/charliermarsh/ruff#lint.flake8-annotations-ann
     "ANN0",  # Type annotations for arguments other than `self` and `cls`
     "ANN2",  # Return type annotations
     "B026",  # Keyword arguments must come after starred arguments
@@ -268,7 +268,7 @@ extend-select = [
     "RUF008",  # Do not use mutable default values for dataclass attributes
     "RUF100",  # #noqa directive that doesn't flag anything
 ]
-ignore = [
+lint.ignore = [
     "ANN10",  # Type annotations for `self` and `cls`
     #"E203",  # Whitespace before ":"  -- Commented because ruff doesn't currently check E203
     "E501",  # Line too long (reason: black will automatically fix this for us)
@@ -303,11 +303,11 @@ ignore = [
     "TRY004", "TRY200",
 ]
 
-[tool.ruff.pep8-naming]
+[tool.ruff.lint.pep8-naming]
 # Allow Pydantic's `@validator` decorator to trigger class method treatment.
 classmethod-decorators = ["pydantic.validator"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/**.py" = [  # Some things we want for the moin project are unnecessary in tests.
     "D",  # Ignore docstring rules in tests
     "ANN", # Ignore type annotations in tests

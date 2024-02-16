@@ -386,11 +386,13 @@ def _process_run(cmd: list[str]) -> None:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
+            text=True,
         )
     except Exception as exc:
         raise RuntimeError(f"Subprocess command {cmd} execution crashed: {exc!r}")
 
-    for line in proc.stdout:
+    # https://github.com/microsoft/pylance-release/issues/2385
+    for line in proc.stdout:  # pyright: ignore[reportOptionalIterable]
         print(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 

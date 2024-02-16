@@ -40,10 +40,7 @@ jobs:
           snap watch --last=install
           echo "::endgroup::"
       - name: Run Linters
-        # Currently picking specific linters that pass until we can enable them all.
-        # Still missing: pyright
-        # run: tox run --skip-pkg-install --no-list-dependencies -m lint
-        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy,lint-yaml
+        run: tox run --skip-pkg-install --no-list-dependencies -m lint
   run-tests:
     strategy:
       matrix:

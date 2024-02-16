@@ -16,6 +16,7 @@
 
 """Infrastructure for the 'extensions' command."""
 import argparse
+import operator
 from textwrap import dedent
 
 import tabulate
@@ -55,10 +56,9 @@ class ListExtensionsCommand(BaseCommand):
             )
 
         printable_extensions = sorted(
-            extension_presentation.values(),
-            key=lambda ext: ext.name,
+            [ext.marshal() for ext in extension_presentation.values()],
+            key=operator.itemgetter("Extension name"),
         )
-        printable_extensions = [ext.marshal() for ext in printable_extensions]
         emit.message(tabulate.tabulate(printable_extensions, headers="keys"))
 
 

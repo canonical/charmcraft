@@ -353,6 +353,8 @@ class Builder:
         if self.measure:
             instance_metrics = charmcraft.env.get_managed_environment_metrics_path()
             cmd.append(f"--measure={str(instance_metrics)}")
+        else:
+            instance_metrics = None
 
         emit.progress(
             f"Launching environment to pack for base {build_on} "

@@ -839,7 +839,7 @@ class PromoteBundleCommand(BaseCommand):
             if parsed_args.output_bundle:
                 command_parts.extend(["--output-bundle", parsed_args.output_bundle])
             for exclusion in parsed_args.exclude:
-                command_parts.extend(["--exclude"], exclusion)
+                command_parts.extend(["--exclude", exclusion])
             command = " ".join(command_parts)
             raise CraftError(
                 f"Target channel ({to_channel.name}) must be lower risk "
@@ -958,7 +958,7 @@ class PromoteBundleCommand(BaseCommand):
 
         if parsed_args.output_bundle:
             with parsed_args.output_bundle.open("w+") as output_bundle:
-                yaml.dump(bundle_config, output_bundle)
+                yaml.dump(bundle_config, stream=output_bundle)  # pyright: ignore[reportCallIssue]
 
         for charm_name, charm_revision in charm_revisions.items():
             store.release(

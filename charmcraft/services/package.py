@@ -105,7 +105,7 @@ class PackageService(services.PackageService):
         """Get a charm file name for the appropriate set of run-on bases."""
         if self._platform:
             return dest_dir / f"{self._project.name}_{self._platform}.charm"
-        build_plan = cast(Charm, self._project).get_build_plan()
+        build_plan = models.CharmcraftBuildPlanner.parse_obj(self._project.dict()).get_build_plan()
         platform = utils.get_os_platform()
         build_on_base = bases.BaseName(name=platform.system, version=platform.release)
         host_arch = utils.get_host_architecture()

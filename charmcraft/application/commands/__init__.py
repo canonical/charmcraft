@@ -32,6 +32,7 @@ from charmcraft.application.commands.lifecycle import (
     PrimeCommand,
     StageCommand,
 )
+from charmcraft.application.commands.remote import RemoteBuild
 from charmcraft.application.commands.store import (
     # auth
     LoginCommand,
@@ -117,6 +118,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
         [
             Analyse,
             Analyze,
+            RemoteBuild,
             Version,
         ],
     )

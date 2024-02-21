@@ -213,6 +213,30 @@ def test_build_info_generator(given, expected):
 
 
 # endregion
+# region Build planner tests
+@pytest.mark.parametrize(
+    ("bases", "expected_bases"),
+    [
+        (
+            [{"name": "ubuntu", "channel": "22.04"}],
+            [
+                BasesConfiguration(
+                    **{
+                        "build-on": [{"name": "ubuntu", "channel": "22.04"}],
+                        "run-on": [{"name": "ubuntu", "channel": "22.04"}],
+                    }
+                )
+            ],
+        ),
+    ],
+)
+def test_create_build_planner(bases, expected_bases):
+    actual = project.CharmcraftBuildPlanner(bases=bases)
+
+    assert actual.bases == expected_bases
+
+
+# endregion
 # region CharmcraftProject tests
 @pytest.mark.parametrize(
     ("data", "type_class"),

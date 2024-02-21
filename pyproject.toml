@@ -3,7 +3,8 @@ name = "charmcraft"
 description = "The main tool to build, upload, and develop in general the Juju charms."
 dynamic = ["version", "readme"]
 dependencies = [
-    "craft-application~=1.1",
+    # TODO: remove [remote] once craft-application has remote as a default dependency
+    "craft-application[remote] @ git+https://github.com/canonical/craft-application@for-charmcraft",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
     "craft-providers",

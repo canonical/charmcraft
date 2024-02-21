@@ -17,8 +17,11 @@
 from __future__ import annotations
 
 import os
+import pathlib
 
 from craft_application import services
+
+from charmcraft import const
 
 
 class LifecycleService(services.LifecycleService):
@@ -28,4 +31,7 @@ class LifecycleService(services.LifecycleService):
         """Do Charmcraft-specific setup work."""
         self._manager_kwargs.setdefault("project_name", self._project.name)
         self._manager_kwargs.setdefault("parallel_build_count", os.cpu_count())
+        if not self._services.ProviderClass.is_managed():
+            self._work_dir = pathlib.Path(self._work_dir, const.BUILD_DIRNAME)
+            self._work_dir.mkdir(exist_ok=True)
         super().setup()

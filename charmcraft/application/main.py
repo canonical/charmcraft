@@ -37,6 +37,7 @@ APP_METADATA = AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,  # type: ignore[arg-type]
+    source_ignore_patterns=["build/", "*.charm"],
 )
 
 
@@ -51,6 +52,7 @@ class Charmcraft(Application):
         super().__init__(app=app, services=services)
         self._global_args: dict[str, Any] = {}
         self._dispatcher: craft_cli.Dispatcher | None = None
+        self._project_dir = pathlib.Path.cwd()
 
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:
@@ -61,11 +63,7 @@ class Charmcraft(Application):
         self, project_dir: pathlib.Path | None = None
     ) -> models.CharmcraftProject:
         """Get the charmcraft project."""
-        if self.is_managed():
-            project_dir = env.get_managed_environment_project_path()
-        elif project_dir is None:
-            project_dir = pathlib.Path(self._global_args.get("project_dir") or ".")
-        return cast(models.CharmcraftProject, super().get_project(project_dir))
+        return cast(models.CharmcraftProject, super().get_project(self._project_dir))
 
     def _project_vars(self, yaml_data: dict[str, Any]) -> dict[str, str]:
         """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
@@ -74,7 +72,7 @@ class Charmcraft(Application):
     def _extra_yaml_transform(self, yaml_data: dict[str, Any]) -> dict[str, Any]:
         yaml_data = yaml_data.copy()
 
-        metadata_path = pathlib.Path(self._work_dir / "metadata.yaml")
+        metadata_path = pathlib.Path(self._project_dir / "metadata.yaml")
         if metadata_path.exists():
             with metadata_path.open() as file:
                 metadata_yaml = util.safe_yaml_load(file)
@@ -122,13 +120,10 @@ class Charmcraft(Application):
         """Configure the application using any global arguments."""
         super().configure(global_args)
         self._global_args = global_args
-        if not self.services.ProviderClass.is_managed():
-            # Do not do strict resolution here, as commands such as `init` will create
-            # the project directory.
-            project_dir = pathlib.Path(global_args.get("project_dir") or ".").resolve()
-            self._work_dir = project_dir
-        else:
-            self._work_dir = env.get_managed_environment_project_path()
+        if self.is_managed():
+            self._project_dir = env.get_managed_environment_project_path()
+        elif project_dir := global_args.get("project_dir"):
+            self._project_dir = pathlib.Path(project_dir).expanduser().resolve()
 
     @property
     def app_config(self) -> dict[str, Any]:

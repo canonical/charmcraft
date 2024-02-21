@@ -18,13 +18,14 @@
 
 from . import config, metadata
 from .metadata import BundleMetadata, CharmMetadata, CharmMetadataLegacy
-from .project import CharmcraftProject, Charm, Bundle
+from .project import CharmcraftBuildPlanner, CharmcraftProject, Charm, Bundle
 
 __all__ = [
     "config",
     "metadata",
     "Bundle",
     "Charm",
+    "CharmcraftBuildPlanner",
     "CharmcraftProject",
     "BundleMetadata",
     "CharmMetadata",

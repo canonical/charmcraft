@@ -24,7 +24,6 @@ from typing import (
     cast,
 )
 
-import craft_application.models
 import pydantic
 from craft_application import errors, models
 from craft_application.util import get_host_architecture, safe_yaml_load
@@ -176,7 +175,7 @@ class CharmBuildInfo(models.BuildInfo):
                     )
 
 
-class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
+class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     """A craft-application compatible version of a Charmcraft project.
 
     This is a Project definition for charmcraft commands that are run through
@@ -188,19 +187,19 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
     """
 
     type: Literal["charm", "bundle"]
-    name: models.ProjectName | None
+    name: models.ProjectName | None  # Bundle names are optional.  # type: ignore[assignment]
     title: models.ProjectTitle | None
     summary: models.SummaryStr | None
     description: str | None
 
     analysis: AnalysisConfig | None
     charmhub: CharmhubConfig | None
-    parts: dict[str, dict[str, Any]] | None  # parts are handled by craft-parts
+    parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
 
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
-    version: None = None
+    version: Literal["unversioned"] = "unversioned"
     base: None = None
     license: None = None
     # These are inside the "links" child model.
@@ -348,9 +347,6 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
     def validate_each_part(cls, item):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
         return process_part_config(item)
-
-
-craft_application.models.Project.register(CharmcraftProject)
 
 
 class Charm(CharmcraftProject):

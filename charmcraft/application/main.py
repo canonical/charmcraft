@@ -71,7 +71,9 @@ class Charmcraft(Application):
         """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
         return {"version": "unversioned"}
 
-    def _extra_yaml_transform(self, yaml_data: dict[str, Any]) -> dict[str, Any]:
+    def _extra_yaml_transform(
+        self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
+    ) -> dict[str, Any]:
         yaml_data = yaml_data.copy()
 
         metadata_path = pathlib.Path(self._work_dir / "metadata.yaml")
@@ -102,16 +104,7 @@ class Charmcraft(Application):
         return yaml_data
 
     def _configure_services(self, platform: str | None, build_for: str | None) -> None:
-        self.services.set_kwargs(
-            "lifecycle",
-            cache_dir=self.cache_dir,
-            work_dir=self._work_dir,
-            build_for=build_for,
-        )
-        self.services.set_kwargs(
-            "provider",
-            work_dir=self._work_dir,
-        )
+        super()._configure_services(platform, build_for)
         self.services.set_kwargs(
             "package",
             project_dir=self._work_dir,
@@ -172,16 +165,6 @@ def main() -> int:
     charmcraft_services = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     app = Charmcraft(app=APP_METADATA, services=charmcraft_services)
-
-    app.add_global_argument(
-        craft_cli.GlobalArgument(
-            "project_dir",
-            "option",
-            "-p",
-            "--project-dir",
-            "Specify the project's directory (defaults to current)",
-        )
-    )
 
     commands.fill_command_groups(app)
 

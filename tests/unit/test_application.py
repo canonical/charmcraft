@@ -42,7 +42,7 @@ def test_configure(
 
     app.configure(global_args)
 
-    assert app._work_dir == pathlib.Path(expected_project_dir).resolve()
+    assert app.project_dir == pathlib.Path(expected_project_dir).resolve()
 
 
 @pytest.mark.parametrize(
@@ -101,7 +101,7 @@ def test_extra_yaml_transform_success(
     fs.create_file("metadata.yaml", contents=metadata_yaml)
     app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
 
-    actual = app._extra_yaml_transform(charmcraft_dict)
+    actual = app._extra_yaml_transform(charmcraft_dict, build_on="amd64", build_for=None)
 
     assert actual == expected
 
@@ -145,6 +145,6 @@ def test_extra_yaml_transform_failure(
     app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
 
     with pytest.raises(errors.CraftError) as exc_info:
-        app._extra_yaml_transform(charmcraft_dict)
+        app._extra_yaml_transform(charmcraft_dict, build_for=None, build_on="amd64")
 
     assert exc_info.value.args[0] == message

@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,16 +13,10 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Service class for running craft lifecycle commands."""
-from __future__ import annotations
-
-from craft_application import services
+"""Integration tests for the lifecycle service."""
 
 
-class LifecycleService(services.LifecycleService):
-    """Business logic for lifecycle builds."""
+def test_init_lifecycle(service_factory):
+    """Test the setup of a parts lifecycle, implicitly testing setup."""
 
-    def setup(self) -> None:
-        """Do Charmcraft-specific setup work."""
-        self._manager_kwargs.setdefault("project_name", self._project.name)
-        super().setup()
+    service_factory.lifecycle._init_lifecycle_manager()

@@ -25,7 +25,7 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   snap-tests:
-    runs-on: self-hosted
+    runs-on: spread-installed
     needs: [snap-build]
     strategy:
       fail-fast: false
@@ -63,7 +63,7 @@ jobs:
           done
 
   snap-store-tests:
-    runs-on: self-hosted
+    runs-on: spread-installed
     needs: [snap-build]
 
     steps:

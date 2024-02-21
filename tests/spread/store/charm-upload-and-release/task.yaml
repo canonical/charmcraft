@@ -43,6 +43,7 @@ execute: |
   charmcraft release $CHARM_DEFAULT_NAME -r $uploaded_revno -c edge
 
   # Releases may have some delay in the craft store, so sleep for a bit before trying and try up to 10 times.
+  sleep 10
   for i in {1..10}
   do
     sleep 2
@@ -52,7 +53,7 @@ execute: |
     # check that the current release greater or equal than what was
     # uploaded, because other tests running concurrently may have
     # also released (but for sure cannot be a previous revision)
-    if [ $edge_revision -ge $uploaded_revno ]; then
+    if [[ $edge_revision -ge $uploaded_revno ]]; then
       break
     fi
   done

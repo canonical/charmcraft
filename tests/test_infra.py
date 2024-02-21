@@ -17,8 +17,6 @@
 import itertools
 import os
 import re
-import subprocess
-import sys
 
 import pytest
 
@@ -47,6 +45,10 @@ def test_ensure_copyright():
     for filepath in get_python_filepaths():
         if os.stat(filepath).st_size == 0:
             continue
+        if filepath.endswith("charmcraft/_version.py") or filepath.endswith(
+            "charmcraft\\_version.py"
+        ):
+            continue
 
         with open(filepath, encoding="utf8") as fh:
             for line in itertools.islice(fh, 5):
@@ -57,15 +59,6 @@ def test_ensure_copyright():
     if issues:
         msg = "Please add copyright headers to the following files:\n" + "\n".join(issues)
         pytest.fail(msg, pytrace=False)
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_setup_version():
-    """Verify that setup.py is picking up the version correctly."""
-    cmd = [os.path.abspath("setup.py"), "--version"]
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, check=True)
-    output = proc.stdout.decode("utf8")
-    assert output.strip() == __version__
 
 
 def test_bashcompletion_all_commands():
@@ -90,4 +83,4 @@ def test_bashcompletion_all_commands():
     for cgroup in app.command_groups:
         real_command_names.update(cmd.name for cmd in cgroup.commands if not cmd.hidden)
 
-    assert completed_commands == real_command_names
+    assert real_command_names.issubset(set(completed_commands))

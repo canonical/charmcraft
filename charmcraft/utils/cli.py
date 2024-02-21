@@ -19,7 +19,7 @@ import enum
 import json
 import numbers
 import sys
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 from typing import Literal, overload
 
@@ -84,6 +84,31 @@ class ResourceOption:
             "the resource format must be <name>:<revision> (revision being a non-negative integer)"
         )
         raise ValueError(msg)
+
+
+@dataclass(frozen=True)
+class ChoicesList:
+    """Argparse helper to make a list argument from a collection of choices.
+
+    For example, a list of digits might look like:
+
+        parser.add_argument("--digits", type=ChoicesList(string.digits))
+    """
+
+    choices: Collection
+
+    def __call__(self, value: str) -> list[str]:
+        """Validate and get the chosen list of choices.
+
+        :param value: The list as a comma-separated string from the CLI
+        :returns: A list of string values.
+        :raises ValueError: if any invalid choices are in the list.
+        """
+        values = value.split(",")
+        invalid_values = set(values) - set(self.choices)
+        if invalid_values:
+            raise ValueError(f"invalid values: {', '.join(invalid_values)}")
+        return values
 
 
 def confirm_with_user(prompt, default=False) -> bool:
@@ -157,15 +182,13 @@ class OutputFormat(enum.Enum):
 
 
 @overload
-def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str:
-    ...
+def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str: ...
 
 
 @overload
 def format_content(
     content: str | (numbers.Real | (list | dict)), fmt: OutputFormat | (str | None)
-) -> str:
-    ...
+) -> str: ...
 
 
 def format_content(content, fmt=None):

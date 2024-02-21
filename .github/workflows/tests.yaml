@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -40,37 +40,25 @@ jobs:
           snap watch --last=install
           echo "::endgroup::"
       - name: Run Linters
-        # Currently picking specific linters that pass until we can enable them all.
-        # Still missing: pyright, yamllint
-        # run: tox run --skip-pkg-install --no-list-dependencies -m lint
-        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy
+        run: tox run --skip-pkg-install --no-list-dependencies -m lint
   run-tests:
     strategy:
       matrix:
-        os: [macos-11, macos-12, windows-2019, windows-2022]
-        python-version: ["3.10", "3.11"]
-        include:
-          - os: ubuntu-22.04
-            python-version: "3.10"
-
+        os: [ubuntu-22.04, macos-12, macos-13, windows-2019, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install/update pip, wheel, and setuptools on non Windows
-        if: ${{ matrix.os != 'windows-2019' && matrix.os != 'windows-2022' }}
-        run: |
-          pip install -U pip wheel setuptools
-      - name: Install/update pip, wheel, and setuptools on Windows
-        if: ${{ matrix.os == 'windows-2019' || matrix.os == 'windows-2022' }}
-        run: |
-          pip install -U wheel setuptools
+          python-version: |
+            3.10
+            3.11
+            3.12
+          cache: "pip"
       - name: Install Ubuntu-specific dependencies
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
@@ -78,13 +66,13 @@ jobs:
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
           export $(cat /etc/os-release | grep VERSION_CODENAME)
           pip install -U -r "requirements-${VERSION_CODENAME}.txt"
-      - name: Install charmcraft and dependencies
+      - name: Configure environment
         run: |
-          pip install -U -r requirements-dev.txt
-          pip install -e .
+          python -m pip install tox
+          tox run --colored yes -m tests --notest
       - name: Run tests
         run: |
-          pytest -ra tests
+          tox run --skip-pkg-install --no-list-dependencies --result-json results/tox-${{ matrix.platform }}.json --colored yes -m tests
 
   snap-build:
     runs-on: ubuntu-22.04
@@ -97,7 +85,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: snapcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
@@ -120,27 +108,27 @@ jobs:
           snap: ${{ steps.snapcraft.outputs.snap }}
           release: edge/${{ steps.vars.outputs.branch }}
 
-# Commented out until we can provide the necessary launchpad credentials.
-#  snap-remote-build:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Start installing snapcraft
-#        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
-#        id: install
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 0
-#      - name: Remote-build snap
-#        id: snapcraft
-#        run: |
-#          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
-#          snapcraft remote-build --launchpad-accept-public-upload
-#      - name: Upload snap artifacts
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: snap
-#          path: ./*.snap
+  # Commented out until we can provide the necessary launchpad credentials.
+  #  snap-remote-build:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - name: Start installing snapcraft
+  #        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
+  #        id: install
+  #      - name: Checkout code
+  #        uses: actions/checkout@v3
+  #        with:
+  #          fetch-depth: 0
+  #      - name: Remote-build snap
+  #        id: snapcraft
+  #        run: |
+  #          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
+  #          snapcraft remote-build --launchpad-accept-public-upload
+  #      - name: Upload snap artifacts
+  #        uses: actions/upload-artifact@v4
+  #        with:
+  #          name: snap
+  #          path: ./*.snap
 
   snap-tests:
     needs: [snap-build]
@@ -151,7 +139,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
           path: snap-artifacts
@@ -194,7 +182,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Install dependencies
@@ -205,9 +193,9 @@ jobs:
         run: |
           pyinstaller charmcraft.spec
       - name: Upload unsigned exe
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: snap
+          name: windows-exe
           path: dist\charmcraft.exe
       - name: Smoke test executable
         run: |
@@ -244,7 +232,7 @@ jobs:
           echo "Test signing charmcraft msix installer..."
           & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
       - name: Upload installer(s)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: installers
           path: |

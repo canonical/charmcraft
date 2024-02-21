@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Canonical Ltd.
+# Copyright 2020-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Commands related to Charmhub."""
+import argparse
 import collections
 import dataclasses
 import os
@@ -25,6 +26,7 @@ import tempfile
 import textwrap
 import typing
 import zipfile
+from collections.abc import Collection
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
@@ -32,13 +34,14 @@ import yaml
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_parts import Step
-from craft_store import attenuations
+from craft_store import attenuations, models
 from craft_store.errors import CredentialsUnavailable
+from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
 from tabulate import tabulate
 
 import charmcraft.store.models
-from charmcraft import env, parts, utils
+from charmcraft import const, env, parts, utils
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.models import project
 from charmcraft.store import ImageHandler, LocalDockerdInterface, OCIRegistry, Store
@@ -176,8 +179,6 @@ class LoginCommand(CharmcraftCommand):
         restrictive_options_map = [
             ("ttl", parsed_args.ttl),
             ("channels", parsed_args.channel),
-            ("charms", parsed_args.charm),
-            ("bundles", parsed_args.bundle),
             ("permissions", parsed_args.permission),
         ]
         kwargs = {}
@@ -185,16 +186,16 @@ class LoginCommand(CharmcraftCommand):
             if namespace_value is not None:
                 kwargs[arg_name] = namespace_value
 
-        ephemeral = parsed_args.export is not None
-        store_config = env.get_store_config()
-        store = Store(store_config, ephemeral=ephemeral)
-        credentials = store.login(**kwargs)
-        if parsed_args.export is None:
-            macaroon_info = store.whoami()
-            emit.message(f"Logged in as '{macaroon_info.account.username}'.")
-        else:
+        packages = utils.get_packages(charms=parsed_args.charm, bundles=parsed_args.bundle) or None
+
+        if parsed_args.export:
+            credentials = self._services.store.get_credentials(packages=packages, **kwargs)
             parsed_args.export.write_text(credentials)
             emit.message(f"Login successful. Credentials exported to {str(parsed_args.export)!r}.")
+        else:
+            self._services.store.login(packages=packages, **kwargs)
+            username = self._services.store.get_account_info()["username"]
+            emit.message(f"Logged in as {username!r}.")
 
 
 class LogoutCommand(CharmcraftCommand):
@@ -217,9 +218,8 @@ class LogoutCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(env.get_store_config())
         try:
-            store.logout()
+            self._services.store.logout()
             emit.message("Charmhub token cleared.")
         except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
@@ -241,9 +241,8 @@ class WhoamiCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        store = Store(env.get_store_config())
         try:
-            macaroon_info = store.whoami()
+            macaroon_info = self._services.store.client.whoami()
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}
@@ -255,22 +254,22 @@ class WhoamiCommand(CharmcraftCommand):
         human_msgs = []
         prog_info = {"logged": True}
 
-        human_msgs.append(f"name: {macaroon_info.account.name}")
-        prog_info["name"] = macaroon_info.account.name
-        human_msgs.append(f"username: {macaroon_info.account.username}")
-        prog_info["username"] = macaroon_info.account.username
-        human_msgs.append(f"id: {macaroon_info.account.id}")
-        prog_info["id"] = macaroon_info.account.id
+        human_msgs.append(f"name: {macaroon_info['account']['display-name']}")
+        prog_info["name"] = macaroon_info["account"]["display-name"]
+        human_msgs.append(f"username: {macaroon_info['account']['username']}")
+        prog_info["username"] = macaroon_info["account"]["username"]
+        human_msgs.append(f"id: {macaroon_info['account']['id']}")
+        prog_info["id"] = macaroon_info["account"]["id"]
 
-        if macaroon_info.permissions:
+        if permissions := macaroon_info.get("permissions"):
             human_msgs.append("permissions:")
-            for item in macaroon_info.permissions:
+            for item in permissions:
                 human_msgs.append(f"- {item}")
-            prog_info["permissions"] = macaroon_info.permissions
+            prog_info["permissions"] = permissions
 
-        if macaroon_info.packages:
+        if packages := macaroon_info.get("packages"):
             grouped = {}
-            for package in macaroon_info.packages:
+            for package in packages:
                 grouped.setdefault(package.type, []).append(package)
             for package_type, title in [("charm", "charms"), ("bundle", "bundles")]:
                 if package_type in grouped:
@@ -285,11 +284,11 @@ class WhoamiCommand(CharmcraftCommand):
                             pkg_info.append({"id": item.id})
                     prog_info[title] = pkg_info
 
-        if macaroon_info.channels:
+        if channels := macaroon_info.get("channels"):
             human_msgs.append("channels:")
-            for item in macaroon_info.channels:
+            for item in channels:
                 human_msgs.append(f"- {item}")
-            prog_info["channels"] = macaroon_info.channels
+            prog_info["channels"] = channels
 
         if parsed_args.format:
             emit.message(cli.format_content(prog_info, parsed_args.format))
@@ -1826,16 +1825,32 @@ class UploadResourceCommand(CharmcraftCommand):
                 'The digest (remote or local) or id (local, exclude "sha256:") of the OCI image'
             ),
         )
+        parser.add_argument(
+            "--arch",
+            type=utils.ChoicesList(const.SUPPORTED_ARCHITECTURES | {"all"}),
+            help="The architectures valid for this file resource. If none are provided, the resource is uploaded without architecture information.",
+        )
 
     def run(self, parsed_args):
         """Run the command."""
         store = Store(env.get_store_config())
+
+        if parsed_args.arch:
+            if parsed_args.image:
+                raise ArgumentParsingError(
+                    "Cannot specify an architecture for an OCI image. OCI images contain architecture metadata that is used."
+                )
+            architectures = parsed_args.arch
+            utils.validate_architectures(architectures, allow_all=True)
+        else:
+            architectures = ["all"]
 
         if parsed_args.filepath:
             resource_filepath = parsed_args.filepath
             resource_filepath_is_temp = False
             resource_type = ResourceType.file
             emit.progress(f"Uploading resource directly from file {str(resource_filepath)!r}.")
+            bases = [{"name": "all", "channel": "all", "architectures": architectures}]
         elif parsed_args.image:
             credentials = store.get_oci_registry_credentials(
                 parsed_args.charm_name, parsed_args.resource_name
@@ -1897,11 +1912,16 @@ class UploadResourceCommand(CharmcraftCommand):
             resource_filepath_is_temp = True
             resource_type = ResourceType.oci_image
 
+            image_arch = image_info.get("Architecture", "all")
+            image_arch = utils.ARCH_TRANSLATIONS.get(image_arch, image_arch)
+            bases = [{"name": "all", "channel": "all", "architectures": [image_arch]}]
+
         result = store.upload_resource(
             parsed_args.charm_name,
             parsed_args.resource_name,
             resource_type,
             resource_filepath,
+            bases=bases,
         )
 
         # clean the filepath if needed
@@ -1932,6 +1952,109 @@ class UploadResourceCommand(CharmcraftCommand):
                     emit.message(f"- {error.code}: {error.message}")
             retcode = 1
         return retcode
+
+
+class SetResourceArchitecturesCommand(CharmcraftCommand):
+    """Set the architectures for a resource revision."""
+
+    name = "set-resource-architectures"
+    help_msg = "Set the architectures for a resource revision in Charmhub"
+    overview = textwrap.dedent(
+        """
+        Set the architectures for a resource revision in Charmhub.
+
+        Each resource revision is tagged with one or more architectures. If a
+        revision is incorrectly tagged, this command can modify the architecture
+        tags for that resource revision.
+
+        For example:
+
+            $ charmcraft resource-revisions my-charm my-resource
+            Revision    Created at               Size  Architectures
+            1           2020-11-15 T11:13:15Z  183151  riscv64
+            $ charmcraft set-resource-architectures my-charm my-resource --revision=1 arm64,armhf
+            Revision 1 of 'my-resource' on charm 'my-charm' set to architectures: arm64,armhf
+            $ charmcraft resource-revisions my-charm my-resource
+            Revision    Created at               Size  Architectures
+            1           2020-11-15 T11:13:15Z  183151  arm64,armhf
+        """
+    )
+    format_option = True
+
+    def fill_parser(self, parser) -> None:
+        """Add set-resource-architectures specific command parameters."""
+        super().fill_parser(parser)
+        parser.add_argument(
+            "charm_name",
+            metavar="charm-name",
+            help="The name of the charm",
+        )
+        parser.add_argument("resource_name", metavar="resource-name", help="The resource name")
+        parser.add_argument(
+            "--revision",
+            dest="revisions",
+            action="append",
+            type=int,
+            required=True,
+            help="A revision to update",
+        )
+        parser.add_argument(
+            "arch",
+            type=utils.ChoicesList(const.SUPPORTED_ARCHITECTURES | {"all"}),
+            help="Comma-separated list of architectures",
+        )
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Run the command."""
+        store = self._services.store
+
+        updates = store.set_resource_revisions_architectures(
+            name=parsed_args.charm_name,
+            resource_name=parsed_args.resource_name,
+            updates={revision: parsed_args.arch for revision in parsed_args.revisions},
+        )
+
+        fmt = parsed_args.format or cli.OutputFormat.TABLE
+        self.write_output(fmt, updates)
+
+    @staticmethod
+    def write_output(
+        fmt: cli.OutputFormat,
+        updates: Collection[models.resource_revision_model.CharmResourceRevision],
+    ) -> None:
+        """Write formatted output for this command to the terminal."""
+        if fmt == cli.OutputFormat.TABLE:
+            if not updates:
+                emit.message("No revisions updated.")
+                return
+
+            emit.progress(f"{len(updates)} revision(s) updated.", permanent=True)
+
+            updates_dicts = [
+                {
+                    "Revision": update.revision,
+                    "Updated At": (
+                        utils.format_timestamp(update.updated_at)
+                        if update.updated_at is not None
+                        else "--"
+                    ),
+                    "Architectures": ",".join(_get_architectures_from_bases(update.bases)),
+                }
+                for update in sorted(updates, key=lambda rev: int(rev.revision), reverse=True)
+            ]
+        else:
+            updates_dicts = [
+                {
+                    "revision": update.revision,
+                    "updated_at": (
+                        update.updated_at.isoformat() if update.updated_at is not None else None
+                    ),
+                    "architectures": _get_architectures_from_bases(update.bases),
+                }
+                for update in updates
+            ]
+
+        emit.message(cli.format_content(updates_dicts, fmt))
 
 
 class ListResourceRevisionsCommand(CharmcraftCommand):
@@ -1973,8 +2096,9 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
             info = [
                 {
                     "revision": item.revision,
-                    "created at": utils.format_timestamp(item.created_at),
+                    "created at": item.created_at.isoformat(),
                     "size": item.size,
+                    "bases": [base.dict() for base in item.bases],
                 }
                 for item in result
             ]
@@ -1985,7 +2109,7 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
             emit.message("No revisions found.")
             return
 
-        headers = ["Revision", "Created at", "Size"]
+        headers = ["Revision", "Created at", "Size", "Architectures"]
         custom_alignment = ["left", "left", "right"]
         result.sort(key=attrgetter("revision"), reverse=True)
         data = [
@@ -1993,6 +2117,7 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
                 item.revision,
                 utils.format_timestamp(item.created_at),
                 naturalsize(item.size, gnu=True),
+                ",".join(_get_architectures_from_bases(item.bases)),
             )
             for item in result
         ]
@@ -2000,3 +2125,12 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
         table = tabulate(data, headers=headers, tablefmt="plain", colalign=custom_alignment)
         for line in table.splitlines():
             emit.message(line)
+
+
+def _get_architectures_from_bases(bases: typing.Iterable[ResponseCharmResourceBase]) -> list[str]:
+    """Get a list of all architectures from an iterable of resource bases."""
+    architectures = set()
+    for base in bases:
+        for architecture in base.architectures:
+            architectures.add(architecture)
+    return sorted(architectures)

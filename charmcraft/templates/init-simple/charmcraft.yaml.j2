@@ -43,6 +43,23 @@ bases:
       channel: "22.04"
 
 
+# (Optional) Configuration options for the charm
+# This config section defines charm config options, and populates the Configure
+# tab on Charmhub.
+# More information on this section at https://juju.is/docs/sdk/charmcraft-yaml#heading--config
+# General configuration documentation: https://juju.is/docs/sdk/config
+config:
+  options:
+    # An example config option to customise the log level of the workload
+    log-level:
+      description: |
+        Configures the log level of gunicorn.
+
+        Acceptable values are: "info", "debug", "warning", "error" and "critical"
+      default: "info"
+      type: string
+
+
 # The containers and resources metadata apply to Kubernetes charms only.
 # See https://juju.is/docs/sdk/metadata-reference for a checklist and guidance.
 # Remove them if not required.
@@ -66,19 +83,3 @@ resources:
     # during testing. This field is also used by the 'canonical/charming-actions'
     # Github action for automated releasing.
     upstream-source: kennethreitz/httpbin
-
-
-# This config section defines charm config options, and populates the Configure
-# tab on Charmhub.
-# See https://juju.is/docs/config for guidance.
-
-config:
-  options:
-    # An example config option to customise the log level of the workload
-    log-level:
-      description: |
-        Configures the log level of gunicorn.
-
-        Acceptable values are: "info", "debug", "warning", "error" and "critical"
-      default: "info"
-      type: string

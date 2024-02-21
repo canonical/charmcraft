@@ -39,7 +39,6 @@ from charmcraft.commands.store import (
     FetchLibCommand,
     ListLibCommand,
     ListNamesCommand,
-    ListResourceRevisionsCommand,
     ListResourcesCommand,
     ListRevisionsCommand,
     LoginCommand,
@@ -69,7 +68,6 @@ from charmcraft.store.models import (
     RegistryCredentials,
     Release,
     Resource,
-    ResourceRevision,
     Revision,
     Uploaded,
 )
@@ -4579,104 +4577,3 @@ def test_uploadresource_call_error(emitter, store_mock, config, tmp_path, format
                 "- broken: other long error text",
             ]
         )
-
-
-# -- tests for list resource revisions command
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
-    """Happy path of one result from the Store."""
-    store_response = [
-        ResourceRevision(revision=1, size=50, created_at=datetime.datetime(2020, 7, 3, 2, 30, 40)),
-    ]
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.list_resource_revisions("testcharm", "testresource"),
-    ]
-    if formatted:
-        expected = [
-            {
-                "revision": 1,
-                "created at": "2020-07-03T02:30:40Z",
-                "size": 50,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        expected = [
-            "Revision    Created at              Size",
-            "1           2020-07-03T02:30:40Z     50B",
-        ]
-        emitter.assert_messages(expected)
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_empty(emitter, store_mock, config, formatted):
-    """No results from the store."""
-    store_response = []
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    if formatted:
-        emitter.assert_json_output([])
-    else:
-        emitter.assert_message("No revisions found.")
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, formatted):
-    """Results are presented ordered by revision in the table."""
-    # three Revisions with all values weirdly similar, the only difference is revision, so
-    # we really assert later that it was used for ordering
-    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
-    store_response = [
-        ResourceRevision(revision=1, size=5000, created_at=tstamp),
-        ResourceRevision(revision=3, size=34450520, created_at=tstamp),
-        ResourceRevision(revision=4, size=876543, created_at=tstamp),
-        ResourceRevision(revision=2, size=50, created_at=tstamp),
-    ]
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    if formatted:
-        expected = [
-            {
-                "revision": 1,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 5000,
-            },
-            {
-                "revision": 3,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 34450520,
-            },
-            {
-                "revision": 4,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 876543,
-            },
-            {
-                "revision": 2,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 50,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        expected = [
-            "Revision    Created at              Size",
-            "4           2020-07-03T20:30:40Z  856.0K",
-            "3           2020-07-03T20:30:40Z   32.9M",
-            "2           2020-07-03T20:30:40Z     50B",
-            "1           2020-07-03T20:30:40Z    4.9K",
-        ]
-        emitter.assert_messages(expected)

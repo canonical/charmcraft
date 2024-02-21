@@ -352,7 +352,9 @@ class ImageHandler:
         """Verify if the image is present in the registry."""
         return self.registry.is_manifest_already_uploaded(digest)
 
-    def _extract_file(self, image_tar: str, name: str, compress: bool = False) -> (str, int, str):
+    def _extract_file(
+        self, image_tar: str, name: str, compress: bool = False
+    ) -> tuple[str, int, str]:
         """Extract a file from the tar and return its info. Optionally, gzip the content."""
         emit.progress(f"Extracting file {name!r} from local tar (compress={compress})")
         src_filehandler = image_tar.extractfile(name)

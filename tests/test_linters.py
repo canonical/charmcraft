@@ -34,6 +34,7 @@ from charmcraft.linters import (
     JujuConfig,
     JujuMetadata,
     Language,
+    NamingConventions,
     analyze,
     check_dispatch_with_python_entrypoint,
     get_entrypoint_from_dispatch,
@@ -45,6 +46,7 @@ EXAMPLE_DISPATCH = """
 
 PYTHONPATH=lib:venv ./charm.py
 """
+
 
 # --- tests for helper functions
 
@@ -706,6 +708,9 @@ def test_analyze_run_everything(config):
     FakeChecker2 = create_fake_checker(
         check_type=CheckType.LINT, name="name2", url="url2", text="text2", result="result2"
     )
+    FakeChecker3 = create_fake_checker(
+        check_type=CheckType.LINT, name="returns_none", url="url3", text=None, result="result3"
+    )
 
     # hack the first fake checker to validate that it receives the indicated path
     def dir_validator(self, basedir):
@@ -714,10 +719,10 @@ def test_analyze_run_everything(config):
 
     FakeChecker1.run = dir_validator
 
-    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
+    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]):
         result = analyze(config, pathlib.Path("test-buildpath"))
 
-    r1, r2 = result
+    r1, r2, r3 = result
     assert r1.check_type == "attribute"
     assert r1.name == "name1"
     assert r1.url == "url1"
@@ -728,6 +733,10 @@ def test_analyze_run_everything(config):
     assert r2.url == "url2"
     assert r2.text == "text2"
     assert r2.result == "result2"
+    assert r3.name == "returns_none"
+    assert r3.url == "url3"
+    assert r3.text == "n/a"
+    assert r3.result == "result3"
 
 
 def test_analyze_ignore_attribute(config):
@@ -898,6 +907,67 @@ def test_jujuactions_file_corrupted(tmp_path):
     assert result == JujuActions.Result.ERROR
 
 
+@pytest.mark.parametrize(
+    ("action_file_content", "expected_result"),
+    [
+        pytest.param(
+            dedent(
+                """
+                my_action:
+                    params:
+                        my_first_param:
+                            type: str
+                            description: foo
+                        my_second_param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="snake_case",
+        ),
+        pytest.param(
+            dedent(
+                """
+                my_action:
+                    params:
+                        my_first_param:
+                            type: str
+                            description: foo
+                        my-second-param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="convention_mismatch",
+        ),
+        pytest.param(
+            dedent(
+                """
+                my-action:
+                    params:
+                        my-first-param:
+                            type: str
+                            description: foo
+                        my-second-param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.OK,
+            id="ok",
+        ),
+    ],
+)
+def test_jujuactions_naming_convention(tmp_path, action_file_content, expected_result):
+    """The config.yaml file has consistent snake case convention."""
+    action_file = tmp_path / const.JUJU_ACTIONS_FILENAME
+    action_file.write_text(action_file_content)
+    result = NamingConventions().run(tmp_path)
+    assert result == expected_result
+
+
 # --- tests for JujuConfig checker
 
 
@@ -989,6 +1059,78 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     result = linter.run(tmp_path)
     assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
+
+
+@pytest.mark.parametrize(
+    ("config_file_content", "expected_result"),
+    [
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my_first_param:
+                    type: str
+                    description: foo
+                my_second_param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="snake_case",
+        ),
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my_first_param:
+                    type: str
+                    description: foo
+                my-second-param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="convention_mismatch",
+        ),
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my-first-param:
+                    type: str
+                    description: foo
+                my-second-param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.OK,
+            id="ok",
+        ),
+    ],
+)
+def test_jujuconfig_naming_convention(tmp_path, config_file_content, expected_result):
+    """The config.yaml file has consistent snake case convention."""
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
+    config_file.write_text(config_file_content)
+    result = NamingConventions().run(tmp_path)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        pytest.param(const.JUJU_CONFIG_FILENAME, id="config"),
+        pytest.param(const.JUJU_ACTIONS_FILENAME, id="action"),
+    ],
+)
+def test_empty_file(tmp_path, file):
+    file = tmp_path / file
+    file.write_text("")
+    result = NamingConventions().run(tmp_path)
+    assert result == LintResult.OK
 
 
 # --- tests for Entrypoint checker

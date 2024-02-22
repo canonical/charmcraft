@@ -1,6 +1,6 @@
 [![charmcraft](https://snapcraft.io/charmcraft/badge.svg)](https://snapcraft.io/charmcraft)
-[![Tests](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml)
-[![Spread](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml)
+[![Tests](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg?event=push)](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml)
+[![Spread](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push)](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml)
 [![Weekly Spread](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml)
 
 # Charmcraft -- easily initialise, pack, and publish your charms

@@ -19,13 +19,13 @@ jobs:
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
 
   snap-tests:
-    runs-on: self-hosted
+    runs-on: spread-installed
     needs: [snap-build]
     strategy:
       fail-fast: false
@@ -49,7 +49,7 @@ jobs:
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
 
@@ -57,8 +57,16 @@ jobs:
         run: |
           spread ${{ matrix.spread }}
 
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done
+
   snap-store-tests:
-    runs-on: self-hosted
+    runs-on: spread-installed
     needs: [snap-build]
 
     steps:
@@ -88,7 +96,7 @@ jobs:
 
       - if: steps.decisions.outputs.RUN == 'true'
         name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
 
@@ -100,3 +108,11 @@ jobs:
           BUNDLE_DEFAULT_NAME: gh-ci-charmcraft-bundle
         run: |
           spread google:ubuntu-22.04-64:tests/spread/store/
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

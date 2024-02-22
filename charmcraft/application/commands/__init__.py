@@ -25,12 +25,7 @@ from charmcraft.application.commands.extensions import (
 from charmcraft.application.commands.init import InitCommand
 from charmcraft.application.commands.lifecycle import (
     get_lifecycle_commands,
-    BuildCommand,
-    CleanCommand,
     PackCommand,
-    PullCommand,
-    PrimeCommand,
-    StageCommand,
 )
 from charmcraft.application.commands.store import (
     # auth
@@ -58,6 +53,7 @@ from charmcraft.application.commands.store import (
     # resources support
     ListResourcesCommand,
     ListResourceRevisionsCommand,
+    SetResourceArchitecturesCommand,
     UploadResourceCommand,
 )
 from charmcraft.application.commands.version import Version
@@ -95,6 +91,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
             # resources support
             ListResourcesCommand,
             ListResourceRevisionsCommand,
+            SetResourceArchitecturesCommand,
             UploadResourceCommand,
         ],
     )
@@ -128,12 +125,7 @@ __all__ = [
     "ExtensionsCommand",
     "InitCommand",
     "get_lifecycle_commands",
-    "BuildCommand",
-    "CleanCommand",
     "PackCommand",
-    "PrimeCommand",
-    "PullCommand",
-    "StageCommand",
     "LoginCommand",
     "LogoutCommand",
     "WhoamiCommand",
@@ -153,5 +145,6 @@ __all__ = [
     "FetchLibCommand",
     "ListResourcesCommand",
     "ListResourceRevisionsCommand",
+    "SetResourceArchitecturesCommand",
     "UploadResourceCommand",
 ]

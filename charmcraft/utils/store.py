@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-
-# Copyright 2020-2024 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +13,17 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Setup script for Charmcraft."""
+"""Store helper utilities."""
+from collections.abc import Iterable
 
-from setuptools import setup
+from craft_store import endpoints
 
-setup()
+
+def get_packages(
+    charms: Iterable[str] = (), bundles: Iterable[str] = ()
+) -> list[endpoints.Package]:
+    """Get a list of packages from charms and bundles."""
+    return [
+        *(endpoints.Package(package_type="charm", package_name=charm) for charm in charms),
+        *(endpoints.Package(package_type="bundle", package_name=bundle) for bundle in bundles),
+    ]

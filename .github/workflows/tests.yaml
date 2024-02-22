@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -40,14 +40,11 @@ jobs:
           snap watch --last=install
           echo "::endgroup::"
       - name: Run Linters
-        # Currently picking specific linters that pass until we can enable them all.
-        # Still missing: pyright
-        # run: tox run --skip-pkg-install --no-list-dependencies -m lint
-        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy,lint-yaml
+        run: tox run --skip-pkg-install --no-list-dependencies -m lint
   run-tests:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-11, macos-12, windows-2019, windows-2022]
+        os: [ubuntu-22.04, macos-12, macos-13, windows-2019, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -55,7 +52,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: |
             3.10
@@ -88,7 +85,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: snapcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
@@ -128,7 +125,7 @@ jobs:
   #          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
   #          snapcraft remote-build --launchpad-accept-public-upload
   #      - name: Upload snap artifacts
-  #        uses: actions/upload-artifact@v3
+  #        uses: actions/upload-artifact@v4
   #        with:
   #          name: snap
   #          path: ./*.snap
@@ -142,7 +139,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
           path: snap-artifacts
@@ -185,7 +182,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Install dependencies
@@ -196,9 +193,9 @@ jobs:
         run: |
           pyinstaller charmcraft.spec
       - name: Upload unsigned exe
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: snap
+          name: windows-exe
           path: dist\charmcraft.exe
       - name: Smoke test executable
         run: |
@@ -235,7 +232,7 @@ jobs:
           echo "Test signing charmcraft msix installer..."
           & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
       - name: Upload installer(s)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: installers
           path: |

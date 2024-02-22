@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-
-# Copyright 2020-2024 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +13,14 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Setup script for Charmcraft."""
+"""Tests for store helpers."""
+from hypothesis import given, strategies
 
-from setuptools import setup
+from charmcraft import utils
 
-setup()
+
+@given(charms=strategies.lists(strategies.text()), bundles=strategies.lists(strategies.text()))
+def test_get_packages(charms, bundles):
+    packages = utils.get_packages(charms=charms, bundles=bundles)
+    result_names = [package.package_name for package in packages]
+    assert result_names == charms + bundles

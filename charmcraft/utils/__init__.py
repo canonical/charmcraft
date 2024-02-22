@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ from charmcraft.utils.cli import (
     SingleOptionEnsurer,
     OutputFormat,
     ResourceOption,
+    ChoicesList,
     confirm_with_user,
     format_content,
     format_timestamp,
@@ -41,6 +42,7 @@ from charmcraft.utils.platform import (
     OSPlatform,
     get_host_architecture,
     get_os_platform,
+    validate_architectures,
 )
 from charmcraft.utils.file import S_IRALL, S_IXALL, make_executable, useful_filepath, build_zip
 from charmcraft.utils.package import (
@@ -58,6 +60,7 @@ from charmcraft.utils.project import (
     get_charm_name_from_path,
     get_templates_environment,
 )
+from charmcraft.utils.store import get_packages
 from charmcraft.utils.yaml import dump_yaml, load_yaml
 
 __all__ = [
@@ -73,6 +76,7 @@ __all__ = [
     "ARCH_TRANSLATIONS",
     "OSPlatform",
     "get_os_platform",
+    "validate_architectures",
     "get_host_architecture",
     "S_IRALL",
     "S_IXALL",
@@ -91,12 +95,14 @@ __all__ = [
     "SingleOptionEnsurer",
     "OutputFormat",
     "ResourceOption",
+    "ChoicesList",
     "confirm_with_user",
     "format_content",
     "humanize_list",
     "find_charm_sources",
     "get_charm_name_from_path",
     "get_templates_environment",
+    "get_packages",
     "dump_yaml",
     "load_yaml",
 ]

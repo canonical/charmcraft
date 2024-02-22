@@ -25,12 +25,7 @@ from charmcraft.application.commands.extensions import (
 from charmcraft.application.commands.init import InitCommand
 from charmcraft.application.commands.lifecycle import (
     get_lifecycle_commands,
-    BuildCommand,
-    CleanCommand,
     PackCommand,
-    PullCommand,
-    PrimeCommand,
-    StageCommand,
 )
 from charmcraft.application.commands.store import (
     # auth
@@ -130,12 +125,7 @@ __all__ = [
     "ExtensionsCommand",
     "InitCommand",
     "get_lifecycle_commands",
-    "BuildCommand",
-    "CleanCommand",
     "PackCommand",
-    "PrimeCommand",
-    "PullCommand",
-    "StageCommand",
     "LoginCommand",
     "LogoutCommand",
     "WhoamiCommand",

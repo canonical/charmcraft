@@ -286,7 +286,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     """
 
     type: Literal["charm", "bundle"]
-    name: models.ProjectName | None  # Bundle names are optional.  # type: ignore[assignment]
     title: models.ProjectTitle | None
     summary: models.SummaryStr | None
     description: str | None
@@ -298,7 +297,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
-    version: Literal["unversioned"] = "unversioned"
+    version: Literal["unversioned"] = "unversioned"  # type: ignore[assignment]
     base: None = None
     license: None = None
     # These are inside the "links" child model.
@@ -491,7 +490,7 @@ class Bundle(CharmcraftProject):
 
     type: Literal["bundle"]
     bundle: dict[str, Any] = {}
-    name: models.ProjectName | None = None
+    name: models.ProjectName | None = None  # type: ignore[assignment]
     title: models.ProjectTitle | None
     summary: models.SummaryStr | None
     description: pydantic.StrictStr | None

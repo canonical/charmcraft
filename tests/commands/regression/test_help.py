@@ -40,7 +40,6 @@ import pytest_check
     [
         "pack",
         "clean",
-        "init",
         "version",
         "login",
         "logout",

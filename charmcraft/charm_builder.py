@@ -41,7 +41,7 @@ from charmcraft.utils import (
     validate_strict_dependencies,
 )
 
-MINIMUM_PIP_VERSION = (22, 0)
+MINIMUM_PIP_VERSION = (23, 0)
 KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/ba/19/e63fb4e0d20e48bd2167bb7e857abc0e21679e24805ba921a224df8977c0/pip-23.2.1.tar.gz"
 
 
@@ -386,11 +386,13 @@ def _process_run(cmd: list[str]) -> None:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
+            text=True,
         )
     except Exception as exc:
         raise RuntimeError(f"Subprocess command {cmd} execution crashed: {exc!r}")
 
-    for line in proc.stdout:
+    # https://github.com/microsoft/pylance-release/issues/2385
+    for line in proc.stdout:  # pyright: ignore[reportOptionalIterable]
         print(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 

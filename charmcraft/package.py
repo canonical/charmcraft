@@ -195,9 +195,9 @@ class Builder:
         with charmcraft.instrum.Timer("Lifecycle run"):
             lifecycle.run(craft_parts.Step.PRIME)
 
-        # skip creation yaml files if using reactive, reactive will create them
+        # skip creating yaml files if using reactive, reactive will create them
         # in a incompatible way
-        if self._parts.get("charm", {}).get("plugin", None) != "reactive":
+        if "reactive" not in {value.get("plugin") for value in self._parts.values()}:
             create_actions_yaml(lifecycle.prime_dir, self.config)
             create_config_yaml(lifecycle.prime_dir, self.config)
             create_metadata_yaml(lifecycle.prime_dir, self.config)
@@ -353,6 +353,8 @@ class Builder:
         if self.measure:
             instance_metrics = charmcraft.env.get_managed_environment_metrics_path()
             cmd.append(f"--measure={str(instance_metrics)}")
+        else:
+            instance_metrics = None
 
         emit.progress(
             f"Launching environment to pack for base {build_on} "

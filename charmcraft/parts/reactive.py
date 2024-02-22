@@ -156,10 +156,10 @@ def run_charm_tool(args: list[str]):
             result_classification = "ERROR"
             raise
         result_classification = "WARNING"
-    finally:
+        print(f"charm tool execution {result_classification}: returncode={exc.returncode}")
+    else:
         print(
-            f"charm tool execution {result_classification}: "
-            f"returncode={exc.returncode if exc else completed_process.returncode}"
+            f"charm tool execution {result_classification}: returncode={completed_process.returncode}"
         )
 
 

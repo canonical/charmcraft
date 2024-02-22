@@ -1,5 +1,10 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
+environment:
+  TEMPLATE/simple: simple
+  TEMPLATE/machine: machine
+  TEMPLATE/kubernetes: kubernetes
+
 include:
   - tests/
 
@@ -7,6 +12,8 @@ kill-timeout: 30m
 
 prepare: |
   tests.pkgs install unzip
+  tests.pkgs install pipx python3-venv
+  pipx install --force tox
   rm -rf charm
   charmcraft init --project-dir=charm
   cd charm
@@ -37,6 +44,7 @@ restore: |
 
 execute: |
   cd charm
+  ~/.local/bin/tox run
   charmcraft pack --verbose
   test -f charm*.charm
   # Charmcraft 3.0 uses the craft-parts standard prime keyword that only

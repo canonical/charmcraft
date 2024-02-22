@@ -19,7 +19,6 @@ import json
 import pathlib
 from collections.abc import Container
 
-import craft_cli
 from craft_cli import emit
 from pydantic.json import pydantic_encoder
 
@@ -50,7 +49,7 @@ class Analyse(base.CharmcraftCommand):
             "--force",
             action="store_true",
             # For backwards compatibility. This command doesn't ignore suppressed linters from charmcraft.yaml.
-            help=craft_cli.HIDDEN,
+            help=argparse.SUPPRESS,
         )
         parser.add_argument("--ignore", help="Linters to ignore (comma separated)")
         parser.add_argument("filepath", type=pathlib.Path, help="The charm to analyse")

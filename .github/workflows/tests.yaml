@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -40,14 +40,11 @@ jobs:
           snap watch --last=install
           echo "::endgroup::"
       - name: Run Linters
-        # Currently picking specific linters that pass until we can enable them all.
-        # Still missing: pyright
-        # run: tox run --skip-pkg-install --no-list-dependencies -m lint
-        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy,lint-yaml
+        run: tox run --skip-pkg-install --no-list-dependencies -m lint
   run-tests:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-11, macos-12, windows-2019, windows-2022]
+        os: [ubuntu-22.04, macos-12, macos-13, windows-2019, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -55,7 +52,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: |
             3.10
@@ -185,7 +182,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Install dependencies

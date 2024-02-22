@@ -34,6 +34,7 @@ from charmcraft.linters import (
     JujuConfig,
     JujuMetadata,
     Language,
+    NamingConventions,
     analyze,
     check_dispatch_with_python_entrypoint,
     get_entrypoint_from_dispatch,
@@ -45,6 +46,7 @@ EXAMPLE_DISPATCH = """
 
 PYTHONPATH=lib:venv ./charm.py
 """
+
 
 # --- tests for helper functions
 
@@ -905,6 +907,67 @@ def test_jujuactions_file_corrupted(tmp_path):
     assert result == JujuActions.Result.ERROR
 
 
+@pytest.mark.parametrize(
+    ("action_file_content", "expected_result"),
+    [
+        pytest.param(
+            dedent(
+                """
+                my_action:
+                    params:
+                        my_first_param:
+                            type: str
+                            description: foo
+                        my_second_param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="snake_case",
+        ),
+        pytest.param(
+            dedent(
+                """
+                my_action:
+                    params:
+                        my_first_param:
+                            type: str
+                            description: foo
+                        my-second-param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="convention_mismatch",
+        ),
+        pytest.param(
+            dedent(
+                """
+                my-action:
+                    params:
+                        my-first-param:
+                            type: str
+                            description: foo
+                        my-second-param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.OK,
+            id="ok",
+        ),
+    ],
+)
+def test_jujuactions_naming_convention(tmp_path, action_file_content, expected_result):
+    """The config.yaml file has consistent snake case convention."""
+    action_file = tmp_path / const.JUJU_ACTIONS_FILENAME
+    action_file.write_text(action_file_content)
+    result = NamingConventions().run(tmp_path)
+    assert result == expected_result
+
+
 # --- tests for JujuConfig checker
 
 
@@ -996,6 +1059,78 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     result = linter.run(tmp_path)
     assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
+
+
+@pytest.mark.parametrize(
+    ("config_file_content", "expected_result"),
+    [
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my_first_param:
+                    type: str
+                    description: foo
+                my_second_param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="snake_case",
+        ),
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my_first_param:
+                    type: str
+                    description: foo
+                my-second-param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="convention_mismatch",
+        ),
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my-first-param:
+                    type: str
+                    description: foo
+                my-second-param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.OK,
+            id="ok",
+        ),
+    ],
+)
+def test_jujuconfig_naming_convention(tmp_path, config_file_content, expected_result):
+    """The config.yaml file has consistent snake case convention."""
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
+    config_file.write_text(config_file_content)
+    result = NamingConventions().run(tmp_path)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        pytest.param(const.JUJU_CONFIG_FILENAME, id="config"),
+        pytest.param(const.JUJU_ACTIONS_FILENAME, id="action"),
+    ],
+)
+def test_empty_file(tmp_path, file):
+    file = tmp_path / file
+    file.write_text("")
+    result = NamingConventions().run(tmp_path)
+    assert result == LintResult.OK
 
 
 # --- tests for Entrypoint checker

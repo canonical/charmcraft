@@ -20,6 +20,7 @@ import ast
 import os
 import pathlib
 import shlex
+import typing
 from collections.abc import Generator
 from typing import final
 
@@ -376,6 +377,106 @@ class JujuConfig(Linter):
         return self.Result.OK
 
 
+class NamingConventions(Linter):
+    """Check that charm follows naming conventions.
+
+    More information can be found at https://juju.is/docs/sdk/styleguide#heading--naming.
+    """
+
+    name = "naming-conventions"
+    url = "https://juju.is/docs/sdk/styleguide#heading--naming"
+
+    exception_result = LintResult.WARNING
+
+    def __init__(self):
+        self.text = ""
+
+    @staticmethod
+    def check_naming_convention(names: typing.Iterable[str], scope: str) -> str | None:
+        """Check adherence to naming convention.
+
+        :returns: string with warning if present, otherwise None
+        """
+        snake_keys = [key for key in names if "_" in key]
+
+        if snake_keys:
+            hyphen_keys = [key for key in names if "-" in key]
+
+            if hyphen_keys:
+                return (
+                    f"Some {scope} ({', '.join(snake_keys)}) are in snake case, "
+                    f"while others  ({', '.join(hyphen_keys)}) are with hyphens."
+                )
+            else:
+                return (
+                    f"Some {scope} ({', '.join(snake_keys)}) are using "
+                    "snake case naming convention."
+                )
+
+        return None
+
+    @staticmethod
+    def _config_options_check(config_file: pathlib.Path) -> list[str]:
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        warnings = []
+
+        if not config_file.exists():
+            return warnings
+
+        with config_file.open("rt", encoding="utf8") as fh:
+            options = content.get("options", {}) if (content := yaml.safe_load(fh)) else {}
+
+        if check := NamingConventions.check_naming_convention(options.keys(), "config-options"):
+            warnings.append(check)
+
+        return warnings
+
+    @staticmethod
+    def _actions_check(action_file: pathlib.Path) -> list[str]:
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        warnings = []
+
+        if not action_file.exists():
+            return warnings
+
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        with action_file.open("rt", encoding="utf8") as fh:
+            if content := yaml.safe_load(fh):
+                actions_names = list(dict(content).keys())
+            else:
+                actions_names = []
+
+        if check := NamingConventions.check_naming_convention(actions_names, "actions"):
+            warnings.append(check)
+
+        actions_params = [
+            param
+            for action_name in actions_names
+            if isinstance(content[action_name], dict)
+            for param in content.get(action_name, {}).get("params", [])
+        ]
+
+        if check := NamingConventions.check_naming_convention(actions_params, "action params"):
+            warnings.append(check)
+
+        return warnings
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        # Check naming convention on config options
+
+        warnings = NamingConventions._config_options_check(
+            basedir / const.JUJU_CONFIG_FILENAME
+        ) + NamingConventions._actions_check(basedir / const.JUJU_ACTIONS_FILENAME)
+
+        if warnings:
+            all_warning_string = "\n".join(warnings)
+            self.text = f"Naming conventions breaks:\n{all_warning_string}"
+            return self.exception_result
+
+        return self.Result.OK
+
+
 class Entrypoint(Linter):
     """Check the entrypoint is correct.
 
@@ -421,6 +522,7 @@ CHECKERS: list[type[BaseChecker]] = [
     JujuActions,
     JujuConfig,
     JujuMetadata,
+    NamingConventions,
     Framework,
     Entrypoint,
 ]

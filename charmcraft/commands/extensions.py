@@ -16,6 +16,7 @@
 
 """Infrastructure for the 'extensions' command."""
 import argparse
+import operator
 from textwrap import dedent
 
 import tabulate
@@ -47,16 +48,16 @@ class ListExtensionsCommand(BaseCommand):
         """Print the list of available extensions and their bases."""
         extension_presentation: dict[str, ExtensionModel] = {}
 
-        for extension_name in extensions.registry.get_extension_names():
-            extension_class = extensions.registry.get_extension_class(extension_name)
+        for extension_name in extensions.get_extension_names():
+            extension_class = extensions.get_extension_class(extension_name)
             extension_bases = list(extension_class.get_supported_bases())
             extension_presentation[extension_name] = ExtensionModel(
                 name=extension_name, bases=extension_bases
             )
 
         printable_extensions = sorted(
-            [v.marshal() for v in extension_presentation.values()],
-            key=lambda d: d["Extension name"],
+            [ext.marshal() for ext in extension_presentation.values()],
+            key=operator.itemgetter("Extension name"),
         )
         emit.message(tabulate.tabulate(printable_extensions, headers="keys"))
 

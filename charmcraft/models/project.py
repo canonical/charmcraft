@@ -178,7 +178,7 @@ class CharmBuildInfo(models.BuildInfo):
 class CharmcraftBuildPlanner(models.BuildPlanner):
     """Build planner for Charmcraft."""
 
-    bases: list[BasesConfiguration]
+    bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
     def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:

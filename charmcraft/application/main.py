@@ -16,6 +16,7 @@
 """New entrypoint for charmcraft."""
 from __future__ import annotations
 
+import os
 import pathlib
 import shutil
 import sys
@@ -120,6 +121,7 @@ class Charmcraft(Application):
         """
         dispatcher = self._dispatcher or self._get_dispatcher()
         command = dispatcher.load_command(self.app_config)
+        self._work_dir = self.project_dir
 
         super().run_managed(platform, build_for)
 

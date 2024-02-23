@@ -121,7 +121,9 @@ def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, m
     mock_version.return_value = "22.04"
 
     assert charm_plugin.get_build_commands() == [
-        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
+        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 "
+        "CRYPTOGRAPHY_OPENSSL_NO_LEGACY=true "
+        "PATH=/some/path SNAP=snap_value "
         "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
         "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
         "https_proxy=https_proxy_value no_proxy=no_proxy_value "
@@ -163,7 +165,9 @@ def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker,
     mock_version.return_value = "7"
 
     assert charm_plugin.get_build_commands() == [
-        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/opt/rh/rh-python38/root/usr/bin:/some/path "
+        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 "
+        "CRYPTOGRAPHY_OPENSSL_NO_LEGACY=true "
+        "PATH=/opt/rh/rh-python38/root/usr/bin:/some/path "
         "SNAP=snap_value SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
         "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
         "https_proxy=https_proxy_value no_proxy=no_proxy_value "

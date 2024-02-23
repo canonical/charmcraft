@@ -107,13 +107,6 @@ class Charmcraft(Application):
         super().configure(global_args)
         self._global_args = global_args
 
-    @property
-    def app_config(self) -> dict[str, Any]:
-        """Charmcraft-specific application config to send to commands."""
-        config = super().app_config
-        config.setdefault("global_args", self._global_args)
-        return config
-
     def _get_dispatcher(self) -> craft_cli.Dispatcher:
         """Get the dispatcher, with a charmcraft-specific side-effect of storing it on the app."""
         self._dispatcher = super()._get_dispatcher()

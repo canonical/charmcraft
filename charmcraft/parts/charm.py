@@ -285,7 +285,7 @@ class CharmPlugin(plugins.Plugin):
             "LC_ALL": "C.UTF-8",
             # Cryptography fails to load OpenSSL legacy provider in some circumstances.
             # Since we don't need the legacy provider, this works around that bug.
-            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true",
         }
         for key in [
             "PATH",

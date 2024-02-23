@@ -99,7 +99,7 @@ def test_charmplugin_get_build_environment_centos_7(charm_plugin, mocker, monkey
     mock_version.return_value = "7"
     assert charm_plugin.get_build_environment() == {
         "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true",
-        "PATH": "/opt/rh/rh-python38/root/usr/bin:${PATH}"
+        "PATH": "/opt/rh/rh-python38/root/usr/bin:${PATH}",
     }
 
 

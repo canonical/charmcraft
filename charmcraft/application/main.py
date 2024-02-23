@@ -25,7 +25,7 @@ import craft_cli
 from craft_application import Application, AppMetadata, util
 from craft_parts import plugins
 
-from charmcraft import const, env, errors, models, services
+from charmcraft import const, errors, models, services
 from charmcraft.application import commands
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
@@ -67,7 +67,7 @@ class Charmcraft(Application):
     ) -> dict[str, Any]:
         yaml_data = yaml_data.copy()
 
-        metadata_path = pathlib.Path(self._work_dir / "metadata.yaml")
+        metadata_path = pathlib.Path(self.project_dir / "metadata.yaml")
         if metadata_path.exists():
             with metadata_path.open() as file:
                 metadata_yaml = util.safe_yaml_load(file)
@@ -106,13 +106,6 @@ class Charmcraft(Application):
         """Configure the application using any global arguments."""
         super().configure(global_args)
         self._global_args = global_args
-        if not self.services.ProviderClass.is_managed():
-            # Do not do strict resolution here, as commands such as `init` will create
-            # the project directory.
-            project_dir = pathlib.Path(global_args.get("project_dir") or ".").resolve()
-            self._work_dir = project_dir
-        else:
-            self._work_dir = env.get_managed_environment_project_path()
 
     @property
     def app_config(self) -> dict[str, Any]:

@@ -98,7 +98,7 @@ class Charmcraft(Application):
         super()._configure_services(platform, build_for)
         self.services.set_kwargs(
             "package",
-            project_dir=self._work_dir,
+            project_dir=self.project_dir,
             platform=platform,
         )
 

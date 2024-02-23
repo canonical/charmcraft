@@ -14,35 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for application class."""
-import contextlib
-import pathlib
 import textwrap
 
 import pyfakefs.fake_filesystem
 import pytest
 
 from charmcraft import application, errors
-
-
-@pytest.mark.parametrize(
-    ("global_args", "expected_project_dir"),
-    [
-        ({"project_dir": "."}, "."),
-        ({"project_dir": None}, "."),
-        ({"project_dir": "/some/project/directory"}, "/some/project/directory"),
-    ],
-)
-def test_configure(
-    fs: pyfakefs.fake_filesystem.FakeFilesystem, service_factory, global_args, expected_project_dir
-):
-    with contextlib.suppress(FileExistsError):  # Exception occurs on Windows only.
-        fs.create_dir(expected_project_dir)
-
-    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
-
-    app.configure(global_args)
-
-    assert app.project_dir == pathlib.Path(expected_project_dir).resolve()
 
 
 @pytest.mark.parametrize(

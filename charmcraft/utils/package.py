@@ -20,7 +20,7 @@ import string
 import subprocess
 from collections.abc import Collection, Iterable
 
-from charmcraft.errors import MissingDependenciesError
+from charmcraft import errors
 
 PACKAGE_LINE_REGEX = re.compile(r"^([A-Za-z0-9_.-]+)( *[~<>=!]==?)?")
 
@@ -158,4 +158,4 @@ def validate_strict_dependencies(
         extra_packages |= other_names - dependency_names
 
     if extra_packages:
-        raise MissingDependenciesError(extra_packages)
+        raise errors.MissingDependenciesError(extra_packages)

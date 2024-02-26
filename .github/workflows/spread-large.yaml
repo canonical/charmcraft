@@ -1,4 +1,4 @@
-name: Large Manual Spread
+name: Weekly Spread
 on:
   schedule:
     # At 00:00 on Wednesday and Sunday.
@@ -18,7 +18,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
@@ -42,7 +42,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
       - name: Spread k8s operator

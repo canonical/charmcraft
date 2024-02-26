@@ -5,7 +5,9 @@ systems:
 kill-timeout: 30m
 
 environment:
-  CHARM: https://git.launchpad.net/content-cache-charm
+  CHARM/content_cache: https://git.launchpad.net/content-cache-charm
+  CHARM/ceph_fs: https://git.launchpad.net/charm-ceph-fs
+  CHARM/openstack_manila: https://opendev.org/openstack/charm-manila
   JUJU_CONTROLLER: lxd
   JUJU_MODEL: reactive-test
 

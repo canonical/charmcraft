@@ -20,7 +20,9 @@ import ast
 import os
 import pathlib
 import shlex
+import typing
 from collections.abc import Generator
+from typing import final
 
 import yaml
 
@@ -74,22 +76,52 @@ class BaseChecker(metaclass=abc.ABCMeta):
     url: str
     text: str
 
+    exception_result: str
+
     @abc.abstractmethod
     def run(self, basedir: pathlib.Path) -> str:
         """Run this checker."""
         ...
+
+    @final
+    def get_result(self, base_dir: pathlib.Path) -> CheckResult:
+        """Get the result of a single checker."""
+        try:
+            result = self.run(base_dir)
+        except Exception:
+            result = self.exception_result
+        return CheckResult(
+            check_type=self.check_type,
+            name=self.name,
+            url=self.url,
+            text=self.text,
+            result=result,
+        )
+
+    @final
+    def get_ignore_result(self) -> CheckResult:
+        """Get the result presuming the checker is ignored."""
+        return CheckResult(
+            check_type=self.check_type,
+            name=self.name,
+            url=self.url,
+            text="",
+            result=LintResult.IGNORED,
+        )
 
 
 class AttributeChecker(BaseChecker, metaclass=abc.ABCMeta):
     """Base attribute checker."""
 
     check_type = CheckType.ATTRIBUTE
+    exception_result = LintResult.UNKNOWN
 
 
 class Linter(BaseChecker, metaclass=abc.ABCMeta):
     """Base linter class."""
 
     check_type = CheckType.LINT
+    exception_result = LintResult.FATAL
     Result = LintResult
 
 
@@ -116,7 +148,10 @@ class Language(AttributeChecker):
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         python_entrypoint = check_dispatch_with_python_entrypoint(basedir)
-        return self.Result.UNKNOWN if python_entrypoint is None else self.Result.PYTHON
+        if python_entrypoint is None:
+            self.text = "Charm language unknown"
+            return self.Result.UNKNOWN
+        return self.Result.PYTHON
 
 
 class Framework(AttributeChecker):
@@ -252,17 +287,24 @@ class JujuMetadata(Linter):
             metadata = read_metadata_yaml(basedir)
         except yaml.YAMLError:
             self.text = "The metadata.yaml file is not a valid YAML file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
         except Exception:
             self.text = "Cannot read the metadata.yaml file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         # check required attributes
         missing_fields = {"name", "summary", "description"} - set(metadata)
         if missing_fields:
             missing = utils.humanize_list(missing_fields, "and")
             self.text = f"The metadata.yaml file is missing the following attribute(s): {missing}."
-            return self.Result.ERRORS
+            return self.Result.ERROR
+
+        if "series" in metadata:
+            self.text = (
+                "The metadata.yaml file contains the deprecated attribute: series."
+                "This attribute will be rejected starting in Juju 4.0."
+            )
+            return self.Result.WARNING
 
         return self.Result.OK
 
@@ -278,6 +320,7 @@ class JujuActions(Linter):
         """Run the proper verifications."""
         filepath = basedir / const.JUJU_ACTIONS_FILENAME
         if not filepath.exists():
+            self.text = ""
             # it's optional
             return self.Result.OK
 
@@ -285,8 +328,9 @@ class JujuActions(Linter):
             with filepath.open("rt", encoding="utf8") as fh:
                 yaml.safe_load(fh)
         except Exception:
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
+        self.text = "Valid actions.yaml file."
         return self.Result.OK
 
 
@@ -318,17 +362,117 @@ class JujuConfig(Linter):
                 content = yaml.safe_load(fh)
         except Exception:
             self.text = "The config.yaml file is not a valid YAML file."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         options = content.get("options")
         if not isinstance(options, dict):
             self.text = "Error in config.yaml: must have an 'options' dictionary."
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         for value in options.values():
             if "type" not in value:
                 self.text = "Error in config.yaml: items under 'options' must have a 'type' key."
-                return self.Result.ERRORS
+                return self.Result.ERROR
+
+        return self.Result.OK
+
+
+class NamingConventions(Linter):
+    """Check that charm follows naming conventions.
+
+    More information can be found at https://juju.is/docs/sdk/styleguide#heading--naming.
+    """
+
+    name = "naming-conventions"
+    url = "https://juju.is/docs/sdk/styleguide#heading--naming"
+
+    exception_result = LintResult.WARNING
+
+    def __init__(self):
+        self.text = ""
+
+    @staticmethod
+    def check_naming_convention(names: typing.Iterable[str], scope: str) -> str | None:
+        """Check adherence to naming convention.
+
+        :returns: string with warning if present, otherwise None
+        """
+        snake_keys = [key for key in names if "_" in key]
+
+        if snake_keys:
+            hyphen_keys = [key for key in names if "-" in key]
+
+            if hyphen_keys:
+                return (
+                    f"Some {scope} ({', '.join(snake_keys)}) are in snake case, "
+                    f"while others  ({', '.join(hyphen_keys)}) are with hyphens."
+                )
+            else:
+                return (
+                    f"Some {scope} ({', '.join(snake_keys)}) are using "
+                    "snake case naming convention."
+                )
+
+        return None
+
+    @staticmethod
+    def _config_options_check(config_file: pathlib.Path) -> list[str]:
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        warnings = []
+
+        if not config_file.exists():
+            return warnings
+
+        with config_file.open("rt", encoding="utf8") as fh:
+            options = content.get("options", {}) if (content := yaml.safe_load(fh)) else {}
+
+        if check := NamingConventions.check_naming_convention(options.keys(), "config-options"):
+            warnings.append(check)
+
+        return warnings
+
+    @staticmethod
+    def _actions_check(action_file: pathlib.Path) -> list[str]:
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        warnings = []
+
+        if not action_file.exists():
+            return warnings
+
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        with action_file.open("rt", encoding="utf8") as fh:
+            if content := yaml.safe_load(fh):
+                actions_names = list(dict(content).keys())
+            else:
+                actions_names = []
+
+        if check := NamingConventions.check_naming_convention(actions_names, "actions"):
+            warnings.append(check)
+
+        actions_params = [
+            param
+            for action_name in actions_names
+            if isinstance(content[action_name], dict)
+            for param in content.get(action_name, {}).get("params", [])
+        ]
+
+        if check := NamingConventions.check_naming_convention(actions_params, "action params"):
+            warnings.append(check)
+
+        return warnings
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        # Check naming convention on config options
+
+        warnings = NamingConventions._config_options_check(
+            basedir / const.JUJU_CONFIG_FILENAME
+        ) + NamingConventions._actions_check(basedir / const.JUJU_ACTIONS_FILENAME)
+
+        if warnings:
+            all_warning_string = "\n".join(warnings)
+            self.text = f"Naming conventions breaks:\n{all_warning_string}"
+            return self.exception_result
 
         return self.Result.OK
 
@@ -358,15 +502,15 @@ class Entrypoint(Linter):
 
         if not entrypoint.exists():
             self.text = f"Cannot find the entrypoint file: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         if not entrypoint.is_file():
             self.text = f"The entrypoint is not a file: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         if not os.access(entrypoint, os.X_OK):
             self.text = f"The entrypoint file is not executable: {str(entrypoint)!r}"
-            return self.Result.ERRORS
+            return self.Result.ERROR
 
         return self.Result.OK
 
@@ -378,6 +522,7 @@ CHECKERS: list[type[BaseChecker]] = [
     JujuActions,
     JujuConfig,
     JujuMetadata,
+    NamingConventions,
     Framework,
     Entrypoint,
 ]
@@ -423,7 +568,7 @@ def analyze(
                 check_type=checker.check_type,
                 name=checker.name,
                 url=checker.url,
-                text=checker.text,
+                text=checker.text or "n/a",
                 result=result,
             )
         )

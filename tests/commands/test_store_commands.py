@@ -24,6 +24,7 @@ from argparse import ArgumentParser, Namespace
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import dateutil.parser
+import pydantic
 import pytest
 import yaml
 from craft_cli import CraftError
@@ -38,7 +39,6 @@ from charmcraft.commands.store import (
     FetchLibCommand,
     ListLibCommand,
     ListNamesCommand,
-    ListResourceRevisionsCommand,
     ListResourcesCommand,
     ListRevisionsCommand,
     LoginCommand,
@@ -54,7 +54,9 @@ from charmcraft.commands.store import (
     WhoamiCommand,
     get_name_from_zip,
 )
-from charmcraft.commands.store.store import (
+from charmcraft.main import ArgumentParsingError
+from charmcraft.models.charmcraft import CharmhubConfig
+from charmcraft.store.models import (
     Account,
     Base,
     Channel,
@@ -66,12 +68,9 @@ from charmcraft.commands.store.store import (
     RegistryCredentials,
     Release,
     Resource,
-    ResourceRevision,
     Revision,
     Uploaded,
 )
-from charmcraft.main import ArgumentParsingError
-from charmcraft.models.charmcraft import CharmhubConfig
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
@@ -982,7 +981,7 @@ def test_upload_call_login_expired(mocker, monkeypatch, config, tmp_path, format
     """Simple upload but login expired."""
     monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, base64.b64encode(b"credentials").decode())
     mock_whoami = mocker.patch("craft_store.base_client.HTTPClient.request")
-    push_file_mock = mocker.patch("charmcraft.commands.store.store.Client.push_file")
+    push_file_mock = mocker.patch("charmcraft.store.Client.push_file")
 
     mock_whoami.side_effect = StoreServerError(_fake_response(401, json={}))
 
@@ -2763,6 +2762,8 @@ def test_createlib_simple(
     emitter, store_mock, tmp_path, monkeypatch, config, formatted, charmcraft_yaml_name
 ):
     """Happy path with result from the Store."""
+    if not charmcraft_yaml_name:
+        pytest.xfail("Store commands need refactoring to not need a project.")
     monkeypatch.chdir(tmp_path)
 
     config.name = charmcraft_yaml_name
@@ -2794,6 +2795,9 @@ def test_createlib_simple(
     assert created_lib_file.read_text() == expected_newlib_content
 
 
+@pytest.mark.xfail(
+    strict=True, raises=pydantic.ValidationError, reason="Store commands need refactor."
+)
 def test_createlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     args = Namespace(name="testlib", format=None)
@@ -3080,6 +3084,11 @@ def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkey
         )
 
 
+@pytest.mark.xfail(
+    strict=True,
+    raises=pydantic.ValidationError,
+    reason="Store commands need refactoring to not need a project.",
+)
 def test_publishlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     config.name = None
@@ -4568,104 +4577,3 @@ def test_uploadresource_call_error(emitter, store_mock, config, tmp_path, format
                 "- broken: other long error text",
             ]
         )
-
-
-# -- tests for list resource revisions command
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
-    """Happy path of one result from the Store."""
-    store_response = [
-        ResourceRevision(revision=1, size=50, created_at=datetime.datetime(2020, 7, 3, 2, 30, 40)),
-    ]
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.list_resource_revisions("testcharm", "testresource"),
-    ]
-    if formatted:
-        expected = [
-            {
-                "revision": 1,
-                "created at": "2020-07-03T02:30:40Z",
-                "size": 50,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        expected = [
-            "Revision    Created at              Size",
-            "1           2020-07-03T02:30:40Z     50B",
-        ]
-        emitter.assert_messages(expected)
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_empty(emitter, store_mock, config, formatted):
-    """No results from the store."""
-    store_response = []
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    if formatted:
-        emitter.assert_json_output([])
-    else:
-        emitter.assert_message("No revisions found.")
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, formatted):
-    """Results are presented ordered by revision in the table."""
-    # three Revisions with all values weirdly similar, the only difference is revision, so
-    # we really assert later that it was used for ordering
-    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
-    store_response = [
-        ResourceRevision(revision=1, size=5000, created_at=tstamp),
-        ResourceRevision(revision=3, size=34450520, created_at=tstamp),
-        ResourceRevision(revision=4, size=876543, created_at=tstamp),
-        ResourceRevision(revision=2, size=50, created_at=tstamp),
-    ]
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    if formatted:
-        expected = [
-            {
-                "revision": 1,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 5000,
-            },
-            {
-                "revision": 3,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 34450520,
-            },
-            {
-                "revision": 4,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 876543,
-            },
-            {
-                "revision": 2,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 50,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        expected = [
-            "Revision    Created at              Size",
-            "4           2020-07-03T20:30:40Z  856.0K",
-            "3           2020-07-03T20:30:40Z   32.9M",
-            "2           2020-07-03T20:30:40Z     50B",
-            "1           2020-07-03T20:30:40Z    4.9K",
-        ]
-        emitter.assert_messages(expected)

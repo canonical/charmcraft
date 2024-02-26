@@ -97,3 +97,44 @@ jobs:
           BUNDLE_DEFAULT_NAME: gh-ci-charmcraft-bundle
         run: |
           spread google:ubuntu-22.04-64:tests/spread/store/
+  snap-remote-build-tests:
+    runs-on: spread-installed
+    needs: [snap-build]
+
+    steps:
+      - name: Decision to Run
+        id: decisions
+        run: |
+          # Secrets cannot be used in conditionals, so this is our dance:
+          # https://github.com/actions/runner/issues/520
+          if [[ -n "${{ secrets.LAUNCHPAD_CREDENTIALS }}" ]]; then
+            echo "RUN=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "RUN=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - if: steps.decisions.outputs.RUN == 'true'
+        name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+
+      - if: steps.decisions.outputs.RUN == 'true'
+        name: Checkout charmcraft
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: true
+
+      - if: steps.decisions.outputs.RUN == 'true'
+        name: Download snap artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: snap
+
+      - if: steps.decisions.outputs.RUN == 'true'
+        name: Run spread
+        env:
+          LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}
+        run: |
+          spread google:ubuntu-22.04-64:tests/spread/smoketests/remote-build

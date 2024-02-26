@@ -28,7 +28,7 @@ restore: |
 
 execute: |
   cd charm
-  charmcraft remote-build --verbose
+  charmcraft remote-build --verbose --launchpad-accept-public-upload
   test -f charm*.charm
   unzip -l charm*.charm | MATCH "venv/ops/charm.py"
   test ! -d build

@@ -18,7 +18,7 @@
 import datetime
 import os
 import pathlib
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import pydantic
 from craft_cli import CraftError
@@ -44,9 +44,9 @@ class CharmhubConfig(
 ):
     """Definition of Charmhub endpoint configuration."""
 
-    api_url: pydantic.HttpUrl = "https://api.charmhub.io"
-    storage_url: pydantic.HttpUrl = "https://storage.snapcraftcontent.com"
-    registry_url: pydantic.HttpUrl = "https://registry.jujucharms.com"
+    api_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://api.charmhub.io")
+    storage_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://storage.snapcraftcontent.com")
+    registry_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://registry.jujucharms.com")
 
 
 class Base(ModelConfigDefaults):

@@ -40,7 +40,6 @@ import pytest_check
     [
         "pack",
         "clean",
-        "init",
         "version",
         "login",
         "logout",
@@ -61,7 +60,6 @@ import pytest_check
         "list-lib",
         "resources",
         "upload-resource",
-        "analyze",
         "list-extensions",
         "expand-extensions",
     ],

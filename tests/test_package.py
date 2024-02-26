@@ -1185,26 +1185,26 @@ def test_build_arguments_managed_charmcraft_measure(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_build_package_tree_structure(tmp_path, config):
+def test_build_package_tree_structure(new_path, config):
     """The zip file is properly built internally."""
     # the metadata
     metadata_data = {"name": "test-charm-name-from-metadata-yaml"}
-    metadata_file = tmp_path / const.METADATA_FILENAME
+    metadata_file = new_path / const.METADATA_FILENAME
     with metadata_file.open("wt", encoding="ascii") as fh:
         yaml.dump(metadata_data, fh)
 
     # create some dirs and files! a couple of files outside, and the dir we'll zip...
-    file_outside_1 = tmp_path / "file_outside_1"
+    file_outside_1 = new_path / "file_outside_1"
     with file_outside_1.open("wb") as fh:
         fh.write(b"content_out_1")
-    file_outside_2 = tmp_path / "file_outside_2"
+    file_outside_2 = new_path / "file_outside_2"
     with file_outside_2.open("wb") as fh:
         fh.write(b"content_out_2")
-    to_be_zipped_dir = tmp_path / const.BUILD_DIRNAME
+    to_be_zipped_dir = new_path / const.BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
     # ...also outside a dir with a file...
-    dir_outside = tmp_path / "extdir"
+    dir_outside = new_path / "extdir"
     dir_outside.mkdir()
     file_ext = dir_outside / "file_ext"
     with file_ext.open("wb") as fh:
@@ -1285,7 +1285,7 @@ def test_build_package_tree_structure(tmp_path, config):
     ],
 )
 def test_build_package_name(
-    tmp_path,
+    new_path,
     prepare_charmcraft_yaml,
     prepare_metadata_yaml,
     charmcraft_yaml,
@@ -1293,7 +1293,7 @@ def test_build_package_name(
     expected_zipname,
 ):
     """The zip file name comes from the config."""
-    to_be_zipped_dir = tmp_path / const.BUILD_DIRNAME
+    to_be_zipped_dir = new_path / const.BUILD_DIRNAME
     to_be_zipped_dir.mkdir()
 
     prepare_charmcraft_yaml(charmcraft_yaml)
@@ -1307,7 +1307,7 @@ def test_build_package_name(
         }
     )
 
-    config = load(tmp_path)
+    config = load(new_path)
     builder = get_builder(config)
     zipname = builder.handle_package(to_be_zipped_dir, bases_config)
 
@@ -1880,7 +1880,7 @@ def test_launch_shell(emitter):
                     ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
                 )
             ],
-            {"test": pathlib.Path("test_amd64.charm").resolve()},
+            {"test": pathlib.Path("test_amd64.charm")},
             id="one_correct_charm",
         ),
         pytest.param(
@@ -1892,14 +1892,16 @@ def test_launch_shell(emitter):
                     ["pack_cmd", "--project-dir=charms/test"], stdout=mock.ANY, stderr=mock.ANY
                 )
             ],
-            {"test": pathlib.Path("test_amd64.charm").resolve()},
+            {"test": pathlib.Path("test_amd64.charm")},
             id="one_correct_charm",
         ),
     ],
 )
+@pytest.mark.usefixtures("new_path")
 def test_subprocess_pack_charms_success(
     mocker, check, charms, charm_files, command_args, expected_calls, expected
 ):
+    expected = {name: path.resolve() for name, path in expected.items()}
     mock_check_call = mocker.patch("subprocess.check_call")
     mock_check_call.side_effect = lambda *_, **__: [pathlib.Path(f).touch() for f in charm_files]
 

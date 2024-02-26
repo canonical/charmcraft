@@ -34,7 +34,7 @@ from craft_cli import (
 )
 
 from charmcraft import config, const, env, utils
-from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
+from charmcraft.commands import clean, extensions, pack, store, version
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -58,9 +58,7 @@ See https://charmhub.io/publishing for more information.
 # central place and not distributed in several classes/files. Also note that order here is
 # important when listing commands and showing help.
 _basic_commands = [
-    analyze.AnalyzeCommand,
     clean.CleanCommand,
-    init.InitCommand,
     pack.PackCommand,
     version.VersionCommand,
 ]

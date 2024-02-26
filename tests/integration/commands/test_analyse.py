@@ -18,73 +18,32 @@ import json
 import sys
 import zipfile
 from argparse import ArgumentParser, Namespace
-from unittest.mock import ANY, patch
 
 import pytest
 from craft_cli import CraftError
 
 from charmcraft import linters
+from charmcraft.application.commands.analyse import Analyse
 from charmcraft.cmdbase import JSON_FORMAT
-from charmcraft.commands.analyze import AnalyzeCommand
 from charmcraft.models.lint import LintResult
-from charmcraft.utils import useful_filepath
-
-
-def test_options_filepath_type(config):
-    """The filepath parameter implies a set of validations."""
-    cmd = AnalyzeCommand(config)
-    parser = ArgumentParser()
-    cmd.fill_parser(parser)
-    (action,) = (action for action in parser._actions if action.dest == "filepath")
-    assert action.type is useful_filepath
 
 
 def test_options_format_possible_values(config):
     """The format option implies a set of validations."""
-    cmd = AnalyzeCommand(config)
+    cmd = Analyse(config)
     parser = ArgumentParser()
     cmd.fill_parser(parser)
     (action,) = (action for action in parser._actions if action.dest == "format")
     assert action.choices == ["json"]
 
 
-def test_expanded_charm_basic(config, tmp_path, monkeypatch):
-    """Check that the analyze runs on the temp directory with the extracted charm."""
-    # prepare a fake charm file with some specific content just to check it was used properly
-    charm_file = tmp_path / "foobar.charm"
-    with zipfile.ZipFile(str(charm_file), "w") as zf:
-        zf.writestr("fake_file", b"fake content")
-
-    # this is to flag that the fake analyzer was called (otherwise the internal
-    # verifications would be "lost")
-    fake_analyze_called = False
-
-    def fake_analyze(passed_config, passed_basedir, *, override_ignore_config):
-        """Verify that the analyzer was called with the proper content.
-
-        As we cannot check the directory itself (is temporal), we validate by content.
-        """
-        nonlocal fake_analyze_called
-
-        fake_analyze_called = True
-        assert passed_config is config
-        assert (passed_basedir / "fake_file").read_text() == "fake content"
-        assert override_ignore_config is False
-        return []
-
-    monkeypatch.setattr(linters, "analyze", fake_analyze)
-    args = Namespace(filepath=charm_file, force=None, format=None)
-    AnalyzeCommand(config).run(args)
-    assert fake_analyze_called
-
-
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("modebits", [0o777, 0o750, 0o444])
-def test_expanded_charm_permissions(config, tmp_path, monkeypatch, modebits):
+def test_expanded_charm_permissions(config, fake_project_dir, monkeypatch, modebits):
     """Check that the expanded charm keeps original permissions."""
     # prepare a fake charm file with some specific content just to check it was used properly
-    charm_file = tmp_path / "foobar.charm"
-    payload_file = tmp_path / "payload.txt"
+    charm_file = fake_project_dir / "foobar.charm"
+    payload_file = fake_project_dir / "payload.txt"
     payload_file.write_bytes(b"123")
     payload_file.chmod(modebits)
     with zipfile.ZipFile(str(charm_file), "w") as zf:
@@ -98,22 +57,20 @@ def test_expanded_charm_permissions(config, tmp_path, monkeypatch, modebits):
         return []
 
     monkeypatch.setattr(linters, "analyze", fake_analyze)
-    args = Namespace(filepath=charm_file, force=None, format=None)
-    AnalyzeCommand(config).run(args)
+    args = Namespace(filepath=charm_file, force=None, format=None, ignore=None)
+    Analyse(config).run(args)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_corrupt_charm(tmp_path, config):
+def test_corrupt_charm(fake_project_dir, config):
     """There was a problem opening the indicated charm."""
-    charm_file = tmp_path / "foobar.charm"
+    charm_file = fake_project_dir / "foobar.charm"
     charm_file.write_text("this is not a real zip content")
 
-    args = Namespace(filepath=charm_file, force=None, format=None)
+    args = Namespace(filepath=charm_file, force=None, format=None, ignore=None)
     with pytest.raises(CraftError) as cm:
-        AnalyzeCommand(config).run(args)
-    assert str(cm.value) == (
-        f"Cannot open charm file '{charm_file}': BadZipFile('File is not a zip file')."
-    )
+        Analyse(config).run(args)
+    assert str(cm.value) == (f"Cannot open charm file '{charm_file}': File is not a zip file")
 
 
 def create_a_valid_zip(tmp_path):
@@ -124,18 +81,22 @@ def create_a_valid_zip(tmp_path):
     return zip_file
 
 
-def test_integration_linters(tmp_path, emitter, config, monkeypatch):
+def test_integration_linters(fake_project_dir, emitter, config, monkeypatch):
     """Integration test with the real linters.analyze function (as other tests fake it)."""
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None, format=None)
-    AnalyzeCommand(config).run(args)
+    fake_charm = create_a_valid_zip(fake_project_dir)
+    args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
+    Analyse(config).run(args)
 
-    emitter.assert_message("Attributes:")
-    emitter.assert_message("Lint Errors:")
+    emitter.assert_progress(
+        "language: Charm language unknown (https://juju.is/docs/sdk/charmcraft-analyzers-and-linters#heading--language)",
+        permanent=True,
+    )
 
 
 @pytest.mark.parametrize("indicated_format", [None, JSON_FORMAT])
-def test_complete_set_of_results(emitter, config, monkeypatch, tmp_path, indicated_format):
+def test_complete_set_of_results(
+    check, emitter, service_factory, config, monkeypatch, fake_project_dir, indicated_format
+):
     """Show a complete basic case of results."""
     # fake results from the analyzer
     linting_results = [
@@ -190,91 +151,83 @@ def test_complete_set_of_results(emitter, config, monkeypatch, tmp_path, indicat
         ),
     ]
 
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None, format=indicated_format)
-    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    with patch.object(linters, "analyze") as mock_analyze:
-        mock_analyze.return_value = linting_results
-        AnalyzeCommand(config).run(args)
-    mock_analyze.assert_called_with(config, ANY, override_ignore_config=False)
+    fake_charm = create_a_valid_zip(fake_project_dir)
+    args = Namespace(filepath=fake_charm, force=None, format=indicated_format, ignore=None)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
+    Analyse(config).run(args)
 
     if indicated_format is None:
         expected = [
-            "Attributes:",
-            "- check-attribute-04: check-result-04 (url-04)",
-            "- check-attribute-05: ignored (url-05)",
-            "Lint Ignored:",
-            "- check-lint-06 (url-06)",
-            "Lint Warnings:",
-            "- check-lint-01: text-01 (url-01)",
-            "Lint Errors:",
-            "- check-lint-03: text-03 (url-03)",
-            "Lint Fatal:",
-            "- check-lint-07 (url-07)",
-            "Lint OK:",
-            "- check-lint-02: no issues found (url-02)",
+            "check-lint-01: [WARNING] text-01 (url-01)",
+            "check-lint-02: [OK] text-02 (url-02)",
+            "check-lint-03: [ERROR] text-03 (url-03)",
+            "check-attribute-04: [CHECK-RESULT-04] text-04 (url-04)",
+            "check-attribute-05: (url-05) ",
+            "check-lint-06: (url-06) ",
+            "check-lint-07: [FATAL] text-07 (url-07)",
         ]
-        emitter.assert_messages(expected)
+        for line in expected:
+            with check:
+                emitter.assert_progress(line, permanent=True)
     else:
         expected = [
             {
+                "check_type": "lint",
                 "name": "check-lint-01",
-                "type": "lint",
-                "url": "url-01",
                 "result": "warning",
+                "text": "text-01",
+                "url": "url-01",
             },
             {
+                "check_type": "lint",
                 "name": "check-lint-02",
-                "type": "lint",
-                "url": "url-02",
                 "result": "ok",
+                "text": "text-02",
+                "url": "url-02",
             },
             {
+                "check_type": "lint",
                 "name": "check-lint-03",
-                "type": "lint",
-                "url": "url-03",
                 "result": "error",
+                "text": "text-03",
+                "url": "url-03",
             },
             {
+                "check_type": "attribute",
                 "name": "check-attribute-04",
-                "type": "attribute",
-                "url": "url-04",
                 "result": "check-result-04",
+                "text": "text-04",
+                "url": "url-04",
             },
             {
+                "check_type": "attribute",
                 "name": "check-attribute-05",
-                "type": "attribute",
+                "result": "ignored",
+                "text": "text-05",
                 "url": "url-05",
-                "result": "ignored",
             },
             {
+                "check_type": "lint",
                 "name": "check-lint-06",
-                "type": "lint",
-                "url": "url-06",
                 "result": "ignored",
+                "text": "text-06",
+                "url": "url-06",
             },
             {
+                "check_type": "lint",
                 "name": "check-lint-07",
-                "type": "lint",
-                "url": "url-07",
                 "result": "fatal",
+                "text": "text-07",
+                "url": "url-07",
             },
         ]
         text = emitter.assert_message(r"\[.*\]", regex=True)
         assert expected == json.loads(text)
 
 
-def test_force_used_to_override_ignores(emitter, config, monkeypatch, tmp_path):
-    """Show only attribute results (the rest may be ignored)."""
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=True, format=None)
-    with patch.object(linters, "analyze") as mock_analyze:
-        mock_analyze.return_value = []
-        AnalyzeCommand(config).run(args)
-    mock_analyze.assert_called_with(config, ANY, override_ignore_config=True)
-
-
-def test_only_attributes(emitter, config, monkeypatch, tmp_path):
+def test_only_attributes(emitter, service_factory, config, monkeypatch, fake_project_dir):
     """Show only attribute results (the rest may be ignored)."""
     # fake results from the analyzer
     linting_results = [
@@ -287,20 +240,18 @@ def test_only_attributes(emitter, config, monkeypatch, tmp_path):
         ),
     ]
 
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None, format=None)
-    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand(config).run(args)
+    fake_charm = create_a_valid_zip(fake_project_dir)
+    args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
+    retcode = Analyse(config).run(args)
 
-    expected = [
-        "Attributes:",
-        "- check-attribute: check-result (url)",
-    ]
-    emitter.assert_messages(expected)
+    emitter.assert_progress("check-attribute: [CHECK-RESULT] text (url)", permanent=True)
     assert retcode == 0
 
 
-def test_only_warnings(emitter, config, monkeypatch, tmp_path):
+def test_only_warnings(emitter, service_factory, config, monkeypatch, fake_project_dir):
     """Show only warning results (the rest may be ignored)."""
     # fake results from the analyzer
     linting_results = [
@@ -313,20 +264,18 @@ def test_only_warnings(emitter, config, monkeypatch, tmp_path):
         ),
     ]
 
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None, format=None)
-    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand(config).run(args)
+    fake_charm = create_a_valid_zip(fake_project_dir)
+    args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
+    retcode = Analyse(config).run(args)
 
-    expected = [
-        "Lint Warnings:",
-        "- check-lint: text (url)",
-    ]
-    emitter.assert_messages(expected)
+    emitter.assert_progress("check-lint: [WARNING] text (url)", permanent=True)
     assert retcode == 3
 
 
-def test_only_errors(emitter, config, monkeypatch, tmp_path):
+def test_only_errors(emitter, service_factory, config, monkeypatch, fake_project_dir):
     """Show only error results (the rest may be ignored)."""
     # fake results from the analyzer
     linting_results = [
@@ -339,20 +288,18 @@ def test_only_errors(emitter, config, monkeypatch, tmp_path):
         ),
     ]
 
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None, format=None)
-    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand(config).run(args)
+    fake_charm = create_a_valid_zip(fake_project_dir)
+    args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
+    retcode = Analyse(config).run(args)
 
-    expected = [
-        "Lint Errors:",
-        "- check-lint: text (url)",
-    ]
-    emitter.assert_messages(expected)
+    emitter.assert_progress("check-lint: [ERROR] text (url)", permanent=True)
     assert retcode == 2
 
 
-def test_both_errors_and_warnings(emitter, config, monkeypatch, tmp_path):
+def test_both_errors_and_warnings(emitter, service_factory, config, monkeypatch, fake_project_dir):
     """Show error and warnings results."""
     # fake results from the analyzer
     linting_results = [
@@ -372,22 +319,19 @@ def test_both_errors_and_warnings(emitter, config, monkeypatch, tmp_path):
         ),
     ]
 
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None, format=None)
-    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand(config).run(args)
+    fake_charm = create_a_valid_zip(fake_project_dir)
+    args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
+    retcode = Analyse(config).run(args)
 
-    expected = [
-        "Lint Warnings:",
-        "- check-lint-2: text-2 (url-2)",
-        "Lint Errors:",
-        "- check-lint-1: text-1 (url-1)",
-    ]
-    emitter.assert_messages(expected)
+    emitter.assert_progress("check-lint-1: [ERROR] text-1 (url-1)", permanent=True)
+    emitter.assert_progress("check-lint-2: [WARNING] text-2 (url-2)", permanent=True)
     assert retcode == 2
 
 
-def test_only_lint_ok(emitter, config, monkeypatch, tmp_path):
+def test_only_lint_ok(emitter, service_factory, config, monkeypatch, fake_project_dir):
     """Show only lint results that are ok (the rest may be ignored)."""
     # fake results from the analyzer
     linting_results = [
@@ -400,20 +344,18 @@ def test_only_lint_ok(emitter, config, monkeypatch, tmp_path):
         ),
     ]
 
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None, format=None)
-    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand(config).run(args)
+    fake_charm = create_a_valid_zip(fake_project_dir)
+    args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
+    retcode = Analyse(config).run(args)
 
-    expected = [
-        "Lint OK:",
-        "- check-lint: no issues found (url)",
-    ]
-    emitter.assert_messages(expected)
+    emitter.assert_progress("check-lint: [OK] text (url)", permanent=True)
     assert retcode == 0
 
 
-def test_only_fatal(emitter, config, monkeypatch, tmp_path):
+def test_only_fatal(emitter, service_factory, config, monkeypatch, fake_project_dir):
     """Show only fatal lint results (the rest may be ignored)."""
     # fake results from the analyzer
     linting_results = [
@@ -425,15 +367,13 @@ def test_only_fatal(emitter, config, monkeypatch, tmp_path):
             result=LintResult.FATAL,
         ),
     ]
+    monkeypatch.setattr(
+        service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
+    )
 
-    fake_charm = create_a_valid_zip(tmp_path)
-    args = Namespace(filepath=fake_charm, force=None, format=None)
-    monkeypatch.setattr(linters, "analyze", lambda *a, **k: linting_results)
-    retcode = AnalyzeCommand(config).run(args)
+    fake_charm = create_a_valid_zip(fake_project_dir)
+    args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
+    retcode = Analyse(config).run(args)
 
-    expected = [
-        "Lint Fatal:",
-        "- check-lint (url)",
-    ]
-    emitter.assert_messages(expected)
+    emitter.assert_progress("check-lint: [FATAL] text (url)", permanent=True)
     assert retcode == 1

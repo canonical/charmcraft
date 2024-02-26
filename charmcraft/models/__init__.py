@@ -21,7 +21,7 @@ from .charmcraft import Base
 from .lint import CheckResult, CheckType, LintResult, ResultLevel
 from .manifest import Attribute, Manifest
 from .metadata import BundleMetadata, CharmMetadata, CharmMetadataLegacy
-from .project import CharmcraftBuildPlanner, CharmcraftProject, Charm, Bundle
+from .project import CharmcraftBuildPlanner, CharmcraftProject, BasesCharm, PlatformCharm, Charm, Bundle
 
 __all__ = [
     "config",
@@ -34,6 +34,8 @@ __all__ = [
     "Attribute",
     "Manifest",
     "Bundle",
+    "BasesCharm",
+    "PlatformCharm",
     "Charm",
     "CharmcraftBuildPlanner",
     "CharmcraftProject",

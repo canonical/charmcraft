@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for project-related models."""
+import itertools
 import json
 import pathlib
 from textwrap import dedent
@@ -28,6 +29,7 @@ from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
 
+from charmcraft import const
 from charmcraft.models import project
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 
@@ -135,6 +137,31 @@ def test_platform_from_single_base(base):
 )
 def test_platform_from_multiple_bases(bases, expected):
     assert project.CharmPlatform.from_bases(bases) == expected
+
+
+# endregion
+# region Platform tests
+VALID_PLATFORM_ARCHITECTURES = [
+    *(list(x) for x in itertools.combinations(const.CharmArch, 1)), # A single architecture in a list
+    *(list(x) for x in itertools.combinations(const.CharmArch, 2)), # Two architectures in a list
+]
+
+@pytest.mark.parametrize("build_on", VALID_PLATFORM_ARCHITECTURES)
+@pytest.mark.parametrize("build_for", [[arch] for arch in (*const.CharmArch, "all")])
+def test_platform_validation_lists(build_on, build_for):
+    platform = project.Platform.parse_obj({"build-on": build_on, "build-for": build_for})
+
+    assert platform.build_for == build_for
+    assert platform.build_on == build_on
+
+
+@pytest.mark.parametrize("build_on", const.CharmArch)
+@pytest.mark.parametrize("build_for", [*const.CharmArch, "all"])
+def test_platform_validation_strings(build_on, build_for):
+    platform = project.Platform.parse_obj({"build-on": build_on, "build-for": build_for})
+
+    assert platform.build_for == [build_for]
+    assert platform.build_on == [build_on]
 
 
 # endregion
@@ -294,7 +321,7 @@ def test_from_yaml_file_success(
 ):
     expected_dict = simple_charm.marshal()
     expected_dict.update(expected_diff)
-    expected = project.Charm.unmarshal(expected_dict)
+    expected = project.CharmcraftProject.unmarshal(expected_dict)
 
     fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
     if metadata_yaml:
@@ -399,7 +426,7 @@ def test_from_yaml_file_exception(
         ),
     ],
 )
-def test_instantiate_charm_success(values: dict[str, Any], expected_changes: dict[str, Any]):
+def test_instantiate_bases_charm_success(values: dict[str, Any], expected_changes: dict[str, Any]):
     """Various successful instantiations of a charm project."""
     values.update(
         {
@@ -412,7 +439,7 @@ def test_instantiate_charm_success(values: dict[str, Any], expected_changes: dic
     expected = values.copy()
     expected.update(expected_changes)
 
-    actual = project.Charm(**values)
+    actual = project.BasesCharm(**values)
 
     assert actual.marshal() == expected
 
@@ -445,11 +472,11 @@ def test_instantiate_charm_success(values: dict[str, Any], expected_changes: dic
         ),
     ],
 )
-def test_instantiate_charm_error(
+def test_instantiate_bases_charm_error(
     values: dict[str, Any], error_cls: type[Exception], error_match: str
 ):
     with pytest.raises(error_cls, match=error_match):
-        project.Charm(**values)
+        project.BasesCharm(**values)
 
 
 @pytest.mark.parametrize(
@@ -460,7 +487,7 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
     with file_path.open() as f:
         expected_dict = safe_yaml_load(f)
 
-    charm = project.Charm.from_yaml_file(file_path)
+    charm = project.CharmcraftProject.from_yaml_file(file_path)
 
     # The JSON round-trip here is to get rid of any Pydantic constraint objects like AnyHttpUrl
     assert json.loads(json.dumps(charm.marshal())) == expected_dict
@@ -492,13 +519,22 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
                 - field 'bases' required in top-level configuration"""
             ),
         ),
+        (
+            "invalid-base.yaml",
+            dedent(
+                """\
+                Bad invalid-base.yaml content:
+                - Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
+                - Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
+            )
+        )
     ],
 )
 def test_read_charm_from_yaml_file_error(filename, errors):
     file_path = pathlib.Path(__file__).parent / "invalid_charms_yaml" / filename
 
     with pytest.raises(CraftValidationError) as exc:
-        _ = project.Charm.from_yaml_file(file_path)
+        _ = project.BasesCharm.from_yaml_file(file_path)
 
     assert exc.value.args[0] == errors
 

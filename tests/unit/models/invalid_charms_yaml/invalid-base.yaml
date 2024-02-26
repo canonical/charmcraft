@@ -1,0 +1,12 @@
+type: charm
+name: invalid-base
+summary: A charm with a 'bases' key that needs to be 'platforms'
+description: |
+  With Ubuntu 24.04 we're moving to 'platforms' for defining bases.
+
+  This ensures that charms with 24.04 in the base are invalid.
+bases:
+- name: ubuntu
+  channel: '24.04'
+- name: ubuntu
+  channel: devel

@@ -15,6 +15,8 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Constants used in charmcraft."""
+import enum
+from typing import Literal
 
 from craft_providers.bases import BaseName
 
@@ -53,12 +55,23 @@ HOOKS_DIRNAME = "hooks"
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = frozenset(("install", "start", "upgrade-charm"))
 
+BaseStr = Literal[
+    "ubuntu@18.04",
+    "ubuntu@20.04",
+    "ubuntu@22.04",
+    "ubuntu@23.10",
+    "ubuntu@24.04",
+    "centos@7",
+    "almalinux@9",
+]
+
 SUPPORTED_BASES = frozenset(
     (
         BaseName("ubuntu", "18.04"),
         BaseName("ubuntu", "20.04"),
         BaseName("ubuntu", "22.04"),
-        BaseName("ubuntu", "23.04"),
+        BaseName("ubuntu", "23.10"),
+        BaseName("ubuntu", "24.04"),
         BaseName("ubuntu", "devel"),
         BaseName("centos", "7"),
         BaseName("almalinux", "9"),
@@ -77,6 +90,20 @@ SUPPORTED_ARCHITECTURES = frozenset(
         "s390x",
     )
 )
+
+
+class CharmArch(str, enum.Enum):
+    """An architecture for a charm.
+
+    Should have the same values as SUPPORTED_ARCHITECTURES.
+    """
+    amd64 = "amd64"
+    arm64 = "arm64"
+    armhf = "armhf"
+    ppc64el = "ppc64el"
+    riscv64 = "riscv64"
+    s390x = "s390x"
+
 
 # The minimum set of files for a charm to be considered valid
 CHARM_MANDATORY_FILES = frozenset(

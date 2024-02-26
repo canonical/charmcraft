@@ -32,11 +32,12 @@ from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self, TypedDict
 
+from charmcraft import utils
 from charmcraft.const import (
     JUJU_ACTIONS_FILENAME,
     JUJU_CONFIG_FILENAME,
     METADATA_FILENAME,
-    METADATA_YAML_KEYS,
+    METADATA_YAML_KEYS, BaseStr, CharmArch,
 )
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
@@ -46,7 +47,7 @@ from charmcraft.models.charmcraft import (
     AnalysisConfig,
     BasesConfiguration,
     CharmhubConfig,
-    Links,
+    Links, Base,
 )
 from charmcraft.parts import process_part_config
 
@@ -96,6 +97,19 @@ class CharmPlatform(pydantic.ConstrainedStr):
             architectures = "-".join(base.architectures)
             base_strings.append(f"{name}-{version}-{architectures}")
         return cls("_".join(base_strings))
+
+
+class Platform(models.CraftBaseModel):
+    """Project platform definition."""
+
+    build_on: list[CharmArch] = pydantic.Field(min_items=1)
+    build_for: list[CharmArch | Literal["all"]] = pydantic.Field(min_items=1, max_items=1)
+
+    @pydantic.validator("build_on", "build_for", pre=True)
+    def _listify_architectures(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            return [value]
+        return value
 
 
 @dataclasses.dataclass
@@ -322,7 +336,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             return cls.parse_obj(data)
         project_type = data.get("type")
         if project_type == "charm":
-            return Charm.unmarshal(data)
+            if data.get("platforms"):
+                return PlatformCharm.unmarshal(data)
+            return BasesCharm.unmarshal(data)
         if project_type == "bundle":
             return Bundle.unmarshal(data)
         raise ValueError(f"field type cannot be {project_type!r}")
@@ -447,7 +463,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         return process_part_config(item)
 
 
-class Charm(CharmcraftProject):
+class BasesCharm(CharmcraftProject):
     """Model for defining a charm."""
 
     type: Literal["charm"]
@@ -478,11 +494,61 @@ class Charm(CharmcraftProject):
     config: dict[str, Any] | None
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
-    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
+    def _validate_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
         """Expand short-form bases into long-form bases."""
-        if "name" not in base:  # Assume long-form base already.
-            return cast(LongFormBasesDict, base)
-        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+        if "name" in base:  # Assume long-form base already.
+            base = cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+
+        # Ensure we're only allowing legacy bases.
+        for build_base in base["build-on"]:
+            if not cls._check_base_is_legacy(build_base):
+                raise ValueError(f"Base requires 'platforms' definition: {build_base}")
+        for run_base in base["run-on"]:
+            if not cls._check_base_is_legacy(run_base):
+                raise ValueError(f"Base requires 'platforms' definition: {run_base}")
+
+        return base
+
+    @staticmethod
+    def _check_base_is_legacy(base: BaseDict) -> bool:
+        """Check that the given base is a legacy base, usable with 'bases'."""
+        if base["name"] == "ubuntu" and base["channel"] in ("18.04", "20.04", "22.04", "23.10"):
+            return True
+        if base in (dict(name="centos", channel="7"), dict(name="almalinux", channel="9")):
+            return True
+        return False
+
+
+class PlatformCharm(CharmcraftProject):
+    """Model for defining a charm using Platforms."""
+
+    type: Literal["charm"]
+    name: models.ProjectName
+    summary: models.SummaryStr
+    description: str
+
+    base: BaseStr
+    platforms: dict[str, Platform | None]
+
+    parts: dict[str, dict[str, Any]]  # craft-parts parts
+
+    actions: dict[str, Any] | None
+    assumes: list[str | dict[str, list | dict]] | None
+    containers: dict[str, Any] | None
+    devices: dict[str, Any] | None
+    extra_bindings: dict[str, Any] | None
+    peers: dict[str, Any] | None
+    provides: dict[str, Any] | None
+    requires: dict[str, Any] | None
+    resources: dict[str, Any] | None
+    storage: dict[str, Any] | None
+    subordinate: bool | None
+    terms: list[str] | None
+    links: Links | None
+    config: dict[str, Any] | None
+
+
+Charm = BasesCharm | PlatformCharm
 
 
 class Bundle(CharmcraftProject):

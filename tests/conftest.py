@@ -44,7 +44,7 @@ from charmcraft.models.charmcraft import Base, BasesConfiguration
 
 @pytest.fixture()
 def simple_charm():
-    return project.Charm(
+    return project.BasesCharm(
         type="charm",
         name="charmy-mccharmface",
         summary="Charmy!",

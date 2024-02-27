@@ -3,21 +3,22 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
-import unittest
-
 import ops
 import ops.testing
+import pytest
+
 from charm import {{ class_name }}
 
 
-class TestCharm(unittest.TestCase):
-    def setUp(self):
-        self.harness = ops.testing.Harness({{ class_name }})
-        self.addCleanup(self.harness.cleanup)
-        self.harness.begin()
+@pytest.fixture
+def harness():
+    harness = ops.testing.Harness({{ class_name }})
+    harness.begin()
+    yield harness
+    harness.cleanup()
 
-    def test_pebble_ready(self):
-        # Simulate the container coming up and emission of pebble-ready event
-        self.harness.container_pebble_ready("some-container")
-        # Ensure we set an ActiveStatus with no message
-        self.assertEqual(self.harness.model.unit.status, ops.ActiveStatus())
+def test_pebble_ready(harness: ops.testing.Harness[{{ class_name }}]):
+    # Simulate the container coming up and emission of pebble-ready event
+    harness.container_pebble_ready("some-container")
+    # Ensure we set an ActiveStatus with no message
+    assert harness.model.unit.status == ops.ActiveStatus()

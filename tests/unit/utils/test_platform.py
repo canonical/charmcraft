@@ -18,8 +18,16 @@ from unittest.mock import patch
 
 import distro
 import pytest
+from craft_application import errors
+from hypothesis import given, strategies
 
-from charmcraft.utils.platform import OSPlatform, get_host_architecture, get_os_platform
+from charmcraft import const
+from charmcraft.utils.platform import (
+    OSPlatform,
+    get_host_architecture,
+    get_os_platform,
+    validate_architectures,
+)
 
 
 @pytest.mark.parametrize(
@@ -135,3 +143,41 @@ def test_get_host_architecture(platform_arch, deb_arch):
     """Test all platform mappings in addition to unknown."""
     with patch("platform.machine", return_value=platform_arch):
         assert get_host_architecture() == deb_arch
+
+
+@given(strategies.iterables(strategies.sampled_from(sorted(const.SUPPORTED_ARCHITECTURES))))
+def test_validate_architectures_valid_values(architectures):
+    validate_architectures(architectures)
+
+
+@given(strategies.iterables(strategies.just("all")))
+def test_validate_architectures_all_success(architectures):
+    validate_architectures(architectures, allow_all=True)
+
+
+@pytest.mark.parametrize(
+    ("architectures", "message"),
+    [
+        (["brutalist"], "Invalid architecture(s): brutalist"),
+    ],
+)
+@pytest.mark.parametrize(
+    "details",
+    [
+        "Valid architecture values are: 'amd64', 'arm64', 'armhf', 'ppc64el', 'riscv64', and 's390x'"
+    ],
+)
+def test_validate_architectures_error(architectures, message, details):
+    match = r"^Invalid architecture\(s\): "
+    with pytest.raises(errors.CraftValidationError, match=match) as exc_info:
+        validate_architectures(architectures)
+
+    assert exc_info.value.details == details
+
+
+def test_validate_architectures_all_error():
+    with pytest.raises(
+        errors.CraftValidationError,
+        match="If 'all' is defined for architectures, it must be the only architecture.",
+    ):
+        validate_architectures(["all", "amd64"], allow_all=True)

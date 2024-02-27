@@ -15,209 +15,50 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """The Store API handling."""
-import dataclasses
-import datetime
 import os
+import pathlib
 import platform
 import time
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Literal, Optional
+from typing import Any
 
 import craft_store
 from craft_cli import CraftError, emit
 from craft_store import attenuations, endpoints
 from craft_store.errors import CredentialsAlreadyAvailable
+from craft_store.models.resource_revision_model import (
+    CharmResourceRevision,
+)
 from dateutil import parser
 
 from charmcraft import const
-from charmcraft.commands.store.client import AnonymousClient, Client
-
+from charmcraft.store.client import (
+    AnonymousClient,
+    Client,
+)
+from charmcraft.store.models import (
+    Account,
+    Base,
+    Channel,
+    Entity,
+    Error,
+    Library,
+    MacaroonInfo,
+    Package,
+    RegistryCredentials,
+    Release,
+    Resource,
+    Revision,
+    Uploaded,
+)
 
 # helpers to build responses from this layer
-@dataclasses.dataclass(frozen=True)
-class Account:
-    """Charmcraft-specific store account model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    name: str
-    username: str
-    id: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Package:
-    """Charmcraft-specific store package model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    id: str | None
-    name: str
-    type: Literal["charm", "bundle"]
-
-
-@dataclasses.dataclass(frozen=True)
-class MacaroonInfo:
-    """Charmcraft-specific macaroon information model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    account: Account
-    channels: list[str] | None
-    packages: list[Package] | None
-    permissions: list[str]
-
-
-@dataclasses.dataclass(frozen=True)
-class Entity:
-    """Charmcraft-specific store entity model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    entity_type: Literal["charm", "bundle"]
-    name: str
-    private: bool
-    status: str
-    publisher_display_name: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Error:
-    """Charmcraft-specific store error model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    message: str
-    code: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Uploaded:
-    """Charmcraft-specific store upload result model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    ok: bool
-    status: int
-    revision: int
-    errors: list[Error]
 
 
 # XXX Facundo 2020-07-23: Need to do a massive rename to call `revno` to the "revision as
 # the number" inside the "revision as the structure", this gets super confusing in the code with
 # time, and now it's the moment to do it (also in Release below!)
-@dataclasses.dataclass(frozen=True)
-class Base:
-    """Charmcraft-specific store object base model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    architecture: str
-    channel: str
-    name: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Revision:
-    """Charmcraft-specific store name revision model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    revision: int
-    version: Optional
-    created_at: datetime.datetime
-    status: str
-    errors: list[Error]
-    bases: list[Base]
-
-
-@dataclasses.dataclass(frozen=True)
-class Resource:
-    """Charmcraft-specific store name resource model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    name: str
-    optional: bool
-    revision: int
-    resource_type: str
-
-
-@dataclasses.dataclass(frozen=True)
-class ResourceRevision:
-    """Charmcraft-specific store resource revision model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    revision: int
-    created_at: datetime.datetime
-    size: int
-
-
-@dataclasses.dataclass(frozen=True)
-class Release:
-    """Charmcraft-specific store release model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    revision: int
-    channel: str
-    expires_at: datetime.datetime
-    resources: list[Resource]
-    base: Base
-
-
-@dataclasses.dataclass(frozen=True)
-class Channel:
-    """Charmcraft-specific store channel model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    name: str
-    fallback: str
-    track: str
-    risk: str
-    branch: str
-
-
-@dataclasses.dataclass(frozen=True)
-class Library:
-    """Charmcraft-specific store library model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    lib_id: str
-    lib_name: str
-    charm_name: str
-    api: int
-    patch: int
-    content: str | None
-    content_hash: str
-
-
-@dataclasses.dataclass(frozen=True)
-class RegistryCredentials:
-    """Charmcraft-specific store registry credential model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
-
-    image_name: str
-    username: str
-    password: str
 
 
 # those statuses after upload that flag that the review ended (and if it ended successfully or not)
@@ -255,15 +96,6 @@ def _build_revision(item: dict[str, Any]) -> Revision:
     )
 
 
-def _build_resource_revision(item):
-    """Build a Revision from a response item."""
-    return ResourceRevision(
-        revision=item["revision"],
-        created_at=parser.parse(item["created-at"]),
-        size=item["size"],
-    )
-
-
 def _build_library(resp):
     """Build a Library from a response."""
     return Library(
@@ -295,7 +127,7 @@ def _get_hostname() -> str:
     return hostname
 
 
-def _store_client_wrapper(auto_login=True):
+def _store_client_wrapper(auto_login: bool = True) -> Callable[[Callable], Callable]:
     """Decorate method to handle store error and login scenarios."""
 
     def store_client_wrapper_decorator(method):
@@ -499,10 +331,23 @@ class Store:
         return self._upload(endpoint, filepath)
 
     @_store_client_wrapper()
-    def upload_resource(self, charm_name, resource_name, resource_type, filepath):
+    def upload_resource(
+        self,
+        charm_name: str,
+        resource_name: str,
+        resource_type,
+        filepath: pathlib.Path,
+        bases: list[dict[str, Any]] | None = None,
+    ):
         """Upload the content of filepath to the indicated resource."""
+        if bases is None:
+            bases = [{"architectures": ["all"]}]
+        extra_fields = {
+            "type": resource_type,
+            "bases": bases,
+        }
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/revisions"
-        return self._upload(endpoint, filepath, extra_fields={"type": resource_type})
+        return self._upload(endpoint, filepath, extra_fields=extra_fields)
 
     @_store_client_wrapper()
     def list_revisions(self, name):
@@ -626,11 +471,11 @@ class Store:
         return [_build_resource(item) for item in response["resources"]]
 
     @_store_client_wrapper()
-    def list_resource_revisions(self, charm_name, resource_name):
+    def list_resource_revisions(
+        self, charm_name: str, resource_name: str
+    ) -> list[CharmResourceRevision]:
         """Return revisions for the indicated charm resource."""
-        endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/revisions"
-        response = self._client.request_urlpath_json("GET", endpoint)
-        return [_build_resource_revision(item) for item in response["revisions"]]
+        return self._client.list_resource_revisions(charm_name, resource_name)
 
     @_store_client_wrapper()
     def get_oci_registry_credentials(self, charm_name, resource_name):

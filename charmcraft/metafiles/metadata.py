@@ -28,7 +28,7 @@ from craft_cli import CraftError, emit
 
 from charmcraft import const
 from charmcraft.format import format_pydantic_errors
-from charmcraft.models.metadata import BundleMetadataLegacy, CharmMetadataLegacy
+from charmcraft.models.metadata import BundleMetadata, CharmMetadataLegacy
 
 if TYPE_CHECKING:
     from charmcraft.models.charmcraft import CharmcraftConfig
@@ -80,7 +80,7 @@ def parse_charm_metadata_yaml(
         raise
 
 
-def parse_bundle_metadata_yaml(charm_dir: pathlib.Path) -> BundleMetadataLegacy:
+def parse_bundle_metadata_yaml(charm_dir: pathlib.Path) -> BundleMetadata:
     """Parse project's legacy metadata.yaml that used for bundles.
 
     :returns: a BundleMetadataLegacy object.
@@ -95,7 +95,7 @@ def parse_bundle_metadata_yaml(charm_dir: pathlib.Path) -> BundleMetadataLegacy:
         raise CraftError(f"The {charm_dir / const.METADATA_FILENAME} file is not valid YAML.")
 
     emit.debug("Validating metadata keys")
-    return BundleMetadataLegacy.unmarshal(metadata)
+    return BundleMetadata.unmarshal(metadata)
 
 
 def create_metadata_yaml(

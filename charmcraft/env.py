@@ -15,8 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft environment utilities."""
-
-
+import dataclasses
 import distutils.util
 import os
 import pathlib
@@ -83,5 +82,25 @@ def is_charmcraft_running_in_developer_mode():
 
 def is_charmcraft_running_in_managed_mode():
     """Check if charmcraft is running in a managed environment."""
-    managed_flag = os.getenv(const.MANAGED_MODE_ENV_VAR, "n")
+    managed_flag = os.getenv(const.MANAGED_MODE_ENV_VAR, os.getenv("CRAFT_MANAGED_MODE", "n"))
     return distutils.util.strtobool(managed_flag) == 1
+
+
+@dataclasses.dataclass(frozen=True)
+class CharmhubConfig:
+    """Definition of Charmhub endpoint configuration."""
+
+    api_url: str = "https://api.charmhub.io"
+    storage_url: str = "https://storage.snapcraftcontent.com"
+    registry_url: str = "https://registry.jujucharms.com"
+
+
+DEFAULT_CHARMHUB_CONFIG = CharmhubConfig()
+
+
+def get_store_config() -> CharmhubConfig:
+    """Get the appropriate configuration for the store."""
+    api_url = os.getenv(const.STORE_API_ENV_VAR, DEFAULT_CHARMHUB_CONFIG.api_url)
+    storage_url = os.getenv(const.STORE_STORAGE_ENV_VAR, DEFAULT_CHARMHUB_CONFIG.storage_url)
+    registry_url = os.getenv(const.STORE_REGISTRY_ENV_VAR, DEFAULT_CHARMHUB_CONFIG.registry_url)
+    return CharmhubConfig(api_url=api_url, storage_url=storage_url, registry_url=registry_url)

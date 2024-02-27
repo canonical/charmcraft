@@ -33,8 +33,8 @@ from craft_cli import (
     emit,
 )
 
-from charmcraft import __version__, config, const, env, utils
-from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
+from charmcraft import config, const, env, utils
+from charmcraft.commands import clean, extensions, pack, store, version
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -58,10 +58,8 @@ See https://charmhub.io/publishing for more information.
 # central place and not distributed in several classes/files. Also note that order here is
 # important when listing commands and showing help.
 _basic_commands = [
-    analyze.AnalyzeCommand,
     clean.CleanCommand,
     pack.PackCommand,
-    init.InitCommand,
     version.VersionCommand,
 ]
 _charmhub_commands = [
@@ -90,7 +88,6 @@ _charmhub_commands = [
     # resources support
     store.ListResourcesCommand,
     store.UploadResourceCommand,
-    store.ListResourceRevisionsCommand,
 ]
 _extensions_commands = [
     extensions.ExtensionsCommand,
@@ -140,22 +137,9 @@ def _emit_error(error, cause=None):
     emit.error(error)
 
 
-def main(argv=None):
+def main(argv):
     """Provide the main entry point."""
-    if env.is_charmcraft_running_in_managed_mode():
-        logpath = env.get_managed_environment_log_path()
-    else:
-        logpath = None
-
-    emit.init(
-        EmitterMode.BRIEF,
-        "charmcraft",
-        f"Starting charmcraft version {__version__}",
-        log_filepath=logpath,
-    )
-
-    if argv is None:
-        argv = sys.argv
+    emit.debug("Starting classic fallback.")
 
     extra_global_options = [
         GlobalArgument(
@@ -219,4 +203,15 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    if env.is_charmcraft_running_in_managed_mode():
+        logpath = env.get_managed_environment_log_path()
+    else:
+        logpath = None
+
+    emit.init(
+        EmitterMode.BRIEF,
+        "charmcraft",
+        "Starting legacy charmcraft entrypoint",
+        log_filepath=logpath,
+    )
     sys.exit(main(sys.argv))

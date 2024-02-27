@@ -13,20 +13,14 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
 """Expose needed names at main package level."""
 
-from importlib.metadata import version, PackageNotFoundError
-import os
+try:
+    from ._version import __version__
+except ImportError:  # pragma: no cover
+    from importlib.metadata import version, PackageNotFoundError
 
-
-def _get_version() -> str:
-    if os.getenv("SNAP_NAME") == "charmcraft":
-        return os.getenv("SNAP_VERSION", "")
     try:
-        return version("charmcraft")
+        __version__ = version("craft-archives")
     except PackageNotFoundError:
-        return "devel"
-
-
-__version__ = _get_version()
+        __version__ = "dev"

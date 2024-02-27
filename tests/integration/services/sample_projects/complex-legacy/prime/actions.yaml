@@ -1,0 +1,24 @@
+snapshot:
+  additionalProperties: false
+  description: Take a snapshot of the database.
+  params:
+    compression:
+      description: The type of compression to use.
+      properties:
+        kind:
+          enum:
+          - gzip
+          - bzip2
+          - xz
+          type: string
+        quality:
+          description: Compression quality
+          maximum: 9
+          minimum: 0
+          type: integer
+      type: object
+    filename:
+      description: The name of the snapshot file.
+      type: string
+  required:
+  - my-favourite-photo.tiff

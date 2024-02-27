@@ -15,40 +15,60 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft Juju Config pydantic model."""
-
+from typing import Annotated, Literal
 
 import pydantic
 
 from charmcraft.models.basic import ModelConfigDefaults
 
 
+class _BaseJujuOption(ModelConfigDefaults, frozen=True):
+    """A Juju option field. Do not use (use the child classes below)."""
+
+    type: str
+    description: str | None = None
+    default: str | int | float | bool | None = None
+
+
+class JujuStringOption(_BaseJujuOption, frozen=True):
+    """A Juju option field containing a string."""
+
+    type: Literal["string"]
+    default: str | None = None
+
+
+class JujuIntOption(_BaseJujuOption, frozen=True):
+    """A Juju option field containing an integer."""
+
+    type: Literal["int"]
+    default: pydantic.StrictInt | None = None
+
+
+class JujuFloatOption(_BaseJujuOption, frozen=True):
+    """A Juju option field containing a floating-point number."""
+
+    type: Literal["float"]
+    default: float | None = None
+
+
+class JujuBooleanOption(_BaseJujuOption, frozen=True):
+    """A Juju option field containing a boolean value."""
+
+    type: Literal["boolean"]
+    default: bool | None = None
+
+
+JujuOption = Annotated[
+    JujuStringOption | JujuIntOption | JujuFloatOption | JujuBooleanOption,
+    pydantic.Field(discriminator="type"),
+]
+
+
 class JujuConfig(ModelConfigDefaults):
     """Juju configs for charms.
 
     See also: https://juju.is/docs/sdk/config
+    and: https://juju.is/docs/sdk/config-yaml
     """
 
-    options: dict[str, dict] | None
-
-    @pydantic.validator("options", pre=True)
-    def validate_actions(cls, options):
-        """Verify options section."""
-        for name, option in options.items():
-            if not isinstance(option, dict):
-                raise ValueError(f"'{name}' is not a dictionary")
-
-            option_keys = set(option.keys())
-            if not option_keys.issubset({"description", "type", "default"}):
-                invalid_keys = option_keys - {"description", "type", "default"}
-                raise ValueError(f"'{name}' has an invalid key(s): {invalid_keys}")
-
-            if "type" not in option:
-                raise ValueError(f"'{name}' is missing a type")
-
-            if option["type"] not in ["string", "int", "float", "boolean"]:
-                raise ValueError(
-                    f"'{option}' has an invalid type '{option['type']}', "
-                    "must be one of: string, int, float, boolean"
-                )
-
-        return options
+    options: dict[str, JujuOption] | None

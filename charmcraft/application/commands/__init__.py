@@ -68,7 +68,7 @@ from charmcraft.application.commands.version import Version
 def fill_command_groups(app: craft_application.Application) -> None:
     """Fill in all the command groups for Charmcraft."""
     app.add_command_group("Basic", [InitCommand])
-    app.add_command_group("Lifecycle", get_lifecycle_commands())
+    app.add_command_group("Lifecycle", [*get_lifecycle_commands(), RemoteBuild])
     app.add_command_group(
         "Store (account)",
         [
@@ -118,7 +118,6 @@ def fill_command_groups(app: craft_application.Application) -> None:
         [
             Analyse,
             Analyze,
-            RemoteBuild,
             Version,
         ],
     )

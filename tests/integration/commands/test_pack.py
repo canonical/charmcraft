@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for packing."""
+import sys
 import textwrap
 import zipfile
 
@@ -22,6 +23,9 @@ import pytest
 from charmcraft.application import main
 
 
+@pytest.mark.xfail(
+    sys.platform == "win32", reason="https://github.com/canonical/charmcraft/issues/1552"
+)
 @pytest.mark.parametrize(
     "bundle_yaml",
     [

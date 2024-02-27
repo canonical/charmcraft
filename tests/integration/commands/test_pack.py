@@ -44,7 +44,7 @@ def test_build_basic_bundle(monkeypatch, capsys, new_path, bundle_yaml):
         stdout, stderr = capsys.readouterr()
         raise ValueError(stdout, stderr)
 
-    with zipfile.ZipFile(new_path / "bundle.zip") as bundle_zip:
+    with zipfile.ZipFile("bundle.zip") as bundle_zip:
         actual_bundle_yaml = bundle_zip.read("bundle.yaml").decode()
 
     assert actual_bundle_yaml == bundle_yaml

@@ -26,7 +26,7 @@ def test_pack_run_managed_bundle_by_os(monkeypatch, new_path):
 
     pack = lifecycle.PackCommand(None)
 
-    result = pack.run_managed(argparse.Namespace())
+    result = pack.run_managed(argparse.Namespace(destructive_mode=False))
 
     if sys.platform in ("win32",):  # non-posix platforms
         assert result, "Didn't ask for managed mode on non-posix platform"

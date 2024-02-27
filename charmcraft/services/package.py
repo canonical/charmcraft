@@ -34,7 +34,7 @@ from craft_providers import bases
 import charmcraft
 from charmcraft import const, errors, models, utils
 from charmcraft.models import lint
-from charmcraft.models.manifest import Manifest, Attribute
+from charmcraft.models.manifest import Attribute, Manifest
 from charmcraft.models.metadata import BundleMetadata, CharmMetadata
 from charmcraft.models.project import Bundle, Charm, CharmcraftProject
 
@@ -183,7 +183,7 @@ class PackageService(services.PackageService):
             charmcraft_started_at=self._project.started_at.isoformat(),
             analysis={"attributes": attributes},
             image_info=image_info,
-            bases=bases
+            bases=bases,
         )
 
     def write_metadata(self, path: pathlib.Path) -> None:

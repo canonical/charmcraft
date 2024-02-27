@@ -88,6 +88,7 @@ def test_get_charm_path(fake_path, package_service, bases, expected_name):
 
     assert charm_path == fake_prime_dir / expected_name
 
+
 @pytest.mark.parametrize(
     ("lint", "expected"),
     [

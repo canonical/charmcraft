@@ -23,7 +23,8 @@ from typing import Any
 
 import craft_cli
 from craft_application import Application, AppMetadata, util
-from craft_parts import plugins
+from craft_parts.plugins import plugins
+from overrides import override
 
 from charmcraft import const, errors, extensions, models, services
 from charmcraft.application import commands
@@ -118,6 +119,10 @@ class Charmcraft(Application):
         self._dispatcher = super()._get_dispatcher()
         return self._dispatcher
 
+    @override
+    def _get_app_plugins(self) -> dict[str, plugins.PluginType]:
+        return {"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin}
+
     def run_managed(self, platform: str | None, build_for: str | None) -> None:
         """Run charmcraft in managed mode.
 
@@ -144,8 +149,6 @@ class Charmcraft(Application):
 
 def main() -> int:
     """Run craft-application based charmcraft with classic fallback."""
-    plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
-
     charmcraft_services = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     app = Charmcraft(app=APP_METADATA, services=charmcraft_services)

@@ -387,7 +387,10 @@ class PackCommand(PrimeCommand):
         commands do.
         """
         charmcraft_yaml = utils.load_yaml(pathlib.Path("charmcraft.yaml"))
-        if charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
+        # Always use a runner on non-posix platforms.
+        # Craft-parts is not designed to work on non-posix platforms, and most
+        # notably here, the bundle plugin doesn't work on Windows.
+        if os.name == "posix" and charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
             return False
         return super().run_managed(parsed_args)
 

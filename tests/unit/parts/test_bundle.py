@@ -39,7 +39,7 @@ def test_bundleplugin_get_build_commands(bundle_plugin, tmp_path):
     if sys.platform == "linux":
         assert bundle_plugin.get_build_commands() == [
             f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
-            f'cp --archive --link --no-dereference * "{str(tmp_path)}/parts/foo/install"',
+            f'cp --archive --link --no-dereference {tmp_path}/parts/foo/build/* "{str(tmp_path)}/parts/foo/install"',
         ]
     else:
         assert bundle_plugin.get_build_commands() == [

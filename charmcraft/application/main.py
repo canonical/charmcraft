@@ -25,7 +25,7 @@ import craft_cli
 from craft_application import Application, AppMetadata, util
 from craft_parts import plugins
 
-from charmcraft import const, errors, models, services
+from charmcraft import const, errors, extensions, models, services
 from charmcraft.application import commands
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
@@ -66,6 +66,12 @@ class Charmcraft(Application):
         self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
     ) -> dict[str, Any]:
         yaml_data = yaml_data.copy()
+
+        # Default extensions
+        if yaml_data.get("type") == "bundle":
+            yaml_data.setdefault("extensions", []).append("bundle")
+
+        yaml_data = extensions.apply_extensions(self.project_dir, yaml_data)
 
         metadata_path = pathlib.Path(self.project_dir / "metadata.yaml")
         if metadata_path.exists():

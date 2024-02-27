@@ -17,6 +17,9 @@
 """Service class for packing."""
 from __future__ import annotations
 
+import itertools
+import json
+import os
 import pathlib
 import shutil
 from collections.abc import Iterable
@@ -28,8 +31,10 @@ from craft_application import services
 from craft_cli import emit
 from craft_providers import bases
 
-from charmcraft import errors, models, utils
-from charmcraft.models.manifest import Manifest
+import charmcraft
+from charmcraft import const, errors, models, utils
+from charmcraft.models import lint
+from charmcraft.models.manifest import Manifest, Attribute
 from charmcraft.models.metadata import BundleMetadata, CharmMetadata
 from charmcraft.models.project import Bundle, Charm, CharmcraftProject
 
@@ -154,13 +159,40 @@ class PackageService(services.PackageService):
         with dest_path.open("wt+") as dest_file:
             yaml.safe_dump(model, dest_file)
 
+    def get_manifest(self, lint_results: Iterable[lint.CheckResult]) -> Manifest:
+        """Get the manifest for this charm."""
+        project = cast(Charm, self._project)
+
+        attributes = [
+            Attribute(name=result.name, result=result.result)
+            for result in lint_results
+            if result.check_type == lint.CheckType.ATTRIBUTE
+        ]
+
+        if image_info := os.getenv(const.IMAGE_INFO_ENV_VAR):
+            try:
+                image_info = json.loads(image_info)
+            except json.decoder.JSONDecodeError as exc:
+                msg = f"Failed to parse the content of {const.IMAGE_INFO_ENV_VAR} environment variable"
+                raise errors.CraftError(msg) from exc
+
+        bases = list(itertools.chain.from_iterable(base.run_on for base in project.bases))
+
+        return Manifest(
+            charmcraft_version=charmcraft.__version__,
+            charmcraft_started_at=self._project.started_at.isoformat(),
+            analysis={"attributes": attributes},
+            image_info=image_info,
+            bases=bases
+        )
+
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write additional charm metadata.
 
         :param path: The path to the prime directory.
         """
         if isinstance(self._project, Charm):
-            if self._project.analysis is not None:
+            if self._project.analysis:
                 ignore_checkers = {
                     *self._project.analysis.ignore.linters,
                     *self._project.analysis.ignore.attributes,
@@ -170,7 +202,7 @@ class PackageService(services.PackageService):
             lint_results = self._services.analysis.lint_directory(
                 self._services.lifecycle.prime_dir, ignore=ignore_checkers
             )
-            manifest = Manifest.from_charm_and_lint(self._project, lint_results)
+            manifest = self.get_manifest(lint_results)
             # Converting the manifest to a dictionary here is fairly fragile.
             # We need to include unset/default values in order to ensure that the
             # architecture is included on each base in the manifest, even when the

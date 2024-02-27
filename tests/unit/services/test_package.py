@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for package service."""
+import datetime
 import sys
 import zipfile
 
@@ -24,6 +25,14 @@ from charmcraft import models, services
 from charmcraft.application.main import APP_METADATA
 
 SIMPLE_BUILD_BASE = models.charmcraft.Base(name="ubuntu", channel="22.04", architectures=["arm64"])
+SIMPLE_MANIFEST = models.Manifest(
+    charmcraft_started_at="1970-01-01T00:00:00+00:00",
+    bases=[models.Base(name="ubuntu", channel="22.04", architectures=["arm64"])],
+)
+MANIFEST_WITH_ATTRIBUTE = models.Manifest(
+    **SIMPLE_MANIFEST.marshal(),
+    analysis={"attributes": [models.Attribute(name="boop", result="success")]},
+)
 
 
 @pytest.fixture()
@@ -78,6 +87,22 @@ def test_get_charm_path(fake_path, package_service, bases, expected_name):
     charm_path = package_service.get_charm_path(fake_prime_dir)
 
     assert charm_path == fake_prime_dir / expected_name
+
+@pytest.mark.parametrize(
+    ("lint", "expected"),
+    [
+        ([], SIMPLE_MANIFEST),
+        ([models.CheckResult("lint", "lint", "lint", models.CheckType.LINT, "")], SIMPLE_MANIFEST),
+        (
+            [models.CheckResult("boop", "success", "", models.CheckType.ATTRIBUTE, "")],
+            MANIFEST_WITH_ATTRIBUTE,
+        ),
+    ],
+)
+def test_get_manifest(package_service, simple_charm, lint, expected):
+    simple_charm._started_at = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+
+    assert package_service.get_manifest(lint) == expected
 
 
 def test_do_not_overwrite_metadata_yaml(

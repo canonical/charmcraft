@@ -27,6 +27,7 @@ from craft_parts import plugins
 
 from charmcraft import const, env, errors, models, services
 from charmcraft.application import commands
+from charmcraft.extensions import apply_extensions
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
 from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
@@ -99,7 +100,7 @@ class Charmcraft(Application):
             for field in const.METADATA_YAML_MIGRATE_FIELDS:
                 yaml_data.setdefault(field, metadata_yaml.get(field))
 
-        return yaml_data
+        return apply_extensions(self._work_dir, yaml_data)
 
     def _configure_services(self, platform: str | None, build_for: str | None) -> None:
         self.services.set_kwargs(

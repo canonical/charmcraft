@@ -44,7 +44,7 @@ def test_bundleplugin_get_build_commands(bundle_plugin, tmp_path):
     else:
         assert bundle_plugin.get_build_commands() == [
             f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
-            f'cp -R -p -P * "{str(tmp_path)}/parts/foo/install"',
+            f'cp -R -p -P {tmp_path}/parts/foo/build/* "{str(tmp_path)}/parts/foo/install"',
         ]
 
 

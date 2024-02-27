@@ -28,17 +28,21 @@ from charmcraft.application import main
         textwrap.dedent(
             """\
             name: my-bundle
-        """
+            """
         )
     ],
 )
-def test_build_basic_bundle(monkeypatch, new_path, bundle_yaml):
+def test_build_basic_bundle(monkeypatch, capsys, new_path, bundle_yaml):
     (new_path / "charmcraft.yaml").write_text("type: bundle")
     (new_path / "bundle.yaml").write_text(bundle_yaml)
 
     monkeypatch.setattr("sys.argv", ["charmcraft", "pack", f"--project-dir={new_path}"])
 
-    assert main() == 0
+    exit_code = main()
+
+    if exit_code != 0:
+        stdout, stderr = capsys.readouterr()
+        raise ValueError(stdout, stderr)
 
     with zipfile.ZipFile(new_path / "bundle.zip") as bundle_zip:
         actual_bundle_yaml = bundle_zip.read("bundle.yaml").decode()

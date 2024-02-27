@@ -19,6 +19,7 @@ import json
 import pathlib
 from textwrap import dedent
 from typing import Any
+from unittest import mock
 
 import pydantic
 import pyfakefs.fake_filesystem
@@ -29,7 +30,7 @@ from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
 
-from charmcraft import const
+from charmcraft import const, utils
 from charmcraft.models import project
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 
@@ -142,9 +143,12 @@ def test_platform_from_multiple_bases(bases, expected):
 # endregion
 # region Platform tests
 VALID_PLATFORM_ARCHITECTURES = [
-    *(list(x) for x in itertools.combinations(const.CharmArch, 1)), # A single architecture in a list
-    *(list(x) for x in itertools.combinations(const.CharmArch, 2)), # Two architectures in a list
+    *(
+        list(x) for x in itertools.combinations(const.CharmArch, 1)
+    ),  # A single architecture in a list
+    *(list(x) for x in itertools.combinations(const.CharmArch, 2)),  # Two architectures in a list
 ]
+
 
 @pytest.mark.parametrize("build_on", VALID_PLATFORM_ARCHITECTURES)
 @pytest.mark.parametrize("build_for", [[arch] for arch in (*const.CharmArch, "all")])
@@ -237,6 +241,161 @@ def test_build_info_from_build_on_run_on_multi_arch(run_on, expected):
 )
 def test_build_info_generator(given, expected):
     assert list(project.CharmBuildInfo.gen_from_bases_configurations(*given)) == expected
+
+
+# endregion
+# region Build planners
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        pytest.param(
+            {"type": "bundle"},
+            [
+                project.models.BuildInfo(
+                    platform=utils.get_host_architecture(),
+                    build_on=utils.get_host_architecture(),
+                    build_for=utils.get_host_architecture(),
+                    base=bases.BaseName(name=utils.get_os_platform().system, version=utils.get_os_platform().release)
+                )
+            ],
+            id="bundle"
+        ),
+        pytest.param(
+            {"base": "ubuntu@24.04", "platforms": {"amd64": None}},
+            [
+                project.models.BuildInfo(
+                    platform="amd64",
+                    build_on="amd64",
+                    build_for="amd64",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                )
+            ],
+            id="simple-platforms"
+        ),
+        pytest.param(
+            {
+                "base": "ubuntu@24.04",
+                "platforms": {
+                    "fancy": {"build-on": ["amd64", "arm64", "riscv64"], "build-for": ["all"]},
+                    "crossy": {"build-on": "s390x", "build-for": "ppc64el"},
+                    "amd64": None,
+                    "arm64": None,
+                    "riscv64": None
+                },
+            },
+            [
+                project.models.BuildInfo(
+                    platform="fancy",
+                    build_on="amd64",
+                    build_for="all",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="fancy",
+                    build_on="arm64",
+                    build_for="all",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="fancy",
+                    build_on="riscv64",
+                    build_for="all",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="crossy",
+                    build_on="s390x",
+                    build_for="ppc64el",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="amd64",
+                    build_on="amd64",
+                    build_for="amd64",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="arm64",
+                    build_on="arm64",
+                    build_for="arm64",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="riscv64",
+                    build_on="riscv64",
+                    build_for="riscv64",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                ),
+            ],
+            id="complex-platforms"
+        ),
+        pytest.param(
+            {"bases": [{"name": "ubuntu", "channel": "22.04"}]},
+            [
+                project.CharmBuildInfo(
+                    platform=f"ubuntu-22.04-{utils.get_host_architecture()}",
+                    build_on=utils.get_host_architecture(),
+                    build_for=utils.get_host_architecture(),
+                    build_for_bases=[project.charmcraft.Base(name="ubuntu", channel="22.04")],
+                    build_on_index=0,
+                    base=bases.BaseName("ubuntu", "22.04"),
+                    bases_index=0
+                ),
+            ],
+            id="basic-bases",
+        ),
+        pytest.param(
+            {"bases": [{"build-on": [BASE_WITH_ONE_ARCH], "run-on": [BASE_WITH_ONE_ARCH]}]},
+            [
+                project.CharmBuildInfo(
+                    platform="arch-1.0-amd64",
+                    build_on="amd64",
+                    build_for="amd64",
+                    build_for_bases=[BASE_WITH_ONE_ARCH],
+                    build_on_index=0,
+                    base=bases.BaseName("arch", "1.0"),
+                    bases_index=0,
+                ),
+            ],
+            id="arch-base"
+        ),
+    ],
+)
+def test_build_planner_correct(data, expected):
+    planner = project.CharmcraftBuildPlanner.parse_obj(data)
+
+    assert planner.get_build_plan() == expected
+
+
+@pytest.mark.parametrize("base", ["ubuntu@20.04", "ubuntu@22.04", "ubuntu@24.04"])
+@pytest.mark.parametrize(
+    ("build_base", "build_plan_basename"),
+    [
+        ("ubuntu@20.04", bases.BaseName("ubuntu", "20.04")),
+        ("ubuntu@22.04", bases.BaseName("ubuntu", "22.04")),
+        ("ubuntu@24.04", bases.BaseName("ubuntu", "24.04")),
+        ("almalinux@9", bases.BaseName("almalinux", "9")),
+    ]
+)
+@pytest.mark.parametrize(
+    "platforms",
+    [
+        {"amd64": None},
+        {"amd64": None, "fancy": {"build-on": ["amd64", "riscv64"], "build-for": ["all"]}},
+    ],
+)
+def test_build_planner_platforms_combinations(base, build_base, build_plan_basename, platforms):
+    """Test that we're able to create a valid platform for each of these combinations."""
+    planner = project.CharmcraftBuildPlanner(
+        base=base,
+        build_base=build_base,
+        platforms=platforms,
+    )
+    plan = planner.get_build_plan()
+
+    for build_info in plan:
+        pytest_check.equal(build_info.base, build_plan_basename)
+        pytest_check.is_in(build_info.platform, platforms.keys())
 
 
 # endregion
@@ -526,8 +685,8 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
                 Bad invalid-base.yaml content:
                 - Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
                 - Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
-            )
-        )
+            ),
+        ),
     ],
 )
 def test_read_charm_from_yaml_file_error(filename, errors):
@@ -537,6 +696,25 @@ def test_read_charm_from_yaml_file_error(filename, errors):
         _ = project.BasesCharm.from_yaml_file(file_path)
 
     assert exc.value.args[0] == errors
+
+
+@pytest.mark.parametrize(
+    ("base", "expected"),
+    [
+        ({"name": "ubuntu", "channel": "18.04"}, True),
+        ({"name": "ubuntu", "channel": "20.04"}, True),
+        ({"name": "ubuntu", "channel": "22.04"}, True),
+        ({"name": "ubuntu", "channel": "23.04"}, True),
+        ({"name": "ubuntu", "channel": "23.10"}, True),
+        ({"name": "ubuntu", "channel": "24.04"}, False),
+        ({"name": "ubuntu", "channel": "24.10"}, False),
+        ({"name": "ubuntu", "channel": "25.04"}, False),
+        ({"name": "centos", "channel": "7"}, True),
+        ({"name": "almalinux", "channel": "9"}, True),
+    ],
+)
+def test_check_legacy_bases(base, expected):
+    assert project.BasesCharm._check_base_is_legacy(base) == expected
 
 
 # endregion

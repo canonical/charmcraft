@@ -32,12 +32,14 @@ from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self, TypedDict
 
-from charmcraft import utils
+from charmcraft import const
 from charmcraft.const import (
     JUJU_ACTIONS_FILENAME,
     JUJU_CONFIG_FILENAME,
     METADATA_FILENAME,
-    METADATA_YAML_KEYS, BaseStr, CharmArch,
+    METADATA_YAML_KEYS,
+    BaseStr,
+    CharmArch,
 )
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
@@ -47,7 +49,7 @@ from charmcraft.models.charmcraft import (
     AnalysisConfig,
     BasesConfiguration,
     CharmhubConfig,
-    Links, Base,
+    Links,
 )
 from charmcraft.parts import process_part_config
 
@@ -176,35 +178,6 @@ class CharmBuildInfo(models.BuildInfo):
         :param bases_config: One or more BasesConfiguration objects from which to generate
             CharmBuildInfo objects.
         :returns: A list of CharmBuildInfo objects from this BasesConfiguration.
-        """
-        for bases_index, bases_config in enumerate(bases_configs):
-            for build_on_index, build_on_base in enumerate(bases_config.build_on):
-                for build_on_arch in build_on_base.architectures:
-                    yield cls.from_build_on_run_on(
-                        build_on_base,
-                        build_on_arch,
-                        bases_config.run_on,
-                        bases_index=bases_index,
-                        build_on_index=build_on_index,
-                    )
-
-
-class CharmcraftBuildPlanner(models.BuildPlanner):
-    """Build planner for Charmcraft."""
-
-    bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
-
-    @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
-    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
-        """Expand short-form bases into long-form bases."""
-        if "name" not in base:  # Assume long-form base already.
-            return cast(LongFormBasesDict, base)
-        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
-
-    def get_build_plan(self) -> list[models.BuildInfo]:
-        """Get build bases for this charm.
-
-        This method provides a flattened version of every way to build the charm, unfiltered.
 
         Example 1: a simple charm:
             bases:
@@ -285,7 +258,77 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
 
         Here the string "multi" defines a destination platform that has multiple architectures.
         """
-        return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
+        for bases_index, bases_config in enumerate(bases_configs):
+            for build_on_index, build_on_base in enumerate(bases_config.build_on):
+                for build_on_arch in build_on_base.architectures:
+                    yield cls.from_build_on_run_on(
+                        build_on_base,
+                        build_on_arch,
+                        bases_config.run_on,
+                        bases_index=bases_index,
+                        build_on_index=build_on_index,
+                    )
+
+
+class CharmcraftBuildPlanner(models.BuildPlanner):
+    """Build planner for Charmcraft."""
+
+    bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
+    base: str | None = None
+    build_base: str | None = None
+    platforms: dict[str, Platform | None] | None = None
+
+    @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
+    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
+        """Expand short-form bases into long-form bases."""
+        if "name" not in base:  # Assume long-form base already.
+            return cast(LongFormBasesDict, base)
+        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+
+    def get_build_plan(self) -> list[models.BuildInfo]:
+        """Get build bases for this charm.
+
+        This method provides a flattened version of every way to build the charm, unfiltered.
+
+        If a charm uses the older "bases" model, it defers to
+        `CharmBuildInfo.gen_from_bases_configurations'. Otherwise, it generates the BuildInfo
+        as expected with platforms.
+        """
+        if not self.base:
+            return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
+
+        build_base = self.build_base or self.base
+        base_name, _, base_version = build_base.partition("@")
+        base = bases.BaseName(name=base_name, version=base_version)
+
+        if self.platforms is None:
+            raise CraftError("Must define at least one platform.")
+        build_infos = []
+        for platform_name, platform in self.platforms.items():
+            if platform is None:
+                if platform_name not in const.SUPPORTED_ARCHITECTURES:
+                    raise errors.CraftError(
+                        f"Invalid platform {platform_name}.",
+                        details="A platform name must either be a valid architecture name or the "
+                        "platform must specify one or more build-on and build-for architectures.",
+                    )
+                build_infos.append(
+                    models.BuildInfo(
+                        platform_name, build_on=platform_name, build_for=platform_name, base=base
+                    )
+                )
+            else:
+                for build_on in platform.build_on:
+                    build_infos.extend([
+                        models.BuildInfo(
+                            platform_name,
+                            build_on=str(build_on),
+                            build_for=str(build_for),
+                            base=base,
+                        )
+                        for build_for in platform.build_for
+                    ])
+        return build_infos
 
 
 class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
@@ -512,9 +555,9 @@ class BasesCharm(CharmcraftProject):
     @staticmethod
     def _check_base_is_legacy(base: BaseDict) -> bool:
         """Check that the given base is a legacy base, usable with 'bases'."""
-        if base["name"] == "ubuntu" and base["channel"] in ("18.04", "20.04", "22.04", "23.10"):
+        if base["name"] == "ubuntu" and base["channel"] < "24.04":
             return True
-        if base in (dict(name="centos", channel="7"), dict(name="almalinux", channel="9")):
+        if base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"}):
             return True
         return False
 

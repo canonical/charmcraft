@@ -80,29 +80,19 @@ SUPPORTED_BASES = frozenset(
 
 SUPPORTED_OSES = frozenset(base.name for base in SUPPORTED_BASES)
 
-SUPPORTED_ARCHITECTURES = frozenset(
-    (
-        "amd64",
-        "arm64",
-        "armhf",
-        "ppc64el",
-        "riscv64",
-        "s390x",
-    )
-)
-
 
 class CharmArch(str, enum.Enum):
-    """An architecture for a charm.
+    """An architecture for a charm."""
 
-    Should have the same values as SUPPORTED_ARCHITECTURES.
-    """
     amd64 = "amd64"
     arm64 = "arm64"
     armhf = "armhf"
     ppc64el = "ppc64el"
     riscv64 = "riscv64"
     s390x = "s390x"
+
+
+SUPPORTED_ARCHITECTURES = frozenset(arch.value for arch in CharmArch)
 
 
 # The minimum set of files for a charm to be considered valid

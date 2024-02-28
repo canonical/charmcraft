@@ -95,6 +95,7 @@ class RemoteBuild(ExtensibleCommand):
                 "Running with 'sudo' may cause permission errors and is discouraged.",
                 permanent=True,
             )
+            # Give the user a bit of time to process this before proceeding.
             time.sleep(1)
 
         emit.progress(

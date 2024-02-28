@@ -6,16 +6,16 @@
 import ops
 import ops.testing
 import pytest
-
 from charm import {{ class_name }}
 
 
 @pytest.fixture
 def harness():
-    harness = ops.testing.Harness({{ class_name  }})
+    harness = ops.testing.Harness({{ class_name }})
     harness.begin()
     yield harness
     harness.cleanup()
+
 
 def test_httpbin_pebble_ready(harness: ops.testing.Harness[{{ class_name }}]):
     # Expected plan after Pebble ready with default config
@@ -42,6 +42,7 @@ def test_httpbin_pebble_ready(harness: ops.testing.Harness[{{ class_name }}]):
     # Ensure we set an ActiveStatus with no message
     assert harness.model.unit.status == ops.ActiveStatus()
 
+
 def test_config_changed_valid_can_connect(harness: ops.testing.Harness[{{ class_name }}]):
     # Ensure the simulated Pebble API is reachable
     harness.set_can_connect("httpbin", True)
@@ -54,11 +55,13 @@ def test_config_changed_valid_can_connect(harness: ops.testing.Harness[{{ class_
     assert updated_env == {"GUNICORN_CMD_ARGS": "--log-level debug"}
     assert harness.model.unit.status == ops.ActiveStatus()
 
+
 def test_config_changed_valid_cannot_connect(harness: ops.testing.Harness[{{ class_name }}]):
     # Trigger a config-changed event with an updated value
     harness.update_config({"log-level": "debug"})
     # Check the charm is in WaitingStatus
     assert isinstance(harness.model.unit.status, ops.WaitingStatus)
+
 
 def test_config_changed_invalid(harness: ops.testing.Harness[{{ class_name }}]):
     # Ensure the simulated Pebble API is reachable

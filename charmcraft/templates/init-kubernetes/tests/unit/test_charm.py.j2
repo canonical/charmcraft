@@ -6,7 +6,6 @@
 import ops
 import ops.testing
 import pytest
-
 from charm import {{ class_name }}
 
 
@@ -16,6 +15,7 @@ def harness():
     harness.begin()
     yield harness
     harness.cleanup()
+
 
 def test_pebble_ready(harness: ops.testing.Harness[{{ class_name }}]):
     # Simulate the container coming up and emission of pebble-ready event

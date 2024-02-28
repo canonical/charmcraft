@@ -1,9 +1,9 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
 environment:
-  TEMPLATE/simple: simple
-  TEMPLATE/machine: machine
-  TEMPLATE/kubernetes: kubernetes
+  PROFILE/simple: simple
+  PROFILE/machine: machine
+  PROFILE/kubernetes: kubernetes
 
 include:
   - tests/
@@ -11,29 +11,16 @@ include:
 kill-timeout: 30m
 
 prepare: |
-  tests.pkgs install unzip
   tests.pkgs install pipx python3-venv
   pipx install --force tox
   rm -rf charm
-  charmcraft init --project-dir=charm
+  charmcraft init --project-dir=charm --profile=${PROFILE}
+
+  cp charmcraft-${PROFILE}.yaml charm/charmcraft.yaml
+
   cd charm
   echo "ignore me" > secrets.txt
   touch extra_file.txt
-
-  cat <<- EOF >> charmcraft.yaml
-  parts:
-    charm:
-      prime:
-        - extra_file.txt
-    hello:
-      plugin: nil
-      build-packages: [hello]
-      override-build: |
-        hello > "\$CRAFT_PART_INSTALL/hello.txt"
-      override-prime: |
-        echo "Running the prime step"
-        craftctl default
-  EOF
 
 restore: |
   pushd charm
@@ -44,8 +31,8 @@ restore: |
 
 execute: |
   cd charm
-  ~/.local/bin/tox run
   charmcraft pack --verbose
+  ~/.local/bin/tox run
   test -f charm*.charm
   # Charmcraft 3.0 uses the craft-parts standard prime keyword that only
   # includes the specifically mentioned files

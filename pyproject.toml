@@ -108,6 +108,12 @@ namespaces = false
 [tool.black]
 target-version = ["py310", "py311"]
 line-length = 99
+extend-exclude = """
+# See: https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-format
+(
+    tests/spread/  # Includes files that are formatted using ruff's formatter with some subtle differences.
+)
+"""
 
 [tool.codespell]
 ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread"
@@ -127,6 +133,7 @@ line_length = 88
 minversion = "7.0"
 testpaths = "tests"
 xfail_strict = true
+norecursedirs = "tests/spread"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
@@ -231,6 +238,7 @@ extend-exclude = [
     "tools",
     "snap/local",
     "charmcraft/_version.py",  # setuptools_scm generates old-style type annotations.
+    "tests/spread/**",  # These include init-created charms that follow different linting rules.
 ]
 # Follow ST063 - Maintaining and updating linting specifications for updating these.
 lint.select = [  # Base linting rule selections.

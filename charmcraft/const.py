@@ -91,6 +91,9 @@ class CharmArch(str, enum.Enum):
     riscv64 = "riscv64"
     s390x = "s390x"
 
+    def __str__(self) -> str:
+        return str(self.value)
+
 
 SUPPORTED_ARCHITECTURES = frozenset(arch.value for arch in CharmArch)
 

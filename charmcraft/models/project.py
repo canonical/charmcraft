@@ -32,7 +32,7 @@ from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self, TypedDict
 
-from charmcraft import const
+from charmcraft import const, utils
 from charmcraft.const import (
     JUJU_ACTIONS_FILENAME,
     JUJU_CONFIG_FILENAME,
@@ -273,6 +273,7 @@ class CharmBuildInfo(models.BuildInfo):
 class CharmcraftBuildPlanner(models.BuildPlanner):
     """Build planner for Charmcraft."""
 
+    type: str = ""
     bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
     base: str | None = None
     build_base: str | None = None
@@ -294,6 +295,18 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
         `CharmBuildInfo.gen_from_bases_configurations'. Otherwise, it generates the BuildInfo
         as expected with platforms.
         """
+        if self.type == "bundle":
+            # A bundle can build anywhere, so just present the current system.
+            current_arch = utils.get_host_architecture()
+            current_base = utils.get_os_platform()
+            return [
+                models.BuildInfo(
+                    platform=current_arch,
+                    build_on=current_arch,
+                    build_for=current_arch,
+                    base=bases.BaseName(name=current_base.system, version=current_base.release),
+                )
+            ]
         if not self.base:
             return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
 
@@ -307,7 +320,7 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
         for platform_name, platform in self.platforms.items():
             if platform is None:
                 if platform_name not in const.SUPPORTED_ARCHITECTURES:
-                    raise errors.CraftError(
+                    raise CraftError(
                         f"Invalid platform {platform_name}.",
                         details="A platform name must either be a valid architecture name or the "
                         "platform must specify one or more build-on and build-for architectures.",
@@ -355,7 +368,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
     version: Literal["unversioned"] = "unversioned"  # type: ignore[assignment]
-    base: None = None
     license: None = None
     # These are inside the "links" child model.
     contact: None = None
@@ -379,9 +391,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             return cls.parse_obj(data)
         project_type = data.get("type")
         if project_type == "charm":
-            if data.get("platforms"):
-                return PlatformCharm.unmarshal(data)
-            return BasesCharm.unmarshal(data)
+            if "bases" in data:
+                return BasesCharm.unmarshal(data)
+            return PlatformCharm.unmarshal(data)
         if project_type == "bundle":
             return Bundle.unmarshal(data)
         raise ValueError(f"field type cannot be {project_type!r}")
@@ -519,6 +531,8 @@ class BasesCharm(CharmcraftProject):
     # solved with Pydantic 2.
     bases: list[BasesConfiguration] = pydantic.Field(min_items=1)
 
+    base: None = None
+
     parts: dict[str, dict[str, Any]] = {"charm": {"plugin": "charm", "source": "."}}
 
     actions: dict[str, Any] | None
@@ -539,8 +553,10 @@ class BasesCharm(CharmcraftProject):
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
     def _validate_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
         """Expand short-form bases into long-form bases."""
-        if "name" in base:  # Assume long-form base already.
+        if "name" in base:  # Convert short form to long form
             base = cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+        else:  # Cast to long form since we know it is one.
+            base = cast(LongFormBasesDict, base)
 
         # Ensure we're only allowing legacy bases.
         for build_base in base["build-on"]:
@@ -555,7 +571,13 @@ class BasesCharm(CharmcraftProject):
     @staticmethod
     def _check_base_is_legacy(base: BaseDict) -> bool:
         """Check that the given base is a legacy base, usable with 'bases'."""
-        if base["name"] == "ubuntu" and base["channel"] < "24.04":
+        # This pyright ignore can go away once we're on Python minimum version 3.11.
+        # At that point we can mark items as required or not required.
+        # https://docs.python.org/3/library/typing.html#typing.Required
+        if (
+            base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+            and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+        ):
             return True
         if base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"}):
             return True

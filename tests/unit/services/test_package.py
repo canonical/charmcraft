@@ -20,8 +20,9 @@ import zipfile
 
 import craft_cli.pytest_plugin
 import pytest
+import pytest_check
 
-from charmcraft import models, services
+from charmcraft import const, models, services, utils
 from charmcraft.application.main import APP_METADATA
 
 SIMPLE_BUILD_BASE = models.charmcraft.Base(name="ubuntu", channel="22.04", architectures=["arm64"])
@@ -45,6 +46,7 @@ def package_service(fake_path, simple_charm, service_factory):
         work_dir=fake_path,
         cache_dir=fake_path / "cache",
         build_for=None,
+        build_plan=[],
     )
 
     return services.PackageService(
@@ -54,6 +56,7 @@ def package_service(fake_path, simple_charm, service_factory):
         services=service_factory,
         project_dir=fake_project_dir,
         platform="distro-1-test64",
+        build_plan=[],
     )
 
 
@@ -121,6 +124,96 @@ def test_do_not_overwrite_metadata_yaml(
     )
 
 
+# region Tests for getting bases for manifest.yaml
+@pytest.mark.parametrize(
+    ("bases", "expected"),
+    [
+        (
+            [{"name": "ubuntu", "channel": "20.04"}],
+            [
+                {
+                    "name": "ubuntu",
+                    "channel": "20.04",
+                    "architectures": [utils.get_host_architecture()],
+                }
+            ],
+        ),
+        (
+            [
+                {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
+                {"name": "ubuntu", "channel": "20.04", "architectures": ["riscv64"]},
+            ],
+            [
+                {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
+                {"name": "ubuntu", "channel": "20.04", "architectures": ["riscv64"]},
+            ],
+        ),
+    ],
+)
+def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expected):
+    charm = models.BasesCharm.parse_obj(
+        {
+            "name": "my-charm",
+            "description": "",
+            "summary": "",
+            "type": "charm",
+            "bases": [{"build-on": bases, "run-on": bases}],
+        }
+    )
+    package_service._project = charm
+
+    assert package_service.get_manifest_bases() == [models.Base.parse_obj(b) for b in expected]
+
+
+@pytest.mark.parametrize("base", ["ubuntu@22.04", "ubuntu@24.04", "almalinux@9"])
+@pytest.mark.parametrize(
+    ("platforms", "selected_platform", "expected_architectures"),
+    [
+        ({"armhf": None}, "armhf", ["armhf"]),
+        (
+            {"anything": {"build-on": [*const.SUPPORTED_ARCHITECTURES], "build-for": "all"}},
+            "anything",
+            ["all"],
+        ),
+        (
+            {
+                "anything": {"build-on": [*const.SUPPORTED_ARCHITECTURES], "build-for": "all"},
+                "amd64": None,
+                "riscy": {"build-on": ["arm64", "ppc64el", "riscv64"], "build-for": ["all"]},
+            },
+            "anything",
+            ["all"],
+        ),
+        ({utils.get_host_architecture(): None}, None, [utils.get_host_architecture()]),
+        ({"invalid-arch": None}, None, [utils.get_host_architecture()]),
+    ],
+)
+def test_get_manifest_bases_from_platforms(
+    package_service, base, platforms, selected_platform, expected_architectures
+):
+    charm = models.PlatformCharm.parse_obj(
+        {
+            "name": "my-charm",
+            "description": "",
+            "summary": "",
+            "type": "charm",
+            "base": base,
+            "platforms": platforms,
+            "parts": {},
+        }
+    )
+    package_service._project = charm
+    package_service._platform = selected_platform
+
+    bases = package_service.get_manifest_bases()
+
+    pytest_check.equal(len(bases), 1)
+    actual_base = bases[0]
+    pytest_check.equal(f"{actual_base.name}@{actual_base.channel}", base)
+    pytest_check.equal(actual_base.architectures, expected_architectures)
+
+
+# endregion
 # region tests for packing the charm
 # These tests are modified from test_zipbuild
 def test_pack_charm_simple(fake_path, package_service):

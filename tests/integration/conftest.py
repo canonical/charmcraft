@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,23 +13,27 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Configuration for services integration tests."""
+"""General fixtures for integration tests."""
+from unittest import mock
+
+import craft_store
 import pytest
 
-from charmcraft import services
-from charmcraft.application.main import APP_METADATA, Charmcraft
+from charmcraft import application, services
+from charmcraft.application import commands
 
 
 @pytest.fixture()
-def service_factory(fs, fake_path, simple_charm) -> services.CharmcraftServiceFactory:
-    fake_project_dir = fake_path / "project"
-    fake_project_dir.mkdir()
-    factory = services.CharmcraftServiceFactory(app=APP_METADATA)
-
-    app = Charmcraft(app=APP_METADATA, services=factory)
-
-    app._configure_services(None, None)
-
-    factory.project = simple_charm
-
+def service_factory():
+    factory = services.CharmcraftServiceFactory(app=application.APP_METADATA)
+    factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
     return factory
+
+
+@pytest.fixture()
+def app(service_factory):
+    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
+    app._configure_services(None, None)
+    commands.fill_command_groups(app)
+
+    return app

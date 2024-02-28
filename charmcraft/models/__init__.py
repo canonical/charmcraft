@@ -22,6 +22,7 @@ from .lint import CheckResult, CheckType, LintResult, ResultLevel
 from .manifest import Attribute, Manifest
 from .metadata import BundleMetadata, CharmMetadata, CharmMetadataLegacy
 from .project import (
+    CharmBuildInfo,
     CharmcraftBuildPlanner,
     CharmcraftProject,
     BasesCharm,
@@ -44,6 +45,7 @@ __all__ = [
     "BasesCharm",
     "PlatformCharm",
     "Charm",
+    "CharmBuildInfo",
     "CharmcraftBuildPlanner",
     "CharmcraftProject",
     "BundleMetadata",

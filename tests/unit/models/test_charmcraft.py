@@ -13,23 +13,19 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Configuration for services integration tests."""
+"""Tests for Charmcraft models."""
 import pytest
 
-from charmcraft import services
-from charmcraft.application.main import APP_METADATA, Charmcraft
+from charmcraft.models import charmcraft
 
 
-@pytest.fixture()
-def service_factory(fs, fake_path, simple_charm) -> services.CharmcraftServiceFactory:
-    fake_project_dir = fake_path / "project"
-    fake_project_dir.mkdir()
-    factory = services.CharmcraftServiceFactory(app=APP_METADATA)
-
-    app = Charmcraft(app=APP_METADATA, services=factory)
-
-    app._configure_services(None, None)
-
-    factory.project = simple_charm
-
-    return factory
+@pytest.mark.parametrize(
+    ("base_str", "expected"),
+    [
+        ("ubuntu@24.04", charmcraft.Base(name="ubuntu", channel="24.04", architectures=[])),
+        ("ubuntu@22.04", charmcraft.Base(name="ubuntu", channel="22.04", architectures=[])),
+        ("almalinux@9", charmcraft.Base(name="almalinux", channel="9", architectures=[])),
+    ],
+)
+def test_get_base_from_str_and_arch(base_str, expected):
+    assert charmcraft.Base.from_str_and_arch(base_str, []) == expected

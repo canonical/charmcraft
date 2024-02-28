@@ -1,31 +1,21 @@
 summary: pack a charm with different dependencies specified
 
+environment:
+  CHARM/bases: bases-charm
+  CHARM/platforms: platforms-charm
+
 include:
   - tests/
 
-prepare: |
-  tests.pkgs install unzip
-  charmcraft init --project-dir=charm
-  cd charm
-  echo "bump2version" > req.txt
-
-  cat <<- EOF >> charmcraft.yaml
-  parts:
-    charm:
-      charm-binary-python-packages: [pytest]
-      charm-python-packages: [fades]
-      charm-requirements: [req.txt]
-  EOF
-
 restore: |
-  pushd charm
+  pushd "${CHARM}"
   charmcraft clean
   popd
 
-  rm -rf charm
+  rm -rf "${CHARM}"
 
 execute: |
-  cd charm
+  cd "${CHARM}"
   charmcraft pack --verbose
   test -f charm*.charm
   unzip -l charm*.charm | MATCH "venv/pytest/__init__.py"

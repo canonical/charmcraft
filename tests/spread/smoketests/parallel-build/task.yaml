@@ -1,4 +1,5 @@
 summary: pack 3 charms at same time and check that they are built successfully
+priority: 1000  # Build very early. This takes a while and can be flaky.
 
 kill-timeout: 60m
 
@@ -32,6 +33,7 @@ restore: |
 
 execute: |
   (cd charm1 && charmcraft pack --verbose) &
+  sleep 0.5  # This reduces certain race conditions in lxd.
   (cd charm2 && charmcraft pack --verbose) &
   sleep 60
   (cd charm3 && charmcraft pack --verbose) &

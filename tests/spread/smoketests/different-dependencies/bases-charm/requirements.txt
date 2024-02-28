@@ -1,0 +1,1 @@
+craft-application == 0.99.99999   # Ensure the default requirements file doesn't get used - if it did get used charmcraft should error out.

@@ -1,0 +1,32 @@
+summary: pack a simple charm created from `init`
+
+environment:
+  PROFILE/simple: simple
+  PROFILE/machine: machine
+  PROFILE/kubernetes: kubernetes
+
+include:
+  - tests/spread/smoketests/
+
+prepare: |
+  charmcraft init --project-dir=charm --profile=$PROFILE
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+  test -f *.charm
+  unzip -l *.charm | MATCH "manifest.yaml"
+  unzip -l *.charm | MATCH "metadata.yaml"
+  unzip -l *.charm | MATCH "src/charm.py"
+  unzip -l *.charm | MATCH "hooks/install"
+  unzip -l *.charm | MATCH "hooks/upgrade-charm"
+  unzip -l *.charm | MATCH "hooks/start"
+  unzip -l *.charm | MATCH "venv/ops/charm.py"
+  test ! -d build

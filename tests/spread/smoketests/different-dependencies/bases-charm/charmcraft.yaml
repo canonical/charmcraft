@@ -1,0 +1,23 @@
+name: bases-charm
+type: charm
+title: Bases dependency test charm
+summary: A charm that uses bases and tests many dependency options.
+description: |
+  Options tested include:
+  - charm-python-packages
+  - charm-binary-python-packages
+  - charm-requirements
+
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "22.04"
+    run-on:
+    - name: ubuntu
+      channel: "22.04"
+
+parts:
+    charm:
+      charm-binary-python-packages: [pytest]
+      charm-python-packages: [fades]
+      charm-requirements: [req.txt]

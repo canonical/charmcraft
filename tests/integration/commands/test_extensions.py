@@ -40,6 +40,11 @@ def create_extension(ext_name, bases, experimental):
 
 @pytest.fixture(autouse=True, scope="module")
 def registered_extensions():
+    default_extensions = {
+        name: extensions.get_extension_class(name) for name in extensions.get_extension_names()
+    }
+    for ext in default_extensions:
+        extensions.unregister(ext)
     fake_extensions = [
         create_extension("f1", [("ubuntu", "22.04")], [("ubuntu", "24.04")]),
         create_extension("f2", [], [("almalinux", "9")]),
@@ -49,6 +54,8 @@ def registered_extensions():
     yield fake_extensions
     for ext in fake_extensions:
         extensions.unregister(ext.name)
+    for name, cls in default_extensions.items():
+        extensions.register(name, cls)
 
 
 @pytest.mark.parametrize(

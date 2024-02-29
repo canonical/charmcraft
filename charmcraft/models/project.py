@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ from typing import (
     cast,
 )
 
-import craft_application.models
 import pydantic
 from craft_application import errors, models
 from craft_application.util import get_host_architecture, safe_yaml_load
@@ -176,7 +175,106 @@ class CharmBuildInfo(models.BuildInfo):
                     )
 
 
-class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
+class CharmcraftBuildPlanner(models.BuildPlanner):
+    """Build planner for Charmcraft."""
+
+    bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
+
+    @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
+    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
+        """Expand short-form bases into long-form bases."""
+        if "name" not in base:  # Assume long-form base already.
+            return cast(LongFormBasesDict, base)
+        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+
+    def get_build_plan(self) -> list[models.BuildInfo]:
+        """Get build bases for this charm.
+
+        This method provides a flattened version of every way to build the charm, unfiltered.
+
+        Example 1: a simple charm:
+            bases:
+              - name: ubuntu
+                channel: 24.04
+        This gets expanded to a standard long-form:
+            bases:
+              - build-on:
+                  - name: ubuntu
+                    channel: "24.04"
+                run-on:
+                  - name: ubuntu
+                    channel: "24.04"
+        Presuming charmcraft is run on riscv64 (if architectures are not specified charmcraft will
+        use the host architecture as the only architecture), it will output a list containing the
+        following single BuildInfo object:
+            CharmBuildInfo(
+                build_on="riscv64",
+                build_for="riscv64",
+                base=BaseName(name="ubuntu", channel="24.04"),
+                build_for_base=BaseName(name="ubuntu", channel="24.04"),
+                bases_index=0,
+                build_on_index=0
+            )
+
+        Example 2: a more complex set of bases:
+            bases:
+              - build-on:
+                  - name: ubuntu
+                    channel: "24.04"
+                    architectures: ["amd64", "riscv64"]
+                  - name: ubuntu
+                    channel: "22.04"
+                    architectures: ["arm64"]
+                run-on:
+                  - name: ubuntu
+                    channel: "22.04"
+                    architectures: ["amd64", "arm64"]
+                  - name: ubuntu
+                    channel: "24.04"
+                    architectures: ["amd64", "arm64", "riscv64"]
+        This will result in the following builds in the plan:
+        [
+            CharmBuildInfo(
+                build_on="amd64",
+                build_for="multi",
+                base=BaseName(name="ubuntu", channel="24.04"),
+                build_for_bases=[
+                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
+                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
+                ]
+                bases_index=0,
+                build_on_index=0
+            ),
+            CharmBuildInfo(
+                build_on="riscv64",
+                build_for="multi",
+                base=BaseName(name="ubuntu", channel="24.04"),
+                build_for_bases=[
+                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
+                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
+                ]
+                bases_index=0,
+                build_on_index=0
+            ),
+            CharmBuildInfo(
+                build_on="arm64",
+                build_for="multi",
+                base=BaseName(name="ubuntu", channel="22.04"),
+                build_for_bases=[
+                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
+                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
+                ]
+                bases_index=0,
+                build_on_index=1
+            ),
+        ]
+
+        Here the string "multi" defines a destination platform that has multiple architectures.
+        """
+        return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
+
+
+class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     """A craft-application compatible version of a Charmcraft project.
 
     This is a Project definition for charmcraft commands that are run through
@@ -188,19 +286,18 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
     """
 
     type: Literal["charm", "bundle"]
-    name: models.ProjectName | None
     title: models.ProjectTitle | None
     summary: models.SummaryStr | None
     description: str | None
 
     analysis: AnalysisConfig | None
     charmhub: CharmhubConfig | None
-    parts: dict[str, dict[str, Any]] | None  # parts are handled by craft-parts
+    parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
 
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
-    version: None = None
+    version: Literal["unversioned"] = "unversioned"  # type: ignore[assignment]
     base: None = None
     license: None = None
     # These are inside the "links" child model.
@@ -350,9 +447,6 @@ class CharmcraftProject(models.CraftBaseModel, metaclass=abc.ABCMeta):
         return process_part_config(item)
 
 
-craft_application.models.Project.register(CharmcraftProject)
-
-
 class Charm(CharmcraftProject):
     """Model for defining a charm."""
 
@@ -390,99 +484,13 @@ class Charm(CharmcraftProject):
             return cast(LongFormBasesDict, base)
         return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
 
-    def get_build_plan(self) -> list[models.BuildInfo]:
-        """Get build bases for this charm.
-
-        This method provides a flattened version of every way to build the charm, unfiltered.
-
-        Example 1: a simple charm:
-            bases:
-              - name: ubuntu
-                channel: 24.04
-        This gets expanded to a standard long-form:
-            bases:
-              - build-on:
-                  - name: ubuntu
-                    channel: "24.04"
-                run-on:
-                  - name: ubuntu
-                    channel: "24.04"
-        Presuming charmcraft is run on riscv64 (if architectures are not specified charmcraft will
-        use the host architecture as the only architecture), it will output a list containing the
-        following single BuildInfo object:
-            CharmBuildInfo(
-                build_on="riscv64",
-                build_for="riscv64",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_base=BaseName(name="ubuntu", channel="24.04"),
-                bases_index=0,
-                build_on_index=0
-            )
-
-        Example 2: a more complex set of bases:
-            bases:
-              - build-on:
-                  - name: ubuntu
-                    channel: "24.04"
-                    architectures: ["amd64", "riscv64"]
-                  - name: ubuntu
-                    channel: "22.04"
-                    architectures: ["arm64"]
-                run-on:
-                  - name: ubuntu
-                    channel: "22.04"
-                    architectures: ["amd64", "arm64"]
-                  - name: ubuntu
-                    channel: "24.04"
-                    architectures: ["amd64", "arm64", "riscv64"]
-        This will result in the following builds in the plan:
-        [
-            CharmBuildInfo(
-                build_on="amd64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=0
-            ),
-            CharmBuildInfo(
-                build_on="riscv64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=0
-            ),
-            CharmBuildInfo(
-                build_on="arm64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="22.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=1
-            ),
-        ]
-
-        Here the string "multi" defines a destination platform that has multiple architectures.
-        """
-        return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
-
 
 class Bundle(CharmcraftProject):
     """Model for defining a bundle."""
 
     type: Literal["bundle"]
     bundle: dict[str, Any] = {}
-    name: models.ProjectName | None = None
+    name: models.ProjectName | None = None  # type: ignore[assignment]
     title: models.ProjectTitle | None
     summary: models.SummaryStr | None
     description: pydantic.StrictStr | None

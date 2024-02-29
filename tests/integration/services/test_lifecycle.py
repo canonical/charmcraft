@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,29 +13,10 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+"""Integration tests for the lifecycle service."""
 
-"""Extension processor and related utilities."""
 
-from charmcraft.extensions._utils import apply_extensions
-from charmcraft.extensions.extension import Extension
-from charmcraft.extensions.bundle import Bundle
-from charmcraft.extensions.registry import (
-    get_extension_class,
-    get_extension_names,
-    get_extensions,
-    register,
-    unregister,
-)
+def test_init_lifecycle(service_factory):
+    """Test the setup of a parts lifecycle, implicitly testing setup."""
 
-register("bundle", Bundle)
-
-__all__ = [
-    "Extension",
-    "Bundle",
-    "get_extension_class",
-    "get_extension_names",
-    "get_extensions",
-    "apply_extensions",
-    "register",
-    "unregister",
-]
+    service_factory.lifecycle._init_lifecycle_manager()

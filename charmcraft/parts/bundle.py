@@ -66,6 +66,7 @@ class BundlePlugin(plugins.Plugin):
     def get_build_commands(self) -> list[str]:
         """Return a list of commands to run during the build step."""
         install_dir = self._part_info.part_install_dir
+        build_dir = self._part_info.part_build_subdir
         if sys.platform == "linux":
             cp_cmd = "cp --archive --link --no-dereference"
         else:
@@ -73,5 +74,5 @@ class BundlePlugin(plugins.Plugin):
 
         return [
             f'mkdir -p "{install_dir}"',
-            f'{cp_cmd} * "{install_dir}"',
+            f'{cp_cmd} {build_dir}/* "{install_dir}"',
         ]

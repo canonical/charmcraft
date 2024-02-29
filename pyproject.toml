@@ -6,7 +6,7 @@ dependencies = [
     "craft-application @ git+https://github.com/canonical/craft-application@main",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
-    "craft-providers",
+    "craft-providers>=1.23.0",
     "craft-store>=2.4",
     "distro>=1.3.0",
     "humanize>=2.6.0",

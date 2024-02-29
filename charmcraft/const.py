@@ -64,7 +64,7 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "centos@7",
     "almalinux@9",
 ]
-BaseStr = CommonBaseStr | Literal[]
+BaseStr = CommonBaseStr
 BuildBaseStr = CommonBaseStr | Literal["ubuntu@devel"]
 
 DEVEL_BASE_STRINGS = ()  # Bases that require a specified build base.

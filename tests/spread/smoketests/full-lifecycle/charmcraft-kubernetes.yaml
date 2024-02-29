@@ -29,17 +29,13 @@ description: |
 
 
 # (Required for 'charm' type)
-base: ubuntu@24.04
-platforms:
-  amd64:
-  arm64:
-  ppc64el:
-  s390x:
-
-parts:
-  charm:
-    plugin: charm
-    source: .
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "22.04"
+    run-on:
+    - name: ubuntu
+      channel: "22.04"
 
 
 # (Optional) Configuration options for the charm

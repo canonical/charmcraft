@@ -74,6 +74,9 @@ def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
                 ],
             },
             "ubuntu-22.04-amd64",
+            marks=pytest.mark.skipif(
+                CURRENT_PLATFORM.release != "22.04", reason="Bases charm only tested on jammy."
+            ),
             id="bases-charm",
         ),
         pytest.param(
@@ -89,6 +92,9 @@ def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
                 "parts": {},
             },
             "ubuntu-22.04-amd64",
+            marks=pytest.mark.skipif(
+                CURRENT_PLATFORM.release != "22.04", reason="Jammy charms only tested on jammy"
+            ),
             id="platforms-jammy-charm",
         ),
         pytest.param(
@@ -102,13 +108,33 @@ def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
                 "parts": {},
             },
             utils.get_host_architecture(),
-            id="platforms-jammy-charm",
+            marks=pytest.mark.skipif(
+                CURRENT_PLATFORM.release != "22.04", reason="Jammy charms only tested on jammy"
+            ),
+            id="platforms-jammy-basic",
+        ),
+        pytest.param(
+            {
+                "type": "charm",
+                "name": "my-charm",
+                "summary": "A test charm",
+                "description": "A charm for testing",
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@devel",
+                "platforms": {utils.get_host_architecture(): None},
+                "parts": {},
+            },
+            utils.get_host_architecture(),
+            marks=pytest.mark.skipif(
+                CURRENT_PLATFORM.release != "24.04", reason="Noble charm needs noble"
+            ),
+            id="platforms-noble",
         ),
     ],
 )
 @pytest.mark.skipif(
-    CURRENT_PLATFORM.system != "ubuntu" or CURRENT_PLATFORM.system != "22.04",
-    reason="Basic charm tests are currently tied to Ubuntu Jammy",
+    CURRENT_PLATFORM.system != "ubuntu",
+    reason="Basic charm tests use destructive mode.",
 )
 def test_build_basic_charm(
     monkeypatch, emitter, new_path, charmcraft_project, service_factory, app, platform
@@ -122,7 +148,7 @@ def test_build_basic_charm(
     )
 
     app.configure({})
-    app.run()
+    assert app.run() == 0
 
     with zipfile.ZipFile(new_path / f"my-charm_{platform}.charm") as charm_zip:
         metadata = yaml.safe_load(charm_zip.read("metadata.yaml"))

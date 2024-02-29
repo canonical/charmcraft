@@ -616,6 +616,16 @@ class PlatformCharm(CharmcraftProject):
     links: Links | None
     config: dict[str, Any] | None
 
+    @pydantic.validator("build_base", always=True)
+    def _validate_dev_base_needs_build_base(
+        cls, build_base: str | None, values: dict[str, Any]
+    ) -> str | None:
+        if not build_base and (base := values["base"]) in const.DEVEL_BASE_STRINGS:
+            raise ValueError(
+                f"Base {base} requires a build-base (recommended: 'build-base: ubuntu@devel')"
+            )
+        return build_base
+
 
 Charm = BasesCharm | PlatformCharm
 

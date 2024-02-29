@@ -66,6 +66,8 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
 BaseStr = CommonBaseStr | Literal["ubuntu@24.04"]
 BuildBaseStr = CommonBaseStr | Literal["ubuntu@devel"]
 
+DEVEL_BASE_STRINGS = ("ubuntu@24.04",)  # Bases that require a specified build base.
+
 SUPPORTED_BASES = frozenset(
     (
         BaseName("ubuntu", "18.04"),

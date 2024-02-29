@@ -656,6 +656,25 @@ def test_instantiate_bases_charm_error(
         project.BasesCharm(**values)
 
 
+@pytest.mark.parametrize("base", ["ubuntu@24.04"])
+def test_devel_bases(monkeypatch, base):
+    monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
+
+    with pytest.raises(
+        pydantic.ValidationError,
+        match=r"requires a build-base \(recommended: 'build-base: ubuntu@devel'\)",
+    ):
+        project.PlatformCharm(
+            type="charm",
+            name="test-charm",
+            summary="",
+            description="",
+            base=base,
+            platforms={"amd64": None},
+            parts={"charm": {"plugin": "charm"}},
+        )
+
+
 @pytest.mark.parametrize(
     "filename", [f.name for f in (pathlib.Path(__file__).parent / "valid_charms_yaml").iterdir()]
 )

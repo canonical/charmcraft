@@ -33,10 +33,10 @@ execute: |
   cd charm
   charmcraft pack --verbose
   ~/.local/bin/tox run
-  test -f charm*.charm
+  test -f *.charm
   # Charmcraft 3.0 uses the craft-parts standard prime keyword that only
   # includes the specifically mentioned files
-  unzip -c charm*.charm hello.txt | grep "^Hello, world!"
-  unzip -l charm*.charm | NOMATCH "venv/ops/charm.py"
-  unzip -l charm*.charm | MATCH extra_file.txt
-  unzip -l charm*.charm | NOMATCH secrets.txt
+  unzip -c *.charm hello.txt | grep "^Hello, world!"
+  unzip -l *.charm | NOMATCH "venv/ops/charm.py"
+  unzip -l *.charm | MATCH extra_file.txt
+  unzip -l *.charm | NOMATCH secrets.txt

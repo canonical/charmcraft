@@ -45,8 +45,7 @@ def package_service(fake_path, simple_charm, service_factory):
         "lifecycle",
         work_dir=fake_path,
         cache_dir=fake_path / "cache",
-        build_for=None,
-        build_plan=[],
+        build_plan=[],  # Only okay now because we're not asking the lifecycle service to use the plan.
     )
 
     return services.PackageService(

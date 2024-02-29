@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for packing."""
 import sys
-import textwrap
 import zipfile
 
 import pytest
@@ -32,11 +31,8 @@ CURRENT_PLATFORM = utils.get_os_platform()
 @pytest.mark.parametrize(
     "bundle_yaml",
     [
-        textwrap.dedent(
-            """\
-            # name: my-bundle
-            """
-        )
+        "",
+        "name: my-bundle",
     ],
 )
 def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):

@@ -59,37 +59,20 @@ jobs:
     needs: [snap-build]
 
     steps:
-      - name: Decision to Run
-        id: decisions
-        run: |
-          # Secrets cannot be used in conditionals, so this is our dance:
-          # https://github.com/actions/runner/issues/520
-          if [[ -n "${{ secrets.CHARMCRAFT_AUTH }}" ]]; then
-            echo "::set-output name=RUN::true"
-          else
-            echo "::set-output name=RUN::"
-          fi
-
-      - if: steps.decisions.outputs.RUN == 'true'
-        name: Cleanup job workspace
-        run: |
-          rm -rf "${{ github.workspace }}"
-          mkdir "${{ github.workspace }}"
-
-      - if: steps.decisions.outputs.RUN == 'true'
+      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Checkout charmcraft
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: true
 
-      - if: steps.decisions.outputs.RUN == 'true'
+      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Download snap artifact
         uses: actions/download-artifact@v4
         with:
           name: snap
 
-      - if: steps.decisions.outputs.RUN == 'true'
+      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Run spread
         env:
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
@@ -102,37 +85,20 @@ jobs:
     needs: [snap-build]
 
     steps:
-      - name: Decision to Run
-        id: decisions
-        run: |
-          # Secrets cannot be used in conditionals, so this is our dance:
-          # https://github.com/actions/runner/issues/520
-          if [[ -n "${{ secrets.LAUNCHPAD_CREDENTIALS }}" ]]; then
-            echo "RUN=true" >> "${GITHUB_OUTPUT}"
-          else
-            echo "RUN=false" >> "${GITHUB_OUTPUT}"
-          fi
-
-      - if: steps.decisions.outputs.RUN == 'true'
-        name: Cleanup job workspace
-        run: |
-          rm -rf "${{ github.workspace }}"
-          mkdir "${{ github.workspace }}"
-
-      - if: steps.decisions.outputs.RUN == 'true'
+      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Checkout charmcraft
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: true
 
-      - if: steps.decisions.outputs.RUN == 'true'
+      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Download snap artifact
         uses: actions/download-artifact@v4
         with:
           name: snap
 
-      - if: steps.decisions.outputs.RUN == 'true'
+      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Run spread
         env:
           LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}

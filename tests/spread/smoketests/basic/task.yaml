@@ -1,18 +1,21 @@
 summary: pack a simple charm on various bases
 
 environment:
-  BASE_CHANNEL/focal: 20.04
-  BASE_CHANNEL/jammy: 22.04
-  BASE_CHANNEL/mantic: 23.10  # Non-LTS
+  BASE_CHANNEL/focal_bases: 20.04
+  BASE_CHANNEL/jammy_bases,jammy_platforms: 22.04
+  BASE_CHANNEL/mantic_bases: 23.10  # Non-LTS
+  CHARM_TYPE/focal_bases,jammy_bases,mantic_bases: bases
+  CHARM_TYPE/jammy_platforms: platforms
   # Alma Linux is disabled temporarily: https://github.com/canonical/charmcraft/issues/1496
   # BASE_CHANNEL/alma: alma9
+  # CHARM_TYPE/alma: bases
 
 include:
   - tests/
 
 prepare: |
   charmcraft init --project-dir=charm
-  cp charmcraft-$BASE_CHANNEL.yaml charm/charmcraft.yaml
+  cp charmcraft-$CHARM_TYPE-$BASE_CHANNEL.yaml charm/charmcraft.yaml
 
 restore: |
   pushd charm

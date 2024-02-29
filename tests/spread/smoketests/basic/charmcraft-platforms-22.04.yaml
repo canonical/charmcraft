@@ -1,0 +1,15 @@
+name: jammy-platforms
+type: charm
+title: A charm built and running on jammy.
+summary: A charm built and running on jammy.
+description: A charm built and running on jammy.
+base: ubuntu@22.04
+platforms:
+  all:
+    build-on:
+      - amd64
+      - arm64
+      #  Not armhf, just for fun
+      - ppc64el
+      - riscv64
+      - s390x

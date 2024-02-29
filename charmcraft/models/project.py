@@ -32,6 +32,7 @@ from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self, TypedDict
 
+from charmcraft import utils
 from charmcraft.const import (
     JUJU_ACTIONS_FILENAME,
     JUJU_CONFIG_FILENAME,
@@ -178,6 +179,7 @@ class CharmBuildInfo(models.BuildInfo):
 class CharmcraftBuildPlanner(models.BuildPlanner):
     """Build planner for Charmcraft."""
 
+    project_type: Literal["charm", "bundle"] = pydantic.Field(alias="type")
     bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
@@ -271,6 +273,19 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
 
         Here the string "multi" defines a destination platform that has multiple architectures.
         """
+        if self.project_type == "bundle":
+            # A bundle can build anywhere, so just present the current system.
+            current_arch = utils.get_host_architecture()
+            current_base = utils.get_os_platform()
+            return [
+                models.BuildInfo(
+                    platform=current_arch,
+                    build_on=current_arch,
+                    build_for=current_arch,
+                    base=bases.BaseName(name=current_base.system, version=current_base.release),
+                )
+            ]
+
         return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
 
 

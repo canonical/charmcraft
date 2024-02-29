@@ -24,6 +24,7 @@ import pydantic
 import pyfakefs.fake_filesystem
 import pytest
 import pytest_check
+from craft_application import models
 from craft_application.errors import CraftValidationError
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
@@ -414,6 +415,27 @@ def test_build_planner_platforms_combinations(base, build_base, build_plan_basen
     for build_info in plan:
         pytest_check.equal(build_info.base, build_plan_basename)
         pytest_check.is_in(build_info.platform, platforms.keys())
+
+
+@pytest.mark.parametrize("architecture", sorted(const.SUPPORTED_ARCHITECTURES))
+@pytest.mark.parametrize("system", ["ubuntu", "linux", "macos", "windows", "plan9"])
+@pytest.mark.parametrize("release", ["22.04", "2.6.32", "10.5", "vista", "from bell labs"])
+def test_get_bundle_plan(mocker, architecture, release, system):
+    mocker.patch("charmcraft.utils.get_host_architecture", return_value=architecture)
+    mocker.patch(
+        "charmcraft.utils.get_os_platform",
+        return_value=utils.OSPlatform(machine=architecture, system=system, release=release),
+    )
+    planner = project.CharmcraftBuildPlanner(type="bundle")
+
+    assert planner.get_build_plan() == [
+        models.BuildInfo(
+            platform=architecture,
+            build_on=architecture,
+            build_for=architecture,
+            base=bases.BaseName(system, release),
+        )
+    ]
 
 
 # endregion

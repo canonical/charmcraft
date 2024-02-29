@@ -24,11 +24,12 @@ from charmcraft.application.main import APP_METADATA, Charmcraft
 def service_factory(fs, fake_path, simple_charm) -> services.CharmcraftServiceFactory:
     fake_project_dir = fake_path / "project"
     fake_project_dir.mkdir()
+
     factory = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     app = Charmcraft(app=APP_METADATA, services=factory)
 
-    app._configure_services(None, None)
+    app._configure_services(platform=None, build_for=None)
 
     factory.project = simple_charm
 

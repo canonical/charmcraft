@@ -39,7 +39,7 @@ from charmcraft.const import (
     METADATA_FILENAME,
     METADATA_YAML_KEYS,
     BaseStr,
-    CharmArch,
+    CharmArch, BuildBaseStr,
 )
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
@@ -593,6 +593,7 @@ class PlatformCharm(CharmcraftProject):
     description: str
 
     base: BaseStr
+    build_base: BuildBaseStr | None = None
     platforms: dict[str, Platform | None]
 
     parts: dict[str, dict[str, Any]]  # craft-parts parts

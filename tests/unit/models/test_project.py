@@ -19,7 +19,6 @@ import json
 import pathlib
 from textwrap import dedent
 from typing import Any
-from unittest import mock
 
 import pydantic
 import pyfakefs.fake_filesystem
@@ -255,32 +254,35 @@ def test_build_info_generator(given, expected):
                     platform=utils.get_host_architecture(),
                     build_on=utils.get_host_architecture(),
                     build_for=utils.get_host_architecture(),
-                    base=bases.BaseName(name=utils.get_os_platform().system, version=utils.get_os_platform().release)
+                    base=bases.BaseName(
+                        name=utils.get_os_platform().system,
+                        version=utils.get_os_platform().release,
+                    ),
                 )
             ],
-            id="bundle"
+            id="bundle",
         ),
         pytest.param(
-            {"base": "ubuntu@24.04", "platforms": {"amd64": None}},
+            {"base": "ubuntu@22.04", "platforms": {"amd64": None}},
             [
                 project.models.BuildInfo(
                     platform="amd64",
                     build_on="amd64",
                     build_for="amd64",
-                    base=bases.BaseName("ubuntu", "24.04"),
+                    base=bases.BaseName("ubuntu", "22.04"),
                 )
             ],
-            id="simple-platforms"
+            id="simple-platforms",
         ),
         pytest.param(
             {
-                "base": "ubuntu@24.04",
+                "base": "ubuntu@22.04",
                 "platforms": {
                     "fancy": {"build-on": ["amd64", "arm64", "riscv64"], "build-for": ["all"]},
                     "crossy": {"build-on": "s390x", "build-for": "ppc64el"},
                     "amd64": None,
                     "arm64": None,
-                    "riscv64": None
+                    "riscv64": None,
                 },
             },
             [
@@ -288,46 +290,62 @@ def test_build_info_generator(given, expected):
                     platform="fancy",
                     build_on="amd64",
                     build_for="all",
-                    base=bases.BaseName("ubuntu", "24.04"),
+                    base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
                     platform="fancy",
                     build_on="arm64",
                     build_for="all",
-                    base=bases.BaseName("ubuntu", "24.04"),
+                    base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
                     platform="fancy",
                     build_on="riscv64",
                     build_for="all",
-                    base=bases.BaseName("ubuntu", "24.04"),
+                    base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
                     platform="crossy",
                     build_on="s390x",
                     build_for="ppc64el",
-                    base=bases.BaseName("ubuntu", "24.04"),
+                    base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
                     platform="amd64",
                     build_on="amd64",
                     build_for="amd64",
-                    base=bases.BaseName("ubuntu", "24.04"),
+                    base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
                     platform="arm64",
                     build_on="arm64",
                     build_for="arm64",
-                    base=bases.BaseName("ubuntu", "24.04"),
+                    base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
                     platform="riscv64",
                     build_on="riscv64",
                     build_for="riscv64",
-                    base=bases.BaseName("ubuntu", "24.04"),
+                    base=bases.BaseName("ubuntu", "22.04"),
                 ),
             ],
-            id="complex-platforms"
+            id="complex-platforms",
+        ),
+        pytest.param(
+            {
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@devel",
+                "platforms": {"amd64": None},
+            },
+            [
+                project.models.BuildInfo(
+                    platform="amd64",
+                    build_on="amd64",
+                    build_for="amd64",
+                    base=bases.BaseName("ubuntu", "devel"),
+                )
+            ],
+            id="platforms-with-build-base",
         ),
         pytest.param(
             {"bases": [{"name": "ubuntu", "channel": "22.04"}]},
@@ -339,7 +357,7 @@ def test_build_info_generator(given, expected):
                     build_for_bases=[project.charmcraft.Base(name="ubuntu", channel="22.04")],
                     build_on_index=0,
                     base=bases.BaseName("ubuntu", "22.04"),
-                    bases_index=0
+                    bases_index=0,
                 ),
             ],
             id="basic-bases",
@@ -357,7 +375,7 @@ def test_build_info_generator(given, expected):
                     bases_index=0,
                 ),
             ],
-            id="arch-base"
+            id="arch-base",
         ),
     ],
 )
@@ -375,7 +393,7 @@ def test_build_planner_correct(data, expected):
         ("ubuntu@22.04", bases.BaseName("ubuntu", "22.04")),
         ("ubuntu@24.04", bases.BaseName("ubuntu", "24.04")),
         ("almalinux@9", bases.BaseName("almalinux", "9")),
-    ]
+    ],
 )
 @pytest.mark.parametrize(
     "platforms",

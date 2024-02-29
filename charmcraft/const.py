@@ -55,15 +55,16 @@ HOOKS_DIRNAME = "hooks"
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = frozenset(("install", "start", "upgrade-charm"))
 
-BaseStr = Literal[
+CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@18.04",
     "ubuntu@20.04",
     "ubuntu@22.04",
     "ubuntu@23.10",
-    "ubuntu@24.04",
     "centos@7",
     "almalinux@9",
 ]
+BaseStr = CommonBaseStr | Literal["ubuntu@24.04"]
+BuildBaseStr = CommonBaseStr | Literal["ubuntu@devel"]
 
 SUPPORTED_BASES = frozenset(
     (

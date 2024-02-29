@@ -25,7 +25,7 @@ parts:
   another-part:
     plugin: nil
 base: ubuntu@24.04
-build-base: ubuntu@22.04
+build-base: ubuntu@devel
 platforms:
   all:
     build-on:

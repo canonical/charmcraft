@@ -32,12 +32,15 @@ from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self, TypedDict
 
-from charmcraft import utils
+from charmcraft import const, utils
 from charmcraft.const import (
     JUJU_ACTIONS_FILENAME,
     JUJU_CONFIG_FILENAME,
     METADATA_FILENAME,
     METADATA_YAML_KEYS,
+    BaseStr,
+    BuildBaseStr,
+    CharmArch,
 )
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
@@ -97,6 +100,19 @@ class CharmPlatform(pydantic.ConstrainedStr):
             architectures = "-".join(base.architectures)
             base_strings.append(f"{name}-{version}-{architectures}")
         return cls("_".join(base_strings))
+
+
+class Platform(models.CraftBaseModel):
+    """Project platform definition."""
+
+    build_on: list[CharmArch] = pydantic.Field(min_items=1)
+    build_for: list[CharmArch | Literal["all"]] = pydantic.Field(min_items=1, max_items=1)
+
+    @pydantic.validator("build_on", "build_for", pre=True)
+    def _listify_architectures(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            return [value]
+        return value
 
 
 @dataclasses.dataclass
@@ -163,36 +179,6 @@ class CharmBuildInfo(models.BuildInfo):
         :param bases_config: One or more BasesConfiguration objects from which to generate
             CharmBuildInfo objects.
         :returns: A list of CharmBuildInfo objects from this BasesConfiguration.
-        """
-        for bases_index, bases_config in enumerate(bases_configs):
-            for build_on_index, build_on_base in enumerate(bases_config.build_on):
-                for build_on_arch in build_on_base.architectures:
-                    yield cls.from_build_on_run_on(
-                        build_on_base,
-                        build_on_arch,
-                        bases_config.run_on,
-                        bases_index=bases_index,
-                        build_on_index=build_on_index,
-                    )
-
-
-class CharmcraftBuildPlanner(models.BuildPlanner):
-    """Build planner for Charmcraft."""
-
-    project_type: Literal["charm", "bundle"] = pydantic.Field(alias="type")
-    bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
-
-    @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
-    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
-        """Expand short-form bases into long-form bases."""
-        if "name" not in base:  # Assume long-form base already.
-            return cast(LongFormBasesDict, base)
-        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
-
-    def get_build_plan(self) -> list[models.BuildInfo]:
-        """Get build bases for this charm.
-
-        This method provides a flattened version of every way to build the charm, unfiltered.
 
         Example 1: a simple charm:
             bases:
@@ -273,7 +259,44 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
 
         Here the string "multi" defines a destination platform that has multiple architectures.
         """
-        if self.project_type == "bundle":
+        for bases_index, bases_config in enumerate(bases_configs):
+            for build_on_index, build_on_base in enumerate(bases_config.build_on):
+                for build_on_arch in build_on_base.architectures:
+                    yield cls.from_build_on_run_on(
+                        build_on_base,
+                        build_on_arch,
+                        bases_config.run_on,
+                        bases_index=bases_index,
+                        build_on_index=build_on_index,
+                    )
+
+
+class CharmcraftBuildPlanner(models.BuildPlanner):
+    """Build planner for Charmcraft."""
+
+    type: str = ""
+    bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
+    base: str | None = None
+    build_base: str | None = None
+    platforms: dict[str, Platform | None] | None = None
+
+    @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
+    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
+        """Expand short-form bases into long-form bases."""
+        if "name" not in base:  # Assume long-form base already.
+            return cast(LongFormBasesDict, base)
+        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+
+    def get_build_plan(self) -> list[models.BuildInfo]:
+        """Get build bases for this charm.
+
+        This method provides a flattened version of every way to build the charm, unfiltered.
+
+        If a charm uses the older "bases" model, it defers to
+        `CharmBuildInfo.gen_from_bases_configurations'. Otherwise, it generates the BuildInfo
+        as expected with platforms.
+        """
+        if self.type == "bundle":
             # A bundle can build anywhere, so just present the current system.
             current_arch = utils.get_host_architecture()
             current_base = utils.get_os_platform()
@@ -285,8 +308,43 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                     base=bases.BaseName(name=current_base.system, version=current_base.release),
                 )
             ]
+        if not self.base:
+            return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
 
-        return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
+        build_base = self.build_base or self.base
+        base_name, _, base_version = build_base.partition("@")
+        base = bases.BaseName(name=base_name, version=base_version)
+
+        if self.platforms is None:
+            raise CraftError("Must define at least one platform.")
+        build_infos = []
+        for platform_name, platform in self.platforms.items():
+            if platform is None:
+                if platform_name not in const.SUPPORTED_ARCHITECTURES:
+                    raise CraftError(
+                        f"Invalid platform {platform_name}.",
+                        details="A platform name must either be a valid architecture name or the "
+                        "platform must specify one or more build-on and build-for architectures.",
+                    )
+                build_infos.append(
+                    models.BuildInfo(
+                        platform_name, build_on=platform_name, build_for=platform_name, base=base
+                    )
+                )
+            else:
+                for build_on in platform.build_on:
+                    build_infos.extend(
+                        [
+                            models.BuildInfo(
+                                platform_name,
+                                build_on=str(build_on),
+                                build_for=str(build_for),
+                                base=base,
+                            )
+                            for build_for in platform.build_for
+                        ]
+                    )
+        return build_infos
 
 
 class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
@@ -313,7 +371,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
     version: Literal["unversioned"] = "unversioned"  # type: ignore[assignment]
-    base: None = None
     license: None = None
     # These are inside the "links" child model.
     contact: None = None
@@ -337,7 +394,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             return cls.parse_obj(data)
         project_type = data.get("type")
         if project_type == "charm":
-            return Charm.unmarshal(data)
+            if "bases" in data:
+                return BasesCharm.unmarshal(data)
+            return PlatformCharm.unmarshal(data)
         if project_type == "bundle":
             return Bundle.unmarshal(data)
         raise ValueError(f"field type cannot be {project_type!r}")
@@ -462,7 +521,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         return process_part_config(item)
 
 
-class Charm(CharmcraftProject):
+class BasesCharm(CharmcraftProject):
     """Model for defining a charm."""
 
     type: Literal["charm"]
@@ -474,6 +533,8 @@ class Charm(CharmcraftProject):
     # a ConstrainedList child class has pydontic issues. This appears to be
     # solved with Pydantic 2.
     bases: list[BasesConfiguration] = pydantic.Field(min_items=1)
+
+    base: None = None
 
     parts: dict[str, dict[str, Any]] = {"charm": {"plugin": "charm", "source": "."}}
 
@@ -493,11 +554,70 @@ class Charm(CharmcraftProject):
     config: dict[str, Any] | None
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
-    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
+    def _validate_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
         """Expand short-form bases into long-form bases."""
-        if "name" not in base:  # Assume long-form base already.
-            return cast(LongFormBasesDict, base)
-        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+        if "name" in base:  # Convert short form to long form
+            base = cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+        else:  # Cast to long form since we know it is one.
+            base = cast(LongFormBasesDict, base)
+
+        # Ensure we're only allowing legacy bases.
+        for build_base in base["build-on"]:
+            if not cls._check_base_is_legacy(build_base):
+                raise ValueError(f"Base requires 'platforms' definition: {build_base}")
+        for run_base in base["run-on"]:
+            if not cls._check_base_is_legacy(run_base):
+                raise ValueError(f"Base requires 'platforms' definition: {run_base}")
+
+        return base
+
+    @staticmethod
+    def _check_base_is_legacy(base: BaseDict) -> bool:
+        """Check that the given base is a legacy base, usable with 'bases'."""
+        # This pyright ignore can go away once we're on Python minimum version 3.11.
+        # At that point we can mark items as required or not required.
+        # https://docs.python.org/3/library/typing.html#typing.Required
+        if (
+            base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+            and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+        ):
+            return True
+        if base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"}):
+            return True
+        return False
+
+
+class PlatformCharm(CharmcraftProject):
+    """Model for defining a charm using Platforms."""
+
+    type: Literal["charm"]
+    name: models.ProjectName
+    summary: models.SummaryStr
+    description: str
+
+    base: BaseStr
+    build_base: BuildBaseStr | None = None
+    platforms: dict[str, Platform | None]
+
+    parts: dict[str, dict[str, Any]]  # craft-parts parts
+
+    actions: dict[str, Any] | None
+    assumes: list[str | dict[str, list | dict]] | None
+    containers: dict[str, Any] | None
+    devices: dict[str, Any] | None
+    extra_bindings: dict[str, Any] | None
+    peers: dict[str, Any] | None
+    provides: dict[str, Any] | None
+    requires: dict[str, Any] | None
+    resources: dict[str, Any] | None
+    storage: dict[str, Any] | None
+    subordinate: bool | None
+    terms: list[str] | None
+    links: Links | None
+    config: dict[str, Any] | None
+
+
+Charm = BasesCharm | PlatformCharm
 
 
 class Bundle(CharmcraftProject):

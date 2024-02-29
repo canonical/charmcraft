@@ -107,6 +107,7 @@ class Charmcraft(Application):
             "package",
             project_dir=self.project_dir,
             platform=platform,
+            build_plan=self._build_plan,
         )
 
     def configure(self, global_args: dict[str, Any]) -> None:

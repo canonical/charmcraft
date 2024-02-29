@@ -39,7 +39,8 @@ from charmcraft.const import (
     METADATA_FILENAME,
     METADATA_YAML_KEYS,
     BaseStr,
-    CharmArch, BuildBaseStr,
+    BuildBaseStr,
+    CharmArch,
 )
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
@@ -332,15 +333,17 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                 )
             else:
                 for build_on in platform.build_on:
-                    build_infos.extend([
-                        models.BuildInfo(
-                            platform_name,
-                            build_on=str(build_on),
-                            build_for=str(build_for),
-                            base=base,
-                        )
-                        for build_for in platform.build_for
-                    ])
+                    build_infos.extend(
+                        [
+                            models.BuildInfo(
+                                platform_name,
+                                build_on=str(build_on),
+                                build_for=str(build_for),
+                                base=base,
+                            )
+                            for build_for in platform.build_for
+                        ]
+                    )
         return build_infos
 
 

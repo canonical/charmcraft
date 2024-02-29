@@ -319,9 +319,8 @@ class PackCommand(PrimeCommand):
             "--project-dir",
             "-p",
             type=pathlib.Path,
-            help="Specify the project's directory (defaults to current)"
+            help="Specify the project's directory (defaults to current)",
         )
-
 
     @override
     def run(self, parsed_args: argparse.Namespace, step_name: str | None = None) -> None:

@@ -137,7 +137,7 @@ class InitCommand(BaseCommand):
             "--project-dir",
             "-p",
             type=pathlib.Path,
-            help="Specify the project's directory (defaults to current)"
+            help="Specify the project's directory (defaults to current)",
         )
 
     def run(self, args):

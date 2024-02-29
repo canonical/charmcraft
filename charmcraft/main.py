@@ -28,7 +28,6 @@ from craft_cli import (
     CraftError,
     Dispatcher,
     EmitterMode,
-    GlobalArgument,
     ProvideHelpException,
     emit,
 )

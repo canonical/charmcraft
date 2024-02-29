@@ -16,7 +16,6 @@
 
 """Infrastructure for the 'extensions' command."""
 import argparse
-import pathlib
 from textwrap import dedent
 
 from craft_cli import emit

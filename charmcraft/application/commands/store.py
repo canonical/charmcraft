@@ -819,13 +819,6 @@ class PromoteBundleCommand(CharmcraftCommand):
             default=[],
             help="Any charms to exclude from the promotion process",
         )
-        parser.add_argument(
-            "-p",
-            "--project-dir",
-            type=pathlib.Path,
-            default=pathlib.Path.cwd(),
-            help="Specify the project's directory (defaults to current)",
-        )
 
     def run(self, parsed_args: "Namespace") -> None:
         """Run the command."""
@@ -1288,13 +1281,6 @@ class CreateLibCommand(CharmcraftCommand):
         """Add own parameters to the general parser."""
         super().fill_parser(parser)
         parser.add_argument("name", help="The name of the library file (e.g. 'db')")
-        parser.add_argument(
-            "-p",
-            "--project-dir",
-            type=pathlib.Path,
-            default=pathlib.Path.cwd(),
-            help="Specify the project's directory (defaults to current)",
-        )
 
     def run(self, parsed_args):
         """Run the command."""
@@ -1380,13 +1366,6 @@ class PublishLibCommand(CharmcraftCommand):
             "library",
             nargs="?",
             help="Library to publish (e.g. charms.mycharm.v2.foo.); optional, default to all",
-        )
-        parser.add_argument(
-            "-p",
-            "--project-dir",
-            type=pathlib.Path,
-            default=pathlib.Path.cwd(),
-            help="Specify the project's directory (defaults to current)",
         )
 
     def run(self, parsed_args):

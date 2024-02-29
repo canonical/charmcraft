@@ -74,13 +74,6 @@ class _LifecyclePartsCommand(_LifecycleCommand):
             action="store_true",
             help="Build in the current host",
         )
-        parser.add_argument(
-            "-p",
-            "--project-dir",
-            type=pathlib.Path,
-            default=pathlib.Path.cwd(),
-            help="Specify the project's directory (defaults to current)",
-        )
 
     @override
     def get_managed_cmd(self, parsed_args: argparse.Namespace) -> list[str]:
@@ -322,6 +315,13 @@ class PackCommand(PrimeCommand):
             choices=["json"],
             help="Produce a machine-readable format (currently only json)",
         )
+        parser.add_argument(
+            "--project-dir",
+            "-p",
+            type=pathlib.Path,
+            help="Specify the project's directory (defaults to current)"
+        )
+
 
     @override
     def run(self, parsed_args: argparse.Namespace, step_name: str | None = None) -> None:

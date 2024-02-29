@@ -17,6 +17,7 @@
 """Infrastructure for the 'init' command."""
 
 import os
+import pathlib
 import re
 from datetime import date
 
@@ -131,6 +132,12 @@ class InitCommand(BaseCommand):
             choices=list(PROFILES),
             default=DEFAULT_PROFILE,
             help=f"Use the specified project profile (defaults to '{DEFAULT_PROFILE}')",
+        )
+        parser.add_argument(
+            "--project-dir",
+            "-p",
+            type=pathlib.Path,
+            help="Specify the project's directory (defaults to current)"
         )
 
     def run(self, args):

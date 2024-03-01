@@ -259,7 +259,7 @@ def test_build_info_generator(given, expected):
                         name=utils.get_os_platform().system,
                         version=utils.get_os_platform().release,
                     ),
-                )
+                ),
             ],
             id="bundle",
         ),
@@ -676,6 +676,25 @@ def test_instantiate_bases_charm_error(
 ):
     with pytest.raises(error_cls, match=error_match):
         project.BasesCharm(**values)
+
+
+@pytest.mark.parametrize("base", ["ubuntu@24.04"])
+def test_devel_bases(monkeypatch, base):
+    monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
+
+    with pytest.raises(
+        pydantic.ValidationError,
+        match=r"requires a build-base \(recommended: 'build-base: ubuntu@devel'\)",
+    ):
+        project.PlatformCharm(
+            type="charm",
+            name="test-charm",
+            summary="",
+            description="",
+            base=base,
+            platforms={"amd64": None},
+            parts={"charm": {"plugin": "charm"}},
+        )
 
 
 @pytest.mark.parametrize(

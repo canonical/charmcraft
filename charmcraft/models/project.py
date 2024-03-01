@@ -616,6 +616,31 @@ class PlatformCharm(CharmcraftProject):
     links: Links | None
     config: dict[str, Any] | None
 
+    @staticmethod
+    def _check_base_is_legacy(base: BaseDict) -> bool:
+        """Check that the given base is a legacy base, usable with 'bases'."""
+        # This pyright ignore can go away once we're on Python minimum version 3.11.
+        # At that point we can mark items as required or not required.
+        # https://docs.python.org/3/library/typing.html#typing.Required
+        if (
+            base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+            and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+        ):
+            return True
+        if base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"}):
+            return True
+        return False
+
+    @pydantic.validator("build_base", always=True)
+    def _validate_dev_base_needs_build_base(
+        cls, build_base: str | None, values: dict[str, Any]
+    ) -> str | None:
+        if not build_base and (base := values["base"]) in const.DEVEL_BASE_STRINGS:
+            raise ValueError(
+                f"Base {base} requires a build-base (recommended: 'build-base: ubuntu@devel')"
+            )
+        return build_base
+
 
 Charm = BasesCharm | PlatformCharm
 

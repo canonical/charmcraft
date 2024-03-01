@@ -164,7 +164,7 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
     assert package_service.get_manifest_bases() == [models.Base.parse_obj(b) for b in expected]
 
 
-@pytest.mark.parametrize("base", ["ubuntu@22.04", "ubuntu@24.04", "almalinux@9"])
+@pytest.mark.parametrize("base", ["ubuntu@22.04", "almalinux@9"])
 @pytest.mark.parametrize(
     ("platforms", "selected_platform", "expected_architectures"),
     [

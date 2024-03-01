@@ -75,7 +75,7 @@ BASIC_BUNDLE_DICT = {
     ],
 )
 def test_charm_metadata_from_charm_success(charm_dict, expected):
-    charm = project.Charm.unmarshal(charm_dict)
+    charm = project.CharmcraftProject.unmarshal(charm_dict)
 
     assert json.loads(json.dumps(metadata.CharmMetadata.from_charm(charm).marshal())) == expected
 

@@ -35,6 +35,7 @@ def package_service(fake_path, service_factory):
         services=service_factory,
         project_dir=fake_project_dir,
         platform="ubuntu-22.04-arm64",
+        build_plan=[],
     )
     service_factory.package = svc
     return svc

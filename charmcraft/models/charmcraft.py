@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ from typing import Any, Literal, cast
 
 import pydantic
 from craft_cli import CraftError
+from typing_extensions import Self
 
 from charmcraft import const, parts
 from charmcraft.extensions import apply_extensions
@@ -55,6 +56,16 @@ class Base(ModelConfigDefaults):
     name: pydantic.StrictStr
     channel: pydantic.StrictStr
     architectures: list[pydantic.StrictStr] = [get_host_architecture()]
+
+    @classmethod
+    def from_str_and_arch(cls, base_str: str, architectures: list[str]) -> Self:
+        """Get a Base from a base string and list of architectures.
+
+        :param base_str: A base string along the lines of "<name>@<channel>"
+        :param architectures: A list of architectures (or ["all"])
+        """
+        name, _, channel = base_str.partition("@")
+        return cls(name=name, channel=channel, architectures=architectures)
 
 
 class BasesConfiguration(

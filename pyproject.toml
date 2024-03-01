@@ -3,10 +3,10 @@ name = "charmcraft"
 description = "The main tool to build, upload, and develop in general the Juju charms."
 dynamic = ["version", "readme"]
 dependencies = [
-    "craft-application~=1.1",
+    "craft-application @ git+https://github.com/canonical/craft-application@main",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
-    "craft-providers",
+    "craft-providers>=1.23.0",
     "craft-store>=2.4",
     "distro>=1.3.0",
     "humanize>=2.6.0",
@@ -35,6 +35,7 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.10"
 

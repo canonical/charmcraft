@@ -265,17 +265,28 @@ class CharmPlugin(plugins.Plugin):
 
     def get_build_environment(self) -> dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
+        environment = {
+            # Cryptography fails to load OpenSSL legacy provider in some circumstances.
+            # Since we don't need the legacy provider, this works around that bug.
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"
+        }
         os_special_paths = self._get_os_special_priority_paths()
         if os_special_paths:
-            return {"PATH": os_special_paths + ":${PATH}"}
+            environment["PATH"] = os_special_paths + ":${PATH}"
 
-        return {}
+        return environment
 
     def get_build_commands(self) -> list[str]:
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
 
-        build_env = {"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+        build_env = {
+            "LANG": "C.UTF-8",
+            "LC_ALL": "C.UTF-8",
+            # Cryptography fails to load OpenSSL legacy provider in some circumstances.
+            # Since we don't need the legacy provider, this works around that bug.
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true",
+        }
         for key in [
             "PATH",
             "SNAP",

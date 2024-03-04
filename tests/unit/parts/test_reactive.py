@@ -100,7 +100,7 @@ def test_get_build_snaps(plugin):
 
 
 def test_get_build_environment(plugin):
-    assert plugin.get_build_environment() == {}
+    assert plugin.get_build_environment() == {"CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"}
 
 
 def test_get_build_commands(plugin, tmp_path):

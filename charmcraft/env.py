@@ -16,11 +16,11 @@
 
 """Charmcraft environment utilities."""
 import dataclasses
-import distutils.util
 import os
 import pathlib
 
 import platformdirs
+from craft_application.util import strtobool
 
 from charmcraft import const
 
@@ -77,13 +77,13 @@ def is_charmcraft_running_from_snap():
 def is_charmcraft_running_in_developer_mode():
     """Check if Charmcraft is running under developer mode."""
     developer_flag = os.getenv(const.DEVELOPER_MODE_ENV_VAR, "n")
-    return distutils.util.strtobool(developer_flag) == 1
+    return strtobool(developer_flag)
 
 
 def is_charmcraft_running_in_managed_mode():
     """Check if charmcraft is running in a managed environment."""
     managed_flag = os.getenv(const.MANAGED_MODE_ENV_VAR, os.getenv("CRAFT_MANAGED_MODE", "n"))
-    return distutils.util.strtobool(managed_flag) == 1
+    return strtobool(managed_flag)
 
 
 @dataclasses.dataclass(frozen=True)

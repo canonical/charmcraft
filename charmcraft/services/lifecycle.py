@@ -16,8 +16,6 @@
 """Service class for running craft lifecycle commands."""
 from __future__ import annotations
 
-import os
-
 from craft_application import services
 
 
@@ -27,5 +25,4 @@ class LifecycleService(services.LifecycleService):
     def setup(self) -> None:
         """Do Charmcraft-specific setup work."""
         self._manager_kwargs.setdefault("project_name", self._project.name)
-        self._manager_kwargs.setdefault("parallel_build_count", os.cpu_count())
         super().setup()

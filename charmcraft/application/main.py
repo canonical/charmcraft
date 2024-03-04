@@ -129,7 +129,7 @@ class Charmcraft(Application):
         if project_dir := getattr(dispatcher.parsed_args(), "project_dir", None):
             self.project_dir = pathlib.Path(project_dir)
         else:
-            self.project_dir = pathlib.Path(".")
+            self.project_dir = pathlib.Path()
         super()._pre_run(dispatcher)
 
     def run_managed(self, platform: str | None, build_for: str | None) -> None:

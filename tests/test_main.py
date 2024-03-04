@@ -27,10 +27,7 @@ from unittest.mock import patch
 
 import pytest
 from craft_cli import (
-    ArgumentParsingError,
-    CommandGroup,
     CraftError,
-    ProvideHelpException,
 )
 from craft_store.errors import CraftStoreError
 

@@ -13,8 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
-
+import sys
 from textwrap import dedent
 from typing import Any
 
@@ -22,8 +21,6 @@ import pytest
 from overrides import override
 
 from charmcraft import extensions
-from charmcraft.commands.extensions import ExpandExtensionsCommand
-from charmcraft.config import load
 from tests.extensions.test_extensions import FakeExtension
 
 
@@ -44,41 +41,46 @@ def fake_extensions(stub_extensions):
     extensions.register(TestExtension.name, TestExtension)
 
 
-def test_expand_extensions_simple(tmp_path, prepare_charmcraft_yaml, fake_extensions, emitter):
+@pytest.mark.parametrize(
+    ("charmcraft_yaml", "expected"),
+    [
+        (
+            dedent(
+                f"""
+                name: test-charm-name
+                type: charm
+                summary: test-summary
+                description: test-description
+                extensions: [{TestExtension.name}]
+                base: ubuntu@22.04
+                platforms:
+                  amd64:
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name
+                summary: test-summary
+                description: test-description
+                base: ubuntu@22.04
+                platforms:
+                  amd64: null
+                parts: {}
+                type: charm
+                terms:
+                - https://example.com/test
+                """
+            ),
+        )
+    ],
+)
+def test_expand_extensions_simple(
+    monkeypatch, new_path, app, fake_extensions, emitter, charmcraft_yaml, expected
+):
     """Expand a charmcraft.yaml with a single extension."""
-    prepare_charmcraft_yaml(
-        dedent(
-            f"""
-            name: test-charm-name
-            type: charm
-            summary: test-summary
-            description: test-description
-            extensions: [{TestExtension.name}]
-            """
-        )
-    )
+    (new_path / "charmcraft.yaml").write_text(charmcraft_yaml)
+    monkeypatch.setattr(sys, "argv", ["charmcraft", "expand-extensions"])
 
-    config = load(tmp_path)
-    cmd = ExpandExtensionsCommand(config)
-    cmd.run([])
-    emitter.assert_message(
-        dedent(
-            """\
-            analysis:
-              ignore:
-                attributes: []
-                linters: []
-            charmhub:
-              api-url: https://api.charmhub.io
-              registry-url: https://registry.jujucharms.com
-              storage-url: https://storage.snapcraftcontent.com
-            description: test-description
-            name: test-charm-name
-            parts: {}
-            summary: test-summary
-            terms:
-            - https://example.com/test
-            type: charm
-            """
-        )
-    )
+    app.run()
+
+    emitter.assert_message(expected)

@@ -133,10 +133,17 @@ class InitCommand(base.CharmcraftCommand):
             default=DEFAULT_PROFILE,
             help=f"Use the specified project profile (defaults to '{DEFAULT_PROFILE}')",
         )
+        parser.add_argument(
+            "-p",
+            "--project-dir",
+            type=pathlib.Path,
+            default=pathlib.Path.cwd(),
+            help="Specify the project's directory (defaults to current)",
+        )
 
     def run(self, parsed_args: argparse.Namespace):
         """Execute command's actual functionality."""
-        init_dirpath = pathlib.Path(self._global_args.get("project_dir") or ".").resolve()
+        init_dirpath = parsed_args.project_dir.resolve()
         if not init_dirpath.exists():
             init_dirpath.mkdir(parents=True)
         elif any(init_dirpath.iterdir()) and not parsed_args.force:

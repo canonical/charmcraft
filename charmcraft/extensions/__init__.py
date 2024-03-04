@@ -18,6 +18,7 @@
 
 from charmcraft.extensions._utils import apply_extensions
 from charmcraft.extensions.extension import Extension
+from charmcraft.extensions.bundle import Bundle
 from charmcraft.extensions.registry import (
     get_extension_class,
     get_extension_names,
@@ -26,8 +27,11 @@ from charmcraft.extensions.registry import (
     unregister,
 )
 
+register("bundle", Bundle)
+
 __all__ = [
     "Extension",
+    "Bundle",
     "get_extension_class",
     "get_extension_names",
     "get_extensions",

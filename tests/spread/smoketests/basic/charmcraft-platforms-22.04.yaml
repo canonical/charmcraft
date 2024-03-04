@@ -1,0 +1,14 @@
+name: jammy-platforms
+type: charm
+title: A charm built and running on jammy.
+summary: A charm built and running on jammy.
+description: A charm built and running on jammy.
+base: ubuntu@22.04
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+parts:
+  my-charm:
+    plugin: charm
+    source: .

@@ -124,6 +124,7 @@ class Charmcraft(Application):
     def _get_app_plugins(self) -> dict[str, plugins.PluginType]:
         return {"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin}
 
+    @override
     def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:
         """Override to get project_dir early."""
         if project_dir := getattr(dispatcher.parsed_args(), "project_dir", None):

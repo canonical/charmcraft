@@ -314,7 +314,7 @@ lint.ignore = [
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "ANN0", "ANN2",
     "ARG001", "ARG002", "ARG005",
-    "B034",
+    "B034", "B904",
     "BLE",
     "D417",
     "FBT",
@@ -327,7 +327,7 @@ lint.ignore = [
     "RET505", "RET506", "RET508",
     "S108", "S113", "S324", "S701",
     "SIM102",
-    "TRY004", "TRY200",
+    "TRY004",
 ]
 
 [tool.ruff.lint.pep8-naming]

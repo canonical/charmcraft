@@ -327,7 +327,6 @@ lint.ignore = [
     "RET505", "RET506", "RET508",
     "S108", "S113", "S324", "S701",
     "SIM102",
-    "TRY004", "TRY200",
 ]
 
 [tool.ruff.lint.pep8-naming]

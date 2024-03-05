@@ -314,9 +314,7 @@ lint.ignore = [
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "ANN0", "ANN2",
     "ARG001", "ARG002", "ARG005",
-    "B034",
     "BLE",
-    "D417",
     "FBT",
     "N805", "N806",
     "PGH003",

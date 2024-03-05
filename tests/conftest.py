@@ -274,10 +274,8 @@ def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
 
     def prepare_charmcraft_yaml(content: str | None = None):
         if content is None:
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(tmp_path / const.CHARMCRAFT_FILENAME)
-            except OSError:
-                pass
         else:
             charmcraft_yaml_file = tmp_path / const.CHARMCRAFT_FILENAME
             charmcraft_yaml_file.write_text(content)
@@ -296,10 +294,8 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
 
     def prepare_metadata_yaml(content: str | None = None, remove: bool = False):
         if content is None:
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(tmp_path / const.METADATA_FILENAME)
-            except OSError:
-                pass
         else:
             metadata_yaml_file = tmp_path / const.METADATA_FILENAME
             metadata_yaml_file.write_text(content)
@@ -318,10 +314,8 @@ def prepare_actions_yaml(tmp_path: pathlib.Path):
 
     def prepare_actions_yaml(content: str | None = None):
         if content is None:
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(tmp_path / const.JUJU_ACTIONS_FILENAME)
-            except OSError:
-                pass
         else:
             actions_yaml_file = tmp_path / const.JUJU_ACTIONS_FILENAME
             actions_yaml_file.write_text(content)
@@ -340,10 +334,8 @@ def prepare_config_yaml(tmp_path: pathlib.Path):
 
     def prepare_config_yaml(content: str | None = None):
         if content is None:
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(tmp_path / const.JUJU_CONFIG_FILENAME)
-            except OSError:
-                pass
         else:
             config_yaml_file = tmp_path / const.JUJU_CONFIG_FILENAME
             config_yaml_file.write_text(content)

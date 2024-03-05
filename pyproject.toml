@@ -347,12 +347,9 @@ classmethod-decorators = ["pydantic.validator"]
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "A001", "A002",
     "B007", "B015",
-    "D100",
-    "N802",
     "PT004", "PT012",
     "PTH1",
     "S105", "S106",
-    "SIM105", "SIM115",
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.
 "__init__.py" = ["I001"]

@@ -59,8 +59,6 @@ import pytest_check
         "list-lib",
         "resources",
         "upload-resource",
-        "list-extensions",
-        "expand-extensions",
     ],
 )
 def test_compare_command_and_legacy_options(command):

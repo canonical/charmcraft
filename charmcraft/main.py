@@ -33,7 +33,7 @@ from craft_cli import (
 )
 
 from charmcraft import config, const, env, utils
-from charmcraft.commands import extensions, pack, store, version
+from charmcraft.commands import pack, store, version
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -87,15 +87,9 @@ _charmhub_commands = [
     store.ListResourcesCommand,
     store.UploadResourceCommand,
 ]
-_extensions_commands = [
-    extensions.ExtensionsCommand,
-    extensions.ListExtensionsCommand,
-    extensions.ExpandExtensionsCommand,
-]
 COMMAND_GROUPS = [
     CommandGroup("Basic", _basic_commands),
     CommandGroup("Charmhub", _charmhub_commands),
-    CommandGroup("Extensions", _extensions_commands),
 ]
 
 # non-charmcraft useful environment variables to log

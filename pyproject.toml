@@ -64,7 +64,7 @@ lint = [
 ]
 types = [
     "mypy[reports]~=1.5",
-    "pyright==1.1.350",
+    "pyright==1.1.352",
     "types-python-dateutil",
     "types-requests<2.31.0.7",  # Frozen until we can get urllib3 v2
     "types-setuptools",

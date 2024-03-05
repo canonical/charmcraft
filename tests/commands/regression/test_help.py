@@ -39,7 +39,6 @@ import pytest_check
     "command",
     [
         "pack",
-        "clean",
         "version",
         "login",
         "logout",

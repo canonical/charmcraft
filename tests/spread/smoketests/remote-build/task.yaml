@@ -22,7 +22,9 @@ prepare: |
   date --utc +%Y-%m-%dT%R:%S.%N > charm/build_time.txt  # Ensure we get a unique build name
 
   sed -i "s/- name: ubuntu/- name: ${BASE_NAME}/g" charm/charmcraft.yaml
-  sed -i "s/channel:.*/channel: '${BASE_CHANNEL}'/g" charm/charmcraft.yaml
+  # This limits us to amd64 since it tends to be the fastest build queue on launchpad.
+  # We only need to do one build to test this anyway.
+  sed -i -E "s/( *)channel: .*/\1channel: '${BASE_CHANNEL}'\n\1architectures: [amd64]/g" charm/charmcraft.yaml
 
   mkdir -p ~/.local/share/charmcraft
   # To get this on your machine, you can run:

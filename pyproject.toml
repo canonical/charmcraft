@@ -157,17 +157,7 @@ reportAttributeAccessIssue = "warning"
 reportGeneralTypeIssues = "warning"
 reportIncompatibleMethodOverride = "warning"
 reportIncompatibleVariableOverride = "warning"
-reportMissingParameterType = "warning"
-reportMissingTypeArgument = "warning"
 reportOptionalMemberAccess = "warning"
-reportUnknownArgumentType = "warning"
-reportUnknownLambdaType = "warning"
-reportUnknownMemberType = "warning"
-reportUnknownParameterType = "warning"
-reportUnknownVariableType = "warning"
-reportUnnecessaryIsInstance = "warning"
-reportUnsupportedDunderAll = "warning"
-reportUntypedFunctionDecorator = "warning"
 
 
 [tool.mypy]

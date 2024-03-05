@@ -128,7 +128,7 @@ class Charmcraft(Application):
     def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:
         """Override to get project_dir early."""
         super()._pre_run(dispatcher)
-        if not not self.is_managed() and not getattr(dispatcher.parsed_args(), "project_dir", None):
+        if not self.is_managed() and not getattr(dispatcher.parsed_args(), "project_dir", None):
             self.project_dir = pathlib.Path()
 
     def run_managed(self, platform: str | None, build_for: str | None) -> None:

@@ -356,7 +356,7 @@ class CharmPlugin(plugins.Plugin):
 
                 # remove base tools if defined in charm_python_packages
                 for pkg in options.charm_python_packages:
-                    pkg = re.split("[<=>]", pkg, 1)[0].strip()
+                    pkg = re.split("[<=>]", pkg, maxsplit=1)[0].strip()
                     if pkg in base_tools:
                         base_tools.remove(pkg)
 

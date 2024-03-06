@@ -194,7 +194,7 @@ class PackCommand(BaseCommand):
             if bases_index >= len_configured_bases:
                 raise CraftError(msg.format(bases_index))
 
-    def _pack_charm(self, parsed_args, builder: package.Builder) -> list[pathlib.Path]:
+    def _pack_charm(self, parsed_args, builder: package.Builder) -> None:
         """Pack a charm."""
         self._validate_bases_indices(parsed_args.bases_index)
 
@@ -206,7 +206,7 @@ class PackCommand(BaseCommand):
         )
 
         # avoid showing results when run inside a container (the outer charmcraft
-        # is responsible of the final message to the user)
+        # is responsible for the final message to the user)
         if env.is_charmcraft_running_in_managed_mode():
             return
 

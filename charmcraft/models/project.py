@@ -60,6 +60,7 @@ class CharmcraftSummaryStr(models.SummaryStr):
 
     See: https://github.com/canonical/charmcraft/issues/1568
     """
+
     max_length = 200
 
 
@@ -436,9 +437,12 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
         project_dir = path.parent
 
+        charmcraft_files = ["charmcraft.yaml"]
+
         bundle_file = project_dir / "bundle.yaml"
         if data.get("type") == "bundle":
             if bundle_file.is_file():
+                charmcraft_files.append("bundle.yaml")
                 with bundle_file.open() as f:
                     data["bundle"] = safe_yaml_load(f)
             else:
@@ -446,6 +450,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
         metadata_file = project_dir / METADATA_FILENAME
         if metadata_file.is_file():
+            charmcraft_files.append(METADATA_FILENAME)
             # metadata.yaml exists, so we can't specify metadata keys in charmcraft.yaml.
             overlap_keys = METADATA_YAML_KEYS.intersection(data.keys())
             if overlap_keys:
@@ -460,31 +465,51 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
         config_file = project_dir / JUJU_CONFIG_FILENAME
         if config_file.is_file():
+            charmcraft_files.append(JUJU_CONFIG_FILENAME)
             if "config" in data:
                 raise errors.CraftValidationError(
                     f"Cannot specify 'config' section in 'charmcraft.yaml' when {JUJU_CONFIG_FILENAME!r} exists",
                     resolution=f"Move all data from {JUJU_CONFIG_FILENAME!r} to the 'config' section in 'charmcraft.yaml'",
                 )
-            data["config"] = parse_config_yaml(project_dir, allow_broken=True)
+            try:
+                data["config"] = parse_config_yaml(project_dir)
+            except pydantic.ValidationError as err:
+                raise errors.CraftValidationError.from_pydantic(err, file_name=repr(JUJU_CONFIG_FILENAME))
 
         actions_file = project_dir / JUJU_ACTIONS_FILENAME
         if actions_file.is_file():
+            charmcraft_files.append(JUJU_ACTIONS_FILENAME)
             if "actions" in data:
                 raise errors.CraftValidationError(
                     f"Cannot specify 'actions' section in 'charmcraft.yaml' when {JUJU_ACTIONS_FILENAME!r} exists",
                     resolution=f"Move all data from {JUJU_ACTIONS_FILENAME!r} to the 'actions' section in 'charmcraft.yaml'",
                 )
-            data["actions"] = parse_actions_yaml(project_dir).actions
+            try:
+                data["actions"] = parse_actions_yaml(project_dir).actions
+            except pydantic.ValidationError as err:
+                raise errors.CraftValidationError.from_pydantic(err, file_name=repr(JUJU_ACTIONS_FILENAME))
 
         try:
             project = cls.unmarshal(data)
         except pydantic.ValidationError as err:
-            raise errors.CraftValidationError.from_pydantic(err, file_name=path.name)
+            file_names = [path.name]
+            if metadata_file.is_file():
+                if any(error["loc"][0] in METADATA_YAML_KEYS for error in err.errors()):
+                    file_names.append(metadata_file.name)
+            if config_file.is_file() and any(error["loc"][0] == "config" for error in err.errors()):
+                file_names.append(config_file.name)
+
+            file_names_str = utils.humanize_list(file_names, "or")
+            raise errors.CraftValidationError.from_pydantic(err, file_name=file_names_str)
         except ValueError as err:
             error_str = "\n".join(f"- {arg}" for arg in err.args)
-            raise errors.CraftValidationError(
-                f"Bad charmcraft.yaml content:\n{error_str}",
-            )
+            if charmcraft_files == ["charmcraft.yaml"]:
+                bad_file_msg = "Bad 'charmcraft.yaml' content"
+            else:
+                bad_file_msg = (
+                    f"Bad charm metadata in one of {utils.humanize_list(charmcraft_files, 'or')}"
+                )
+            raise errors.CraftValidationError(f"{bad_file_msg}:\n{error_str}")
 
         return project
 

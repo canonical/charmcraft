@@ -613,6 +613,129 @@ def test_from_yaml_file_exception(
     assert exc.value.details == details
 
 
+@pytest.mark.parametrize(
+    ("files", "error_message"),
+    [
+        pytest.param(
+            {
+                "charmcraft.yaml": dedent(
+                    """\
+                    type: charm
+                    bases: [{name: ubuntu, channel: '22.04'}]
+                    """
+                )
+            },
+            "^Bad 'charmcraft.yaml' content:\n- field 'name' required",
+            id="basic-invalid-charm",
+        ),
+        pytest.param(
+            {
+                "charmcraft.yaml": dedent(
+                    """\
+                    type: charm
+                    bases: [{name: ubuntu, channel: '22.04'}]
+                    """
+                ),
+                "metadata.yaml": dedent(
+                    """\
+                    name: my-charm
+                    summary: This is an invalid summary because I'm ensuring that it's over 200 characters long. This is an invalid summary because I'm ensuring that it's over 200 characters long. This is an invalid summary because I'm ensuring that it's over 200 characters long.
+                    description: y'know, for testing
+                    """
+                )
+            },
+            "^Bad 'charmcraft.yaml' or 'metadata.yaml' content:\n- .*field 'summary'",
+            id="invalid-metadata"
+        ),
+        pytest.param(
+            {
+                "charmcraft.yaml": dedent(
+                    """\
+                    type: charm
+                    bases: [{name: ubuntu, channel: '22.04'}]
+                    name: my-charm
+                    summary: This is an invalid summary because I'm ensuring that it's over 200 characters long. This is an invalid summary because I'm ensuring that it's over 200 characters long. This is an invalid summary because I'm ensuring that it's over 200 characters long.
+                    description: y'know, for testing
+                    """
+                )
+            },
+            "^Bad 'charmcraft.yaml' content:\n- .*field 'summary'",
+            id="invalid-metadata-in-charmcraft.yaml"
+        ),
+        pytest.param(
+            {
+                "charmcraft.yaml": dedent(
+                    """\
+                    type: charm
+                    bases: [{name: ubuntu, channel: '22.04'}]
+                    name: my-charm
+                    summary: a test charm
+                    description: y'know, for testing
+                    config: [[]]
+                    """
+                )
+            },
+            "^Bad 'charmcraft.yaml' content:\n- .*field 'config'",
+            id="invalid-config-in-charmcraft.yaml"
+        ),
+        pytest.param(
+            {
+                "charmcraft.yaml": dedent(
+                    """\
+                    type: charm
+                    bases: [{name: ubuntu, channel: '22.04'}]
+                    name: my-charm
+                    summary: a test charm
+                    description: y'know, for testing
+                    """
+                ),
+                "config.yaml": "options:\n  something: invalid"
+            },
+            "^Bad 'config.yaml' content:\n- .*field 'options.something'",
+            id="invalid-config-in-config.yaml"
+        ),
+        pytest.param(
+            {
+                "charmcraft.yaml": dedent(
+                    """\
+                    type: charm
+                    bases: [{name: ubuntu, channel: '22.04'}]
+                    name: my-charm
+                    summary: a test charm
+                    description: y'know, for testing
+                    actions: [[]]
+                    """
+                )
+            },
+            "^Bad 'charmcraft.yaml' content:\n- .*field 'actions'",
+            id="invalid-actions-in-charmcraft.yaml"
+        ),
+        pytest.param(
+            {
+                "charmcraft.yaml": dedent(
+                    """\
+                    type: charm
+                    bases: [{name: ubuntu, channel: '22.04'}]
+                    name: my-charm
+                    summary: a test charm
+                    description: y'know, for testing
+                    """
+                ),
+                "actions.yaml": "actions:"
+            },
+            "^Bad 'actions.yaml' content:\n- .*field 'actions",
+            id="invalid-actions-in-actions.yaml"
+        ),
+    ],
+)
+def test_bad_content_files(fs, files, error_message):
+    for file, contents in files.items():
+        fs.create_file(file, contents=contents)
+
+    with pytest.raises(CraftValidationError, match=error_message):
+        project.CharmcraftProject.from_yaml_file(pathlib.Path("/charmcraft.yaml"))
+
+
 # endregion
 # region Charm tests
 @pytest.mark.parametrize(
@@ -718,7 +841,7 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             "basic.yaml",
             dedent(
                 """\
-                Bad basic.yaml content:
+                Bad 'basic.yaml' content:
                 - field 'name' required in top-level configuration
                 - field 'summary' required in top-level configuration
                 - field 'description' required in top-level configuration
@@ -729,7 +852,7 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             "invalid-type.yaml",
             dedent(
                 """\
-                Bad invalid-type.yaml content:
+                Bad 'invalid-type.yaml' content:
                 - field 'name' required in top-level configuration
                 - field 'summary' required in top-level configuration
                 - field 'description' required in top-level configuration
@@ -741,7 +864,7 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             "invalid-base.yaml",
             dedent(
                 """\
-                Bad invalid-base.yaml content:
+                Bad 'invalid-base.yaml' content:
                 - Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
                 - Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
             ),

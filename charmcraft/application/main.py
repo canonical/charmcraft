@@ -68,6 +68,16 @@ class Charmcraft(Application):
     ) -> dict[str, Any]:
         yaml_data = yaml_data.copy()
 
+        ext_names = yaml_data.setdefault("extensions", [])
+        invalid_extensions = [ext for ext in ext_names if ext.startswith("_")]
+        if invalid_extensions:
+            invalid_extensions_str = humanize_list(invalid_extensions, "and")
+            raise errors.CraftError(
+                f"Invalid extension(s): {invalid_extensions_str}",
+                details="Extensions prefixed with an underscore are for internal use only",
+                retcode=65  # Bad data, per sysexits.h
+            )
+
         # Default extensions
         if yaml_data.get("type") == "bundle":
             yaml_data.setdefault("extensions", []).append("_bundle")

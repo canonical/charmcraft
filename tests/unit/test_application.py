@@ -109,6 +109,11 @@ def test_extra_yaml_transform_success(
             ),
             "Fields in charmcraft.yaml cannot be duplicated in metadata.yaml",
         ),
+        (
+            {"extensions": ["_hidden", "_private", "Willard"]},
+            "",
+            "Invalid extension(s): '_hidden' and '_private'"
+        )
     ],
 )
 def test_extra_yaml_transform_failure(

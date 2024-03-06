@@ -69,6 +69,30 @@ class BadLibraryNameError(CraftError):
         )
 
 
+class InvalidYamlFileError(CraftError):
+    """If a provided YAML file doesn't conform to the expected format."""
+
+    def __init__(
+        self,
+        file_name: str,
+        docs_url: str,
+        *,
+        details: str | None = None,
+        resolution: str | None = None,
+    ):
+        message = f"{file_name!r} does not meet the expected format"
+        resolution = resolution or f"Ensure {file_name!r} meets Charmcraft's expected format"
+        super().__init__(
+            message=message,
+            details=details,
+            resolution=resolution,
+            docs_url=docs_url,
+            logpath_report=False,
+            reportable=False,
+            retcode=65,  # Data error, per sysexits.h
+        )
+
+
 class InvalidCharmPathError(CraftError):
     """The path provided is not the source directory for a valid charm."""
 

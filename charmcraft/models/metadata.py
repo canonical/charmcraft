@@ -114,7 +114,8 @@ class CharmMetadataLegacy(CharmMetadata):
         # convert undocumented "maintainer" to documented "maintainers"
         if "maintainer" in obj and "maintainers" in obj:
             raise CraftError(
-                f"Cannot specify both 'maintainer' and 'maintainers' in {const.METADATA_FILENAME}"
+                f"Cannot specify both 'maintainer' and 'maintainers' in {const.METADATA_FILENAME}",
+                retcode=65,  # Data error, per sysexits.h
             )
 
         if "maintainer" in obj:

@@ -22,7 +22,7 @@ import sys
 from typing import Any
 
 import craft_cli
-from craft_application import Application, AppMetadata, util
+from craft_application import Application, AppMetadata
 from craft_parts.plugins import plugins
 from overrides import override
 
@@ -32,7 +32,6 @@ from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
 from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
 from charmcraft.services import CharmcraftServiceFactory
-from charmcraft.utils import humanize_list
 
 APP_METADATA = AppMetadata(
     name="charmcraft",
@@ -81,35 +80,10 @@ class Charmcraft(Application):
         # Default extensions
         if yaml_data.get("type") == "bundle":
             yaml_data.setdefault("extensions", []).append("_bundle")
+        if (self.project_dir / const.METADATA_FILENAME).exists():
+            yaml_data.setdefault("extensions", []).append("_metadata")
 
-        yaml_data = extensions.apply_extensions(self.project_dir, yaml_data)
-
-        metadata_path = pathlib.Path(self.project_dir / "metadata.yaml")
-        if metadata_path.exists():
-            with metadata_path.open() as file:
-                metadata_yaml = util.safe_yaml_load(file)
-            if not isinstance(metadata_yaml, dict):
-                raise errors.CraftError(
-                    "Invalid file: 'metadata.yaml'",
-                    resolution="Ensure metadata.yaml meets the juju metadata.yaml specification.",
-                    docs_url="https://juju.is/docs/sdk/metadata-yaml",
-                    retcode=65,  # Data error, per sysexits.h
-                )
-            duplicate_fields = []
-            for field in const.METADATA_YAML_MIGRATE_FIELDS:
-                if field in yaml_data and field in metadata_yaml:
-                    duplicate_fields.append(field)
-            if duplicate_fields:
-                raise errors.CraftError(
-                    "Fields in charmcraft.yaml cannot be duplicated in metadata.yaml",
-                    details=f"Duplicate fields: {humanize_list(duplicate_fields, 'and')}",
-                    resolution="Remove the duplicate fields from metadata.yaml.",
-                    retcode=65,  # Data error. per sysexits.h
-                )
-            for field in const.METADATA_YAML_MIGRATE_FIELDS:
-                yaml_data.setdefault(field, metadata_yaml.get(field))
-
-        return yaml_data
+        return extensions.apply_extensions(self.project_dir, yaml_data)
 
     def _configure_services(self, platform: str | None, build_for: str | None) -> None:
         super()._configure_services(platform, build_for)

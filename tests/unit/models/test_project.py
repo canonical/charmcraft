@@ -470,25 +470,16 @@ def test_unmarshal_invalid_type(type_):
 
 
 @pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml", "config_yaml", "actions_yaml", "expected_diff"),
+    ("charmcraft_yaml", "config_yaml", "actions_yaml", "expected_diff"),
     [
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
-            None,
-            {},
-        ),
-        (
-            MINIMAL_CHARMCRAFT_YAML,
-            SIMPLE_METADATA_YAML,
-            None,
-            None,
             {},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
-            None,
             SIMPLE_CONFIG_YAML,
             None,
             {"config": SIMPLE_CONFIG_DICT},
@@ -496,16 +487,8 @@ def test_unmarshal_invalid_type(type_):
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
-            None,
             SIMPLE_ACTIONS_YAML,
             {"actions": SIMPLE_ACTIONS_DICT},
-        ),
-        (
-            MINIMAL_CHARMCRAFT_YAML,
-            SIMPLE_METADATA_YAML,
-            SIMPLE_CONFIG_YAML,
-            SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT, "config": SIMPLE_CONFIG_DICT},
         ),
     ],
 )
@@ -513,7 +496,6 @@ def test_from_yaml_file_success(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
     simple_charm,
     charmcraft_yaml: str,
-    metadata_yaml: str | None,
     config_yaml: str | None,
     actions_yaml: str | None,
     expected_diff: dict[str, Any],
@@ -523,8 +505,6 @@ def test_from_yaml_file_success(
     expected = project.CharmcraftProject.unmarshal(expected_dict)
 
     fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
-    if metadata_yaml:
-        fs.create_file("/metadata.yaml", contents=metadata_yaml)
     if config_yaml:
         fs.create_file("/config.yaml", contents=config_yaml)
     if actions_yaml:
@@ -538,7 +518,6 @@ def test_from_yaml_file_success(
 @pytest.mark.parametrize(
     (
         "charmcraft_yaml",
-        "metadata_yaml",
         "config_yaml",
         "actions_yaml",
         "exc_class",
@@ -550,25 +529,13 @@ def test_from_yaml_file_success(
             None,
             None,
             None,
-            None,
             CraftError,
             r"^Could not find charmcraft\.yaml at '.charmcraft\.yaml'$",
             None,
             id="FileNotFound",
         ),
         pytest.param(
-            SIMPLE_CHARMCRAFT_YAML,
-            SIMPLE_METADATA_YAML,
-            None,
-            None,
-            CraftValidationError,
-            r"^Cannot specify metadata keys in 'charmcraft\.yaml' when 'metadata\.yaml' exists",
-            "Invalid keys: ['description', 'name', 'summary']",
-            id="duplicate-metadata",
-        ),
-        pytest.param(
             f"{SIMPLE_CHARMCRAFT_YAML}\nconfig: ",
-            None,
             SIMPLE_CONFIG_YAML,
             None,
             CraftValidationError,
@@ -578,7 +545,6 @@ def test_from_yaml_file_success(
         ),
         pytest.param(
             f"{SIMPLE_CHARMCRAFT_YAML}\nactions:",
-            None,
             None,
             SIMPLE_ACTIONS_YAML,
             CraftValidationError,
@@ -591,7 +557,6 @@ def test_from_yaml_file_success(
 def test_from_yaml_file_exception(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
     charmcraft_yaml: str | None,
-    metadata_yaml: str | None,
     config_yaml: str | None,
     actions_yaml: str | None,
     exc_class: type[CraftError],
@@ -600,8 +565,6 @@ def test_from_yaml_file_exception(
 ):
     if charmcraft_yaml:
         fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
-    if metadata_yaml:
-        fs.create_file("/metadata.yaml", contents=metadata_yaml)
     if config_yaml:
         fs.create_file("/config.yaml", contents=config_yaml)
     if actions_yaml:

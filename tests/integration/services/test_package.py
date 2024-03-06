@@ -22,7 +22,7 @@ import pytest
 import pytest_check
 
 import charmcraft
-from charmcraft import models, services
+from charmcraft import services
 from charmcraft.application.main import APP_METADATA
 
 
@@ -49,15 +49,16 @@ def package_service(fake_path, service_factory):
     ],
 )
 @freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
-def test_write_metadata(monkeypatch, fs, package_service, project_path):
+def test_write_metadata(monkeypatch, fs, package_service, app, project_path):
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
     fs.add_real_directory(project_path)
+    app.project_dir = project_path / "project"
     test_prime_dir = pathlib.Path("/prime")
     fs.create_dir(test_prime_dir)
     expected_prime_dir = project_path / "prime"
 
-    project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
-    project._started_at = datetime.datetime.utcnow()
+    project = app.get_project()
+    project._started_at = datetime.datetime(2020, 3, 14, 0, 0, 0)
     package_service._project = project
 
     package_service.write_metadata(test_prime_dir)

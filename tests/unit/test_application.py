@@ -35,37 +35,24 @@ from charmcraft import application, errors
             ),
         ),
         (
-            {"name": "test-charm"},
-            textwrap.dedent(
-                """\
-                summary: A test charm
-                description: A charm for testing!"""
-            ),
-        ),
-        (
-            {"name": "test-charm", "summary": "A test charm"},
-            textwrap.dedent(
-                """\
-                description: A charm for testing!"""
-            ),
-        ),
-        (
             {
                 "name": "test-charm",
                 "summary": "A test charm",
                 "description": "A charm for testing!",
             },
-            textwrap.dedent(
-                """\
-                something-else: yes
-                """
-            ),
         ),
     ],
 )
 @pytest.mark.parametrize(
     "expected",
-    [{"name": "test-charm", "summary": "A test charm", "description": "A charm for testing!"}],
+    [
+        {
+            "name": "test-charm",
+            "summary": "A test charm",
+            "description": "A charm for testing!",
+            "parts": {},
+        }
+    ],
 )
 def test_extra_yaml_transform_success(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
@@ -93,7 +80,7 @@ def test_extra_yaml_transform_success(
                 "description": "A charm for testing!",
             },
             "",
-            "Invalid file: 'metadata.yaml'",
+            "'metadata.yaml' does not meet the expected format",
         ),
         (
             {

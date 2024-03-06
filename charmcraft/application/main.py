@@ -124,6 +124,13 @@ class Charmcraft(Application):
     def _get_app_plugins(self) -> dict[str, plugins.PluginType]:
         return {"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin}
 
+    @override
+    def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:
+        """Override to get project_dir early."""
+        super()._pre_run(dispatcher)
+        if not self.is_managed() and not getattr(dispatcher.parsed_args(), "project_dir", None):
+            self.project_dir = pathlib.Path().expanduser().resolve()
+
     def run_managed(self, platform: str | None, build_for: str | None) -> None:
         """Run charmcraft in managed mode.
 

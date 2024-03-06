@@ -76,12 +76,6 @@ class RemoteBuild(ExtensibleCommand):
             metavar="<seconds>",
             help="Time in seconds to wait for launchpad to build.",
         )
-        parser.add_argument(
-            "--project-dir",
-            type=pathlib.Path,
-            default=None,
-            help="set the directory for the project",
-        )
 
     def _run(self, parsed_args: argparse.Namespace, **kwargs: Any) -> int | None:  # noqa: ANN401
         """Run the remote-build command.

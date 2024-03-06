@@ -28,7 +28,6 @@ from craft_cli import (
     CraftError,
     Dispatcher,
     EmitterMode,
-    GlobalArgument,
     ProvideHelpException,
     emit,
 )
@@ -134,16 +133,6 @@ def main(argv):
     """Provide the main entry point."""
     emit.debug("Starting classic fallback.")
 
-    extra_global_options = [
-        GlobalArgument(
-            "project_dir",
-            "option",
-            "-p",
-            "--project-dir",
-            "Specify the project's directory (defaults to current)",
-        ),
-    ]
-
     # process
     try:
         setup_parts()
@@ -153,7 +142,6 @@ def main(argv):
             "charmcraft",
             COMMAND_GROUPS,
             summary=GENERAL_SUMMARY,
-            extra_global_args=extra_global_options,
         )
         global_args = dispatcher.pre_parse_args(argv[1:])
         loaded_config = config.load(global_args["project_dir"])

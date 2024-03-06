@@ -13,8 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
-
+import argparse
 from textwrap import dedent
 from typing import Any
 
@@ -22,7 +21,7 @@ import pytest
 from overrides import override
 
 from charmcraft import extensions
-from charmcraft.commands.extensions import ListExtensionsCommand
+from charmcraft.application.commands.extensions import ListExtensionsCommand
 from tests.extensions.test_extensions import FakeExtension
 
 
@@ -59,13 +58,13 @@ def fake_extensions(stub_extensions):
 def test_expand_extensions_simple(fake_extensions, emitter):
     """List extensions"""
     cmd = ListExtensionsCommand(None)
-    cmd.run([])
+    cmd.run(argparse.Namespace(format=None))
     emitter.assert_message(
         dedent(
             """\
-            Extension name    Supported bases
-            ----------------  -----------------
-            test-extension    'ubuntu 22.04'
-            test-extension-2  'ubuntu 23.04'"""
+            Extension name    Supported bases    Experimental bases
+            ----------------  -----------------  --------------------
+            test-extension    ubuntu@22.04
+            test-extension-2  ubuntu@23.04"""
         )
     )

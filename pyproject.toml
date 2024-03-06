@@ -314,9 +314,7 @@ lint.ignore = [
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "ANN0", "ANN2",
     "ARG001", "ARG002", "ARG005",
-    "B034",
     "BLE",
-    "D417",
     "FBT",
     "N805", "N806",
     "PGH003",
@@ -327,7 +325,6 @@ lint.ignore = [
     "RET505", "RET506", "RET508",
     "S108", "S113", "S324", "S701",
     "SIM102",
-    "TRY004", "TRY200",
 ]
 
 [tool.ruff.lint.pep8-naming]
@@ -347,12 +344,9 @@ classmethod-decorators = ["pydantic.validator"]
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "A001", "A002",
     "B007", "B015",
-    "D100",
-    "N802",
     "PT004", "PT012",
     "PTH1",
     "S105", "S106",
-    "SIM105", "SIM115",
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.
 "__init__.py" = ["I001"]

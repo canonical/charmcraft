@@ -55,6 +55,14 @@ from charmcraft.models.charmcraft import (
 from charmcraft.parts import process_part_config
 
 
+class CharmcraftSummaryStr(models.SummaryStr):
+    """A summary string that overrides the length for charmcraft.
+
+    See: https://github.com/canonical/charmcraft/issues/1568
+    """
+    max_length = 200
+
+
 class BaseDict(TypedDict, total=False):
     """TypedDict that describes only one base.
 
@@ -360,7 +368,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     type: Literal["charm", "bundle"]
     title: models.ProjectTitle | None
-    summary: models.SummaryStr | None
+    summary: CharmcraftSummaryStr | None
     description: str | None
 
     analysis: AnalysisConfig | None
@@ -526,7 +534,7 @@ class BasesCharm(CharmcraftProject):
 
     type: Literal["charm"]
     name: models.ProjectName
-    summary: models.SummaryStr
+    summary: CharmcraftSummaryStr
     description: str
 
     # This is defined this way because using conlist makes mypy sad and using
@@ -592,7 +600,7 @@ class PlatformCharm(CharmcraftProject):
 
     type: Literal["charm"]
     name: models.ProjectName
-    summary: models.SummaryStr
+    summary: CharmcraftSummaryStr
     description: str
 
     base: BaseStr
@@ -652,7 +660,7 @@ class Bundle(CharmcraftProject):
     bundle: dict[str, Any] = {}
     name: models.ProjectName | None = None  # type: ignore[assignment]
     title: models.ProjectTitle | None
-    summary: models.SummaryStr | None
+    summary: CharmcraftSummaryStr | None
     description: pydantic.StrictStr | None
     charmhub: CharmhubConfig = CharmhubConfig()
 

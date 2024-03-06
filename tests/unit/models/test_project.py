@@ -642,10 +642,10 @@ def test_from_yaml_file_exception(
                     summary: This is an invalid summary because I'm ensuring that it's over 200 characters long. This is an invalid summary because I'm ensuring that it's over 200 characters long. This is an invalid summary because I'm ensuring that it's over 200 characters long.
                     description: y'know, for testing
                     """
-                )
+                ),
             },
             "^Bad 'charmcraft.yaml' or 'metadata.yaml' content:\n- .*field 'summary'",
-            id="invalid-metadata"
+            id="invalid-metadata",
         ),
         pytest.param(
             {
@@ -660,7 +660,7 @@ def test_from_yaml_file_exception(
                 )
             },
             "^Bad 'charmcraft.yaml' content:\n- .*field 'summary'",
-            id="invalid-metadata-in-charmcraft.yaml"
+            id="invalid-metadata-in-charmcraft.yaml",
         ),
         pytest.param(
             {
@@ -676,7 +676,7 @@ def test_from_yaml_file_exception(
                 )
             },
             "^Bad 'charmcraft.yaml' content:\n- .*field 'config'",
-            id="invalid-config-in-charmcraft.yaml"
+            id="invalid-config-in-charmcraft.yaml",
         ),
         pytest.param(
             {
@@ -689,10 +689,10 @@ def test_from_yaml_file_exception(
                     description: y'know, for testing
                     """
                 ),
-                "config.yaml": "options:\n  something: invalid"
+                "config.yaml": "options:\n  something: invalid",
             },
             "^Bad 'config.yaml' content:\n- .*field 'options.something'",
-            id="invalid-config-in-config.yaml"
+            id="invalid-config-in-config.yaml",
         ),
         pytest.param(
             {
@@ -708,7 +708,7 @@ def test_from_yaml_file_exception(
                 )
             },
             "^Bad 'charmcraft.yaml' content:\n- .*field 'actions'",
-            id="invalid-actions-in-charmcraft.yaml"
+            id="invalid-actions-in-charmcraft.yaml",
         ),
         pytest.param(
             {
@@ -721,10 +721,10 @@ def test_from_yaml_file_exception(
                     description: y'know, for testing
                     """
                 ),
-                "actions.yaml": "actions:"
+                "actions.yaml": "actions:",
             },
             "^Bad 'actions.yaml' content:\n- .*field 'actions",
-            id="invalid-actions-in-actions.yaml"
+            id="invalid-actions-in-actions.yaml",
         ),
     ],
 )

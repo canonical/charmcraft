@@ -474,7 +474,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             try:
                 data["config"] = parse_config_yaml(project_dir)
             except pydantic.ValidationError as err:
-                raise errors.CraftValidationError.from_pydantic(err, file_name=repr(JUJU_CONFIG_FILENAME))
+                raise errors.CraftValidationError.from_pydantic(
+                    err, file_name=repr(JUJU_CONFIG_FILENAME)
+                )
 
         actions_file = project_dir / JUJU_ACTIONS_FILENAME
         if actions_file.is_file():
@@ -487,7 +489,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             try:
                 data["actions"] = parse_actions_yaml(project_dir).actions
             except pydantic.ValidationError as err:
-                raise errors.CraftValidationError.from_pydantic(err, file_name=repr(JUJU_ACTIONS_FILENAME))
+                raise errors.CraftValidationError.from_pydantic(
+                    err, file_name=repr(JUJU_ACTIONS_FILENAME)
+                )
 
         try:
             project = cls.unmarshal(data)
@@ -496,7 +500,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             if metadata_file.is_file():
                 if any(error["loc"][0] in METADATA_YAML_KEYS for error in err.errors()):
                     file_names.append(metadata_file.name)
-            if config_file.is_file() and any(error["loc"][0] == "config" for error in err.errors()):
+            if config_file.is_file() and any(
+                error["loc"][0] == "config" for error in err.errors()
+            ):
                 file_names.append(config_file.name)
 
             file_names_str = utils.humanize_list(file_names, "or")

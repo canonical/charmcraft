@@ -19,6 +19,7 @@ import ast
 import datetime
 import itertools
 import os
+import pathlib
 import subprocess
 import sys
 from argparse import ArgumentParser
@@ -258,7 +259,7 @@ def test_usage_of_parsed_args(command_class, config):
 
     # build the abstract source tree for the command
     filepath = sys.modules[command_class.__module__].__file__
-    tree = ast.parse(open(filepath).read())
+    tree = ast.parse(pathlib.Path(filepath).read_text())
 
     # get the node for the command
     for node in ast.walk(tree):

@@ -22,7 +22,11 @@ from charmcraft.extensions import extension
 
 
 class Bundle(extension.Extension):
-    """An extension that generates the bits for a bundle."""
+    """An extension that generates the bits for a bundle.
+
+    This extension should never be used directly. It will be applied automatically
+    when relevant.
+    """
 
     @override
     @staticmethod

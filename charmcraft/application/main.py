@@ -70,7 +70,7 @@ class Charmcraft(Application):
 
         # Default extensions
         if yaml_data.get("type") == "bundle":
-            yaml_data.setdefault("extensions", []).append("bundle")
+            yaml_data.setdefault("extensions", []).append("_bundle")
 
         yaml_data = extensions.apply_extensions(self.project_dir, yaml_data)
 

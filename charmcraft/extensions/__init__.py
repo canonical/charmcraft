@@ -27,7 +27,7 @@ from charmcraft.extensions.registry import (
     unregister,
 )
 
-register("bundle", Bundle)
+register("_bundle", Bundle)
 
 __all__ = [
     "Extension",

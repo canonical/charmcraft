@@ -21,6 +21,12 @@ from charmcraft import errors, extensions
 from charmcraft.extensions.extension import Extension
 
 
+class HiddenExtension(Extension):
+    """A test extension that's hidden from the user."""
+
+    name = "_hidden"
+
+
 class FakeExtension1(Extension):
     """A fake test Extension"""
 
@@ -57,7 +63,7 @@ class FakeExtension3(Extension):
 
 @pytest.fixture()
 def fake_extensions(stub_extensions):
-    fakes = [FakeExtension1, FakeExtension2]
+    fakes = [HiddenExtension, FakeExtension1, FakeExtension2]
     for ext_class in fakes:
         extensions.register(ext_class.name, ext_class)
     yield fakes
@@ -74,8 +80,8 @@ def test_get_extension_names(fake_extensions):
 
 
 def test_get_extension_class(fake_extensions):
-    assert extensions.get_extension_class(FakeExtension1.name) is FakeExtension1
-    assert extensions.get_extension_class(FakeExtension2.name) is FakeExtension2
+    for ext_class in fake_extensions:
+        assert extensions.get_extension_class(ext_class.name) is ext_class
 
 
 def test_get_extension_class_error(fake_extensions):

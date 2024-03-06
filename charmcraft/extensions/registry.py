@@ -30,7 +30,7 @@ def get_extension_names() -> list[str]:
     :return: The list of available extensions.
     :raises ExtensionError: If the extension name is invalid.
     """
-    return list(_EXTENSIONS.keys())
+    return sorted(name for name in _EXTENSIONS if not name.startswith("_"))
 
 
 def get_extension_class(extension_name: str) -> type[Extension]:
@@ -67,6 +67,7 @@ def get_extensions() -> list[dict[str, Any]]:
                 ],
             }
             for name, cls in _EXTENSIONS.items()
+            if not name.startswith("_")
         ),
         key=lambda d: d["name"],
     )

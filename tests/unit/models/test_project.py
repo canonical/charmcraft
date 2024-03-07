@@ -469,7 +469,15 @@ def test_unmarshal_invalid_type(type_):
         project.CharmcraftProject.unmarshal({"type": type_})
 
 
-@pytest.mark.parametrize(("charmcraft_yaml", "expected_diff"), [(SIMPLE_CHARMCRAFT_YAML, {},),])
+@pytest.mark.parametrize(
+    ("charmcraft_yaml", "expected_diff"),
+    [
+        (
+            SIMPLE_CHARMCRAFT_YAML,
+            {},
+        ),
+    ],
+)
 def test_from_yaml_file_success(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
     simple_charm,

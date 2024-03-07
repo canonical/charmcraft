@@ -124,6 +124,7 @@ class Metadata(_ConfigFile):
 
     @override
     def get_root_snippet(self) -> dict[str, Any]:
+        """Get the additional root snippet."""
         return self._get_config_file()
 
 
@@ -138,13 +139,18 @@ class Actions(_ConfigFile):
     docs_url = "https://juju.is/docs/sdk/actions-yaml"
 
     @staticmethod
-    def unmarshal(data: dict[str, dict[str, Any]]) -> models.JujuActions:
+    def _unmarshal(data: dict[str, dict[str, Any]]) -> models.JujuActions:
         return models.JujuActions.unmarshal({"actions": data})
 
-    config_model = collections.namedtuple("config_model", "unmarshal")(unmarshal)
+    config_model = collections.namedtuple(  # type: ignore[assignment]  # noqa: PYI024
+        "config_model", "unmarshal"
+    )(
+        _unmarshal  # type: ignore[arg-type]
+    )
 
     @override
     def get_root_snippet(self) -> dict[str, Any]:
+        """Get the additional root snippet."""
         return {"actions": self._get_config_file()}
 
 
@@ -165,6 +171,7 @@ class Bundle(_ConfigFile):
 
     @override
     def get_root_snippet(self) -> dict[str, Any]:
+        """Get the additional root snippet."""
         bundle_config = self._get_config_file()
         snippet = {"bundle": bundle_config}
 

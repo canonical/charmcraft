@@ -19,7 +19,6 @@ import textwrap
 
 import pytest
 
-from charmcraft import const
 from charmcraft.extensions import Bundle
 
 
@@ -31,7 +30,7 @@ def extension():
 @pytest.mark.parametrize(
     ("bundle_yaml", "root_snippet"),
     [
-        ("{}",{"bundle": {}}),
+        ("{}", {"bundle": {}}),
         (
             textwrap.dedent(
                 """\
@@ -47,10 +46,10 @@ def extension():
                     "name": "blah",
                     "description": "A test bundle",
                     "series": "bionic",
-                }
-            }
+                },
+            },
         ),
-    ]
+    ],
 )
 def test_get_root_snippet(fs, extension, bundle_yaml, root_snippet):
     fs.create_file("/root/project/bundle.yaml", contents=bundle_yaml)

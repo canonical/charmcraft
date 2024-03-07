@@ -57,11 +57,11 @@ def extension():
                         "params": {
                             "outfile": {
                                 "type": "string",
-                                "description": "The filename to write to."
+                                "description": "The filename to write to.",
                             }
                         },
                         "additionalProperties": False,
-                    }
+                    },
                 }
             },
         ),

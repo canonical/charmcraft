@@ -34,12 +34,10 @@ from typing_extensions import Self, TypedDict
 
 from charmcraft import const, utils
 from charmcraft.const import (
-    JUJU_ACTIONS_FILENAME,
     BaseStr,
     BuildBaseStr,
     CharmArch,
 )
-from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.models import charmcraft
 from charmcraft.models.charmcraft import (
     AnalysisConfig,

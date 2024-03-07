@@ -32,11 +32,9 @@ def apply_extensions(project_root: Path, yaml_data: dict[str, Any]) -> dict[str,
     """
     # Don't modify the dict passed in
     yaml_data = copy.deepcopy(yaml_data)
-    declared_extensions: list[str] = cast(list[str], yaml_data.get("extensions", []))
+    declared_extensions: list[str] = cast(list[str], yaml_data.pop("extensions", []))
     if not declared_extensions:
         return yaml_data
-
-    del yaml_data["extensions"]
 
     # Process extensions in a consistent order
     for extension_name in sorted(declared_extensions):

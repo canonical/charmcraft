@@ -1257,6 +1257,8 @@ def test_additional_files_checker_not_applicable(tmp_path):
         (pathlib.Path(const.METADATA_FILENAME)),
         (pathlib.Path(const.JUJU_ACTIONS_FILENAME)),
         (pathlib.Path(const.JUJU_CONFIG_FILENAME)),
+        (pathlib.Path(const.HOOKS_DIRNAME)),
+        (pathlib.Path("README.md")),
     ],
 )
 def test_additional_files_checker_generated_ignore(tmp_path, file):

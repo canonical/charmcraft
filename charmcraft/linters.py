@@ -518,20 +518,20 @@ class Entrypoint(Linter):
 class AdditionalFiles(Linter):
     """Check that the charm does not contain any additional files in the prime directory.
 
-    A few generated files are ignored.
+    A few generated files and basic charm files are ignored.
     """
 
     name = "additional-files"
     text = "No additional files found in the charm."
     url = "https://juju.is/docs/sdk/include-extra-files-in-a-charm"
 
-    INGNORE_FILES: set[pathlib.Path] = {
-        pathlib.Path(const.BUNDLE_FILENAME),
-        pathlib.Path(const.CHARMCRAFT_FILENAME),
-        pathlib.Path(const.MANIFEST_FILENAME),
-        pathlib.Path(const.METADATA_FILENAME),
-        pathlib.Path(const.JUJU_ACTIONS_FILENAME),
-        pathlib.Path(const.JUJU_CONFIG_FILENAME),
+    IGNORE_FILES: set[pathlib.Path] = {
+        pathlib.Path(f)
+        for f in (
+            {const.BUNDLE_FILENAME, const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
+            | const.CHARM_MANDATORY_FILES
+            | const.CHARM_OPTIONAL_FILES
+        )
     }
 
     def _check_additional_files(self, stage_dir: pathlib.Path, prime_dir: pathlib.Path) -> str:
@@ -543,7 +543,7 @@ class AdditionalFiles(Linter):
         stage_files = {f.relative_to(stage_dir) for f in stage_dir.rglob("*")}
         prime_files = {f.relative_to(prime_dir) for f in prime_dir.rglob("*")}
 
-        prime_files = prime_files - self.INGNORE_FILES
+        prime_files = prime_files - self.IGNORE_FILES
 
         for prime_file in prime_files:
             if prime_file not in stage_files:

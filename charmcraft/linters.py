@@ -523,7 +523,7 @@ class AdditionalFiles(Linter):
 
     name = "additional-files"
     text = "No additional files found in the charm."
-    url = "xxxxxx"
+    url = "https://juju.is/docs/sdk/include-extra-files-in-a-charm"
 
     INGNORE_FILES: set[pathlib.Path] = {
         pathlib.Path(const.BUNDLE_FILENAME),

@@ -13,7 +13,8 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""config.yaml extension."""
+"""Extensions that load additional YAML files into the project."""
+import collections
 from typing import Any
 
 import craft_application.errors
@@ -124,3 +125,24 @@ class Metadata(_ConfigFile):
     @override
     def get_root_snippet(self) -> dict[str, Any]:
         return self._get_config_file()
+
+
+class Actions(_ConfigFile):
+    """An extension that validates and loads metadata.yaml into a charm.
+
+    We still support having ``metadata.yaml`` separate from ``charmcraft.yaml``,
+    so this extension will load that if it exists.
+    """
+
+    filename = const.JUJU_ACTIONS_FILENAME
+    docs_url = "https://juju.is/docs/sdk/actions-yaml"
+
+    @staticmethod
+    def unmarshal(data: dict[str, dict[str, Any]]) -> models.JujuActions:
+        return models.JujuActions.unmarshal({"actions": data})
+
+    config_model = collections.namedtuple("config_model", "unmarshal")(unmarshal)
+
+    @override
+    def get_root_snippet(self) -> dict[str, Any]:
+        return {"actions": self._get_config_file()}

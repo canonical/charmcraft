@@ -77,13 +77,15 @@ class Charmcraft(Application):
                 retcode=65,  # Bad data, per sysexits.h
             )
 
-        # Default extensions
+        # Implicit extensions
         if yaml_data.get("type") == "bundle":
             ext_names.append("_bundle")
         if (self.project_dir / const.METADATA_FILENAME).exists():
             ext_names.append("_metadata")
         if (self.project_dir / const.JUJU_CONFIG_FILENAME).exists():
             ext_names.append("_config")
+        if (self.project_dir / const.JUJU_ACTIONS_FILENAME).exists():
+            ext_names.append("_actions")
 
         return extensions.apply_extensions(self.project_dir, yaml_data)
 

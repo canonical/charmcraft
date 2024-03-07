@@ -18,6 +18,7 @@
 
 from . import config, metadata
 from .charmcraft import Base
+from .actions import JujuActions
 from .config import (
     JujuConfig,
     JujuBooleanOption,
@@ -43,6 +44,7 @@ __all__ = [
     "config",
     "metadata",
     "Base",
+    "JujuActions",
     "JujuConfig",
     "JujuBooleanOption",
     "JujuFloatOption",

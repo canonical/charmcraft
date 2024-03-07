@@ -367,6 +367,8 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     charmhub: CharmhubConfig | None
     parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
 
+    extensions: list[str] = pydantic.Field(default_factory=list)
+
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.

@@ -112,8 +112,8 @@ def test_extra_yaml_transform_success(
         (
             {"extensions": ["_hidden", "_private", "Willard"]},
             "",
-            "Invalid extension(s): '_hidden' and '_private'"
-        )
+            "Invalid extension(s): '_hidden' and '_private'",
+        ),
     ],
 )
 def test_extra_yaml_transform_failure(

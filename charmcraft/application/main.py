@@ -75,7 +75,7 @@ class Charmcraft(Application):
             raise errors.CraftError(
                 f"Invalid extension(s): {invalid_extensions_str}",
                 details="Extensions prefixed with an underscore are for internal use only",
-                retcode=65  # Bad data, per sysexits.h
+                retcode=65,  # Bad data, per sysexits.h
             )
 
         # Default extensions

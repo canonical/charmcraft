@@ -515,6 +515,57 @@ class Entrypoint(Linter):
         return self.Result.OK
 
 
+class AdditionalFiles(Linter):
+    """Check that the charm does not contain any additional files in the prime directory.
+
+    A few generated files and basic charm files are ignored.
+    """
+
+    name = "additional-files"
+    text = "No additional files found in the charm."
+    url = "https://juju.is/docs/sdk/include-extra-files-in-a-charm"
+
+    IGNORE_FILES: set[pathlib.Path] = {
+        pathlib.Path(f)
+        for f in (
+            {const.BUNDLE_FILENAME, const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
+            | const.CHARM_MANDATORY_FILES
+            | const.CHARM_OPTIONAL_FILES
+        )
+    }
+
+    def _check_additional_files(self, stage_dir: pathlib.Path, prime_dir: pathlib.Path) -> str:
+        """Compare the staged files with the prime files."""
+        errors: list[str] = []
+        stage_dir = stage_dir.absolute()
+        prime_dir = prime_dir.absolute()
+
+        stage_files = {f.relative_to(stage_dir) for f in stage_dir.rglob("*")}
+        prime_files = {f.relative_to(prime_dir) for f in prime_dir.rglob("*")}
+
+        prime_files = prime_files - self.IGNORE_FILES
+
+        for prime_file in prime_files:
+            if prime_file not in stage_files:
+                errors.append(f"File '{prime_file}' is not staged but in the charm.")
+
+        if errors:
+            self.text = "Error: Additional files found in the charm:\n" + "\n".join(errors)
+            return self.Result.ERROR
+
+        return self.Result.OK
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        stage_dir = basedir.parent / "stage"
+        if not stage_dir.exists() or not stage_dir.is_dir():
+            # Does not work without the build environment
+            self.text = "Additional files check not applicable without a build environment."
+            return self.Result.NONAPPLICABLE
+
+        return self._check_additional_files(stage_dir, basedir)
+
+
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
 CHECKERS: list[type[BaseChecker]] = [
@@ -525,6 +576,7 @@ CHECKERS: list[type[BaseChecker]] = [
     NamingConventions,
     Framework,
     Entrypoint,
+    AdditionalFiles,
 ]
 
 

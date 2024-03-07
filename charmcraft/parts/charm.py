@@ -201,8 +201,7 @@ class CharmPlugin(plugins.Plugin):
         dependency resolution will be used, requiring all dependencies, including
         library dependencies, to be defined in provided requirements files.
 
-    Extra files to be included in the charm payload must be listed under
-    the ``prime`` file filter.
+    Extra files to be included in the charm payload must use the ``dump`` plugin.
     """
 
     properties_class = CharmPluginProperties

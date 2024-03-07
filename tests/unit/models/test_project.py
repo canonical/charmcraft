@@ -469,29 +469,11 @@ def test_unmarshal_invalid_type(type_):
         project.CharmcraftProject.unmarshal({"type": type_})
 
 
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "config_yaml", "actions_yaml", "expected_diff"),
-    [
-        (
-            SIMPLE_CHARMCRAFT_YAML,
-            None,
-            None,
-            {},
-        ),
-        (
-            SIMPLE_CHARMCRAFT_YAML,
-            None,
-            SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT},
-        ),
-    ],
-)
+@pytest.mark.parametrize(("charmcraft_yaml", "expected_diff"), [(SIMPLE_CHARMCRAFT_YAML, {},),])
 def test_from_yaml_file_success(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
     simple_charm,
     charmcraft_yaml: str,
-    config_yaml: str | None,
-    actions_yaml: str | None,
     expected_diff: dict[str, Any],
 ):
     expected_dict = simple_charm.marshal()
@@ -499,10 +481,6 @@ def test_from_yaml_file_success(
     expected = project.CharmcraftProject.unmarshal(expected_dict)
 
     fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
-    if config_yaml:
-        fs.create_file("/config.yaml", contents=config_yaml)
-    if actions_yaml:
-        fs.create_file("/actions.yaml", contents=actions_yaml)
 
     actual = project.CharmcraftProject.from_yaml_file(pathlib.Path("/charmcraft.yaml"))
 
@@ -512,8 +490,6 @@ def test_from_yaml_file_success(
 @pytest.mark.parametrize(
     (
         "charmcraft_yaml",
-        "config_yaml",
-        "actions_yaml",
         "exc_class",
         "match",
         "details",
@@ -521,39 +497,22 @@ def test_from_yaml_file_success(
     [
         pytest.param(
             None,
-            None,
-            None,
             CraftError,
             r"^Could not find charmcraft\.yaml at '.charmcraft\.yaml'$",
             None,
             id="FileNotFound",
-        ),
-        pytest.param(
-            f"{SIMPLE_CHARMCRAFT_YAML}\nactions:",
-            None,
-            SIMPLE_ACTIONS_YAML,
-            CraftValidationError,
-            r"^Cannot specify 'actions' section",
-            None,
-            id="duplcate-actions",
         ),
     ],
 )
 def test_from_yaml_file_exception(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
     charmcraft_yaml: str | None,
-    config_yaml: str | None,
-    actions_yaml: str | None,
     exc_class: type[CraftError],
     match: str,
     details: str,
 ):
     if charmcraft_yaml:
         fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
-    if config_yaml:
-        fs.create_file("/config.yaml", contents=config_yaml)
-    if actions_yaml:
-        fs.create_file("/actions.yaml", contents=actions_yaml)
 
     with pytest.raises(exc_class, match=match) as exc:
         project.CharmcraftProject.from_yaml_file(pathlib.Path("/charmcraft.yaml"))

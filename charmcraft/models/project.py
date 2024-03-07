@@ -433,15 +433,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             else:
                 raise CraftError(f"Missing bundle.yaml file: {str(bundle_file)!r}")
 
-        actions_file = project_dir / JUJU_ACTIONS_FILENAME
-        if actions_file.is_file():
-            if "actions" in data:
-                raise errors.CraftValidationError(
-                    f"Cannot specify 'actions' section in 'charmcraft.yaml' when {JUJU_ACTIONS_FILENAME!r} exists",
-                    resolution=f"Move all data from {JUJU_ACTIONS_FILENAME!r} to the 'actions' section in 'charmcraft.yaml'",
-                )
-            data["actions"] = parse_actions_yaml(project_dir).actions
-
         try:
             project = cls.unmarshal(data)
         except pydantic.ValidationError as err:

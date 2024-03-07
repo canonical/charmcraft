@@ -29,13 +29,14 @@ CURRENT_PLATFORM = utils.get_os_platform()
     sys.platform == "win32", reason="https://github.com/canonical/charmcraft/issues/1552"
 )
 @pytest.mark.parametrize(
-    "bundle_yaml",
+    ("bundle_yaml", "filename"),
     [
-        "",
-        "name: my-bundle",
+        ("{}", "bundle.zip"),
+        ("name: my-bundle", "my-bundle.zip"),
     ],
 )
-def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
+def test_build_basic_bundle(monkeypatch, emitter, app, new_path, bundle_yaml, filename):
+    app._work_dir = new_path
     (new_path / "charmcraft.yaml").write_text("type: bundle")
     (new_path / "bundle.yaml").write_text(bundle_yaml)
 
@@ -43,11 +44,12 @@ def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
     monkeypatch.setattr("sys.argv", ["charmcraft", "pack"])
 
     app.configure({})
-    app.run()
+    assert app.run() == 0
 
-    with zipfile.ZipFile("bundle.zip") as bundle_zip:
+    with zipfile.ZipFile(new_path / filename) as bundle_zip:
         actual_bundle_yaml = bundle_zip.read("bundle.yaml").decode()
 
+    emitter.assert_progress(f"Packing bundle {filename}")
     assert actual_bundle_yaml == bundle_yaml
 
 

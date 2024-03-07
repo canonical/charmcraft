@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for the bundle extension."""
 import pathlib
+import textwrap
 
 import pytest
 
@@ -23,25 +24,38 @@ from charmcraft.extensions import Bundle
 
 
 @pytest.fixture()
-def basic_bundle_extension():
+def extension():
     return Bundle(project_root=pathlib.Path("/root/project"), yaml_data={})
 
 
-def test_get_supported_bases():
-    assert Bundle.get_supported_bases() == []
+@pytest.mark.parametrize(
+    ("bundle_yaml", "root_snippet"),
+    [
+        ("{}",{"bundle": {}}),
+        (
+            textwrap.dedent(
+                """\
+                name: blah
+                description: A test bundle
+                series: bionic
+                """
+            ),
+            {
+                "name": "blah",
+                "description": "A test bundle",
+                "bundle": {
+                    "name": "blah",
+                    "description": "A test bundle",
+                    "series": "bionic",
+                }
+            }
+        ),
+    ]
+)
+def test_get_root_snippet(fs, extension, bundle_yaml, root_snippet):
+    fs.create_file("/root/project/bundle.yaml", contents=bundle_yaml)
 
-
-@pytest.mark.parametrize("base", [None, *const.SUPPORTED_BASES])
-def test_is_experimental(base):
-    assert not Bundle.is_experimental(base)
-
-
-def test_get_root_snippet(basic_bundle_extension):
-    assert basic_bundle_extension.get_root_snippet() == {}
-
-
-def test_get_part_snippet(basic_bundle_extension):
-    assert basic_bundle_extension.get_part_snippet() == {}
+    assert extension.get_root_snippet() == root_snippet
 
 
 @pytest.mark.parametrize(
@@ -52,7 +66,7 @@ def test_get_part_snippet(basic_bundle_extension):
         {"parts": {"my-part": {"plugin": "nil"}}},
     ],
 )
-def test_get_parts_snippet_no_parts(basic_bundle_extension, yaml_data):
+def test_get_parts_snippet_no_parts(yaml_data):
     bundle_extension = Bundle(project_root=pathlib.Path("/root/project"), yaml_data=yaml_data)
 
     assert bundle_extension.get_parts_snippet() == {"bundle": {"plugin": "bundle", "source": "."}}

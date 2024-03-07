@@ -146,3 +146,40 @@ class Actions(_ConfigFile):
     @override
     def get_root_snippet(self) -> dict[str, Any]:
         return {"actions": self._get_config_file()}
+
+
+class _FlexibleModel(craft_application.models.CraftBaseModel, extra=pydantic.Extra.allow):
+    """A model that can have anything. We don't need to validate bundle models."""
+
+
+class Bundle(_ConfigFile):
+    """An extension that generates the bits for a bundle.
+
+    This extension should never be used directly. It will be applied automatically
+    when relevant.
+    """
+
+    filename = const.BUNDLE_FILENAME
+    docs_url = "https://juju.is/docs/sdk/charm-bundles"
+    config_model = _FlexibleModel
+
+    @override
+    def get_root_snippet(self) -> dict[str, Any]:
+        bundle_config = self._get_config_file()
+        snippet = {"bundle": bundle_config}
+
+        for attribute in models.Bundle.__fields__:
+            if attribute in bundle_config and attribute not in self.yaml_data:
+                snippet[attribute] = bundle_config[attribute]
+
+        return snippet
+
+    @override
+    def get_parts_snippet(self) -> dict[str, Any]:
+        """Generate the bundle part if there isn't one."""
+        parts = self.yaml_data.get("parts", {})
+        has_bundle = any(part.get("plugin") == "bundle" for part in parts.values())
+        if has_bundle:
+            return {}
+
+        return {"bundle": {"plugin": "bundle", "source": "."}}

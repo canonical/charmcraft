@@ -18,16 +18,15 @@ from __future__ import annotations
 
 import os
 import pathlib
-import subprocess
 import textwrap
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import craft_cli
-from craft_cli import ArgumentParsingError, CraftError, emit
+from craft_application.commands import lifecycle
+from craft_cli import ArgumentParsingError, CraftError
 from typing_extensions import override
 
-from charmcraft import utils
-from charmcraft.application.commands.base import CharmcraftCommand
+from charmcraft import models, services, utils
 
 if TYPE_CHECKING:  # pragma: no cover
     import argparse
@@ -38,211 +37,16 @@ BUNDLE_MANDATORY_FILES = ["bundle.yaml", "README.md"]
 def get_lifecycle_commands() -> list[type[craft_cli.BaseCommand]]:
     """Return the lifecycle related command group."""
     return [
-        CleanCommand,
-        PullCommand,
-        BuildCommand,
-        StageCommand,
-        PrimeCommand,
+        lifecycle.CleanCommand,
+        lifecycle.PullCommand,
+        lifecycle.BuildCommand,
+        lifecycle.StageCommand,
+        lifecycle.PrimeCommand,
         PackCommand,
     ]
 
 
-class _LifecycleCommand(CharmcraftCommand):
-    """Lifecycle-related commands."""
-
-    @override
-    def run(self, parsed_args: argparse.Namespace) -> None:
-        emit.trace(f"lifecycle command: {self.name!r}, arguments: {parsed_args!r}")
-
-
-class _LifecyclePartsCommand(_LifecycleCommand):
-    # All lifecycle-related commands need a project to work
-    always_load_project = True
-
-    @override
-    def fill_parser(self, parser: argparse.ArgumentParser) -> None:
-        super().fill_parser(parser)  # type: ignore[arg-type]
-        parser.add_argument(
-            "parts",
-            metavar="part-name",
-            type=str,
-            nargs="*",
-            help="Optional list of parts to process",
-        )
-        parser.add_argument(
-            "--destructive-mode",
-            action="store_true",
-            help="Build in the current host",
-        )
-
-    @override
-    def get_managed_cmd(self, parsed_args: argparse.Namespace) -> list[str]:
-        cmd = super().get_managed_cmd(parsed_args)
-
-        cmd.extend(parsed_args.parts)
-
-        return cmd
-
-
-class _LifecycleStepCommand(_LifecyclePartsCommand):
-    @override
-    def run_managed(self, parsed_args: argparse.Namespace) -> bool:
-        return not parsed_args.destructive_mode
-
-    @override
-    def fill_parser(self, parser: argparse.ArgumentParser) -> None:
-        super().fill_parser(parser)
-
-        if self._should_add_shell_args():
-            group = parser.add_mutually_exclusive_group()
-            group.add_argument(
-                "--shell",
-                action="store_true",
-                help="Shell into the environment in lieu of the step to run.",
-            )
-            group.add_argument(
-                "--shell-after",
-                action="store_true",
-                help="Shell into the environment after the step has run.",
-            )
-
-        parser.add_argument(
-            "--debug",
-            action="store_true",
-            help="Shell into the environment if the build fails.",
-        )
-
-        group = parser.add_mutually_exclusive_group()
-        group.add_argument(
-            "--platform",
-            type=str,
-            metavar="name",
-            default=os.getenv("CRAFT_PLATFORM"),
-            help="Set platform to build for",
-        )
-        group.add_argument(
-            "--build-for",
-            type=str,
-            metavar="arch",
-            default=os.getenv("CRAFT_BUILD_FOR"),
-            help="Set architecture to build for",
-        )
-
-    @override
-    def get_managed_cmd(self, parsed_args: argparse.Namespace) -> list[str]:
-        """Get the command to run in managed mode.
-
-        :param parsed_args: The parsed arguments used.
-        :returns: A list of strings ready to be passed into a craft-providers executor.
-        :raises: RuntimeError if this command is not supposed to run managed.
-        """
-        cmd = super().get_managed_cmd(parsed_args)
-
-        if getattr(parsed_args, "shell", False):
-            cmd.append("--shell")
-        if getattr(parsed_args, "shell_after", False):
-            cmd.append("--shell-after")
-
-        return cmd
-
-    @override
-    def run(self, parsed_args: argparse.Namespace, step_name: str | None = None) -> None:
-        """Run a lifecycle step command."""
-        super().run(parsed_args)
-
-        shell = getattr(parsed_args, "shell", False)
-        shell_after = getattr(parsed_args, "shell_after", False)
-        debug = getattr(parsed_args, "debug", False)
-
-        step_name = step_name or self.name
-
-        if shell:
-            previous_step = self._services.lifecycle.previous_step_name(step_name)
-            step_name = previous_step
-            shell_after = True
-
-        try:
-            self._services.lifecycle.run(
-                step_name=step_name,
-                part_names=parsed_args.parts,
-            )
-        except Exception as err:
-            if debug:
-                emit.progress(str(err), permanent=True)
-                _launch_shell()
-            raise
-
-        if shell_after:
-            _launch_shell()
-
-    @staticmethod
-    def _should_add_shell_args() -> bool:
-        return True
-
-
-class PullCommand(_LifecycleStepCommand):
-    """Command to pull parts."""
-
-    name = "pull"
-    help_msg = "Download or retrieve artifacts defined for a part"
-    overview = textwrap.dedent(
-        """
-        Download or retrieve artifacts defined for a part. If part names
-        are specified only those parts will be pulled, otherwise all parts
-        will be pulled.
-        """
-    )
-
-
-class BuildCommand(_LifecycleStepCommand):
-    """Command to build parts."""
-
-    name = "build"
-    help_msg = "Build artifacts defined for a part"
-    overview = textwrap.dedent(
-        """
-        Build artifacts defined for a part. If part names are specified only
-        those parts will be built, otherwise all parts will be built.
-        """
-    )
-
-
-class StageCommand(_LifecycleStepCommand):
-    """Command to stage parts."""
-
-    name = "stage"
-    help_msg = "Stage built artifacts into a common staging area"
-    overview = textwrap.dedent(
-        """
-        Stage built artifacts into a common staging area. If part names are
-        specified only those parts will be staged. The default is to stage
-        all parts.
-        """
-    )
-
-
-class PrimeCommand(_LifecycleStepCommand):
-    """Command to prime parts."""
-
-    name = "prime"
-    help_msg = "Prime artifacts defined for a part"
-    overview = textwrap.dedent(
-        """
-        Prepare the final payload to be packed, performing additional
-        processing and adding metadata files. If part names are specified only
-        those parts will be primed. The default is to prime all parts.
-        """
-    )
-
-    @override
-    def run(self, parsed_args: argparse.Namespace, step_name: str | None = None) -> None:
-        """Run the prime command."""
-        super().run(parsed_args, step_name=step_name)
-
-        self._services.package.write_metadata(self._services.lifecycle.prime_dir)
-
-
-class PackCommand(PrimeCommand):
+class PackCommand(lifecycle.PackCommand):
     """Command to pack the final artifact."""
 
     name = "pack"
@@ -266,16 +70,9 @@ class PackCommand(PrimeCommand):
     )
 
     @override
-    def fill_parser(self, parser: argparse.ArgumentParser) -> None:
-        super().fill_parser(parser)
+    def _fill_parser(self, parser: argparse.ArgumentParser) -> None:
+        super()._fill_parser(parser)
 
-        parser.add_argument(
-            "--output",
-            "-o",
-            type=pathlib.Path,
-            default=pathlib.Path(),
-            help="Output directory for created packages.",
-        )
         parser.add_argument(
             "--bases-index",
             action="append",
@@ -316,32 +113,12 @@ class PackCommand(PrimeCommand):
             help="Produce a machine-readable format (currently only json)",
         )
         parser.add_argument(
-            "--project-dir",
             "-p",
+            "--project-dir",
             type=pathlib.Path,
+            default=pathlib.Path.cwd(),
             help="Specify the project's directory (defaults to current)",
         )
-
-    @override
-    def run(self, parsed_args: argparse.Namespace, step_name: str | None = None) -> None:
-        """Run the pack command."""
-        self._validate_args(parsed_args)
-        if step_name not in ("pack", None):
-            raise RuntimeError(f"Step name {step_name} passed to pack command.")
-        super().run(parsed_args, step_name="prime")
-
-        emit.progress("Packing...")
-        packages = self._services.package.pack(
-            self._services.lifecycle.prime_dir, parsed_args.output
-        )
-
-        if not packages:
-            emit.message("No packages created.")
-        elif len(packages) == 1:
-            emit.message(f"Packed {packages[0].name}")
-        else:
-            package_names = ", ".join(pkg.name for pkg in packages)
-            emit.message(f"Packed: {package_names}")
 
     @staticmethod
     @override
@@ -349,21 +126,23 @@ class PackCommand(PrimeCommand):
         return True
 
     def _validate_args(self, parsed_args: argparse.Namespace) -> None:
-        if self._services.project.type == "charm":
+        project = cast(models.CharmcraftProject, self._services.project)
+        package_service = cast(services.PackageService, self._services.package)
+        if project.type == "charm":
             if parsed_args.include_all_charms:
                 raise ArgumentParsingError(
                     "--include-all-charms can only be used when packing a bundle. "
-                    f"Currently trying to pack: {self._services.package.project_dir}"
+                    f"Currently trying to pack: {package_service.project_dir}"
                 )
             if parsed_args.include_charm:
                 raise ArgumentParsingError(
                     "--include-charm can only be used when packing a bundle. "
-                    f"Currently trying to pack: {self._services.package.project_dir}"
+                    f"Currently trying to pack: {package_service.project_dir}"
                 )
             if parsed_args.output_bundle:
                 raise ArgumentParsingError(
                     "--output-bundle can only be used when packing a bundle. "
-                    f"Currently trying to pack: {self._services.package.project_dir}"
+                    f"Currently trying to pack: {package_service.project_dir}"
                 )
 
     def _validate_bases_indices(self, bases_indices):
@@ -371,8 +150,10 @@ class PackCommand(PrimeCommand):
         if bases_indices is None:
             return
 
+        project = cast(models.Charm, self._services.project)
+
         msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
-        len_configured_bases = len(self._services.project.bases)
+        len_configured_bases = len(project.bases)
         for bases_index in bases_indices:
             if bases_index < 0:
                 raise CraftError(msg.format(bases_index))
@@ -385,54 +166,11 @@ class PackCommand(PrimeCommand):
         If we're packing a bundle, run unmanaged. Otherwise, do what other lifecycle
         commands do.
         """
-        charmcraft_yaml = utils.load_yaml(pathlib.Path("charmcraft.yaml"))
+        project_dir = pathlib.Path(getattr(parsed_args, "project_dir", "."))
+        charmcraft_yaml = utils.load_yaml(project_dir / "charmcraft.yaml")
         # Always use a runner on non-posix platforms.
         # Craft-parts is not designed to work on non-posix platforms, and most
         # notably here, the bundle plugin doesn't work on Windows.
         if os.name == "posix" and charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
             return False
         return super().run_managed(parsed_args)
-
-
-class CleanCommand(_LifecyclePartsCommand):
-    """Command to remove part assets."""
-
-    name = "clean"
-    help_msg = "Remove a part's assets"
-    overview = textwrap.dedent(
-        """
-        Clean up artifacts belonging to parts. If no parts are specified,
-        remove the packing environment.
-        """
-    )
-
-    @override
-    def run(self, parsed_args: argparse.Namespace) -> None:
-        """Run the clean command."""
-        super().run(parsed_args)
-
-        if parsed_args.destructive_mode or not self._should_clean_instances(parsed_args):
-            self._services.lifecycle.clean(parsed_args.parts)
-        else:
-            self._services.provider.clean_instances()
-
-    @override
-    def run_managed(self, parsed_args: argparse.Namespace) -> bool:
-        if parsed_args.destructive_mode:
-            # In destructive mode, always run on the host.
-            return False
-
-        # "clean" should run managed if cleaning specific parts.
-        # otherwise, should run on the host to clean the build provider.
-        return not self._should_clean_instances(parsed_args)
-
-    @staticmethod
-    def _should_clean_instances(parsed_args: argparse.Namespace) -> bool:
-        return not bool(parsed_args.parts)
-
-
-def _launch_shell() -> None:
-    """Launch a user shell for debugging environment."""
-    emit.progress("Launching shell on build environment...", permanent=True)
-    with emit.pause():
-        subprocess.run(["bash"], check=False)

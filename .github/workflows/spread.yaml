@@ -54,6 +54,14 @@ jobs:
         run: |
           spread ${{ matrix.spread }}
 
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done
+
   snap-store-tests:
     runs-on: spread-installed
     needs: [snap-build]
@@ -104,3 +112,11 @@ jobs:
           LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}
         run: |
           spread google:ubuntu-22.04-64:tests/spread/smoketests/remote-build
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

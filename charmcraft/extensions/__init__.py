@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 """Extension processor and related utilities."""
 
-from charmcraft.extensions._utils import apply_extensions
-from charmcraft.extensions.extension import Extension
-from charmcraft.extensions.configfiles import Actions, Bundle, Config, Metadata
-from charmcraft.extensions.registry import (
+from ._utils import apply_extensions
+from .extension import Extension
+from .configfiles import Actions, Bundle, Config, Metadata
+from .registry import (
     get_extension_class,
     get_extension_names,
     get_extensions,

@@ -25,12 +25,11 @@ from charmcraft import const, errors, models, utils
 from charmcraft.extensions import extension
 
 
-class Config(extension.Extension):
-    """An extension that validates and loads config.yaml into a charm.
+class _ConfigFile(extension.Extension):
+    """Base extension for updating the Charmcraft project from a config file."""
 
-    We still support having ``config.yaml`` separate from ``charmcraft.yaml``,
-    so this extension will load that if it exists.
-    """
+    filename: str
+    docs_url: str
 
     @override
     @staticmethod
@@ -44,43 +43,42 @@ class Config(extension.Extension):
         """Not experimental."""
         return False
 
-    @override
-    def get_root_snippet(self) -> dict[str, Any]:
-        """Get additional fields from config.yaml."""
-        config_path = self.project_root / const.JUJU_CONFIG_FILENAME
+    def _get_config_file(self) -> dict[str, Any]:
+        """Load the configuration file."""
+        config_path = self.project_root / self.filename
         if not config_path.is_file():
             raise errors.InvalidYamlFileError(
-                const.JUJU_CONFIG_FILENAME,
-                resolution=f"Ensure {const.JUJU_CONFIG_FILENAME!r} is a file",
-                docs_url="https://juju.is/docs/sdk/config-yaml",
+                self.filename,
+                resolution=f"Ensure {self.filename!r} is a file",
+                docs_url=self.docs_url,
             )
 
         with config_path.open() as md_file:
             config_dict = craft_application.util.safe_yaml_load(md_file)
         if not isinstance(config_dict, dict):
             raise errors.InvalidYamlFileError(
-                const.JUJU_CONFIG_FILENAME,
-                resolution=f"Ensure {const.JUJU_CONFIG_FILENAME!r} is a valid YAML dictionary",
-                docs_url="https://juju.is/docs/sdk/config-yaml",
+                self.filename,
+                resolution=f"Ensure {self.filename!r} is a valid YAML dictionary",
+                docs_url=self.docs_url,
             )
 
         try:
             models.JujuConfig.unmarshal(config_dict)
         except pydantic.ValidationError as exc:
             raise craft_application.errors.CraftValidationError.from_pydantic(
-                exc, file_name=const.METADATA_FILENAME
+                exc, file_name=self.filename
             )
 
         if duplicate_fields := config_dict.keys() & self.yaml_data.keys():
             duplicate_fields_str = utils.humanize_list(duplicate_fields, "and")
             raise errors.CraftError(
-                f"Fields in charmcraft.yaml cannot be duplicated in {const.JUJU_CONFIG_FILENAME!r}",
+                f"Fields in charmcraft.yaml cannot be duplicated in {self.filename!r}",
                 details=f"Duplicate fields: {duplicate_fields_str}",
-                resolution="Remove the duplicate fields from metadata.yaml",
+                resolution=f"Remove the duplicate fields from {self.filename!r}",
                 retcode=65,  # Data error. per sysexits.h
             )
 
-        return {"config": config_dict}
+        return config_dict
 
     @override
     def get_part_snippet(self) -> dict[str, Any]:
@@ -91,3 +89,19 @@ class Config(extension.Extension):
     def get_parts_snippet(self) -> dict[str, Any]:
         """Generate the bundle part if there isn't one."""
         return {}
+
+
+class Config(_ConfigFile):
+    """An extension that validates and loads config.yaml into a charm.
+
+    We still support having ``config.yaml`` separate from ``charmcraft.yaml``,
+    so this extension will load that if it exists.
+    """
+
+    filename = const.JUJU_CONFIG_FILENAME
+    docs_url = "https://juju.is/docs/sdk/config-yaml"
+
+    @override
+    def get_root_snippet(self) -> dict[str, Any]:
+        """Get the root snippet for config."""
+        return {"config": self._get_config_file()}

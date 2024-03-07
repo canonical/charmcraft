@@ -85,9 +85,15 @@ def test_duplicate_fields(fs, contents, details):
 @pytest.mark.parametrize(
     ("metadata_yaml", "root_snippet"),
     [
-        ("options:", {"config": {"options": None}},),
+        (
+            "options:",
+            {"config": {"options": None}},
+        ),
         ("{}", {"config": {}}),
-        ("options: {my-option: {type: boolean}}", {"config": {"options": {"my-option": {"type": "boolean"}}}}),
+        (
+            "options: {my-option: {type: boolean}}",
+            {"config": {"options": {"my-option": {"type": "boolean"}}}},
+        ),
     ],
 )
 def test_get_root_snippet_successful_load(fs, extension, metadata_yaml, root_snippet):

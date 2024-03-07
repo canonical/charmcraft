@@ -18,7 +18,14 @@
 
 from . import config, metadata
 from .charmcraft import Base
-from .config import JujuConfig, JujuBooleanOption, JujuFloatOption, JujuIntOption, JujuStringOption, JujuOption
+from .config import (
+    JujuConfig,
+    JujuBooleanOption,
+    JujuFloatOption,
+    JujuIntOption,
+    JujuStringOption,
+    JujuOption,
+)
 from .lint import CheckResult, CheckType, LintResult, ResultLevel
 from .manifest import Attribute, Manifest
 from .metadata import BundleMetadata, CharmMetadata, CharmMetadataLegacy

@@ -79,7 +79,7 @@ def test_duplicate_fields(fs, extension, contents, details):
     with pytest.raises(errors.CraftError) as exc:
         extension.get_root_snippet()
 
-    assert exc.value.resolution == "Remove the duplicate fields from metadata.yaml"
+    assert exc.value.resolution == "Remove the duplicate fields from 'metadata.yaml'"
     assert exc.value.details == details
 
 

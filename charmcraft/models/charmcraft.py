@@ -25,7 +25,6 @@ from craft_cli import CraftError
 from typing_extensions import Self
 
 from charmcraft import const, parts
-from charmcraft.extensions import apply_extensions
 from charmcraft.format import format_pydantic_errors
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
@@ -305,6 +304,9 @@ class CharmcraftConfig(
             # is not a valid list, parse_obj() will properly handle the error.
             if isinstance(obj.get("bases"), list):
                 cls.expand_short_form_bases(obj["bases"])
+
+            # Putting this here to avoid circular imports.
+            from charmcraft.extensions import apply_extensions
 
             obj = apply_extensions(project.dirpath, obj)
 

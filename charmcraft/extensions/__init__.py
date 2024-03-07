@@ -19,8 +19,7 @@
 from charmcraft.extensions._utils import apply_extensions
 from charmcraft.extensions.extension import Extension
 from charmcraft.extensions.bundle import Bundle
-from charmcraft.extensions.configfiles import Config
-from charmcraft.extensions.metadata import Metadata
+from charmcraft.extensions.configfiles import Config, Metadata
 from charmcraft.extensions.registry import (
     get_extension_class,
     get_extension_names,

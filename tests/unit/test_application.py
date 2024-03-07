@@ -85,9 +85,10 @@ def test_extra_yaml_transform_success(
                 """\
                 name: test-charm
                 summary: A test charm
-                description: A charm for testing!"""
+                description: A charm for testing!
+                """
             ),
-            "Fields in charmcraft.yaml cannot be duplicated in metadata.yaml",
+            "Fields in charmcraft.yaml cannot be duplicated in 'metadata.yaml'",
         ),
         (
             {"extensions": ["_hidden", "_private", "Willard"]},

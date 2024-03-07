@@ -17,6 +17,7 @@
 from typing import Any
 
 import craft_application.errors
+import craft_application.models
 import craft_application.util
 import pydantic
 from overrides import override
@@ -30,6 +31,7 @@ class _ConfigFile(extension.Extension):
 
     filename: str
     docs_url: str
+    config_model: type[craft_application.models.CraftBaseModel]
 
     @override
     @staticmethod
@@ -63,7 +65,7 @@ class _ConfigFile(extension.Extension):
             )
 
         try:
-            models.JujuConfig.unmarshal(config_dict)
+            self.config_model.unmarshal(config_dict)
         except pydantic.ValidationError as exc:
             raise craft_application.errors.CraftValidationError.from_pydantic(
                 exc, file_name=self.filename
@@ -100,8 +102,25 @@ class Config(_ConfigFile):
 
     filename = const.JUJU_CONFIG_FILENAME
     docs_url = "https://juju.is/docs/sdk/config-yaml"
+    config_model = models.JujuConfig
 
     @override
     def get_root_snippet(self) -> dict[str, Any]:
         """Get the root snippet for config."""
         return {"config": self._get_config_file()}
+
+
+class Metadata(_ConfigFile):
+    """An extension that validates and loads metadata.yaml into a charm.
+
+    We still support having ``metadata.yaml`` separate from ``charmcraft.yaml``,
+    so this extension will load that if it exists.
+    """
+
+    filename = const.METADATA_FILENAME
+    docs_url = "https://juju.is/docs/sdk/metadata-yaml"
+    config_model = models.CharmMetadataLegacy
+
+    @override
+    def get_root_snippet(self) -> dict[str, Any]:
+        return self._get_config_file()

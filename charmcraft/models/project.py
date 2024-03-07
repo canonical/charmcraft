@@ -364,6 +364,8 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     charmhub: CharmhubConfig | None
     parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
 
+    extensions: list[str] | None = None
+
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
@@ -432,15 +434,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
                     data["bundle"] = safe_yaml_load(f)
             else:
                 raise CraftError(f"Missing bundle.yaml file: {str(bundle_file)!r}")
-
-        config_file = project_dir / JUJU_CONFIG_FILENAME
-        if config_file.is_file():
-            if "config" in data:
-                raise errors.CraftValidationError(
-                    f"Cannot specify 'config' section in 'charmcraft.yaml' when {JUJU_CONFIG_FILENAME!r} exists",
-                    resolution=f"Move all data from {JUJU_CONFIG_FILENAME!r} to the 'config' section in 'charmcraft.yaml'",
-                )
-            data["config"] = parse_config_yaml(project_dir, allow_broken=True)
 
         actions_file = project_dir / JUJU_ACTIONS_FILENAME
         if actions_file.is_file():

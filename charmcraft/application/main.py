@@ -26,7 +26,7 @@ from craft_application import Application, AppMetadata
 from craft_parts.plugins import plugins
 from overrides import override
 
-from charmcraft import const, errors, extensions, models, services
+from charmcraft import const, errors, extensions, models, services, utils
 from charmcraft.application import commands
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
@@ -70,7 +70,7 @@ class Charmcraft(Application):
         ext_names = yaml_data.setdefault("extensions", [])
         invalid_extensions = [ext for ext in ext_names if ext.startswith("_")]
         if invalid_extensions:
-            invalid_extensions_str = humanize_list(invalid_extensions, "and")
+            invalid_extensions_str = utils.humanize_list(invalid_extensions, "and")
             raise errors.CraftError(
                 f"Invalid extension(s): {invalid_extensions_str}",
                 details="Extensions prefixed with an underscore are for internal use only",
@@ -79,9 +79,11 @@ class Charmcraft(Application):
 
         # Default extensions
         if yaml_data.get("type") == "bundle":
-            yaml_data.setdefault("extensions", []).append("_bundle")
+            ext_names.append("_bundle")
         if (self.project_dir / const.METADATA_FILENAME).exists():
-            yaml_data.setdefault("extensions", []).append("_metadata")
+            ext_names.append("_metadata")
+        if (self.project_dir / const.JUJU_CONFIG_FILENAME).exists():
+            ext_names.append("_config")
 
         return extensions.apply_extensions(self.project_dir, yaml_data)
 

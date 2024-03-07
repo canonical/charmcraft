@@ -19,6 +19,7 @@
 from charmcraft.extensions._utils import apply_extensions
 from charmcraft.extensions.extension import Extension
 from charmcraft.extensions.bundle import Bundle
+from charmcraft.extensions.config import Config
 from charmcraft.extensions.metadata import Metadata
 from charmcraft.extensions.registry import (
     get_extension_class,
@@ -29,11 +30,14 @@ from charmcraft.extensions.registry import (
 )
 
 register("_bundle", Bundle)
+register("_config", Config)
 register("_metadata", Metadata)
 
 __all__ = [
     "Extension",
     "Bundle",
+    "Config",
+    "Metadata",
     "get_extension_class",
     "get_extension_names",
     "get_extensions",

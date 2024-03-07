@@ -34,13 +34,6 @@ from charmcraft import application, errors
                 description: A charm for testing!"""
             ),
         ),
-        (
-            {
-                "name": "test-charm",
-                "summary": "A test charm",
-                "description": "A charm for testing!",
-            },
-        ),
     ],
 )
 @pytest.mark.parametrize(

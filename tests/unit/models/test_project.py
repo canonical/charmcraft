@@ -480,12 +480,6 @@ def test_unmarshal_invalid_type(type_):
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
-            SIMPLE_CONFIG_YAML,
-            None,
-            {"config": SIMPLE_CONFIG_DICT},
-        ),
-        (
-            SIMPLE_CHARMCRAFT_YAML,
             None,
             SIMPLE_ACTIONS_YAML,
             {"actions": SIMPLE_ACTIONS_DICT},
@@ -533,15 +527,6 @@ def test_from_yaml_file_success(
             r"^Could not find charmcraft\.yaml at '.charmcraft\.yaml'$",
             None,
             id="FileNotFound",
-        ),
-        pytest.param(
-            f"{SIMPLE_CHARMCRAFT_YAML}\nconfig: ",
-            SIMPLE_CONFIG_YAML,
-            None,
-            CraftValidationError,
-            r"^Cannot specify 'config' section",
-            None,
-            id="duplicate-config",
         ),
         pytest.param(
             f"{SIMPLE_CHARMCRAFT_YAML}\nactions:",

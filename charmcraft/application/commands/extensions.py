@@ -16,7 +16,6 @@
 
 """Infrastructure for the 'extensions' command."""
 import argparse
-import pathlib
 from textwrap import dedent
 
 from craft_cli import emit
@@ -88,13 +87,6 @@ class ExpandExtensionsCommand(base.CharmcraftCommand):
     def fill_parser(self, parser) -> None:
         """Fill in the parser for this command."""
         super().fill_parser(parser)
-        parser.add_argument(
-            "-p",
-            "--project-dir",
-            type=pathlib.Path,
-            default=pathlib.Path.cwd(),
-            help="Specify the project's directory (defaults to current)",
-        )
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Print the project's specification with the extensions expanded."""

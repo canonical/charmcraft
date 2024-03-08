@@ -113,15 +113,15 @@ class PackCommand(lifecycle.PackCommand):
             help="Produce a machine-readable format (currently only json)",
         )
         parser.add_argument(
-            "-p",
             "--project-dir",
+            "-p",
             type=pathlib.Path,
             default=pathlib.Path.cwd(),
             help="Specify the project's directory (defaults to current)",
         )
 
-    @staticmethod
     @override
+    @staticmethod
     def _should_add_shell_args() -> bool:
         return True
 

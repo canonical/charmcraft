@@ -29,7 +29,6 @@ import craft_application
 import yaml
 from craft_application import services
 from craft_cli import emit
-from craft_providers import bases
 
 import charmcraft
 from charmcraft import const, errors, models, utils
@@ -62,12 +61,10 @@ class PackageService(services.PackageService):
         services: CharmcraftServiceFactory,
         *,
         project_dir: pathlib.Path,
-        platform: str | None,
         build_plan: list[craft_application.models.BuildInfo],
     ) -> None:
         super().__init__(app, services, project=cast(craft_application.models.Project, project))
         self.project_dir = project_dir.resolve(strict=True)
-        self._platform = platform
         self._build_plan = build_plan
 
     def pack(self, prime_dir: pathlib.Path, dest: pathlib.Path) -> list[pathlib.Path]:
@@ -115,24 +112,19 @@ class PackageService(services.PackageService):
 
     def get_charm_path(self, dest_dir: pathlib.Path) -> pathlib.Path:
         """Get a charm file name for the appropriate set of run-on bases."""
-        if self._platform:
-            return dest_dir / f"{self._project.name}_{self._platform}.charm"
-        build_plan = models.CharmcraftBuildPlanner.parse_obj(
-            self._project.marshal()
-        ).get_build_plan()
-        platform = utils.get_os_platform()
-        build_on_base = bases.BaseName(name=platform.system, version=platform.release)
-        host_arch = utils.get_host_architecture()
-        for build_info in build_plan:
-            print(build_info)
-            if build_info.build_on != host_arch:
-                continue
-            if build_info.base == build_on_base:
-                return dest_dir / f"{self._project.name}_{build_info.platform}.charm"
-
-        raise errors.CraftError(
-            "Current machine is not a valid build platform for this charm.",
-        )
+        if len(self._build_plan) != 1:
+            raise RuntimeError(
+                f"{len(self._build_plan)} build items in the build plan, expected 1."
+            )
+        build_info = self._build_plan[0]
+        if isinstance(build_info, models.CharmBuildInfo):
+            built_for_str = "-".join(
+                f"{base.name}-{base.channel}-{build_info.platform}"
+                for base in build_info.build_for_bases
+            )
+        else:
+            built_for_str = f"{self._project.base}-{build_info.platform}"
+        return dest_dir / f"{self._project.name}_{built_for_str}.charm"
 
     @property
     def metadata(self) -> BundleMetadata | CharmMetadata:
@@ -196,15 +188,13 @@ class PackageService(services.PackageService):
         if isinstance(self._project, BasesCharm):
             return list(itertools.chain.from_iterable(base.run_on for base in self._project.bases))
         if isinstance(self._project, PlatformCharm):
-            if not self._platform:
-                architectures = [utils.get_host_architecture()]
-            elif platform := self._project.platforms.get(self._platform):
-                architectures = [str(arch) for arch in platform.build_for]
-            elif self._platform in (*const.SUPPORTED_ARCHITECTURES, "all"):
-                architectures = [self._platform]
-            else:
-                architectures = [utils.get_host_architecture()]
-            return [models.Base.from_str_and_arch(self._project.base, architectures)]
+            return [
+                models.Base.from_str_and_arch(
+                    self._project.base,
+                    sorted({item.build_for for item in self._build_plan}),
+                )
+            ]
+
         raise TypeError(f"Unknown charm type {self._project.__class__}, cannot get bases.")
 
     def write_metadata(self, path: pathlib.Path) -> None:

@@ -83,11 +83,14 @@ def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
                 "description": "A charm for testing",
                 "base": "ubuntu@22.04",
                 "platforms": {
-                    "ubuntu-22.04-amd64": {"build-on": ["amd64"], "build-for": ["amd64"]}
+                    "my-platform": {
+                        "build-on": [utils.get_host_architecture()],
+                        "build-for": [utils.get_host_architecture()],
+                    }
                 },
                 "parts": {},
             },
-            "ubuntu-22.04-amd64",
+            "my-platform",
             marks=pytest.mark.skipif(
                 CURRENT_PLATFORM.release != "22.04", reason="Jammy charms only tested on jammy"
             ),
@@ -133,7 +136,14 @@ def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
     reason="Basic charm tests use destructive mode.",
 )
 def test_build_basic_charm(
-    monkeypatch, emitter, new_path, charmcraft_project, service_factory, app, platform
+    monkeypatch,
+    emitter,
+    new_path,
+    charmcraft_project,
+    service_factory,
+    app,
+    platform,
+    capsys,
 ):
     (new_path / "charmcraft.yaml").write_text(yaml.dump(charmcraft_project))
     service_factory.project = models.CharmcraftProject.unmarshal(charmcraft_project)
@@ -146,11 +156,16 @@ def test_build_basic_charm(
     app.configure({})
     assert app.run() == 0
 
-    with zipfile.ZipFile(new_path / f"my-charm_{platform}.charm") as charm_zip:
+    if "platforms" in charmcraft_project:
+        charm_name = f"my-charm_{service_factory.project.base}-{platform}.charm"
+    else:
+        charm_name = f"my-charm_{platform}.charm"
+
+    with zipfile.ZipFile(new_path / charm_name) as charm_zip:
         metadata = yaml.safe_load(charm_zip.read("metadata.yaml"))
         manifest = yaml.safe_load(charm_zip.read("manifest.yaml"))
 
-    emitter.assert_progress(f"Packing charm my-charm_{platform}.charm")
+    emitter.assert_progress(f"Packing charm {charm_name}")
 
     assert "bases" in manifest
     if "platforms" in charmcraft_project:

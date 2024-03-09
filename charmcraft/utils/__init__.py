@@ -41,6 +41,7 @@ from charmcraft.utils.platform import (
     ARCH_TRANSLATIONS,
     OSPlatform,
     get_host_architecture,
+    get_host_base_name,
     get_os_platform,
     validate_architectures,
 )
@@ -78,6 +79,7 @@ __all__ = [
     "get_os_platform",
     "validate_architectures",
     "get_host_architecture",
+    "get_host_base_name",
     "S_IRALL",
     "S_IXALL",
     "make_executable",

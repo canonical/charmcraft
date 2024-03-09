@@ -34,8 +34,9 @@ def package_service(fake_path, service_factory):
         project=service_factory.project,
         services=service_factory,
         project_dir=fake_project_dir,
-        platform="ubuntu-22.04-arm64",
-        build_plan=[],
+        build_plan=models.CharmcraftBuildPlanner.parse_obj(
+            service_factory.project
+        ).get_build_plan(),
     )
     service_factory.package = svc
     return svc

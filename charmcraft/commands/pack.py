@@ -116,6 +116,12 @@ class PackCommand(BaseCommand):
             type=pathlib.Path,
             help="Write the bundle configuration to this path",
         )
+        parser.add_argument(
+            "--project-dir",
+            "-p",
+            type=pathlib.Path,
+            help="Specify the project's directory (defaults to current)",
+        )
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""

@@ -1,0 +1,12 @@
+name: jammy
+type: charm
+title: A charm built and running on jammy.
+summary: A charm built and running on jammy.
+description: A charm built and running on jammy.
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "22.04"
+    run-on:
+    - name: ubuntu
+      channel: "22.04"

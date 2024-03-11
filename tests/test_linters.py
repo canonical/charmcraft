@@ -26,6 +26,7 @@ import pytest
 from charmcraft import const
 from charmcraft.linters import (
     CHECKERS,
+    AdditionalFiles,
     BaseChecker,
     CheckType,
     Entrypoint,
@@ -1187,3 +1188,97 @@ def test_entrypoint_non_exec(tmp_path):
         result = linter.run(tmp_path)
     assert result == Entrypoint.Result.ERROR
     assert linter.text == f"The entrypoint file is not executable: {str(entrypoint)!r}"
+
+
+# --- tests for Additional Files checker
+
+
+def test_additional_files_checker(tmp_path):
+    """The additional files checker can find additional files."""
+    stage_dir = tmp_path / "stage"
+    stage_dir.mkdir()
+    prime_dir = tmp_path / "prime"
+    prime_dir.mkdir()
+
+    file_added = prime_dir / "file_added"
+    file_added.write_text("")
+
+    linter = AdditionalFiles()
+    result = linter.run(prime_dir)
+
+    assert result == LintResult.ERROR
+    assert linter.text == (
+        "Error: Additional files found in the charm:\n"
+        "File 'file_added' is not staged but in the charm."
+    )
+
+
+def test_additional_files_checker_ok(tmp_path):
+    """The additional files checker OK with same file list."""
+    stage_dir = tmp_path / "stage"
+    stage_dir.mkdir()
+    prime_dir = tmp_path / "prime"
+    prime_dir.mkdir()
+
+    file_added = prime_dir / "file_added"
+    file_added.write_text("")
+
+    file_added = stage_dir / "file_added"
+    file_added.write_text("")
+
+    linter = AdditionalFiles()
+    result = linter.run(prime_dir)
+
+    assert result == LintResult.OK
+    assert linter.text == "No additional files found in the charm."
+
+
+def test_additional_files_checker_not_applicable(tmp_path):
+    """The additional files checker cannot work without a stage dir."""
+    prime_dir = tmp_path / "prime"
+    prime_dir.mkdir()
+
+    file_added = prime_dir / "file_added"
+    file_added.write_text("")
+
+    linter = AdditionalFiles()
+    result = linter.run(prime_dir)
+
+    assert result == LintResult.NONAPPLICABLE
+    assert linter.text == "Additional files check not applicable without a build environment."
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        (pathlib.Path(const.BUNDLE_FILENAME)),
+        (pathlib.Path(const.CHARMCRAFT_FILENAME)),
+        (pathlib.Path(const.MANIFEST_FILENAME)),
+        (pathlib.Path(const.METADATA_FILENAME)),
+        (pathlib.Path(const.JUJU_ACTIONS_FILENAME)),
+        (pathlib.Path(const.JUJU_CONFIG_FILENAME)),
+        (pathlib.Path(const.HOOKS_DIRNAME)),
+        (pathlib.Path("README.md")),
+    ],
+)
+def test_additional_files_checker_generated_ignore(tmp_path, file):
+    """The additional files checker OK with generated files."""
+    stage_dir = tmp_path / "stage"
+    stage_dir.mkdir()
+    prime_dir = tmp_path / "prime"
+    prime_dir.mkdir()
+
+    file_added = prime_dir / "file_added"
+    file_added.write_text("")
+
+    file_added = stage_dir / "file_added"
+    file_added.write_text("")
+
+    file_added = prime_dir / file
+    file_added.write_text("")
+
+    linter = AdditionalFiles()
+    result = linter.run(prime_dir)
+
+    assert result == LintResult.OK
+    assert linter.text == "No additional files found in the charm."

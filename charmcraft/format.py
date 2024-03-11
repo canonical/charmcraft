@@ -32,7 +32,7 @@ def format_pydantic_error_location(loc) -> str:
             previous_part += f"[{loc_part}]"
             loc_parts.append(previous_part)
         else:
-            raise RuntimeError(f"unhandled loc: {loc_part}")
+            raise RuntimeError(f"unhandled loc: {loc_part}")  # noqa: TRY004
 
     loc = ".".join(loc_parts)
 

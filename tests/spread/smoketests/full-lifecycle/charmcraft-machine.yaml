@@ -1,0 +1,70 @@
+# This file configures Charmcraft.
+# See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+# (Required)
+name: machine-bases-charm
+
+
+# (Required)
+type: charm
+
+
+# (Recommended)
+title: Charm Template
+
+
+# (Required)
+summary: A very short one-line summary of the charm.
+
+
+# (Required)
+description: |
+  A single sentence that says what the charm is, concisely and memorably.
+
+  A paragraph of one to three short sentences, that describe what the charm does.
+
+  A third paragraph that explains what need the charm meets.
+
+  Finally, a paragraph that describes whom the charm is useful for.
+
+
+# (Required for 'charm' type)
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "22.04"
+    run-on:
+    - name: ubuntu
+      channel: "22.04"
+
+
+# (Optional) Configuration options for the charm
+# This config section defines charm config options, and populates the Configure
+# tab on Charmhub.
+# More information on this section at https://juju.is/docs/sdk/charmcraft-yaml#heading--config
+# General configuration documentation: https://juju.is/docs/sdk/config
+config:
+  options:
+    # An example config option to customise the log level of the workload
+    log-level:
+      description: |
+        Configures the log level of gunicorn.
+
+        Acceptable values are: "info", "debug", "warning", "error" and "critical"
+      default: "info"
+      type: string
+
+
+# Added for the full lifecycle test:
+parts:
+  charm:
+    prime:
+      - extra_file.txt
+  hello:
+    plugin: nil
+    build-packages: [hello]
+    override-build: |
+      hello > "$CRAFT_PART_INSTALL/hello.txt"
+    override-prime: |
+      echo "Running the prime step"
+      craftctl default

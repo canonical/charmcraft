@@ -125,7 +125,7 @@ def create_build_plan(
     return build_plan
 
 
-def get_command_environment(base: Base) -> dict[str, str]:
+def get_command_environment(base: Base) -> dict[str, str | None]:
     """Construct the required environment."""
     env = base.default_command_environment()
     env[const.MANAGED_MODE_ENV_VAR] = "1"

@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
+import contextlib
 import pathlib
 import re
 import subprocess
@@ -303,11 +303,9 @@ def test_build_checks_provider(basic_project, mock_provider, mock_capture_logs_f
     config = load(basic_project)
     builder = get_builder(config)
 
-    try:
-        builder.run()
-    except CraftError:
+    with contextlib.suppress(CraftError):
         # 'No suitable 'build-on' environment...' error will be raised on some test platforms
-        pass
+        builder.run()
 
     mock_provider.ensure_provider_is_available.assert_called_once()
 

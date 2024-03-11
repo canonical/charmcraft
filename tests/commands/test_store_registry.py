@@ -21,6 +21,7 @@ import gzip
 import hashlib
 import io
 import json
+import pathlib
 import sys
 import tarfile
 from unittest.mock import call, patch
@@ -933,7 +934,7 @@ class FakeRegistry:
         return reference in self.stored_blobs
 
     def upload_blob(self, filepath, size, digest):
-        self.stored_blobs[digest] = (open(filepath, "rb").read(), size)
+        self.stored_blobs[digest] = (pathlib.Path(filepath).read_bytes(), size)
 
 
 class FakeDockerd:
@@ -1000,7 +1001,7 @@ def test_imagehandler_extract_file_simple(tmp_path, emitter):
 
     assert size == len(test_content)
     assert digest == "sha256:" + hashlib.sha256(test_content).hexdigest()
-    assert open(tmp_filepath, "rb").read() == test_content
+    assert pathlib.Path(tmp_filepath).read_bytes() == test_content
 
     emitter.assert_progress("Extracting file 'testfile.txt' from local tar (compress=False)")
 
@@ -1019,7 +1020,7 @@ def test_imagehandler_extract_file_compressed_ok(tmp_path, emitter):
     with tarfile.open(tar_filepath, "r") as tar:
         tmp_filepath, size, digest = im._extract_file(tar, "testfile.txt", compress=True)
 
-    compressed_content = open(tmp_filepath, "rb").read()
+    compressed_content = pathlib.Path(tmp_filepath).read_bytes()
     assert size == len(compressed_content)
     assert digest == "sha256:" + hashlib.sha256(compressed_content).hexdigest()
     assert gzip.decompress(compressed_content) == test_content

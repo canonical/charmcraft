@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import dataclasses
 from typing import TYPE_CHECKING
+from charmcraft.services.remotebuild import RemoteBuildService
 
 from craft_application import ServiceFactory
 
@@ -38,6 +39,7 @@ class CharmcraftServiceFactory(ServiceFactory):
     ProviderClass: type[ProviderService] = ProviderService
     AnalysisClass: type[AnalysisService] = AnalysisService
     StoreClass: type[StoreService] = StoreService
+    RemoteBuildClass: type[RemoteBuildService] = RemoteBuildService
 
     if TYPE_CHECKING:
         # Cheeky hack that lets static type checkers report the correct types.

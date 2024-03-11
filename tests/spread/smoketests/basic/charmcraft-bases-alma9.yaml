@@ -1,0 +1,12 @@
+name: alma9
+type: charm
+title: A charm built and running on Almalinux 9.
+summary: A charm built and running on Almalinux 9.
+description: A charm built and running on Almalinux 9.
+bases:
+  - build-on:
+    - name: almalinux
+      channel: "9"
+    run-on:
+      - name: almalinux
+        channel: "9"

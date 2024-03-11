@@ -16,8 +16,6 @@
 """Base command for Charmcraft commands."""
 from __future__ import annotations
 
-from typing import Any
-
 import craft_application.commands
 
 from charmcraft import services
@@ -28,14 +26,6 @@ class CharmcraftCommand(craft_application.commands.AppCommand):
 
     format_option: bool = False
     _services: services.CharmcraftServiceFactory
-
-    def __init__(self, config: dict[str, Any] | None) -> None:
-        super().__init__(config)
-
-        if config is None:
-            config = {}
-
-        self._global_args: dict[str, Any] = config.get("global_args", {})
 
     def fill_parser(self, parser) -> None:
         """Fill the argument parser for this command."""

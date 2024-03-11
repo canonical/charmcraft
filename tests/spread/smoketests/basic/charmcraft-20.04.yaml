@@ -1,0 +1,12 @@
+name: focal
+type: charm
+title: A charm built and running on focal
+summary: A charm built and running on focal
+description: A charm built and running on focal
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "20.04"
+    run-on:
+    - name: ubuntu
+      channel: "20.04"

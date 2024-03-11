@@ -74,10 +74,23 @@ def init_command():
 
 
 def create_namespace(
-    *, name="my-charm", author="J Doe", force=False, profile=commands.init.DEFAULT_PROFILE
+    *,
+    name="my-charm",
+    author="J Doe",
+    force=False,
+    profile=commands.init.DEFAULT_PROFILE,
+    project_dir: pathlib.Path | None = None,
 ):
     """Helper to create a valid namespace."""
-    return argparse.Namespace(name=name, author=author, force=force, profile=profile)
+    if project_dir is None:
+        project_dir = pathlib.Path.cwd()
+    return argparse.Namespace(
+        name=name,
+        author=author,
+        force=force,
+        profile=profile,
+        project_dir=project_dir,
+    )
 
 
 @pytest.mark.parametrize(
@@ -199,9 +212,7 @@ def test_create_directory(new_path, init_command, subdir, expected_files):
     init_dir = new_path / subdir
 
     try:
-        init_command._global_args["project_dir"] = subdir
-
-        init_command.run(create_namespace())
+        init_command.run(create_namespace(project_dir=pathlib.Path(subdir)))
 
         actual_files = {p.relative_to(init_dir) for p in init_dir.rglob("*")}
 

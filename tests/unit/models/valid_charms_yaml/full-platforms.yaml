@@ -24,44 +24,25 @@ parts:
     charm-strict-dependencies: false
   another-part:
     plugin: nil
-bases:
-- build-on:
-  - name: ubuntu
-    channel: '22.04'
-    architectures:
-    - amd64
-    - riscv64
-  - name: ubuntu
-    channel: '20.04'
-    architectures:
-    - amd64
-    - arm64
-  run-on:
-  - name: ubuntu
-    channel: '22.04'
-    architectures:
-    - amd64
-  - name: ubuntu
-    channel: '22.04'
-    architectures:
-    - riscv64
-  - name: ubuntu
-    channel: '22.04'
-    architectures:
-    - arm64
-- build-on:
-  - name: ubuntu
-    channel: '24.04'
-  run-on:
-  - name: ubuntu
-    channel: '24.04'
-    architectures:
-    - amd64
-    - arm64
-    - riscv64
-    - s390x
-    - ppc64el
-    - armhf
+base: ubuntu@24.04
+build-base: ubuntu@devel
+platforms:
+  all:
+    build-on:
+      - amd64
+      - arm64
+      - riscv64
+      - s390x
+      - ppc64el
+      - armhf
+    build-for: [all]
+  amd64:
+  arm64:
+    build-on:
+      - amd64
+      - arm64
+    build-for:
+      - arm64
 actions:
   snapshot:
     description: Take a snapshot of the database.

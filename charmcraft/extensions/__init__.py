@@ -18,6 +18,7 @@
 
 from charmcraft.extensions._utils import apply_extensions
 from charmcraft.extensions.extension import Extension
+from charmcraft.extensions.bundle import Bundle
 from charmcraft.extensions.flask import Flask
 from charmcraft.extensions.registry import (
     get_extension_class,
@@ -27,8 +28,12 @@ from charmcraft.extensions.registry import (
     unregister,
 )
 
+register("bundle", Bundle)
+register("flask-framework", Flask)
+
 __all__ = [
     "Extension",
+    "Bundle",
     "get_extension_class",
     "get_extension_names",
     "get_extensions",
@@ -36,5 +41,3 @@ __all__ = [
     "register",
     "unregister",
 ]
-
-register("flask-framework", Flask)

@@ -39,7 +39,6 @@ import pytest_check
     "command",
     [
         "pack",
-        "clean",
         "version",
         "login",
         "logout",
@@ -60,8 +59,6 @@ import pytest_check
         "list-lib",
         "resources",
         "upload-resource",
-        "list-extensions",
-        "expand-extensions",
     ],
 )
 def test_compare_command_and_legacy_options(command):
@@ -86,7 +83,10 @@ def test_compare_command_and_legacy_options(command):
         if line.strip() == "See also:":
             break
 
-        if ":" not in line:
+        if "--" not in line:  # Only check the lines that list an option
+            continue
+        # --project-dir is now attached only to relevant commands.
+        if "--project-dir" in line:
             continue
         option = line.strip().split(":", maxsplit=1)[0]
 

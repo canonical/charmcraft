@@ -72,8 +72,14 @@ LongFormBasesDict = TypedDict(
 
 
 class CharmcraftSummaryStr(models.SummaryStr):
-    """A summary for charms and bundles."""
+    """A brief summary of this charm or bundle. Ideally, this should fit into one line."""
 
+    # Maximum length was set to 200 characters because the 78 character maximum
+    # inherited from craft-application is too restrictive, as several hundred charms
+    # already exceed this maximum.
+    # Eventually this limit will be reduced, ideally to 78 characters, though that may
+    # never happen entirely. Reductions will only occur on major releases.
+    # https://github.com/canonical/charmcraft/issues/1598
     max_length = 200
 
 

@@ -71,6 +71,12 @@ LongFormBasesDict = TypedDict(
 )
 
 
+class CharmcraftSummaryStr(models.SummaryStr):
+    """A summary for charms and bundles."""
+
+    max_length = 200
+
+
 class CharmPlatform(pydantic.ConstrainedStr):
     """The platform string for a charm file.
 
@@ -360,7 +366,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     type: Literal["charm", "bundle"]
     title: models.ProjectTitle | None
-    summary: models.SummaryStr | None
+    summary: CharmcraftSummaryStr | None
     description: str | None
 
     analysis: AnalysisConfig | None
@@ -526,7 +532,7 @@ class BasesCharm(CharmcraftProject):
 
     type: Literal["charm"]
     name: models.ProjectName
-    summary: models.SummaryStr
+    summary: CharmcraftSummaryStr
     description: str
 
     # This is defined this way because using conlist makes mypy sad and using
@@ -592,7 +598,7 @@ class PlatformCharm(CharmcraftProject):
 
     type: Literal["charm"]
     name: models.ProjectName
-    summary: models.SummaryStr
+    summary: CharmcraftSummaryStr
     description: str
 
     base: BaseStr
@@ -652,7 +658,7 @@ class Bundle(CharmcraftProject):
     bundle: dict[str, Any] = {}
     name: models.ProjectName | None = None  # type: ignore[assignment]
     title: models.ProjectTitle | None
-    summary: models.SummaryStr | None
+    summary: CharmcraftSummaryStr | None
     description: pydantic.StrictStr | None
     charmhub: CharmhubConfig = CharmhubConfig()
 

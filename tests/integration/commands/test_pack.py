@@ -26,7 +26,7 @@ CURRENT_PLATFORM = utils.get_os_platform()
 
 
 @pytest.mark.xfail(
-    sys.platform == "win32", reason="https://github.com/canonical/charmcraft/issues/1552"
+    sys.platform != "linux", reason="https://github.com/canonical/charmcraft/issues/1552"
 )
 @pytest.mark.parametrize(
     "bundle_yaml",

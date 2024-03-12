@@ -15,20 +15,27 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for lifecycle commands."""
 import argparse
-import sys
+
+import pytest
 
 from charmcraft.application.commands import lifecycle
 
 
-def test_pack_run_managed_bundle_by_os(monkeypatch, new_path):
+@pytest.mark.parametrize(
+    ("platform", "expected"),
+    [
+        ("linux", False),
+        ("macos", True),
+        ("win32", True),
+    ],
+)
+def test_pack_run_managed_bundle_by_os(monkeypatch, new_path, platform, expected):
     """When packing a bundle, run_managed should return False if and only if we're on posix."""
+    monkeypatch.setattr("sys.platform", platform)
     (new_path / "charmcraft.yaml").write_text("type: bundle")
 
     pack = lifecycle.PackCommand(None)
 
     result = pack.run_managed(argparse.Namespace(destructive_mode=False))
 
-    if sys.platform in ("win32",):  # non-posix platforms
-        assert result, "Didn't ask for managed mode on non-posix platform"
-    else:
-        assert not result
+    assert result == expected

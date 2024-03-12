@@ -22,7 +22,6 @@ from collections.abc import Iterable
 import distro
 from craft_application import errors
 from craft_parts.utils.formatting_utils import humanize_list
-from craft_providers import bases
 
 from charmcraft import const
 
@@ -70,11 +69,6 @@ def get_host_architecture():
     """Get host architecture in deb format suitable for base definition."""
     os_platform = get_os_platform()
     return ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)
-
-
-def get_host_base_name():
-    """Get the host machine as a craft-providers BaseName."""
-    return bases.BaseName(name=distro.name(), version=distro.version())
 
 
 def validate_architectures(architectures: Iterable[str], *, allow_all: bool = False) -> None:

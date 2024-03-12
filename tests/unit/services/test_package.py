@@ -21,7 +21,6 @@ import zipfile
 import craft_cli.pytest_plugin
 import pytest
 import pytest_check
-from craft_providers import bases
 
 from charmcraft import const, models, services, utils
 from charmcraft.application.main import APP_METADATA
@@ -38,10 +37,7 @@ MANIFEST_WITH_ATTRIBUTE = models.Manifest(
 
 
 @pytest.fixture()
-def package_service(monkeypatch, fake_path, simple_charm, service_factory):
-    monkeypatch.setattr(
-        utils, "get_host_base_name", lambda: bases.BaseName(name="ubuntu", version="22.04")
-    )
+def package_service(fake_path, simple_charm, service_factory):
     fake_project_dir = fake_path / "project"
     fake_project_dir.mkdir(parents=True)
 
@@ -58,17 +54,8 @@ def package_service(monkeypatch, fake_path, simple_charm, service_factory):
         # The package service doesn't call other services
         services=service_factory,
         project_dir=fake_project_dir,
-        build_plan=[
-            models.CharmBuildInfo(
-                base=utils.get_host_base_name(),
-                build_on=utils.get_host_architecture(),
-                build_for=utils.get_host_architecture(),
-                platform="test64",
-                bases_index=0,
-                build_for_bases=[models.Base(name="ubuntu", channel="22.04")],
-                build_on_index=0,
-            )
-        ],
+        platform="distro-1-test64",
+        build_plan=[],
     )
 
 
@@ -93,7 +80,7 @@ def test_get_metadata(package_service, simple_charm, metadata):
     [
         (
             [SIMPLE_BUILD_BASE],
-            "charmy-mccharmface_ubuntu-22.04-test64.charm",
+            "charmy-mccharmface_distro-1-test64.charm",
         ),
     ],
 )
@@ -194,13 +181,14 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
                 "riscy": {"build-on": ["arm64", "ppc64el", "riscv64"], "build-for": ["all"]},
             },
             "anything",
-            ["all", "amd64"],
+            ["all"],
         ),
         ({utils.get_host_architecture(): None}, None, [utils.get_host_architecture()]),
+        ({"invalid-arch": None}, None, [utils.get_host_architecture()]),
     ],
 )
 def test_get_manifest_bases_from_platforms(
-    monkeypatch, package_service, base, platforms, selected_platform, expected_architectures
+    package_service, base, platforms, selected_platform, expected_architectures
 ):
     charm = models.PlatformCharm.parse_obj(
         {
@@ -214,7 +202,7 @@ def test_get_manifest_bases_from_platforms(
         }
     )
     package_service._project = charm
-    package_service._build_plan = models.CharmcraftBuildPlanner.parse_obj(charm).get_build_plan()
+    package_service._platform = selected_platform
 
     bases = package_service.get_manifest_bases()
 
@@ -241,7 +229,7 @@ def test_pack_charm_simple(fake_path, package_service):
 
     package_service.pack_charm(build_dir, fake_path)
 
-    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_ubuntu-22.04-test64.charm")
+    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_distro-1-test64.charm")
     assert sorted(x.filename for x in zf.infolist()) == ["bar/baz.txt", "foo.txt"]
     assert zf.read("foo.txt") == b"123\x00456"
     assert zf.read("bar/baz.txt") == b"mo\xc3\xb1o"
@@ -260,7 +248,7 @@ def test_zipbuild_symlink_simple(fake_path, package_service):
 
     package_service.pack_charm(build_dir, fake_path)
 
-    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_ubuntu-22.04-test64.charm")
+    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_distro-1-test64.charm")
     assert sorted(x.filename for x in zf.infolist()) == ["link.txt", "real.txt"]
     assert zf.read("real.txt") == b"123\x00456"
     assert zf.read("link.txt") == b"123\x00456"
@@ -281,7 +269,7 @@ def test_zipbuild_symlink_outside(fake_path, package_service):
 
     package_service.pack_charm(build_dir, fake_path)
 
-    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_ubuntu-22.04-test64.charm")
+    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_distro-1-test64.charm")
     assert sorted(x.filename for x in zf.infolist()) == ["link.txt"]
     assert zf.read("link.txt") == b"123\x00456"
 

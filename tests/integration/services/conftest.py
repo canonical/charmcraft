@@ -29,7 +29,7 @@ def service_factory(fs, fake_path, simple_charm) -> services.CharmcraftServiceFa
 
     app = Charmcraft(app=APP_METADATA, services=factory)
 
-    app._configure_services()
+    app._configure_services(platform=None, build_for=None)
 
     factory.project = simple_charm
 

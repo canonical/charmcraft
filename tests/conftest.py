@@ -25,12 +25,12 @@ import types
 from unittest import mock
 from unittest.mock import Mock
 
-from craft_application import models
 import craft_parts
 import craft_store
 import pytest
 import responses as responses_module
 import yaml
+from craft_application import models
 from craft_parts import callbacks, plugins
 from craft_providers import Executor, Provider, bases
 
@@ -80,7 +80,7 @@ def default_build_plan():
             base=bases.BaseName("ubuntu", "22.04"),
             build_on=arch,
             build_for=arch,
-            platform="distro-1-test64"
+            platform="distro-1-test64",
         )
     ]
 

@@ -27,15 +27,14 @@ from charmcraft.application.main import APP_METADATA
 
 
 @pytest.fixture()
-def package_service(fake_path, service_factory):
+def package_service(fake_path, service_factory, default_build_plan):
     fake_project_dir = fake_path
     svc = services.PackageService(
         app=APP_METADATA,
         project=service_factory.project,
         services=service_factory,
         project_dir=fake_project_dir,
-        platform="ubuntu-22.04-arm64",
-        build_plan=[],
+        build_plan=default_build_plan,
     )
     service_factory.package = svc
     return svc

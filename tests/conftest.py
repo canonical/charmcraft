@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Canonical Ltd.
+# Copyright 2020-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,16 +25,17 @@ import types
 from unittest import mock
 from unittest.mock import Mock
 
+from craft_application import models
 import craft_parts
 import craft_store
 import pytest
 import responses as responses_module
 import yaml
 from craft_parts import callbacks, plugins
-from craft_providers import Executor, Provider
+from craft_providers import Executor, Provider, bases
 
 import charmcraft.parts
-from charmcraft import const, deprecations, instrum, parts, services
+from charmcraft import const, deprecations, instrum, parts, services, utils
 from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
@@ -69,6 +70,19 @@ def service_factory(
     factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
 
     return factory
+
+
+@pytest.fixture()
+def default_build_plan():
+    arch = utils.get_host_architecture()
+    return [
+        models.BuildInfo(
+            base=bases.BaseName("ubuntu", "22.04"),
+            build_on=arch,
+            build_for=arch,
+            platform="distro-1-test64"
+        )
+    ]
 
 
 @pytest.fixture()

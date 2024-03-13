@@ -62,12 +62,11 @@ class PackageService(services.PackageService):
         services: CharmcraftServiceFactory,
         *,
         project_dir: pathlib.Path,
-        platform: str | None,
         build_plan: list[craft_application.models.BuildInfo],
     ) -> None:
         super().__init__(app, services, project=cast(craft_application.models.Project, project))
         self.project_dir = project_dir.resolve(strict=True)
-        self._platform = platform
+        self._platform = build_plan[0].platform
         self._build_plan = build_plan
 
     def pack(self, prime_dir: pathlib.Path, dest: pathlib.Path) -> list[pathlib.Path]:

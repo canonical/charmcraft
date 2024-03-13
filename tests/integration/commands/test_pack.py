@@ -26,7 +26,7 @@ CURRENT_PLATFORM = utils.get_os_platform()
 
 
 @pytest.mark.xfail(
-    sys.platform == "win32", reason="https://github.com/canonical/charmcraft/issues/1552"
+    sys.platform != "linux", reason="https://github.com/canonical/charmcraft/issues/1552"
 )
 @pytest.mark.parametrize(
     "bundle_yaml",
@@ -35,7 +35,7 @@ CURRENT_PLATFORM = utils.get_os_platform()
         "name: my-bundle",
     ],
 )
-def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
+def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml):
     (new_path / "charmcraft.yaml").write_text("type: bundle")
     (new_path / "bundle.yaml").write_text(bundle_yaml)
 
@@ -43,7 +43,8 @@ def test_build_basic_bundle(monkeypatch, app, new_path, bundle_yaml):
     monkeypatch.setattr("sys.argv", ["charmcraft", "pack"])
 
     app.configure({})
-    app.run()
+    if app.run() != 0:
+        raise ValueError(capsys.readouterr())
 
     with zipfile.ZipFile("bundle.zip") as bundle_zip:
         actual_bundle_yaml = bundle_zip.read("bundle.yaml").decode()

@@ -16,8 +16,8 @@
 """craft-application based lifecycle commands."""
 from __future__ import annotations
 
-import os
 import pathlib
+import sys
 import textwrap
 from typing import TYPE_CHECKING, cast
 
@@ -168,9 +168,9 @@ class PackCommand(lifecycle.PackCommand):
         """
         project_dir = pathlib.Path(getattr(parsed_args, "project_dir", "."))
         charmcraft_yaml = utils.load_yaml(project_dir / "charmcraft.yaml")
-        # Always use a runner on non-posix platforms.
+        # Always use a runner on non-Linux platforms.
         # Craft-parts is not designed to work on non-posix platforms, and most
         # notably here, the bundle plugin doesn't work on Windows.
-        if os.name == "posix" and charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
+        if sys.platform == "linux" and charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
             return False
         return super().run_managed(parsed_args)

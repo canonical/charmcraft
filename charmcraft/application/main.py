@@ -101,12 +101,11 @@ class Charmcraft(Application):
 
         return yaml_data
 
-    def _configure_services(self, platform: str | None, build_for: str | None) -> None:
-        super()._configure_services(platform, build_for)
+    def _configure_services(self, provider_name: str | None) -> None:
+        super()._configure_services(provider_name)
         self.services.set_kwargs(
             "package",
             project_dir=self.project_dir,
-            platform=platform,
             build_plan=self._build_plan,
         )
 

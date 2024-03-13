@@ -40,17 +40,23 @@ class TestCommand(base.CharmcraftCommand):
     overview = _overview
     common = True
 
-    arguments: list[str] = []
-
     def fill_parser(self, parser):
         """Specify command's specific parameters."""
-        self.arguments = sys.argv[2:]
+        parser.add_argument(
+            "spread_args",
+            metavar="spread arguments",
+            nargs=argparse.REMAINDER,
+            help="Arguments to spread",
+        )
 
     def run(self, parsed_args: argparse.Namespace):
         """Execute command's actual functionality."""
+        spread_args = parsed_args.spread_args
+        if len(spread_args) > 0 and spread_args[0] == "--":
+            spread_args = spread_args[1:]
         try:
             cmd = f"{os.environ['SNAP']}/bin/spread"
             with emit.pause():
-                subprocess.run([cmd, "-v", *self.arguments], check=True)
+                subprocess.run([cmd, *spread_args], check=True)
         except subprocess.CalledProcessError as err:
             raise CraftError(f"test error: {err}")

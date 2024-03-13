@@ -5,6 +5,7 @@ export CONTROLLER_NAME="craft-test-$PROVIDER"
 
 install_lxd() {
     snap install lxd --channel "$LXD_CHANNEL"
+    snap refresh lxd --channel "$LXD_CHANNEL"
     lxd waitready
     lxd init --auto
     chmod a+wr /var/snap/lxd/common/lxd/unix.socket

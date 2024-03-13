@@ -2,18 +2,19 @@ summary: Minimal charm test
 
 systems:
   - ubuntu-22.04
+  - ubuntu-20.04
 
 environment:
   PROVIDER: lxd
-  JUJU_CHANNEL/alt1,alt2: 3.3/stable
-  JUJU_CHANNEL/alt3: 3.1/stable
-  CHARMCRAFT_CHANNEL/alt1,alt3: latest/stable
-  CHARMCRAFT_CHANNEL/alt2: latest/candidate
+  JUJU_CHANNEL: 3.3/stable
+  CHARMCRAFT_CHANNEL/charmcraft_current: latest/stable
+  CHARMCRAFT_CHANNEL/charmcraft_next: latest/candidate
 
-# This creates 3 test variants:
-# - alt1: with juju 3.3 and charmcraft stable
-# - alt2: with juju 3.3 and charmcraft candidate
-# - alt3: with juju 3.1 and charmcraft stable
+# This will run four tests:
+# - juju 3.3 and charmcraft stable on ubuntu-22.04
+# - juju 3.3 and charmcraft candidate on ubuntu-22.04
+# - juju 3.3 and charmcraft stable on ubuntu-20.04
+# - juju 3.3 and charmcraft candidate on ubuntu-20.04
 
 prepare: |
   . "$CRAFT_TEST_PATH"/funcs.sh

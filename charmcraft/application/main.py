@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ from craft_application import Application, AppMetadata, util
 from craft_parts.plugins import plugins
 from overrides import override
 
-from charmcraft import const, errors, extensions, models, services
+from charmcraft import const, errors, extensions, models, preprocess, services
 from charmcraft.application import commands
 from charmcraft.main import GENERAL_SUMMARY
 from charmcraft.main import main as old_main
@@ -68,9 +68,7 @@ class Charmcraft(Application):
     ) -> dict[str, Any]:
         yaml_data = yaml_data.copy()
 
-        # Default extensions
-        if yaml_data.get("type") == "bundle":
-            yaml_data.setdefault("extensions", []).append("bundle")
+        yaml_data = preprocess.add_default_parts(yaml_data)
 
         yaml_data = extensions.apply_extensions(self.project_dir, yaml_data)
 

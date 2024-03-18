@@ -32,19 +32,16 @@ from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self, TypedDict
 
-from charmcraft import const, utils
+from charmcraft import const, preprocess, utils
 from charmcraft.const import (
     JUJU_ACTIONS_FILENAME,
     JUJU_CONFIG_FILENAME,
-    METADATA_FILENAME,
-    METADATA_YAML_KEYS,
     BaseStr,
     BuildBaseStr,
     CharmArch,
 )
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
-from charmcraft.metafiles.metadata import parse_charm_metadata_yaml
 from charmcraft.models import charmcraft
 from charmcraft.models.charmcraft import (
     AnalysisConfig,
@@ -440,27 +437,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
         project_dir = path.parent
 
-        bundle_file = project_dir / "bundle.yaml"
-        if data.get("type") == "bundle":
-            if bundle_file.is_file():
-                with bundle_file.open() as f:
-                    data["bundle"] = safe_yaml_load(f)
-            else:
-                raise CraftError(f"Missing bundle.yaml file: {str(bundle_file)!r}")
-
-        metadata_file = project_dir / METADATA_FILENAME
-        if metadata_file.is_file():
-            # metadata.yaml exists, so we can't specify metadata keys in charmcraft.yaml.
-            overlap_keys = METADATA_YAML_KEYS.intersection(data.keys())
-            if overlap_keys:
-                raise errors.CraftValidationError(
-                    f"Cannot specify metadata keys in 'charmcraft.yaml' when "
-                    f"{METADATA_FILENAME!r} exists",
-                    details=f"Invalid keys: {sorted(overlap_keys)}",
-                    resolution=f"Migrate all keys from {METADATA_FILENAME!r} to 'charmcraft.yaml'",
-                )
-            metadata = parse_charm_metadata_yaml(project_dir, allow_basic=True)
-            data.update(metadata.dict(include={"name", "summary", "description"}))
+        preprocess.add_default_parts(data)
+        preprocess.add_bundle_snippet(project_dir, data)
+        preprocess.add_metadata(project_dir, data)
 
         config_file = project_dir / JUJU_CONFIG_FILENAME
         if config_file.is_file():

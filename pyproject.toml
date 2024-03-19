@@ -154,7 +154,6 @@ include = [
 analyzeUnannotatedFunctions = false
 reportArgumentType = "warning"
 reportAttributeAccessIssue = "warning"
-reportGeneralTypeIssues = "warning"
 reportIncompatibleVariableOverride = "warning"
 reportOptionalMemberAccess = "warning"
 

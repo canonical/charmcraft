@@ -42,6 +42,7 @@ from charmcraft.utils import get_host_architecture
 class CharmhubConfig(
     ModelConfigDefaults,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
     """Definition of Charmhub endpoint configuration."""
 
@@ -50,7 +51,7 @@ class CharmhubConfig(
     registry_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://registry.jujucharms.com")
 
 
-class Base(ModelConfigDefaults):
+class Base(ModelConfigDefaults, frozen=True):
     """Represents a base."""
 
     name: pydantic.StrictStr
@@ -71,6 +72,7 @@ class Base(ModelConfigDefaults):
 class BasesConfiguration(
     ModelConfigDefaults,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
     """Definition of build-on/run-on combinations."""
 
@@ -78,7 +80,7 @@ class BasesConfiguration(
     run_on: list[Base]
 
 
-class Project(ModelConfigDefaults):
+class Project(ModelConfigDefaults, frozen=True):
     """Internal-only project configuration."""
 
     # do not verify that `dirpath` is a valid existing directory; it's used externally as a dir
@@ -91,20 +93,20 @@ class Project(ModelConfigDefaults):
     started_at: datetime.datetime
 
 
-class Ignore(ModelConfigDefaults):
+class Ignore(ModelConfigDefaults, frozen=True):
     """Definition of `analysis.ignore` configuration."""
 
     attributes: list[AttributeName] = []
     linters: list[LinterName] = []
 
 
-class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
+class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True, frozen=True):
     """Definition of `analysis` configuration."""
 
     ignore: Ignore = Ignore()
 
 
-class Links(ModelConfigDefaults):
+class Links(ModelConfigDefaults, frozen=True):
     """Definition of `links` in metadata."""
 
     contact: pydantic.StrictStr | list[pydantic.StrictStr] | None
@@ -118,6 +120,7 @@ class CharmcraftConfig(
     ModelConfigDefaults,
     validate_all=False,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
     """Definition of charmcraft.yaml configuration."""
 

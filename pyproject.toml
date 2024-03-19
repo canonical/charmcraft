@@ -164,6 +164,8 @@ reportOptionalMemberAccess = "warning"
 python_version = "3.10"
 packages = [
     "charmcraft",
+    "tests.unit",
+    "tests.integration",
 ]
 plugins = ["pydantic.mypy"]
 exclude = [

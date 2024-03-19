@@ -18,7 +18,7 @@
 
 from charmcraft.extensions._utils import apply_extensions
 from charmcraft.extensions.extension import Extension
-from charmcraft.extensions.flask import Flask
+from charmcraft.extensions.gunicorn import FlaskFramework, DjangoFramework
 from charmcraft.extensions.registry import (
     get_extension_class,
     get_extension_names,
@@ -37,4 +37,5 @@ __all__ = [
     "unregister",
 ]
 
-register("flask-framework", Flask)
+register("flask-framework", FlaskFramework)
+register("django-framework", DjangoFramework)

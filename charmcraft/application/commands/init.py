@@ -37,6 +37,7 @@ PROFILES = {
     "kubernetes": "init-kubernetes",
     "machine": "init-machine",
     "flask-framework": "init-flask-framework",
+    "django-framework": "init-django-framework",
 }
 DEFAULT_PROFILE = "simple"
 

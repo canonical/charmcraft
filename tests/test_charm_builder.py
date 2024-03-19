@@ -281,8 +281,8 @@ def test_build_generics_symlink_file(tmp_path):
     built_symlink = build_dir / "somehook.py"
     assert built_symlink.is_symlink()
     assert built_symlink.resolve() == build_dir / "crazycharm.py"
-    real_link = os.readlink(str(built_symlink))
-    assert real_link == "crazycharm.py"
+    real_link = built_symlink.readlink()
+    assert real_link == pathlib.Path("crazycharm.py")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -312,8 +312,7 @@ def test_build_generics_symlink_dir(tmp_path):
     built_symlink = build_dir / "thelink"
     assert built_symlink.is_symlink()
     assert built_symlink.resolve() == build_dir / "somedir"
-    real_link = os.readlink(str(built_symlink))
-    assert real_link == "somedir"
+    assert built_symlink.readlink() == pathlib.Path("somedir")
 
     # the file inside the linked dir should exist
     assert (build_dir / "thelink" / "some file").exists()
@@ -349,8 +348,7 @@ def test_build_generics_symlink_deep(tmp_path):
     built_symlink = build_dir / "dir2" / "file.link"
     assert built_symlink.is_symlink()
     assert built_symlink.resolve() == build_dir / "dir1" / "file.real"
-    real_link = os.readlink(str(built_symlink))
-    assert real_link == "../dir1/file.real"
+    assert built_symlink.readlink() == pathlib.Path("..", "dir1", "file.real")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -513,8 +511,8 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     test_hook = build_dir / const.HOOKS_DIRNAME / "testhook"
     assert test_hook.is_symlink()
     assert test_hook.resolve() == included_dispatcher
-    real_link = os.readlink(str(test_hook))
-    assert real_link == os.path.join("..", const.DISPATCH_FILENAME)
+    real_link = test_hook.readlink()
+    assert real_link == pathlib.Path("..", const.DISPATCH_FILENAME)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

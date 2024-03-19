@@ -19,7 +19,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, override
 
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
@@ -107,7 +107,7 @@ class ReactivePlugin(plugins.Plugin):
     properties_class = ReactivePluginProperties
     validator_class = ReactivePluginEnvironmentValidator
 
-    @classmethod
+    @override
     def get_build_snaps(cls) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()

@@ -289,7 +289,7 @@ class CharmcraftConfig(
             base["run-on"] = [converted_base.dict()]
 
     @classmethod
-    def unmarshal(cls, obj: dict[str, Any], project: Project):
+    def unmarshal(cls, obj: dict[str, Any], project: Project):  # pyright: ignore[reportIncompatibleMethodOverride]
         """Unmarshal object with necessary translations and error handling.
 
         (1) Perform any necessary translations.
@@ -359,7 +359,7 @@ class CharmcraftConfig(
             raise CraftError(format_pydantic_errors(error.errors()))
 
     @classmethod
-    def schema(cls, **kwargs) -> dict[str, Any]:
+    def schema(cls, **kwargs) -> dict[str, Any]:  # pyright: ignore[reportIncompatibleMethodOverride]
         """Perform any schema fixups required to hide internal details."""
         schema = super().schema(**kwargs)
 

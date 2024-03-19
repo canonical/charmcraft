@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any
 import pydantic
 from craft_application import models
 from craft_cli import CraftError
-from typing_extensions import Self
+from typing_extensions import Self, override
 
 from charmcraft import const
 
@@ -103,8 +103,9 @@ class CharmMetadataLegacy(CharmMetadata):
     description: pydantic.StrictStr
     display_name: pydantic.StrictStr | None  # type: ignore[assignment]
 
+    @override
     @classmethod
-    def unmarshal(cls, obj: dict[str, Any]):
+    def unmarshal(cls, data: dict[str, Any]) -> Self:
         """Unmarshal object with necessary translations and error handling.
 
         :returns: valid CharmMetadataLegacy object.
@@ -112,16 +113,16 @@ class CharmMetadataLegacy(CharmMetadata):
         :raises CraftError: On failure to unmarshal object.
         """
         # convert undocumented "maintainer" to documented "maintainers"
-        if "maintainer" in obj and "maintainers" in obj:
+        if "maintainer" in data and "maintainers" in data:
             raise CraftError(
                 f"Cannot specify both 'maintainer' and 'maintainers' in {const.METADATA_FILENAME}"
             )
 
-        if "maintainer" in obj:
-            obj["maintainers"] = [obj["maintainer"]]
-            del obj["maintainer"]
+        if "maintainer" in data:
+            data["maintainers"] = [data["maintainer"]]
+            del data["maintainer"]
 
-        return cls.parse_obj(obj)
+        return cls.parse_obj(data)
 
 
 class BundleMetadata(models.BaseMetadata):

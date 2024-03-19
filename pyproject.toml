@@ -155,7 +155,6 @@ analyzeUnannotatedFunctions = false
 reportArgumentType = "warning"
 reportAttributeAccessIssue = "warning"
 reportGeneralTypeIssues = "warning"
-reportIncompatibleMethodOverride = "warning"
 reportIncompatibleVariableOverride = "warning"
 reportOptionalMemberAccess = "warning"
 

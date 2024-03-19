@@ -20,7 +20,7 @@ import re
 import shlex
 import sys
 from contextlib import suppress
-from typing import Any, cast
+from typing import Any, cast, override
 
 import pydantic
 from craft_parts import Step, callbacks, plugins
@@ -206,8 +206,8 @@ class CharmPlugin(plugins.Plugin):
 
     properties_class = CharmPluginProperties
 
-    @classmethod
-    def get_build_snaps(cls) -> set[str]:
+    @override
+    def get_build_snaps(self) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
 

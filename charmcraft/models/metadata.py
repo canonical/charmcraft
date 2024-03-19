@@ -38,25 +38,25 @@ class CharmMetadata(models.BaseMetadata):
     """
 
     name: models.ProjectName
-    display_name: models.ProjectTitle | None
+    display_name: models.ProjectTitle | None = None
     summary: models.SummaryStr
     description: pydantic.StrictStr
-    maintainers: list[pydantic.StrictStr] | None
-    assumes: list[str | dict[str, list | dict]] | None
-    containers: dict[str, Any] | None
-    devices: dict[str, Any] | None
-    docs: pydantic.AnyHttpUrl | None
-    extra_bindings: dict[str, Any] | None
-    issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
-    peers: dict[str, Any] | None
-    provides: dict[str, Any] | None
-    requires: dict[str, Any] | None
-    resources: dict[str, Any] | None
-    source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
-    storage: dict[str, Any] | None
-    subordinate: bool | None
-    terms: list[pydantic.StrictStr] | None
-    website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    maintainers: list[pydantic.StrictStr] | None = None
+    assumes: list[str | dict[str, list | dict]] | None = None
+    containers: dict[str, Any] | None = None
+    devices: dict[str, Any] | None = None
+    docs: pydantic.AnyHttpUrl | None = None
+    extra_bindings: dict[str, Any] | None = None
+    issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
+    peers: dict[str, Any] | None = None
+    provides: dict[str, Any] | None = None
+    requires: dict[str, Any] | None = None
+    resources: dict[str, Any] | None = None
+    source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
+    storage: dict[str, Any] | None = None
+    subordinate: bool | None = None
+    terms: list[pydantic.StrictStr] | None = None
+    website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
 
     @classmethod
     def from_charm(cls, charm: Charm) -> Self:
@@ -101,7 +101,7 @@ class CharmMetadataLegacy(CharmMetadata):
     name: pydantic.StrictStr  # type: ignore[assignment]
     summary: pydantic.StrictStr  # type: ignore[assignment]
     description: pydantic.StrictStr
-    display_name: pydantic.StrictStr | None  # type: ignore[assignment]
+    display_name: pydantic.StrictStr | None = None  # type: ignore[assignment]
 
     @override
     @classmethod
@@ -128,8 +128,8 @@ class CharmMetadataLegacy(CharmMetadata):
 class BundleMetadata(models.BaseMetadata):
     """metadata.yaml for a bundle zip."""
 
-    name: models.ProjectName | None
-    description: pydantic.StrictStr | None
+    name: models.ProjectName | None = None
+    description: pydantic.StrictStr | None = None
 
     @classmethod
     def from_bundle(cls, bundle: Bundle) -> Self:

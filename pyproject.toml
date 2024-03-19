@@ -149,6 +149,7 @@ ignore = [
 ]
 include = [
     "charmcraft",
+    "tests/unit",
     # "tests",  # TODO: enable tests
 ]
 analyzeUnannotatedFunctions = false

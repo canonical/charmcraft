@@ -39,4 +39,4 @@ class Manifest(models.BaseMetadata):
     charmcraft_started_at: str
     bases: list[Base] | None
     analysis: dict[Literal["attributes"], list[Attribute]] = {"attributes": []}
-    image_info: Any | None
+    image_info: Any | None = None

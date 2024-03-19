@@ -15,8 +15,9 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Bundle plugin for craft-parts."""
 import sys
-from typing import Any, override
+from typing import Any
 
+import overrides
 from craft_parts import plugins
 
 
@@ -50,7 +51,7 @@ class BundlePlugin(plugins.Plugin):
 
     properties_class = BundlePluginProperties
 
-    @override
+    @overrides.override
     def get_build_snaps(self) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()

@@ -330,7 +330,6 @@ classmethod-decorators = ["pydantic.validator"]
 
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "A001", "A002",
-    "B007", "B015",
     "PT004", "PT012",
     "PTH1",
     "S105", "S106",

@@ -28,10 +28,10 @@ backends:
           workers: 1
           storage: 40G
       - ubuntu-20.04-64:
-          workers: 4
+          workers: 3
           storage: 40G
       - ubuntu-22.04-64:
-          workers: 5
+          workers: 6
           storage: 40G
 
   multipass:

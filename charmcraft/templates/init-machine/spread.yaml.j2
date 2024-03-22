@@ -99,7 +99,7 @@ suites:
 
     prepare: |
       set -e
-      . "$CRAFT_TEST_LIB_PATH"/funcs.sh
+      . "$CRAFT_TEST_LIB_PATH"/test-helpers.sh
       apt update -y
       apt install -y python3-pip
       pip3 install tox
@@ -113,7 +113,7 @@ suites:
 
     restore: |
       set -e
-      . "$CRAFT_TEST_LIB_PATH"/funcs.sh
+      . "$CRAFT_TEST_LIB_PATH"/test-helpers.sh
       rm -f "$PROJECT_PATH"/*.charm
       charmcraft clean -p "$PROJECT_PATH"
 

@@ -76,9 +76,11 @@ files and directories:
     ├── tests
     │   ├── spread
     │   │   ├── lib
-    │   │   │   └── funcs.sh   - Helpers for spread testing
-    │   │   └── minimal
-    │   │       └── task.yaml  - Minimal task definition
+    │   │   │   ├── cloud-config.yaml
+    │   │   │   └── test-helpers.yaml
+    │   │   └── general
+    │   │       └── integration
+    │   │           └── task.yaml
     │   ├── integration
     │   │   └── test_charm.py  - Integration tests
     │   └── unit

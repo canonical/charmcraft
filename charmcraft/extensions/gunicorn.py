@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""The base of Gunicorn based extension."""
+"""Gunicorn based extensions."""
 
 import abc
 from typing import Any

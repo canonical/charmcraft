@@ -1,8 +1,9 @@
 project: {{ name }}-tests
 
 environment:
+  PROVIDER: lxd
   CHARMCRAFT_CHANNEL: latest/stable
-  JUJU_CHANNEL: latest/stable
+  JUJU_CHANNEL: 3/stable
   LXD_CHANNEL: latest/stable
 
   JUJU_BOOTSTRAP_OPTIONS: --model-default test-mode=true --model-default automatically-retry-hooks=false --model-default
@@ -17,7 +18,7 @@ environment:
   LANGUAGE: "en"
 
   PROJECT_PATH: /home/spread/proj
-  CRAFT_TEST_PATH: /home/spread/proj/tests/spread/lib
+  CRAFT_TEST_LIB_PATH: /home/spread/proj/tests/spread/lib
 
 backends:
   multipass:
@@ -85,9 +86,40 @@ backends:
 
 
 suites:
-  tests/spread/:
-    summary: Spread tests
+  tests/spread/general/:
+    summary: Charm functionality tests
 
+    systems:
+      - ubuntu-22.04
+      - ubuntu-20.04
+
+    environment:
+      CHARMCRAFT_CHANNEL/charmcraft_current: latest/stable
+      CHARMCRAFT_CHANNEL/charmcraft_next: latest/candidate
+
+    prepare: |
+      set -e
+      . "$CRAFT_TEST_LIB_PATH"/funcs.sh
+      apt update -y
+      apt install -y python3-pip
+      pip3 install tox
+
+      install_lxd
+      install_charmcraft
+      install_juju
+      bootstrap_juju
+
+      juju add-model testing
+
+    restore: |
+      set -e
+      . "$CRAFT_TEST_LIB_PATH"/funcs.sh
+      rm -f "$PROJECT_PATH"/*.charm
+      charmcraft clean -p "$PROJECT_PATH"
+
+      restore_juju
+      restore_charmcraft
+      restore_lxd
 
 exclude:
   - .git
@@ -109,7 +141,4 @@ restore: |
   mkdir -p "$PROJECT_PATH"
 
 
-kill-timeout: 15m
-
-workers: 1
-
+kill-timeout: 1h

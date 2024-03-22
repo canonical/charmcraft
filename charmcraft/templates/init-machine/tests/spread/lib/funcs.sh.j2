@@ -19,6 +19,20 @@ install_lxd() {
 }
 
 
+install_charmcraft() {
+    snap install charmcraft --classic --channel "$CHARMCRAFT_CHANNEL"
+    snap refresh charmcraft --classic --channel "$CHARMCRAFT_CHANNEL"
+}
+
+
+install_juju() {
+    snap install juju --classic --channel "$JUJU_CHANNEL"
+    snap refresh juju --classic --channel "$JUJU_CHANNEL"
+    mkdir -p "$HOME"/.local/share/juju
+    snap install juju-crashdump --classic
+}
+
+
 bootstrap_juju() {
     juju bootstrap --verbose "$PROVIDER" "$CONTROLLER_NAME" \
       $JUJU_BOOTSTRAP_OPTIONS $JUJU_EXTRA_BOOTSTRAP_OPTIONS \
@@ -26,8 +40,22 @@ bootstrap_juju() {
 }
 
 
+restore_charmcraft() {
+    snap remove --purge charmcraft
+}
+
+
+restore_lxd() {
+    snap stop lxd
+    snap remove --purge lxd
+}
+
+
 restore_juju() {
-     juju controllers --refresh ||:
-     juju destroy-controller -v --no-prompt --show-log \
+    juju controllers --refresh ||:
+    juju destroy-controller -v --no-prompt --show-log \
        --destroy-storage --destroy-all-models "$CONTROLLER_NAME"
+    snap stop juju
+    snap remove --purge juju
+    snap remove --purge juju-crashdump
 }

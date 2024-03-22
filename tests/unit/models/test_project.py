@@ -557,16 +557,6 @@ def test_from_yaml_file_success(
             id="FileNotFound",
         ),
         pytest.param(
-            SIMPLE_CHARMCRAFT_YAML,
-            SIMPLE_METADATA_YAML,
-            None,
-            None,
-            CraftValidationError,
-            r"^Cannot specify metadata keys in 'charmcraft\.yaml' when 'metadata\.yaml' exists",
-            "Invalid keys: ['description', 'name', 'summary']",
-            id="duplicate-metadata",
-        ),
-        pytest.param(
             f"{SIMPLE_CHARMCRAFT_YAML}\nconfig: ",
             None,
             SIMPLE_CONFIG_YAML,

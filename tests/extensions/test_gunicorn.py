@@ -17,11 +17,11 @@ import pytest
 
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions import apply_extensions
-from charmcraft.extensions.flask import ACTIONS, OPTIONS
+from charmcraft.extensions.gunicorn import _GunicornBase
 
 
-@pytest.fixture(name="input_yaml")
-def input_yaml_fixture(monkeypatch, tmp_path):
+@pytest.fixture(name="flask_input_yaml")
+def flask_input_yaml_fixture(monkeypatch, tmp_path):
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
     return {
         "type": "charm",
@@ -33,19 +33,20 @@ def input_yaml_fixture(monkeypatch, tmp_path):
     }
 
 
-def test_flask_extension(input_yaml, tmp_path):
-    applied = apply_extensions(tmp_path, input_yaml)
+def test_flask_extension(flask_input_yaml, tmp_path):
+    applied = apply_extensions(tmp_path, flask_input_yaml)
     assert applied == {
-        "actions": ACTIONS,
+        "actions": _GunicornBase._ACTIONS["flask"],
         "assumes": ["k8s-api"],
         "bases": [{"channel": "22.04", "name": "ubuntu"}],
         "containers": {
             "flask-app": {"resource": "flask-app-image"},
-            "statsd-prometheus-exporter": {"resource": "statsd-prometheus-exporter-image"},
         },
         "description": "test description",
         "name": "test-flask",
-        "config": {"options": OPTIONS},
+        "config": {
+            "options": {**_GunicornBase._OPTIONS["flask"], **_GunicornBase._WEBSERVER_OPTIONS}
+        },
         "parts": {},
         "peers": {"secret-storage": {"interface": "secret-storage"}},
         "provides": {
@@ -57,12 +58,7 @@ def test_flask_extension(input_yaml, tmp_path):
             "ingress": {"interface": "ingress", "limit": 1},
         },
         "resources": {
-            "flask-app-image": {"description": "Flask application image.", "type": "oci-image"},
-            "statsd-prometheus-exporter-image": {
-                "description": "Prometheus exporter for statsd data",
-                "type": "oci-image",
-                "upstream-source": "prom/statsd-exporter:v0.24.0",
-            },
+            "flask-app-image": {"description": "flask application image.", "type": "oci-image"},
         },
         "summary": "test summary",
         "type": "charm",
@@ -78,32 +74,38 @@ PROTECTED_FIELDS_TEST_PARAMETERS = [
 
 
 @pytest.mark.parametrize("modification", PROTECTED_FIELDS_TEST_PARAMETERS)
-def test_flask_protected_fields(modification, input_yaml, tmp_path):
-    input_yaml.update(modification)
+def test_flask_protected_fields(modification, flask_input_yaml, tmp_path):
+    flask_input_yaml.update(modification)
     with pytest.raises(ExtensionError):
-        apply_extensions(tmp_path, input_yaml)
+        apply_extensions(tmp_path, flask_input_yaml)
 
 
-def test_flask_merge_options(input_yaml, tmp_path):
+def test_flask_merge_options(flask_input_yaml, tmp_path):
     added_options = {"api_secret": {"type": "string"}}
-    input_yaml["config"] = {"options": added_options}
-    applied = apply_extensions(tmp_path, input_yaml)
-    assert applied["config"] == {"options": {**OPTIONS, **added_options}}
+    flask_input_yaml["config"] = {"options": added_options}
+    applied = apply_extensions(tmp_path, flask_input_yaml)
+    assert applied["config"] == {
+        "options": {
+            **_GunicornBase._OPTIONS["flask"],
+            **_GunicornBase._WEBSERVER_OPTIONS,
+            **added_options,
+        }
+    }
 
 
-def test_flask_merge_action(input_yaml, tmp_path):
+def test_flask_merge_action(flask_input_yaml, tmp_path):
     added_actions = {"foobar": {}}
-    input_yaml["actions"] = added_actions
-    applied = apply_extensions(tmp_path, input_yaml)
-    assert applied["actions"] == {**ACTIONS, **added_actions}
+    flask_input_yaml["actions"] = added_actions
+    applied = apply_extensions(tmp_path, flask_input_yaml)
+    assert applied["actions"] == {**_GunicornBase._ACTIONS["flask"], **added_actions}
 
 
-def test_flask_merge_relation(input_yaml, tmp_path):
+def test_flask_merge_relation(flask_input_yaml, tmp_path):
     new_provides = {"provides-foobar": {"interface": "foobar"}}
     new_requires = {"requires-foobar": {"interface": "foobar"}}
-    input_yaml["provides"] = new_provides
-    input_yaml["requires"] = new_requires
-    applied = apply_extensions(tmp_path, input_yaml)
+    flask_input_yaml["provides"] = new_provides
+    flask_input_yaml["requires"] = new_requires
+    applied = apply_extensions(tmp_path, flask_input_yaml)
     assert applied["provides"] == {
         "metrics-endpoint": {"interface": "prometheus_scrape"},
         "grafana-dashboard": {"interface": "grafana_dashboard"},
@@ -121,7 +123,7 @@ INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
     pytest.param({"extra-bindings": {"foobar": {}}}, id="extra-bindings"),
     pytest.param({"storage": {"foobar": {"type": "filesystem"}}}, id="storage"),
     pytest.param(
-        {"config": {"options": {"webserver_wsgi_path": {"type": "string"}}}},
+        {"config": {"options": {"webserver-wsgi-path": {"type": "string"}}}},
         id="duplicate-options",
     ),
     pytest.param(
@@ -132,11 +134,61 @@ INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
         {"provides": {"metrics-endpoint": {"interface": "prometheus_scrape"}}},
         id="duplicate-provides",
     ),
+    pytest.param(
+        {"config": {"options": {"webserver-foobar": {"type": "string"}}}},
+        id="reserved-config-prefix-webserver",
+    ),
+    pytest.param(
+        {"config": {"options": {"flask-foobar": {"type": "string"}}}},
+        id="reserved-config-prefix-flask",
+    ),
 ]
 
 
 @pytest.mark.parametrize("modification", INCOMPATIBLE_FIELDS_TEST_PARAMETERS)
-def test_flask_incompatible_fields(modification, input_yaml, tmp_path):
-    input_yaml.update(modification)
+def test_flask_incompatible_fields(modification, flask_input_yaml, tmp_path):
+    flask_input_yaml.update(modification)
     with pytest.raises(ExtensionError):
-        apply_extensions(tmp_path, input_yaml)
+        apply_extensions(tmp_path, flask_input_yaml)
+
+
+def test_django_extension(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-django",
+        "summary": "test summary",
+        "description": "test description",
+        "bases": [{"name": "ubuntu", "channel": "22.04"}],
+        "extensions": ["django-framework"],
+    }
+
+    applied = apply_extensions(tmp_path, input_yaml)
+    assert applied == {
+        "actions": _GunicornBase._ACTIONS["django"],
+        "assumes": ["k8s-api"],
+        "bases": [{"channel": "22.04", "name": "ubuntu"}],
+        "containers": {
+            "django-app": {"resource": "django-app-image"},
+        },
+        "description": "test description",
+        "name": "test-django",
+        "config": {
+            "options": {**_GunicornBase._OPTIONS["django"], **_GunicornBase._WEBSERVER_OPTIONS}
+        },
+        "parts": {},
+        "peers": {"secret-storage": {"interface": "secret-storage"}},
+        "provides": {
+            "metrics-endpoint": {"interface": "prometheus_scrape"},
+            "grafana-dashboard": {"interface": "grafana_dashboard"},
+        },
+        "requires": {
+            "logging": {"interface": "loki_push_api"},
+            "ingress": {"interface": "ingress", "limit": 1},
+        },
+        "resources": {
+            "django-app-image": {"description": "django application image.", "type": "oci-image"},
+        },
+        "summary": "test summary",
+        "type": "charm",
+    }

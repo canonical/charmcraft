@@ -60,6 +60,7 @@ def registered_extensions():
                 """\
             Extension name    Supported bases    Experimental bases
             ----------------  -----------------  --------------------
+            django-framework                     ubuntu@22.04
             f1                ubuntu@22.04       ubuntu@24.04
             f2                                   almalinux@9
             flask-framework                      ubuntu@22.04"""
@@ -70,6 +71,13 @@ def registered_extensions():
             textwrap.dedent(
                 """\
             [
+                {
+                    "name": "django-framework",
+                    "bases": [],
+                    "experimental_bases": [
+                        "ubuntu@22.04"
+                    ]
+                },
                 {
                     "name": "f1",
                     "bases": [

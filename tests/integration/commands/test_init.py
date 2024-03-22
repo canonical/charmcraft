@@ -240,6 +240,9 @@ def test_tox_success(new_path, init_command, profile):
 
     init_command.run(create_namespace(profile=profile))
 
+    if not (new_path / "tox.ini").exists():
+        pytest.skip("init template doesn't contain tox.ini file")
+
     result = subprocess.run(
         ["tox", "-v"],
         cwd=new_path,

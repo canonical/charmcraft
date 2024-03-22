@@ -149,4 +149,6 @@ def add_actions(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
             retcode=65,  # Data error, per sysexits.h
         )
     with actions_file.open() as f:
-        yaml_data["actions"] = util.safe_yaml_load(f)
+        actions = util.safe_yaml_load(f)
+    if actions and isinstance(actions, dict):
+        yaml_data["actions"] = actions

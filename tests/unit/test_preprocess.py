@@ -163,7 +163,8 @@ def test_add_config_success(fs, yaml_data, config_yaml, expected):
 @pytest.mark.parametrize(
     ("yaml_data", "actions_yaml", "expected"),
     [
-        ({}, "{}", {"actions": {}}),
+        ({}, "", {}),
+        ({}, "{}", {}),
         (
             {},
             "boop:\n description: Boop in the snoot",

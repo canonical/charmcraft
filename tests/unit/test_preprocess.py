@@ -142,3 +142,19 @@ def test_add_bundle_snippet_invalid_file(fs, contents):
         preprocess.add_bundle_snippet(pathlib.Path("project"), {"type": "bundle"})
 
     assert exc_info.value.retcode == 65
+
+
+@pytest.mark.parametrize(
+    ("yaml_data", "config_yaml", "expected"),
+    [
+        ({}, "{}", {"config": {}}),
+        ({}, "options:\n boop:\n  type: int", {"config": {"options": {"boop": {"type": "int"}}}})
+    ]
+)
+def test_add_config_success(fs, yaml_data, config_yaml, expected):
+    project_dir = pathlib.Path("project")
+    fs.create_file(project_dir / const.JUJU_CONFIG_FILENAME, contents=config_yaml)
+
+    preprocess.add_config(project_dir, yaml_data)
+
+    assert yaml_data == expected

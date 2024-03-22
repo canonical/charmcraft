@@ -440,15 +440,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         preprocess.add_default_parts(data)
         preprocess.add_bundle_snippet(project_dir, data)
         preprocess.add_metadata(project_dir, data)
-
-        config_file = project_dir / JUJU_CONFIG_FILENAME
-        if config_file.is_file():
-            if "config" in data:
-                raise errors.CraftValidationError(
-                    f"Cannot specify 'config' section in 'charmcraft.yaml' when {JUJU_CONFIG_FILENAME!r} exists",
-                    resolution=f"Move all data from {JUJU_CONFIG_FILENAME!r} to the 'config' section in 'charmcraft.yaml'",
-                )
-            data["config"] = parse_config_yaml(project_dir, allow_broken=True)
+        preprocess.add_config(project_dir, data)
 
         actions_file = project_dir / JUJU_ACTIONS_FILENAME
         if actions_file.is_file():

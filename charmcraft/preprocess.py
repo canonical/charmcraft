@@ -21,9 +21,9 @@ to do pre-processing on a charmcraft.yaml file before applying extensions.
 import pathlib
 from typing import Any
 
-from craft_application import util
+from craft_application import errors, util
 
-from charmcraft import const, errors, utils
+from charmcraft import const, utils
 
 
 def add_default_parts(yaml_data: dict[str, Any]) -> None:
@@ -74,7 +74,7 @@ def add_metadata(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
         )
 
 
-def add_bundle_snippet(project_dir: pathlib.Path, yaml_data: dict[str, Any]):
+def add_bundle_snippet(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
     """Add metadata from bundle.yaml to a bundle.
 
     :param yaml_data: The raw YAML dictionary of the project.
@@ -105,3 +105,26 @@ def add_bundle_snippet(project_dir: pathlib.Path, yaml_data: dict[str, Any]):
             retcode=65,  # EX_DATAERR from sysexits.h
         )
     yaml_data["bundle"] = bundle
+
+
+def add_config(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
+    """Add configuration options from config.yaml to existing YAML data.
+
+    :param project_dir: The Path to the directory containing charmcraft.yaml
+    :param yaml_data: The raw YAML dictionary of the project.
+    :returns: The same dictionary passed in, with necessary mutations.
+    """
+    config_file = project_dir / const.JUJU_CONFIG_FILENAME
+    if not config_file.exists():
+        return
+
+    if "config" in yaml_data:
+        raise errors.CraftValidationError(
+            f"Cannot specify 'config' section in 'charmcraft.yaml' when {const.JUJU_CONFIG_FILENAME!r} exists",
+            resolution=f"Move all data from {const.JUJU_CONFIG_FILENAME!r} to the 'config' section in 'charmcraft.yaml'",
+            docs_url="https://juju.is/docs/sdk/charmcraft-yaml",
+            retcode=65,  # Data error, per sysexits.h
+        )
+
+    with config_file.open() as f:
+        yaml_data["config"] = util.safe_yaml_load(f)

@@ -69,6 +69,7 @@ class Charmcraft(Application):
 
         preprocess.add_default_parts(yaml_data)
         preprocess.add_bundle_snippet(self.project_dir, yaml_data)
+        preprocess.add_config(self.project_dir, yaml_data)
 
         yaml_data = extensions.apply_extensions(self.project_dir, yaml_data)
 

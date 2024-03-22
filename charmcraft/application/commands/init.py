@@ -70,9 +70,17 @@ files and directories:
     │                             linting tools
     ├── README.md              - Frontpage for your charmhub.io/charm/
     ├── requirements.txt       - PyPI dependencies for your charm, with `ops`
+    ├── spread.yaml            - Spread testing configuration file
     ├── src
     │   └── charm.py           - Minimal operator using Python operator framework
     ├── tests
+    │   ├── spread
+    │   │   ├── lib
+    │   │   │   ├── cloud-config.yaml
+    │   │   │   └── test-helpers.yaml
+    │   │   └── general
+    │   │       └── integration
+    │   │           └── task.yaml
     │   ├── integration
     │   │   └── test_charm.py  - Integration tests
     │   └── unit

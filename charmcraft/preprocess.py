@@ -54,7 +54,7 @@ def add_metadata(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
     with metadata_path.open() as file:
         metadata_yaml = util.safe_yaml_load(file)
     if not isinstance(metadata_yaml, dict):
-        raise errors.CraftError(
+        raise errors.CraftValidationError(
             "Invalid file: 'metadata.yaml'",
             resolution="Ensure metadata.yaml meets the juju metadata.yaml specification.",
             docs_url="https://juju.is/docs/sdk/metadata-yaml",
@@ -66,7 +66,7 @@ def add_metadata(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
             duplicate_fields.append(field)
         yaml_data.setdefault(field, metadata_yaml.get(field))
     if duplicate_fields:
-        raise errors.CraftError(
+        raise errors.CraftValidationError(
             "Fields in charmcraft.yaml cannot be duplicated in metadata.yaml",
             details=f"Duplicate fields: {utils.humanize_list(duplicate_fields, 'and')}",
             resolution="Remove the duplicate fields from metadata.yaml.",
@@ -86,7 +86,7 @@ def add_bundle_snippet(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> 
 
     bundle_file = project_dir / const.BUNDLE_FILENAME
     if not bundle_file.is_file():
-        raise errors.CraftError(
+        raise errors.CraftValidationError(
             f"Missing 'bundle.yaml' file: {str(bundle_file)!r}",
             resolution="Create a 'bundle.yaml' file in the same directory as 'charmcraft.yaml'.",
             docs_url="https://juju.is/docs/sdk/create-a-charm-bundle",
@@ -97,7 +97,7 @@ def add_bundle_snippet(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> 
     with bundle_file.open() as bf:
         bundle = util.safe_yaml_load(bf)
     if not isinstance(bundle, dict):
-        raise errors.CraftError(
+        raise errors.CraftValidationError(
             "Incorrectly formatted 'bundle.yaml' file",
             resolution="Ensure 'bundle.yaml' matches the Juju 'bundle.yaml' format.",
             docs_url="https://juju.is/docs/sdk/charm-bundles",
@@ -128,3 +128,25 @@ def add_config(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
 
     with config_file.open() as f:
         yaml_data["config"] = util.safe_yaml_load(f)
+
+
+def add_actions(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
+    """Add actions from actions.yaml to existing YAML data.
+
+    :param project_dir: The Path to the directory containing charmcraft.yaml
+    :param yaml_data: The raw YAML dictionary of the project.
+    :returns: The same dictionary passed in, with necessary mutations.
+    """
+    actions_file = project_dir / const.JUJU_ACTIONS_FILENAME
+    if not actions_file.exists():
+        return
+
+    if "actions" in yaml_data:
+        raise errors.CraftValidationError(
+            f"Cannot specify 'actions' section in 'charmcraft.yaml' when {const.JUJU_ACTIONS_FILENAME!r} exists",
+            resolution=f"Move all data from {const.JUJU_ACTIONS_FILENAME!r} to the 'actions' section in 'charmcraft.yaml'",
+            docs_url="https://juju.is/docs/sdk/charmcraft-yaml",
+            retcode=65,  # Data error, per sysexits.h
+        )
+    with actions_file.open() as f:
+        yaml_data["actions"] = util.safe_yaml_load(f)

@@ -17,13 +17,14 @@
 import pathlib
 
 import pytest
-
 from craft_application import util
 
 from charmcraft import models
 
 
-@pytest.mark.parametrize("charm_dir", sorted((pathlib.Path(__file__).parent / "sample-charms").iterdir()))
+@pytest.mark.parametrize(
+    "charm_dir", sorted((pathlib.Path(__file__).parent / "sample-charms").iterdir())
+)
 def test_load_charm(app, charm_dir):
     app.project_dir = charm_dir
 

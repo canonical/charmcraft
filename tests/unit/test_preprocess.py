@@ -148,13 +148,29 @@ def test_add_bundle_snippet_invalid_file(fs, contents):
     ("yaml_data", "config_yaml", "expected"),
     [
         ({}, "{}", {"config": {}}),
-        ({}, "options:\n boop:\n  type: int", {"config": {"options": {"boop": {"type": "int"}}}})
-    ]
+        ({}, "options:\n boop:\n  type: int", {"config": {"options": {"boop": {"type": "int"}}}}),
+    ],
 )
 def test_add_config_success(fs, yaml_data, config_yaml, expected):
     project_dir = pathlib.Path("project")
     fs.create_file(project_dir / const.JUJU_CONFIG_FILENAME, contents=config_yaml)
 
     preprocess.add_config(project_dir, yaml_data)
+
+    assert yaml_data == expected
+
+
+@pytest.mark.parametrize(
+    ("yaml_data", "actions_yaml", "expected"),
+    [
+        ({}, "{}", {"actions": {}}),
+        ({}, "boop:\n description: Boop in the snoot", {"actions": {"boop": {"description": "Boop in the snoot"}}}),
+    ],
+)
+def test_add_actions_success(fs, yaml_data, actions_yaml, expected):
+    project_dir = pathlib.Path("project")
+    fs.create_file(project_dir / const.JUJU_ACTIONS_FILENAME, contents=actions_yaml)
+
+    preprocess.add_actions(project_dir, yaml_data)
 
     assert yaml_data == expected

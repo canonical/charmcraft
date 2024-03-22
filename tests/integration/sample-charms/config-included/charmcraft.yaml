@@ -31,4 +31,3 @@ config:
       default: vector
       description: skin for the Wiki
       type: string
-

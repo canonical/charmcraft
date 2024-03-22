@@ -34,14 +34,10 @@ from typing_extensions import Self, TypedDict
 
 from charmcraft import const, preprocess, utils
 from charmcraft.const import (
-    JUJU_ACTIONS_FILENAME,
-    JUJU_CONFIG_FILENAME,
     BaseStr,
     BuildBaseStr,
     CharmArch,
 )
-from charmcraft.metafiles.actions import parse_actions_yaml
-from charmcraft.metafiles.config import parse_config_yaml
 from charmcraft.models import charmcraft
 from charmcraft.models.charmcraft import (
     AnalysisConfig,
@@ -441,15 +437,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         preprocess.add_bundle_snippet(project_dir, data)
         preprocess.add_metadata(project_dir, data)
         preprocess.add_config(project_dir, data)
-
-        actions_file = project_dir / JUJU_ACTIONS_FILENAME
-        if actions_file.is_file():
-            if "actions" in data:
-                raise errors.CraftValidationError(
-                    f"Cannot specify 'actions' section in 'charmcraft.yaml' when {JUJU_ACTIONS_FILENAME!r} exists",
-                    resolution=f"Move all data from {JUJU_ACTIONS_FILENAME!r} to the 'actions' section in 'charmcraft.yaml'",
-                )
-            data["actions"] = parse_actions_yaml(project_dir).actions
+        preprocess.add_actions(project_dir, data)
 
         try:
             project = cls.unmarshal(data)

@@ -164,7 +164,11 @@ def test_add_config_success(fs, yaml_data, config_yaml, expected):
     ("yaml_data", "actions_yaml", "expected"),
     [
         ({}, "{}", {"actions": {}}),
-        ({}, "boop:\n description: Boop in the snoot", {"actions": {"boop": {"description": "Boop in the snoot"}}}),
+        (
+            {},
+            "boop:\n description: Boop in the snoot",
+            {"actions": {"boop": {"description": "Boop in the snoot"}}},
+        ),
     ],
 )
 def test_add_actions_success(fs, yaml_data, actions_yaml, expected):

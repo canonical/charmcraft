@@ -64,7 +64,7 @@ lint = [
 ]
 types = [
     "mypy[reports]~=1.5",
-    "pyright==1.1.353",
+    "pyright==1.1.354",
     "types-python-dateutil",
     "types-requests<2.31.0.20240312",  # Frozen until we can get urllib3 v2
     "types-setuptools",
@@ -149,13 +149,12 @@ ignore = [
 ]
 include = [
     "charmcraft",
-    # "tests",  # TODO: enable tests
+    "tests/unit",
+    "tests/integration",
 ]
 analyzeUnannotatedFunctions = false
 reportArgumentType = "warning"
 reportAttributeAccessIssue = "warning"
-reportGeneralTypeIssues = "warning"
-reportIncompatibleMethodOverride = "warning"
 reportIncompatibleVariableOverride = "warning"
 reportOptionalMemberAccess = "warning"
 
@@ -164,6 +163,8 @@ reportOptionalMemberAccess = "warning"
 python_version = "3.10"
 packages = [
     "charmcraft",
+    "tests.unit",
+    "tests.integration",
 ]
 plugins = ["pydantic.mypy"]
 exclude = [
@@ -190,12 +191,8 @@ module=[
     "charmcraft.commands.store",
     "charmcraft.store.registry",
     "charmcraft.store.store",
-    "charmcraft.config",
     "charmcraft.extensions._utils",
     "charmcraft.linters",
-    "charmcraft.models.actions",
-    "charmcraft.models.basic",
-    "charmcraft.models.config",
     "charmcraft.models.charmcraft",
     "charmcraft.package",
     "charmcraft.providers",
@@ -332,9 +329,7 @@ classmethod-decorators = ["pydantic.validator"]
 
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "A001", "A002",
-    "B007", "B015",
     "PT004", "PT012",
-    "PTH1",
     "S105", "S106",
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.

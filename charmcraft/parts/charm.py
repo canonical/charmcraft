@@ -22,6 +22,7 @@ import sys
 from contextlib import suppress
 from typing import Any, cast
 
+import overrides
 import pydantic
 from craft_parts import Step, callbacks, plugins
 from craft_parts.errors import OsReleaseIdError, OsReleaseVersionIdError
@@ -206,8 +207,8 @@ class CharmPlugin(plugins.Plugin):
 
     properties_class = CharmPluginProperties
 
-    @classmethod
-    def get_build_snaps(cls) -> set[str]:
+    @overrides.override
+    def get_build_snaps(self) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
 

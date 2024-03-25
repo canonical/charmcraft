@@ -17,6 +17,7 @@
 import sys
 from typing import Any
 
+import overrides
 from craft_parts import plugins
 
 
@@ -50,8 +51,8 @@ class BundlePlugin(plugins.Plugin):
 
     properties_class = BundlePluginProperties
 
-    @classmethod
-    def get_build_snaps(cls) -> set[str]:
+    @overrides.override
+    def get_build_snaps(self) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
 

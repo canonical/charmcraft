@@ -286,17 +286,34 @@ def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     If content is not given, remove charmcraft.yaml if exists.
     """
 
+    charmcraft_yaml_path = tmp_path / const.CHARMCRAFT_FILENAME
+
     def prepare_charmcraft_yaml(content: str | None = None):
         if content is None:
             with contextlib.suppress(OSError):
-                os.remove(tmp_path / const.CHARMCRAFT_FILENAME)
+                charmcraft_yaml_path.unlink(missing_ok=True)
         else:
-            charmcraft_yaml_file = tmp_path / const.CHARMCRAFT_FILENAME
-            charmcraft_yaml_file.write_text(content)
+            charmcraft_yaml_path.write_text(content)
 
         return tmp_path
 
     return prepare_charmcraft_yaml
+
+
+def prepare_file(tmp_path: pathlib.Path, filename: str):
+    """Helper to create a file under a temporary path."""
+
+    path = tmp_path / filename
+
+    def prepare(content: str | None = None):
+        if content is None:
+            path.unlink(missing_ok=True)
+        else:
+            path.write_text(content)
+
+        return tmp_path
+
+    return prepare
 
 
 @pytest.fixture()
@@ -305,18 +322,7 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
 
     If content is not given, remove metadata.yaml if exists.
     """
-
-    def prepare_metadata_yaml(content: str | None = None, remove: bool = False):
-        if content is None:
-            with contextlib.suppress(OSError):
-                os.remove(tmp_path / const.METADATA_FILENAME)
-        else:
-            metadata_yaml_file = tmp_path / const.METADATA_FILENAME
-            metadata_yaml_file.write_text(content)
-
-        return tmp_path
-
-    return prepare_metadata_yaml
+    return prepare_file(tmp_path, const.METADATA_FILENAME)
 
 
 @pytest.fixture()
@@ -325,18 +331,7 @@ def prepare_actions_yaml(tmp_path: pathlib.Path):
 
     If content is not given, remove actions.yaml if exists.
     """
-
-    def prepare_actions_yaml(content: str | None = None):
-        if content is None:
-            with contextlib.suppress(OSError):
-                os.remove(tmp_path / const.JUJU_ACTIONS_FILENAME)
-        else:
-            actions_yaml_file = tmp_path / const.JUJU_ACTIONS_FILENAME
-            actions_yaml_file.write_text(content)
-
-        return tmp_path
-
-    return prepare_actions_yaml
+    return prepare_file(tmp_path, const.JUJU_ACTIONS_FILENAME)
 
 
 @pytest.fixture()
@@ -345,18 +340,7 @@ def prepare_config_yaml(tmp_path: pathlib.Path):
 
     If content is not given, remove config.yaml if exists.
     """
-
-    def prepare_config_yaml(content: str | None = None):
-        if content is None:
-            with contextlib.suppress(OSError):
-                os.remove(tmp_path / const.JUJU_CONFIG_FILENAME)
-        else:
-            config_yaml_file = tmp_path / const.JUJU_CONFIG_FILENAME
-            config_yaml_file.write_text(content)
-
-        return tmp_path
-
-    return prepare_config_yaml
+    return prepare_file(tmp_path, const.JUJU_CONFIG_FILENAME)
 
 
 @pytest.fixture()

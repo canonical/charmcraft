@@ -1433,7 +1433,7 @@ def test_status_base_in_none(client_mock, config):
     (cmap,) = channel_map
     assert cmap.base is None
     (rev,) = revisions
-    rev.bases == [None]
+    assert rev.bases == [None]
 
 
 # -- tests for library related functions

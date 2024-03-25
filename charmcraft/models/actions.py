@@ -24,7 +24,7 @@ import pydantic
 from charmcraft.models.basic import ModelConfigDefaults
 
 
-class JujuActions(ModelConfigDefaults):
+class JujuActions(ModelConfigDefaults, frozen=True):
     """Juju actions for charms.
 
     See also: https://juju.is/docs/sdk/actions

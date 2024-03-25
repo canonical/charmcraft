@@ -138,7 +138,7 @@ parts:
       # Ensure we don't have a dubious ownership error from git with a remote build.
       git config --global --add safe.directory $CRAFT_PART_SRC
       # set the version
-      version="$(python3 setup.py --version)"
+      version="$(python3 -c 'from charmcraft import __version__;print(__version__)')"
       craftctl set version="${version}"
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       craftctl set grade="${grade}"

@@ -60,8 +60,8 @@ paste, but do please pay attention to details!
 
 - build a tarball to test
 
-    rm -rf dist/
-    ./setup.py sdist bdist_wheel
+    tox -e clean
+    tox -e package
 
 - try the tarball
 
@@ -89,7 +89,10 @@ paste, but do please pay attention to details!
 
     git push --tags
 
-- release in Github
+    For a new tag, this will trigger publishing a release of the Python
+    package on PyPI via GHA.
+
+- release on GitHub
 
     xdg-open https://github.com/canonical/charmcraft/tags
 
@@ -100,10 +103,6 @@ paste, but do please pay attention to details!
     Attach the `dist/` files
 
     Click on "Publish release"
-
-- release to PyPI
-
-    fades -d twine -x twine upload --verbose dist/*
 
 - release to Snap Store (for all the archs)
 

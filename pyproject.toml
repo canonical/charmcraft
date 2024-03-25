@@ -1,8 +1,10 @@
 [project]
 name = "charmcraft"
+dynamic = ["version"]
 description = "The main tool to build, upload, and develop in general the Juju charms."
-dynamic = ["version", "readme"]
+readme = "README.md"
 dependencies = [
+    "attrs<23",
     "craft-application~=2.0",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
@@ -81,9 +83,6 @@ requires = [
     "setuptools_scm[toml]>=7.1"
 ]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools.dynamic]
-readme = {file = "README.md"}
 
 [tool.setuptools_scm]
 write_to = "charmcraft/_version.py"

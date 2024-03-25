@@ -119,7 +119,7 @@ def test_main_managed_instance_error(monkeypatch, side_effect, config):
 
 
 def test_main_no_args():
-    """The setup.py entry_point function needs to work with no arguments."""
+    """The package entry_point script needs to work with no arguments."""
     with patch("sys.argv", ["charmcraft"]):
         retcode = main(sys.argv)
 

@@ -27,7 +27,7 @@ from charmcraft import main
 def get_python_filepaths(*, roots=None, python_paths=None):
     """Helper to retrieve paths of Python files."""
     if python_paths is None:
-        python_paths = ["setup.py"]
+        python_paths = []
     if roots is None:
         roots = ["charmcraft", "tests"]
     for root in roots:

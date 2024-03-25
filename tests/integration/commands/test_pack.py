@@ -29,24 +29,24 @@ CURRENT_PLATFORM = utils.get_os_platform()
     sys.platform != "linux", reason="https://github.com/canonical/charmcraft/issues/1552"
 )
 @pytest.mark.parametrize(
-    "bundle_yaml",
+    ("bundle_yaml", "filename"),
     [
-        "",
-        "name: my-bundle",
+        ("{}", "bundle.zip"),
+        ("name: my-bundle", "my-bundle.zip"),
     ],
 )
-def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml):
+def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, filename):
     (new_path / "charmcraft.yaml").write_text("type: bundle")
     (new_path / "bundle.yaml").write_text(bundle_yaml)
 
     monkeypatch.setenv("CRAFT_DEBUG", "1")
-    monkeypatch.setattr("sys.argv", ["charmcraft", "pack"])
+    monkeypatch.setattr("sys.argv", ["charmcraft", "pack", "--verbosity=trace"])
 
     app.configure({})
     if app.run() != 0:
         raise ValueError(capsys.readouterr())
 
-    with zipfile.ZipFile("bundle.zip") as bundle_zip:
+    with zipfile.ZipFile(filename) as bundle_zip:
         actual_bundle_yaml = bundle_zip.read("bundle.yaml").decode()
 
     assert actual_bundle_yaml == bundle_yaml

@@ -1,0 +1,27 @@
+summary: test charmcraft init with flask-framework profile
+
+environment:
+  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
+
+execute: |
+  unset CHARMCRAFT_STORE_API_URL
+  unset CHARMCRAFT_UPLOAD_URL
+  unset CHARMCRAFT_REGISTRY_URL
+  mkdir -p test-init
+  cd test-init
+  charmcraft init --profile flask-framework
+  charmcraft fetch-lib charms.traefik_k8s.v2.ingress
+  charmcraft fetch-lib charms.observability_libs.v0.juju_topology
+  charmcraft fetch-lib charms.grafana_k8s.v0.grafana_dashboard
+  charmcraft fetch-lib charms.loki_k8s.v0.loki_push_api
+  charmcraft fetch-lib charms.data_platform_libs.v0.data_interfaces
+  charmcraft fetch-lib charms.prometheus_k8s.v0.prometheus_scrape
+  charmcraft pack --verbose
+  test -f *.charm
+
+restore: |
+  pushd test-init
+  charmcraft clean
+  popd
+
+  rm -rf test-init

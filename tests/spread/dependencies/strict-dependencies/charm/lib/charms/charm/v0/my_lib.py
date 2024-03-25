@@ -13,6 +13,9 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+
+"""Test charm library."""
+
 PYDEPS = ["ops"]
 LIBID = "my_lib"
 LIBAPI = 0

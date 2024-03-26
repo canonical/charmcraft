@@ -45,7 +45,7 @@ def test_flask_extension(flask_input_yaml, tmp_path):
         "description": "test description",
         "name": "test-flask",
         "config": {"options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}},
-        "parts": {},
+        "parts": {"charm": {"plugin": "charm", "source": "."}},
         "peers": {"secret-storage": {"interface": "secret-storage"}},
         "provides": {
             "metrics-endpoint": {"interface": "prometheus_scrape"},

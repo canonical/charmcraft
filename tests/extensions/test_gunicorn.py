@@ -45,7 +45,7 @@ def test_flask_extension(flask_input_yaml, tmp_path):
         "description": "test description",
         "name": "test-flask",
         "config": {"options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}},
-        "parts": {},
+        "parts": {"charm": {"plugin": "charm", "source": "."}},
         "peers": {"secret-storage": {"interface": "secret-storage"}},
         "provides": {
             "metrics-endpoint": {"interface": "prometheus_scrape"},
@@ -148,3 +148,16 @@ def test_flask_incompatible_fields(modification, flask_input_yaml, tmp_path):
     flask_input_yaml.update(modification)
     with pytest.raises(ExtensionError):
         apply_extensions(tmp_path, flask_input_yaml)
+
+
+def test_handle_charm_part(flask_input_yaml, tmp_path):
+    # Currently, in the flask-framework extension, we will reject any project that
+    # includes a charm part. This is to prevent issues where a non-default charm part is
+    # incompatible with this extension. This might change in the future.
+    # For the same reason, the Flask-Framework extension will also add a default charm part.
+    flask_input_yaml["parts"] = {"charm": {}}
+    with pytest.raises(ExtensionError):
+        apply_extensions(tmp_path, flask_input_yaml)
+    del flask_input_yaml["parts"]
+    applied = apply_extensions(tmp_path, flask_input_yaml)
+    assert applied["parts"] == {"charm": {"plugin": "charm", "source": "."}}

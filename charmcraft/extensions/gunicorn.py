@@ -75,6 +75,12 @@ class _GunicornBase(Extension):
                 f"the '{self.framework}-framework' extension is incompatible with "
                 f"type {charm_type!r}"
             )
+        parts = self.yaml_data.get("parts")
+        if parts and "charm" in parts:
+            raise ExtensionError(
+                f"the '{self.framework}-framework' extension is incompatible with "
+                f"customized charm part"
+            )
         incompatible_fields = {"devices", "extra-bindings", "storage"} & self.yaml_data.keys()
         if incompatible_fields:
             raise ExtensionError(
@@ -138,6 +144,7 @@ class _GunicornBase(Extension):
                 "grafana-dashboard": {"interface": "grafana_dashboard"},
             },
             "config": {"options": {**self._WEBSERVER_OPTIONS, **self.options}},
+            "parts": {"charm": {"plugin": "charm", "source": "."}},
         }
 
     @override

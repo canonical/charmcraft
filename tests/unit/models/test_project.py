@@ -55,6 +55,7 @@ FULL_BASE_CONFIG_DICT = {
     "build-on": [{"channel": "22.04", "name": "ubuntu"}],
     "run-on": [{"channel": "22.04", "name": "ubuntu"}],
 }
+BASIC_CHARM_PARTS = {"charm": {"plugin": "charm", "source": "."}}
 
 MINIMAL_CHARMCRAFT_YAML = """\
 type: charm
@@ -477,35 +478,39 @@ def test_unmarshal_invalid_type(type_):
             None,
             None,
             None,
-            {},
+            {"parts": BASIC_CHARM_PARTS},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             None,
             None,
-            {},
+            {"parts": BASIC_CHARM_PARTS},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             SIMPLE_CONFIG_YAML,
             None,
-            {"config": SIMPLE_CONFIG_DICT},
+            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
             SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT},
+            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             SIMPLE_CONFIG_YAML,
             SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT, "config": SIMPLE_CONFIG_DICT},
+            {
+                "actions": SIMPLE_ACTIONS_DICT,
+                "config": SIMPLE_CONFIG_DICT,
+                "parts": BASIC_CHARM_PARTS,
+            },
         ),
     ],
 )

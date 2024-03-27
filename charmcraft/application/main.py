@@ -65,15 +65,14 @@ class Charmcraft(Application):
     def _extra_yaml_transform(
         self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
     ) -> dict[str, Any]:
-        yaml_data = yaml_data.copy()
+        # Extensions get applied on as close as possible to what the user provided.
+        yaml_data = extensions.apply_extensions(self.project_dir, yaml_data.copy())
 
+        # Preprocessing "magic" to create a fully-formed charm.
         preprocess.add_default_parts(yaml_data)
         preprocess.add_bundle_snippet(self.project_dir, yaml_data)
         preprocess.add_config(self.project_dir, yaml_data)
         preprocess.add_actions(self.project_dir, yaml_data)
-
-        yaml_data = extensions.apply_extensions(self.project_dir, yaml_data)
-
         preprocess.add_metadata(self.project_dir, yaml_data)
 
         return yaml_data

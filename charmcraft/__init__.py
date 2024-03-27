@@ -21,6 +21,6 @@ except ImportError:  # pragma: no cover
     from importlib.metadata import version, PackageNotFoundError
 
     try:
-        __version__ = version("craft-archives")
+        __version__ = version("charmcraft")
     except PackageNotFoundError:
         __version__ = "dev"

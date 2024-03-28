@@ -1135,6 +1135,8 @@ def test_load_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
                 test-bool:
                   default: true
                   type: boolean
+                test-secret:
+                  type: secret
             """
         )
     )
@@ -1146,6 +1148,7 @@ def test_load_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
             "test-string": {"description": "test-2", "type": "string"},
             "test-float": {"default": 1.23, "type": "float"},
             "test-bool": {"default": True, "type": "boolean"},
+            "test-secret": {"type": "secret"},
         },
     }
 
@@ -1179,6 +1182,8 @@ def test_load_config_in_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare_c
               test-bool:
                 default: true
                 type: boolean
+              test-secret:
+                type: secret
             """
         ),
     )
@@ -1190,6 +1195,7 @@ def test_load_config_in_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare_c
             "test-string": {"description": "test-2", "type": "string"},
             "test-float": {"default": 1.23, "type": "float"},
             "test-bool": {"default": True, "type": "boolean"},
+            "test-secret": {"type": "secret"},
         },
     }
 
@@ -1248,6 +1254,8 @@ def test_load_bad_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
                 test-bool:
                   default: true
                   type: boolean
+                test-secret:
+                  type: secret
             """
         )
     )

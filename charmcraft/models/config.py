@@ -50,10 +50,10 @@ class JujuConfig(ModelConfigDefaults):
             if "type" not in option:
                 raise ValueError(f"'{name}' is missing a type")
 
-            if option["type"] not in ["string", "int", "float", "boolean"]:
+            if option["type"] not in ["string", "int", "float", "boolean", "secret"]:
                 raise ValueError(
                     f"'{option}' has an invalid type '{option['type']}', "
-                    "must be one of: string, int, float, boolean"
+                    "must be one of: string, int, float, boolean, secret"
                 )
 
         return options

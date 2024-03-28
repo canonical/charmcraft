@@ -1,22 +1,22 @@
-summary: pack a simple init-created charm
+summary: pack a simple charm on various bases
 
 environment:
-  BASE_NAME: ubuntu
-  BASE_CHANNEL/focal: 20.04
-  BASE_CHANNEL/jammy: 22.04
-  BASE_CHANNEL/lunar: 23.04  # Non-LTS
-  BASE_NAME/alma: almalinux
-  BASE_CHANNEL/alma: 9
+  BASE_CHANNEL/focal_bases: 20.04
+  BASE_CHANNEL/jammy_bases,jammy_platforms: 22.04
+  BASE_CHANNEL/mantic_bases: 23.10  # Non-LTS
+  BASE_CHANNEL/noble_platforms: 24.04
+  CHARM_TYPE/focal_bases,jammy_bases,mantic_bases: bases
+  CHARM_TYPE/jammy_platforms,noble_platforms: platforms
+  # Alma Linux is disabled temporarily: https://github.com/canonical/charmcraft/issues/1496
+  # BASE_CHANNEL/alma: alma9
+  # CHARM_TYPE/alma: bases
 
 include:
   - tests/
 
 prepare: |
-  tests.pkgs install unzip
   charmcraft init --project-dir=charm
-
-  sed -i "s/- name: ubuntu/- name: ${BASE_NAME}/g" charm/charmcraft.yaml
-  sed -i "s/channel:.*/channel: '${BASE_CHANNEL}'/g" charm/charmcraft.yaml
+  cp charmcraft-$CHARM_TYPE-$BASE_CHANNEL.yaml charm/charmcraft.yaml
 
 restore: |
   pushd charm
@@ -28,6 +28,7 @@ restore: |
 execute: |
   cd charm
   charmcraft pack --verbose
-  test -f charm*.charm
-  unzip -l charm*.charm | MATCH "venv/ops/charm.py"
+  test -f *.charm
+  unzip -l *.charm | MATCH "src/charm.py"
+  unzip -l *.charm | MATCH "venv/ops/charm.py"
   test ! -d build

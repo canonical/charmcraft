@@ -16,6 +16,7 @@
 
 import itertools
 import os
+import pathlib
 import re
 
 import pytest
@@ -30,7 +31,7 @@ def get_python_filepaths(*, roots=None, python_paths=None):
     if roots is None:
         roots = ["charmcraft", "tests"]
     for root in roots:
-        for dirpath, dirnames, filenames in os.walk(root):
+        for dirpath, _, filenames in os.walk(root):
             for filename in filenames:
                 if filename.endswith(".py"):
                     python_paths.append(os.path.join(dirpath, filename))
@@ -42,7 +43,7 @@ def test_ensure_copyright():
     issues = []
     regex = re.compile(r"# Copyright \d{4}(-\d{4})? Canonical Ltd.$")
     for filepath in get_python_filepaths():
-        if os.stat(filepath).st_size == 0:
+        if pathlib.Path(filepath).stat().st_size == 0:
             continue
         if filepath.endswith("charmcraft/_version.py") or filepath.endswith(
             "charmcraft\\_version.py"

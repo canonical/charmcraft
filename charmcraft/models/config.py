@@ -77,7 +77,7 @@ JujuOption = Annotated[
 ]
 
 
-class JujuConfig(ModelConfigDefaults):
+class JujuConfig(ModelConfigDefaults, frozen=True):
     """Juju configs for charms.
 
     See also: https://juju.is/docs/sdk/config

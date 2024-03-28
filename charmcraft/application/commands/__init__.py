@@ -25,13 +25,9 @@ from charmcraft.application.commands.extensions import (
 from charmcraft.application.commands.init import InitCommand
 from charmcraft.application.commands.lifecycle import (
     get_lifecycle_commands,
-    BuildCommand,
-    CleanCommand,
     PackCommand,
-    PullCommand,
-    PrimeCommand,
-    StageCommand,
 )
+from charmcraft.application.commands.remote import RemoteBuild
 from charmcraft.application.commands.store import (
     # auth
     LoginCommand,
@@ -67,7 +63,7 @@ from charmcraft.application.commands.version import Version
 def fill_command_groups(app: craft_application.Application) -> None:
     """Fill in all the command groups for Charmcraft."""
     app.add_command_group("Basic", [InitCommand])
-    app.add_command_group("Lifecycle", get_lifecycle_commands())
+    app.add_command_group("Lifecycle", [*get_lifecycle_commands(), RemoteBuild])
     app.add_command_group(
         "Store (account)",
         [
@@ -130,12 +126,7 @@ __all__ = [
     "ExtensionsCommand",
     "InitCommand",
     "get_lifecycle_commands",
-    "BuildCommand",
-    "CleanCommand",
     "PackCommand",
-    "PrimeCommand",
-    "PullCommand",
-    "StageCommand",
     "LoginCommand",
     "LogoutCommand",
     "WhoamiCommand",

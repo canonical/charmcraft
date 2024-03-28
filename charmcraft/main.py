@@ -28,13 +28,12 @@ from craft_cli import (
     CraftError,
     Dispatcher,
     EmitterMode,
-    GlobalArgument,
     ProvideHelpException,
     emit,
 )
 
 from charmcraft import config, const, env, utils
-from charmcraft.commands import analyze, clean, extensions, init, pack, store, version
+from charmcraft.commands import pack, store, version
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -58,9 +57,6 @@ See https://charmhub.io/publishing for more information.
 # central place and not distributed in several classes/files. Also note that order here is
 # important when listing commands and showing help.
 _basic_commands = [
-    analyze.AnalyzeCommand,
-    clean.CleanCommand,
-    init.InitCommand,
     pack.PackCommand,
     version.VersionCommand,
 ]
@@ -91,15 +87,9 @@ _charmhub_commands = [
     store.ListResourcesCommand,
     store.UploadResourceCommand,
 ]
-_extensions_commands = [
-    extensions.ExtensionsCommand,
-    extensions.ListExtensionsCommand,
-    extensions.ExpandExtensionsCommand,
-]
 COMMAND_GROUPS = [
     CommandGroup("Basic", _basic_commands),
     CommandGroup("Charmhub", _charmhub_commands),
-    CommandGroup("Extensions", _extensions_commands),
 ]
 
 # non-charmcraft useful environment variables to log
@@ -143,16 +133,6 @@ def main(argv):
     """Provide the main entry point."""
     emit.debug("Starting classic fallback.")
 
-    extra_global_options = [
-        GlobalArgument(
-            "project_dir",
-            "option",
-            "-p",
-            "--project-dir",
-            "Specify the project's directory (defaults to current)",
-        ),
-    ]
-
     # process
     try:
         setup_parts()
@@ -162,7 +142,6 @@ def main(argv):
             "charmcraft",
             COMMAND_GROUPS,
             summary=GENERAL_SUMMARY,
-            extra_global_args=extra_global_options,
         )
         global_args = dispatcher.pre_parse_args(argv[1:])
         loaded_config = config.load(global_args["project_dir"])

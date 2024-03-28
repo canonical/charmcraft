@@ -32,7 +32,7 @@ def format_pydantic_error_location(loc) -> str:
             previous_part += f"[{loc_part}]"
             loc_parts.append(previous_part)
         else:
-            raise RuntimeError(f"unhandled loc: {loc_part}")
+            raise RuntimeError(f"unhandled loc: {loc_part}")  # noqa: TRY004
 
     loc = ".".join(loc_parts)
 
@@ -58,6 +58,7 @@ def printable_field_location_split(location: str) -> tuple[str, str]:
     (2) field2 => 'field2', top-level
 
     :returns: Tuple of <field name>, <location> as printable representations.
+
     """
     loc_split = location.split(".")
     field_name = repr(loc_split.pop())

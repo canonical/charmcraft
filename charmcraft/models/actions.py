@@ -24,7 +24,7 @@ import pydantic
 from charmcraft.models.basic import ModelConfigDefaults
 
 
-class JujuActions(ModelConfigDefaults):
+class JujuActions(ModelConfigDefaults, frozen=True):
     """Juju actions for charms.
 
     See also: https://juju.is/docs/sdk/actions
@@ -37,7 +37,7 @@ class JujuActions(ModelConfigDefaults):
     def validate_actions(cls, actions):
         """Verify actions names and descriptions."""
         if not isinstance(actions, dict):
-            raise ValueError("actions.yaml is not a valid actions configuration")
+            raise TypeError("actions.yaml is not a valid actions configuration")
         for action in actions:
             if keyword.iskeyword(action):
                 raise ValueError(
@@ -52,7 +52,7 @@ class JujuActions(ModelConfigDefaults):
     def validate_each_action(cls, action):
         """Verify actions names and descriptions."""
         if not isinstance(action, dict):
-            raise ValueError(f"'{action}' is not a dictionary")
+            raise TypeError(f"'{action}' is not a dictionary")
 
         if "description" not in action:
             raise ValueError(f"'{action}' is missing a description")

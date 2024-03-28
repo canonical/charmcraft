@@ -111,7 +111,7 @@ class ChoicesList:
         return values
 
 
-def confirm_with_user(prompt, default=False) -> bool:
+def confirm_with_user(prompt: str, default: bool = False) -> bool:
     """Query user for yes/no answer.
 
     If stdin is not a tty, the default value is returned.
@@ -182,15 +182,13 @@ class OutputFormat(enum.Enum):
 
 
 @overload
-def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str:
-    ...
+def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str: ...
 
 
 @overload
 def format_content(
     content: str | (numbers.Real | (list | dict)), fmt: OutputFormat | (str | None)
-) -> str:
-    ...
+) -> str: ...
 
 
 def format_content(content, fmt=None):

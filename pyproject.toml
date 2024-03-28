@@ -3,10 +3,10 @@ name = "charmcraft"
 description = "The main tool to build, upload, and develop in general the Juju charms."
 dynamic = ["version", "readme"]
 dependencies = [
-    "craft-application~=1.1",
+    "craft-application~=2.0",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
-    "craft-providers",
+    "craft-providers>=1.23.0",
     "craft-store>=2.4",
     "distro>=1.3.0",
     "humanize>=2.6.0",
@@ -35,6 +35,7 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.10"
 
@@ -57,15 +58,15 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "responses",
 ]
 lint = [
-    "black>=23.10.1,<24.0.0",
+    "black~=24.0",
     "codespell[tomli]>=2.2.6,<3.0.0",
     "yamllint>=1.32.0,<2.0.0",
 ]
 types = [
     "mypy[reports]~=1.5",
-    "pyright==1.1.332",
+    "pyright==1.1.354",
     "types-python-dateutil",
-    "types-requests<2.31.0.7",  # Frozen until we can get urllib3 v2
+    "types-requests<2.31.0.20240312",  # Frozen until we can get urllib3 v2
     "types-setuptools",
     "types-tabulate",
     "types-urllib3",
@@ -140,14 +141,30 @@ skip_empty = true
 #fail_under = 80
 
 [tool.pyright]
-strict = ["charmcraft"]
+# strict = ["charmcraft"]
 pythonVersion = "3.10"
 pythonPlatform = "Linux"
+ignore = [
+    "tools/measurements-viewer.py",
+]
+include = [
+    "charmcraft",
+    "tests/unit",
+    "tests/integration",
+]
+analyzeUnannotatedFunctions = false
+reportArgumentType = "warning"
+reportAttributeAccessIssue = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportOptionalMemberAccess = "warning"
+
 
 [tool.mypy]
 python_version = "3.10"
 packages = [
     "charmcraft",
+    "tests.unit",
+    "tests.integration",
 ]
 plugins = ["pydantic.mypy"]
 exclude = [
@@ -174,12 +191,8 @@ module=[
     "charmcraft.commands.store",
     "charmcraft.store.registry",
     "charmcraft.store.store",
-    "charmcraft.config",
     "charmcraft.extensions._utils",
     "charmcraft.linters",
-    "charmcraft.models.actions",
-    "charmcraft.models.basic",
-    "charmcraft.models.config",
     "charmcraft.models.charmcraft",
     "charmcraft.package",
     "charmcraft.providers",
@@ -206,7 +219,7 @@ extend-exclude = [
     "charmcraft/_version.py",  # setuptools_scm generates old-style type annotations.
 ]
 # Follow ST063 - Maintaining and updating linting specifications for updating these.
-select = [  # Base linting rule selections.
+lint.select = [  # Base linting rule selections.
     # See the internal document for discussion:
     # https://docs.google.com/document/d/1i1n8pDmFmWi4wTDpk-JfnWCVUThPJiggyPi2DYwBBu4/edit
     # All sections here are stable in ruff and shouldn't randomly introduce
@@ -243,11 +256,11 @@ select = [  # Base linting rule selections.
     "PL",  # Pylint
     "TRY",  # Cleaner try/except,
 ]
-extend-select = [
+lint.extend-select = [
     # Pyupgrade: https://github.com/charliermarsh/ruff#pyupgrade-up
     "UP00", "UP01", "UP02", "UP030", "UP032", "UP033",
     # "UP034",  # Very new, not yet enabled in ruff 0.0.227
-    # Annotations: https://github.com/charliermarsh/ruff#flake8-annotations-ann
+    # Annotations: https://github.com/charliermarsh/ruff#lint.flake8-annotations-ann
     "ANN0",  # Type annotations for arguments other than `self` and `cls`
     "ANN2",  # Return type annotations
     "B026",  # Keyword arguments must come after starred arguments
@@ -268,7 +281,7 @@ extend-select = [
     "RUF008",  # Do not use mutable default values for dataclass attributes
     "RUF100",  # #noqa directive that doesn't flag anything
 ]
-ignore = [
+lint.ignore = [
     "ANN10",  # Type annotations for `self` and `cls`
     #"E203",  # Whitespace before ":"  -- Commented because ruff doesn't currently check E203
     "E501",  # Line too long (reason: black will automatically fix this for us)
@@ -287,9 +300,7 @@ ignore = [
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "ANN0", "ANN2",
     "ARG001", "ARG002", "ARG005",
-    "B034",
     "BLE",
-    "D417",
     "FBT",
     "N805", "N806",
     "PGH003",
@@ -300,14 +311,13 @@ ignore = [
     "RET505", "RET506", "RET508",
     "S108", "S113", "S324", "S701",
     "SIM102",
-    "TRY004", "TRY200",
 ]
 
-[tool.ruff.pep8-naming]
+[tool.ruff.lint.pep8-naming]
 # Allow Pydantic's `@validator` decorator to trigger class method treatment.
 classmethod-decorators = ["pydantic.validator"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/**.py" = [  # Some things we want for the moin project are unnecessary in tests.
     "D",  # Ignore docstring rules in tests
     "ANN", # Ignore type annotations in tests
@@ -319,13 +329,8 @@ classmethod-decorators = ["pydantic.validator"]
 
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "A001", "A002",
-    "B007", "B015",
-    "D100",
-    "N802",
     "PT004", "PT012",
-    "PTH1",
     "S105", "S106",
-    "SIM105", "SIM115",
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.
 "__init__.py" = ["I001"]

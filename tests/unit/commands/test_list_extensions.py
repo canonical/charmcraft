@@ -13,8 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
-
+import argparse
 from textwrap import dedent
 from typing import Any
 
@@ -22,12 +21,11 @@ import pytest
 from overrides import override
 
 from charmcraft import extensions
-from charmcraft.commands.extensions import ExpandExtensionsCommand
-from charmcraft.config import load
+from charmcraft.application.commands.extensions import ListExtensionsCommand
 from tests.extensions.test_extensions import FakeExtension
 
 
-class TestExtension(FakeExtension):
+class MyFakeExtension(FakeExtension):
     """A fake test Extension that has complete behavior"""
 
     name = "test-extension"
@@ -39,46 +37,34 @@ class TestExtension(FakeExtension):
         return {"terms": ["https://example.com/test"]}
 
 
+class YourFakeExtension(FakeExtension):
+    """A fake test Extension that has complete behavior"""
+
+    name = "test-extension-2"
+    bases = [("ubuntu", "23.04")]
+
+    @override
+    def get_root_snippet(self) -> dict[str, Any]:
+        """Return the root snippet to apply."""
+        return {"terms": ["https://example.com/test2"]}
+
+
 @pytest.fixture()
 def fake_extensions(stub_extensions):
-    extensions.register(TestExtension.name, TestExtension)
+    extensions.register(MyFakeExtension.name, MyFakeExtension)
+    extensions.register(YourFakeExtension.name, YourFakeExtension)
 
 
-def test_expand_extensions_simple(tmp_path, prepare_charmcraft_yaml, fake_extensions, emitter):
-    """Expand a charmcraft.yaml with a single extension."""
-    prepare_charmcraft_yaml(
-        dedent(
-            f"""
-            name: test-charm-name
-            type: charm
-            summary: test-summary
-            description: test-description
-            extensions: [{TestExtension.name}]
-            """
-        )
-    )
-
-    config = load(tmp_path)
-    cmd = ExpandExtensionsCommand(config)
-    cmd.run([])
+def test_expand_extensions_simple(fake_extensions, emitter):
+    """List extensions"""
+    cmd = ListExtensionsCommand(None)
+    cmd.run(argparse.Namespace(format=None))
     emitter.assert_message(
         dedent(
             """\
-            analysis:
-              ignore:
-                attributes: []
-                linters: []
-            charmhub:
-              api-url: https://api.charmhub.io
-              registry-url: https://registry.jujucharms.com
-              storage-url: https://storage.snapcraftcontent.com
-            description: test-description
-            name: test-charm-name
-            parts: {}
-            summary: test-summary
-            terms:
-            - https://example.com/test
-            type: charm
-            """
+            Extension name    Supported bases    Experimental bases
+            ----------------  -----------------  --------------------
+            test-extension    ubuntu@22.04
+            test-extension-2  ubuntu@23.04"""
         )
     )

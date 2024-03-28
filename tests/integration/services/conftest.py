@@ -17,36 +17,19 @@
 import pytest
 
 from charmcraft import services
-from charmcraft.application.main import APP_METADATA
+from charmcraft.application.main import APP_METADATA, Charmcraft
 
 
 @pytest.fixture()
 def service_factory(fs, fake_path, simple_charm) -> services.CharmcraftServiceFactory:
     fake_project_dir = fake_path / "project"
     fake_project_dir.mkdir()
+
     factory = services.CharmcraftServiceFactory(app=APP_METADATA)
 
-    factory.set_kwargs(
-        "package",
-        project_dir=fake_project_dir,
-    )
-    factory.set_kwargs("analysis")
+    app = Charmcraft(app=APP_METADATA, services=factory)
 
-    factory.set_kwargs(
-        "lifecycle",
-        cache_dir=fake_path / "cache",
-        work_dir=fake_project_dir,
-        build_for=None,
-    )
-    factory.set_kwargs(
-        "provider",
-        work_dir=fake_project_dir,
-    )
-    factory.set_kwargs(
-        "package",
-        project_dir=fake_project_dir,
-        platform=None,
-    )
+    app._configure_services(provider_name=None)
 
     factory.project = simple_charm
 

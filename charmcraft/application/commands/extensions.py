@@ -84,6 +84,10 @@ class ExpandExtensionsCommand(base.CharmcraftCommand):
     )
     always_load_project = True
 
+    def fill_parser(self, parser) -> None:
+        """Fill in the parser for this command."""
+        super().fill_parser(parser)
+
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Print the project's specification with the extensions expanded."""
         emit.message(utils.dump_yaml(self._services.project.marshal()))

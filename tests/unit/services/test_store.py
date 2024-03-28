@@ -51,7 +51,7 @@ def test_user_agent(store):
 @pytest.mark.parametrize("release", ["10", "11", "12"])
 @pytest.mark.parametrize("machine", ["x86_64", "arm64", "riscv64"])
 @pytest.mark.parametrize("python", ["CPython", "PyPy"])
-@pytest.mark.parametrize("python_version", ["3.10", "3.11"])
+@pytest.mark.parametrize("python_version", ["3.10", "3.12"])
 def test_ua_system_info_non_linux(
     monkeypatch, store, system, release, machine, python, python_version
 ):
@@ -66,7 +66,7 @@ def test_ua_system_info_non_linux(
 
 @pytest.mark.parametrize("machine", ["x86_64", "arm64", "riscv64"])
 @pytest.mark.parametrize("python", ["CPython", "PyPy"])
-@pytest.mark.parametrize("python_version", ["3.10", "3.11"])
+@pytest.mark.parametrize("python_version", ["3.10", "3.12"])
 @pytest.mark.parametrize("distro_name", ["Ubuntu", "Debian", "Something"])
 @pytest.mark.parametrize("distro_version", ["1", "24.04", "version"])
 def test_ua_system_info_linux(

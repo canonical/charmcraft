@@ -21,6 +21,8 @@ import os
 
 from craft_application import services
 
+from charmcraft.const import EXPERIMENTAL_EXTENSIONS_ENV_VAR
+
 
 class ProviderService(services.ProviderService):
     """Business logic for getting providers."""
@@ -30,6 +32,6 @@ class ProviderService(services.ProviderService):
         self.environment["CHARMCRAFT_MANAGED_MODE"] = "1"
 
         # Pass-through host environment that target may need.
-        for env_key in ["http_proxy", "https_proxy", "no_proxy"]:
+        for env_key in ["http_proxy", "https_proxy", "no_proxy", EXPERIMENTAL_EXTENSIONS_ENV_VAR]:
             if env_key in os.environ:
                 self.environment[env_key] = os.environ[env_key]

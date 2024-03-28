@@ -26,10 +26,10 @@ bases:
     - arm64
 - build-on:
   - name: ubuntu
-    channel: '24.04'
+    channel: '20.04'
   run-on:
   - name: ubuntu
-    channel: '24.04'
+    channel: '20.04'
     architectures:
     - amd64
     - arm64

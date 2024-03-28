@@ -13,8 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
-
+import sys
 from textwrap import dedent
 from typing import Any
 
@@ -22,7 +21,6 @@ import pytest
 from overrides import override
 
 from charmcraft import extensions
-from charmcraft.commands.extensions import ListExtensionsCommand
 from tests.extensions.test_extensions import FakeExtension
 
 
@@ -38,34 +36,51 @@ class TestExtension(FakeExtension):
         return {"terms": ["https://example.com/test"]}
 
 
-class TestExtension2(FakeExtension):
-    """A fake test Extension that has complete behavior"""
-
-    name = "test-extension-2"
-    bases = [("ubuntu", "23.04")]
-
-    @override
-    def get_root_snippet(self) -> dict[str, Any]:
-        """Return the root snippet to apply."""
-        return {"terms": ["https://example.com/test2"]}
-
-
 @pytest.fixture()
 def fake_extensions(stub_extensions):
     extensions.register(TestExtension.name, TestExtension)
-    extensions.register(TestExtension2.name, TestExtension2)
 
 
-def test_expand_extensions_simple(fake_extensions, emitter):
-    """List extensions"""
-    cmd = ListExtensionsCommand(None)
-    cmd.run([])
-    emitter.assert_message(
-        dedent(
-            """\
-            Extension name    Supported bases
-            ----------------  -----------------
-            test-extension    'ubuntu 22.04'
-            test-extension-2  'ubuntu 23.04'"""
+@pytest.mark.parametrize(
+    ("charmcraft_yaml", "expected"),
+    [
+        (
+            dedent(
+                f"""
+                name: test-charm-name
+                type: charm
+                summary: test-summary
+                description: test-description
+                extensions: [{TestExtension.name}]
+                base: ubuntu@22.04
+                platforms:
+                  amd64:
+                """
+            ),
+            dedent(
+                """\
+                name: test-charm-name
+                summary: test-summary
+                description: test-description
+                base: ubuntu@22.04
+                platforms:
+                  amd64: null
+                parts: {}
+                type: charm
+                terms:
+                - https://example.com/test
+                """
+            ),
         )
-    )
+    ],
+)
+def test_expand_extensions_simple(
+    monkeypatch, new_path, app, fake_extensions, emitter, charmcraft_yaml, expected
+):
+    """Expand a charmcraft.yaml with a single extension."""
+    (new_path / "charmcraft.yaml").write_text(charmcraft_yaml)
+    monkeypatch.setattr(sys, "argv", ["charmcraft", "expand-extensions"])
+
+    app.run()
+
+    emitter.assert_message(expected)

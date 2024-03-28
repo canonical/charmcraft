@@ -20,6 +20,7 @@ import ast
 import os
 import pathlib
 import shlex
+import typing
 from collections.abc import Generator
 from typing import final
 
@@ -376,6 +377,106 @@ class JujuConfig(Linter):
         return self.Result.OK
 
 
+class NamingConventions(Linter):
+    """Check that charm follows naming conventions.
+
+    More information can be found at https://juju.is/docs/sdk/styleguide#heading--naming.
+    """
+
+    name = "naming-conventions"
+    url = "https://juju.is/docs/sdk/styleguide#heading--naming"
+
+    exception_result = LintResult.WARNING
+
+    def __init__(self):
+        self.text = ""
+
+    @staticmethod
+    def check_naming_convention(names: typing.Iterable[str], scope: str) -> str | None:
+        """Check adherence to naming convention.
+
+        :returns: string with warning if present, otherwise None
+        """
+        snake_keys = [key for key in names if "_" in key]
+
+        if snake_keys:
+            hyphen_keys = [key for key in names if "-" in key]
+
+            if hyphen_keys:
+                return (
+                    f"Some {scope} ({', '.join(snake_keys)}) are in snake case, "
+                    f"while others  ({', '.join(hyphen_keys)}) are with hyphens."
+                )
+            else:
+                return (
+                    f"Some {scope} ({', '.join(snake_keys)}) are using "
+                    "snake case naming convention."
+                )
+
+        return None
+
+    @staticmethod
+    def _config_options_check(config_file: pathlib.Path) -> list[str]:
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        warnings = []
+
+        if not config_file.exists():
+            return warnings
+
+        with config_file.open("rt", encoding="utf8") as fh:
+            options = content.get("options", {}) if (content := yaml.safe_load(fh)) else {}
+
+        if check := NamingConventions.check_naming_convention(options.keys(), "config-options"):
+            warnings.append(check)
+
+        return warnings
+
+    @staticmethod
+    def _actions_check(action_file: pathlib.Path) -> list[str]:
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        warnings = []
+
+        if not action_file.exists():
+            return warnings
+
+        # This is safe as the compliance with YAML is done in the JujuConfig linter
+        with action_file.open("rt", encoding="utf8") as fh:
+            if content := yaml.safe_load(fh):
+                actions_names = list(dict(content).keys())
+            else:
+                actions_names = []
+
+        if check := NamingConventions.check_naming_convention(actions_names, "actions"):
+            warnings.append(check)
+
+        actions_params = [
+            param
+            for action_name in actions_names
+            if isinstance(content[action_name], dict)
+            for param in content.get(action_name, {}).get("params", [])
+        ]
+
+        if check := NamingConventions.check_naming_convention(actions_params, "action params"):
+            warnings.append(check)
+
+        return warnings
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        # Check naming convention on config options
+
+        warnings = NamingConventions._config_options_check(
+            basedir / const.JUJU_CONFIG_FILENAME
+        ) + NamingConventions._actions_check(basedir / const.JUJU_ACTIONS_FILENAME)
+
+        if warnings:
+            all_warning_string = "\n".join(warnings)
+            self.text = f"Naming conventions breaks:\n{all_warning_string}"
+            return self.exception_result
+
+        return self.Result.OK
+
+
 class Entrypoint(Linter):
     """Check the entrypoint is correct.
 
@@ -414,6 +515,57 @@ class Entrypoint(Linter):
         return self.Result.OK
 
 
+class AdditionalFiles(Linter):
+    """Check that the charm does not contain any additional files in the prime directory.
+
+    A few generated files and basic charm files are ignored.
+    """
+
+    name = "additional-files"
+    text = "No additional files found in the charm."
+    url = "https://juju.is/docs/sdk/include-extra-files-in-a-charm"
+
+    IGNORE_FILES: set[pathlib.Path] = {
+        pathlib.Path(f)
+        for f in (
+            {const.BUNDLE_FILENAME, const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
+            | const.CHARM_MANDATORY_FILES
+            | const.CHARM_OPTIONAL_FILES
+        )
+    }
+
+    def _check_additional_files(self, stage_dir: pathlib.Path, prime_dir: pathlib.Path) -> str:
+        """Compare the staged files with the prime files."""
+        errors: list[str] = []
+        stage_dir = stage_dir.absolute()
+        prime_dir = prime_dir.absolute()
+
+        stage_files = {f.relative_to(stage_dir) for f in stage_dir.rglob("*")}
+        prime_files = {f.relative_to(prime_dir) for f in prime_dir.rglob("*")}
+
+        prime_files = prime_files - self.IGNORE_FILES
+
+        for prime_file in prime_files:
+            if prime_file not in stage_files:
+                errors.append(f"File '{prime_file}' is not staged but in the charm.")
+
+        if errors:
+            self.text = "Error: Additional files found in the charm:\n" + "\n".join(errors)
+            return self.Result.ERROR
+
+        return self.Result.OK
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the proper verifications."""
+        stage_dir = basedir.parent / "stage"
+        if not stage_dir.exists() or not stage_dir.is_dir():
+            # Does not work without the build environment
+            self.text = "Additional files check not applicable without a build environment."
+            return self.Result.NONAPPLICABLE
+
+        return self._check_additional_files(stage_dir, basedir)
+
+
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
 CHECKERS: list[type[BaseChecker]] = [
@@ -421,8 +573,10 @@ CHECKERS: list[type[BaseChecker]] = [
     JujuActions,
     JujuConfig,
     JujuMetadata,
+    NamingConventions,
     Framework,
     Entrypoint,
+    AdditionalFiles,
 ]
 
 
@@ -466,7 +620,7 @@ def analyze(
                 check_type=checker.check_type,
                 name=checker.name,
                 url=checker.url,
-                text=checker.text,
+                text=checker.text or "n/a",
                 result=result,
             )
         )

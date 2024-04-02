@@ -1137,6 +1137,7 @@ def test_load_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
                   type: boolean
                 test-secret:
                   default: secret:co1s9mnmp25c762drvtg
+                  type: secret
             """
         )
     )

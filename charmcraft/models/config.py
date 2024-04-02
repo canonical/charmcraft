@@ -66,9 +66,7 @@ class JujuSecretOption(_BaseJujuOption, frozen=True):
     # that anyone would know what the secret ID (specific to
     # the deployment in a model) is at the time that they are
     # writing the config, but included for completeness.
-    default: (
-        Annotated[str, pydantic.StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")] | None
-    ) = None
+    default: Annotated[str, pydantic.constr(regex=r"^secret:[a-z0-9]{20}$")] | None = None
 
 
 JujuOption = Annotated[

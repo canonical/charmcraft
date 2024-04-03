@@ -22,6 +22,8 @@ import pytest
 from charmcraft import const, errors, preprocess
 
 BASIC_BUNDLE = {"type": "bundle", "parts": {"bundle": {"plugin": "bundle", "source": "."}}}
+BASIC_CHARM = {"type": "charm", "parts": {"charm": {"plugin": "charm", "source": "."}}}
+BASIC_BASES_CHARM = {**BASIC_CHARM, "bases": [{"name": "ubuntu", "channel": "22.04"}]}
 
 
 @pytest.mark.parametrize(
@@ -30,6 +32,8 @@ BASIC_BUNDLE = {"type": "bundle", "parts": {"bundle": {"plugin": "bundle", "sour
         pytest.param({}, {}, id="no-type"),
         pytest.param({"type": "bundle"}, BASIC_BUNDLE, id="empty-bundle"),
         pytest.param(BASIC_BUNDLE.copy(), BASIC_BUNDLE, id="prefilled-bundle"),
+        pytest.param({"type": "charm"}, {"type": "charm"}, id="empty-charm"),
+        pytest.param(BASIC_CHARM.copy(), BASIC_CHARM, id="empty-charm"),
     ],
 )
 def test_add_default_parts_correct(yaml_data, expected):

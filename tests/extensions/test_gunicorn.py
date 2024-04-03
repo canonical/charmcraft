@@ -21,8 +21,7 @@ from charmcraft.extensions.gunicorn import FlaskFramework
 
 
 @pytest.fixture(name="flask_input_yaml")
-def flask_input_yaml_fixture(monkeypatch, tmp_path):
-    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+def flask_input_yaml_fixture(tmp_path):
     return {
         "type": "charm",
         "name": "test-flask",

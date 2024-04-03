@@ -55,7 +55,7 @@ class _GunicornBase(Extension):
     @override
     def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
-        return True
+        return False
 
     framework: str
     actions: dict

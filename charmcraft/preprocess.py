@@ -32,13 +32,16 @@ def add_default_parts(yaml_data: dict[str, Any]) -> None:
     :param yaml_data: The raw YAML dictionary of the project.
     :returns: The same dictionary passed in, with necessary mutations.
     """
-    if (yaml_data.get("type")) != "bundle":
-        return
-    parts = yaml_data.setdefault("parts", {})
-    if parts:  # Only operate if there aren't any parts declared.
+    if "parts" in yaml_data:  # Only operate if there isn't a parts key
         return
 
-    parts["bundle"] = {"plugin": "bundle", "source": "."}
+    if yaml_data.get("type") == "bundle":
+        yaml_data["parts"] = {"bundle": {"plugin": "bundle", "source": "."}}
+    elif yaml_data.get("type") == "charm":
+        # Only for backwards compatibility for bases charms.
+        # Platforms charms expect parts to be explicit.
+        if "bases" in yaml_data:
+            yaml_data["parts"] = {"charm": {"plugin": "charm", "source": "."}}
 
 
 def add_metadata(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:

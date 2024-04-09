@@ -678,8 +678,8 @@ def test_devel_bases(monkeypatch, base):
     monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
 
     with pytest.raises(
-        pydantic.ValidationError,
-        match=r"requires a build-base \(recommended: 'build-base: ubuntu@devel'\)",
+        CraftValidationError,
+        match=r"build-base must be 'devel' when base is 'ubuntu@24.04'",
     ):
         project.PlatformCharm(
             type="charm",

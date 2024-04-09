@@ -30,7 +30,7 @@ from craft_application.util import get_host_architecture, safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
 from pydantic import dataclasses
-from typing_extensions import Self, TypedDict
+from typing_extensions import Self, TypedDict, override
 
 from charmcraft import const, preprocess, utils
 from charmcraft.const import (
@@ -602,15 +602,12 @@ class PlatformCharm(CharmcraftProject):
             return True
         return False
 
-    @pydantic.validator("build_base", always=True)
-    def _validate_dev_base_needs_build_base(
-        cls, build_base: str | None, values: dict[str, Any]
-    ) -> str | None:
-        if not build_base and (base := values["base"]) in const.DEVEL_BASE_STRINGS:
-            raise ValueError(
-                f"Base {base} requires a build-base (recommended: 'build-base: ubuntu@devel')"
-            )
-        return build_base
+    @override
+    @classmethod
+    def _providers_base(cls, base: str | None) -> bases.BaseAlias | None:
+        """Get a BaseAlias from charmcraft's base."""
+        name, channel = base.split("@")
+        return bases.get_base_alias((name, channel))
 
 
 Charm = BasesCharm | PlatformCharm

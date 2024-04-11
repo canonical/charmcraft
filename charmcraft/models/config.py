@@ -82,4 +82,35 @@ class JujuConfig(ModelConfigDefaults, frozen=True):
     and: https://juju.is/docs/sdk/config-yaml
     """
 
+<<<<<<< HEAD
     options: dict[str, JujuOption] | None
+=======
+    options: Optional[Dict[str, Dict[str, Any]]]
+
+    @pydantic.validator("options", pre=True)
+    def validate_actions(cls, options):
+        """Verify options section."""
+        if options is None:
+            return None
+        if not isinstance(options, dict):
+            raise ValueError("'options' is not a dictionary")
+        for name, option in options.items():
+            if not isinstance(option, dict):
+                raise ValueError(f"'{name}' is not a dictionary")
+
+            option_keys = set(option.keys())
+            if not option_keys.issubset({"description", "type", "default"}):
+                invalid_keys = option_keys - {"description", "type", "default"}
+                raise ValueError(f"'{name}' has an invalid key(s): {invalid_keys}")
+
+            if "type" not in option:
+                raise ValueError(f"'{name}' is missing a type")
+
+            if option["type"] not in ["string", "int", "float", "boolean", "secret"]:
+                raise ValueError(
+                    f"'{option}' has an invalid type '{option['type']}', "
+                    "must be one of: string, int, float, boolean, secret"
+                )
+
+        return options
+>>>>>>> 0f7a56d (feat(config): support `type:secret` in config.options (#1623))

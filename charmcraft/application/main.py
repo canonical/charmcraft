@@ -64,16 +64,17 @@ class Charmcraft(Application):
 
     def _check_deprecated(self, yaml_data: dict[str, Any]) -> None:
         """Check for deprecated fields in the yaml_data."""
-        for part in yaml_data.get("parts", {}):
-            if (part in ("charm", "reactive", "bundle")) or (
-                yaml_data["parts"][part].get("plugin", None) in ("charm", "reactive", "bundle")
-            ):
-                if "prime" in yaml_data.get("parts", {}).get(part, {}):
-                    craft_cli.emit.progress(
-                        "Warning: use 'prime' in charm part is deprecated and no longer works, "
-                        "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
-                        permanent=True,
-                    )
+        if "parts" in yaml_data:
+            for k, v in yaml_data["parts"].items():
+                if (k in ("charm", "reactive", "bundle")) or (
+                    v.get("plugin", None) in ("charm", "reactive", "bundle")
+                ):
+                    if "prime" in v:
+                        craft_cli.emit.progress(
+                            "Warning: use 'prime' in charm part is deprecated and no longer works, "
+                            "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
+                            permanent=True,
+                        )
 
     def _extra_yaml_transform(
         self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None

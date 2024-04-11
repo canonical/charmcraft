@@ -65,6 +65,12 @@ class Charmcraft(Application):
     def _extra_yaml_transform(
         self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
     ) -> dict[str, Any]:
+        if yaml_data.get("parts", {}).get("charm", {}).get("prime", None):
+            craft_cli.emit.progress(
+                "Warning: use 'prime' in charm part is deprecated and no longer works, "
+                "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
+                permanent=True,
+            )
         # Extensions get applied on as close as possible to what the user provided.
         yaml_data = extensions.apply_extensions(self.project_dir, yaml_data.copy())
 

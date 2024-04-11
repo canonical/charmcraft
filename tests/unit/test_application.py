@@ -125,3 +125,24 @@ def test_extra_yaml_transform_failure(
         app._extra_yaml_transform(charmcraft_dict, build_for=None, build_on="amd64")
 
     assert exc_info.value.args[0] == message
+
+
+def test_deprecated_prime_warning(
+    emitter,
+    service_factory,
+):
+    charmcraft_dict = {
+        "name": "test-charm",
+        "summary": "A test charm",
+        "description": "A charm for testing!",
+        "parts": {"charm": {"prime": ["something"]}},
+    }
+    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
+
+    app._extra_yaml_transform(charmcraft_dict, build_for=None, build_on="amd64")
+
+    emitter.assert_progress(
+        "Warning: use 'prime' in charm part is deprecated and no longer works, "
+        "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
+        permanent=True,
+    )

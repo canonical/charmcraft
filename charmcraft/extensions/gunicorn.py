@@ -168,6 +168,12 @@ class _GunicornBase(Extension):
 class FlaskFramework(_GunicornBase):
     """Extension for 12-factor Flask applications."""
 
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
+
     framework = "flask"
     actions = {
         "rotate-secret-key": {

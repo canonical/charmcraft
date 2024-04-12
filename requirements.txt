@@ -32,7 +32,7 @@ oauthlib==3.2.2
 overrides==7.7.0
 packaging==24.0
 platformdirs==4.2.0
-protobuf==3.20.3
+protobuf==5.26.1
 pycparser==2.21
 pydantic==1.10.14
 pydantic-yaml==0.11.2

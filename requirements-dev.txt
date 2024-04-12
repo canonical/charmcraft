@@ -18,7 +18,7 @@ freezegun==1.4.0
 httplib2==0.22.0
 humanize==4.9.0
 hypothesis==6.99.6
-idna==3.6
+idna==3.7
 importlib_metadata==7.0.2
 iniconfig==2.0.0
 jaraco.classes==3.3.1

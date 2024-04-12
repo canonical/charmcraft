@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -673,23 +673,18 @@ def test_instantiate_bases_charm_error(
         project.BasesCharm(**values)
 
 
-@pytest.mark.parametrize("base", ["ubuntu@24.04"])
-def test_devel_bases(monkeypatch, base):
-    monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
-
-    with pytest.raises(
-        CraftValidationError,
-        match=r"build-base must be 'devel' when base is 'ubuntu@24.04'",
-    ):
-        project.PlatformCharm(
-            type="charm",
-            name="test-charm",
-            summary="",
-            description="",
-            base=base,
-            platforms={"amd64": None},
-            parts={"charm": {"plugin": "charm"}},
-        )
+@pytest.mark.parametrize(
+    ("base", "expected_base"),
+    [
+        (None, None),
+        *[
+            (f"{base.name}@{base.version}", bases.get_base_alias(base))
+            for base in const.SUPPORTED_BASES
+        ],
+    ],
+)
+def test_provider_base(base, expected_base):
+    assert project.PlatformCharm._providers_base(base) == expected_base
 
 
 @pytest.mark.parametrize(

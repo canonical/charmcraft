@@ -491,6 +491,16 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
         return process_part_config(item)
 
+    @override
+    @classmethod
+    def _providers_base(cls, base: str | None) -> bases.BaseAlias | None:
+        """Get a BaseAlias from charmcraft's base."""
+        if not base:
+            return None
+
+        name, channel = base.split("@")
+        return bases.get_base_alias((name, channel))
+
 
 class BasesCharm(CharmcraftProject):
     """Model for defining a charm."""
@@ -601,13 +611,6 @@ class PlatformCharm(CharmcraftProject):
         if base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"}):
             return True
         return False
-
-    @override
-    @classmethod
-    def _providers_base(cls, base: str | None) -> bases.BaseAlias | None:
-        """Get a BaseAlias from charmcraft's base."""
-        name, channel = base.split("@")
-        return bases.get_base_alias((name, channel))
 
 
 Charm = BasesCharm | PlatformCharm

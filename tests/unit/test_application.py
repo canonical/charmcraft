@@ -135,7 +135,7 @@ def test_extra_yaml_transform_failure(
                 "name": "test-charm",
                 "summary": "A test charm",
                 "description": "A charm for testing!",
-                "parts": {"charm": {"plugin": "charm", "prime": ["something"]}},
+                "parts": {"charm": {"prime": ["something"]}},
             }
         ),
         (
@@ -143,7 +143,7 @@ def test_extra_yaml_transform_failure(
                 "name": "test-charm",
                 "summary": "A test charm",
                 "description": "A charm for testing!",
-                "parts": {"bundle": {"plugin": "bundle", "prime": ["something"]}},
+                "parts": {"bundle": {"prime": ["something"]}},
             }
         ),
         (
@@ -151,7 +151,7 @@ def test_extra_yaml_transform_failure(
                 "name": "test-charm",
                 "summary": "A test charm",
                 "description": "A charm for testing!",
-                "parts": {"reactive": {"plugin": "reactive", "prime": ["something"]}},
+                "parts": {"reactive": {"prime": ["something"]}},
             }
         ),
         (
@@ -190,7 +190,7 @@ def test_deprecated_prime_warning(
     app._extra_yaml_transform(charmcraft_dict, build_for=None, build_on="amd64")
 
     emitter.assert_progress(
-        "Warning: use 'prime' in charm part is deprecated and no longer works, "
+        "Warning: use of 'prime' in a charm part is deprecated and no longer works, "
         "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
         permanent=True,
     )

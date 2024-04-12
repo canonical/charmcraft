@@ -71,7 +71,8 @@ class Charmcraft(Application):
                 ):
                     if "prime" in v:
                         craft_cli.emit.progress(
-                            "Warning: use 'prime' in charm part is deprecated and no longer works, "
+                            "Warning: use of 'prime' in a charm part "
+                            "is deprecated and no longer works, "
                             "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
                             permanent=True,
                         )

@@ -46,6 +46,7 @@ architectures:
   - build-on: arm64
   - build-on: armhf
   - build-on: amd64
+  - build-on: riscv64
 
 # https://github.com/snapcore/snapcraft/issues/4187
 environment:

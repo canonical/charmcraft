@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import pathlib
+import sys
 import textwrap
 from typing import TYPE_CHECKING, cast
 
@@ -111,9 +112,16 @@ class PackCommand(lifecycle.PackCommand):
             choices=["json"],
             help="Produce a machine-readable format (currently only json)",
         )
+        parser.add_argument(
+            "--project-dir",
+            "-p",
+            type=pathlib.Path,
+            default=pathlib.Path.cwd(),
+            help="Specify the project's directory (defaults to current)",
+        )
 
-    @staticmethod
     @override
+    @staticmethod
     def _should_add_shell_args() -> bool:
         return True
 
@@ -160,6 +168,9 @@ class PackCommand(lifecycle.PackCommand):
         """
         project_dir = pathlib.Path(getattr(parsed_args, "project_dir", "."))
         charmcraft_yaml = utils.load_yaml(project_dir / "charmcraft.yaml")
-        if charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
+        # Always use a runner on non-Linux platforms.
+        # Craft-parts is not designed to work on non-posix platforms, and most
+        # notably here, the bundle plugin doesn't work on Windows.
+        if sys.platform == "linux" and charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
             return False
         return super().run_managed(parsed_args)

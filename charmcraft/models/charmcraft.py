@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ from typing import Any, Literal, cast
 
 import pydantic
 from craft_cli import CraftError
+from typing_extensions import Self
 
 from charmcraft import const, parts
 from charmcraft.extensions import apply_extensions
@@ -41,6 +42,7 @@ from charmcraft.utils import get_host_architecture
 class CharmhubConfig(
     ModelConfigDefaults,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
     """Definition of Charmhub endpoint configuration."""
 
@@ -49,17 +51,28 @@ class CharmhubConfig(
     registry_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://registry.jujucharms.com")
 
 
-class Base(ModelConfigDefaults):
+class Base(ModelConfigDefaults, frozen=True):
     """Represents a base."""
 
     name: pydantic.StrictStr
     channel: pydantic.StrictStr
     architectures: list[pydantic.StrictStr] = [get_host_architecture()]
 
+    @classmethod
+    def from_str_and_arch(cls, base_str: str, architectures: list[str]) -> Self:
+        """Get a Base from a base string and list of architectures.
+
+        :param base_str: A base string along the lines of "<name>@<channel>"
+        :param architectures: A list of architectures (or ["all"])
+        """
+        name, _, channel = base_str.partition("@")
+        return cls(name=name, channel=channel, architectures=architectures)
+
 
 class BasesConfiguration(
     ModelConfigDefaults,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
     """Definition of build-on/run-on combinations."""
 
@@ -67,7 +80,7 @@ class BasesConfiguration(
     run_on: list[Base]
 
 
-class Project(ModelConfigDefaults):
+class Project(ModelConfigDefaults, frozen=True):
     """Internal-only project configuration."""
 
     # do not verify that `dirpath` is a valid existing directory; it's used externally as a dir
@@ -80,20 +93,20 @@ class Project(ModelConfigDefaults):
     started_at: datetime.datetime
 
 
-class Ignore(ModelConfigDefaults):
+class Ignore(ModelConfigDefaults, frozen=True):
     """Definition of `analysis.ignore` configuration."""
 
     attributes: list[AttributeName] = []
     linters: list[LinterName] = []
 
 
-class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
+class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True, frozen=True):
     """Definition of `analysis` configuration."""
 
     ignore: Ignore = Ignore()
 
 
-class Links(ModelConfigDefaults):
+class Links(ModelConfigDefaults, frozen=True):
     """Definition of `links` in metadata."""
 
     contact: pydantic.StrictStr | list[pydantic.StrictStr] | None
@@ -107,6 +120,7 @@ class CharmcraftConfig(
     ModelConfigDefaults,
     validate_all=False,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
     """Definition of charmcraft.yaml configuration."""
 
@@ -278,7 +292,9 @@ class CharmcraftConfig(
             base["run-on"] = [converted_base.dict()]
 
     @classmethod
-    def unmarshal(cls, obj: dict[str, Any], project: Project):
+    def unmarshal(  # pyright: ignore[reportIncompatibleMethodOverride]
+        cls, obj: dict[str, Any], project: Project
+    ):
         """Unmarshal object with necessary translations and error handling.
 
         (1) Perform any necessary translations.
@@ -348,7 +364,9 @@ class CharmcraftConfig(
             raise CraftError(format_pydantic_errors(error.errors()))
 
     @classmethod
-    def schema(cls, **kwargs) -> dict[str, Any]:
+    def schema(  # pyright: ignore[reportIncompatibleMethodOverride]
+        cls, **kwargs
+    ) -> dict[str, Any]:
         """Perform any schema fixups required to hide internal details."""
         schema = super().schema(**kwargs)
 

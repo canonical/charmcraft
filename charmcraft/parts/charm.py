@@ -22,6 +22,7 @@ import sys
 from contextlib import suppress
 from typing import Any, cast
 
+import overrides
 import pydantic
 from craft_parts import Step, callbacks, plugins
 from craft_parts.errors import OsReleaseIdError, OsReleaseVersionIdError
@@ -201,14 +202,13 @@ class CharmPlugin(plugins.Plugin):
         dependency resolution will be used, requiring all dependencies, including
         library dependencies, to be defined in provided requirements files.
 
-    Extra files to be included in the charm payload must be listed under
-    the ``prime`` file filter.
+    Extra files to be included in the charm payload must use the ``dump`` plugin.
     """
 
     properties_class = CharmPluginProperties
 
-    @classmethod
-    def get_build_snaps(cls) -> set[str]:
+    @overrides.override
+    def get_build_snaps(self) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
 
@@ -265,17 +265,28 @@ class CharmPlugin(plugins.Plugin):
 
     def get_build_environment(self) -> dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
+        environment = {
+            # Cryptography fails to load OpenSSL legacy provider in some circumstances.
+            # Since we don't need the legacy provider, this works around that bug.
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"
+        }
         os_special_paths = self._get_os_special_priority_paths()
         if os_special_paths:
-            return {"PATH": os_special_paths + ":${PATH}"}
+            environment["PATH"] = os_special_paths + ":${PATH}"
 
-        return {}
+        return environment
 
     def get_build_commands(self) -> list[str]:
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
 
-        build_env = {"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+        build_env = {
+            "LANG": "C.UTF-8",
+            "LC_ALL": "C.UTF-8",
+            # Cryptography fails to load OpenSSL legacy provider in some circumstances.
+            # Since we don't need the legacy provider, this works around that bug.
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true",
+        }
         for key in [
             "PATH",
             "SNAP",
@@ -345,7 +356,7 @@ class CharmPlugin(plugins.Plugin):
 
                 # remove base tools if defined in charm_python_packages
                 for pkg in options.charm_python_packages:
-                    pkg = re.split("[<=>]", pkg, 1)[0].strip()
+                    pkg = re.split("[<=>]", pkg, maxsplit=1)[0].strip()
                     if pkg in base_tools:
                         base_tools.remove(pkg)
 

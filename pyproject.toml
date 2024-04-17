@@ -3,10 +3,10 @@ name = "charmcraft"
 description = "The main tool to build, upload, and develop in general the Juju charms."
 dynamic = ["version", "readme"]
 dependencies = [
-    "craft-application~=1.1",
+    "craft-application~=2.0",
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
-    "craft-providers",
+    "craft-providers>=1.23.0",
     "craft-store>=2.4",
     "distro>=1.3.0",
     "humanize>=2.6.0",
@@ -35,6 +35,7 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.10"
 
@@ -63,9 +64,9 @@ lint = [
 ]
 types = [
     "mypy[reports]~=1.5",
-    "pyright==1.1.350",
+    "pyright==1.1.354",
     "types-python-dateutil",
-    "types-requests<2.31.0.7",  # Frozen until we can get urllib3 v2
+    "types-requests<2.31.0.20240312",  # Frozen until we can get urllib3 v2
     "types-setuptools",
     "types-tabulate",
     "types-urllib3",
@@ -148,32 +149,22 @@ ignore = [
 ]
 include = [
     "charmcraft",
-    # "tests",  # TODO: enable tests
+    "tests/unit",
+    "tests/integration",
 ]
 analyzeUnannotatedFunctions = false
 reportArgumentType = "warning"
 reportAttributeAccessIssue = "warning"
-reportGeneralTypeIssues = "warning"
-reportIncompatibleMethodOverride = "warning"
 reportIncompatibleVariableOverride = "warning"
-reportMissingParameterType = "warning"
-reportMissingTypeArgument = "warning"
 reportOptionalMemberAccess = "warning"
-reportReturnType = "warning"
-reportUnknownArgumentType = "warning"
-reportUnknownLambdaType = "warning"
-reportUnknownMemberType = "warning"
-reportUnknownParameterType = "warning"
-reportUnknownVariableType = "warning"
-reportUnnecessaryIsInstance = "warning"
-reportUnsupportedDunderAll = "warning"
-reportUntypedFunctionDecorator = "warning"
 
 
 [tool.mypy]
 python_version = "3.10"
 packages = [
     "charmcraft",
+    "tests.unit",
+    "tests.integration",
 ]
 plugins = ["pydantic.mypy"]
 exclude = [
@@ -200,12 +191,8 @@ module=[
     "charmcraft.commands.store",
     "charmcraft.store.registry",
     "charmcraft.store.store",
-    "charmcraft.config",
     "charmcraft.extensions._utils",
     "charmcraft.linters",
-    "charmcraft.models.actions",
-    "charmcraft.models.basic",
-    "charmcraft.models.config",
     "charmcraft.models.charmcraft",
     "charmcraft.package",
     "charmcraft.providers",
@@ -313,9 +300,7 @@ lint.ignore = [
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "ANN0", "ANN2",
     "ARG001", "ARG002", "ARG005",
-    "B034",
     "BLE",
-    "D417",
     "FBT",
     "N805", "N806",
     "PGH003",
@@ -326,7 +311,6 @@ lint.ignore = [
     "RET505", "RET506", "RET508",
     "S108", "S113", "S324", "S701",
     "SIM102",
-    "TRY004", "TRY200",
 ]
 
 [tool.ruff.lint.pep8-naming]
@@ -345,13 +329,8 @@ classmethod-decorators = ["pydantic.validator"]
 
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "A001", "A002",
-    "B007", "B015",
-    "D100",
-    "N802",
     "PT004", "PT012",
-    "PTH1",
     "S105", "S106",
-    "SIM105", "SIM115",
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.
 "__init__.py" = ["I001"]

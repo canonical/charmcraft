@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
+import overrides
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
@@ -107,7 +108,7 @@ class ReactivePlugin(plugins.Plugin):
     properties_class = ReactivePluginProperties
     validator_class = ReactivePluginEnvironmentValidator
 
-    @classmethod
+    @overrides.override
     def get_build_snaps(cls) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
@@ -118,7 +119,11 @@ class ReactivePlugin(plugins.Plugin):
 
     def get_build_environment(self) -> dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
-        return {}
+        return {
+            # Cryptography fails to load OpenSSL legacy provider in some circumstances.
+            # Since we don't need the legacy provider, this works around that bug.
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"
+        }
 
     def get_build_commands(self) -> list[str]:
         """Return a list of commands to run during the build step."""

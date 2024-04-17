@@ -21,7 +21,7 @@ import pydantic
 
 class ModelConfigDefaults(
     craft_application.models.CraftBaseModel,
-    frozen=True,
+    frozen=True,  # pyright: ignore[reportGeneralTypeIssues]
     validate_all=True,
     allow_population_by_field_name=False,
     alias_generator=pydantic.BaseConfig.alias_generator,

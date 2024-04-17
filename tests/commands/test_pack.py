@@ -843,7 +843,7 @@ def test_prime_extra_globstar(tmp_path, bundle_yaml, bundle_config):
         ("libs/fs.txt", False),
     )
 
-    for srcpath, expected in srcpaths:
+    for srcpath, _ in srcpaths:
         testfile = tmp_path / pathlib.Path(srcpath)
         testfile.parent.mkdir(parents=True, exist_ok=True)
         testfile.touch()
@@ -875,7 +875,7 @@ def test_prime_extra_globstar_specific_files(tmp_path, bundle_yaml, bundle_confi
         ("libs/fs.nop", False),
     )
 
-    for srcpath, expected in srcpaths:
+    for srcpath, _ in srcpaths:
         testfile = tmp_path / pathlib.Path(srcpath)
         testfile.parent.mkdir(parents=True, exist_ok=True)
         testfile.touch()

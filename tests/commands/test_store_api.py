@@ -1389,7 +1389,7 @@ def test_status_with_resources(client_mock, config):
     assert res2.resource_type == "file"
 
 
-def test_status_base_in_None(client_mock, config):
+def test_status_base_in_none(client_mock, config):
     """Support the case of base being None (may happen with bundles)."""
     client_mock.request_urlpath_json.return_value = {
         "channel-map": [
@@ -1433,7 +1433,7 @@ def test_status_base_in_None(client_mock, config):
     (cmap,) = channel_map
     assert cmap.base is None
     (rev,) = revisions
-    rev.bases == [None]
+    assert rev.bases == [None]
 
 
 # -- tests for library related functions

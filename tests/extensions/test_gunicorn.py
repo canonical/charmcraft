@@ -20,11 +20,6 @@ from charmcraft.extensions import apply_extensions
 from charmcraft.extensions.gunicorn import DjangoFramework, FlaskFramework
 
 
-@pytest.fixture(autouse=True)
-def enable_experimental_extensions(monkeypatch):
-    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
-
-
 def make_flask_input_yaml():
     return {
         "type": "charm",
@@ -42,10 +37,11 @@ def flask_input_yaml_fixture():
 
 
 @pytest.mark.parametrize(
-    ("input_yaml", "expected"),
+    ("input_yaml", "experimental", "expected"),
     [
         (
             make_flask_input_yaml(),
+            False,
             {
                 "actions": FlaskFramework.actions,
                 "assumes": ["k8s-api"],
@@ -87,6 +83,7 @@ def flask_input_yaml_fixture():
                 "bases": [{"name": "ubuntu", "channel": "22.04"}],
                 "extensions": ["django-framework"],
             },
+            True,
             {
                 "actions": DjangoFramework.actions,
                 "assumes": ["k8s-api"],
@@ -121,7 +118,10 @@ def flask_input_yaml_fixture():
         ),
     ],
 )
-def test_apply_extensions_correct(monkeypatch, tmp_path, input_yaml, expected):
+def test_apply_extensions_correct(monkeypatch, experimental, tmp_path, input_yaml, expected):
+    if experimental:
+        monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
     applied = apply_extensions(tmp_path, input_yaml)
     assert applied == expected
 

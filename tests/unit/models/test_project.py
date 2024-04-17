@@ -676,15 +676,19 @@ def test_instantiate_bases_charm_error(
 @pytest.mark.parametrize(
     ("base", "expected_base"),
     [
-        (None, None),
-        *[
-            (f"{base.name}@{base.version}", bases.get_base_alias(base))
-            for base in const.SUPPORTED_BASES
-        ],
+        (f"{base.name}@{base.version}", bases.get_base_alias(base))
+        for base in const.SUPPORTED_BASES
     ],
 )
 def test_provider_base(base, expected_base):
     assert project.PlatformCharm._providers_base(base) == expected_base
+
+
+def test_provider_base_error():
+    with pytest.raises(CraftValidationError) as raised:
+        project.PlatformCharm._providers_base("unknown")  # pylint: disable=protected-access
+
+    assert "Unknown base 'unknown'" in str(raised.value)
 
 
 @pytest.mark.parametrize(

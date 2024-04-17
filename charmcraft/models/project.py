@@ -29,6 +29,7 @@ from craft_application import errors, models
 from craft_application.util import get_host_architecture, safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
+from craft_providers.errors import BaseConfigurationError
 from pydantic import dataclasses
 from typing_extensions import Self, TypedDict, override
 
@@ -493,13 +494,20 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     @override
     @classmethod
-    def _providers_base(cls, base: str | None) -> bases.BaseAlias | None:
-        """Get a BaseAlias from charmcraft's base."""
-        if not base:
-            return None
+    def _providers_base(cls, base: str) -> bases.BaseAlias | None:
+        """Get a BaseAlias from charmcraft's base.
 
-        name, channel = base.split("@")
-        return bases.get_base_alias((name, channel))
+        :param base: The base name.
+
+        :returns: The BaseAlias for the base.
+
+        :raises CraftValidationError: If the project's base cannot be determined.
+        """
+        try:
+            name, channel = base.split("@")
+            return bases.get_base_alias((name, channel))
+        except (ValueError, BaseConfigurationError) as err:
+            raise errors.CraftValidationError(f"Unknown base {base!r}") from err
 
 
 class BasesCharm(CharmcraftProject):

@@ -168,12 +168,6 @@ class _GunicornBase(Extension):
 class FlaskFramework(_GunicornBase):
     """Extension for 12-factor Flask applications."""
 
-    @staticmethod
-    @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
-        """Check if the extension is in an experimental state."""
-        return False
-
     framework = "flask"
     actions = {
         "rotate-secret-key": {
@@ -211,6 +205,12 @@ class FlaskFramework(_GunicornBase):
             "description": "Set the secure attribute in the Flask application cookies. This configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable. Run `app.config.from_prefixed_env()` in your Flask application in order to receive this configuration.",
         },
     }
+
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
 
 
 class DjangoFramework(_GunicornBase):

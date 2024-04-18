@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Canonical Ltd.
+# Copyright 2020-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,22 +66,29 @@ Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories:
 
     .
-    ├── charmcraft.yaml        - Charm build configuration
-    ├── CONTRIBUTING.md        - Instructions for how to build and develop
-    │                             your charm
-    ├── LICENSE                - Your charm license, we recommend Apache 2
-    ├── pyproject.toml         - Configuration for testing, formatting and
-    │                             linting tools
-    ├── README.md              - Frontpage for your charmhub.io/charm/
-    ├── requirements.txt       - PyPI dependencies for your charm, with `ops`
+    ├── charmcraft.yaml            - Charm build configuration
+    ├── CONTRIBUTING.md            - Instructions for how to build and develop
+    │                                your charm
+    ├── LICENSE                    - Your charm license, we recommend Apache 2
+    ├── pyproject.toml             - Configuration for testing, formatting and
+    │                                linting tools
+    ├── README.md                  - Frontpage for your charmhub.io/charm/
+    ├── requirements.txt           - PyPI dependencies for your charm, with `ops`
     ├── src
-    │   └── charm.py           - Minimal operator using Python operator framework
+    │   └── charm.py               - Minimal operator using Python operator framework
     ├── tests
     │   ├── integration
-    │   │   └── test_charm.py  - Integration tests
+    │   │   └── test_charm.py      - Integration tests
+    │   ├── spread
+    │   │   ├── lib
+    │   │   │   └── test-helpers.sh
+    │   │   └── general
+    │   │       └── integration 
+    │   │           └── task.yaml  - Run integration tests in spread back-end
     │   └── unit
-    │       └── test_charm.py  - Unit tests
-    └── tox.ini                - Configuration for tox, the tool to run all tests
+    │       └── test_charm.py      - Unit tests
+    ├── spread.yaml                - Spread testing configuration file
+    └── tox.ini                    - Configuration for tox, the tool to run all tests
 
 You will need to edit at least charmcraft.yaml and README.md.
 
@@ -184,7 +191,7 @@ class InitCommand(base.CharmcraftCommand):
         template_directory = PROFILES[parsed_args.profile]
         env = get_templates_environment(template_directory)
 
-        executables = ["run_tests", "src/charm.py"]
+        executables = ["run_tests", "src/charm.py", "tests/spread/lib/tools/retry"]
         for template_name in env.list_templates():
             if not template_name.endswith(".j2"):
                 continue

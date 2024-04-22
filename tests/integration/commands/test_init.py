@@ -46,15 +46,33 @@ BASIC_INIT_FILES = frozenset(
         "pyproject.toml",
         "README.md",
         "requirements.txt",
+        "spread.yaml",
         "src",
         "src/charm.py",
         "tests",
         "tests/integration",
         "tests/integration/test_charm.py",
+        "tests/spread",
+        "tests/spread/lib",
+        "tests/spread/lib/cloud-init.yaml",
+        "tests/spread/lib/test-helpers.sh",
+        "tests/spread/general",
+        "tests/spread/general/integration",
+        "tests/spread/general/integration/task.yaml",
         "tests/unit",
         "tests/unit/test_charm.py",
         "tox.ini",
     )
+)
+BASIC_INIT_FILES_WITH_TOOLS = frozenset(
+    [p for p in BASIC_INIT_FILES]
+    + [
+        pathlib.Path(p)
+        for p in (
+            "tests/spread/lib/tools",
+            "tests/spread/lib/tools/retry",
+        )
+    ],
 )
 UNKNOWN_AUTHOR_REGEX = re.compile(
     r"^Unable to automatically determine author's name, specify it with --author$"
@@ -96,9 +114,9 @@ def create_namespace(
 @pytest.mark.parametrize(
     ("profile", "expected_files"),
     [
-        pytest.param("simple", BASIC_INIT_FILES, id="simple"),
+        pytest.param("simple", BASIC_INIT_FILES_WITH_TOOLS, id="simple"),
         pytest.param("machine", BASIC_INIT_FILES, id="machine"),
-        pytest.param("kubernetes", BASIC_INIT_FILES, id="kubernetes"),
+        pytest.param("kubernetes", BASIC_INIT_FILES_WITH_TOOLS, id="kubernetes"),
     ],
 )
 @pytest.mark.parametrize("charm_name", ["my-charm", "charm123"])

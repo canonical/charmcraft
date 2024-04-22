@@ -83,7 +83,7 @@ files and directories:
     │   │   ├── lib
     │   │   │   └── test-helpers.sh
     │   │   └── general
-    │   │       └── integration 
+    │   │       └── integration
     │   │           └── task.yaml  - Run integration tests in spread back-end
     │   └── unit
     │       └── test_charm.py      - Unit tests

@@ -1203,16 +1203,12 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
             call("progress", "Extracting file 'layer1.bin' from local tar (compress=True)"),
             call(
                 "progress",
-                "Uploading layer blob 1/2, size={}, digest={}".format(
-                    u_layer1_size, u_layer1_digest
-                ),
+                f"Uploading layer blob 1/2, size={u_layer1_size}, digest={u_layer1_digest}",
             ),
             call("progress", "Extracting file 'layer2.bin' from local tar (compress=True)"),
             call(
                 "progress",
-                "Uploading layer blob 2/2, size={}, digest={}".format(
-                    u_layer2_size, u_layer2_digest
-                ),
+                f"Uploading layer blob 2/2, size={u_layer2_size}, digest={u_layer2_digest}",
             ),
         ]
     )
@@ -1295,9 +1291,7 @@ def test_imagehandler_uploadfromlocal_no_config(emitter, tmp_path, monkeypatch):
             call("progress", "Extracting file 'layer.bin' from local tar (compress=True)"),
             call(
                 "progress",
-                "Uploading layer blob 1/1, size={}, digest={}".format(
-                    u_layer_size, u_layer_digest
-                ),
+                f"Uploading layer blob 1/1, size={u_layer_size}, digest={u_layer_digest}",
             ),
         ]
     )

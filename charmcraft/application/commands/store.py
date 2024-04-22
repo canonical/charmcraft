@@ -499,21 +499,21 @@ def get_name_from_zip(filepath):
             name = yaml.safe_load(zf.read("metadata.yaml"))["name"]
         except Exception as err:
             raise CraftError(
-                "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
-                "a 'name' key.".format(str(filepath))
+                f"Bad 'metadata.yaml' file inside charm zip {str(filepath)!r}: must be a valid YAML with "
+                "a 'name' key."
             ) from err
     elif "bundle.yaml" in zf.namelist():
         try:
             name = yaml.safe_load(zf.read("bundle.yaml"))["name"]
         except Exception as err:
             raise CraftError(
-                "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
-                "a 'name' key.".format(str(filepath))
+                f"Bad 'bundle.yaml' file inside bundle zip {str(filepath)!r}: must be a valid YAML with "
+                "a 'name' key."
             ) from err
     else:
         raise CraftError(
-            "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
-            "nor a bundle ('bundle.yaml' not found).".format(str(filepath))
+            f"The indicated zip file {str(filepath)!r} is not a charm ('metadata.yaml' not found) "
+            "nor a bundle ('bundle.yaml' not found)."
         )
 
     return name
@@ -1385,9 +1385,7 @@ class PublishLibCommand(CharmcraftCommand):
                 )
             if lib_data.charm_name != charm_name:
                 raise CraftError(
-                    "The library {} does not belong to this charm {!r}.".format(
-                        lib_data.full_name, charm_name
-                    )
+                    f"The library {lib_data.full_name} does not belong to this charm {charm_name!r}."
                 )
             local_libs_data = [lib_data]
         else:

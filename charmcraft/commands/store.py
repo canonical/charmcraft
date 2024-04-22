@@ -1505,6 +1505,7 @@ class FetchLibCommand(BaseCommand):
         downloaded libraries.
     """
     )
+    hidden = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""

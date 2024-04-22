@@ -46,29 +46,38 @@ BASIC_INIT_FILES = frozenset(
         "pyproject.toml",
         "README.md",
         "requirements.txt",
-        "spread.yaml",
         "src",
         "src/charm.py",
         "tests",
         "tests/integration",
         "tests/integration/test_charm.py",
-        "tests/spread",
-        "tests/spread/lib",
-        "tests/spread/lib/cloud-init.yaml",
-        "tests/spread/lib/test-helpers.sh",
-        "tests/spread/general",
-        "tests/spread/general/integration",
-        "tests/spread/general/integration/task.yaml",
         "tests/unit",
         "tests/unit/test_charm.py",
         "tox.ini",
     )
 )
-BASIC_INIT_FILES_WITH_TOOLS = frozenset(
+BASIC_INIT_FILES_WITH_SPREAD = frozenset(
     list(BASIC_INIT_FILES)
     + [
         pathlib.Path(p)
         for p in (
+            "spread.yaml",
+            "tests/spread",
+            "tests/spread/lib",
+            "tests/spread/lib/cloud-config.yaml",
+            "tests/spread/lib/test-helpers.sh",
+            "tests/spread/general",
+            "tests/spread/general/integration",
+            "tests/spread/general/integration/task.yaml",
+        )
+    ]
+)
+BASIC_INIT_FILES_WITH_TOOLS = frozenset(
+    list(BASIC_INIT_FILES_WITH_SPREAD)
+    + [
+        pathlib.Path(p)
+        for p in (
+            "tests/spread/lib",
             "tests/spread/lib/tools",
             "tests/spread/lib/tools/retry",
         )
@@ -115,7 +124,7 @@ def create_namespace(
     ("profile", "expected_files"),
     [
         pytest.param("simple", BASIC_INIT_FILES_WITH_TOOLS, id="simple"),
-        pytest.param("machine", BASIC_INIT_FILES, id="machine"),
+        pytest.param("machine", BASIC_INIT_FILES_WITH_SPREAD, id="machine"),
         pytest.param("kubernetes", BASIC_INIT_FILES_WITH_TOOLS, id="kubernetes"),
     ],
 )
@@ -225,7 +234,7 @@ def test_gecos_user_has_no_name(monkeypatch, new_path, init_command):
         ),
     ],
 )
-@pytest.mark.parametrize("expected_files", [BASIC_INIT_FILES])
+@pytest.mark.parametrize("expected_files", [BASIC_INIT_FILES_WITH_TOOLS])
 def test_create_directory(new_path, init_command, subdir, expected_files):
     init_dir = new_path / subdir
 

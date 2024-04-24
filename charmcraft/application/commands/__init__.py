@@ -30,6 +30,7 @@ from charmcraft.application.commands.lifecycle import (
 from charmcraft.application.commands.remote import RemoteBuild
 from charmcraft.application.commands.store import (
     # auth
+    FetchLibs,
     LoginCommand,
     LogoutCommand,
     WhoamiCommand,
@@ -102,6 +103,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
             CreateLibCommand,
             PublishLibCommand,
             ListLibCommand,
+            FetchLibs,
             FetchLibCommand,
         ],
     )

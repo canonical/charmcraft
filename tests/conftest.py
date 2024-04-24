@@ -35,7 +35,7 @@ from craft_parts import callbacks, plugins
 from craft_providers import Executor, Provider, bases
 
 import charmcraft.parts
-from charmcraft import const, deprecations, instrum, parts, services, utils
+from charmcraft import const, deprecations, instrum, parts, services, store, utils
 from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
@@ -67,7 +67,7 @@ def service_factory(
 
     factory.project = simple_charm
 
-    factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
+    factory.store.client = mock.Mock(spec_set=store.Client)
 
     return factory
 

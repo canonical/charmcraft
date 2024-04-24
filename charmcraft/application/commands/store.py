@@ -1694,8 +1694,14 @@ class FetchLibs(CharmcraftCommand):
 
         downloaded_libs = 0
         for lib_md in libs_metadata.values():
-            local_lib = local_libs.get(f"{lib_md.charm_name}.{lib_md.lib_name}")
+            lib_name = f"{lib_md.charm_name}.{lib_md.lib_name}"
+            local_lib = local_libs.get(lib_name)
             if local_lib and local_lib.content_hash == lib_md.content_hash:
+                emit.debug(
+                    f"Skipping {lib_name} because the same file already exists on "
+                    f"disk (hash: {lib_md.content_hash}). "
+                    "Delete the file and re-run 'charmcraft fetch-libs' to force re-download."
+                )
                 continue
             lib_name = utils.get_lib_module_name(lib_md.charm_name, lib_md.lib_name, lib_md.api)
             emit.progress(f"Downloading {lib_name}")
@@ -1705,13 +1711,13 @@ class FetchLibs(CharmcraftCommand):
                 api=lib_md.api,
                 patch=lib_md.patch,
             )
-            downloaded_libs += 1
-            lib_path = utils.get_lib_path(lib_md.charm_name, lib_md.lib_name, lib_md.api)
-            lib_path.parent.mkdir(exist_ok=True, parents=True)
             if lib.content is None:
                 raise errors.CraftError(
                     f"Store returned no content for '{lib.charm_name}.{lib.lib_name}'"
                 )
+            downloaded_libs += 1
+            lib_path = utils.get_lib_path(lib_md.charm_name, lib_md.lib_name, lib_md.api)
+            lib_path.parent.mkdir(exist_ok=True, parents=True)
             lib_path.write_text(lib.content)
 
         emit.message(f"Downloaded {downloaded_libs} charm libraries.")

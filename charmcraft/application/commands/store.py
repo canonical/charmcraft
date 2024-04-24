@@ -1677,7 +1677,7 @@ class FetchLibs(CharmcraftCommand):
         declared_libs = {lib.lib: lib for lib in charm_libs}
         missing_store_libs = declared_libs.keys() - libs_metadata.keys()
         if missing_store_libs:
-            missing_libs_source = [declared_libs[lib].dict() for lib in missing_store_libs]
+            missing_libs_source = [declared_libs[lib].dict() for lib in sorted(missing_store_libs)]
             libs_yaml = util.dump_yaml(missing_libs_source)
             raise errors.CraftError(
                 f"Could not find the following libraries on charmhub:\n{libs_yaml}",

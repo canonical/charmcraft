@@ -26,7 +26,7 @@ from craft_store import models
 from charmcraft import const, env, errors, store
 from charmcraft.models import CharmLib
 from charmcraft.store import AUTH_DEFAULT_PERMISSIONS, AUTH_DEFAULT_TTL
-from charmcraft.store.models import Library
+from charmcraft.store.models import Library, LibraryMetadataRequest
 
 
 class BaseStoreService(craft_application.AppService):
@@ -198,11 +198,13 @@ class StoreService(BaseStoreService):
         store_libs = []
         for lib in libraries:
             charm_name, _, lib_name = lib.lib.partition(".")
-            store_lib = {
-                "charm-name": charm_name,
-                "library-name": lib_name,
-                "api": lib.api_version,
-            }
+            store_lib = LibraryMetadataRequest(
+                {
+                    "charm-name": charm_name,
+                    "library-name": lib_name,
+                    "api": lib.api_version,
+                }
+            )
             if (patch_version := lib.patch_version) is not None:
                 store_lib["patch"] = patch_version
             store_libs.append(store_lib)

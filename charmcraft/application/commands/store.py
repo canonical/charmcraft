@@ -28,7 +28,7 @@ import typing
 import zipfile
 from collections.abc import Collection
 from operator import attrgetter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import yaml
 from craft_application import util
@@ -1618,7 +1618,7 @@ class FetchLibCommand(CharmcraftCommand):
         if parsed_args.format:
             output_data = []
             for lib_data, error_message in full_lib_data:
-                datum = {
+                datum: dict[str, Any] = {
                     "charm_name": lib_data.charm_name,
                     "library_name": lib_data.lib_name,
                     "library_id": lib_data.lib_id,

@@ -243,9 +243,7 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     with pytest.raises(CraftError) as err:
         get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
-            str(test_path)
-        )
+        f"Library {str(test_path)!r} metadata field LIBAPI is different from the version in the path."
     )
 
 

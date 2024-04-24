@@ -16,6 +16,7 @@
 """Tests for store models."""
 
 import pytest
+
 from charmcraft.store import models
 
 
@@ -38,7 +39,7 @@ from charmcraft.store import models
                 api=1,
                 patch=123,
                 content_hash="hashyhash",
-                content=None
+                content=None,
             ),
         ),
         (
@@ -58,10 +59,10 @@ from charmcraft.store import models
                 api=1,
                 patch=123,
                 content_hash="hashyhash",
-                content="I am a library."
+                content="I am a library.",
             ),
         ),
-    ]
+    ],
 )
 def test_library_from_dict(data, expected):
     assert models.Library.from_dict(data) == expected

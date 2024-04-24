@@ -18,14 +18,12 @@ from __future__ import annotations
 
 import platform
 from collections.abc import Collection, Mapping, Sequence
-from typing import overload
 
 import craft_application
 import craft_store
 from craft_store import models
 
-from charmcraft import const, env, errors
-from charmcraft import store
+from charmcraft import const, env, errors, store
 from charmcraft.models import CharmLib
 from charmcraft.store import AUTH_DEFAULT_PERMISSIONS, AUTH_DEFAULT_TTL
 from charmcraft.store.models import Library
@@ -219,4 +217,6 @@ class StoreService(BaseStoreService):
         self, charm_name: str, *, library_id: str, api: int | None = None, patch: int | None = None
     ) -> Library:
         """Get a library by charm name and ID from charmhub."""
-        return self.client.get_library(charm_name=charm_name, library_id=library_id, api=api, patch=patch)
+        return self.client.get_library(
+            charm_name=charm_name, library_id=library_id, api=api, patch=patch
+        )

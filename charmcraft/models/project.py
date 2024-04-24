@@ -17,8 +17,8 @@
 import abc
 import datetime
 import pathlib
-from collections.abc import Iterable, Iterator
 import re
+from collections.abc import Iterable, Iterator
 from typing import (
     Any,
     Literal,
@@ -123,6 +123,7 @@ class Platform(models.CraftBaseModel):
 
 class CharmLib(models.CraftBaseModel):
     """A Charm library dependency for this charm."""
+
     lib: str = pydantic.Field(
         title="Library Path (e.g. my_charm.my_library)",
         regex=r"[a-z0-9_]+\.[a-z0-9_]+",
@@ -143,15 +144,13 @@ class CharmLib(models.CraftBaseModel):
         if not re.fullmatch("[a-z0-9_]+", charm_name):
             if "-" in charm_name:
                 raise ValueError(
-                    f"Invalid charm name in lib {value!r}. Try replacing hypens ('-') with underscores ('_')."
+                    f"Invalid charm name in lib {value!r}. Try replacing hyphens ('-') with underscores ('_')."
                 )
             raise ValueError(
                 f"Invalid charm name for lib {value!r}. Value {charm_name!r} is invalid."
             )
         if not re.fullmatch("[a-z0-9_]+", lib_name):
-            raise ValueError(
-                f"Library name {lib_name!r} is invalid."
-            )
+            raise ValueError(f"Library name {lib_name!r} is invalid.")
         return str(value)
 
     @pydantic.validator("version", pre=True)
@@ -173,7 +172,9 @@ class CharmLib(models.CraftBaseModel):
         try:
             int(patch)
         except ValueError:
-            raise ValueError(f"Patch version not valid. Expected an integer, got {patch!r}") from None
+            raise ValueError(
+                f"Patch version not valid. Expected an integer, got {patch!r}"
+            ) from None
         return value
 
     @property

@@ -16,9 +16,9 @@
 
 """A client to hit the Store."""
 
-from collections.abc import Sequence
 import os
 import platform
+from collections.abc import Sequence
 from json.decoder import JSONDecodeError
 from typing import Any
 
@@ -91,9 +91,7 @@ class Client(craft_store.StoreClient):
         Supports both charmcraft 2.x style init and compatibility with upstream.
         """
         if base_url and api_base_url or not base_url and not api_base_url:
-            raise ValueError(
-                "Either base_url or api_base_url must be set, but not both."
-            )
+            raise ValueError("Either base_url or api_base_url must be set, but not both.")
         if base_url:
             api_base_url = base_url
         self.api_base_url = api_base_url.rstrip("/")
@@ -175,9 +173,7 @@ class Client(craft_store.StoreClient):
         )
 
     def get_library(
-        self,
-        *,
-        charm_name: str, library_id: str, api: int | None = None, patch: int | None = None
+        self, *, charm_name: str, library_id: str, api: int | None = None, patch: int | None = None
     ) -> Library:
         """Fetch a library attached to a charm.
 
@@ -196,23 +192,16 @@ class Client(craft_store.StoreClient):
             )
         )
 
-    def fetch_libraries_metadata(self, libs: Sequence[LibraryMetadataRequest]) -> Sequence[Library]:
+    def fetch_libraries_metadata(
+        self, libs: Sequence[LibraryMetadataRequest]
+    ) -> Sequence[Library]:
         """Fetch the metadata for one or more charm libraries.
 
         http://api.charmhub.io/docs/libraries.html#fetch_libraries
         """
-        response = self.request_urlpath_json(
-            "POST",
-            "/v1/charm/libraries/bulk",
-            json=libs
-        )
+        response = self.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=libs)
         if "libraries" not in response:
             raise CraftError(
-                "Server returned invalid response while querying libraries",
-                details=str(response)
+                "Server returned invalid response while querying libraries", details=str(response)
             )
-        return [
-            Library.from_dict(lib)
-            for lib in response["libraries"]
-        ]
-
+        return [Library.from_dict(lib) for lib in response["libraries"]]

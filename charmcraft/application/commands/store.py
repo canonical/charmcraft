@@ -30,9 +30,8 @@ from collections.abc import Collection
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
-from craft_application import util
-import craft_cli
 import yaml
+from craft_application import util
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_parts import Step
@@ -1671,7 +1670,7 @@ class FetchLibs(CharmcraftCommand):
             raise errors.LibraryError(
                 message="No dependent libraries declared in charmcraft.yaml.",
                 resolution="Add a 'charm-libs' section to charmcraft.yaml.",
-                retcode=78  # EX_CONFIG: configuration error
+                retcode=78,  # EX_CONFIG: configuration error
             )
         emit.progress("Getting library metadata from charmhub")
         libs_metadata = store.get_libraries_metadata_by_name(charm_libs)
@@ -1689,8 +1688,7 @@ class FetchLibs(CharmcraftCommand):
 
         emit.trace(f"Library metadata retrieved: {libs_metadata}")
         local_libs = {
-            f"{lib.charm_name}.{lib.lib_name}": lib
-            for lib in utils.get_libs_from_tree()
+            f"{lib.charm_name}.{lib.lib_name}": lib for lib in utils.get_libs_from_tree()
         }
         emit.trace(f"Local libraries: {local_libs}")
 
@@ -1705,7 +1703,7 @@ class FetchLibs(CharmcraftCommand):
                 charm_name=lib_md.charm_name,
                 library_id=lib_md.lib_id,
                 api=lib_md.api,
-                patch=lib_md.patch
+                patch=lib_md.patch,
             )
             downloaded_libs += 1
             lib_path = utils.get_lib_path(lib_md.charm_name, lib_md.lib_name, lib_md.api)
@@ -1717,7 +1715,6 @@ class FetchLibs(CharmcraftCommand):
             lib_path.write_text(lib.content)
 
         emit.message(f"Downloaded {downloaded_libs} charm libraries.")
-
 
 
 class ListLibCommand(CharmcraftCommand):

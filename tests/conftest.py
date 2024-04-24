@@ -26,7 +26,6 @@ from unittest import mock
 from unittest.mock import Mock
 
 import craft_parts
-import craft_store
 import pytest
 import responses as responses_module
 import yaml

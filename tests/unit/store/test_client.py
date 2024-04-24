@@ -16,22 +16,36 @@
 """Unit tests for store client."""
 
 from unittest import mock
+
 import pytest
 
 from charmcraft import store
 
+
 @pytest.fixture()
 def client() -> store.Client:
-    return store.Client(
-        api_base_url="http://charmhub.local"
-    )
+    return store.Client(api_base_url="http://charmhub.local")
 
 
 @pytest.mark.parametrize(
     ("charm", "lib_id", "api", "patch", "expected_call"),
     [
-        ("my-charm", "abcdefg", None, None, mock.call("GET", "/v1/charm/libraries/my-charm/abcdefg", params={})),
-        ("my-charm", "abcdefg", 0, 0, mock.call("GET", "/v1/charm/libraries/my-charm/abcdefg", params={"api": 0, "patch": 0})),
+        (
+            "my-charm",
+            "abcdefg",
+            None,
+            None,
+            mock.call("GET", "/v1/charm/libraries/my-charm/abcdefg", params={}),
+        ),
+        (
+            "my-charm",
+            "abcdefg",
+            0,
+            0,
+            mock.call(
+                "GET", "/v1/charm/libraries/my-charm/abcdefg", params={"api": 0, "patch": 0}
+            ),
+        ),
     ],
 )
 def test_get_library_success(monkeypatch, client, charm, lib_id, api, patch, expected_call):
@@ -66,7 +80,7 @@ def test_get_library_success(monkeypatch, client, charm, lib_id, api, patch, exp
                         "library-id": "ididid",
                         "api": 1,
                         "patch": 2,
-                        "hash": "hashhashhash"
+                        "hash": "hashhashhash",
                     },
                 ],
             },
@@ -78,7 +92,7 @@ def test_get_library_success(monkeypatch, client, charm, lib_id, api, patch, exp
                     api=1,
                     patch=2,
                     content=None,
-                    content_hash="hashhashhash"
+                    content_hash="hashhashhash",
                 ),
             ],
         ),
@@ -90,4 +104,6 @@ def test_fetch_libraries_metadata(monkeypatch, client, libs, json_response, expe
 
     assert client.fetch_libraries_metadata(libs) == expected
 
-    mock_get_urlpath_json.assert_has_calls([mock.call("POST", "/v1/charm/libraries/bulk", json=libs)])
+    mock_get_urlpath_json.assert_has_calls(
+        [mock.call("POST", "/v1/charm/libraries/bulk", json=libs)]
+    )

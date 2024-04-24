@@ -20,10 +20,10 @@ import datetime
 import enum
 import functools
 from dataclasses import dataclass
-from typing import Any, Literal, TypedDict, cast
-from typing_extensions import NotRequired, Self
+from typing import Any, Literal, TypedDict
 
 from craft_cli import CraftError
+from typing_extensions import NotRequired, Self
 
 
 @dataclasses.dataclass(frozen=True)
@@ -290,5 +290,5 @@ LibraryMetadataRequest = TypedDict(
         "library-name": str,
         "api": int,
         "patch": NotRequired[int],
-    }
+    },
 )

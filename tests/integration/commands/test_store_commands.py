@@ -486,5 +486,5 @@ def test_fetchlib_store_same_versions_different_hash(
     else:
         emitter.assert_message(error_message)
 
-        
+
 # endregion

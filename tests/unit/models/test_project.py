@@ -21,7 +21,6 @@ from textwrap import dedent
 from typing import Any
 
 import hypothesis
-from hypothesis import strategies
 import pydantic
 import pyfakefs.fake_filesystem
 import pytest
@@ -31,6 +30,7 @@ from craft_application.errors import CraftValidationError
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
+from hypothesis import strategies
 
 from charmcraft import const, utils
 from charmcraft.models import project
@@ -194,11 +194,9 @@ def test_build_info_from_build_on_run_on_basic(
 
 @pytest.mark.parametrize(
     "lib_name",
-    ["charm.lib", "charm_with_hyphens.lib", "charm.lib_with_hyphens", "charm0.number_0_lib"]
+    ["charm.lib", "charm_with_hyphens.lib", "charm.lib_with_hyphens", "charm0.number_0_lib"],
 )
-@pytest.mark.parametrize(
-    "lib_version", ["0", "1", "2.0", "2.1", "3.14"]
-)
+@pytest.mark.parametrize("lib_version", ["0", "1", "2.0", "2.1", "3.14"])
 def test_create_valid_charm_lib(lib_name, lib_version):
     project.CharmLib.unmarshal({"lib": lib_name, "version": lib_version})
 
@@ -207,10 +205,16 @@ def test_create_valid_charm_lib(lib_name, lib_version):
     ("name", "error_match"),
     [
         ("boop", r"Library name invalid. Expected '\[charm_name\].\[lib_name\]', got 'boop'"),
-        ("raw-charm-name.valid_lib", r"Invalid charm name in lib 'raw-charm-name.valid_lib'. Try replacing hypens \('-'\) with underscores \('_'\)."),
-        ("Invalid charm name.valid_lib", "Invalid charm name for lib 'Invalid charm name.valid_lib'. Value 'Invalid charm name' is invalid"),
-        ("my_charm.invalid library name", "Library name 'invalid library name' is invalid.")
-    ]
+        (
+            "raw-charm-name.valid_lib",
+            r"Invalid charm name in lib 'raw-charm-name.valid_lib'. Try replacing hyphens \('-'\) with underscores \('_'\).",
+        ),
+        (
+            "Invalid charm name.valid_lib",
+            "Invalid charm name for lib 'Invalid charm name.valid_lib'. Value 'Invalid charm name' is invalid",
+        ),
+        ("my_charm.invalid library name", "Library name 'invalid library name' is invalid."),
+    ],
 )
 def test_invalid_charm_lib_name(name: str, error_match: str):
     with pytest.raises(pydantic.ValidationError, match=error_match):
@@ -219,8 +223,14 @@ def test_invalid_charm_lib_name(name: str, error_match: str):
 
 @hypothesis.given(
     strategies.one_of(
-        strategies.floats(min_value=0.001, max_value=2**32, allow_nan=False, allow_infinity=False, allow_subnormal=False),
-        strategies.integers(min_value=0, max_value=2**32)
+        strategies.floats(
+            min_value=0.001,
+            max_value=2**32,
+            allow_nan=False,
+            allow_infinity=False,
+            allow_subnormal=False,
+        ),
+        strategies.integers(min_value=0, max_value=2**32),
     )
 )
 def test_valid_library_version(version: float):
@@ -229,12 +239,17 @@ def test_valid_library_version(version: float):
 
 @pytest.mark.parametrize("version", [".1", "NaN", ""])
 def test_invalid_api_version(version: str):
-    with pytest.raises(pydantic.ValidationError, match="API version not valid. Expected an integer, got '"):
+    with pytest.raises(
+        pydantic.ValidationError, match="API version not valid. Expected an integer, got '"
+    ):
         project.CharmLib(lib="charm_name.lib_name", version=version)
+
 
 @pytest.mark.parametrize("version", ["1.", "1.number"])
 def test_invalid_patch_version(version: str):
-    with pytest.raises(pydantic.ValidationError, match="Patch version not valid. Expected an integer, got '"):
+    with pytest.raises(
+        pydantic.ValidationError, match="Patch version not valid. Expected an integer, got '"
+    ):
         project.CharmLib(lib="charm_name.lib_name", version=version)
 
 

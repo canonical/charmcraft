@@ -177,7 +177,9 @@ def get_lib_path(charm: str, lib_name: str, api: int) -> pathlib.Path:
     :param api: The API version of the library
     :returns: A relative path to the library python file.
     """
-    return pathlib.Path("lib/charms") / create_importable_name(charm) / f"v{api}" / f"{lib_name}.py"
+    return (
+        pathlib.Path("lib/charms") / create_importable_name(charm) / f"v{api}" / f"{lib_name}.py"
+    )
 
 
 def get_lib_module_name(charm: str, lib_name: str, api: int) -> str:
@@ -192,11 +194,9 @@ def get_lib_module_name(charm: str, lib_name: str, api: int) -> str:
 
 
 @overload
-def get_lib_info(*, full_name: str) -> LibData:
-    ...
+def get_lib_info(*, full_name: str) -> LibData: ...
 @overload
-def get_lib_info(*, lib_path: pathlib.Path) -> LibData:
-    ...
+def get_lib_info(*, lib_path: pathlib.Path) -> LibData: ...
 def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None = None) -> LibData:
     """Get the whole lib info from the path/file.
 

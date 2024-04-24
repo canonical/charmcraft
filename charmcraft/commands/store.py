@@ -16,7 +16,6 @@
 
 """Commands related to Charmhub."""
 import collections
-import dataclasses
 import os
 import pathlib
 import shutil

@@ -19,12 +19,13 @@ import sys
 from unittest import mock
 
 import pytest
-from charmcraft.application.commands import FetchLibCommand
+
 from charmcraft import env
+from charmcraft.application.commands import FetchLibCommand
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.store.models import Library
-
 from tests import factory
+
 
 @pytest.fixture()
 def store_mock():
@@ -40,6 +41,7 @@ def store_mock():
 
     with mock.patch("charmcraft.application.commands.store.Store", validate_params):
         yield store_mock
+
 
 # region fetch-lib tests
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
@@ -74,7 +76,9 @@ def test_fetchlib_simple_downloaded(emitter, store_mock, tmp_path, monkeypatch, 
     FetchLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
-        mock.call.get_libraries_tips([{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]),
+        mock.call.get_libraries_tips(
+            [{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]
+        ),
         mock.call.get_library("testcharm", lib_id, 0),
     ]
     if formatted:
@@ -129,7 +133,9 @@ def test_fetchlib_simple_dash_in_name(emitter, store_mock, tmp_path, monkeypatch
     FetchLibCommand(config).run(args)
 
     assert store_mock.mock_calls == [
-        mock.call.get_libraries_tips([{"charm_name": "test-charm", "lib_name": "testlib", "api": 0}]),
+        mock.call.get_libraries_tips(
+            [{"charm_name": "test-charm", "lib_name": "testlib", "api": 0}]
+        ),
         mock.call.get_library("test-charm", lib_id, 0),
     ]
     expected = "Library charms.test_charm.v0.testlib version 0.7 downloaded."
@@ -479,4 +485,6 @@ def test_fetchlib_store_same_versions_different_hash(
         emitter.assert_json_output(expected)
     else:
         emitter.assert_message(error_message)
+
+        
 # endregion

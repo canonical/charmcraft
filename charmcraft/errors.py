@@ -59,8 +59,7 @@ class BadLibraryPathError(LibraryError):
 
     def __init__(self, path):
         super().__init__(
-            "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
-            "".format(path)
+            f"Charm library path {path} must conform to lib/charms/<charm>/vN/<libname>.py"
         )
 
 

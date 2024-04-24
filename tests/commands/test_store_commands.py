@@ -906,8 +906,8 @@ def test_get_name_nor_charm_nor_bundle(tmp_path):
     with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
     assert str(cm.value) == (
-        "The indicated zip file '{}' is not a charm ('metadata.yaml' not found) nor a bundle "
-        "('bundle.yaml' not found).".format(bad_zip)
+        f"The indicated zip file '{bad_zip}' is not a charm ('metadata.yaml' not found) nor a bundle "
+        "('bundle.yaml' not found)."
     )
 
 

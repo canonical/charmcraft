@@ -44,9 +44,7 @@ def build_user_agent():
     else:
         testing = " "
     os_platform = "{0.system}/{0.release} ({0.machine})".format(utils.get_os_platform())
-    return "charmcraft/{}{}{} python/{}".format(
-        __version__, testing, os_platform, platform.python_version()
-    )
+    return f"charmcraft/{__version__}{testing}{os_platform} python/{platform.python_version()}"
 
 
 class AnonymousClient:

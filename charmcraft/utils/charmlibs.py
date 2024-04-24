@@ -262,9 +262,7 @@ def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None 
     # validate internal API matches with what was used in the path
     if internals.api != api_from_path:
         raise CraftError(
-            "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
-                str(lib_path)
-            )
+            f"Library {str(lib_path)!r} metadata field LIBAPI is different from the version in the path."
         )
 
     return LibData(

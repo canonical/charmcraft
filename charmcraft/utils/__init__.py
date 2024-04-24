@@ -72,6 +72,8 @@ __all__ = [
     "create_charm_name_from_importable",
     "create_importable_name",
     "get_lib_internals",
+    "get_lib_path",
+    "get_lib_module_name",
     "get_lib_info",
     "get_libs_from_tree",
     "collect_charmlib_pydeps",

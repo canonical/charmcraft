@@ -190,6 +190,11 @@ class StoreService(BaseStoreService):
         return [rev for rev in new_revisions if int(rev.revision) in updates]
 
     def get_libraries_metadata(self, libraries: Sequence[CharmLib]) -> Sequence[Library]:
+        """Get the metadata for one or more charm libraries.
+
+        :param libraries: A sequence of libraries to request.
+        :returns: A sequence of the libraries' metadata in the store.
+        """
         store_libs = []
         for lib in libraries:
             charm_name, _, lib_name = lib.lib.partition(".")

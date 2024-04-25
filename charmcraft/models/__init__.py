@@ -24,6 +24,7 @@ from .metadata import BundleMetadata, CharmMetadata, CharmMetadataLegacy
 from .project import (
     CharmBuildInfo,
     CharmcraftBuildPlanner,
+    CharmLib,
     CharmcraftProject,
     BasesCharm,
     PlatformCharm,
@@ -48,6 +49,7 @@ __all__ = [
     "CharmBuildInfo",
     "CharmcraftBuildPlanner",
     "CharmcraftProject",
+    "CharmLib",
     "BundleMetadata",
     "CharmMetadata",
     "CharmMetadataLegacy",

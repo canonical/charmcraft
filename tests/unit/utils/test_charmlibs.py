@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ from charmcraft.utils.charmlibs import (
     collect_charmlib_pydeps,
     get_lib_info,
     get_lib_internals,
+    get_lib_module_name,
+    get_lib_path,
     get_libs_from_tree,
     get_name_from_metadata,
 )
@@ -77,6 +79,26 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 
     result = get_name_from_metadata()
     assert result is None
+
+
+@pytest.mark.parametrize(
+    ("charm", "lib", "api", "expected"),
+    [
+        ("my-charm", "some_lib", 0, pathlib.Path("lib/charms/my_charm/v0/some_lib.py")),
+    ],
+)
+def test_get_lib_path(charm: str, lib: str, api: int, expected: pathlib.Path):
+    assert get_lib_path(charm, lib, api) == expected
+
+
+@pytest.mark.parametrize(
+    ("charm", "lib", "api", "expected"),
+    [
+        ("my-charm", "some_lib", 0, "charms.my_charm.v0.some_lib"),
+    ],
+)
+def test_get_lib_module_name(charm: str, lib: str, api: int, expected: str):
+    assert get_lib_module_name(charm, lib, api) == expected
 
 
 # endregion

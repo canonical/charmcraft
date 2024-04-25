@@ -140,7 +140,7 @@ def test_client_init():
     with patch("craft_store.StoreClient.__init__") as mock_client_init:
         with patch("charmcraft.store.client.build_user_agent") as mock_ua:
             mock_ua.return_value = user_agent
-            Client(api_url, storage_url)
+            Client(api_url, storage_url, user_agent=user_agent)
     mock_client_init.assert_called_with(
         base_url=api_url,
         storage_base_url=storage_url,

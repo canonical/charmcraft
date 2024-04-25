@@ -17,6 +17,7 @@
 
 from charmcraft.store.client import build_user_agent, AnonymousClient, Client
 from charmcraft.store import models
+from charmcraft.store.models import LibraryMetadataRequest
 from charmcraft.store.registry import (
     OCIRegistry,
     HashingTemporaryFile,
@@ -37,4 +38,5 @@ __all__ = [
     "AUTH_DEFAULT_TTL",
     "Store",
     "models",
+    "LibraryMetadataRequest",
 ]

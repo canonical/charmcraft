@@ -24,6 +24,8 @@ backends:
   multipass:
     type: adhoc
     allocate: |
+      # Mitigate issues found when launching multiple mutipass instances
+      # concurrently. See https://github.com/canonical/multipass/issues/3336
       sleep 0.$RANDOM
       sleep 0.$RANDOM
       sleep 0.$RANDOM

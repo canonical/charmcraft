@@ -22,6 +22,7 @@ import sys
 
 from craft_cli import CraftError, emit
 
+from charmcraft import env
 from charmcraft.application.commands import base
 
 _overview = """
@@ -67,8 +68,12 @@ class TestCommand(base.CharmcraftCommand):
         if len(spread_args) == 0 and os.environ.get("GITHUB_RUN_ID"):
             spread_args = ["github-ci"]
 
-        try:
+        if env.is_charmcraft_running_from_snap():
             cmd = f"{os.environ['SNAP']}/bin/spread"
+        else:
+            cmd = "spread"
+
+        try:
             with emit.pause():
                 subprocess.run([cmd, *spread_args], check=True)
         except subprocess.CalledProcessError as err:

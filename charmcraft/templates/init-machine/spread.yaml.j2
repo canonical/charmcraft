@@ -32,6 +32,8 @@ backends:
 
       mkdir -p "$HOME/.spread"
       export counter_file="$HOME/.spread/multipass-count"
+
+      # Sequential variable for unique instance names
       instance_num=$(flock -x $counter_file bash -c '
         [ -s $counter_file ] || echo 0 > $counter_file
         num=$(< $counter_file)

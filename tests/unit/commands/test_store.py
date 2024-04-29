@@ -14,15 +14,25 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for store commands."""
+import argparse
 import datetime
 import textwrap
 
+import craft_cli.pytest_plugin
 import pytest
 from craft_store import models
 
+from charmcraft import errors, store
 from charmcraft.application.commands import SetResourceArchitecturesCommand
+from charmcraft.application.commands.store import FetchLibs
+from charmcraft.application.main import APP_METADATA
+from charmcraft.models.project import CharmLib
 from charmcraft.utils import cli
 from tests import get_fake_revision
+
+BASIC_CHARMCRAFT_YAML = """\
+type: charm
+"""
 
 
 @pytest.mark.parametrize(
@@ -72,3 +82,139 @@ def test_set_resource_architectures_output_table(emitter, updates, expected):
     SetResourceArchitecturesCommand.write_output(cli.OutputFormat.TABLE, updates)
 
     emitter.assert_message(expected)
+
+
+def test_fetch_libs_no_charm_libs(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter, service_factory
+):
+    fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
+
+    with pytest.raises(errors.LibraryError) as exc_info:
+        fetch_libs.run(argparse.Namespace())
+
+    assert exc_info.value.resolution == "Add a 'charm-libs' section to charmcraft.yaml."
+
+
+@pytest.mark.parametrize(
+    ("libs", "expected"),
+    [
+        (
+            [CharmLib(lib="mysql.mysql", version="1")],
+            textwrap.dedent(
+                """\
+                Could not find the following libraries on charmhub:
+                - lib: mysql.mysql
+                  version: '1'
+                """
+            ),
+        ),
+        (
+            [
+                CharmLib(lib="mysql.mysql", version="1"),
+                CharmLib(lib="some_charm.lib", version="1.2"),
+            ],
+            textwrap.dedent(
+                """\
+                Could not find the following libraries on charmhub:
+                - lib: mysql.mysql
+                  version: '1'
+                - lib: some_charm.lib
+                  version: '1.2'
+                """
+            ),
+        ),
+    ],
+)
+def test_fetch_libs_missing_from_store(service_factory, libs, expected):
+    service_factory.project.charm_libs = libs
+    service_factory.store.client.fetch_libraries_metadata.return_value = []
+    fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
+
+    with pytest.raises(errors.CraftError) as exc_info:
+        fetch_libs.run(argparse.Namespace())
+
+    assert exc_info.value.args[0] == expected
+
+
+@pytest.mark.parametrize(
+    ("libs", "store_libs", "dl_lib", "expected"),
+    [
+        (
+            [CharmLib(lib="mysql.backups", version="1")],
+            [
+                store.models.Library(
+                    charm_name="mysql",
+                    lib_name="backups",
+                    lib_id="ididid",
+                    api=1,
+                    patch=2,
+                    content=None,
+                    content_hash="hashhashhash",
+                )
+            ],
+            store.models.Library(
+                charm_name="mysql",
+                lib_name="backups",
+                lib_id="ididid",
+                api=1,
+                patch=2,
+                content=None,
+                content_hash="hashhashhash",
+            ),
+            "Store returned no content for 'mysql.backups'",
+        ),
+    ],
+)
+def test_fetch_libs_no_content(new_path, service_factory, libs, store_libs, dl_lib, expected):
+    service_factory.project.charm_libs = libs
+    service_factory.store.client.fetch_libraries_metadata.return_value = store_libs
+    service_factory.store.client.get_library.return_value = dl_lib
+    fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
+
+    with pytest.raises(errors.CraftError, match=expected) as exc_info:
+        fetch_libs.run(argparse.Namespace())
+
+    assert exc_info.value.args[0] == expected
+
+
+@pytest.mark.parametrize(
+    ("libs", "store_libs", "dl_lib", "expected"),
+    [
+        (
+            [CharmLib(lib="mysql.backups", version="1")],
+            [
+                store.models.Library(
+                    charm_name="mysql",
+                    lib_name="backups",
+                    lib_id="ididid",
+                    api=1,
+                    patch=2,
+                    content=None,
+                    content_hash="hashhashhash",
+                )
+            ],
+            store.models.Library(
+                charm_name="mysql",
+                lib_name="backups",
+                lib_id="ididid",
+                api=1,
+                patch=2,
+                content="I am a library.",
+                content_hash="hashhashhash",
+            ),
+            "Store returned no content for 'mysql.backups'",
+        ),
+    ],
+)
+def test_fetch_libs_success(
+    new_path, emitter, service_factory, libs, store_libs, dl_lib, expected
+):
+    service_factory.project.charm_libs = libs
+    service_factory.store.client.fetch_libraries_metadata.return_value = store_libs
+    service_factory.store.client.get_library.return_value = dl_lib
+    fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
+
+    fetch_libs.run(argparse.Namespace())
+
+    emitter.assert_progress("Getting library metadata from charmhub")
+    emitter.assert_message("Downloaded 1 charm libraries.")

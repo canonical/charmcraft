@@ -112,8 +112,11 @@ def test_do_not_overwrite_metadata_yaml(
 ):
     fake_prime_dir = fake_path / "prime"
     fake_prime_dir.mkdir()
-    fake_metadata_yaml = fake_prime_dir / "metadata.yaml"
-    fake_metadata_yaml.touch()
+    fake_stage_dir = fake_path / "stage"
+    fake_stage_dir.mkdir()
+    fake_staged_metadata = fake_stage_dir / "metadata.yaml"
+    fake_staged_metadata.touch()
+    package_service._project.parts["reactive"] = {"source": "."}
 
     package_service.write_metadata(fake_prime_dir)
 

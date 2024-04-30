@@ -28,7 +28,7 @@ from charmcraft.application.commands import base
 _overview = """
 Run charm tests in different back-ends.
 
-This command will run charm test suites using the spread tool. Forfurther
+This command will run charm test suites using the spread tool. For further
 information, see the spread documentation: https://github.com/snapcore/spread
 """
 

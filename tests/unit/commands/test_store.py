@@ -16,15 +16,18 @@
 """Unit tests for store commands."""
 import argparse
 import datetime
+import pathlib
 import textwrap
+from unittest import mock
 
 import craft_cli.pytest_plugin
+import craft_store
 import pytest
 from craft_store import models
 
 from charmcraft import errors, store
 from charmcraft.application.commands import SetResourceArchitecturesCommand
-from charmcraft.application.commands.store import FetchLibs
+from charmcraft.application.commands.store import FetchLibs, LoginCommand
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import CharmLib
 from charmcraft.utils import cli
@@ -33,6 +36,49 @@ from tests import get_fake_revision
 BASIC_CHARMCRAFT_YAML = """\
 type: charm
 """
+
+
+def test_login_basic_no_export(service_factory, mock_store_client):
+    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
+
+    cmd.run(
+        argparse.Namespace(
+            charm=None,
+            bundle=None,
+            channel=None,
+            permission=None,
+            ttl=None,
+            export=None,
+        )
+    )
+
+
+@pytest.mark.parametrize("charm", [None, ["my-charm"]])
+@pytest.mark.parametrize("bundle", [None, ["my-bundle"]])
+@pytest.mark.parametrize("channel", [None, ["edge", "latest/stable"]])
+@pytest.mark.parametrize("permission", [None, [], ["package-manage"]])
+@pytest.mark.parametrize("ttl", [None, 0, 2**65])
+def test_login_export(
+    monkeypatch, service_factory, mock_store_client, charm, bundle, channel, permission, ttl
+):
+    mock_client_cls = mock.Mock(return_value=mock_store_client)
+    monkeypatch.setattr(craft_store, "StoreClient", mock_client_cls)
+    mock_store_client.login.return_value = "Some store credentials"
+    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
+
+    cmd.run(
+        argparse.Namespace(
+            charm=charm,
+            bundle=bundle,
+            channel=channel,
+            permission=permission,
+            ttl=ttl,
+            export=pathlib.Path("charmhub.login"),
+        )
+    )
+
+    assert pathlib.Path("charmhub.login").read_text() == "Some store credentials"
+    mock_store_client.login.assert_called_once()
 
 
 @pytest.mark.parametrize(

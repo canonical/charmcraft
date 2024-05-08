@@ -54,8 +54,19 @@ def simple_charm():
 
 
 @pytest.fixture()
+def mock_store_client():
+    client = mock.Mock(spec_set=store.Client)
+
+    client.whoami.return_value = {
+        "account": {"username": "test-user"},
+    }
+
+    return client
+
+
+@pytest.fixture()
 def service_factory(
-    fs, fake_project_dir, fake_prime_dir, simple_charm
+    fs, fake_project_dir, fake_prime_dir, simple_charm, mock_store_client
 ) -> services.CharmcraftServiceFactory:
     factory = services.CharmcraftServiceFactory(app=APP_METADATA)
 
@@ -66,7 +77,7 @@ def service_factory(
 
     factory.project = simple_charm
 
-    factory.store.client = mock.Mock(spec_set=store.Client)
+    factory.store.client = mock_store_client
 
     return factory
 

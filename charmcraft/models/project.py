@@ -569,10 +569,10 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 class BasesCharm(CharmcraftProject):
     """Model for defining a charm."""
 
-    type: Literal["charm"]
+    type: Literal["charm"]  # pyright: ignore[reportIncompatibleVariableOverride]
     name: models.ProjectName
-    summary: CharmcraftSummaryStr
-    description: str
+    summary: CharmcraftSummaryStr  # pyright: ignore[reportIncompatibleVariableOverride]
+    description: str  # pyright: ignore[reportIncompatibleVariableOverride]
 
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydontic issues. This appears to be
@@ -635,16 +635,18 @@ class BasesCharm(CharmcraftProject):
 class PlatformCharm(CharmcraftProject):
     """Model for defining a charm using Platforms."""
 
-    type: Literal["charm"]
+    type: Literal["charm"]  # pyright: ignore[reportIncompatibleVariableOverride]
     name: models.ProjectName
-    summary: CharmcraftSummaryStr
-    description: str
+    summary: CharmcraftSummaryStr  # pyright: ignore[reportIncompatibleVariableOverride]
+    description: str  # pyright: ignore[reportIncompatibleVariableOverride]
 
-    base: BaseStr
+    base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
     build_base: BuildBaseStr | None = None
-    platforms: dict[str, Platform | None]
+    platforms: dict[  # pyright: ignore[reportGeneralTypeIssues,reportIncompatibleVariableOverride]
+        str, Platform | None
+    ]
 
-    parts: dict[str, dict[str, Any]]  # craft-parts parts
+    parts: dict[str, dict[str, Any]]  # pyright: ignore[reportGeneralTypeIssues]
 
     actions: dict[str, Any] | None
     assumes: list[str | dict[str, list | dict]] | None

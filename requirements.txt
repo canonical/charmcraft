@@ -33,7 +33,7 @@ overrides==7.7.0
 packaging==24.0
 platformdirs==4.2.0
 protobuf==5.26.1
-pycparser==2.21
+pycparser==2.22
 pydantic==1.10.14
 pydantic-yaml==0.11.2
 pygit2==1.14.1

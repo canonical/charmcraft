@@ -3,22 +3,21 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
+import unittest
+
 import ops
 import ops.testing
-import pytest
 from charm import {{ class_name }}
 
 
-@pytest.fixture
-def harness():
-    harness = ops.testing.Harness({{ class_name }})
-    yield harness
-    harness.cleanup()
+class TestCharm(unittest.TestCase):
+    def setUp(self):
+        self.harness = ops.testing.Harness({{ class_name }})
+        self.addCleanup(self.harness.cleanup)
 
+    def test_start(self):
+        # Simulate the charm starting
+        self.harness.begin_with_initial_hooks()
 
-def test_start(harness: ops.testing.Harness[{{ class_name }}]):
-    # Simulate the charm starting
-    harness.begin_with_initial_hooks()
-
-    # Ensure we set an ActiveStatus with no message
-    assert harness.model.unit.status == ops.ActiveStatus()
+        # Ensure we set an ActiveStatus with no message
+        self.assertEqual(self.harness.model.unit.status, ops.ActiveStatus())

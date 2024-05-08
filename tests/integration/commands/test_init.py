@@ -259,7 +259,10 @@ def test_executable_set(new_path, init_command):
 
 @pytest.mark.slow()
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-@pytest.mark.skipif(bool(os.getenv("RUNNING_TOX")), reason="does not work inside tox")
+@pytest.mark.skipif(
+    bool(os.getenv("RUNNING_TOX")) and sys.version_info < (3, 11),
+    reason="does not work inside tox in Python3.10 and below",
+)
 @pytest.mark.parametrize("profile", list(commands.init.PROFILES))
 def test_tox_success(new_path, init_command, profile):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own

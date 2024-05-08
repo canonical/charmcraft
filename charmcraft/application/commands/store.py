@@ -187,7 +187,10 @@ class LoginCommand(CharmcraftCommand):
             if namespace_value is not None:
                 kwargs[arg_name] = namespace_value
 
-        packages = utils.get_packages(charms=parsed_args.charm, bundles=parsed_args.bundle) or None
+        packages = (
+            utils.get_packages(charms=parsed_args.charm or [], bundles=parsed_args.bundle or [])
+            or None
+        )
 
         if parsed_args.export:
             credentials = self._services.store.get_credentials(packages=packages, **kwargs)

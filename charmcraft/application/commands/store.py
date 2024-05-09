@@ -28,9 +28,10 @@ import typing
 import zipfile
 from collections.abc import Collection
 from operator import attrgetter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import yaml
+from craft_application import util
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_parts import Step
@@ -41,7 +42,7 @@ from humanize import naturalsize
 from tabulate import tabulate
 
 import charmcraft.store.models
-from charmcraft import const, env, parts, utils
+from charmcraft import const, env, errors, parts, utils
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.models import project
 from charmcraft.store import ImageHandler, LocalDockerdInterface, OCIRegistry, Store
@@ -186,7 +187,10 @@ class LoginCommand(CharmcraftCommand):
             if namespace_value is not None:
                 kwargs[arg_name] = namespace_value
 
-        packages = utils.get_packages(charms=parsed_args.charm, bundles=parsed_args.bundle) or None
+        packages = (
+            utils.get_packages(charms=parsed_args.charm or [], bundles=parsed_args.bundle or [])
+            or None
+        )
 
         if parsed_args.export:
             credentials = self._services.store.get_credentials(packages=packages, **kwargs)
@@ -499,21 +503,21 @@ def get_name_from_zip(filepath):
             name = yaml.safe_load(zf.read("metadata.yaml"))["name"]
         except Exception as err:
             raise CraftError(
-                "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
-                "a 'name' key.".format(str(filepath))
+                f"Bad 'metadata.yaml' file inside charm zip {str(filepath)!r}: must be a valid YAML with "
+                "a 'name' key."
             ) from err
     elif "bundle.yaml" in zf.namelist():
         try:
             name = yaml.safe_load(zf.read("bundle.yaml"))["name"]
         except Exception as err:
             raise CraftError(
-                "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
-                "a 'name' key.".format(str(filepath))
+                f"Bad 'bundle.yaml' file inside bundle zip {str(filepath)!r}: must be a valid YAML with "
+                "a 'name' key."
             ) from err
     else:
         raise CraftError(
-            "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
-            "nor a bundle ('bundle.yaml' not found).".format(str(filepath))
+            f"The indicated zip file {str(filepath)!r} is not a charm ('metadata.yaml' not found) "
+            "nor a bundle ('bundle.yaml' not found)."
         )
 
     return name
@@ -1385,9 +1389,7 @@ class PublishLibCommand(CharmcraftCommand):
                 )
             if lib_data.charm_name != charm_name:
                 raise CraftError(
-                    "The library {} does not belong to this charm {!r}.".format(
-                        lib_data.full_name, charm_name
-                    )
+                    f"The library {lib_data.full_name} does not belong to this charm {charm_name!r}."
                 )
             local_libs_data = [lib_data]
         else:
@@ -1512,6 +1514,7 @@ class FetchLibCommand(CharmcraftCommand):
     )
     format_option = True
     always_load_project = True
+    hidden = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -1522,7 +1525,7 @@ class FetchLibCommand(CharmcraftCommand):
             help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all",
         )
 
-    def run(self, parsed_args):
+    def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
         if parsed_args.library:
             local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
@@ -1536,10 +1539,9 @@ class FetchLibCommand(CharmcraftCommand):
         to_query = []
         for lib in local_libs_data:
             if lib.lib_id is None:
-                item = {"charm_name": lib.charm_name, "lib_name": lib.lib_name}
+                item = {"charm_name": lib.charm_name, "lib_name": lib.lib_name, "api": lib.api}
             else:
-                item = {"lib_id": lib.lib_id}
-            item["api"] = lib.api
+                item = {"lib_id": lib.lib_id, "api": lib.api}
             to_query.append(item)
         libs_tips = store.get_libraries_tips(to_query)
 
@@ -1619,7 +1621,7 @@ class FetchLibCommand(CharmcraftCommand):
         if parsed_args.format:
             output_data = []
             for lib_data, error_message in full_lib_data:
-                datum = {
+                datum: dict[str, Any] = {
                     "charm_name": lib_data.charm_name,
                     "library_name": lib_data.lib_name,
                     "library_id": lib_data.lib_id,
@@ -1634,6 +1636,94 @@ class FetchLibCommand(CharmcraftCommand):
                     datum["error_message"] = error_message
                 output_data.append(datum)
             emit.message(cli.format_content(output_data, parsed_args.format))
+
+
+class FetchLibs(CharmcraftCommand):
+    """Fetch libraries defined in charmcraft.yaml."""
+
+    name = "fetch-libs"
+    help_msg = "Fetch one or more charm libraries"
+    overview = textwrap.dedent(
+        """
+        Fetch charm libraries defined in charmcraft.yaml.
+
+        For each library in the top-level `charm-libs` key, fetch the latest library
+        version matching those requirements.
+
+        For example:
+        charm-libs:
+          # Fetch lib with API version 0.
+          # If `fetch-libs` is run and a newer minor version is available,
+          # it will be fetched from the store.
+          - lib: postgresql.postgres_client
+            version: "0"
+          # Always fetch precisely version 0.57.
+          - lib: mysql.client
+            version: "0.57"
+        """
+    )
+    format_option = True
+    always_load_project = True
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Fetch libraries."""
+        store = self._services.store
+        charm_libs = self._services.project.charm_libs
+        if not charm_libs:
+            raise errors.LibraryError(
+                message="No dependent libraries declared in charmcraft.yaml.",
+                resolution="Add a 'charm-libs' section to charmcraft.yaml.",
+                retcode=78,  # EX_CONFIG: configuration error
+            )
+        emit.progress("Getting library metadata from charmhub")
+        libs_metadata = store.get_libraries_metadata_by_name(charm_libs)
+        declared_libs = {lib.lib: lib for lib in charm_libs}
+        missing_store_libs = declared_libs.keys() - libs_metadata.keys()
+        if missing_store_libs:
+            missing_libs_source = [declared_libs[lib].dict() for lib in sorted(missing_store_libs)]
+            libs_yaml = util.dump_yaml(missing_libs_source)
+            raise errors.CraftError(
+                f"Could not find the following libraries on charmhub:\n{libs_yaml}",
+                resolution="Use 'charmcraft list-lib' to check library names and versions.",
+                reportable=False,
+                logpath_report=False,
+            )
+
+        emit.trace(f"Library metadata retrieved: {libs_metadata}")
+        local_libs = {
+            f"{lib.charm_name}.{lib.lib_name}": lib for lib in utils.get_libs_from_tree()
+        }
+        emit.trace(f"Local libraries: {local_libs}")
+
+        downloaded_libs = 0
+        for lib_md in libs_metadata.values():
+            lib_name = f"{lib_md.charm_name}.{lib_md.lib_name}"
+            local_lib = local_libs.get(lib_name)
+            if local_lib and local_lib.content_hash == lib_md.content_hash:
+                emit.debug(
+                    f"Skipping {lib_name} because the same file already exists on "
+                    f"disk (hash: {lib_md.content_hash}). "
+                    "Delete the file and re-run 'charmcraft fetch-libs' to force re-download."
+                )
+                continue
+            lib_name = utils.get_lib_module_name(lib_md.charm_name, lib_md.lib_name, lib_md.api)
+            emit.progress(f"Downloading {lib_name}")
+            lib = store.get_library(
+                charm_name=lib_md.charm_name,
+                library_id=lib_md.lib_id,
+                api=lib_md.api,
+                patch=lib_md.patch,
+            )
+            if lib.content is None:
+                raise errors.CraftError(
+                    f"Store returned no content for '{lib.charm_name}.{lib.lib_name}'"
+                )
+            downloaded_libs += 1
+            lib_path = utils.get_lib_path(lib_md.charm_name, lib_md.lib_name, lib_md.api)
+            lib_path.parent.mkdir(exist_ok=True, parents=True)
+            lib_path.write_text(lib.content)
+
+        emit.message(f"Downloaded {downloaded_libs} charm libraries.")
 
 
 class ListLibCommand(CharmcraftCommand):

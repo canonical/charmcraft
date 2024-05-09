@@ -20,9 +20,10 @@ import datetime
 import enum
 import functools
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal, TypedDict
 
 from craft_cli import CraftError
+from typing_extensions import NotRequired, Self
 
 
 @dataclasses.dataclass(frozen=True)
@@ -170,10 +171,7 @@ class Channel:
 
 @dataclasses.dataclass(frozen=True)
 class Library:
-    """Charmcraft-specific store library model.
-
-    Deprecated in favour of implementation in craft-store.
-    """
+    """Charmcraft-specific store library model."""
 
     lib_id: str
     lib_name: str
@@ -182,6 +180,24 @@ class Library:
     patch: int
     content: str | None
     content_hash: str
+
+    @classmethod
+    def from_dict(cls, value: dict[str, Any]) -> Self:
+        """Convert a dictionary of this type to the type itself.
+
+        Dictionary should match a single item of the `libraries` attribute in
+        the response to fetch_libraries or fetch_library
+        http://api.charmhub.io/docs/libraries.html#fetch_libraries
+        """
+        return cls(
+            charm_name=value["charm-name"],
+            lib_name=value["library-name"],
+            lib_id=value["library-id"],
+            api=value["api"],
+            patch=value["patch"],
+            content_hash=value["hash"],
+            content=value.get("content"),
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -265,3 +281,14 @@ class ChannelData:
         """Get the channel name as a string."""
         risk = self.risk.name.lower()
         return "/".join(i for i in (self.track, risk, self.branch) if i is not None)
+
+
+LibraryMetadataRequest = TypedDict(
+    "LibraryMetadataRequest",
+    {
+        "charm-name": str,
+        "library-name": str,
+        "api": int,
+        "patch": NotRequired[int],
+    },
+)

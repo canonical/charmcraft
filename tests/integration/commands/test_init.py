@@ -56,6 +56,33 @@ BASIC_INIT_FILES = frozenset(
         "tox.ini",
     )
 )
+BASIC_INIT_FILES_WITH_SPREAD = frozenset(
+    list(BASIC_INIT_FILES)
+    + [
+        pathlib.Path(p)
+        for p in (
+            "spread.yaml",
+            "tests/spread",
+            "tests/spread/lib",
+            "tests/spread/lib/cloud-config.yaml",
+            "tests/spread/lib/test-helpers.sh",
+            "tests/spread/general",
+            "tests/spread/general/integration",
+            "tests/spread/general/integration/task.yaml",
+        )
+    ]
+)
+BASIC_INIT_FILES_WITH_TOOLS = frozenset(
+    list(BASIC_INIT_FILES_WITH_SPREAD)
+    + [
+        pathlib.Path(p)
+        for p in (
+            "tests/spread/lib",
+            "tests/spread/lib/tools",
+            "tests/spread/lib/tools/retry",
+        )
+    ]
+)
 UNKNOWN_AUTHOR_REGEX = re.compile(
     r"^Unable to automatically determine author's name, specify it with --author$"
 )
@@ -96,9 +123,9 @@ def create_namespace(
 @pytest.mark.parametrize(
     ("profile", "expected_files"),
     [
-        pytest.param("simple", BASIC_INIT_FILES, id="simple"),
-        pytest.param("machine", BASIC_INIT_FILES, id="machine"),
-        pytest.param("kubernetes", BASIC_INIT_FILES, id="kubernetes"),
+        pytest.param("simple", BASIC_INIT_FILES_WITH_TOOLS, id="simple"),
+        pytest.param("machine", BASIC_INIT_FILES_WITH_SPREAD, id="machine"),
+        pytest.param("kubernetes", BASIC_INIT_FILES_WITH_TOOLS, id="kubernetes"),
     ],
 )
 @pytest.mark.parametrize("charm_name", ["my-charm", "charm123"])
@@ -207,7 +234,7 @@ def test_gecos_user_has_no_name(monkeypatch, new_path, init_command):
         ),
     ],
 )
-@pytest.mark.parametrize("expected_files", [BASIC_INIT_FILES])
+@pytest.mark.parametrize("expected_files", [BASIC_INIT_FILES_WITH_TOOLS])
 def test_create_directory(new_path, init_command, subdir, expected_files):
     init_dir = new_path / subdir
 
@@ -232,7 +259,10 @@ def test_executable_set(new_path, init_command):
 
 @pytest.mark.slow()
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-@pytest.mark.skipif(bool(os.getenv("RUNNING_TOX")), reason="does not work inside tox")
+@pytest.mark.skipif(
+    bool(os.getenv("RUNNING_TOX")) and sys.version_info < (3, 11),
+    reason="does not work inside tox in Python3.10 and below",
+)
 @pytest.mark.parametrize("profile", list(commands.init.PROFILES))
 def test_tox_success(new_path, init_command, profile):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own

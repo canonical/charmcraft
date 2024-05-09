@@ -330,9 +330,7 @@ def test_bundle_missing_name_in_bundle(tmp_path, bundle_yaml, bundle_config):
         PackCommand(bundle_config).run(noargs)
     assert str(cm.value) == (
         "Invalid bundle config; "
-        "missing a 'name' field indicating the bundle's name in file '{}'.".format(
-            tmp_path / const.BUNDLE_FILENAME
-        )
+        f"missing a 'name' field indicating the bundle's name in file '{tmp_path / const.BUNDLE_FILENAME}'."
     )
 
 

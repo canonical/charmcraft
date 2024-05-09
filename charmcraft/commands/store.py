@@ -16,7 +16,6 @@
 
 """Commands related to Charmhub."""
 import collections
-import dataclasses
 import os
 import pathlib
 import shutil
@@ -498,21 +497,21 @@ def get_name_from_zip(filepath):
             name = yaml.safe_load(zf.read(const.METADATA_FILENAME))["name"]
         except Exception as err:
             raise CraftError(
-                "Bad 'metadata.yaml' file inside charm zip {!r}: must be a valid YAML with "
-                "a 'name' key.".format(str(filepath))
+                f"Bad 'metadata.yaml' file inside charm zip {str(filepath)!r}: must be a valid YAML with "
+                "a 'name' key."
             ) from err
     elif const.BUNDLE_FILENAME in zf.namelist():
         try:
             name = yaml.safe_load(zf.read(const.BUNDLE_FILENAME))["name"]
         except Exception as err:
             raise CraftError(
-                "Bad 'bundle.yaml' file inside bundle zip {!r}: must be a valid YAML with "
-                "a 'name' key.".format(str(filepath))
+                f"Bad 'bundle.yaml' file inside bundle zip {str(filepath)!r}: must be a valid YAML with "
+                "a 'name' key."
             ) from err
     else:
         raise CraftError(
-            "The indicated zip file {!r} is not a charm ('metadata.yaml' not found) "
-            "nor a bundle ('bundle.yaml' not found).".format(str(filepath))
+            f"The indicated zip file {str(filepath)!r} is not a charm ('metadata.yaml' not found) "
+            "nor a bundle ('bundle.yaml' not found)."
         )
 
     return name
@@ -1380,9 +1379,7 @@ class PublishLibCommand(BaseCommand):
                 )
             if lib_data.charm_name != charm_name:
                 raise CraftError(
-                    "The library {} does not belong to this charm {!r}.".format(
-                        lib_data.full_name, charm_name
-                    )
+                    f"The library {lib_data.full_name} does not belong to this charm {charm_name!r}."
                 )
             local_libs_data = [lib_data]
         else:
@@ -1472,154 +1469,6 @@ class PublishLibCommand(BaseCommand):
                 }
                 if error_message is None:
                     datum["published"] = {
-                        "patch": lib_data.patch,
-                        "content_hash": lib_data.content_hash,
-                    }
-                else:
-                    datum["error_message"] = error_message
-                output_data.append(datum)
-            emit.message(self.format_content(parsed_args.format, output_data))
-
-
-class FetchLibCommand(BaseCommand):
-    """Fetch one or more charm libraries."""
-
-    name = "fetch-lib"
-    help_msg = "Fetch one or more charm libraries"
-    overview = textwrap.dedent(
-        """
-        Fetch charm libraries.
-
-        The first time a library is downloaded the command will create the needed
-        directories to place it, subsequent fetches will just update the local copy.
-
-        You can specify the library to update or download by building its fully
-        qualified name with the charm and library names, and the desired API
-        version. For example, to fetch the API version 3 of library 'somelib'
-        from charm `specialcharm`, do:
-
-            $ charmcraft fetch-lib charms.specialcharm.v3.somelib
-            Library charms.specialcharm.v3.somelib version 3.7 downloaded.
-
-        If the command is executed without parameters, it will update all the currently
-        downloaded libraries.
-    """
-    )
-
-    def fill_parser(self, parser):
-        """Add own parameters to the general parser."""
-        self.include_format_option(parser)
-        parser.add_argument(
-            "library",
-            nargs="?",
-            help="Library to fetch (e.g. charms.mycharm.v2.foo.); optional, default to all",
-        )
-
-    def run(self, parsed_args):
-        """Run the command."""
-        if parsed_args.library:
-            local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
-        else:
-            local_libs_data = utils.get_libs_from_tree()
-            found_libs = [lib_data.full_name for lib_data in local_libs_data]
-            emit.debug(f"Libraries found under 'lib/charms': {found_libs}")
-
-        # get tips from the Store
-        store = Store(self.config.charmhub, needs_auth=False)
-        to_query = []
-        for lib in local_libs_data:
-            if lib.lib_id is None:
-                item = {"charm_name": lib.charm_name, "lib_name": lib.lib_name}
-            else:
-                item = {"lib_id": lib.lib_id}
-            item["api"] = lib.api
-            to_query.append(item)
-        libs_tips = store.get_libraries_tips(to_query)
-
-        # check if something needs to be done
-        analysis = []
-        for lib_data in local_libs_data:
-            emit.debug(f"Verifying local lib {lib_data}")
-            # fix any missing lib id using the Store info
-            if lib_data.lib_id is None:
-                for tip in libs_tips.values():
-                    if lib_data.charm_name == tip.charm_name and lib_data.lib_name == tip.lib_name:
-                        lib_data = dataclasses.replace(lib_data, lib_id=tip.lib_id)
-                        break
-
-            tip = libs_tips.get((lib_data.lib_id, lib_data.api))
-            emit.debug(f"Store tip: {tip}")
-            error_message = None
-            if tip is None:
-                error_message = f"Library {lib_data.full_name} not found in Charmhub."
-            elif tip.patch > lib_data.patch:
-                # the store has a higher version than local
-                pass
-            elif tip.patch < lib_data.patch:
-                # the store has a lower version numbers than local
-                error_message = (
-                    f"Library {lib_data.full_name} has local changes, cannot be updated."
-                )
-            else:
-                # same versions locally and in the store
-                if tip.content_hash == lib_data.content_hash:
-                    error_message = (
-                        f"Library {lib_data.full_name} was already up to date in "
-                        f"version {tip.api:d}.{tip.patch:d}."
-                    )
-                else:
-                    error_message = (
-                        f"Library {lib_data.full_name} has local changes, cannot be updated."
-                    )
-            analysis.append((lib_data, error_message))
-
-        full_lib_data = []
-        for lib_data, error_message in analysis:
-            if error_message is None:
-                downloaded = store.get_library(lib_data.charm_name, lib_data.lib_id, lib_data.api)
-                if lib_data.content is None:
-                    # locally new
-                    lib_data.path.parent.mkdir(parents=True, exist_ok=True)
-                    lib_data.path.write_text(downloaded.content)
-                    message = (
-                        f"Library {lib_data.full_name} version "
-                        f"{downloaded.api:d}.{downloaded.patch:d} downloaded."
-                    )
-                else:
-                    # XXX Facundo 2020-12-17: manage the case where the library was renamed
-                    # (related GH issue: #214)
-                    lib_data.path.write_text(downloaded.content)
-                    message = (
-                        f"Library {lib_data.full_name} updated to version "
-                        f"{downloaded.api:d}.{downloaded.patch:d}."
-                    )
-
-                # fix lib_data with new info so it's later available
-                # for the case of programmatic output
-                lib_data = dataclasses.replace(
-                    lib_data,
-                    patch=downloaded.patch,
-                    content=downloaded.content,
-                    content_hash=downloaded.content_hash,
-                )
-            else:
-                message = error_message
-            full_lib_data.append((lib_data, error_message))
-
-            if not parsed_args.format:
-                emit.message(message)
-
-        if parsed_args.format:
-            output_data = []
-            for lib_data, error_message in full_lib_data:
-                datum = {
-                    "charm_name": lib_data.charm_name,
-                    "library_name": lib_data.lib_name,
-                    "library_id": lib_data.lib_id,
-                    "api": lib_data.api,
-                }
-                if error_message is None:
-                    datum["fetched"] = {
                         "patch": lib_data.patch,
                         "content_hash": lib_data.content_hash,
                     }

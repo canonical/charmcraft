@@ -65,6 +65,9 @@ apps:
       XDG_CONFIG_HOME: $SNAP_USER_COMMON/config
       CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
 
+  spread:
+    command: bin/spread
+
 confinement: classic
 
 build-packages:
@@ -148,6 +151,17 @@ parts:
       sed -i -e '1 s|^#!/.*|#!/snap/charmcraft/current/bin/python -E|' $CRAFT_PART_INSTALL/bin/craftctl
     organize:
       bin/craftctl: libexec/charmcraft/craftctl
+
+  spread:
+    plugin: go
+    source: https://github.com/snapcore/spread.git
+    source-depth: 1
+    build-packages:
+      - golang-go
+    build-environment:
+      - CGO_ENABLED: 0
+    stage:
+      - -bin/humbox
 
 hooks:
   configure:

@@ -20,6 +20,7 @@ import pathlib
 from textwrap import dedent
 from typing import Any
 
+import hypothesis
 import pydantic
 import pyfakefs.fake_filesystem
 import pytest
@@ -29,6 +30,7 @@ from craft_application.errors import CraftValidationError
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
+from hypothesis import strategies
 
 from charmcraft import const, utils
 from charmcraft.models import project
@@ -55,6 +57,7 @@ FULL_BASE_CONFIG_DICT = {
     "build-on": [{"channel": "22.04", "name": "ubuntu"}],
     "run-on": [{"channel": "22.04", "name": "ubuntu"}],
 }
+BASIC_CHARM_PARTS = {"charm": {"plugin": "charm", "source": "."}}
 
 MINIMAL_CHARMCRAFT_YAML = """\
 type: charm
@@ -187,6 +190,67 @@ def test_build_info_from_build_on_run_on_basic(
     pytest_check.equal(info.build_for, run_on.architectures[0])
     pytest_check.equal(info.base.name, build_on_base.name)
     pytest_check.equal(info.base.version, build_on_base.channel)
+
+
+@pytest.mark.parametrize(
+    "lib_name",
+    ["charm.lib", "charm_with_hyphens.lib", "charm.lib_with_hyphens", "charm0.number_0_lib"],
+)
+@pytest.mark.parametrize("lib_version", ["0", "1", "2.0", "2.1", "3.14"])
+def test_create_valid_charm_lib(lib_name, lib_version):
+    project.CharmLib.unmarshal({"lib": lib_name, "version": lib_version})
+
+
+@pytest.mark.parametrize(
+    ("name", "error_match"),
+    [
+        ("boop", r"Library name invalid. Expected '\[charm_name\].\[lib_name\]', got 'boop'"),
+        (
+            "raw-charm-name.valid_lib",
+            r"Invalid charm name in lib 'raw-charm-name.valid_lib'. Try replacing hyphens \('-'\) with underscores \('_'\).",
+        ),
+        (
+            "Invalid charm name.valid_lib",
+            "Invalid charm name for lib 'Invalid charm name.valid_lib'. Value 'Invalid charm name' is invalid",
+        ),
+        ("my_charm.invalid library name", "Library name 'invalid library name' is invalid."),
+    ],
+)
+def test_invalid_charm_lib_name(name: str, error_match: str):
+    with pytest.raises(pydantic.ValidationError, match=error_match):
+        project.CharmLib.unmarshal({"lib": name, "version": "0"})
+
+
+@hypothesis.given(
+    strategies.one_of(
+        strategies.floats(
+            min_value=0.001,
+            max_value=2**32,
+            allow_nan=False,
+            allow_infinity=False,
+            allow_subnormal=False,
+        ),
+        strategies.integers(min_value=0, max_value=2**32),
+    )
+)
+def test_valid_library_version(version: float):
+    project.CharmLib.unmarshal({"lib": "charm_name.lib_name", "version": str(version)})
+
+
+@pytest.mark.parametrize("version", [".1", "NaN", ""])
+def test_invalid_api_version(version: str):
+    with pytest.raises(
+        pydantic.ValidationError, match="API version not valid. Expected an integer, got '"
+    ):
+        project.CharmLib(lib="charm_name.lib_name", version=version)
+
+
+@pytest.mark.parametrize("version", ["1.", "1.number"])
+def test_invalid_patch_version(version: str):
+    with pytest.raises(
+        pydantic.ValidationError, match="Patch version not valid. Expected an integer, got '"
+    ):
+        project.CharmLib(lib="charm_name.lib_name", version=version)
 
 
 @pytest.mark.parametrize(
@@ -477,35 +541,39 @@ def test_unmarshal_invalid_type(type_):
             None,
             None,
             None,
-            {},
+            {"parts": BASIC_CHARM_PARTS},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             None,
             None,
-            {},
+            {"parts": BASIC_CHARM_PARTS},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             SIMPLE_CONFIG_YAML,
             None,
-            {"config": SIMPLE_CONFIG_DICT},
+            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
             SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT},
+            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             SIMPLE_CONFIG_YAML,
             SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT, "config": SIMPLE_CONFIG_DICT},
+            {
+                "actions": SIMPLE_ACTIONS_DICT,
+                "config": SIMPLE_CONFIG_DICT,
+                "parts": BASIC_CHARM_PARTS,
+            },
         ),
     ],
 )

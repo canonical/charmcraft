@@ -82,7 +82,6 @@ _charmhub_commands = [
     store.CreateLibCommand,
     store.PublishLibCommand,
     store.ListLibCommand,
-    store.FetchLibCommand,
     # resources support
     store.ListResourcesCommand,
     store.UploadResourceCommand,

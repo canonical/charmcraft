@@ -1,6 +1,7 @@
 name: cla-check
 on:
   pull_request:
+  merge_group:
 
 jobs:
   cla-check:
@@ -10,3 +11,6 @@ jobs:
         uses: canonical/has-signed-canonical-cla@v1
         # This prevents the action from running on a merge group, where it fails.
         if: ${{ github.event_name != 'merge_group' }}
+      - name: No-Op  # This exists so the job succeeds if the above step doesn't run.
+        run: 'true'
+        if: ${{ github.event_name == 'merge_group' }}

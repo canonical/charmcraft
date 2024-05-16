@@ -347,9 +347,9 @@ def assert_matched_and_non_matched(globs, matched, unmatched, skip_git=False):
             text=True,
         )
     matched_out = p.stdout.splitlines()
-    assert sorted(matched) == sorted(matched_out), "expected exactly {} to match not {}".format(
-        matched, matched_out
-    )
+    assert sorted(matched) == sorted(
+        matched_out
+    ), f"expected exactly {matched} to match not {matched_out}"
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")

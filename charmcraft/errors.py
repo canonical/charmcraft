@@ -50,17 +50,20 @@ class InvalidEnvironmentVariableError(CraftError):
         )
 
 
-class BadLibraryPathError(CraftError):
+class LibraryError(CraftError):
+    """Errors related to charm libraries."""
+
+
+class BadLibraryPathError(LibraryError):
     """Subclass to provide a specific error for a bad library path."""
 
     def __init__(self, path):
         super().__init__(
-            "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
-            "".format(path)
+            f"Charm library path {path} must conform to lib/charms/<charm>/vN/<libname>.py"
         )
 
 
-class BadLibraryNameError(CraftError):
+class BadLibraryNameError(LibraryError):
     """Subclass to provide a specific error for a bad library name."""
 
     def __init__(self, name):

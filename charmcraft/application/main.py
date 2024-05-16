@@ -62,9 +62,26 @@ class Charmcraft(Application):
         """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
         return {"version": "unversioned"}
 
+    def _check_deprecated(self, yaml_data: dict[str, Any]) -> None:
+        """Check for deprecated fields in the yaml_data."""
+        if "parts" in yaml_data:
+            for k, v in yaml_data["parts"].items():
+                if (k in ("charm", "reactive", "bundle")) or (
+                    v.get("plugin", None) in ("charm", "reactive", "bundle")
+                ):
+                    if "prime" in v:
+                        craft_cli.emit.progress(
+                            "Warning: use of 'prime' in a charm part "
+                            "is deprecated and no longer works, "
+                            "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
+                            permanent=True,
+                        )
+
     def _extra_yaml_transform(
         self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
     ) -> dict[str, Any]:
+        self._check_deprecated(yaml_data)
+
         # Extensions get applied on as close as possible to what the user provided.
         yaml_data = extensions.apply_extensions(self.project_dir, yaml_data.copy())
 

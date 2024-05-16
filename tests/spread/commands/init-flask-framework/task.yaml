@@ -1,8 +1,5 @@
 summary: test charmcraft init with flask-framework profile
 
-environment:
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
-
 execute: |
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL

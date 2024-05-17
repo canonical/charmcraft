@@ -18,7 +18,6 @@
 import argparse
 import os
 import subprocess
-import sys
 
 from craft_cli import CraftError, emit
 
@@ -41,40 +40,65 @@ class TestCommand(base.CharmcraftCommand):
     overview = _overview
     common = True
 
-    def fill_parser(self, parser):
-        """Specify command's specific parameters."""
-        parser.add_argument(
-            "spread_args",
-            metavar="spread arguments",
-            nargs=argparse.REMAINDER,
-            help="Arguments to spread",
+
+    def fill_parser(self, parser: argparse.ArgumentParser) -> None:
+        """Specify the parameters for this command."""
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument(
+            "--shell",
+            action="store_true",
+            help="Shell into the environment in lieu of the step to run.",
+         )
+        group.add_argument(
+            "--shell-after",
+            action="store_true",
+            help="Shell into the environment after the step has run.",
         )
 
-        # XXX: Arguments to the test command are passed directly to spread.
-        #      Inject separator in the argument to avoid parsing test command
-        #      arguments. We should implement better support for this case
-        #      in craft-application.
-        idx = sys.argv.index("test") + 1
-        sys.argv = [*sys.argv[:idx], "--", *sys.argv[idx:]]
+        parser.add_argument(
+            "--debug",
+            action="store_true",
+            help="Shell into the environment if the build fails.",
+        )
+
+        parser.add_argument(
+            "--list",
+            action="store_true",
+            help="Just show the list of jobs that would run.",
+        )
+
+        parser.add_argument(
+            "spread_tasks",
+            metavar="tasks",
+            nargs=argparse.REMAINDER,
+            help=(
+                "Spread tasks to run, in backend:system:suite/task:variant "
+                "format. All fields are optional.",
+            )
+        )
 
     def run(self, parsed_args: argparse.Namespace):
         """Execute command's actual functionality."""
-        # If running on github and no arguments are specified, use the
-        # github-ci backend.
-        spread_args = parsed_args.spread_args
-        if len(spread_args) > 0 and spread_args[0] == "--":
-            spread_args = spread_args[1:]
-
-        if len(spread_args) == 0 and os.environ.get("GITHUB_RUN_ID"):
-            spread_args = ["github-ci"]
-
         if env.is_charmcraft_running_from_snap():
-            cmd = f"{os.environ['SNAP']}/bin/spread"
+            cmd = [f"{os.environ['SNAP']}/bin/spread"]
         else:
-            cmd = "spread"
+            cmd = ["spread"]
+
+        for arg in ("shell", "shell-after", "debug", "list"):
+            if vars(parsed_args).get(arg):
+                cmd.append("-" + arg)
+
+        # Choose the github-ci backend if running on GitHub, otherwise default
+        # to multipass.
+        spread_tasks = parsed_args.spread_tasks
+        if len(spread_tasks) == 0:
+            if os.environ.get("GITHUB_RUN_ID"):
+                spread_tasks = ["github-ci"]
+            else:
+                spread_tasks = ["multipass"]
 
         try:
             with emit.pause():
-                subprocess.run([cmd, *spread_args], check=True)
+                subprocess.run([*cmd, *spread_tasks], check=True)
         except subprocess.CalledProcessError as err:
             raise CraftError(f"test error: {err}")

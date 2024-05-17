@@ -13,7 +13,7 @@ environment:
   # important to ensure adhoc and linode/qemu behave the same
   SUDO_USER: ""
   SUDO_UID: ""
-  
+
   LANG: "C.UTF-8"
   LANGUAGE: "en"
 
@@ -94,7 +94,7 @@ suites:
     summary: Charm functionality tests
 
     systems:
-      - ubuntu-22.04
+      - ubuntu-22.04*
 
     environment:
       CHARMCRAFT_CHANNEL/charmcraft_current: latest/stable

@@ -40,7 +40,6 @@ class TestCommand(base.CharmcraftCommand):
     overview = _overview
     common = True
 
-
     def fill_parser(self, parser: argparse.ArgumentParser) -> None:
         """Specify the parameters for this command."""
         group = parser.add_mutually_exclusive_group()
@@ -48,7 +47,7 @@ class TestCommand(base.CharmcraftCommand):
             "--shell",
             action="store_true",
             help="Shell into the environment in lieu of the step to run.",
-         )
+        )
         group.add_argument(
             "--shell-after",
             action="store_true",
@@ -74,7 +73,7 @@ class TestCommand(base.CharmcraftCommand):
             help=(
                 "Spread tasks to run, in backend:system:suite/task:variant "
                 "format. All fields are optional.",
-            )
+            ),
         )
 
     def run(self, parsed_args: argparse.Namespace):

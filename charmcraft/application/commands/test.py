@@ -72,7 +72,7 @@ class TestCommand(base.CharmcraftCommand):
             nargs=argparse.REMAINDER,
             help=(
                 "Spread tasks to run, in backend:system:suite/task:variant "
-                "format. All fields are optional.",
+                "format. All fields are optional."
             ),
         )
 

@@ -24,10 +24,14 @@ extensions:
   - flask-framework
 
 # Uncomment the integrations used by your application
+# Integrations set to "optional: true" will block the charm
+# until the applications are integrated.
 # requires:
 #   mysql:
 #     interface: mysql_client
+#     optional: false
 #     limit: 1
 #   postgresql:
 #     interface: postgresql_client
+#     optional: false
 #     limit: 1

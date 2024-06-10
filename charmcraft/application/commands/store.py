@@ -43,7 +43,7 @@ from humanize import naturalsize
 from tabulate import tabulate
 
 import charmcraft.store.models
-from charmcraft import const, env, errors, parts, services, utils
+from charmcraft import const, env, errors, parts, utils
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.models import project
 from charmcraft.store import Store
@@ -1949,7 +1949,7 @@ class UploadResourceCommand(CharmcraftCommand):
         elif parsed_args.image:
             emit.progress("Getting image")
             emit.debug("Trying to get image from Docker")
-            image_service = typing.cast(services.ImageService, self._services.image)
+            image_service = self._services.image
             if digest := image_service.get_maybe_id_from_docker(parsed_args.image):
                 emit.debug("Image is available via the local Docker daemon.")
                 source_path = f"docker-daemon:{digest}"

@@ -23,9 +23,10 @@ import subprocess
 from collections.abc import Sequence
 
 import craft_application
-import docker
-import docker.errors
-import docker.models.images
+import docker  # type: ignore[import-untyped]
+import docker.errors  # type: ignore[import-untyped]
+import docker.models.images  # type: ignore[import-untyped]
+from overrides import override
 
 from charmcraft import const, errors, utils
 
@@ -63,7 +64,9 @@ class ImageService(craft_application.AppService):
 
         self._skopeo_path = shutil.which("skopeo") or ""
 
+    @override
     def setup(self) -> None:
+        """Set up the image service."""
         super().setup()
         if not self._skopeo_path:
             raise errors.CraftError(
@@ -105,7 +108,7 @@ class ImageService(craft_application.AppService):
         )
 
     def get_maybe_id_from_docker(self, name: str) -> str | None:
-        """Get the ID of an image from Docker
+        """Get the ID of an image from Docker.
 
         :param name: Any string Docker recognises as the image name.
         :returns: An image digest or None

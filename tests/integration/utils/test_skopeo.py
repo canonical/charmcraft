@@ -18,6 +18,7 @@
 import contextlib
 import os
 import pathlib
+import platform
 import shutil
 
 import pytest
@@ -28,7 +29,12 @@ from charmcraft.utils.skopeo import Skopeo
 pytestmark = [
     pytest.mark.skipif(
         "CI" not in os.environ and not shutil.which("skopeo"), reason="skopeo not found in PATH"
-    )
+    ),
+    pytest.mark.xfail(
+        platform.system().lower() not in ("linux", "darwin"),
+        reason="Don't necessarily have skopeo on non Linux/mac platforms.",
+        strict=False,  # Allow them to pass anyway.
+    ),
 ]
 
 

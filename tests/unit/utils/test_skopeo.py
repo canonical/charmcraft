@@ -16,11 +16,20 @@
 """Unit tests for skopeo wrapper."""
 
 import pathlib
+import platform
 from unittest import mock
 
 import pytest
 
 from charmcraft.utils.skopeo import Skopeo
+
+pytestmark = [
+    pytest.mark.xfail(
+        platform.system().lower() not in ("linux", "darwin"),
+        reason="Don't necessarily have skopeo on non Linux/mac platforms.",
+        strict=False,  # Allow them to pass anyway.
+    ),
+]
 
 IMAGE_PATHS = [  # See: https://github.com/containers/skopeo/blob/main/docs/skopeo.1.md#image-names
     "containers-storage:my/local:image",

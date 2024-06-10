@@ -63,7 +63,7 @@ jobs:
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt update
-          sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
+          sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev skopeo
           export $(cat /etc/os-release | grep VERSION_CODENAME)
           pip install -U -r "requirements-${VERSION_CODENAME}.txt"
       - name: Configure environment

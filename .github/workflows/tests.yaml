@@ -78,7 +78,18 @@ jobs:
           python -m pip install tox
           tox run --colored yes -m tests --notest
       - name: Run tests
+        shell: bash
         run: |
+          if [[ $(uname --kernel-name) == "Linux" ]]; then
+            # Ensure the version of skopeo comes from homebrew
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            # Allow skopeo to access the contents of /run/containers
+            sudo chmod 777 /run/containers
+            # Add an xdg runtime dir for skopeo to look into for an auth.json file
+            sudo mkdir -p /run/user/$(id -u)
+            sudo chown $USER /run/user/$(id -u)
+            export XDG_RUNTIME_DIR=/run/user/$(id -u)
+          fi
           tox run --skip-pkg-install --no-list-dependencies --result-json results/tox-${{ matrix.platform }}.json --colored yes -m tests
 
   snap-build:

@@ -64,7 +64,9 @@ def test_find_skopeo_success(fake_process):
         pytest.param({"os": "linux"}, ["--override-os", "linux"], id="os-linux"),
         pytest.param({"os": "bsd"}, ["--override-os", "bsd"], id="os-bsd"),
         pytest.param(
-            {"tmpdir": pathlib.Path("/run/user/1000")}, ["--tmpdir", "/run/user/1000"], id="tmpdir"
+            {"tmpdir": pathlib.Path("/tmp/skopeo_tmp")},
+            ["--tmpdir", "/tmp/skopeo_tmp"],
+            id="tmpdir",
         ),
     ],
 )

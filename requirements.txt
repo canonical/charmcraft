@@ -9,7 +9,7 @@ craft-grammar==1.2.0
 craft-parts==1.31.0
 craft-providers==1.23.1
 craft-store==2.6.2
-cryptography==42.0.7
+cryptography==42.0.8
 Deprecated==1.2.14
 distro==1.9.0
 docker==7.1.0
@@ -32,7 +32,7 @@ more-itertools==10.2.0
 oauthlib==3.2.2
 overrides==7.7.0
 packaging==24.0
-platformdirs==4.2.1
+platformdirs==4.2.2
 protobuf==5.26.1
 pycparser==2.22
 pydantic==1.10.15

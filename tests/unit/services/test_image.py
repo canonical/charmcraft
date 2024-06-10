@@ -19,11 +19,11 @@
 import itertools
 import json
 from unittest import mock
+
 import docker
 import docker.errors
 import docker.models.images
 import pytest
-import pytest_check
 
 from charmcraft import application, const, services, utils
 
@@ -69,14 +69,11 @@ def test_inspect_single_arch(
     fake_process, image_service: services.ImageService, mock_skopeo, image: str, architecture
 ):
     fake_process.register(
-        ["/skopeo", "inspect", "--raw", image],
-        stdout=json.dumps({"raw_manifest": True})
+        ["/skopeo", "inspect", "--raw", image], stdout=json.dumps({"raw_manifest": True})
     )
     fake_process.register(
         ["/skopeo", "inspect", image],
-        stdout=json.dumps(
-            {"Digest": "Reader's", "Architecture": architecture}
-        ),
+        stdout=json.dumps({"Digest": "Reader's", "Architecture": architecture}),
     )
 
     actual = image_service.inspect(image)
@@ -87,10 +84,7 @@ def test_inspect_single_arch(
 
 
 @pytest.mark.parametrize("image", ["my-image"])
-@pytest.mark.parametrize(
-    "architectures",
-    itertools.product(const.CharmArch, repeat=2)
-)
+@pytest.mark.parametrize("architectures", itertools.product(const.CharmArch, repeat=2))
 def test_inspect_two_arch(
     fake_process, image_service: services.ImageService, mock_skopeo, image: str, architectures
 ):
@@ -99,19 +93,15 @@ def test_inspect_two_arch(
         stdout=json.dumps(
             {
                 "manifests": [
-                    {
-                        "platform": {"os": "linux", "architecture": str(arch)}
-                    }
+                    {"platform": {"os": "linux", "architecture": str(arch)}}
                     for arch in architectures
                 ],
             }
-        )
+        ),
     )
     fake_process.register(
         ["/skopeo", "inspect", image],
-        stdout=json.dumps(
-            {"Digest": "Reader's", "Architecture": "amd64"}
-        )
+        stdout=json.dumps({"Digest": "Reader's", "Architecture": "amd64"}),
     )
 
     actual = image_service.inspect(image)

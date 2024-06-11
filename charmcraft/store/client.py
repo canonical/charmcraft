@@ -199,7 +199,9 @@ class Client(craft_store.StoreClient):
 
         http://api.charmhub.io/docs/libraries.html#fetch_libraries
         """
-        emit.trace(f"Fetching library metadata from charmhub: {libs}", )
+        emit.trace(
+            f"Fetching library metadata from charmhub: {libs}",
+        )
         response = self.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=libs)
         if "libraries" not in response:
             raise CraftError(

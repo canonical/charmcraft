@@ -1,4 +1,6 @@
 summary: pack a simple reactive charm
+# Run these early since they take a while.
+priority: 100
 
 environment:
   CHARM_SNAP_CHANNEL/stable: stable

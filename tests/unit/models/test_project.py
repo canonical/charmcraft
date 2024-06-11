@@ -193,12 +193,19 @@ def test_build_info_from_build_on_run_on_basic(
 
 
 @pytest.mark.parametrize(
-    "lib_name",
-    ["charm.lib", "charm_with_hyphens.lib", "charm.lib_with_hyphens", "charm0.number_0_lib"],
+    ("lib_name", "expected_lib_name"),
+    [
+        ("charm.lib", "charm.lib"),
+        ("charm_with_underscores.lib", "charm-with-underscores.lib"),
+        ("charm-with-hyphens.lib", "charm-with-hyphens.lib"),
+        ("charm.lib_with_hyphens", "charm.lib_with_hyphens"),
+        ("charm0.number_0_lib", "charm0.number_0_lib"),
+    ],
 )
 @pytest.mark.parametrize("lib_version", ["0", "1", "2.0", "2.1", "3.14"])
-def test_create_valid_charm_lib(lib_name, lib_version):
-    project.CharmLib.unmarshal({"lib": lib_name, "version": lib_version})
+def test_create_valid_charm_lib(lib_name: str, expected_lib_name: str, lib_version: str):
+    lib = project.CharmLib.unmarshal({"lib": lib_name, "version": lib_version})
+    assert lib.lib == expected_lib_name
 
 
 @pytest.mark.parametrize(

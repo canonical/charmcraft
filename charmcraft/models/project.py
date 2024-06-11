@@ -152,7 +152,7 @@ class CharmLib(models.CraftBaseModel):
             raise ValueError(
                 f"Library name {lib_name!r} is invalid. Library names must be valid Python module names."
             )
-        return str(value)
+        return f"{charm_name}.{lib_name}"
 
     @pydantic.validator("version", pre=True)
     def _validate_api_version(cls, value: str) -> str:

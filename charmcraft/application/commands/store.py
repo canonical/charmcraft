@@ -1950,6 +1950,8 @@ class UploadResourceCommand(CharmcraftCommand):
             emit.progress("Getting image")
             emit.debug("Trying to get image from Docker")
             image_service = self._services.image
+            # Check Docker first for backwards compatibility - prefer to get from
+            # Docker than from a local path if Docker contains the image.
             if digest := image_service.get_maybe_id_from_docker(parsed_args.image):
                 emit.debug("Image is available via the local Docker daemon.")
                 source_path = f"docker-daemon:{digest}"

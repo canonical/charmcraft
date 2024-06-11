@@ -67,6 +67,8 @@ jobs:
           export $(cat /etc/os-release | grep VERSION_CODENAME)
           pip install -U -r "requirements-${VERSION_CODENAME}.txt"
       - name: Install external dependencies with homebrew
+        # This is only necessary for Linux until skopeo >= 1.11 is in repos.
+        # Once we're running on Noble, we can get skopeo from apt.
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
         run: |
           if [[ $(uname --kernel-name) == "Linux" ]]; then
@@ -82,6 +84,7 @@ jobs:
         run: |
           if [[ $(uname --kernel-name) == "Linux" ]]; then
             # Ensure the version of skopeo comes from homebrew
+            # This is only necessary until we move to noble.
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             # Allow skopeo to access the contents of /run/containers
             sudo chmod 777 /run/containers

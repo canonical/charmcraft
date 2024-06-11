@@ -206,14 +206,10 @@ def test_create_valid_charm_lib(lib_name, lib_version):
     [
         ("boop", r"Library name invalid. Expected '\[charm_name\].\[lib_name\]', got 'boop'"),
         (
-            "raw-charm-name.valid_lib",
-            r"Invalid charm name in lib 'raw-charm-name.valid_lib'. Try replacing hyphens \('-'\) with underscores \('_'\).",
-        ),
-        (
             "Invalid charm name.valid_lib",
             "Invalid charm name for lib 'Invalid charm name.valid_lib'. Value 'Invalid charm name' is invalid",
         ),
-        ("my_charm.invalid library name", "Library name 'invalid library name' is invalid."),
+        ("my_charm.invalid-library-name", "Library name 'invalid-library-name' is invalid. Library names must be valid Python module names."),
     ],
 )
 def test_invalid_charm_lib_name(name: str, error_match: str):

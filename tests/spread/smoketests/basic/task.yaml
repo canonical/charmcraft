@@ -1,4 +1,6 @@
 summary: pack a simple charm on various bases
+kill-timeout: 30m  # These sometimes take a while to download bases.
+priority: 50  # Because these can take a while, run them early.
 
 environment:
   BASE_CHANNEL/focal_bases: 20.04

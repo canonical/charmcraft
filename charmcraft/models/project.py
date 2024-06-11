@@ -149,7 +149,9 @@ class CharmLib(models.CraftBaseModel):
                 f"Invalid charm name for lib {value!r}. Value {charm_name!r} is invalid."
             )
         if not re.fullmatch("[a-z0-9_]+", lib_name):
-            raise ValueError(f"Library name {lib_name!r} is invalid. Library names must be valid Python module names.")
+            raise ValueError(
+                f"Library name {lib_name!r} is invalid. Library names must be valid Python module names."
+            )
         return str(value)
 
     @pydantic.validator("version", pre=True)

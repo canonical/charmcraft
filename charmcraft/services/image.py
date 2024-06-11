@@ -18,7 +18,6 @@
 import dataclasses
 import io
 import logging
-import shutil
 import subprocess
 from collections.abc import Sequence
 

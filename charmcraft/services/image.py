@@ -57,23 +57,11 @@ class ImageService(craft_application.AppService):
     _skopeo: utils.Skopeo
     _docker: docker.DockerClient
 
-    def __init__(
-        self, app: craft_application.AppMetadata, services: craft_application.ServiceFactory
-    ) -> None:
-        super().__init__(app, services)
-
-        self._skopeo_path = shutil.which("skopeo") or ""
-
     @override
     def setup(self) -> None:
         """Set up the image service."""
         super().setup()
-        if not self._skopeo_path:
-            raise errors.CraftError(
-                "Could not find skopeo on the machine.",
-            )
-        logger.debug("skopeo path: %s", self._skopeo_path)
-        self._skopeo = utils.Skopeo(skopeo_path=self._skopeo_path)
+        self._skopeo = utils.Skopeo()
         self._docker = docker.from_env()
 
     def copy(

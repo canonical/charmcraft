@@ -126,7 +126,7 @@ class CharmLib(models.CraftBaseModel):
 
     lib: str = pydantic.Field(
         title="Library Path (e.g. my_charm.my_library)",
-        regex=r"[a-z0-9_]+\.[a-z0-9_]+",
+        regex=r"[a-z][a-zA-Z0-9-]+\.[a-z][a-zA-Z0-9-]+",
     )
     version: str = pydantic.Field(
         title="Version filter for the charm. Either an API version or a specific [api].[patch].",
@@ -141,15 +141,15 @@ class CharmLib(models.CraftBaseModel):
             raise ValueError(
                 f"Library name invalid. Expected '[charm_name].[lib_name]', got {value!r}"
             )
-        if not re.fullmatch("[a-z0-9_]+", charm_name):
-            if "-" in charm_name:
+        if not re.fullmatch("[a-z0-9-]+", charm_name):
+            if "_" in charm_name:
                 raise ValueError(
-                    f"Invalid charm name in lib {value!r}. Try replacing hyphens ('-') with underscores ('_')."
+                    f"Invalid charm name in lib {value!r}. Try replacing underscores ('_') with hyphens ('-')."
                 )
             raise ValueError(
                 f"Invalid charm name for lib {value!r}. Value {charm_name!r} is invalid."
             )
-        if not re.fullmatch("[a-z0-9_]+", lib_name):
+        if not re.fullmatch("[a-z0-9-]+", lib_name):
             raise ValueError(f"Library name {lib_name!r} is invalid.")
         return str(value)
 

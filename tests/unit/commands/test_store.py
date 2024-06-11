@@ -157,14 +157,14 @@ def test_fetch_libs_no_charm_libs(
         (
             [
                 CharmLib(lib="mysql.mysql", version="1"),
-                CharmLib(lib="some_charm.lib", version="1.2"),
+                CharmLib(lib="some-charm.lib", version="1.2"),
             ],
             textwrap.dedent(
                 """\
                 Could not find the following libraries on charmhub:
                 - lib: mysql.mysql
                   version: '1'
-                - lib: some_charm.lib
+                - lib: some-charm.lib
                   version: '1.2'
                 """
             ),

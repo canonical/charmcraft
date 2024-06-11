@@ -25,9 +25,9 @@ parts:
   another-part:
     plugin: nil
 charm-libs:
-  - lib: my_charm.my_lib
+  - lib: my-charm.my-lib
     version: '1'
-  - lib: other_charm.lib
+  - lib: other-charm.lib
     version: '0.123'
 bases:
 - build-on:

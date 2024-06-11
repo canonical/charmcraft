@@ -194,7 +194,7 @@ def test_build_info_from_build_on_run_on_basic(
 
 @pytest.mark.parametrize(
     "lib_name",
-    ["charm.lib", "charm_with_hyphens.lib", "charm.lib_with_hyphens", "charm0.number_0_lib"],
+    ["charm.lib", "charm-with-hyphens.lib", "charm.lib-with-hyphens", "charm0.number-0-lib"],
 )
 @pytest.mark.parametrize("lib_version", ["0", "1", "2.0", "2.1", "3.14"])
 def test_create_valid_charm_lib(lib_name, lib_version):
@@ -206,14 +206,14 @@ def test_create_valid_charm_lib(lib_name, lib_version):
     [
         ("boop", r"Library name invalid. Expected '\[charm_name\].\[lib_name\]', got 'boop'"),
         (
-            "raw-charm-name.valid_lib",
-            r"Invalid charm name in lib 'raw-charm-name.valid_lib'. Try replacing hyphens \('-'\) with underscores \('_'\).",
+            "python_charm_name.valid-lib",
+            r"Invalid charm name in lib 'python_charm_name.valid-lib'. Try replacing underscores \('_'\) with hyphens \('-'\).",
         ),
         (
-            "Invalid charm name.valid_lib",
-            "Invalid charm name for lib 'Invalid charm name.valid_lib'. Value 'Invalid charm name' is invalid",
+            "Invalid charm name.valid-lib",
+            "Invalid charm name for lib 'Invalid charm name.valid-lib'. Value 'Invalid charm name' is invalid",
         ),
-        ("my_charm.invalid library name", "Library name 'invalid library name' is invalid."),
+        ("my-charm.invalid library name", "Library name 'invalid library name' is invalid."),
     ],
 )
 def test_invalid_charm_lib_name(name: str, error_match: str):
@@ -234,7 +234,7 @@ def test_invalid_charm_lib_name(name: str, error_match: str):
     )
 )
 def test_valid_library_version(version: float):
-    project.CharmLib.unmarshal({"lib": "charm_name.lib_name", "version": str(version)})
+    project.CharmLib.unmarshal({"lib": "charm-name.lib-name", "version": str(version)})
 
 
 @pytest.mark.parametrize("version", [".1", "NaN", ""])
@@ -242,7 +242,7 @@ def test_invalid_api_version(version: str):
     with pytest.raises(
         pydantic.ValidationError, match="API version not valid. Expected an integer, got '"
     ):
-        project.CharmLib(lib="charm_name.lib_name", version=version)
+        project.CharmLib(lib="charm-name.lib-name", version=version)
 
 
 @pytest.mark.parametrize("version", ["1.", "1.number"])
@@ -250,7 +250,7 @@ def test_invalid_patch_version(version: str):
     with pytest.raises(
         pydantic.ValidationError, match="Patch version not valid. Expected an integer, got '"
     ):
-        project.CharmLib(lib="charm_name.lib_name", version=version)
+        project.CharmLib(lib="charm-name.lib-name", version=version)
 
 
 @pytest.mark.parametrize(

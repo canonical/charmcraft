@@ -34,6 +34,8 @@ def service_factory(
     # Allow access to the real venv library path.
     # This is necessary because certifi lazy-loads the certificate file.
     for python_path in sys.path:
+        if not python_path:
+            continue
         with contextlib.suppress(OSError):
             fs.add_real_directory(python_path)
 

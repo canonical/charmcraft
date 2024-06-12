@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for package service."""
+import contextlib
 import datetime
 import pathlib
 
@@ -50,7 +51,8 @@ def package_service(fake_path, service_factory, default_build_plan):
 @freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
 def test_write_metadata(monkeypatch, fs, package_service, project_path):
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
-    fs.add_real_directory(project_path)
+    with contextlib.suppress(FileExistsError):
+        fs.add_real_directory(project_path)
     test_prime_dir = pathlib.Path("/prime")
     fs.create_dir(test_prime_dir)
     expected_prime_dir = project_path / "prime"
@@ -79,7 +81,8 @@ def test_overwrite_metadata(monkeypatch, fs, package_service, project_path):
     Regression test for https://github.com/canonical/charmcraft/issues/1654
     """
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
-    fs.add_real_directory(project_path)
+    with contextlib.suppress(FileExistsError):
+        fs.add_real_directory(project_path)
     test_prime_dir = pathlib.Path("/prime")
     fs.create_dir(test_prime_dir)
     expected_prime_dir = project_path / "prime"
@@ -104,7 +107,8 @@ def test_no_overwrite_reactive_metadata(monkeypatch, fs, package_service):
     """
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
     project_path = pathlib.Path(__file__).parent / "sample_projects" / "basic-reactive"
-    fs.add_real_directory(project_path)
+    with contextlib.suppress(FileExistsError):
+        fs.add_real_directory(project_path)
     test_prime_dir = pathlib.Path("/prime")
     fs.create_dir(test_prime_dir)
     test_stage_dir = pathlib.Path("/stage")

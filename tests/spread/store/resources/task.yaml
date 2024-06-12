@@ -81,8 +81,8 @@ execute: |
   [[ "$new_architectures" == '["all"]' ]]
 
   # upload and verify the OCI image resource by digest
-  # This is a different image hash because it's what Docker contains locally.
-  uploaded_revision=$(charmcraft upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=sha256:feb5d9fea6a5e9606aa995e879d862b825965ba48de054caab5ef356dc6b3412 | jq -r '.revision')
+  # This is a different image hash because it's what Docker contains locally on amd64.
+  uploaded_revision=$(charmcraft --verbose upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=sha256:feb5d9fea6a5e9606aa995e879d862b825965ba48de054caab5ef356dc6b3412 | jq -r '.revision')
   sleep 3  # Give the store a bit of time to process it
   last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-image --format=json | jq -r .[0])
   last_image_revno=$(echo $last_revision | jq .revision)

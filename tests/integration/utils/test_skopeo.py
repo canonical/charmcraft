@@ -51,7 +51,6 @@ def test_inspect_and_download(
     monkeypatch, tmp_path: pathlib.Path, name: str, image: str, tag: str
 ):
     (tmp_path / "tmp").mkdir()
-    monkeypatch.chdir(tmp_path)
     skopeo = Skopeo(tmpdir=tmp_path / "tmp")
 
     raw_data = skopeo.inspect(f"{image}:{tag}", raw=True)
@@ -75,8 +74,8 @@ def test_inspect_and_download(
         by_os_arch_tar = tmp_path / f"{name}_{os}_{arch}.tar"
         os_arch_skopeo = Skopeo(arch=arch, os=os)
 
-        os_arch_skopeo.copy(f"{image}:{tag}", f"oci-archive:{by_os_arch_tar.name}")
-        skopeo.copy(f"{image}@{digest}", f"oci-archive:{by_digest_tar.name}")
+        os_arch_skopeo.copy(f"{image}:{tag}", f"oci-archive:{by_os_arch_tar}")
+        skopeo.copy(f"{image}@{digest}", f"oci-archive:{by_digest_tar}")
 
         assert by_digest_tar.exists()
         assert by_os_arch_tar.exists()

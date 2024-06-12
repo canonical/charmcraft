@@ -53,7 +53,7 @@ class Skopeo:
         self._tmpdir = tmpdir
         self._debug = debug
 
-        self._run_skopeo([self._skopeo, "--version"])
+        self._run_skopeo([self._skopeo, "--version"], capture_output=True, text=True)
 
     def get_global_command(self) -> list[str]:
         """Prepare the global skopeo options."""

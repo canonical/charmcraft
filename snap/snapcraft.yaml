@@ -152,6 +152,32 @@ parts:
     organize:
       bin/craftctl: libexec/charmcraft/craftctl
 
+  skopeo:  # Copied from Rockcraft
+    plugin: nil
+    source: https://github.com/containers/skopeo.git
+    source-tag: v1.15.1
+    override-build: |
+      CGO=1 go build -ldflags -linkmode=external ./cmd/skopeo
+      mkdir "$CRAFT_PART_INSTALL"/bin
+      install -m755 skopeo "$CRAFT_PART_INSTALL"/bin/skopeo
+    stage-packages:
+      - libgpgme11
+      - libassuan0
+      - libbtrfs0
+      - libdevmapper1.02.1
+    build-attributes:
+      - enable-patchelf
+    build-snaps:
+      - go/1.21/stable
+    build-packages:
+      - libgpgme-dev
+      - libassuan-dev
+      - libbtrfs-dev
+      - libdevmapper-dev
+      - pkg-config
+    organize:
+      bin/skopeo: libexec/charmcraft/skopeo
+
   spread:
     plugin: go
     source: https://github.com/snapcore/spread.git

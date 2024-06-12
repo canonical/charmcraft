@@ -49,7 +49,7 @@ class Charmcraft(Application):
         app: AppMetadata,
         services: CharmcraftServiceFactory,
     ) -> None:
-        super().__init__(app=app, services=services)
+        super().__init__(app=app, services=services, extra_loggers={"charmcraft"})
         self._global_args: dict[str, Any] = {}
         self._dispatcher: craft_cli.Dispatcher | None = None
         self._cli_loggers |= {"charmcraft"}

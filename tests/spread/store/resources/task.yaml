@@ -80,11 +80,30 @@ execute: |
   new_architectures=$(charmcraft set-resource-architectures $CHARM_DEFAULT_NAME example-file --format=json --revision=$upload_revision_number all | jq -c '.[0].architectures')
   [[ "$new_architectures" == '["all"]' ]]
 
-  # upload and verify the OCI image resource
-  charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
+  # upload and verify the OCI image resource by digest
+  # This is a different image hash because it's what Docker contains locally on amd64.
+  uploaded_revision=$(charmcraft --verbose upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=sha256:feb5d9fea6a5e9606aa995e879d862b825965ba48de054caab5ef356dc6b3412 | jq -r '.revision')
+  sleep 3  # Give the store a bit of time to process it
   last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-image --format=json | jq -r .[0])
   last_image_revno=$(echo $last_revision | jq .revision)
+  test $last_image_revno -ge $uploaded_revision
   last_revision_created=$(echo $last_revision | jq -r '.["created at"]')
+
+  # Upload and verify the OCI image resource by image ID.
+  uploaded_revision=$(charmcraft upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=feb5d9fea6a5 | jq -r '.revision')
+  sleep 3  # Give the store a bit of time to process it
+  last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-image --format=json | jq -r .[0])
+  last_image_revno=$(echo $last_revision | jq .revision)
+  test $last_image_revno -ge $uploaded_revision
+  last_revision_created=$(echo $last_revision | jq -r '.["created at"]')
+
+  # Upload and verify a docker image resource file.
+  docker save hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346 -o hello-world.docker
+  docker_revision=$(charmcraft upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=docker-archive:hello-world.docker | jq -r '.revision')
+  /snap/charmcraft/current/libexec/charmcraft/skopeo copy docker-archive:hello-world.docker oci-archive:hello-world.tar
+  oci_revision=$(charmcraft upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=oci-archive:hello-world.tar | jq -r '.revision')
+  test $docker_revision -eq $uploaded_revision
+  test $oci_revision -eq $uploaded_revision
 
   # release and check full status
   charmcraft release $CHARM_DEFAULT_NAME -r $last_charm_revno -c edge --resource=example-file:$last_file_revno --resource=example-image:$last_image_revno

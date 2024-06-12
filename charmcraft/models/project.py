@@ -640,11 +640,11 @@ class PlatformCharm(CharmcraftProject):
     summary: CharmcraftSummaryStr
     description: str
 
-    base: BaseStr
+    # Silencing pyright because it complains about missing default value
+    base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
     build_base: BuildBaseStr | None = None
-    platforms: dict[str, Platform | None]
-
-    parts: dict[str, dict[str, Any]]  # craft-parts parts
+    platforms: dict[str, Platform | None]  # pyright: ignore[reportGeneralTypeIssues]
+    parts: dict[str, dict[str, Any]]  # pyright: ignore[reportGeneralTypeIssues]
 
     actions: dict[str, Any] | None
     assumes: list[str | dict[str, list | dict]] | None

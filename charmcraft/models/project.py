@@ -125,8 +125,8 @@ class CharmLib(models.CraftBaseModel):
     """A Charm library dependency for this charm."""
 
     lib: str = pydantic.Field(
-        title="Library Path (e.g. my_charm.my_library)",
-        regex=r"[a-z0-9_]+\.[a-z0-9_]+",
+        title="Library Path (e.g. my-charm.my_library)",
+        regex=r"[a-z][a-z0-9_-]+\.[a-z][a-z0-9_]+",
     )
     version: str = pydantic.Field(
         title="Version filter for the charm. Either an API version or a specific [api].[patch].",
@@ -141,17 +141,18 @@ class CharmLib(models.CraftBaseModel):
             raise ValueError(
                 f"Library name invalid. Expected '[charm_name].[lib_name]', got {value!r}"
             )
-        if not re.fullmatch("[a-z0-9_]+", charm_name):
-            if "-" in charm_name:
-                raise ValueError(
-                    f"Invalid charm name in lib {value!r}. Try replacing hyphens ('-') with underscores ('_')."
-                )
+        # Accept python-importable charm names, but convert them to store-accepted names.
+        if "_" in charm_name:
+            charm_name = charm_name.replace("_", "-")
+        if not re.fullmatch("[a-z0-9_-]+", charm_name):
             raise ValueError(
                 f"Invalid charm name for lib {value!r}. Value {charm_name!r} is invalid."
             )
         if not re.fullmatch("[a-z0-9_]+", lib_name):
-            raise ValueError(f"Library name {lib_name!r} is invalid.")
-        return str(value)
+            raise ValueError(
+                f"Library name {lib_name!r} is invalid. Library names must be valid Python module names."
+            )
+        return f"{charm_name}.{lib_name}"
 
     @pydantic.validator("version", pre=True)
     def _validate_api_version(cls, value: str) -> str:

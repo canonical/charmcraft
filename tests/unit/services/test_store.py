@@ -232,11 +232,11 @@ def test_get_credentials(monkeypatch, store):
         ([], []),
         (
             [CharmLib(lib="my_charm.my_lib", version="1")],
-            [{"charm-name": "my_charm", "library-name": "my_lib", "api": 1}],
+            [{"charm-name": "my-charm", "library-name": "my_lib", "api": 1}],
         ),
         (
             [CharmLib(lib="my_charm.my_lib", version="1.0")],
-            [{"charm-name": "my_charm", "library-name": "my_lib", "api": 1, "patch": 0}],
+            [{"charm-name": "my-charm", "library-name": "my_lib", "api": 1, "patch": 0}],
         ),
     ],
 )

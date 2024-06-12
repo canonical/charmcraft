@@ -164,7 +164,7 @@ def test_fetch_libs_no_charm_libs(
                 Could not find the following libraries on charmhub:
                 - lib: mysql.mysql
                   version: '1'
-                - lib: some_charm.lib
+                - lib: some-charm.lib
                   version: '1.2'
                 """
             ),

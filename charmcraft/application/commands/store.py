@@ -1701,10 +1701,11 @@ class FetchLibs(CharmcraftCommand):
             lib_name = f"{lib_md.charm_name}.{lib_md.lib_name}"
             local_lib = local_libs.get(lib_name)
             if local_lib and local_lib.content_hash == lib_md.content_hash:
-                emit.debug(
+                emit.progress(
                     f"Skipping {lib_name} because the same file already exists on "
                     f"disk (hash: {lib_md.content_hash}). "
-                    "Delete the file and re-run 'charmcraft fetch-libs' to force re-download."
+                    "Delete the file and re-run 'charmcraft fetch-libs' to force re-download.",
+                    permanent=True,
                 )
                 continue
             lib_name = utils.get_lib_module_name(lib_md.charm_name, lib_md.lib_name, lib_md.api)
@@ -1723,6 +1724,7 @@ class FetchLibs(CharmcraftCommand):
             lib_path = utils.get_lib_path(lib_md.charm_name, lib_md.lib_name, lib_md.api)
             lib_path.parent.mkdir(exist_ok=True, parents=True)
             lib_path.write_text(lib.content)
+            emit.debug(f"Downloaded {lib_name}.")
 
         emit.message(f"Downloaded {downloaded_libs} charm libraries.")
 

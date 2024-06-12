@@ -52,6 +52,7 @@ class Charmcraft(Application):
         super().__init__(app=app, services=services)
         self._global_args: dict[str, Any] = {}
         self._dispatcher: craft_cli.Dispatcher | None = None
+        self._cli_loggers |= {"charmcraft"}
 
     @property
     def command_groups(self) -> list[craft_cli.CommandGroup]:

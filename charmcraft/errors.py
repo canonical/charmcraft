@@ -16,10 +16,14 @@
 """Charmcraft error classes."""
 import io
 import pathlib
+import shlex
+import subprocess
+import textwrap
 from collections.abc import Iterable, Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from craft_cli import CraftError
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from charmcraft.linters import CheckResult
@@ -171,3 +175,22 @@ class MissingDependenciesError(DependencyError):
 
 class ExtensionError(CraftError):
     """Error related to extension handling."""
+
+
+class SubprocessError(CraftError):
+    """A craft-cli friendly subprocess error."""
+
+    @classmethod
+    def from_subprocess(cls, error: subprocess.CalledProcessError) -> Self:
+        """Convert a CalledProcessError to a craft-cli error."""
+        error_details = f"Full command: {shlex.join(error.cmd)}\nError text:\n"
+        if isinstance(error.stderr, str):
+            error_details += textwrap.indent(error.stderr, "  ")
+        else:
+            stderr = cast(io.TextIOBase, error.stderr)
+            stderr.seek(io.SEEK_SET)
+            error_details += textwrap.indent(stderr.read(), "  ")
+        return cls(
+            f"Error while running {error.cmd[0]} (return code {error.returncode})",
+            details=error_details,
+        )

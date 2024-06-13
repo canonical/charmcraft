@@ -18,8 +18,8 @@ import io
 import os
 import pathlib
 import zipfile
-
 from _stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
+
 from craft_cli import CraftError
 
 # handy masks for execution and reading for everybody

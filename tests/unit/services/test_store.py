@@ -35,6 +35,7 @@ from tests import get_fake_revision
 def store(service_factory) -> services.StoreService:
     store = services.StoreService(app=application.APP_METADATA, services=service_factory)
     store.client = mock.Mock(spec_set=client.Client)
+    store.anonymous_client = mock.Mock(spec_set=client.AnonymousClient)
     return store
 
 
@@ -244,4 +245,4 @@ def test_fetch_libraries_metadata(monkeypatch, store, libs, expected_call):
 
     store.get_libraries_metadata(libs)
 
-    store.client.fetch_libraries_metadata.assert_called_once_with(expected_call)
+    store.anonymous_client.fetch_libraries_metadata.assert_called_once_with(expected_call)

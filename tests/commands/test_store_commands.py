@@ -18,6 +18,7 @@
 
 import base64
 import datetime
+import platform
 import sys
 import zipfile
 from argparse import ArgumentParser, Namespace
@@ -4426,6 +4427,7 @@ def test_uploadresource_image_id_upload_from_local(emitter, store_mock, config):
     )
 
 
+@pytest.mark.skipif(platform.system() == "Windows", reason="No skopeo")
 def test_uploadresource_image_digest_missing_everywhere(emitter, store_mock, config):
     """Upload an oci-image resource by digest, but the image is not found remote nor locally."""
     # fake credentials for the charm/resource, the final json content, and the upload result
@@ -4458,7 +4460,7 @@ def test_uploadresource_image_digest_missing_everywhere(emitter, store_mock, con
             with pytest.raises(CraftError) as cm:
                 UploadResourceCommand(config).run(args)
 
-    assert str(cm.value) == "Image not found locally."
+    assert str(cm.value).startswith("Error while running")
 
     # validate how local interfaces and store was used
     assert im_mock.mock_calls == [
@@ -4483,6 +4485,7 @@ def test_uploadresource_image_digest_missing_everywhere(emitter, store_mock, con
     )
 
 
+@pytest.mark.skipif(platform.system() == "Windows", reason="No skopeo")
 def test_uploadresource_image_id_missing(emitter, store_mock, config):
     """Upload an oci-image resource by id, but the image is not found locally."""
     # fake credentials for the charm/resource, the final json content, and the upload result
@@ -4512,7 +4515,7 @@ def test_uploadresource_image_id_missing(emitter, store_mock, config):
         with pytest.raises(CraftError) as cm:
             UploadResourceCommand(config).run(args)
 
-    assert str(cm.value) == "Image not found locally."
+    assert str(cm.value).startswith("Error while")
 
     assert dock_mock.mock_calls == [
         call.get_image_info_from_id(original_image_id),

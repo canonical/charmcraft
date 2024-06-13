@@ -56,6 +56,7 @@ from charmcraft.utils.project import (
     get_charm_name_from_path,
     get_templates_environment,
 )
+from charmcraft.utils.skopeo import Skopeo
 from charmcraft.utils.store import ChannelData, Risk
 from charmcraft.utils.yaml import load_yaml
 
@@ -96,5 +97,6 @@ __all__ = [
     "find_charm_sources",
     "get_charm_name_from_path",
     "get_templates_environment",
+    "Skopeo",
     "load_yaml",
 ]

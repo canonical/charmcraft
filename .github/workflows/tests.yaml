@@ -106,7 +106,7 @@ jobs:
             # This is only necessary until we move to noble.
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             # Allow skopeo to access the contents of /run/containers
-            sudo chmod 777 /run/containers
+            sudo chmod 777 /run/containers || true
             # Add an xdg runtime dir for skopeo to look into for an auth.json file
             sudo mkdir -p /run/user/$(id -u)
             sudo chown $USER /run/user/$(id -u)

@@ -38,7 +38,7 @@ from humanize import naturalsize
 from tabulate import tabulate
 
 from charmcraft.cmdbase import BaseCommand
-from charmcraft import parts, utils
+from charmcraft import errors, parts, utils
 
 from charmcraft.commands.store.registry import ImageHandler, OCIRegistry, LocalDockerdInterface
 from charmcraft.commands.store.store import Store, Entity
@@ -1849,6 +1849,7 @@ class UploadResourceCommand(BaseCommand):
             dockerd = LocalDockerdInterface()
 
             server_image_digest = None
+            # "Classic" method - use Docker
             if ":" in parsed_args.image:
                 # the user provided a digest; check if the specific image is
                 # already in Canonical's registry
@@ -1868,14 +1869,41 @@ class UploadResourceCommand(BaseCommand):
 
             if server_image_digest is None:
                 if image_info is None:
-                    raise CraftError("Image not found locally.")
+                    emit.progress(
+                        "Image not found locally. Passing path directly to skopeo.",
+                        permanent=True,
+                    )
+                    skopeo = utils.Skopeo()
+                    registry_url_without_https = self.config.charmhub.registry_url[8:]
+                    with emit.open_stream("Running Skopeo") as stream:
+                        skopeo.copy(
+                            parsed_args.image,
+                            f"docker://{registry_url_without_https}/{image_name}",
+                            dest_username=credentials.username,
+                            dest_password=credentials.password,
+                            all_images=True,
+                            stdout=stream,
+                            stderr=stream,
+                        )
+                    try:
+                        image_info = skopeo.inspect(parsed_args.image)
+                    except errors.SubprocessError as exc:
+                        raise errors.CraftError(
+                            "Could not inspect OCI image.", details=f"{exc.message}\n{exc.details}"
+                        )
+                    try:
+                        server_image_digest = image_info["Digest"]
+                    except KeyError:
+                        raise errors.CraftError("Could not get digest for image.")
 
-                # upload it from local registry
-                emit.progress("Uploading from local registry.", permanent=True)
-                server_image_digest = ih.upload_from_local(image_info)
-                emit.progress(
-                    f"Image uploaded, new remote digest: {server_image_digest}.", permanent=True
-                )
+                else:
+                    # upload it from local registry
+                    emit.progress("Uploading from local registry.", permanent=True)
+                    server_image_digest = ih.upload_from_local(image_info)
+                    emit.progress(
+                        f"Image uploaded, new remote digest: {server_image_digest}.",
+                        permanent=True,
+                    )
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(

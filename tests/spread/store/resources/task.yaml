@@ -76,6 +76,9 @@ execute: |
   last_revision_created=$(echo $last_revision | jq -r .created_at)
   [[ $start_datetime < $last_revision_created ]]
 
+  # Check that skopeo upload-resource works.
+  charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=docker://hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
+
   # release and check full status
   charmcraft release $CHARM_DEFAULT_NAME -r $last_charm_revno -c edge --resource=example-file:$last_file_revno --resource=example-image:$last_image_revno
   edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')

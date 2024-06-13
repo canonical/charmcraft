@@ -20,8 +20,7 @@ import json
 import pathlib
 import shutil
 import subprocess
-from collections.abc import Sequence
-from typing import Any, cast, overload
+from typing import Any, Dict, List, Optional, Sequence, Union, cast, overload
 
 from charmcraft import errors
 
@@ -34,9 +33,9 @@ class Skopeo:
         *,
         skopeo_path: str = "",
         insecure_policy: bool = False,
-        arch: str | None = None,
-        os: str | None = None,
-        tmpdir: pathlib.Path | None = None,
+        arch: Union[str, None] = None,
+        os: Union[str, None] = None,
+        tmpdir: Union[pathlib.Path, None] = None,
         debug: bool = False,
     ) -> None:
         if skopeo_path:
@@ -55,7 +54,7 @@ class Skopeo:
 
         self._run_skopeo([self._skopeo, "--version"], capture_output=True, text=True)
 
-    def get_global_command(self) -> list[str]:
+    def get_global_command(self) -> List[str]:
         """Prepare the global skopeo options."""
         command = [self._skopeo]
         if self._insecure_policy:
@@ -84,12 +83,12 @@ class Skopeo:
         *,
         all_images: bool = False,
         preserve_digests: bool = False,
-        source_username: str | None = None,
-        source_password: str | None = None,
-        dest_username: str | None = None,
-        dest_password: str | None = None,
-        stdout: io.FileIO | int | None = None,
-        stderr: io.FileIO | int | None = None,
+        source_username: Optional[str] = None,
+        source_password: Optional[str] = None,
+        dest_username: Optional[str] = None,
+        dest_password: Optional[str] = None,
+        stdout: Union[io.FileIO, int, None] = None,
+        stderr: Union[io.FileIO, int, None] = None,
     ) -> subprocess.CompletedProcess:
         """Copy an OCI image using Skopeo."""
         command = [
@@ -122,19 +121,23 @@ class Skopeo:
     @overload
     def inspect(
         self, image: str, *, format_template: None = None, raw: bool = False, tags: bool = True
-    ) -> dict[str, Any]: ...
+    ) -> Dict[str, Any]:
+        ...
+
     @overload
     def inspect(
         self, image: str, *, format_template: str, raw: bool = False, tags: bool = True
-    ) -> str: ...
+    ) -> str:
+        ...
+
     def inspect(
         self,
-        image: str,
+        image,
         *,
-        format_template: str | None = None,
+        format_template=None,
         raw: bool = False,
         tags: bool = True,
-    ) -> dict[str, Any] | str:
+    ):
         """Inspect an image."""
         command = [*self.get_global_command(), "inspect"]
         if format_template is not None:

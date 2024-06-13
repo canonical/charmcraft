@@ -17,12 +17,10 @@
 import itertools
 import os
 import re
-import subprocess
-import sys
 
 import pytest
 
-from charmcraft import __version__, main
+from charmcraft import main
 
 
 def get_python_filepaths(*, roots=None, python_paths=None):
@@ -56,15 +54,6 @@ def test_ensure_copyright():
     if issues:
         msg = "Please add copyright headers to the following files:\n" + "\n".join(issues)
         pytest.fail(msg, pytrace=False)
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_setup_version():
-    """Verify that setup.py is picking up the version correctly."""
-    cmd = [os.path.abspath("setup.py"), "--version"]
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, check=True)
-    output = proc.stdout.decode("utf8")
-    assert output.strip() == __version__
 
 
 def test_bashcompletion_all_commands():

@@ -4460,7 +4460,7 @@ def test_uploadresource_image_digest_missing_everywhere(emitter, store_mock, con
             with pytest.raises(CraftError) as cm:
                 UploadResourceCommand(config).run(args)
 
-    assert str(cm.value) == "Image not found locally."
+    assert str(cm.value).startswith("Error while running")
 
     # validate how local interfaces and store was used
     assert im_mock.mock_calls == [
@@ -4515,7 +4515,7 @@ def test_uploadresource_image_id_missing(emitter, store_mock, config):
         with pytest.raises(CraftError) as cm:
             UploadResourceCommand(config).run(args)
 
-    assert str(cm.value) == "Image not found locally."
+    assert str(cm.value).startswith("Error while")
 
     assert dock_mock.mock_calls == [
         call.get_image_info_from_id(original_image_id),

@@ -135,6 +135,8 @@ class SubprocessError(CraftError):
         error_details = f"Full command: {shlex.join(error.cmd)}\nError text:\n"
         if isinstance(error.stderr, str):
             error_details += textwrap.indent(error.stderr, "  ")
+        elif error.stderr is None:
+            pass
         else:
             stderr = error.stderr
             stderr.seek(io.SEEK_SET)

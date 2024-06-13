@@ -88,7 +88,7 @@ jobs:
         run: |
           pip install -U -r requirements-dev.txt
           pip install -e .
-          pip install tox
+          pip install tox setuptools
       - name: Install external dependencies with homebrew
         # This is only necessary for Linux until skopeo >= 1.11 is in repos.
         # Once we're running on Noble, we can get skopeo from apt.

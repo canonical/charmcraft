@@ -20,6 +20,7 @@ import collections
 import dataclasses
 import os
 import pathlib
+import re
 import shutil
 import string
 import tempfile
@@ -45,7 +46,7 @@ import charmcraft.store.models
 from charmcraft import const, env, errors, parts, utils
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.models import project
-from charmcraft.store import ImageHandler, LocalDockerdInterface, OCIRegistry, Store
+from charmcraft.store import Store
 from charmcraft.store.models import Entity
 from charmcraft.utils import cli
 
@@ -1923,7 +1924,7 @@ class UploadResourceCommand(CharmcraftCommand):
             help="The architectures valid for this file resource. If none are provided, the resource is uploaded without architecture information.",
         )
 
-    def run(self, parsed_args):
+    def run(self, parsed_args: argparse.Namespace) -> int:
         """Run the command."""
         store = Store(env.get_store_config())
 
@@ -1938,87 +1939,97 @@ class UploadResourceCommand(CharmcraftCommand):
             architectures = ["all"]
 
         if parsed_args.filepath:
-            resource_filepath = parsed_args.filepath
-            resource_filepath_is_temp = False
-            resource_type = ResourceType.file
-            emit.progress(f"Uploading resource directly from file {str(resource_filepath)!r}.")
+            emit.progress(f"Uploading resource directly from file {str(parsed_args.filepath)!r}.")
             bases = [{"name": "all", "channel": "all", "architectures": architectures}]
+            result = store.upload_resource(
+                parsed_args.charm_name,
+                parsed_args.resource_name,
+                ResourceType.file,
+                parsed_args.filepath,
+                bases=bases,
+            )
         elif parsed_args.image:
+            emit.progress("Getting image")
+            emit.debug("Trying to get image from Docker")
+            image_service = self._services.image
+            # Check Docker first for backwards compatibility - prefer to get from
+            # Docker than from a local path if Docker contains the image.
+            if digest := image_service.get_maybe_id_from_docker(parsed_args.image):
+                emit.debug("Image is available via the local Docker daemon.")
+                source_path = f"docker-daemon:{digest}"
+            elif (image_path := pathlib.Path(parsed_args.image)).exists():
+                emit.debug("Image is a path.")
+                if image_path.is_file():
+                    emit.debug("Image is a rock or other OCI archive.")
+                    source_path = f"oci-archive:{image_path.as_posix()}"
+                elif image_path.is_dir():
+                    emit.debug("Image is an OCI directory.")
+                    source_path = f"oci:{image_path.as_posix()}"
+                else:
+                    raise CraftError(
+                        f"Not a valid file or directory: {image_path.as_posix()!r}",
+                        resolution="Pass an OCI archive file such as a rock.",
+                    )
+            elif re.match("^[a-z-]:", parsed_args.image):
+                emit.debug("Presuming an OCI path that skopeo understands.")
+                source_path = parsed_args.image
+            else:
+                raise CraftError(
+                    "Unknown OCI image reference.",
+                    details="Passed image reference is not a Docker image ID, image digest, existing file or container transport string.",
+                    resolution="Pass a valid container transport string.",
+                )
+            emit.debug(f"Using source path {source_path!r}")
+
+            emit.progress("Inspecting source image")
+            image_metadata = image_service.inspect(source_path)
+
             credentials = store.get_oci_registry_credentials(
                 parsed_args.charm_name, parsed_args.resource_name
             )
 
-            # convert the standard OCI registry image name (which is something like
-            # 'registry.jujucharms.com/charm/45kk8smbiyn2e/redis-image') to the image
-            # name that we use internally (just remove the initial "server host" part)
-            image_name = credentials.image_name.split("/", 1)[1]
-            emit.progress(f"Uploading resource from image {image_name} @ {parsed_args.image}.")
-
-            # build the image handler and dockerd interface
-            registry = OCIRegistry(
-                env.get_store_config().registry_url,
-                image_name,
-                username=credentials.username,
-                password=credentials.password,
-            )
-            ih = ImageHandler(registry)
-            dockerd = LocalDockerdInterface()
-
-            server_image_digest = None
-            if ":" in parsed_args.image:
-                # the user provided a digest; check if the specific image is
-                # already in Canonical's registry
-                already_uploaded = ih.check_in_registry(parsed_args.image)
-
-                if already_uploaded:
-                    emit.progress("Using OCI image from Canonical's registry.", permanent=True)
-                    server_image_digest = parsed_args.image
-                else:
-                    emit.progress("Remote image not found, getting its info from local registry.")
-                    image_info = dockerd.get_image_info_from_digest(parsed_args.image)
-
+            if const.STORE_REGISTRY_ENV_VAR in os.environ:
+                # If the user has specified a registry to use, replace what the store
+                # gives with that registry.
+                registry_url = os.environ[const.STORE_REGISTRY_ENV_VAR][7:]
+                image_name = credentials.image_name.split("/", 1)[1]
+                dest_path = f"docker://{registry_url}/{image_name}"
             else:
-                # the user provided an id, can't search remotely, just get its info locally
-                emit.progress("Getting image info from local registry.")
-                image_info = dockerd.get_image_info_from_id(parsed_args.image)
+                dest_path = f"docker://{credentials.image_name}"
 
-            if server_image_digest is None:
-                if image_info is None:
-                    raise CraftError("Image not found locally.")
-
-                # upload it from local registry
-                emit.progress("Uploading from local registry.", permanent=True)
-                server_image_digest = ih.upload_from_local(image_info)
-                emit.progress(
-                    f"Image uploaded, new remote digest: {server_image_digest}.", permanent=True
+            with emit.open_stream("Uploading") as stream:
+                image_service.copy(
+                    source_path,
+                    dest_path,
+                    stream,
+                    dest_username=credentials.username,
+                    dest_password=credentials.password,
                 )
+
+            image_arch = [
+                utils.ARCH_TRANSLATIONS.get(arch, arch) for arch in image_metadata.architectures
+            ]
+            bases = [{"name": "all", "channel": "all", "architectures": image_arch}]
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(
-                parsed_args.charm_name, parsed_args.resource_name, server_image_digest
+                parsed_args.charm_name, parsed_args.resource_name, image_metadata.digest
             )
-            tfd, tname = tempfile.mkstemp(prefix="image-resource", suffix=".json")
-            with open(tfd, "w", encoding="utf-8") as fh:  # reuse the file descriptor and close it
-                fh.write(content)
-            resource_filepath = pathlib.Path(tname)
-            resource_filepath_is_temp = True
-            resource_type = ResourceType.oci_image
+            with tempfile.NamedTemporaryFile(
+                mode="w+", prefix="image-resource", suffix=".json"
+            ) as resource_file:
+                resource_file.write(content)
+                resource_file.flush()
 
-            image_arch = image_info.get("Architecture", "all")
-            image_arch = utils.ARCH_TRANSLATIONS.get(image_arch, image_arch)
-            bases = [{"name": "all", "channel": "all", "architectures": [image_arch]}]
-
-        result = store.upload_resource(
-            parsed_args.charm_name,
-            parsed_args.resource_name,
-            resource_type,
-            resource_filepath,
-            bases=bases,
-        )
-
-        # clean the filepath if needed
-        if resource_filepath_is_temp:
-            resource_filepath.unlink()
+                result = store.upload_resource(
+                    parsed_args.charm_name,
+                    parsed_args.resource_name,
+                    ResourceType.oci_image,
+                    pathlib.Path(resource_file.name),
+                    bases=bases,
+                )
+        else:
+            raise CraftError("Either a file path or an image descriptor must be passed.")
 
         if result.ok:
             if parsed_args.format:

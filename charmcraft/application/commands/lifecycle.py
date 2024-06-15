@@ -19,7 +19,7 @@ from __future__ import annotations
 import pathlib
 import sys
 import textwrap
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import craft_cli
 from craft_application.commands import lifecycle
@@ -174,3 +174,12 @@ class PackCommand(lifecycle.PackCommand):
         if sys.platform == "linux" and charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
             return False
         return super().run_managed(parsed_args)
+
+    def _run(
+        self,
+        parsed_args: argparse.Namespace,
+        step_name: str | None = None,
+        **kwargs: Any,  # noqa: ANN401 (allow dynamic typing)
+    ) -> None:
+        self._validate_args(parsed_args)
+        return super()._run(parsed_args, step_name, **kwargs)

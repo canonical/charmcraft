@@ -77,12 +77,20 @@ def service_factory(
     simple_charm,
     mock_store_client,
     mock_store_anonymous_client,
+    default_build_plan,
 ) -> services.CharmcraftServiceFactory:
     factory = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     factory.set_kwargs(
         "package",
         project_dir=fake_project_dir,
+        build_plan=default_build_plan,
+    )
+    factory.set_kwargs(
+        "lifecycle",
+        work_dir=pathlib.Path("/project"),
+        cache_dir=pathlib.Path("/cache"),
+        build_plan=default_build_plan,
     )
 
     factory.project = simple_charm

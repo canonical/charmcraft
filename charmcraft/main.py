@@ -33,7 +33,7 @@ from craft_cli import (
 )
 
 from charmcraft import config, const, env, utils
-from charmcraft.commands import pack, store, version
+from charmcraft.commands import store, version
 from charmcraft.parts import setup_parts
 
 # set up all the libs' loggers in DEBUG level so their content is grabbed by craft-cli's Emitter
@@ -57,7 +57,6 @@ See https://charmhub.io/publishing for more information.
 # central place and not distributed in several classes/files. Also note that order here is
 # important when listing commands and showing help.
 _basic_commands = [
-    pack.PackCommand,
     version.VersionCommand,
 ]
 _charmhub_commands = [

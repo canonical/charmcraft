@@ -478,7 +478,9 @@ class Store:
         return self._client.list_resource_revisions(charm_name, resource_name)
 
     @_store_client_wrapper()
-    def get_oci_registry_credentials(self, charm_name, resource_name):
+    def get_oci_registry_credentials(
+        self, charm_name: str, resource_name: str
+    ) -> RegistryCredentials:
         """Get credentials to upload a resource to the Canonical's OCI Registry."""
         endpoint = f"/v1/charm/{charm_name}/resources/{resource_name}/oci-image/upload-credentials"
         response = self._client.request_urlpath_json("GET", endpoint)

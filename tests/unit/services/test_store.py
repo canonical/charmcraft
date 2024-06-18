@@ -26,13 +26,16 @@ from hypothesis import given, strategies
 
 import charmcraft
 from charmcraft import application, errors, services
+from charmcraft.models.project import CharmLib
+from charmcraft.store import client
 from tests import get_fake_revision
 
 
 @pytest.fixture()
-def store():
-    store = services.StoreService(app=application.APP_METADATA, services=None)
-    store.client = mock.Mock(spec_set=craft_store.StoreClient)
+def store(service_factory) -> services.StoreService:
+    store = services.StoreService(app=application.APP_METADATA, services=service_factory)
+    store.client = mock.Mock(spec_set=client.Client)
+    store.anonymous_client = mock.Mock(spec_set=client.AnonymousClient)
     return store
 
 
@@ -222,3 +225,24 @@ def test_get_credentials(monkeypatch, store):
         packages=None,
         channels=None,
     )
+
+
+@pytest.mark.parametrize(
+    ("libs", "expected_call"),
+    [
+        ([], []),
+        (
+            [CharmLib(lib="my_charm.my_lib", version="1")],
+            [{"charm-name": "my-charm", "library-name": "my_lib", "api": 1}],
+        ),
+        (
+            [CharmLib(lib="my_charm.my_lib", version="1.0")],
+            [{"charm-name": "my-charm", "library-name": "my_lib", "api": 1, "patch": 0}],
+        ),
+    ],
+)
+def test_fetch_libraries_metadata(monkeypatch, store, libs, expected_call):
+
+    store.get_libraries_metadata(libs)
+
+    store.anonymous_client.fetch_libraries_metadata.assert_called_once_with(expected_call)

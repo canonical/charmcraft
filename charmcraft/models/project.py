@@ -17,6 +17,7 @@
 import abc
 import datetime
 import pathlib
+import re
 from collections.abc import Iterable, Iterator
 from typing import (
     Any,
@@ -118,6 +119,77 @@ class Platform(models.CraftBaseModel):
         if isinstance(value, str):
             return [value]
         return value
+
+
+class CharmLib(models.CraftBaseModel):
+    """A Charm library dependency for this charm."""
+
+    lib: str = pydantic.Field(
+        title="Library Path (e.g. my-charm.my_library)",
+        regex=r"[a-z][a-z0-9_-]+\.[a-z][a-z0-9_]+",
+    )
+    version: str = pydantic.Field(
+        title="Version filter for the charm. Either an API version or a specific [api].[patch].",
+        regex=r"[0-9]+(\.[0-9]+)?",
+    )
+
+    @pydantic.validator("lib", pre=True)
+    def _validate_name(cls, value: str) -> str:
+        """Validate the lib field, providing a useful error message on failure."""
+        charm_name, _, lib_name = str(value).partition(".")
+        if not charm_name or not lib_name:
+            raise ValueError(
+                f"Library name invalid. Expected '[charm_name].[lib_name]', got {value!r}"
+            )
+        # Accept python-importable charm names, but convert them to store-accepted names.
+        if "_" in charm_name:
+            charm_name = charm_name.replace("_", "-")
+        if not re.fullmatch("[a-z0-9_-]+", charm_name):
+            raise ValueError(
+                f"Invalid charm name for lib {value!r}. Value {charm_name!r} is invalid."
+            )
+        if not re.fullmatch("[a-z0-9_]+", lib_name):
+            raise ValueError(
+                f"Library name {lib_name!r} is invalid. Library names must be valid Python module names."
+            )
+        return f"{charm_name}.{lib_name}"
+
+    @pydantic.validator("version", pre=True)
+    def _validate_api_version(cls, value: str) -> str:
+        """Validate the API version field, providing a useful error message on failure."""
+        api, *_ = str(value).partition(".")
+        try:
+            int(api)
+        except ValueError:
+            raise ValueError(f"API version not valid. Expected an integer, got {api!r}") from None
+        return str(value)
+
+    @pydantic.validator("version", pre=True)
+    def _validate_patch_version(cls, value: str) -> str:
+        """Validate the optional patch version, providing a useful error message."""
+        api, separator, patch = value.partition(".")
+        if not separator:
+            return value
+        try:
+            int(patch)
+        except ValueError:
+            raise ValueError(
+                f"Patch version not valid. Expected an integer, got {patch!r}"
+            ) from None
+        return value
+
+    @property
+    def api_version(self) -> int:
+        """The API version needed for this library."""
+        return int(self.version.partition(".")[0])
+
+    @property
+    def patch_version(self) -> int | None:
+        """The patch version needed for this library, or None if no patch version is specified."""
+        api, _, patch = self.version.partition(".")
+        if not patch:
+            return None
+        return int(patch)
 
 
 @dataclasses.dataclass
@@ -381,6 +453,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     contact: None = None
     issues: None = None
     source_code: None = None
+    charm_libs: list[CharmLib] = pydantic.Field(
+        default_factory=list, title="List of libraries to use for this charm"
+    )
 
     # These private attributes are not part of the project model but are attached here
     # because Charmcraft uses this metadata.
@@ -566,11 +641,11 @@ class PlatformCharm(CharmcraftProject):
     summary: CharmcraftSummaryStr
     description: str
 
-    base: BaseStr
+    # Silencing pyright because it complains about missing default value
+    base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
     build_base: BuildBaseStr | None = None
-    platforms: dict[str, Platform | None]
-
-    parts: dict[str, dict[str, Any]]  # craft-parts parts
+    platforms: dict[str, Platform | None]  # pyright: ignore[reportGeneralTypeIssues]
+    parts: dict[str, dict[str, Any]]  # pyright: ignore[reportGeneralTypeIssues]
 
     actions: dict[str, Any] | None
     assumes: list[str | dict[str, list | dict]] | None

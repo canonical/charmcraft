@@ -17,14 +17,17 @@
 from __future__ import annotations
 
 import platform
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 
 import craft_application
 import craft_store
 from craft_store import models
+from overrides import override
 
-from charmcraft import const, env, errors
+from charmcraft import const, env, errors, store
+from charmcraft.models import CharmLib
 from charmcraft.store import AUTH_DEFAULT_PERMISSIONS, AUTH_DEFAULT_TTL
+from charmcraft.store.models import Library, LibraryMetadataRequest
 
 
 class BaseStoreService(craft_application.AppService):
@@ -33,6 +36,7 @@ class BaseStoreService(craft_application.AppService):
     This service should be easily adjustable for craft-application.
     """
 
+    ClientClass: type[craft_store.StoreClient] = craft_store.StoreClient
     client: craft_store.StoreClient
     _endpoints: craft_store.endpoints.Endpoints = craft_store.endpoints.CHARMHUB
     _environment_auth: str = const.ALTERNATE_AUTH_ENV_VAR
@@ -73,7 +77,7 @@ class BaseStoreService(craft_application.AppService):
         """Set up the store service."""
         super().setup()
 
-        self.client = craft_store.StoreClient(
+        self.client = self.ClientClass(
             application_name=self._app.name,
             base_url=self._base_url,
             storage_base_url=self._storage_url,
@@ -159,6 +163,19 @@ class BaseStoreService(craft_application.AppService):
 class StoreService(BaseStoreService):
     """A Store service specifically for Charmcraft."""
 
+    ClientClass = store.Client
+    client: store.Client  # pyright: ignore[reportIncompatibleVariableOverride]
+    anonymous_client: store.AnonymousClient
+
+    @override
+    def setup(self) -> None:
+        """Set up the store service."""
+        super().setup()
+        self.anonymous_client = store.AnonymousClient(
+            api_base_url=self._base_url,
+            storage_base_url=self._storage_url,
+        )
+
     def set_resource_revisions_architectures(
         self, name: str, resource_name: str, updates: dict[int, list[str]]
     ) -> Collection[models.resource_revision_model.CharmResourceRevision]:
@@ -182,3 +199,42 @@ class StoreService(BaseStoreService):
         )
         new_revisions = self.client.list_resource_revisions(name=name, resource_name=resource_name)
         return [rev for rev in new_revisions if int(rev.revision) in updates]
+
+    def get_libraries_metadata(self, libraries: Sequence[CharmLib]) -> Sequence[Library]:
+        """Get the metadata for one or more charm libraries.
+
+        :param libraries: A sequence of libraries to request.
+        :returns: A sequence of the libraries' metadata in the store.
+        """
+        store_libs = []
+        for lib in libraries:
+            charm_name, _, lib_name = lib.lib.partition(".")
+            store_lib = LibraryMetadataRequest(
+                {
+                    "charm-name": charm_name,
+                    "library-name": lib_name,
+                    "api": lib.api_version,
+                }
+            )
+            if (patch_version := lib.patch_version) is not None:
+                store_lib["patch"] = patch_version
+            store_libs.append(store_lib)
+
+        return self.anonymous_client.fetch_libraries_metadata(store_libs)
+
+    def get_libraries_metadata_by_name(
+        self, libraries: Sequence[CharmLib]
+    ) -> Mapping[str, Library]:
+        """Get a mapping of [charm_name].[library_name] to the requested libraries."""
+        return {
+            f"{lib.charm_name}.{lib.lib_name}": lib
+            for lib in self.get_libraries_metadata(libraries)
+        }
+
+    def get_library(
+        self, charm_name: str, *, library_id: str, api: int | None = None, patch: int | None = None
+    ) -> Library:
+        """Get a library by charm name and ID from charmhub."""
+        return self.anonymous_client.get_library(
+            charm_name=charm_name, library_id=library_id, api=api, patch=patch
+        )

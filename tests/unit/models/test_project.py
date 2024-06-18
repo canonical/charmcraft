@@ -20,6 +20,7 @@ import pathlib
 from textwrap import dedent
 from typing import Any
 
+import hypothesis
 import pydantic
 import pyfakefs.fake_filesystem
 import pytest
@@ -29,6 +30,7 @@ from craft_application.errors import CraftValidationError
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
+from hypothesis import strategies
 
 from charmcraft import const, utils
 from charmcraft.models import project
@@ -188,6 +190,73 @@ def test_build_info_from_build_on_run_on_basic(
     pytest_check.equal(info.build_for, run_on.architectures[0])
     pytest_check.equal(info.base.name, build_on_base.name)
     pytest_check.equal(info.base.version, build_on_base.channel)
+
+
+@pytest.mark.parametrize(
+    ("lib_name", "expected_lib_name"),
+    [
+        ("charm.lib", "charm.lib"),
+        ("charm_with_underscores.lib", "charm-with-underscores.lib"),
+        ("charm-with-hyphens.lib", "charm-with-hyphens.lib"),
+        ("charm.lib_with_hyphens", "charm.lib_with_hyphens"),
+        ("charm0.number_0_lib", "charm0.number_0_lib"),
+    ],
+)
+@pytest.mark.parametrize("lib_version", ["0", "1", "2.0", "2.1", "3.14"])
+def test_create_valid_charm_lib(lib_name: str, expected_lib_name: str, lib_version: str):
+    lib = project.CharmLib.unmarshal({"lib": lib_name, "version": lib_version})
+    assert lib.lib == expected_lib_name
+
+
+@pytest.mark.parametrize(
+    ("name", "error_match"),
+    [
+        ("boop", r"Library name invalid. Expected '\[charm_name\].\[lib_name\]', got 'boop'"),
+        (
+            "Invalid charm name.valid_lib",
+            "Invalid charm name for lib 'Invalid charm name.valid_lib'. Value 'Invalid charm name' is invalid",
+        ),
+        (
+            "my_charm.invalid-library-name",
+            "Library name 'invalid-library-name' is invalid. Library names must be valid Python module names.",
+        ),
+    ],
+)
+def test_invalid_charm_lib_name(name: str, error_match: str):
+    with pytest.raises(pydantic.ValidationError, match=error_match):
+        project.CharmLib.unmarshal({"lib": name, "version": "0"})
+
+
+@hypothesis.given(
+    strategies.one_of(
+        strategies.floats(
+            min_value=0.001,
+            max_value=2**32,
+            allow_nan=False,
+            allow_infinity=False,
+            allow_subnormal=False,
+        ),
+        strategies.integers(min_value=0, max_value=2**32),
+    )
+)
+def test_valid_library_version(version: float):
+    project.CharmLib.unmarshal({"lib": "charm_name.lib_name", "version": str(version)})
+
+
+@pytest.mark.parametrize("version", [".1", "NaN", ""])
+def test_invalid_api_version(version: str):
+    with pytest.raises(
+        pydantic.ValidationError, match="API version not valid. Expected an integer, got '"
+    ):
+        project.CharmLib(lib="charm_name.lib_name", version=version)
+
+
+@pytest.mark.parametrize("version", ["1.", "1.number"])
+def test_invalid_patch_version(version: str):
+    with pytest.raises(
+        pydantic.ValidationError, match="Patch version not valid. Expected an integer, got '"
+    ):
+        project.CharmLib(lib="charm_name.lib_name", version=version)
 
 
 @pytest.mark.parametrize(

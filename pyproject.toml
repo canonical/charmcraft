@@ -9,6 +9,7 @@ dependencies = [
     "craft-providers>=1.23.0",
     "craft-store>=2.4",
     "distro>=1.3.0",
+    "docker>=7.0.0",
     "humanize>=2.6.0",
     "jsonschema",
     "jinja2",
@@ -47,7 +48,7 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "coverage",
     "flake8",
     "freezegun",
-    "hypothesis~=6.0",
+    "hypothesis",
     "pydocstyle",
     "pyfakefs",
     "pytest",
@@ -59,12 +60,12 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
 ]
 lint = [
     "black~=24.0",
-    "codespell[tomli]>=2.2.6,<3.0.0",
-    "yamllint>=1.32.0,<2.0.0",
+    "codespell[tomli]",
+    "yamllint",
 ]
 types = [
     "mypy[reports]~=1.5",
-    "pyright==1.1.354",
+    "pyright==1.1.366",
     "types-python-dateutil",
     "types-requests<2.31.0.20240312",  # Frozen until we can get urllib3 v2
     "types-setuptools",
@@ -110,7 +111,7 @@ target-version = ["py310", "py311"]
 line-length = 99
 
 [tool.codespell]
-ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread"
+ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread,socio-economic"
 skip = ".tox,.git,build,.*_cache,__pycache__,*.tar,*.snap,*.png,./node_modules,./docs/_build,.direnv,.venv,venv,.vscode,charmcraft.spec"
 quiet-level = 3
 check-filenames = true

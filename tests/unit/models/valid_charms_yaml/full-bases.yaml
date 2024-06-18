@@ -24,6 +24,11 @@ parts:
     charm-strict-dependencies: false
   another-part:
     plugin: nil
+charm-libs:
+  - lib: my-charm.my_lib
+    version: '1'
+  - lib: other-charm.lib
+    version: '0.123'
 bases:
 - build-on:
   - name: ubuntu

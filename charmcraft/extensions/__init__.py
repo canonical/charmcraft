@@ -27,8 +27,6 @@ from charmcraft.extensions.registry import (
     unregister,
 )
 
-register("flask-framework", FlaskFramework)
-
 __all__ = [
     "DjangoFramework",
     "Extension",

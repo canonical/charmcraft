@@ -11,4 +11,5 @@ data can be found in the `Charm SDK docs <https://juju.is/docs/sdk/reference>`_.
     :maxdepth: 2
 
     commands
+    models/index
     /modindex

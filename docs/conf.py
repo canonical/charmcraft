@@ -68,7 +68,7 @@ extensions.extend(
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
         "sphinxcontrib.details.directive",
         "sphinx_toolbox.collapse",
-
+        "sphinxcontrib.autodoc_pydantic",
     ]
 )
 

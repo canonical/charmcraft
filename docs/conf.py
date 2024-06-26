@@ -17,11 +17,23 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import datetime
+import os
 import pathlib
+import subprocess
+import sys
+
 import craft_parts_docs
+
+import charmcraft
+
+project_dir = pathlib.Path(__file__).parents[1].resolve()
 
 project = "Charmcraft"
 author = "Canonical"
+release = charmcraft.__version__
+if ".post" in release:
+    # The commit hash in the dev release version confuses the spellchecker
+    release = "dev"
 
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
@@ -83,6 +95,8 @@ always_document_param_types = True
 github_username = "canonical"
 github_repository = "charmcraft"
 
+html_domain_indices = True
+
 # endregion
 
 # Setup libraries documentation snippets for use in charmcraft docs.
@@ -93,3 +107,14 @@ github_repository = "charmcraft"
 # (common_docs_path / "craft-parts").symlink_to(
 #     craft_parts_docs_path, target_is_directory=True
 # )
+
+def generate_cli_docs(nil):
+    gen_cli_docs_path = (project_dir / "tools" / "gen_cli_docs.py").resolve()
+    subprocess.run(
+        [sys.executable, gen_cli_docs_path, project_dir / "docs"],
+        check=True
+    )
+
+
+def setup(app):
+    app.connect("builder-inited", generate_cli_docs)

@@ -8,11 +8,7 @@ documentation only contains references about Charmcraft itself. Overall SDK refe
 data can be found in the `Charm SDK docs <https://juju.is/docs/sdk/reference>`_.
 
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 2
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
+    commands
+    /modindex

@@ -137,6 +137,7 @@ dmypy.json
 # backups
 *~
 /charmcraft/_version.py
+/results/
 
 # Spread files
 .spread-reuse*.yaml

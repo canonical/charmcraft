@@ -23,9 +23,9 @@ import shutil
 import typing
 from typing import TYPE_CHECKING, Literal
 
-from craft_application import util
 import pydantic
 import yaml
+from craft_application import util
 from craft_cli import CraftError, emit
 
 from charmcraft import const

@@ -33,6 +33,7 @@ from .project import (
 )
 
 __all__ = [
+    "actions",
     "config",
     "metadata",
     "Base",

@@ -11,4 +11,4 @@ how-to guides are hosted on the `Charm SDK docs <https://juju.is/docs/sdk/how-to
 
 
 `Charm SDK docs <https://juju.is/docs/sdk/how-to>`_
-***************************************************
+===================================================

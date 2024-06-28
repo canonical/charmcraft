@@ -11,4 +11,4 @@ tutorials are hosted on the `Charm SDK docs <https://juju.is/docs/sdk/tutorials>
 
 
 `Charm SDK docs <https://juju.is/docs/sdk/tutorials>`_
-******************************************************
+======================================================

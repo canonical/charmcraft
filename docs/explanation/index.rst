@@ -11,4 +11,4 @@ explanation is hosted on the `Charm SDK docs <https://juju.is/docs/sdk/explanati
 
 
 `Charm SDK docs <https://juju.is/docs/sdk/explanation>`_
-********************************************************
+========================================================

@@ -14,7 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""The flask extension."""
+"""Gunicorn based extensions."""
+
 from typing import Any
 
 from overrides import override
@@ -67,7 +68,7 @@ class _GunicornBase(Extension):
             obj = obj.get(key, {})
         return obj
 
-    def check_input(self) -> None:
+    def _check_input(self) -> None:
         """Check if the extension is applicable for user input charmcraft project file."""
         charm_type = self.yaml_data.get("type")
         if charm_type != "charm":
@@ -150,7 +151,7 @@ class _GunicornBase(Extension):
     @override
     def get_root_snippet(self) -> dict[str, Any]:
         """Fill in some required root components."""
-        self.check_input()
+        self._check_input()
         return self._get_root_snippet()
 
     @override
@@ -210,3 +211,34 @@ class FlaskFramework(_GunicornBase):
     def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
         return False
+
+
+class DjangoFramework(_GunicornBase):
+    """Extension for 12-factor Django applications."""
+
+    framework = "django"
+    actions = {
+        "rotate-secret-key": {
+            "description": "Rotate the django secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
+        },
+        "create-superuser": {
+            "description": "Create a new Django superuser account.",
+            "params": {"username": {"type": "string"}, "email": {"type": "string"}},
+            "required": ["username", "email"],
+        },
+    }
+    options = {
+        "django-debug": {
+            "type": "boolean",
+            "default": False,
+            "description": "Whether Django debug mode is enabled.",
+        },
+        "django-secret-key": {
+            "type": "string",
+            "description": "The secret key used for securely signing the session cookie and for any other security related needs by your Django application. This configuration will set the DJANGO_SECRET_KEY environment variable.",
+        },
+        "django-allowed-hosts": {
+            "type": "string",
+            "description": "A comma-separated list of host/domain names that this Django site can serve. This configuration will set the DJANGO_ALLOWED_HOSTS environment variable with its content being a JSON encoded list.",
+        },
+    }

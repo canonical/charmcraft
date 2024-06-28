@@ -17,11 +17,10 @@ import pytest
 
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions import apply_extensions
-from charmcraft.extensions.gunicorn import FlaskFramework
+from charmcraft.extensions.gunicorn import DjangoFramework, FlaskFramework
 
 
-@pytest.fixture(name="flask_input_yaml")
-def flask_input_yaml_fixture(tmp_path):
+def make_flask_input_yaml():
     return {
         "type": "charm",
         "name": "test-flask",
@@ -32,34 +31,99 @@ def flask_input_yaml_fixture(tmp_path):
     }
 
 
-def test_flask_extension(flask_input_yaml, tmp_path):
-    applied = apply_extensions(tmp_path, flask_input_yaml)
-    assert applied == {
-        "actions": FlaskFramework.actions,
-        "assumes": ["k8s-api"],
-        "bases": [{"channel": "22.04", "name": "ubuntu"}],
-        "containers": {
-            "flask-app": {"resource": "flask-app-image"},
-        },
-        "description": "test description",
-        "name": "test-flask",
-        "config": {"options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}},
-        "parts": {"charm": {"plugin": "charm", "source": "."}},
-        "peers": {"secret-storage": {"interface": "secret-storage"}},
-        "provides": {
-            "metrics-endpoint": {"interface": "prometheus_scrape"},
-            "grafana-dashboard": {"interface": "grafana_dashboard"},
-        },
-        "requires": {
-            "logging": {"interface": "loki_push_api"},
-            "ingress": {"interface": "ingress", "limit": 1},
-        },
-        "resources": {
-            "flask-app-image": {"description": "flask application image.", "type": "oci-image"},
-        },
-        "summary": "test summary",
-        "type": "charm",
-    }
+@pytest.fixture(name="flask_input_yaml")
+def flask_input_yaml_fixture():
+    return make_flask_input_yaml()
+
+
+@pytest.mark.parametrize(
+    ("input_yaml", "experimental", "expected"),
+    [
+        (
+            make_flask_input_yaml(),
+            False,
+            {
+                "actions": FlaskFramework.actions,
+                "assumes": ["k8s-api"],
+                "bases": [{"channel": "22.04", "name": "ubuntu"}],
+                "containers": {
+                    "flask-app": {"resource": "flask-app-image"},
+                },
+                "description": "test description",
+                "name": "test-flask",
+                "config": {
+                    "options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}
+                },
+                "parts": {"charm": {"plugin": "charm", "source": "."}},
+                "peers": {"secret-storage": {"interface": "secret-storage"}},
+                "provides": {
+                    "metrics-endpoint": {"interface": "prometheus_scrape"},
+                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                },
+                "requires": {
+                    "logging": {"interface": "loki_push_api"},
+                    "ingress": {"interface": "ingress", "limit": 1},
+                },
+                "resources": {
+                    "flask-app-image": {
+                        "description": "flask application image.",
+                        "type": "oci-image",
+                    },
+                },
+                "summary": "test summary",
+                "type": "charm",
+            },
+        ),
+        (
+            {
+                "type": "charm",
+                "name": "test-django",
+                "summary": "test summary",
+                "description": "test description",
+                "bases": [{"name": "ubuntu", "channel": "22.04"}],
+                "extensions": ["django-framework"],
+            },
+            True,
+            {
+                "actions": DjangoFramework.actions,
+                "assumes": ["k8s-api"],
+                "bases": [{"channel": "22.04", "name": "ubuntu"}],
+                "containers": {
+                    "django-app": {"resource": "django-app-image"},
+                },
+                "description": "test description",
+                "name": "test-django",
+                "config": {
+                    "options": {**DjangoFramework.options, **DjangoFramework._WEBSERVER_OPTIONS}
+                },
+                "parts": {"charm": {"plugin": "charm", "source": "."}},
+                "peers": {"secret-storage": {"interface": "secret-storage"}},
+                "provides": {
+                    "metrics-endpoint": {"interface": "prometheus_scrape"},
+                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                },
+                "requires": {
+                    "logging": {"interface": "loki_push_api"},
+                    "ingress": {"interface": "ingress", "limit": 1},
+                },
+                "resources": {
+                    "django-app-image": {
+                        "description": "django application image.",
+                        "type": "oci-image",
+                    },
+                },
+                "summary": "test summary",
+                "type": "charm",
+            },
+        ),
+    ],
+)
+def test_apply_extensions_correct(monkeypatch, experimental, tmp_path, input_yaml, expected):
+    if experimental:
+        monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    applied = apply_extensions(tmp_path, input_yaml)
+    assert applied == expected
 
 
 PROTECTED_FIELDS_TEST_PARAMETERS = [

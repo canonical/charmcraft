@@ -108,12 +108,10 @@ html_domain_indices = True
 #     craft_parts_docs_path, target_is_directory=True
 # )
 
+
 def generate_cli_docs(nil):
     gen_cli_docs_path = (project_dir / "tools" / "gen_cli_docs.py").resolve()
-    subprocess.run(
-        [sys.executable, gen_cli_docs_path, project_dir / "docs"],
-        check=True
-    )
+    subprocess.run([sys.executable, gen_cli_docs_path, project_dir / "docs"], check=True)
 
 
 def setup(app):

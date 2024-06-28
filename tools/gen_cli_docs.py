@@ -130,9 +130,7 @@ def main(docs_dir):
             # Add a section for the command to be included in the group reference.
             g.write(f":ref:`ref_commands_{cmd.name}`\n")
             g.write(
-                "   "
-                + make_sentence(fix_spelling(cmd.help_msg)).replace("\n", "\n   ")
-                + "\n\n"
+                "   " + make_sentence(fix_spelling(cmd.help_msg)).replace("\n", "\n   ") + "\n\n"
             )
 
             # Add an entry in the table of contents.

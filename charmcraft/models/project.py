@@ -18,10 +18,9 @@ import abc
 import datetime
 import pathlib
 import re
-from collections.abc import Iterable, Iterator
 import textwrap
+from collections.abc import Iterable, Iterator
 from typing import (
-    Annotated,
     Any,
     Literal,
     cast,
@@ -452,8 +451,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         ),
     )
     charmhub: CharmhubConfig | None = pydantic.Field(
-        default=None,
-        description="(DEPRECATED): Configuration for accessing charmhub."
+        default=None, description="(DEPRECATED): Configuration for accessing charmhub."
     )
     parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
 
@@ -607,14 +605,12 @@ class BasesCharm(CharmcraftProject):
         examples=[
             "mysql",
             "mysql-k8s",
-        ]
+        ],
     )
     summary: CharmcraftSummaryStr = pydantic.Field(
         description="A brief (one-line) summary of your charm.",
     )
-    description: str = pydantic.Field(
-        description="A multi-line summary of your charm."
-    )
+    description: str = pydantic.Field(description="A multi-line summary of your charm.")
 
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydantic issues. This appears to be
@@ -654,7 +650,7 @@ class BasesCharm(CharmcraftProject):
 
             This key is equivalent to the
             `actions.yaml file <https://juju.is/docs/sdk/actions-yaml>`_."""
-        )
+        ),
     )
     assumes: list[str | dict[str, list | dict]] | None = pydantic.Field(
         default=None,
@@ -691,7 +687,7 @@ class BasesCharm(CharmcraftProject):
             can be found in the
             `Juju documentation <https://juju.is/docs/juju/supported-features>`_.
             """
-        )
+        ),
     )
     containers: dict[str, Any] | None = pydantic.Field(
         default=None,
@@ -766,7 +762,7 @@ class BasesCharm(CharmcraftProject):
                 "nvidia-gpu": {
                     "type": "nvidia.com/gpu",
                     "description": "Some NVIDIA GPUs",
-                    "countmin": 20
+                    "countmin": 20,
                 },
             },
             {
@@ -776,12 +772,11 @@ class BasesCharm(CharmcraftProject):
                     "countmin": 2,
                     "countmax": 40,
                 }
-            }
+            },
         ],
     )
     extra_bindings: dict[str, Any] | None = pydantic.Field(
-        default=None,
-        description="A key-only mapping representing extra bindings needed."
+        default=None, description="A key-only mapping representing extra bindings needed."
     )
     peers: dict[str, Any] | None = pydantic.Field(
         default=None,
@@ -891,7 +886,7 @@ class BasesCharm(CharmcraftProject):
         examples=[
             {"water": {"type": "file", "filename": "/dev/h2o"}},
             {"super-app-image": {"type": "oci-image", "description": "My app!"}},
-        ]
+        ],
     )
     storage: dict[str, Any] | None = pydantic.Field(
         default=None,
@@ -952,10 +947,10 @@ class BasesCharm(CharmcraftProject):
     subordinate: bool | None = pydantic.Field(
         default=None,
         description="Optional boolean to declare the charm subordinate.",
-        examples = [True],
+        examples=[True],
     )
     terms: list[str] | None = pydantic.Field(
-        default = None,
+        default=None,
         description=textwrap.dedent(
             """\
             A list of terms to which the user agree by using the charm.
@@ -1007,16 +1002,16 @@ class BasesCharm(CharmcraftProject):
                     "name": {
                         "default": "Wiki",
                         "description": "The name or title of the Wiki",
-                        "type": "string"
+                        "type": "string",
                     },
-                    "skin":{
+                    "skin": {
                         "default": "vector",
                         "description": "Skin to use for the wiki",
                         "type": "string",
-                    }
+                    },
                 },
             },
-        ]
+        ],
     )
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)

@@ -39,7 +39,12 @@ Library Commands
 
 .. include:: commands/store (libraries)-commands.rst
 
+Extensions-related Commands
+===========================
+
+.. include:: commands/extensions-commands.rst
+
 Other Commands
---------------
+==============
 
 .. include:: commands/other-commands.rst

@@ -16,7 +16,7 @@
 
 """Charmcraft pydantic models."""
 
-from . import config, metadata
+from . import actions, config, metadata
 from .charmcraft import Base
 from .lint import CheckResult, CheckType, LintResult, ResultLevel
 from .manifest import Attribute, Manifest

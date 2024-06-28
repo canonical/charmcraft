@@ -80,10 +80,11 @@ docs = [
     "pyspelling",
     "autodoc-pydantic<=2.0",
     "sphinx-autobuild~=2024.2",
-    "sphinx-pydantic==0.1.1",
+    "sphinx-pydantic~=0.1",
     "sphinx-toolbox~=3.5",
-    "sphinx-lint==0.9.1",
+    "sphinx-lint~=0.9",
     "sphinxcontrib-details-directive",
+    "matplotlib",
 ]
 
 [build-system]

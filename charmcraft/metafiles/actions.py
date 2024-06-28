@@ -23,13 +23,13 @@ import shutil
 import typing
 from typing import TYPE_CHECKING, Literal
 
+from craft_application import util
 import pydantic
 import yaml
 from craft_cli import CraftError, emit
 
 from charmcraft import const
 from charmcraft.format import format_pydantic_errors
-from charmcraft.metafiles import read_yaml
 from charmcraft.models.actions import JujuActions
 
 if TYPE_CHECKING:
@@ -60,7 +60,8 @@ def parse_actions_yaml(charm_dir, allow_broken=False):
     :raises: CraftError if actions.yaml is not valid.
     """
     try:
-        actions = read_yaml(charm_dir / const.JUJU_ACTIONS_FILENAME)
+        with (charm_dir / const.JUJU_ACTIONS_FILENAME).open() as file:
+            actions = util.safe_load_yaml(file)
     except FileNotFoundError:
         return None
     except OSError as exc:

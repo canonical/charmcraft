@@ -72,19 +72,19 @@ def printable_field_location_split(location: str) -> tuple[str, str]:
 def format_pydantic_errors(errors, *, file_name: str = const.CHARMCRAFT_FILENAME) -> str:
     """Format errors.
 
-    Example 1: Single error.
+    Example 1: Single error::
 
-    Bad charmcraft.yaml content:
-    - field: <some field>
-      reason: <some reason>
+      Bad charmcraft.yaml content:
+      - field: <some field>
+        reason: <some reason>
 
-    Example 2: Multiple errors.
+    Example 2: Multiple errors::
 
-    Bad charmcraft.yaml content:
-    - field: <some field>
-      reason: <some reason>
-    - field: <some field 2>
-      reason: <some reason 2>
+      Bad charmcraft.yaml content:
+      - field: <some field>
+        reason: <some reason>
+      - field: <some field 2>
+        reason: <some reason 2>
     """
     combined = [f"Bad {file_name} content:"]
     for error in errors:

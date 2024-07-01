@@ -7,12 +7,7 @@ execute: |
   mkdir -p test-init
   cd test-init
   charmcraft init --profile flask-framework
-  charmcraft fetch-lib charms.traefik_k8s.v2.ingress
-  charmcraft fetch-lib charms.observability_libs.v0.juju_topology
-  charmcraft fetch-lib charms.grafana_k8s.v0.grafana_dashboard
-  charmcraft fetch-lib charms.loki_k8s.v0.loki_push_api
-  charmcraft fetch-lib charms.data_platform_libs.v0.data_interfaces
-  charmcraft fetch-lib charms.prometheus_k8s.v0.prometheus_scrape
+  charmcraft fecth-libs
   charmcraft pack --verbose
   test -f *.charm
 

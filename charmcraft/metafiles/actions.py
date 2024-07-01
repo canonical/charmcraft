@@ -61,7 +61,7 @@ def parse_actions_yaml(charm_dir, allow_broken=False):
     """
     try:
         with (charm_dir / const.JUJU_ACTIONS_FILENAME).open() as file:
-            actions = util.safe_load_yaml(file)
+            actions = util.safe_yaml_load(file)
     except FileNotFoundError:
         return None
     except OSError as exc:

@@ -7,7 +7,7 @@ execute: |
   mkdir -p test-init
   cd test-init
   charmcraft init --profile flask-framework
-  charmcraft fecth-libs
+  charmcraft fetch-libs
   charmcraft pack --verbose
   test -f *.charm
 

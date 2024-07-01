@@ -74,7 +74,23 @@ class BasesConfiguration(
     alias_generator=lambda s: s.replace("_", "-"),
     frozen=True,
 ):
-    """Definition of build-on/run-on combinations."""
+    """Definition of build-on/run-on combinations.
+
+    Example::
+
+        bases:
+          - build-on:
+              - name: ubuntu
+                channel: "20.04"
+                architectures: [amd64, arm64]
+            run-on:
+              - name: ubuntu
+                channel: "20.04"
+                architectures: [amd64, arm64]
+              - name: ubuntu
+                channel: "22.04"
+                architectures: [amd64, arm64]
+    """
 
     build_on: list[Base]
     run_on: list[Base]
@@ -110,10 +126,15 @@ class Links(ModelConfigDefaults, frozen=True):
     """Definition of `links` in metadata."""
 
     contact: pydantic.StrictStr | list[pydantic.StrictStr] | None
+    """Instructions for contacting the owner of the charm."""
     documentation: pydantic.AnyHttpUrl | None
+    """The URL of the documentation for this charm."""
     issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    """A link to the issue tracker for this charm."""
     source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    """Where to find this charm's source code."""
     website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    """The website for this charm."""
 
 
 class CharmcraftConfig(

@@ -1066,7 +1066,7 @@ class StatusCommand(CharmcraftCommand):
         into a channel. This command shows the various channels for a charm
         and whether there is a charm released.
 
-        For example:
+        For example::
 
           $ charmcraft status
           Track    Base                   Channel    Version    Revision
@@ -1651,16 +1651,17 @@ class FetchLibs(CharmcraftCommand):
         For each library in the top-level `charm-libs` key, fetch the latest library
         version matching those requirements.
 
-        For example:
-        charm-libs:
-          # Fetch lib with API version 0.
-          # If `fetch-libs` is run and a newer minor version is available,
-          # it will be fetched from the store.
-          - lib: postgresql.postgres_client
-            version: "0"
-          # Always fetch precisely version 0.57.
-          - lib: mysql.client
-            version: "0.57"
+        For example::
+
+            charm-libs:
+            # Fetch lib with API version 0.
+            # If `fetch-libs` is run and a newer minor version is available,
+            # it will be fetched from the store.
+            - lib: postgresql.postgres_client
+              version: "0"
+            # Always fetch precisely version 0.57.
+            - lib: mysql.client
+              version: "0.57"
         """
     )
     format_option = True

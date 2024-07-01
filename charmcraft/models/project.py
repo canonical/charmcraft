@@ -18,6 +18,7 @@ import abc
 import datetime
 import pathlib
 import re
+import textwrap
 from collections.abc import Iterable, Iterator
 from typing import (
     Any,
@@ -440,8 +441,18 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     summary: CharmcraftSummaryStr | None
     description: str | None
 
-    analysis: AnalysisConfig | None
-    charmhub: CharmhubConfig | None
+    analysis: AnalysisConfig | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            How analysis done on the charm will behave.
+
+            Currently the only options are to ignore attributes or linters."""
+        ),
+    )
+    charmhub: CharmhubConfig | None = pydantic.Field(
+        default=None, description="(DEPRECATED): Configuration for accessing charmhub."
+    )
     parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
 
     # Default project properties that Charmcraft currently does not use. Types are set
@@ -568,36 +579,440 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
 
 class BasesCharm(CharmcraftProject):
-    """Model for defining a charm."""
+    """A charm using the deprecated ``bases`` keyword.
+
+    This type of charm only supports the following bases:
+        - Ubuntu 18.04
+        - Ubuntu 20.04
+        - Ubuntu 22.04
+        - CentOS 7
+        - Alma Linux 9
+    """
 
     type: Literal["charm"]
-    name: models.ProjectName
-    summary: CharmcraftSummaryStr
-    description: str
+    """The type of project. Must be the string ``charm``."""
+    name: models.ProjectName = pydantic.Field(
+        description=textwrap.dedent(
+            """\
+            The name of the project on Charmhub.
+
+            This value will be used both in the URL of the charm on Charmhub and when
+            deploying the charm with juju.
+
+            Charms should follow the
+            `charm naming guidelines <https://juju.is/docs/sdk/naming>`_."""
+        ),
+        examples=[
+            "mysql",
+            "mysql-k8s",
+        ],
+    )
+    summary: CharmcraftSummaryStr = pydantic.Field(
+        description="A brief (one-line) summary of your charm.",
+    )
+    description: str = pydantic.Field(description="A multi-line summary of your charm.")
 
     # This is defined this way because using conlist makes mypy sad and using
-    # a ConstrainedList child class has pydontic issues. This appears to be
+    # a ConstrainedList child class has pydantic issues. This appears to be
     # solved with Pydantic 2.
     bases: list[BasesConfiguration] = pydantic.Field(min_items=1)
 
     base: None = None
 
-    parts: dict[str, dict[str, Any]] = {"charm": {"plugin": "charm", "source": "."}}
+    parts: dict[str, dict[str, Any]] = pydantic.Field(
+        default={"charm": {"plugin": "charm", "source": "."}},
+        description=textwrap.dedent(
+            """\
+            Configures the various mechanisms to obtain, process and prepare data from
+            different sources that end up being a part of the final charm.
 
-    actions: dict[str, Any] | None
-    assumes: list[str | dict[str, list | dict]] | None
-    containers: dict[str, Any] | None
-    devices: dict[str, Any] | None
-    extra_bindings: dict[str, Any] | None
-    peers: dict[str, Any] | None
-    provides: dict[str, Any] | None
-    requires: dict[str, Any] | None
-    resources: dict[str, Any] | None
-    storage: dict[str, Any] | None
-    subordinate: bool | None
-    terms: list[str] | None
-    links: Links | None
-    config: dict[str, Any] | None
+            Keys are user-defined part names. The value of each key is a map where keys
+            are part names. Charmcraft provides 3 plugins: charm, bundle, reactive.
+
+            Example::
+
+                parts:
+                  libs:
+                    plugin: dump
+                    source: /usr/local/lib/
+                    organize:
+                      "libxxx.so*": lib/
+                    prime:
+                      - lib/""",
+        ),
+    )
+
+    actions: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            Defines one or more actions.
+
+            This key is equivalent to the
+            `actions.yaml file <https://juju.is/docs/sdk/actions-yaml>`_."""
+        ),
+    )
+    assumes: list[str | dict[str, list | dict]] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            Explicitly state features a Juju model must be able to provide for a
+            successful deployment of this charm. When a charm includes such
+            requirements, Juju performs a pre-deployment check and displays
+            user-friendly error messages if a feature requirement cannot be met by the
+            model that the user is trying to deploy the charm to. If the assumes
+            section of the charm metadata is omitted, Juju will make a best-effort
+            attempt to deploy the charm, and users must rely on the output of
+            ``juju status`` to figure out whether the deployment was successful.
+
+            The key consists of a list of features that can be given either directly
+            or, depending on the complexity of the condition you want to enforce,
+            nested under one or both of the boolean expressions any-of or all-of,
+            as shown below. In order for a charm to be deployed, all entries in the
+            assumes block must be satisfied.
+
+            Structure::
+
+                assumes:
+                  - <feature-1>
+                  - any-of:
+                    - <feature-2>
+                    - <feature-3>
+                  - all-of:
+                    - <feature-4>
+                    - <feature-5>
+
+            Juju version requirements can be specified with a string such as
+            ``juju >= 3.5`` or ``juju < 4.0``. A full list of supported features
+            can be found in the
+            `Juju documentation <https://juju.is/docs/juju/supported-features>`_.
+            """
+        ),
+    )
+    containers: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            Define a map of containers to be created adjacent to the charm (as a
+            sidecar, in the same pod).
+
+            This is required for Kubernetes charms.
+
+            This key consists of a dictionary mapping container names to their
+            specifications. Each container can be specified in terms of ``resource``,
+            ``bases`` and ``mounts``, where one of either the ``resource`` or the
+            ``bases`` subkeys must be defined and ``mounts`` is optional.
+
+            - ``resource`` is the name of an OCI image resource used to create the
+              container (that you will then define further in the resources block).
+            - ``bases`` is a list of bases to be used for resolving a container image,
+              in descending order of preference. To use it, specify a base name (for
+              example, ``ubuntu`` or ``centos``), a ``channel`` and an
+              ``architecture``.
+            - ``mounts`` is a list of mounted storage volumes for this container. To
+              use it, specify the name of the storage to mount from the charm
+              storage and, optionally, the location where to mount the storage.
+
+            Structure::
+
+                containers:
+                  <container name>:
+                    resource: <resource name>
+                    bases:
+                      - name: <base name>
+                        channel: <track[/risk][/branch]>
+                        architectures:
+                          - <architecture>
+                    mounts:
+                      - storage: <storage name>
+                        location: <path>"""
+        ),
+        examples=[
+            {
+                "super-app": {
+                    "resource": "super-app-image",
+                    "mounts": [{"storage": "logs", "location": "/logs"}],
+                }
+            }
+        ],
+    )
+    devices: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            Devices the charm needs.
+
+            Structure::
+
+                devices:
+                  <device name>:
+                    type: gpu | nvidia.com/gpu | amd.com/gpu
+                    description: <Optional description>
+                    countmin: <Optional minimum number requested>
+                    countmax: <Optional maximum number requested>"""
+        ),
+        examples=[
+            {
+                "amd-gpu": {
+                    "type": "amd.com/gpu",
+                    "description": "Some sweet AMD GPU",
+                    "countmin": 1,
+                    "countmax": 100,
+                },
+                "nvidia-gpu": {
+                    "type": "nvidia.com/gpu",
+                    "description": "Some NVIDIA GPUs",
+                    "countmin": 20,
+                },
+            },
+            {
+                "gpus": {
+                    "type": "gpu",
+                    "description": "A bunch of GPUs",
+                    "countmin": 2,
+                    "countmax": 40,
+                }
+            },
+        ],
+    )
+    extra_bindings: dict[str, Any] | None = pydantic.Field(
+        default=None, description="A key-only mapping representing extra bindings needed."
+    )
+    peers: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            A map of peer relations.
+
+            Structure::
+
+                peers:
+                  <endpoint name>:
+                    interface: <Required interface name>
+                    limit: <Optional: maximum number of supported connections
+                    optional: <Informational only - whether the relation is required.>
+                    scope: <"global" or "container" - the relation scope.>
+
+            For more information, see
+            `the Juju documentation <https://juju.is/docs/juju/relation>`_."""
+        ),
+        examples=[
+            {
+                "friend": {
+                    "interface": "life",
+                    "limit": 150,
+                    "optional": True,
+                    "scope": "container",
+                }
+            }
+        ],
+    )
+    provides: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            A map of interfaces this charm provides.
+
+            Structure::
+
+                provides:
+                  <endpoint name>:
+                    interface: <Required interface name>
+                    limit: <Optional: maximum number of supported connections
+                    optional: <Informational only - whether the relation is required.>
+                    scope: <"global" or "container" - the relation scope.>
+
+            For more information, see
+            `the Juju documentation <https://juju.is/docs/juju/relation>`_."""
+        ),
+        examples=[{"self": {"interface": "identity"}}],
+    )
+    requires: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            A map of relations this charm requires.
+
+            Structure::
+
+                requires:
+                  <endpoint name>:
+                    interface: <Required interface name>
+                    limit: <Optional: maximum number of supported connections
+                    optional: <Informational only - whether the relation is required.>
+                    scope: <"global" or "container" - the relation scope.>
+
+            For more information, see
+            `the Juju documentation <https://juju.is/docs/juju/relation>`_."""
+        ),
+        examples=[
+            {
+                "parent": {
+                    "interface": "birth",
+                    "limit": 2,
+                    "optional": False,
+                    "scope": "global",
+                }
+            }
+        ],
+    )
+    resources: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            A mapping of resources that accompany the charm.
+
+            See first: `Juju | Charm resource <https://juju.is/docs/juju/charm-resource>`_
+
+            Each resource is made available when the charm is deployed. NOTE:
+            Kubernetes charms must declare an ``oci-image`` type resource for each
+            container declared in ``containers``.
+
+            Structure::
+
+                # (Optional) Additional resources that accompany the charm
+                resources:
+                  <resource name>:
+                    # (Required) The type of the resource
+                    type: file | oci-image
+
+                    # (Optional) Description of the resource and its purpose
+                    description: <description>
+
+                    # (Required: when type:file) The filename of the resource as it
+                    # should appear in the filesystem.
+                    filename: <filename>"""
+        ),
+        examples=[
+            {"water": {"type": "file", "filename": "/dev/h2o"}},
+            {"super-app-image": {"type": "oci-image", "description": "My app!"}},
+        ],
+    )
+    storage: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            Storage devices requested by the charm.
+
+            Structure::
+
+                storage:
+                  # Each key represents the name of the storage
+                  <storage name>:
+
+                    # (Required) Type of the requested storage
+                    type: filesystem | block
+
+                    # (Optional) Description of the storage requested
+                    description: <description>
+
+                    # (Optional) The mount location for filesystem stores. For
+                    # multi-stores the location acts as the parent directory for each
+                    # mounted store.
+                    location: <location>
+
+                    # Indicates if all units of the application share the storage.
+                    # Defaults to false
+                    shared: true | false
+
+                    # Indicates if the storage should be made read-only (where
+                    # possible). Defaults to false
+                    read-only: true | false
+
+                    # (Optional) The number of storage instances to be requested
+                    multiple:
+                      range: <n> | <n>-<m> | <n>- | <n>+
+
+                    # (Optional) Minimum size of requested storage in forms G, GiB, GB.
+                    # Size multipliers are M, G, T, P, E, Z or Y. With no multiplier
+                    # supplied, M is implied.
+                    minimum-size: <n> | <n><multiplier>
+
+                    # (Optional) List of properties, only supported value is "transient"
+                    properties:
+                      - transient
+            """
+        ),
+        examples=[
+            {
+                "jbod": {
+                    "type": "block",
+                    "description": "A block storage to use as swap space",
+                    "shared": False,
+                    "properties": ["transient"],
+                },
+            },
+        ],
+    )
+    subordinate: bool | None = pydantic.Field(
+        default=None,
+        description="Optional boolean to declare the charm subordinate.",
+        examples=[True],
+    )
+    terms: list[str] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            A list of terms to which the user agree by using the charm.
+            These terms are not enforced by the charm, Juju or Canonical."""
+        ),
+        examples=[
+            "Post cat pictures on Mastodon",
+            "Tag your cat pictures with #caturday",
+        ],
+    )
+    links: Links | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            (Recommended) Links to various additional information used by Charmhub."""
+        ),
+        examples=[
+            {
+                "contact": "Please send your answer to Old Pink, care of the Funny Farm, Chalfont",
+                "documentation": "https://discourse.charmhub.io/t/traefik-k8s-docs-index/10778",
+                "issues": "https://github.com/canonical/traefik-k8s-operator/issues",
+                "source": "https://github.com/canonical/traefik-k8s-operator",
+                "website": "https://charmed-kubeflow.io/",
+            }
+        ],
+    )
+    config: dict[str, Any] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            One or more configuration options for your charm.
+
+            Structure::
+
+                config:
+                  options:
+                    # Each option name is the name by which the charm will query the option.
+                    <option name>:
+                      # (Required) The type of the option
+                      type: string | int | float | boolean | secret
+                      # (Optional) The default value of the option
+                      default: <a reasonable default value of the same type as the option>
+                      # (Optional): A string describing the option. Also appears on charmhub.io
+                      description: <description string>"""
+        ),
+        examples=[
+            {
+                "options": {
+                    "name": {
+                        "default": "Wiki",
+                        "description": "The name or title of the Wiki",
+                        "type": "string",
+                    },
+                    "skin": {
+                        "default": "vector",
+                        "description": "Skin to use for the wiki",
+                        "type": "string",
+                    },
+                },
+            },
+        ],
+    )
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
     def _validate_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:

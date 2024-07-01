@@ -51,6 +51,15 @@ def flask_input_yaml_fixture():
                 },
                 "description": "test description",
                 "name": "test-flask",
+                "charm-libs": [{"lib": "traefik_k8s.ingress", "version": "2"},
+                               {"lib": "observability_libs.juju_topology", "version": "0"},
+                               {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+                               {"lib": "loki_k8s.loki_push_api", "version": "0"},
+                               {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+                               {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+                               {"lib": "redis_k8s.redis", "version": "0"},
+                               {"lib": "data_platform_libs.s3", "version": "0"},
+                               {"lib": "saml_integrator.saml", "version": "0"}],
                 "config": {
                     "options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}
                 },
@@ -93,6 +102,15 @@ def flask_input_yaml_fixture():
                 },
                 "description": "test description",
                 "name": "test-django",
+                "charm-libs": [{"lib": "traefik_k8s.ingress", "version": "2"},
+                               {"lib": "observability_libs.juju_topology", "version": "0"},
+                               {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+                               {"lib": "loki_k8s.loki_push_api", "version": "0"},
+                               {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+                               {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+                               {"lib": "redis_k8s.redis", "version": "0"},
+                               {"lib": "data_platform_libs.s3", "version": "0"},
+                               {"lib": "saml_integrator.saml", "version": "0"}],
                 "config": {
                     "options": {**DjangoFramework.options, **DjangoFramework._WEBSERVER_OPTIONS}
                 },

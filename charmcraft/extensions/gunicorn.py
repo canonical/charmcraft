@@ -98,7 +98,7 @@ class _GunicornBase(Extension):
                     f"{protected!r} in charmcraft.yaml conflicts with a reserved field "
                     f"in the {self.framework}-framework extension, please remove it."
                 )
-        for merging in ("actions", "requires", "provides", "config.options"):
+        for merging in ("actions", "requires", "provides", "config.options", "charm-libs"):
             user_provided: dict[str, Any] = self._get_nested(self.yaml_data, merging)
             if not user_provided:
                 continue

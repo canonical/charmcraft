@@ -221,8 +221,8 @@ def ensure_provider_is_available(provider: "Provider") -> None:
     If the provider is not installed, the user is prompted to install it.
 
     :param instance: the provider to ensure is available
-    :raises ProviderError: if provider is not available, or if the user
-    chooses not to install the provider.
+    :raises ProviderError: if provider is not available, or if the user chooses not
+        to install the provider.
     """
     # TODO: add provider.name and provider.install_recommendations to craft-providers
     confirm_msg = (
@@ -283,10 +283,8 @@ def get_provider():
     If platform is not Linux, use Multipass.
 
     If platform is Linux:
-    (1) use provider specified with CHARMCRAFT_PROVIDER if running
-        in developer mode,
-    (2) use provider specified with snap configuration if running
-        as snap,
+    (1) use provider specified with CHARMCRAFT_PROVIDER if running in developer mode,
+    (2) use provider specified with snap configuration if running as a snap,
     (3) default to platform default (LXD on Linux).
 
     :return: Provider instance.

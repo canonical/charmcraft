@@ -71,6 +71,9 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+# Auto-generated command reference
+/docs/reference/commands/
+/docs/reference/_autosummary/
 
 # PyBuilder
 target/

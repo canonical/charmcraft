@@ -238,7 +238,14 @@ class CharmBuilder:
             # common charm dependencies (e.g. ops). Resolve this by updating to a
             # known working version of pip.
             if get_pip_version(pip_cmd) < MINIMUM_PIP_VERSION:
-                _process_run([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}", f"--hash={KNOWN_GOOD_PIP_HASH}"])
+                _process_run(
+                    [
+                        pip_cmd,
+                        "install",
+                        f"pip@{KNOWN_GOOD_PIP_URL}",
+                        f"--hash={KNOWN_GOOD_PIP_HASH}",
+                    ]
+                )
 
         with instrum.Timer("Installing all dependencies"):
             if self.strict_dependencies:

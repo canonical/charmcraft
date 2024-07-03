@@ -14,7 +14,7 @@ bases:
       channel: "22.04"
 
 # (Required)
-summary: A very short one-line summary of the flask application.
+summary: A very short one-line summary of the Flask application.
 
 # (Required)
 description: |
@@ -24,10 +24,30 @@ extensions:
   - flask-framework
 
 # Uncomment the integrations used by your application
+# Integrations set to "optional: false" will block the charm
+# until the applications are integrated.
 # requires:
 #   mysql:
 #     interface: mysql_client
+#     optional: false
 #     limit: 1
 #   postgresql:
 #     interface: postgresql_client
+#     optional: false
+#     limit: 1
+#   mongodb:
+#     interface: mongodb_client
+#     optional: false
+#     limit: 1
+#   redis:
+#     interface: redis
+#     optional: false
+#     limit: 1
+#   s3:
+#     interface: s3
+#     optional: false
+#     limit: 1
+#   saml:
+#     interface: saml
+#     optional: false
 #     limit: 1

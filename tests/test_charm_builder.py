@@ -27,7 +27,6 @@ import pytest
 
 from charmcraft import charm_builder, const
 from charmcraft.charm_builder import (
-    KNOWN_GOOD_PIP_HASH,
     KNOWN_GOOD_PIP_URL,
     CharmBuilder,
     _process_run,
@@ -611,7 +610,13 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}", f"--hash={KNOWN_GOOD_PIP_HASH}"]),
+        call(
+            [
+                pip_cmd,
+                "install",
+                f"pip@{KNOWN_GOOD_PIP_URL}",
+            ]
+        ),
         call([pip_cmd, "install", f"--requirement={reqs_file}"]),
     ]
 
@@ -650,7 +655,13 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}", f"--hash={KNOWN_GOOD_PIP_HASH}"]),
+        call(
+            [
+                pip_cmd,
+                "install",
+                f"pip@{KNOWN_GOOD_PIP_URL}",
+            ]
+        ),
         call(
             [
                 pip_cmd,
@@ -713,7 +724,13 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}", f"--hash={KNOWN_GOOD_PIP_HASH}"]),
+        call(
+            [
+                pip_cmd,
+                "install",
+                f"pip@{KNOWN_GOOD_PIP_URL}",
+            ]
+        ),
         call([pip_cmd, "install", "--no-binary=pkg1,pkg2", "pkg1", "pkg2"]),
     ]
 
@@ -748,7 +765,13 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}", f"--hash={KNOWN_GOOD_PIP_HASH}"]),
+        call(
+            [
+                pip_cmd,
+                "install",
+                f"pip@{KNOWN_GOOD_PIP_URL}",
+            ]
+        ),
         call([pip_cmd, "install", "pkg1", "pkg2"]),
     ]
 
@@ -789,7 +812,13 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}", f"--hash={KNOWN_GOOD_PIP_HASH}"]),
+        call(
+            [
+                pip_cmd,
+                "install",
+                f"pip@{KNOWN_GOOD_PIP_URL}",
+            ]
+        ),
         call(
             [
                 pip_cmd,

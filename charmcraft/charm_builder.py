@@ -243,7 +243,6 @@ class CharmBuilder:
                         pip_cmd,
                         "install",
                         f"pip@{KNOWN_GOOD_PIP_URL}",
-                        f"--hash={KNOWN_GOOD_PIP_HASH}",
                     ]
                 )
 

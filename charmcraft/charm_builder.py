@@ -41,8 +41,9 @@ from charmcraft.utils import (
     validate_strict_dependencies,
 )
 
-MINIMUM_PIP_VERSION = (23, 0)
-KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/ba/19/e63fb4e0d20e48bd2167bb7e857abc0e21679e24805ba921a224df8977c0/pip-23.2.1.tar.gz"
+MINIMUM_PIP_VERSION = (24, 1)
+KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/c0/d0/9641dc7b05877874c6418f8034ddefc809495e65caa14d38c7551cd114bb/pip-24.1.1.tar.gz"
+KNOWN_GOOD_PIP_HASH = "sha256:5aa64f65e1952733ee0a9a9b1f52496ebdb3f3077cc46f80a16d983b58d1180a"
 
 
 def relativise(src, dst):
@@ -237,7 +238,13 @@ class CharmBuilder:
             # common charm dependencies (e.g. ops). Resolve this by updating to a
             # known working version of pip.
             if get_pip_version(pip_cmd) < MINIMUM_PIP_VERSION:
-                _process_run([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"])
+                _process_run(
+                    [
+                        pip_cmd,
+                        "install",
+                        f"pip@{KNOWN_GOOD_PIP_URL}",
+                    ]
+                )
 
         with instrum.Timer("Installing all dependencies"):
             if self.strict_dependencies:

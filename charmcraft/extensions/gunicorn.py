@@ -223,6 +223,12 @@ class FlaskFramework(_GunicornBase):
         """Check if the extension is in an experimental state."""
         return False
 
+    @override
+    def get_parts_snippet(self) -> dict[str, Any]:
+        """Return the parts to add to parts."""
+        # rust is needed to build pydantic-core, a dependency of flask.
+        return {"flask-framework/rust-deps": {"plugin": "nil", "build-packages": ["cargo"]}}
+
 
 class DjangoFramework(_GunicornBase):
     """Extension for 12-factor Django applications."""

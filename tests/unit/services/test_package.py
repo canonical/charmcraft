@@ -26,9 +26,7 @@ import pytest_check
 from charmcraft import const, models, services, utils
 from charmcraft.application.main import APP_METADATA
 
-SIMPLE_BUILD_BASE = models.charmcraft.Base(
-    name="ubuntu", channel="22.04", architectures=["arm64"]
-)
+SIMPLE_BUILD_BASE = models.charmcraft.Base(name="ubuntu", channel="22.04", architectures=["arm64"])
 SIMPLE_MANIFEST = models.Manifest(
     charmcraft_started_at="1970-01-01T00:00:00+00:00",
     bases=[models.Base(name="ubuntu", channel="22.04", architectures=["arm64"])],
@@ -108,9 +106,7 @@ def test_get_charm_path(fake_path, package_service, bases, expected_name):
     ],
 )
 def test_get_manifest(package_service, simple_charm, lint, expected):
-    simple_charm._started_at = datetime.datetime(
-        1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
-    )
+    simple_charm._started_at = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
 
     assert package_service.get_manifest(lint) == expected
 
@@ -174,9 +170,7 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
     )
     package_service._project = charm
 
-    assert package_service.get_manifest_bases() == [
-        models.Base.parse_obj(b) for b in expected
-    ]
+    assert package_service.get_manifest_bases() == [models.Base.parse_obj(b) for b in expected]
 
 
 @pytest.mark.parametrize("base", ["ubuntu@22.04", "almalinux@9"])

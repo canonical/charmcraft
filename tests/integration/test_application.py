@@ -18,7 +18,6 @@
 import pathlib
 
 import pytest
-
 from craft_application import util
 
 from charmcraft import models, utils
@@ -40,6 +39,4 @@ def test_load_charm(app, charm_dir):
     expected_project = models.CharmcraftProject.unmarshal(expected_data)
 
     assert project == expected_project
-    assert (
-        utils.dump_yaml(project.marshal()) == (charm_dir / "expected.yaml").read_text()
-    )
+    assert utils.dump_yaml(project.marshal()) == (charm_dir / "expected.yaml").read_text()

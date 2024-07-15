@@ -114,9 +114,7 @@ class Platform(models.CraftBaseModel):
     """Project platform definition."""
 
     build_on: list[CharmArch] = pydantic.Field(min_items=1)
-    build_for: list[CharmArch | Literal["all"]] = pydantic.Field(
-        min_items=1, max_items=1
-    )
+    build_for: list[CharmArch | Literal["all"]] = pydantic.Field(min_items=1, max_items=1)
 
     @pydantic.validator("build_on", "build_for", pre=True)
     def _listify_architectures(cls, value: str | list[str]) -> list[str]:
@@ -165,9 +163,7 @@ class CharmLib(models.CraftBaseModel):
         try:
             int(api)
         except ValueError:
-            raise ValueError(
-                f"API version not valid. Expected an integer, got {api!r}"
-            ) from None
+            raise ValueError(f"API version not valid. Expected an integer, got {api!r}") from None
         return str(value)
 
     @pydantic.validator("version", pre=True)
@@ -388,9 +384,7 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                     platform=current_arch,
                     build_on=current_arch,
                     build_for=current_arch,
-                    base=bases.BaseName(
-                        name=current_base.system, version=current_base.release
-                    ),
+                    base=bases.BaseName(name=current_base.system, version=current_base.release),
                 )
             ]
         if not self.base:
@@ -480,9 +474,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # These private attributes are not part of the project model but are attached here
     # because Charmcraft uses this metadata.
-    _started_at: datetime.datetime = pydantic.PrivateAttr(
-        default_factory=datetime.datetime.utcnow
-    )
+    _started_at: datetime.datetime = pydantic.PrivateAttr(default_factory=datetime.datetime.utcnow)
     _valid: bool = pydantic.PrivateAttr(default=False)
 
     @property
@@ -563,9 +555,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     ) -> dict[str, dict[str, Any]]:
         """Preprocess parts object for a charm or bundle, creating an implicit part if needed."""
         if parts is not None and not isinstance(parts, dict):
-            raise TypeError(
-                "'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec."
-            )
+            raise TypeError("'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec.")
         if not parts:
             if "type" in values:
                 parts = {values["type"]: {"plugin": values["type"]}}
@@ -1059,12 +1049,10 @@ class BasesCharm(CharmcraftProject):
             and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
         ):
             return True
-        if base in (
+        return base in (
             {"name": "centos", "channel": "7"},
             {"name": "almalinux", "channel": "9"},
-        ):
-            return True
-        return False
+        )
 
 
 class PlatformCharm(CharmcraftProject):
@@ -1107,12 +1095,10 @@ class PlatformCharm(CharmcraftProject):
             and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
         ):
             return True
-        if base in (
+        return base in (
             {"name": "centos", "channel": "7"},
             {"name": "almalinux", "channel": "9"},
-        ):
-            return True
-        return False
+        )
 
     @pydantic.validator("build_base", always=True)
     def _validate_dev_base_needs_build_base(

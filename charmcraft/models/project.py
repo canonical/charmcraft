@@ -357,7 +357,7 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
     bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
     base: str | None = None
     build_base: str | None = None
-    platforms: dict[str, Platform | None] | None = None
+    platforms: dict[str, Platform | None] | None = None  # type: ignore[assignment]
 
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
     def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
@@ -615,7 +615,7 @@ class BasesCharm(CharmcraftProject):
         description="A brief (one-line) summary of your charm.",
     )
     description: str = pydantic.Field(description="A multi-line summary of your charm.")
-    platforms: None = None
+    platforms: None = None  # type: ignore[assignment]
 
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydantic issues. This appears to be
@@ -1066,7 +1066,7 @@ class PlatformCharm(CharmcraftProject):
     # Silencing pyright because it complains about missing default value
     base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
     build_base: BuildBaseStr | None = None
-    platforms: dict[str, Platform | None]  # pyright: ignore[reportGeneralTypeIssues]
+    platforms: dict[str, Platform | None]  # type: ignore[assignment]
     parts: dict[str, dict[str, Any]]  # pyright: ignore[reportGeneralTypeIssues]
 
     actions: dict[str, Any] | None
@@ -1124,7 +1124,7 @@ class Bundle(CharmcraftProject):
     summary: CharmcraftSummaryStr | None
     description: pydantic.StrictStr | None
     charmhub: CharmhubConfig = CharmhubConfig()
-    platforms: None = None
+    platforms: None = None  # type: ignore[assignment]
 
     @pydantic.root_validator(pre=True)
     def preprocess_bundle(cls, values: dict[str, Any]) -> dict[str, Any]:

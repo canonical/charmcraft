@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for project-related models."""
+
 import itertools
 import json
 import pathlib
@@ -38,7 +39,9 @@ from charmcraft.models.charmcraft import Base, BasesConfiguration
 
 SIMPLE_BASE = Base(name="simple", channel="0.0")
 BASE_WITH_ONE_ARCH = Base(name="arch", channel="1.0", architectures=["amd64"])
-BASE_WITH_MULTIARCH = Base(name="multiarch", channel="2.0", architectures=["arm64", "riscv64"])
+BASE_WITH_MULTIARCH = Base(
+    name="multiarch", channel="2.0", architectures=["arm64", "riscv64"]
+)
 SIMPLE_BASENAME = bases.BaseName("simple", "0.0")
 ONE_ARCH_BASENAME = bases.BaseName("arch", "1.0")
 MULTIARCH_BASENAME = bases.BaseName("multiarch", "2.0")
@@ -49,8 +52,16 @@ SIMPLE_BASES = (
     Base(name="almalinux", channel="9", architectures=["amd64"]),
 )
 COMPLEX_BASES = (
-    Base(name="ubuntu", channel="devel", architectures=["amd64", "arm64", "s390x", "riscv64"]),
-    Base(name="almalinux", channel="9", architectures=["amd64", "arm64", "s390x", "ppc64el"]),
+    Base(
+        name="ubuntu",
+        channel="devel",
+        architectures=["amd64", "arm64", "s390x", "riscv64"],
+    ),
+    Base(
+        name="almalinux",
+        channel="9",
+        architectures=["amd64", "arm64", "s390x", "ppc64el"],
+    ),
 )
 SIMPLE_BASE_CONFIG_DICT = {"name": "ubuntu", "channel": "22.04"}
 FULL_BASE_CONFIG_DICT = {
@@ -63,7 +74,9 @@ MINIMAL_CHARMCRAFT_YAML = """\
 type: charm
 bases: [{name: ubuntu, channel: "22.04", architectures: [arm64]}]
 """
-SIMPLE_METADATA_YAML = "{name: charmy-mccharmface, summary: Charmy!, description: Very charming!}"
+SIMPLE_METADATA_YAML = (
+    "{name: charmy-mccharmface, summary: Charmy!, description: Very charming!}"
+)
 SIMPLE_CHARMCRAFT_YAML = """\
 type: charm
 name: charmy-mccharmface
@@ -71,9 +84,13 @@ summary: Charmy!
 description: Very charming!
 bases: [{name: ubuntu, channel: "22.04", architectures: [arm64]}]
 """
-SIMPLE_CONFIG_YAML = "options: {admin: {default: root, description: Admin user, type: string}}"
+SIMPLE_CONFIG_YAML = (
+    "options: {admin: {default: root, description: Admin user, type: string}}"
+)
 SIMPLE_CONFIG_DICT = {
-    "options": {"admin": {"type": "string", "default": "root", "description": "Admin user"}}
+    "options": {
+        "admin": {"type": "string", "default": "root", "description": "Admin user"}
+    }
 }
 SIMPLE_ACTIONS_YAML = "snooze: {description: Take a little nap.}"
 SIMPLE_ACTIONS_DICT = {"snooze": {"description": "Take a little nap."}}
@@ -149,14 +166,18 @@ VALID_PLATFORM_ARCHITECTURES = [
     *(
         list(x) for x in itertools.combinations(const.CharmArch, 1)
     ),  # A single architecture in a list
-    *(list(x) for x in itertools.combinations(const.CharmArch, 2)),  # Two architectures in a list
+    *(
+        list(x) for x in itertools.combinations(const.CharmArch, 2)
+    ),  # Two architectures in a list
 ]
 
 
 @pytest.mark.parametrize("build_on", VALID_PLATFORM_ARCHITECTURES)
 @pytest.mark.parametrize("build_for", [[arch] for arch in (*const.CharmArch, "all")])
 def test_platform_validation_lists(build_on, build_for):
-    platform = project.Platform.parse_obj({"build-on": build_on, "build-for": build_for})
+    platform = project.Platform.parse_obj(
+        {"build-on": build_on, "build-for": build_for}
+    )
 
     assert platform.build_for == build_for
     assert platform.build_on == build_on
@@ -165,7 +186,9 @@ def test_platform_validation_lists(build_on, build_for):
 @pytest.mark.parametrize("build_on", const.CharmArch)
 @pytest.mark.parametrize("build_for", [*const.CharmArch, "all"])
 def test_platform_validation_strings(build_on, build_for):
-    platform = project.Platform.parse_obj({"build-on": build_on, "build-for": build_for})
+    platform = project.Platform.parse_obj(
+        {"build-on": build_on, "build-for": build_for}
+    )
 
     assert platform.build_for == [build_for]
     assert platform.build_on == [build_on]
@@ -173,7 +196,9 @@ def test_platform_validation_strings(build_on, build_for):
 
 # endregion
 # region CharmBuildInfo tests
-@pytest.mark.parametrize("build_on_base", [SIMPLE_BASE, BASE_WITH_ONE_ARCH, BASE_WITH_MULTIARCH])
+@pytest.mark.parametrize(
+    "build_on_base", [SIMPLE_BASE, BASE_WITH_ONE_ARCH, BASE_WITH_MULTIARCH]
+)
 @pytest.mark.parametrize("build_on_arch", ["amd64", "arm64", "riscv64", "s390x"])
 @pytest.mark.parametrize("run_on", [SIMPLE_BASE, BASE_WITH_ONE_ARCH])
 def test_build_info_from_build_on_run_on_basic(
@@ -203,7 +228,9 @@ def test_build_info_from_build_on_run_on_basic(
     ],
 )
 @pytest.mark.parametrize("lib_version", ["0", "1", "2.0", "2.1", "3.14"])
-def test_create_valid_charm_lib(lib_name: str, expected_lib_name: str, lib_version: str):
+def test_create_valid_charm_lib(
+    lib_name: str, expected_lib_name: str, lib_version: str
+):
     lib = project.CharmLib.unmarshal({"lib": lib_name, "version": lib_version})
     assert lib.lib == expected_lib_name
 
@@ -211,7 +238,10 @@ def test_create_valid_charm_lib(lib_name: str, expected_lib_name: str, lib_versi
 @pytest.mark.parametrize(
     ("name", "error_match"),
     [
-        ("boop", r"Library name invalid. Expected '\[charm_name\].\[lib_name\]', got 'boop'"),
+        (
+            "boop",
+            r"Library name invalid. Expected '\[charm_name\].\[lib_name\]', got 'boop'",
+        ),
         (
             "Invalid charm name.valid_lib",
             "Invalid charm name for lib 'Invalid charm name.valid_lib'. Value 'Invalid charm name' is invalid",
@@ -246,7 +276,8 @@ def test_valid_library_version(version: float):
 @pytest.mark.parametrize("version", [".1", "NaN", ""])
 def test_invalid_api_version(version: str):
     with pytest.raises(
-        pydantic.ValidationError, match="API version not valid. Expected an integer, got '"
+        pydantic.ValidationError,
+        match="API version not valid. Expected an integer, got '",
     ):
         project.CharmLib(lib="charm_name.lib_name", version=version)
 
@@ -254,7 +285,8 @@ def test_invalid_api_version(version: str):
 @pytest.mark.parametrize("version", ["1.", "1.number"])
 def test_invalid_patch_version(version: str):
     with pytest.raises(
-        pydantic.ValidationError, match="Patch version not valid. Expected an integer, got '"
+        pydantic.ValidationError,
+        match="Patch version not valid. Expected an integer, got '",
     ):
         project.CharmLib(lib="charm_name.lib_name", version=version)
 
@@ -310,7 +342,9 @@ def test_build_info_from_build_on_run_on_multi_arch(run_on, expected):
     ],
 )
 def test_build_info_generator(given, expected):
-    assert list(project.CharmBuildInfo.gen_from_bases_configurations(*given)) == expected
+    assert (
+        list(project.CharmBuildInfo.gen_from_bases_configurations(*given)) == expected
+    )
 
 
 # endregion
@@ -349,7 +383,10 @@ def test_build_info_generator(given, expected):
             {
                 "base": "ubuntu@22.04",
                 "platforms": {
-                    "fancy": {"build-on": ["amd64", "arm64", "riscv64"], "build-for": ["all"]},
+                    "fancy": {
+                        "build-on": ["amd64", "arm64", "riscv64"],
+                        "build-for": ["s390x"],
+                    },
                     "crossy": {"build-on": "s390x", "build-for": "ppc64el"},
                     "amd64": None,
                     "arm64": None,
@@ -360,19 +397,19 @@ def test_build_info_generator(given, expected):
                 project.models.BuildInfo(
                     platform="fancy",
                     build_on="amd64",
-                    build_for="all",
+                    build_for="s390x",
                     base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
                     platform="fancy",
                     build_on="arm64",
-                    build_for="all",
+                    build_for="s390x",
                     base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
                     platform="fancy",
                     build_on="riscv64",
-                    build_for="all",
+                    build_for="s390x",
                     base=bases.BaseName("ubuntu", "22.04"),
                 ),
                 project.models.BuildInfo(
@@ -425,7 +462,9 @@ def test_build_info_generator(given, expected):
                     platform=f"ubuntu-22.04-{utils.get_host_architecture()}",
                     build_on=utils.get_host_architecture(),
                     build_for=utils.get_host_architecture(),
-                    build_for_bases=[project.charmcraft.Base(name="ubuntu", channel="22.04")],
+                    build_for_bases=[
+                        project.charmcraft.Base(name="ubuntu", channel="22.04")
+                    ],
                     build_on_index=0,
                     base=bases.BaseName("ubuntu", "22.04"),
                     bases_index=0,
@@ -434,7 +473,11 @@ def test_build_info_generator(given, expected):
             id="basic-bases",
         ),
         pytest.param(
-            {"bases": [{"build-on": [BASE_WITH_ONE_ARCH], "run-on": [BASE_WITH_ONE_ARCH]}]},
+            {
+                "bases": [
+                    {"build-on": [BASE_WITH_ONE_ARCH], "run-on": [BASE_WITH_ONE_ARCH]}
+                ]
+            },
             [
                 project.CharmBuildInfo(
                     platform="arch-1.0-amd64",
@@ -470,10 +513,15 @@ def test_build_planner_correct(data, expected):
     "platforms",
     [
         {"amd64": None},
-        {"amd64": None, "fancy": {"build-on": ["amd64", "riscv64"], "build-for": ["all"]}},
+        {
+            "amd64": None,
+            "fancy": {"build-on": ["amd64", "riscv64"], "build-for": ["riscv64"]},
+        },
     ],
 )
-def test_build_planner_platforms_combinations(base, build_base, build_plan_basename, platforms):
+def test_build_planner_platforms_combinations(
+    base, build_base, build_plan_basename, platforms
+):
     """Test that we're able to create a valid platform for each of these combinations."""
     planner = project.CharmcraftBuildPlanner(
         base=base,
@@ -489,12 +537,16 @@ def test_build_planner_platforms_combinations(base, build_base, build_plan_basen
 
 @pytest.mark.parametrize("architecture", sorted(const.SUPPORTED_ARCHITECTURES))
 @pytest.mark.parametrize("system", ["ubuntu", "linux", "macos", "windows", "plan9"])
-@pytest.mark.parametrize("release", ["22.04", "2.6.32", "10.5", "vista", "from bell labs"])
+@pytest.mark.parametrize(
+    "release", ["22.04", "2.6.32", "10.5", "vista", "from bell labs"]
+)
 def test_get_bundle_plan(mocker, architecture, release, system):
     mocker.patch("charmcraft.utils.get_host_architecture", return_value=architecture)
     mocker.patch(
         "charmcraft.utils.get_os_platform",
-        return_value=utils.OSPlatform(machine=architecture, system=system, release=release),
+        return_value=utils.OSPlatform(
+            machine=architecture, system=system, release=release
+        ),
     )
     planner = project.CharmcraftBuildPlanner(type="bundle")
 
@@ -540,7 +592,13 @@ def test_unmarshal_invalid_type(type_):
 
 
 @pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml", "config_yaml", "actions_yaml", "expected_diff"),
+    (
+        "charmcraft_yaml",
+        "metadata_yaml",
+        "config_yaml",
+        "actions_yaml",
+        "expected_diff",
+    ),
     [
         (
             SIMPLE_CHARMCRAFT_YAML,
@@ -689,7 +747,9 @@ def test_from_yaml_file_exception(
         ),
     ],
 )
-def test_instantiate_bases_charm_success(values: dict[str, Any], expected_changes: dict[str, Any]):
+def test_instantiate_bases_charm_success(
+    values: dict[str, Any], expected_changes: dict[str, Any]
+):
     """Various successful instantiations of a charm project."""
     values.update(
         {
@@ -762,7 +822,8 @@ def test_devel_bases(monkeypatch, base):
 
 
 @pytest.mark.parametrize(
-    "filename", [f.name for f in (pathlib.Path(__file__).parent / "valid_charms_yaml").iterdir()]
+    "filename",
+    [f.name for f in (pathlib.Path(__file__).parent / "valid_charms_yaml").iterdir()],
 )
 def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: str):
     file_path = pathlib.Path(__file__).parent / "valid_charms_yaml" / filename
@@ -806,8 +867,8 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             dedent(
                 """\
                 Bad invalid-base.yaml content:
-                - Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
-                - Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
+                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
+                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
             ),
         ),
     ],

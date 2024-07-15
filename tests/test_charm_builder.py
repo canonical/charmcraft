@@ -606,9 +606,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(
-        charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip")
-    )
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
@@ -625,9 +623,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -656,9 +652,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(
-        charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip")
-    )
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
         call(
@@ -682,9 +676,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -729,9 +721,7 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(
-        charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip")
-    )
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
@@ -742,9 +732,7 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -768,9 +756,7 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(
-        charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip")
-    )
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
@@ -787,9 +773,7 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -819,9 +803,7 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
             with patch("shutil.copytree") as mock_copytree:
                 builder.handle_dependencies()
 
-    pip_cmd = str(
-        charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip")
-    )
+    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
@@ -844,9 +826,7 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
     assert_output("Handling dependencies", "Installing dependencies")
 
 
@@ -885,9 +865,7 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # remove the site venv directory
     staging_venv_dir.rmdir()
@@ -908,9 +886,7 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output):
@@ -948,9 +924,7 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # remove the hash file
     (tmp_path / const.DEPENDENCIES_HASH_FILENAME).unlink()
@@ -971,9 +945,7 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_output):
@@ -1011,14 +983,10 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # avoid the file to be read successfully
-    (tmp_path / const.DEPENDENCIES_HASH_FILENAME).write_bytes(
-        b"\xc3\x28"
-    )  # invalid UTF8
+    (tmp_path / const.DEPENDENCIES_HASH_FILENAME).write_bytes(b"\xc3\x28")  # invalid UTF8
 
     # second run!
     with patch("shutil.copytree") as mock_copytree:
@@ -1037,9 +1005,7 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 @pytest.mark.parametrize(
@@ -1102,9 +1068,7 @@ def test_build_dependencies_no_reused_different_dependencies(
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # for the second call, default new dependencies to first ones so only one is changed at a time
     if new_reqs_content is not None:
@@ -1131,9 +1095,7 @@ def test_build_dependencies_no_reused_different_dependencies(
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 def test_build_dependencies_reused(tmp_path, assert_output):
@@ -1175,9 +1137,7 @@ def test_build_dependencies_reused(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
     # second run!
     with patch("shutil.copytree") as mock_copytree:
@@ -1192,9 +1152,7 @@ def test_build_dependencies_reused(tmp_path, assert_output):
     site_packages_dir = charm_builder._find_venv_site_packages(
         pathlib.Path(const.STAGING_VENV_DIRNAME)
     )
-    assert mock_copytree.mock_calls == [
-        call(site_packages_dir, build_dir / const.VENV_DIRNAME)
-    ]
+    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
 
 
 # -- tests about juju ignore
@@ -1253,12 +1211,8 @@ def test_builder_arguments_defaults(tmp_path):
 
     fake_argv = ["cmd", "--builddir", "builddir", "--installdir", "installdir"]
     with patch.object(sys, "argv", fake_argv):
-        with patch(
-            "charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm
-        ):
-            with patch(
-                "charmcraft.charm_builder.collect_charmlib_pydeps"
-            ) as mock_collect_pydeps:
+        with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
+            with patch("charmcraft.charm_builder.collect_charmlib_pydeps") as mock_collect_pydeps:
                 with pytest.raises(SystemExit) as raised:
                     charm_builder.main()
         assert raised.value.code == 42
@@ -1281,12 +1235,8 @@ def test_builder_arguments_full(tmp_path):
     fake_argv = ["cmd", "--builddir", "builddir", "--installdir", "installdir"]
     fake_argv += ["-rreqs1.txt", "--requirement", "reqs2.txt"]
     with patch.object(sys, "argv", fake_argv):
-        with patch(
-            "charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm
-        ):
-            with patch(
-                "charmcraft.charm_builder.collect_charmlib_pydeps"
-            ) as mock_collect_pydeps:
+        with patch("charmcraft.charm_builder.CharmBuilder.build_charm", new=mock_build_charm):
+            with patch("charmcraft.charm_builder.collect_charmlib_pydeps") as mock_collect_pydeps:
                 with pytest.raises(SystemExit) as raised:
                     charm_builder.main()
         assert raised.value.code == 42

@@ -275,18 +275,36 @@ class CharmBuilder:
                     _process_run(cmd)
                 if self.python_packages:
                     # install python packages from source
-                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    cmd = [
+                        pip_cmd,
+                        "install",
+                        "--upgrade",
+                        "--no-binary",
+                        ":all:",
+                    ]  # base command
                     cmd.extend(self.python_packages)  # the python packages to install
                     _process_run(cmd)
                 if self.requirement_paths:
                     # install dependencies from requirement files
-                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    cmd = [
+                        pip_cmd,
+                        "install",
+                        "--upgrade",
+                        "--no-binary",
+                        ":all:",
+                    ]  # base command
                     for reqspath in self.requirement_paths:
                         cmd.append(f"--requirement={reqspath}")  # the dependencies file(s)
                     _process_run(cmd)
                 if self.charmlib_deps:
                     # install charmlibs python dependencies
-                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    cmd = [
+                        pip_cmd,
+                        "install",
+                        "--upgrade",
+                        "--no-binary",
+                        ":all:",
+                    ]  # base command
                     cmd.extend(self.charmlib_deps)  # the python packages to install
                 _process_run(cmd)
 
@@ -304,7 +322,7 @@ class CharmBuilder:
         )
         _process_run(
             get_pip_command(
-                [pip_cmd, "install"],
+                [pip_cmd, "install", "--no-deps"],
                 self.requirement_paths,
                 binary_deps=self.binary_python_packages or [],
             )
@@ -370,7 +388,11 @@ def _find_venv_bin(basedir: pathlib.Path, exec_base: str) -> pathlib.Path:
 def _find_venv_site_packages(basedir):
     """Determine the venv site-packages directory in different platforms."""
     output = subprocess.check_output(
-        ["python3", "-c", "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')"],
+        [
+            "python3",
+            "-c",
+            "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')",
+        ],
         text=True,
     )
     major, minor = output.strip().split(" ")

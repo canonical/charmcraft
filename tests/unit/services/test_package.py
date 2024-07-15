@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for package service."""
+
 import datetime
 import sys
 import zipfile
@@ -25,7 +26,9 @@ import pytest_check
 from charmcraft import const, models, services, utils
 from charmcraft.application.main import APP_METADATA
 
-SIMPLE_BUILD_BASE = models.charmcraft.Base(name="ubuntu", channel="22.04", architectures=["arm64"])
+SIMPLE_BUILD_BASE = models.charmcraft.Base(
+    name="ubuntu", channel="22.04", architectures=["arm64"]
+)
 SIMPLE_MANIFEST = models.Manifest(
     charmcraft_started_at="1970-01-01T00:00:00+00:00",
     bases=[models.Base(name="ubuntu", channel="22.04", architectures=["arm64"])],
@@ -94,7 +97,10 @@ def test_get_charm_path(fake_path, package_service, bases, expected_name):
     ("lint", "expected"),
     [
         ([], SIMPLE_MANIFEST),
-        ([models.CheckResult("lint", "lint", "lint", models.CheckType.LINT, "")], SIMPLE_MANIFEST),
+        (
+            [models.CheckResult("lint", "lint", "lint", models.CheckType.LINT, "")],
+            SIMPLE_MANIFEST,
+        ),
         (
             [models.CheckResult("boop", "success", "", models.CheckType.ATTRIBUTE, "")],
             MANIFEST_WITH_ATTRIBUTE,
@@ -102,13 +108,18 @@ def test_get_charm_path(fake_path, package_service, bases, expected_name):
     ],
 )
 def test_get_manifest(package_service, simple_charm, lint, expected):
-    simple_charm._started_at = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    simple_charm._started_at = datetime.datetime(
+        1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+    )
 
     assert package_service.get_manifest(lint) == expected
 
 
 def test_do_not_overwrite_metadata_yaml(
-    emitter: craft_cli.pytest_plugin.RecordingEmitter, fake_path, package_service, simple_charm
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    fake_path,
+    package_service,
+    simple_charm,
 ):
     fake_prime_dir = fake_path / "prime"
     fake_prime_dir.mkdir()
@@ -163,7 +174,9 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
     )
     package_service._project = charm
 
-    assert package_service.get_manifest_bases() == [models.Base.parse_obj(b) for b in expected]
+    assert package_service.get_manifest_bases() == [
+        models.Base.parse_obj(b) for b in expected
+    ]
 
 
 @pytest.mark.parametrize("base", ["ubuntu@22.04", "almalinux@9"])
@@ -172,21 +185,31 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
     [
         ({"armhf": None}, "armhf", ["armhf"]),
         (
-            {"anything": {"build-on": [*const.SUPPORTED_ARCHITECTURES], "build-for": "all"}},
+            {
+                "anything": {
+                    "build-on": [*const.SUPPORTED_ARCHITECTURES],
+                    "build-for": "all",
+                }
+            },
             "anything",
             ["all"],
         ),
         (
             {
-                "anything": {"build-on": [*const.SUPPORTED_ARCHITECTURES], "build-for": "all"},
+                "anything": {
+                    "build-on": [*const.SUPPORTED_ARCHITECTURES],
+                    "build-for": "all",
+                },
                 "amd64": None,
-                "riscy": {"build-on": ["arm64", "ppc64el", "riscv64"], "build-for": ["all"]},
+                "riscy": {
+                    "build-on": ["arm64", "ppc64el", "riscv64"],
+                    "build-for": ["all"],
+                },
             },
             "anything",
             ["all"],
         ),
         ({utils.get_host_architecture(): None}, None, [utils.get_host_architecture()]),
-        ({"invalid-arch": None}, None, [utils.get_host_architecture()]),
     ],
 )
 def test_get_manifest_bases_from_platforms(

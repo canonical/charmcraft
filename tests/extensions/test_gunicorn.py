@@ -201,6 +201,13 @@ def test_flask_merge_relation(flask_input_yaml, tmp_path):
     }
 
 
+def test_flask_merge_charm_libs(flask_input_yaml, tmp_path):
+    added_charm_libs = [{"lib": "smtp_integrator.smtp", "version": "0"}]
+    flask_input_yaml["charm-libs"] = added_charm_libs
+    applied = apply_extensions(tmp_path, flask_input_yaml)
+    assert applied["charm-libs"] == [*FlaskFramework._CHARM_LIBS, *added_charm_libs]
+
+
 INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
     pytest.param({"devices": {"gpu": {"type": "gpu"}}}, id="devices"),
     pytest.param({"extra-bindings": {"foobar": {}}}, id="extra-bindings"),

@@ -6,6 +6,7 @@ environment:
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
   PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
   CRAFT_DEBUG: 1  # Show exception tracebacks.
+  CRAFT_VERBOSITY_LEVEL: debug  # Show debugging output when failing.
   # Use the staging store for tests:
   CHARMCRAFT_STORE_API_URL: https://api.staging.charmhub.io
   CHARMCRAFT_UPLOAD_URL: https://storage.staging.snapcraftcontent.com

@@ -4,7 +4,6 @@ title: A charm built and running on noble.
 summary: A charm built and running on noble.
 description: A charm built and running on noble.
 base: ubuntu@24.04
-build-base: ubuntu@devel
 platforms:
   amd64:
   arm64:

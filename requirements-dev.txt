@@ -69,7 +69,7 @@ requests-unixsocket==0.3.0
 responses==0.25.0
 rpds-py==0.18.1
 SecretStorage==3.3.3
-setuptools==69.5.1
+setuptools==70.0.0
 six==1.16.0
 snap-helpers==0.4.2
 snowballstemmer==2.2.0

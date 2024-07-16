@@ -538,6 +538,7 @@ def test_get_instance_name(
         bases.ubuntu.BuilddBaseAlias.BIONIC,
         bases.ubuntu.BuilddBaseAlias.FOCAL,
         bases.ubuntu.BuilddBaseAlias.JAMMY,
+        bases.ubuntu.BuilddBaseAlias.NOBLE,
     ],
 )
 def test_get_base_configuration_ubuntu(

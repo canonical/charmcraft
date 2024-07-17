@@ -71,6 +71,9 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+# Auto-generated command reference
+/docs/reference/commands/
+/docs/reference/_autosummary/
 
 # PyBuilder
 target/
@@ -137,6 +140,7 @@ dmypy.json
 # backups
 *~
 /charmcraft/_version.py
+/results/
 
 # Spread files
 .spread-reuse*.yaml

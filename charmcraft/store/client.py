@@ -70,6 +70,45 @@ class AnonymousClient:
                 f"Could not retrieve json response ({response.status_code} from request"
             ) from json_error
 
+    def get_library(
+        self, *, charm_name: str, library_id: str, api: int | None = None, patch: int | None = None
+    ) -> Library:
+        """Fetch a library attached to a charm.
+
+        http://api.charmhub.io/docs/libraries.html#fetch_library
+        """
+        params = {}
+        if api is not None:
+            params["api"] = api
+        if patch is not None:
+            params["patch"] = patch
+        return Library.from_dict(
+            self.request_urlpath_json(
+                "GET",
+                f"/v1/charm/libraries/{charm_name}/{library_id}",
+                params=params,
+            )
+        )
+
+    def fetch_libraries_metadata(
+        self, libs: Sequence[LibraryMetadataRequest]
+    ) -> Sequence[Library]:
+        """Fetch the metadata for one or more charm libraries.
+
+        http://api.charmhub.io/docs/libraries.html#fetch_libraries
+        """
+        emit.trace(
+            f"Fetching library metadata from charmhub: {libs}",
+        )
+        response = self.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=libs)
+        if "libraries" not in response:
+            raise CraftError(
+                "Server returned invalid response while querying libraries", details=str(response)
+            )
+        converted_response = [Library.from_dict(lib) for lib in response["libraries"]]
+        emit.trace(f"Store response: {converted_response}")
+        return converted_response
+
 
 class Client(craft_store.StoreClient):
     """Lightweight layer above StoreClient."""
@@ -171,37 +210,3 @@ class Client(craft_store.StoreClient):
             headers={"Content-Type": monitor.content_type, "Accept": "application/json"},
             data=monitor,
         )
-
-    def get_library(
-        self, *, charm_name: str, library_id: str, api: int | None = None, patch: int | None = None
-    ) -> Library:
-        """Fetch a library attached to a charm.
-
-        http://api.charmhub.io/docs/libraries.html#fetch_library
-        """
-        params = {}
-        if api is not None:
-            params["api"] = api
-        if patch is not None:
-            params["patch"] = patch
-        return Library.from_dict(
-            self.request_urlpath_json(
-                "GET",
-                f"/v1/charm/libraries/{charm_name}/{library_id}",
-                params=params,
-            )
-        )
-
-    def fetch_libraries_metadata(
-        self, libs: Sequence[LibraryMetadataRequest]
-    ) -> Sequence[Library]:
-        """Fetch the metadata for one or more charm libraries.
-
-        http://api.charmhub.io/docs/libraries.html#fetch_libraries
-        """
-        response = self.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=libs)
-        if "libraries" not in response:
-            raise CraftError(
-                "Server returned invalid response while querying libraries", details=str(response)
-            )
-        return [Library.from_dict(lib) for lib in response["libraries"]]

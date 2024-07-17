@@ -14,7 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-"""The flask extension."""
+"""Gunicorn based extensions."""
+
 from typing import Any
 
 from overrides import override
@@ -45,6 +46,18 @@ class _GunicornBase(Extension):
         },
     }
 
+    _CHARM_LIBS = [
+        {"lib": "traefik_k8s.ingress", "version": "2"},
+        {"lib": "observability_libs.juju_topology", "version": "0"},
+        {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+        {"lib": "loki_k8s.loki_push_api", "version": "0"},
+        {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+        {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+        {"lib": "redis_k8s.redis", "version": "0"},
+        {"lib": "data_platform_libs.s3", "version": "0"},
+        {"lib": "saml_integrator.saml", "version": "0"},
+    ]
+
     @staticmethod
     @override
     def get_supported_bases() -> list[tuple[str, str]]:
@@ -67,7 +80,7 @@ class _GunicornBase(Extension):
             obj = obj.get(key, {})
         return obj
 
-    def check_input(self) -> None:
+    def _check_input(self) -> None:
         """Check if the extension is applicable for user input charmcraft project file."""
         charm_type = self.yaml_data.get("type")
         if charm_type != "charm":
@@ -133,6 +146,7 @@ class _GunicornBase(Extension):
                     "description": f"{self.framework} application image.",
                 },
             },
+            "charm-libs": self._CHARM_LIBS,
             "peers": {"secret-storage": {"interface": "secret-storage"}},
             "actions": self.actions,
             "requires": {
@@ -150,7 +164,7 @@ class _GunicornBase(Extension):
     @override
     def get_root_snippet(self) -> dict[str, Any]:
         """Fill in some required root components."""
-        self.check_input()
+        self._check_input()
         return self._get_root_snippet()
 
     @override
@@ -210,3 +224,34 @@ class FlaskFramework(_GunicornBase):
     def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
         return False
+
+
+class DjangoFramework(_GunicornBase):
+    """Extension for 12-factor Django applications."""
+
+    framework = "django"
+    actions = {
+        "rotate-secret-key": {
+            "description": "Rotate the django secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
+        },
+        "create-superuser": {
+            "description": "Create a new Django superuser account.",
+            "params": {"username": {"type": "string"}, "email": {"type": "string"}},
+            "required": ["username", "email"],
+        },
+    }
+    options = {
+        "django-debug": {
+            "type": "boolean",
+            "default": False,
+            "description": "Whether Django debug mode is enabled.",
+        },
+        "django-secret-key": {
+            "type": "string",
+            "description": "The secret key used for securely signing the session cookie and for any other security related needs by your Django application. This configuration will set the DJANGO_SECRET_KEY environment variable.",
+        },
+        "django-allowed-hosts": {
+            "type": "string",
+            "description": "A comma-separated list of host/domain names that this Django site can serve. This configuration will set the DJANGO_ALLOWED_HOSTS environment variable with its content being a JSON encoded list.",
+        },
+    }

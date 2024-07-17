@@ -164,7 +164,7 @@ def test_fetch_libs_no_charm_libs(
                 Could not find the following libraries on charmhub:
                 - lib: mysql.mysql
                   version: '1'
-                - lib: some_charm.lib
+                - lib: some-charm.lib
                   version: '1.2'
                 """
             ),
@@ -173,7 +173,7 @@ def test_fetch_libs_no_charm_libs(
 )
 def test_fetch_libs_missing_from_store(service_factory, libs, expected):
     service_factory.project.charm_libs = libs
-    service_factory.store.client.fetch_libraries_metadata.return_value = []
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = []
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
     with pytest.raises(errors.CraftError) as exc_info:
@@ -213,8 +213,8 @@ def test_fetch_libs_missing_from_store(service_factory, libs, expected):
 )
 def test_fetch_libs_no_content(new_path, service_factory, libs, store_libs, dl_lib, expected):
     service_factory.project.charm_libs = libs
-    service_factory.store.client.fetch_libraries_metadata.return_value = store_libs
-    service_factory.store.client.get_library.return_value = dl_lib
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = store_libs
+    service_factory.store.anonymous_client.get_library.return_value = dl_lib
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
     with pytest.raises(errors.CraftError, match=expected) as exc_info:
@@ -254,10 +254,10 @@ def test_fetch_libs_no_content(new_path, service_factory, libs, store_libs, dl_l
 )
 def test_fetch_libs_success(
     new_path, emitter, service_factory, libs, store_libs, dl_lib, expected
-):
+) -> None:
     service_factory.project.charm_libs = libs
-    service_factory.store.client.fetch_libraries_metadata.return_value = store_libs
-    service_factory.store.client.get_library.return_value = dl_lib
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = store_libs
+    service_factory.store.anonymous_client.get_library.return_value = dl_lib
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
     fetch_libs.run(argparse.Namespace())

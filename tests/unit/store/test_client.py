@@ -27,6 +27,11 @@ def client() -> store.Client:
     return store.Client(api_base_url="http://charmhub.local")
 
 
+@pytest.fixture()
+def anonymous_client() -> store.AnonymousClient:
+    return store.AnonymousClient("http://charmhub.local", "http://storage.charmhub.local")
+
+
 @pytest.mark.parametrize(
     ("charm", "lib_id", "api", "patch", "expected_call"),
     [
@@ -48,7 +53,9 @@ def client() -> store.Client:
         ),
     ],
 )
-def test_get_library_success(monkeypatch, client, charm, lib_id, api, patch, expected_call):
+def test_get_library_success(
+    monkeypatch, anonymous_client, charm, lib_id, api, patch, expected_call
+):
     mock_get_urlpath_json = mock.Mock(
         return_value={
             "charm-name": charm,
@@ -59,9 +66,9 @@ def test_get_library_success(monkeypatch, client, charm, lib_id, api, patch, exp
             "hash": "hashy!",
         }
     )
-    monkeypatch.setattr(client, "request_urlpath_json", mock_get_urlpath_json)
+    monkeypatch.setattr(anonymous_client, "request_urlpath_json", mock_get_urlpath_json)
 
-    client.get_library(charm_name=charm, library_id=lib_id, api=api, patch=patch)
+    anonymous_client.get_library(charm_name=charm, library_id=lib_id, api=api, patch=patch)
 
     mock_get_urlpath_json.assert_has_calls([expected_call])
 
@@ -98,11 +105,11 @@ def test_get_library_success(monkeypatch, client, charm, lib_id, api, patch, exp
         ),
     ],
 )
-def test_fetch_libraries_metadata(monkeypatch, client, libs, json_response, expected):
+def test_fetch_libraries_metadata(monkeypatch, anonymous_client, libs, json_response, expected):
     mock_get_urlpath_json = mock.Mock(return_value=json_response)
-    monkeypatch.setattr(client, "request_urlpath_json", mock_get_urlpath_json)
+    monkeypatch.setattr(anonymous_client, "request_urlpath_json", mock_get_urlpath_json)
 
-    assert client.fetch_libraries_metadata(libs) == expected
+    assert anonymous_client.fetch_libraries_metadata(libs) == expected
 
     mock_get_urlpath_json.assert_has_calls(
         [mock.call("POST", "/v1/charm/libraries/bulk", json=libs)]

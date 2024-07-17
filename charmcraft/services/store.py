@@ -22,6 +22,7 @@ from collections.abc import Collection, Mapping, Sequence
 import craft_application
 import craft_store
 from craft_store import models
+from overrides import override
 
 from charmcraft import const, env, errors, store
 from charmcraft.models import CharmLib
@@ -164,6 +165,16 @@ class StoreService(BaseStoreService):
 
     ClientClass = store.Client
     client: store.Client  # pyright: ignore[reportIncompatibleVariableOverride]
+    anonymous_client: store.AnonymousClient
+
+    @override
+    def setup(self) -> None:
+        """Set up the store service."""
+        super().setup()
+        self.anonymous_client = store.AnonymousClient(
+            api_base_url=self._base_url,
+            storage_base_url=self._storage_url,
+        )
 
     def set_resource_revisions_architectures(
         self, name: str, resource_name: str, updates: dict[int, list[str]]
@@ -209,7 +220,7 @@ class StoreService(BaseStoreService):
                 store_lib["patch"] = patch_version
             store_libs.append(store_lib)
 
-        return self.client.fetch_libraries_metadata(store_libs)
+        return self.anonymous_client.fetch_libraries_metadata(store_libs)
 
     def get_libraries_metadata_by_name(
         self, libraries: Sequence[CharmLib]
@@ -224,6 +235,6 @@ class StoreService(BaseStoreService):
         self, charm_name: str, *, library_id: str, api: int | None = None, patch: int | None = None
     ) -> Library:
         """Get a library by charm name and ID from charmhub."""
-        return self.client.get_library(
+        return self.anonymous_client.get_library(
             charm_name=charm_name, library_id=library_id, api=api, patch=patch
         )

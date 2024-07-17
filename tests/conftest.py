@@ -65,19 +65,38 @@ def mock_store_client():
 
 
 @pytest.fixture()
+def mock_store_anonymous_client() -> mock.Mock:
+    return mock.Mock(spec_set=store.AnonymousClient)
+
+
+@pytest.fixture()
 def service_factory(
-    fs, fake_project_dir, fake_prime_dir, simple_charm, mock_store_client
+    fs,
+    fake_project_dir,
+    fake_prime_dir,
+    simple_charm,
+    mock_store_client,
+    mock_store_anonymous_client,
+    default_build_plan,
 ) -> services.CharmcraftServiceFactory:
     factory = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     factory.set_kwargs(
         "package",
         project_dir=fake_project_dir,
+        build_plan=default_build_plan,
+    )
+    factory.set_kwargs(
+        "lifecycle",
+        work_dir=pathlib.Path("/project"),
+        cache_dir=pathlib.Path("/cache"),
+        build_plan=default_build_plan,
     )
 
     factory.project = simple_charm
 
     factory.store.client = mock_store_client
+    factory.store.anonymous_client = mock_store_anonymous_client
 
     return factory
 

@@ -51,8 +51,8 @@ from charmcraft.utils import (
     validate_strict_dependencies,
 )
 
-MINIMUM_PIP_VERSION = (23, 0)
-KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/ba/19/e63fb4e0d20e48bd2167bb7e857abc0e21679e24805ba921a224df8977c0/pip-23.2.1.tar.gz"
+MINIMUM_PIP_VERSION = (24, 1)
+KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/c0/d0/9641dc7b05877874c6418f8034ddefc809495e65caa14d38c7551cd114bb/pip-24.1.1.tar.gz"
 
 
 def relativise(src, dst):

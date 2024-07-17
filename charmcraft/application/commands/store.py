@@ -1971,7 +1971,7 @@ class UploadResourceCommand(CharmcraftCommand):
                         f"Not a valid file or directory: {image_path.as_posix()!r}",
                         resolution="Pass an OCI archive file such as a rock.",
                     )
-            elif re.match("^[a-z-]:", parsed_args.image):
+            elif re.match("^[a-z-]+:", parsed_args.image):
                 emit.debug("Presuming an OCI path that skopeo understands.")
                 source_path = parsed_args.image
             else:

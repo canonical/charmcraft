@@ -1992,9 +1992,10 @@ class UploadResourceCommand(CharmcraftCommand):
             if const.STORE_REGISTRY_ENV_VAR in os.environ:
                 # If the user has specified a registry to use, replace what the store
                 # gives with that registry.
-                registry_url = os.environ[const.STORE_REGISTRY_ENV_VAR][8:]
+                registry_url = os.environ[const.STORE_REGISTRY_ENV_VAR]
+                registry_url_without_scheme = registry_url.partition("://")[2]
                 image_name = credentials.image_name.split("/", 1)[1]
-                dest_path = f"docker://{registry_url}/{image_name}"
+                dest_path = f"docker://{registry_url_without_scheme}/{image_name}"
             else:
                 dest_path = f"docker://{credentials.image_name}"
 

@@ -116,7 +116,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" ]]
           then
             echo "branch=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.event_name }}" == "merge_group"]]
+          elif [[ "${{ github.event_name }}" == "merge_group" ]]
           then
             branch=$(echo ${{ github.event.merge_group.base_ref }} | sed -e 's|refs/||' -e 's|heads/||' -e 's|feature/\(.*\)|\1|'
             echo "branch=merge-$branch" >> "$GITHUB_OUTPUT"

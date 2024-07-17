@@ -1971,7 +1971,7 @@ class UploadResourceCommand(CharmcraftCommand):
                         f"Not a valid file or directory: {image_path.as_posix()!r}",
                         resolution="Pass an OCI archive file such as a rock.",
                     )
-            elif re.match("^[a-z-]:", parsed_args.image):
+            elif re.match("^[a-z-]+:", parsed_args.image):
                 emit.debug("Presuming an OCI path that skopeo understands.")
                 source_path = parsed_args.image
             else:
@@ -1992,7 +1992,7 @@ class UploadResourceCommand(CharmcraftCommand):
             if const.STORE_REGISTRY_ENV_VAR in os.environ:
                 # If the user has specified a registry to use, replace what the store
                 # gives with that registry.
-                registry_url = os.environ[const.STORE_REGISTRY_ENV_VAR][7:]
+                registry_url = os.environ[const.STORE_REGISTRY_ENV_VAR][8:]
                 image_name = credentials.image_name.split("/", 1)[1]
                 dest_path = f"docker://{registry_url}/{image_name}"
             else:

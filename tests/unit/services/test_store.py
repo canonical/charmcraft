@@ -22,6 +22,7 @@ import craft_store
 import distro
 import pytest
 from craft_store import models
+from craft_cli.pytest_plugin import RecordingEmitter
 from hypothesis import given, strategies
 
 import charmcraft
@@ -87,6 +88,24 @@ def test_ua_system_info_linux(
         store._ua_system_info
         == f"Linux 6.5.0; {machine}; {python} {python_version}; {distro_name} {distro_version}"
     )
+
+
+def test_setup_with_error(emitter: RecordingEmitter, store):
+    store.ClientClass = mock.Mock(
+        side_effect=[
+            craft_store.errors.NoKeyringError,
+            "I am a store!"
+        ]
+    )
+
+    store.setup()
+
+    assert store.client == "I am a store!"
+    emitter.assert_progress(
+        "WARNING: Cannot get a keyring. Every store interaction that requires "
+        "authentication will require you to log in again.",
+        permanent=True,
+        )
 
 
 def test_get_description_default(monkeypatch, store):

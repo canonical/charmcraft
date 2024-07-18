@@ -46,6 +46,18 @@ class _GunicornBase(Extension):
         },
     }
 
+    _CHARM_LIBS = [
+        {"lib": "traefik_k8s.ingress", "version": "2"},
+        {"lib": "observability_libs.juju_topology", "version": "0"},
+        {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+        {"lib": "loki_k8s.loki_push_api", "version": "0"},
+        {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+        {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+        {"lib": "redis_k8s.redis", "version": "0"},
+        {"lib": "data_platform_libs.s3", "version": "0"},
+        {"lib": "saml_integrator.saml", "version": "0"},
+    ]
+
     @staticmethod
     @override
     def get_supported_bases() -> list[tuple[str, str]]:
@@ -98,7 +110,7 @@ class _GunicornBase(Extension):
                     f"{protected!r} in charmcraft.yaml conflicts with a reserved field "
                     f"in the {self.framework}-framework extension, please remove it."
                 )
-        for merging in ("actions", "requires", "provides", "config.options", "charm-libs"):
+        for merging in ("actions", "requires", "provides", "config.options"):
             user_provided: dict[str, Any] = self._get_nested(self.yaml_data, merging)
             if not user_provided:
                 continue
@@ -134,17 +146,7 @@ class _GunicornBase(Extension):
                     "description": f"{self.framework} application image.",
                 },
             },
-            "charm-libs": [
-                {"lib": "traefik_k8s.ingress", "version": "2"},
-                {"lib": "observability_libs.juju_topology", "version": "0"},
-                {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
-                {"lib": "loki_k8s.loki_push_api", "version": "0"},
-                {"lib": "data_platform_libs.data_interfaces", "version": "0"},
-                {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                {"lib": "redis_k8s.redis", "version": "0"},
-                {"lib": "data_platform_libs.s3", "version": "0"},
-                {"lib": "saml_integrator.saml", "version": "0"},
-            ],
+            "charm-libs": self._CHARM_LIBS,
             "peers": {"secret-storage": {"interface": "secret-storage"}},
             "actions": self.actions,
             "requires": {
@@ -222,6 +224,12 @@ class FlaskFramework(_GunicornBase):
     def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
         return False
+
+    @override
+    def get_parts_snippet(self) -> dict[str, Any]:
+        """Return the parts to add to parts."""
+        # rust is needed to build pydantic-core, a dependency of flask.
+        return {"flask-framework/rust-deps": {"plugin": "nil", "build-packages": ["cargo"]}}
 
 
 class DjangoFramework(_GunicornBase):

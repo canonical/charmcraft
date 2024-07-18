@@ -60,7 +60,7 @@ class ImageService(craft_application.AppService):
     def setup(self) -> None:
         """Set up the image service."""
         super().setup()
-        self._skopeo = utils.Skopeo()
+        self._skopeo = utils.Skopeo(insecure_policy=True)
         self._docker = docker.from_env()
 
     def copy(

@@ -1048,10 +1048,7 @@ class BasesCharm(CharmcraftProject):
             and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
         ):
             return True
-        return base in (
-            {"name": "centos", "channel": "7"},
-            {"name": "almalinux", "channel": "9"},
-        )
+        return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
 
 
 class PlatformCharm(CharmcraftProject):
@@ -1094,10 +1091,7 @@ class PlatformCharm(CharmcraftProject):
             and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
         ):
             return True
-        return base in (
-            {"name": "centos", "channel": "7"},
-            {"name": "almalinux", "channel": "9"},
-        )
+        return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
 
     @pydantic.validator("build_base", always=True)
     def _validate_dev_base_needs_build_base(

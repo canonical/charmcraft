@@ -616,7 +616,7 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
-        call([pip_cmd, "install", f"--requirement={reqs_file}"]),
+        call([pip_cmd, "install", "--no-binary=:all:", f"--requirement={reqs_file}"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))
@@ -657,6 +657,7 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
             [
                 pip_cmd,
                 "install",
+                "--no-binary=:all:",
                 f"--requirement={reqs_file_1}",
                 f"--requirement={reqs_file_2}",
             ]
@@ -714,7 +715,7 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
-        call([pip_cmd, "install", "--no-binary=pkg1,pkg2", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", "--no-binary=:all:", "pkg1", "pkg2"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(pathlib.Path(STAGING_VENV_DIRNAME))

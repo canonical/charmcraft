@@ -297,7 +297,7 @@ class CharmBuilder:
         )
         _process_run(
             get_pip_command(
-                [pip_cmd, "install"],
+                [pip_cmd, "install", "--no-deps"],
                 self.requirement_paths,
                 binary_deps=self.binary_python_packages or [],
             )

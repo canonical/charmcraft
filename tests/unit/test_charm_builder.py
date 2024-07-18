@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for CharmBuilder."""
+
 import pathlib
 
 import pytest
@@ -104,6 +105,7 @@ def test_install_strict_dependencies_success(
         [
             "/pip",
             "install",
+            "--no-deps",
             *([f"--no-binary={no_binary_packages_str}"] if no_binary_packages else []),
             "--requirement=requirements.txt",
         ],

@@ -20,8 +20,8 @@ import platform
 from collections.abc import Collection, Mapping, Sequence
 
 import craft_application
-from craft_cli import emit
 import craft_store
+from craft_cli import emit
 from craft_store import models
 from overrides import override
 

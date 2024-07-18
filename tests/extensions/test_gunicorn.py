@@ -65,7 +65,10 @@ def flask_input_yaml_fixture():
                 "config": {
                     "options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}
                 },
-                "parts": {"charm": {"plugin": "charm", "source": "."}},
+                "parts": {
+                    "charm": {"plugin": "charm", "source": "."},
+                    "flask-framework/rust-deps": {"plugin": "nil", "build-packages": ["cargo"]},
+                },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
                     "metrics-endpoint": {"interface": "prometheus_scrape"},
@@ -201,6 +204,13 @@ def test_flask_merge_relation(flask_input_yaml, tmp_path):
     }
 
 
+def test_flask_merge_charm_libs(flask_input_yaml, tmp_path):
+    added_charm_libs = [{"lib": "smtp_integrator.smtp", "version": "0"}]
+    flask_input_yaml["charm-libs"] = added_charm_libs
+    applied = apply_extensions(tmp_path, flask_input_yaml)
+    assert applied["charm-libs"] == [*FlaskFramework._CHARM_LIBS, *added_charm_libs]
+
+
 INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
     pytest.param({"devices": {"gpu": {"type": "gpu"}}}, id="devices"),
     pytest.param({"extra-bindings": {"foobar": {}}}, id="extra-bindings"),
@@ -245,4 +255,4 @@ def test_handle_charm_part(flask_input_yaml, tmp_path):
         apply_extensions(tmp_path, flask_input_yaml)
     del flask_input_yaml["parts"]
     applied = apply_extensions(tmp_path, flask_input_yaml)
-    assert applied["parts"] == {"charm": {"plugin": "charm", "source": "."}}
+    assert applied["parts"]["charm"] == {"plugin": "charm", "source": "."}

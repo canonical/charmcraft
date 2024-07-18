@@ -258,12 +258,13 @@ class CharmBuilder:
             if self.binary_python_packages:
                 print(
                     "Installing binary-allowed packages and their dependencies.\n"
-                    "WARNING: dependencies may also be installed from binary wheels."
+                    "WARNING: dependencies may also be installed from binary wheels.\n"
+                    "Use strict mode to avoid these issues."
                 )
                 _process_run(
                     get_pip_command(
                         [pip_cmd, "install"],
-                        [],
+                        requirements_files=[],
                         binary_deps=self.binary_python_packages,
                     )
                 )

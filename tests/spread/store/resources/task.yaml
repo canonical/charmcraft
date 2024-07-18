@@ -68,7 +68,7 @@ execute: |
   upload_revision=$(cat file_revisions.json | jq -c ".[] | select(.revision == $upload_revision_number)" )
   upload_revision_architectures=$(echo "$upload_revision" | jq -c '.bases[0].architectures')
   [[ "$upload_revision_architectures" = '["amd64","riscv64"]' ]]
-  last_revision=$(cat file_revisions.json | jq -r .[-1])
+  last_revision=$(jq -r .[-1] file_revisions.json)
   last_file_revno=$(echo $last_revision | jq .revision)
   [[ "$upload_revision_number" -le "$last_file_revno" ]]
   last_revision_created=$(echo $last_revision | jq -r .created_at)

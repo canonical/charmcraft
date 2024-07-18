@@ -14,10 +14,13 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """YAML-related utilities for Charmcraft."""
+
 from typing import Any
 
 import yaml
 from craft_cli import emit
+
+from charmcraft import const
 
 
 def load_yaml(fpath) -> dict[str, Any] | None:
@@ -44,4 +47,9 @@ def _repr_str(dumper: yaml.SafeDumper, data: str) -> yaml.ScalarNode:
 def dump_yaml(data: Any) -> str:  # noqa: ANN401: yaml.dump takes anything, so why can't we?
     """Dump a craft model to a YAML string."""
     yaml.add_representer(str, _repr_str, Dumper=yaml.SafeDumper)
+    yaml.add_representer(
+        const.CharmArch,
+        yaml.representer.SafeRepresenter.represent_str,
+        Dumper=yaml.SafeDumper,
+    )
     return yaml.dump(data, Dumper=yaml.SafeDumper, sort_keys=False)

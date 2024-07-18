@@ -1,0 +1,13 @@
+type: charm
+name: basic-charm
+summary: The most basic valid charm
+description: |
+  The most basic possible valid charmcraft.yaml that doesn't need other files and gets returned to its own value.
+  Note that this means we cannot use short-form bases here because this charm is meant to be rewritable.
+base:
+  "ubuntu@22.04"
+platforms:
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+parts: {}

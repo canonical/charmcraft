@@ -1136,19 +1136,20 @@ def test_load_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
                   default: true
                   type: boolean
                 test-secret:
+                  default: secret:co1s9mnmp25c762drvtg
                   type: secret
             """
         )
     )
     config = load(tmp_path)
 
-    assert config.config.dict(include={"options"}, by_alias=True) == {
+    assert config.config.dict(include={"options"}, by_alias=True, exclude_none=True) == {
         "options": {
             "test-int": {"default": 123, "description": "test-1", "type": "int"},
             "test-string": {"description": "test-2", "type": "string"},
             "test-float": {"default": 1.23, "type": "float"},
             "test-bool": {"default": True, "type": "boolean"},
-            "test-secret": {"type": "secret"},
+            "test-secret": {"default": "secret:co1s9mnmp25c762drvtg", "type": "secret"},
         },
     }
 
@@ -1183,19 +1184,20 @@ def test_load_config_in_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare_c
                 default: true
                 type: boolean
               test-secret:
+                default: secret:co1s9mnmp25c762drvtg
                 type: secret
             """
         ),
     )
     config = load(tmp_path)
 
-    assert config.config.dict(include={"options"}, by_alias=True) == {
+    assert config.config.dict(include={"options"}, by_alias=True, exclude_none=True) == {
         "options": {
             "test-int": {"default": 123, "description": "test-1", "type": "int"},
             "test-string": {"description": "test-2", "type": "string"},
             "test-float": {"default": 1.23, "type": "float"},
             "test-bool": {"default": True, "type": "boolean"},
-            "test-secret": {"type": "secret"},
+            "test-secret": {"default": "secret:co1s9mnmp25c762drvtg", "type": "secret"},
         },
     }
 
@@ -1255,6 +1257,7 @@ def test_load_bad_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
                   default: true
                   type: boolean
                 test-secret:
+                  default: secret:co1s9mnmp25c762drvtg
                   type: secret
             """
         )
@@ -1262,6 +1265,6 @@ def test_load_bad_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
 
     with pytest.raises(
         CraftError,
-        match=r"'test-int' has an invalid key\(s\): {'descriptionn'} in field 'config.options'",
+        match=r"extra field 'descriptionn' not permitted in 'config.options.test-int",
     ):
         load(tmp_path)

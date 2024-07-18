@@ -72,8 +72,8 @@ Object with the following properties:
 
 import datetime
 import pathlib
-from typing import Optional
 
+from charmcraft import const
 from charmcraft.env import (
     get_managed_environment_project_path,
     is_charmcraft_running_in_managed_mode,
@@ -82,26 +82,26 @@ from charmcraft.models.charmcraft import CharmcraftConfig, Project
 from charmcraft.utils import load_yaml
 
 
-def load(dirpath: Optional[str]) -> CharmcraftConfig:
+def load(dirpath: str | None) -> CharmcraftConfig:
     """Load the config from charmcraft.yaml in the indicated directory."""
     if dirpath is None:
         if is_charmcraft_running_in_managed_mode():
-            dirpath = get_managed_environment_project_path()
+            path = get_managed_environment_project_path()
         else:
-            dirpath = pathlib.Path.cwd()
+            path = pathlib.Path.cwd()
     else:
-        dirpath = pathlib.Path(dirpath).expanduser().resolve()
+        path = pathlib.Path(dirpath).expanduser().resolve()
 
     now = datetime.datetime.utcnow()
 
-    content = load_yaml(dirpath / "charmcraft.yaml")
+    content = load_yaml(path / const.CHARMCRAFT_FILENAME)
     if content is None:
         # configuration is mandatory only for some commands; when not provided, it will
         # be initialized all with defaults (but marked as not provided for later verification)
-        return CharmcraftConfig(
+        return CharmcraftConfig(  # pyright: ignore[reportCallIssue]
             type="charm",
             project=Project(
-                dirpath=dirpath,
+                dirpath=path,
                 config_provided=False,
                 started_at=now,
             ),
@@ -113,7 +113,7 @@ def load(dirpath: Optional[str]) -> CharmcraftConfig:
     return CharmcraftConfig.unmarshal(
         content,
         project=Project(
-            dirpath=dirpath,
+            dirpath=path,
             config_provided=True,
             started_at=now,
         ),

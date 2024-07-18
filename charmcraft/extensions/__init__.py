@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,17 +17,27 @@
 """Extension processor and related utilities."""
 
 from charmcraft.extensions._utils import apply_extensions
+from charmcraft.extensions.extension import Extension
+from charmcraft.extensions.gunicorn import DjangoFramework, FlaskFramework
 from charmcraft.extensions.registry import (
     get_extension_class,
     get_extension_names,
+    get_extensions,
     register,
     unregister,
 )
 
 __all__ = [
+    "DjangoFramework",
+    "Extension",
+    "FlaskFramework",
     "get_extension_class",
     "get_extension_names",
+    "get_extensions",
     "apply_extensions",
     "register",
     "unregister",
 ]
+
+register("flask-framework", FlaskFramework)
+register("django-framework", DjangoFramework)

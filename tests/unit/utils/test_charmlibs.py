@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,10 +22,13 @@ import sys
 import pytest
 from craft_cli import CraftError
 
+from charmcraft import const
 from charmcraft.utils.charmlibs import (
     collect_charmlib_pydeps,
     get_lib_info,
     get_lib_internals,
+    get_lib_module_name,
+    get_lib_path,
     get_libs_from_tree,
     get_name_from_metadata,
 )
@@ -37,7 +40,7 @@ def test_get_name_from_metadata_ok(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # put a valid metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     with metadata_file.open("wb") as fh:
         fh.write(b"name: test-name")
 
@@ -57,7 +60,7 @@ def test_get_name_from_metadata_bad_content_garbage(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # put a broken metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     with metadata_file.open("wb") as fh:
         fh.write(b"\b00\bff -- not a really yaml stuff")
 
@@ -70,12 +73,32 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # put a broken metadata
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     with metadata_file.open("wb") as fh:
         fh.write(b"{}")
 
     result = get_name_from_metadata()
     assert result is None
+
+
+@pytest.mark.parametrize(
+    ("charm", "lib", "api", "expected"),
+    [
+        ("my-charm", "some_lib", 0, pathlib.Path("lib/charms/my_charm/v0/some_lib.py")),
+    ],
+)
+def test_get_lib_path(charm: str, lib: str, api: int, expected: pathlib.Path):
+    assert get_lib_path(charm, lib, api) == expected
+
+
+@pytest.mark.parametrize(
+    ("charm", "lib", "api", "expected"),
+    [
+        ("my-charm", "some_lib", 0, "charms.my_charm.v0.some_lib"),
+    ],
+)
+def test_get_lib_module_name(charm: str, lib: str, api: int, expected: str):
+    assert get_lib_module_name(charm, lib, api) == expected
 
 
 # endregion
@@ -242,9 +265,7 @@ def test_getlibinfo_metadata_api_different_path_api(tmp_path, monkeypatch):
     with pytest.raises(CraftError) as err:
         get_lib_info(lib_path=test_path)
     assert str(err.value) == (
-        "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
-            str(test_path)
-        )
+        f"Library {str(test_path)!r} metadata field LIBAPI is different from the version in the path."
     )
 
 

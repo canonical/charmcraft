@@ -21,7 +21,7 @@ import shutil
 import subprocess
 import tempfile
 import zipfile
-from typing import Collection, Dict, List, Mapping, Optional, Sequence
+from collections.abc import Collection, Mapping, Sequence
 
 import craft_parts
 import yaml
@@ -33,13 +33,6 @@ import charmcraft.instrum
 import charmcraft.linters
 import charmcraft.providers
 from charmcraft import const, env, errors, parts
-from charmcraft.const import (
-    BUILD_DIRNAME,
-    CHARM_FILES,
-    CHARM_OPTIONAL,
-    UBUNTU_LTS_STABLE,
-    VENV_DIRNAME,
-)
 from charmcraft.metafiles.actions import create_actions_yaml
 from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.manifest import create_manifest
@@ -84,7 +77,7 @@ def format_charm_file_name(charm_name: str, bases_config: BasesConfiguration) ->
     return "_".join([charm_name, _format_bases_config(bases_config)]) + ".charm"
 
 
-def launch_shell(*, cwd: Optional[pathlib.Path] = None) -> None:
+def launch_shell(*, cwd: pathlib.Path | None = None) -> None:
     """Launch a user shell for debugging environment.
 
     :param cwd: Working directory to start user in.
@@ -113,7 +106,7 @@ class Builder:
         self.measure = measure
 
         self.charmdir = config.project.dirpath
-        self.buildpath = self.charmdir / BUILD_DIRNAME
+        self.buildpath = self.charmdir / const.BUILD_DIRNAME
         self.shared_cache_path = charmcraft.env.get_host_shared_cache_path()
 
         self.config = config
@@ -153,13 +146,13 @@ class Builder:
 
         # show warnings (if any), then errors (if any)
         template = "- {0.name}: {0.text} ({0.url})"
-        if LintResult.WARNINGS in lint_results_by_outcome:
+        if LintResult.WARNING in lint_results_by_outcome:
             emit.progress("Lint Warnings:", permanent=True)
-            for result in lint_results_by_outcome[LintResult.WARNINGS]:
+            for result in lint_results_by_outcome[LintResult.WARNING]:
                 emit.progress(template.format(result), permanent=True)
-        if LintResult.ERRORS in lint_results_by_outcome:
+        if LintResult.ERROR in lint_results_by_outcome:
             emit.progress("Lint Errors:", permanent=True)
-            for result in lint_results_by_outcome[LintResult.ERRORS]:
+            for result in lint_results_by_outcome[LintResult.ERROR]:
                 emit.progress(template.format(result), permanent=True)
             if self.force_packing:
                 emit.progress("Packing anyway as requested.", permanent=True)
@@ -253,19 +246,19 @@ class Builder:
             or self._special_charm_part.get("charm-python-packages")
             or charmlib_pydeps
         ):
-            charm_part_prime.append(VENV_DIRNAME)
+            charm_part_prime.append(const.VENV_DIRNAME)
 
         # add mandatory and optional charm files
-        charm_part_prime.extend(CHARM_FILES)
-        for fn in CHARM_OPTIONAL:
+        charm_part_prime.extend(const.CHARM_MANDATORY_FILES)
+        for fn in const.CHARM_OPTIONAL_FILES:
             path = self.charmdir / fn
             if path.exists():
                 charm_part_prime.append(fn)
 
     @charmcraft.instrum.Timer("Builder run")
     def run(
-        self, bases_indices: Optional[List[int]] = None, destructive_mode: bool = False
-    ) -> List[str]:
+        self, bases_indices: list[int] | None = None, destructive_mode: bool = False
+    ) -> list[str]:
         """Run build process.
 
         In managed-mode or destructive-mode, build for each bases configuration
@@ -275,7 +268,7 @@ class Builder:
 
         :returns: List of charm files created.
         """
-        charms: List[str] = []
+        charms: list[str] = []
 
         managed_mode = charmcraft.env.is_charmcraft_running_in_managed_mode()
         if not managed_mode and not destructive_mode:
@@ -360,6 +353,8 @@ class Builder:
         if self.measure:
             instance_metrics = charmcraft.env.get_managed_environment_metrics_path()
             cmd.append(f"--measure={str(instance_metrics)}")
+        else:
+            instance_metrics = None
 
         emit.progress(
             f"Launching environment to pack for base {build_on} "
@@ -381,13 +376,14 @@ class Builder:
         )
 
         if build_on.name == "ubuntu":
-            if build_on.channel in UBUNTU_LTS_STABLE:
+            if build_on.channel in const.UBUNTU_LTS_STABLE:
                 allow_unstable = False
             else:
                 allow_unstable = True
-                emit.message(
+                emit.progress(
                     f"Warning: non-LTS Ubuntu releases {build_on.channel} are "
-                    "intended for experimental use only."
+                    "intended for experimental use only.",
+                    permanent=True,
                 )
         else:
             allow_unstable = True
@@ -451,7 +447,7 @@ class Builder:
         zipfh.close()
         return zipname
 
-    def _get_charm_pack_args(self, base_indeces: List[str], destructive_mode: bool) -> List[str]:
+    def _get_charm_pack_args(self, base_indeces: list[str], destructive_mode: bool) -> list[str]:
         """Get the arguments for a charmcraft pack subprocess to run."""
         args = ["charmcraft", "pack", "--verbose"]
         if destructive_mode:
@@ -465,8 +461,8 @@ class Builder:
     def pack_bundle(
         self,
         *,
-        charms: Dict[str, pathlib.Path],
-        base_indeces: List[str],
+        charms: dict[str, pathlib.Path],
+        base_indeces: list[str],
         destructive_mode: bool,
         overwrite: bool = False,
     ) -> OutputFiles:
@@ -480,7 +476,7 @@ class Builder:
             work_dir = self.config.project.dirpath / const.BUILD_DIRNAME
 
         # get the config files
-        bundle_filepath = self.config.project.dirpath / "bundle.yaml"
+        bundle_filepath = self.config.project.dirpath / const.BUNDLE_FILENAME
         bundle = load_yaml(bundle_filepath)
         bundle_name = bundle.get("name")
         if not bundle_name:
@@ -518,7 +514,7 @@ class Builder:
         )
         zipname = self.config.project.dirpath / (bundle_name + ".zip")
         if overwrite:
-            primed_bundle_path = lifecycle.prime_dir / "bundle.yaml"
+            primed_bundle_path = lifecycle.prime_dir / const.BUNDLE_FILENAME
             with primed_bundle_path.open("w") as bundle_file:
                 yaml.safe_dump(bundle, bundle_file)
         build_zip(zipname, lifecycle.prime_dir)
@@ -529,7 +525,7 @@ class Builder:
 def _subprocess_pack_charms(
     charms: Mapping[str, pathlib.Path],
     command_args: Collection[str],
-) -> Dict[str, pathlib.Path]:
+) -> dict[str, pathlib.Path]:
     """Pack the given charms for a bundle in subprocesses.
 
     :param command_args: The initial arguments

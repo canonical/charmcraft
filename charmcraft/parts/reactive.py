@@ -19,8 +19,9 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, cast
 
+import overrides
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
@@ -29,10 +30,10 @@ class ReactivePluginProperties(plugins.PluginProperties, plugins.PluginModel):
     """Properties used to pack reactive charms using charm-tools."""
 
     source: str
-    reactive_charm_build_arguments: List[str] = []
+    reactive_charm_build_arguments: list[str] = []
 
     @classmethod
-    def unmarshal(cls, data: Dict[str, Any]):
+    def unmarshal(cls, data: dict[str, Any]):
         """Populate reactive plugin properties from the part specification.
 
         :param data: A dictionary containing part properties.
@@ -54,7 +55,7 @@ class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentVali
     :param env: A string containing the build step environment setup.
     """
 
-    def validate_environment(self, *, part_dependencies: Optional[List[str]] = None):
+    def validate_environment(self, *, part_dependencies: list[str] | None = None):
         """Ensure the environment contains dependencies needed by the plugin.
 
         :param part_dependencies: A list of the parts this part depends on.
@@ -107,20 +108,24 @@ class ReactivePlugin(plugins.Plugin):
     properties_class = ReactivePluginProperties
     validator_class = ReactivePluginEnvironmentValidator
 
-    @classmethod
-    def get_build_snaps(cls) -> Set[str]:
+    @overrides.override
+    def get_build_snaps(cls) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
 
-    def get_build_packages(self) -> Set[str]:
+    def get_build_packages(self) -> set[str]:
         """Return a set of required packages to install in the build environment."""
         return set()
 
-    def get_build_environment(self) -> Dict[str, str]:
+    def get_build_environment(self) -> dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
-        return {}
+        return {
+            # Cryptography fails to load OpenSSL legacy provider in some circumstances.
+            # Since we don't need the legacy provider, this works around that bug.
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"
+        }
 
-    def get_build_commands(self) -> List[str]:
+    def get_build_commands(self) -> list[str]:
         """Return a list of commands to run during the build step."""
         options = cast(ReactivePluginProperties, self._options)
 
@@ -142,7 +147,7 @@ class ReactivePlugin(plugins.Plugin):
         return [" ".join(shlex.quote(i) for i in command)]
 
 
-def run_charm_tool(args: List[str]):
+def run_charm_tool(args: list[str]):
     """Run the charm tool, log and check exit code."""
     result_classification = "SUCCESS"
     exc = None
@@ -156,15 +161,15 @@ def run_charm_tool(args: List[str]):
             result_classification = "ERROR"
             raise
         result_classification = "WARNING"
-    finally:
+        print(f"charm tool execution {result_classification}: returncode={exc.returncode}")
+    else:
         print(
-            f"charm tool execution {result_classification}: "
-            f"returncode={exc.returncode if exc else completed_process.returncode}"
+            f"charm tool execution {result_classification}: returncode={completed_process.returncode}"
         )
 
 
 def build(
-    *, charm_name: str, build_dir: Path, install_dir: Path, charm_build_arguments: List[str]
+    *, charm_name: str, build_dir: Path, install_dir: Path, charm_build_arguments: list[str]
 ):
     """Build a charm using charm tool.
 

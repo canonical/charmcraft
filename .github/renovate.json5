@@ -1,15 +1,44 @@
 {
   // Configuration file for RenovateBot: https://docs.renovatebot.com/configuration-options
   extends: ["config:base"],
+  ignoreDeps: [
+    // Each ignore is probably connected with an ignore in pyproject.toml.
+    // Ensure you change this and those simultaneously.
+    "pydantic",  // Needs to wait for libraries.
+    "pydantic-yaml", // Needs to wait for pydantic
+    "urllib3",
+    "windows",  // We'll update Windows versions manually.
+  ],
   labels: ["dependencies"],  // For convenient searching in GitHub
   pip_requirements: {
-    fileMatch: ["(^|/)requirements([\\w-]*)\\.txt$"]
+    fileMatch: ["^tox.ini$", "(^|/)requirements([\\w-]*)\\.txt$", "^.pre-commit-config.yaml$"]
   },
-  packageRules: [
+   packageRules: [
+    {
+      // Internal package minor patch updates get top priority, with auto-merging
+      groupName: "internal package patch releases",
+      matchPackagePatterns: ["^craft-.*"],
+      matchUpdateTypes: ["minor", "patch", "pin", "digest"],
+      prPriority: 10,
+      automerge: true,
+      minimumReleaseAge: "0 seconds",
+      schedule: ["at any time"],
+    },
+    {
+      // Same as above, but for hotfix branches, only for patch, and without auto-merging.
+      groupName: "internal package patch releases (hotfix)",
+      matchPackagePatterns: ["^craft-.*"],
+      matchUpdateTypes: ["patch", "pin", "digest"],
+      prPriority: 10,
+      minimumReleaseAge: "0 seconds",
+      schedule: ["at any time"],
+      matchBaseBranches: ["/^hotfix/.*/"],  // All hotfix branches
+    },
     {
       // Automerge patches, pin changes and digest changes.
       // Also groups these changes together.
-      groupName: "patch updates",
+      groupName: "bugfixes",
+      excludePackagePrefixes: ["lint", "types"],
       matchUpdateTypes: ["patch", "pin", "digest"],
       prPriority: 3, // Patches should go first!
       automerge: true
@@ -22,48 +51,117 @@
       prPriority: 2
     },
     {
-      // GitHub actions are higher priority to update than most dependencies.
+      // GitHub Actions are higher priority to update than most dependencies since they don't tend to break things.
+      groupName: "GitHub Actions",
       matchManagers: ["github-actions"],
-      prPriority: 1
+      prPriority: 1,
+      automerge: true,
     },
     // Everything not in one of these rules gets priority 0 and falls here.
     {
+      //Do all pydantic-related updates together
+      groupName: "pydantic etc.",
+      matchPackagePatterns: ["^pydantic"],
+    },
+    {
       // Minor changes can be grouped and automerged for dev dependencies, but are also deprioritised.
-      groupName: "development dependencies (minor and patch)",
+      groupName: "development dependencies (non-major)",
       groupSlug: "dev-dependencies",
-      matchDepTypes: ["devDependencies"],
+      matchPackagePrefixes: [
+        "dev",
+        "lint",
+        "types"
+      ],
+      matchPackagePatterns: [
+        // Generated from the dependency dashboard, may not be complete.
+        "^(.*/)?autoflake$",
+        "^(.*/)?black$",
+        "^(.*/)?flake8$",
+        "^(.*/)?hypothesis$",
+        "^(.*/)?pycodestyle$",
+        "^(.*/)?pyfakefs$",
+        "^(.*/)?pyflakes$",
+        "^(.*/)?pylint$",
+        "^(.*/)?pytest",
+        "^(.*/)?responses$",
+        "^(.*/)?ruff$",
+        "^(.*/)?twine$",
+        "^(.*/)?types-"
+      ],
       matchUpdateTypes: ["minor", "patch", "pin", "digest"],
       prPriority: -1,
       automerge: true
     },
     {
-      // Other major dependencies get deprioritised below minor dev dependencies.
+      // Documentation related updates
+      groupName: "documentation dependencies",
+      groupSlug: "doc-dependencies",
+      matchPackageNames: ["Sphinx", "furo"],
+      matchPackagePatterns: ["[Ss]phinx.*$"],
+      matchPackagePrefixes: ["docs"],
+    },
+    {
+          // Other major dependencies get deprioritised below minor dev dependencies.
       matchUpdateTypes: ["major"],
       prPriority: -2
     },
     {
-      // Major dev dependencies are stone last.
+      // Major dev dependencies are stone last, but grouped.
+      groupName: "development dependencies (major versions)",
+      groupSlug: "dev-dependencies",
       matchDepTypes: ["devDependencies"],
       matchUpdateTypes: ["major"],
-      prPriority: -3
+      prPriority: -3,
+      matchPackagePatterns: [
+        // Generated from the dependency dashboard, may not be complete.
+        "^(.*/)?autoflake$",
+        "^(.*/)?black$",
+        "^(.*/)?flake8$",
+        "^(.*/)?hypothesis$",
+        "^(.*/)?pycodestyle$",
+        "^(.*/)?pyfakefs$",
+        "^(.*/)?pyflakes$",
+        "^(.*/)?pylint$",
+        "^(.*/)?pytest",
+        "^(.*/)?responses$",
+        "^(.*/)?ruff$",
+        "^(.*/)?twine$",
+        "^(.*/)?types-"
+      ]
+    },
+    {
+      // Pyright makes regular breaking changes in patch releases, so we separate these
+      // and do them independently.
+      matchPackageNames: ["pyright"],
+      prPriority: -4
     }
   ],
   regexManagers: [
     {
       // tox.ini can get updates too if we specify for each package.
       fileMatch: ["tox.ini"],
+      depTypeTemplate: "devDependencies",
       matchStrings: [
         "# renovate: datasource=(?<datasource>\\S+)\n\\s+(?<depName>.*?)(\\[[\\w]*\\])*[=><]=?(?<currentValue>.*?)\n"
+      ]
+    },
+    {
+      // .pre-commit-config.yaml version updates
+      fileMatch: [".pre-commit-config.yaml"],
+      depTypeTemplate: "devDependencies",
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>\\S+);\\s*depName=(?<depName>.*?)\n\s+rev: \"v?(?<currentValue>.*?)\""
       ]
     }
   ],
   timezone: "Etc/UTC",
-  automergeSchedule: ["before 07:00"],
   schedule: ["every weekend"],
-  prConcurrentLimit: 5, // No more than 5 open PRs at a time.
+  prConcurrentLimit: 2, // No more than 2 open PRs at a time.
+  branchConcurrentLimit: 20, // No more than 20 open branches at a time.
   prCreation: "not-pending", // Wait until status checks have completed before raising the PR
   prNotPendingHours: 4, // ...unless the status checks have been running for 4+ hours.
   prHourlyLimit: 1, // No more than 1 PR per hour.
-  stabilityDays: 2 // Wait 2 days from release before updating.
+  stabilityDays: 2, // Wait 2 days from release before updating.
+  automergeStrategy: "squash", // Squash & rebase when auto-merging.
+  semanticCommitType: "build"  // use `build` as commit header type (i.e. `build(deps): <description>`)
 }
-

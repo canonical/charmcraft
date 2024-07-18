@@ -14,21 +14,42 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """YAML-related utilities for Charmcraft."""
-from typing import Any, Dict, Optional
+
+from typing import Any
 
 import yaml
 from craft_cli import emit
 
+from charmcraft import const
 
-def load_yaml(fpath) -> Optional[Dict[str, Any]]:
+
+def load_yaml(fpath) -> dict[str, Any] | None:
     """Return the content of a YAML file."""
     if not fpath.is_file():
         emit.debug(f"Couldn't find config file {str(fpath)!r}")
         return None
     try:
-        with fpath.open("rb") as fh:
+        with fpath.open("r") as fh:
             content = yaml.safe_load(fh)
     except (yaml.error.YAMLError, OSError) as err:
         emit.debug(f"Failed to read/parse config file {str(fpath)!r}: {err!r}")
         return None
     return content
+
+
+def _repr_str(dumper: yaml.SafeDumper, data: str) -> yaml.ScalarNode:
+    """Multi-line string representer for the YAML dumper."""
+    if "\n" in data:
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data)
+
+
+def dump_yaml(data: Any) -> str:  # noqa: ANN401: yaml.dump takes anything, so why can't we?
+    """Dump a craft model to a YAML string."""
+    yaml.add_representer(str, _repr_str, Dumper=yaml.SafeDumper)
+    yaml.add_representer(
+        const.CharmArch,
+        yaml.representer.SafeRepresenter.represent_str,
+        Dumper=yaml.SafeDumper,
+    )
+    return yaml.dump(data, Dumper=yaml.SafeDumper, sort_keys=False)

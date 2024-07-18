@@ -19,22 +19,55 @@ import pathlib
 import shlex
 import subprocess
 import textwrap
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING, cast
 
 from craft_cli import CraftError
+from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from charmcraft.linters import CheckResult
+else:
+    CheckResult = "CheckResult"
 
 
-class BadLibraryPathError(CraftError):
+class ClassicFallback(BaseException):
+    """Exception used for falling back to classic charmcraft.
+
+    Only used during the transition to craft-application.
+    """
+
+
+class InvalidEnvironmentVariableError(CraftError):
+    """A Charmcraft-related environment variable value is invalid."""
+
+    def __init__(
+        self, variable: str, *, details: str, resolution: str, docs_url: str | None = None
+    ):
+        super().__init__(
+            f"Environment variable {variable!r} contains an invalid value.",
+            details=details,
+            resolution=resolution,
+            docs_url=docs_url,
+            reportable=False,
+            retcode=65,  # Data format error
+        )
+
+
+class LibraryError(CraftError):
+    """Errors related to charm libraries."""
+
+
+class BadLibraryPathError(LibraryError):
     """Subclass to provide a specific error for a bad library path."""
 
     def __init__(self, path):
         super().__init__(
-            "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
-            "".format(path)
+            f"Charm library path {path} must conform to lib/charms/<charm>/vN/<libname>.py"
         )
 
 
-class BadLibraryNameError(CraftError):
+class BadLibraryNameError(LibraryError):
     """Subclass to provide a specific error for a bad library name."""
 
     def __init__(self, name):
@@ -99,6 +132,24 @@ class DuplicateCharmsError(CraftError):
         return details.getvalue()
 
 
+class LintingError(CraftError):
+    """Lint failures."""
+
+    def __init__(self, errors: list[CheckResult], warnings: list[CheckResult]):
+        self.errors = errors
+        self.warnings = warnings
+        detail_lines = ["ERRORS:"]
+        for err in errors:
+            detail_lines.append(f"- {err.name}: {err.text} ({err.url})")
+        for warning in warnings:
+            detail_lines.append(f"- {warning.name}: {warning.text} ({warning.url})")
+
+        super().__init__(
+            f"There were {len(errors)} linting errors and {len(warnings)} warnings."
+            "\n".join(detail_lines)
+        )
+
+
 class DependencyError(CraftError):
     """Errors related to dependencies."""
 
@@ -130,15 +181,13 @@ class SubprocessError(CraftError):
     """A craft-cli friendly subprocess error."""
 
     @classmethod
-    def from_subprocess(cls, error: subprocess.CalledProcessError):
+    def from_subprocess(cls, error: subprocess.CalledProcessError) -> Self:
         """Convert a CalledProcessError to a craft-cli error."""
         error_details = f"Full command: {shlex.join(error.cmd)}\nError text:\n"
         if isinstance(error.stderr, str):
             error_details += textwrap.indent(error.stderr, "  ")
-        elif error.stderr is None:
-            pass
         else:
-            stderr = error.stderr
+            stderr = cast(io.TextIOBase, error.stderr)
             stderr.seek(io.SEEK_SET)
             error_details += textwrap.indent(stderr.read(), "  ")
         return cls(

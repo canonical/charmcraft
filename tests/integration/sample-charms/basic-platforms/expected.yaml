@@ -1,0 +1,21 @@
+name: example-charm
+summary: An example charm with platforms
+description: |
+  A description for an example charm with platforms.
+base: ubuntu@22.04
+platforms:
+  amd64:
+    build-on:
+    - amd64
+    build-for:
+    - amd64
+parts:
+  charm:
+    source: .
+    charm-entrypoint: src/charm.py
+    charm-binary-python-packages: []
+    charm-python-packages: []
+    charm-requirements: []
+    charm-strict-dependencies: false
+    plugin: charm
+type: charm

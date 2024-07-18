@@ -1,0 +1,12 @@
+name: example-charm
+summary: An example charm with platforms
+description: |
+  A description for an example charm with platforms.
+type: charm
+base: ubuntu@22.04
+platforms:
+  amd64:
+
+parts:
+  charm:
+    plugin: charm

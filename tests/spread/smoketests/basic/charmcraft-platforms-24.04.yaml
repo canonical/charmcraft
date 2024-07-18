@@ -1,0 +1,17 @@
+name: noble-platforms
+type: charm
+title: A charm built and running on noble.
+summary: A charm built and running on noble.
+description: A charm built and running on noble.
+base: ubuntu@24.04
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+  mainframe:
+    build-on: [s390x, ppc64el]
+    build-for: [s390x]
+parts:
+  my-charm:
+    plugin: charm
+    source: .

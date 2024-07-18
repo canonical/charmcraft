@@ -20,7 +20,7 @@ _charmcraft()
 {
     local cur prev words cword cmd cmds
     cmds=(
-        analyze
+        analyse
         clean
         close
         create-lib
@@ -32,6 +32,10 @@ _charmcraft()
         login
         logout
         names
+        pull
+        build
+        stage
+        prime
         pack
         promote-bundle
         publish-lib
@@ -83,6 +87,8 @@ _charmcraft()
 
     # offer the options for the given command (and global ones, always available)
     case "$cmd" in
+        analyse)
+            ;&
         analyze)
             COMPREPLY=( $(compgen -W "${globals[*]} --force --format" -- "$cur") )
             ;;

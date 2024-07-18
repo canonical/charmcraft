@@ -20,7 +20,7 @@ import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_subprocess import FakeProcess
 
-from charmcraft import charm_builder, errors, utils
+from charmcraft import charm_builder, const, errors, utils
 
 pytestmark = [
     # Always use pyfakefs and pytest-subprocess
@@ -33,12 +33,12 @@ REQUIREMENTS_FILES = [pytest.param("", id="empty"), "ops~=2.5", "requests\nops"]
 @pytest.fixture()
 def builder(fs: FakeFilesystem) -> charm_builder.CharmBuilder:
     fs.cwd = "/root"
-    fs.makedirs("build")
+    fs.makedirs(const.BUILD_DIRNAME)
     fs.makedirs("install")
     charm_file = fs.create_file("src/charm.py")
 
     return charm_builder.CharmBuilder(
-        builddir=pathlib.Path("build"),
+        builddir=pathlib.Path(const.BUILD_DIRNAME),
         installdir=pathlib.Path("install"),
         entrypoint=charm_file.path,
         requirements=[pathlib.Path("requirements.txt")],
@@ -101,6 +101,7 @@ def test_install_strict_dependencies_success(
     expected_command = [
         "/pip",
         "install",
+        "--no-deps",
         "--no-binary=:all:",
         "--requirement=requirements.txt",
     ]

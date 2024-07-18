@@ -16,7 +16,7 @@
 
 """Reformat pydantic errors."""
 
-from typing import Tuple
+from charmcraft import const
 
 
 def format_pydantic_error_location(loc) -> str:
@@ -32,7 +32,7 @@ def format_pydantic_error_location(loc) -> str:
             previous_part += f"[{loc_part}]"
             loc_parts.append(previous_part)
         else:
-            raise RuntimeError(f"unhandled loc: {loc_part}")
+            raise RuntimeError(f"unhandled loc: {loc_part}")  # noqa: TRY004
 
     loc = ".".join(loc_parts)
 
@@ -46,7 +46,7 @@ def format_pydantic_error_message(msg: str) -> str:
     return msg.replace("str type expected", "string type expected")
 
 
-def printable_field_location_split(location: str) -> Tuple[str, str]:
+def printable_field_location_split(location: str) -> tuple[str, str]:
     """Return split field location.
 
     If top-level, location is returned as unquoted "top-level".
@@ -69,22 +69,22 @@ def printable_field_location_split(location: str) -> Tuple[str, str]:
     return field_name, "top-level"
 
 
-def format_pydantic_errors(errors, *, file_name: str = "charmcraft.yaml") -> str:
+def format_pydantic_errors(errors, *, file_name: str = const.CHARMCRAFT_FILENAME) -> str:
     """Format errors.
 
-    Example 1: Single error.
+    Example 1: Single error::
 
-    Bad charmcraft.yaml content:
-    - field: <some field>
-      reason: <some reason>
+      Bad charmcraft.yaml content:
+      - field: <some field>
+        reason: <some reason>
 
-    Example 2: Multiple errors.
+    Example 2: Multiple errors::
 
-    Bad charmcraft.yaml content:
-    - field: <some field>
-      reason: <some reason>
-    - field: <some field 2>
-      reason: <some reason 2>
+      Bad charmcraft.yaml content:
+      - field: <some field>
+        reason: <some reason>
+      - field: <some field 2>
+        reason: <some reason 2>
     """
     combined = [f"Bad {file_name} content:"]
     for error in errors:

@@ -27,18 +27,8 @@ import pathlib
 import shutil
 import subprocess
 import sys
-from typing import List
 
-from charmcraft import instrum
-from charmcraft.const import (
-    DEPENDENCIES_HASH_FILENAME,
-    DISPATCH_CONTENT,
-    DISPATCH_FILENAME,
-    HOOKS_DIRNAME,
-    MANDATORY_HOOK_NAMES,
-    STAGING_VENV_DIRNAME,
-    VENV_DIRNAME,
-)
+from charmcraft import const, instrum
 from charmcraft.env import get_charm_builder_metrics_path
 from charmcraft.errors import DependencyError
 from charmcraft.jujuignore import JujuIgnore, default_juju_ignore
@@ -53,6 +43,7 @@ from charmcraft.utils import (
 
 MINIMUM_PIP_VERSION = (24, 1)
 KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/c0/d0/9641dc7b05877874c6418f8034ddefc809495e65caa14d38c7551cd114bb/pip-24.1.1.tar.gz"
+KNOWN_GOOD_PIP_HASH = "sha256:5aa64f65e1952733ee0a9a9b1f52496ebdb3f3077cc46f80a16d983b58d1180a"
 
 
 def relativise(src, dst):
@@ -69,9 +60,9 @@ class CharmBuilder:
         installdir: pathlib.Path,
         entrypoint: pathlib.Path,
         allow_pip_binary: bool = None,
-        binary_python_packages: List[str] = None,
-        python_packages: List[str] = None,
-        requirements: List[pathlib.Path] = None,
+        binary_python_packages: list[str] = None,
+        python_packages: list[str] = None,
+        requirements: list[pathlib.Path] = None,
         strict_dependencies: bool = False,
     ) -> None:
         self.builddir = builddir
@@ -83,7 +74,7 @@ class CharmBuilder:
         self.requirement_paths = requirements
         self.strict_dependencies = strict_dependencies
         self.ignore_rules = self._load_juju_ignore()
-        self.ignore_rules.extend_patterns([f"/{STAGING_VENV_DIRNAME}"])
+        self.ignore_rules.extend_patterns([f"/{const.STAGING_VENV_DIRNAME}"])
 
         self.charmlib_deps = collect_charmlib_pydeps(builddir)
         print("Collected charmlib dependencies:", self.charmlib_deps)
@@ -188,10 +179,10 @@ class CharmBuilder:
     def handle_dispatcher(self, linked_entrypoint):
         """Handle modern and classic dispatch mechanisms."""
         # dispatch mechanism, create one if wasn't provided by the project
-        dispatch_path = self.installdir / DISPATCH_FILENAME
+        dispatch_path = self.installdir / const.DISPATCH_FILENAME
         if not dispatch_path.exists():
             print("Creating the dispatch mechanism")
-            dispatch_content = DISPATCH_CONTENT.format(
+            dispatch_content = const.DISPATCH_CONTENT.format(
                 entrypoint_relative_path=linked_entrypoint.relative_to(self.installdir)
             )
             with dispatch_path.open("wt", encoding="utf8") as fh:
@@ -201,7 +192,7 @@ class CharmBuilder:
         # bunch of symlinks, to support old juju: verify that any of the already included hooks
         # in the directory is not linking directly to the entrypoint, and also check all the
         # mandatory ones are present
-        dest_hookpath = self.installdir / HOOKS_DIRNAME
+        dest_hookpath = self.installdir / const.HOOKS_DIRNAME
         if not dest_hookpath.exists():
             dest_hookpath.mkdir()
 
@@ -215,7 +206,7 @@ class CharmBuilder:
                 print(f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint")
 
         # include the mandatory ones and those we need to replace
-        hooknames = MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
+        hooknames = const.MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
         for hookname in hooknames:
             print(f"Creating the {hookname!r} hook script pointing to dispatch")
             dest_hook = dest_hookpath / hookname
@@ -247,7 +238,13 @@ class CharmBuilder:
             # common charm dependencies (e.g. ops). Resolve this by updating to a
             # known working version of pip.
             if get_pip_version(pip_cmd) < MINIMUM_PIP_VERSION:
-                _process_run([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"])
+                _process_run(
+                    [
+                        pip_cmd,
+                        "install",
+                        f"pip@{KNOWN_GOOD_PIP_URL}",
+                    ]
+                )
 
         with instrum.Timer("Installing all dependencies"):
             if self.strict_dependencies:
@@ -278,18 +275,36 @@ class CharmBuilder:
                     _process_run(cmd)
                 if self.python_packages:
                     # install python packages from source
-                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    cmd = [
+                        pip_cmd,
+                        "install",
+                        "--upgrade",
+                        "--no-binary",
+                        ":all:",
+                    ]  # base command
                     cmd.extend(self.python_packages)  # the python packages to install
                     _process_run(cmd)
                 if self.requirement_paths:
                     # install dependencies from requirement files
-                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    cmd = [
+                        pip_cmd,
+                        "install",
+                        "--upgrade",
+                        "--no-binary",
+                        ":all:",
+                    ]  # base command
                     for reqspath in self.requirement_paths:
                         cmd.append(f"--requirement={reqspath}")  # the dependencies file(s)
                     _process_run(cmd)
                 if self.charmlib_deps:
                     # install charmlibs python dependencies
-                    cmd = [pip_cmd, "install", "--upgrade", "--no-binary", ":all:"]  # base command
+                    cmd = [
+                        pip_cmd,
+                        "install",
+                        "--upgrade",
+                        "--no-binary",
+                        ":all:",
+                    ]  # base command
                     cmd.extend(self.charmlib_deps)  # the python packages to install
                 _process_run(cmd)
 
@@ -307,7 +322,7 @@ class CharmBuilder:
         )
         _process_run(
             get_pip_command(
-                [pip_cmd, "install"],
+                [pip_cmd, "install", "--no-deps"],
                 self.requirement_paths,
                 binary_deps=self.binary_python_packages or [],
             )
@@ -325,8 +340,8 @@ class CharmBuilder:
             print("No dependencies to handle")
             return
 
-        staging_venv_dir = self.builddir / STAGING_VENV_DIRNAME
-        hash_file = self.builddir / DEPENDENCIES_HASH_FILENAME
+        staging_venv_dir = self.builddir / const.STAGING_VENV_DIRNAME
+        hash_file = self.builddir / const.DEPENDENCIES_HASH_FILENAME
 
         # find out if current dependencies are the same than the last run.
         current_deps_hash = self._calculate_dependencies_hash()
@@ -357,9 +372,9 @@ class CharmBuilder:
             hash_file.write_text(current_deps_hash, encoding="utf8")
 
         # always copy the virtualvenv site-packages directory to /venv in charm
-        basedir = pathlib.Path(STAGING_VENV_DIRNAME)
+        basedir = pathlib.Path(const.STAGING_VENV_DIRNAME)
         site_packages_dir = _find_venv_site_packages(basedir)
-        shutil.copytree(site_packages_dir, self.installdir / VENV_DIRNAME)
+        shutil.copytree(site_packages_dir, self.installdir / const.VENV_DIRNAME)
 
 
 def _find_venv_bin(basedir: pathlib.Path, exec_base: str) -> pathlib.Path:
@@ -373,7 +388,11 @@ def _find_venv_bin(basedir: pathlib.Path, exec_base: str) -> pathlib.Path:
 def _find_venv_site_packages(basedir):
     """Determine the venv site-packages directory in different platforms."""
     output = subprocess.check_output(
-        ["python3", "-c", "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')"],
+        [
+            "python3",
+            "-c",
+            "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')",
+        ],
         text=True,
     )
     major, minor = output.strip().split(" ")
@@ -384,7 +403,7 @@ def _find_venv_site_packages(basedir):
     return basedir / "lib" / f"python{major}.{minor}" / "site-packages"
 
 
-def _process_run(cmd: List[str]) -> None:
+def _process_run(cmd: list[str]) -> None:
     """Run an external command logging its output.
 
     :raises CraftError: if execution crashes or ends with return code not zero.
@@ -396,11 +415,13 @@ def _process_run(cmd: List[str]) -> None:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
+            text=True,
         )
     except Exception as exc:
         raise RuntimeError(f"Subprocess command {cmd} execution crashed: {exc!r}")
 
-    for line in proc.stdout:
+    # https://github.com/microsoft/pylance-release/issues/2385
+    for line in proc.stdout:  # pyright: ignore[reportOptionalIterable]
         print(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 

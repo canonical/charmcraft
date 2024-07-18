@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,16 +18,13 @@
 import datetime
 import os
 import pathlib
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal, cast
 
 import pydantic
 from craft_cli import CraftError
+from typing_extensions import Self
 
-from charmcraft.const import (
-    CHARM_METADATA_KEYS,
-    CHARM_METADATA_LEGACY_KEYS,
-    METADATA_FILENAME,
-)
+from charmcraft import const, parts
 from charmcraft.extensions import apply_extensions
 from charmcraft.format import format_pydantic_errors
 from charmcraft.metafiles.actions import parse_actions_yaml
@@ -39,40 +36,67 @@ from charmcraft.metafiles.metadata import (
 from charmcraft.models.actions import JujuActions
 from charmcraft.models.basic import AttributeName, LinterName, ModelConfigDefaults
 from charmcraft.models.config import JujuConfig
-from charmcraft.parts import process_part_config
 from charmcraft.utils import get_host_architecture
 
 
 class CharmhubConfig(
     ModelConfigDefaults,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
     """Definition of Charmhub endpoint configuration."""
 
-    api_url: pydantic.HttpUrl = "https://api.charmhub.io"
-    storage_url: pydantic.HttpUrl = "https://storage.snapcraftcontent.com"
-    registry_url: pydantic.HttpUrl = "https://registry.jujucharms.com"
+    api_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://api.charmhub.io")
+    storage_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://storage.snapcraftcontent.com")
+    registry_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://registry.jujucharms.com")
 
 
-class Base(ModelConfigDefaults):
+class Base(ModelConfigDefaults, frozen=True):
     """Represents a base."""
 
     name: pydantic.StrictStr
     channel: pydantic.StrictStr
-    architectures: List[pydantic.StrictStr] = [get_host_architecture()]
+    architectures: list[pydantic.StrictStr] = [get_host_architecture()]
+
+    @classmethod
+    def from_str_and_arch(cls, base_str: str, architectures: list[str]) -> Self:
+        """Get a Base from a base string and list of architectures.
+
+        :param base_str: A base string along the lines of "<name>@<channel>"
+        :param architectures: A list of architectures (or ["all"])
+        """
+        name, _, channel = base_str.partition("@")
+        return cls(name=name, channel=channel, architectures=architectures)
 
 
 class BasesConfiguration(
     ModelConfigDefaults,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
-    """Definition of build-on/run-on combinations."""
+    """Definition of build-on/run-on combinations.
 
-    build_on: List[Base]
-    run_on: List[Base]
+    Example::
+
+        bases:
+          - build-on:
+              - name: ubuntu
+                channel: "20.04"
+                architectures: [amd64, arm64]
+            run-on:
+              - name: ubuntu
+                channel: "20.04"
+                architectures: [amd64, arm64]
+              - name: ubuntu
+                channel: "22.04"
+                architectures: [amd64, arm64]
+    """
+
+    build_on: list[Base]
+    run_on: list[Base]
 
 
-class Project(ModelConfigDefaults):
+class Project(ModelConfigDefaults, frozen=True):
     """Internal-only project configuration."""
 
     # do not verify that `dirpath` is a valid existing directory; it's used externally as a dir
@@ -85,33 +109,39 @@ class Project(ModelConfigDefaults):
     started_at: datetime.datetime
 
 
-class Ignore(ModelConfigDefaults):
+class Ignore(ModelConfigDefaults, frozen=True):
     """Definition of `analysis.ignore` configuration."""
 
-    attributes: List[AttributeName] = []
-    linters: List[LinterName] = []
+    attributes: list[AttributeName] = []
+    linters: list[LinterName] = []
 
 
-class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True):
+class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True, frozen=True):
     """Definition of `analysis` configuration."""
 
     ignore: Ignore = Ignore()
 
 
-class Links(ModelConfigDefaults):
+class Links(ModelConfigDefaults, frozen=True):
     """Definition of `links` in metadata."""
 
-    contact: Optional[Union[pydantic.StrictStr, List[pydantic.StrictStr]]]
-    documentation: Optional[pydantic.AnyHttpUrl]
-    issues: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    source: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    website: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+    contact: pydantic.StrictStr | list[pydantic.StrictStr] | None
+    """Instructions for contacting the owner of the charm."""
+    documentation: pydantic.AnyHttpUrl | None
+    """The URL of the documentation for this charm."""
+    issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    """A link to the issue tracker for this charm."""
+    source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    """Where to find this charm's source code."""
+    website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    """The website for this charm."""
 
 
 class CharmcraftConfig(
     ModelConfigDefaults,
     validate_all=False,
     alias_generator=lambda s: s.replace("_", "-"),
+    frozen=True,
 ):
     """Definition of charmcraft.yaml configuration."""
 
@@ -121,28 +151,28 @@ class CharmcraftConfig(
     metadata_legacy: bool = False
 
     type: Literal["bundle", "charm"]
-    name: Optional[pydantic.StrictStr]
-    summary: Optional[pydantic.StrictStr]
-    description: Optional[pydantic.StrictStr]
+    name: pydantic.StrictStr | None
+    summary: pydantic.StrictStr | None
+    description: pydantic.StrictStr | None
     charmhub: CharmhubConfig = CharmhubConfig()
-    parts: Optional[Dict[str, Any]]
-    bases: Optional[List[BasesConfiguration]]
+    parts: dict[str, Any] | None
+    bases: list[BasesConfiguration] | None
     analysis: AnalysisConfig = AnalysisConfig()
-    actions: Optional[JujuActions]
-    assumes: Optional[List[Union[str, Dict[str, Union[List, Dict]]]]]
-    containers: Optional[Dict[str, Any]]
-    devices: Optional[Dict[str, Any]]
-    title: Optional[pydantic.StrictStr]
-    extra_bindings: Optional[Dict[str, Any]]
-    peers: Optional[Dict[str, Any]]
-    provides: Optional[Dict[str, Any]]
-    requires: Optional[Dict[str, Any]]
-    resources: Optional[Dict[str, Any]]
-    storage: Optional[Dict[str, Any]]
-    subordinate: Optional[bool]
-    terms: Optional[List[str]]
-    links: Optional[Links]
-    config: Optional[JujuConfig]
+    actions: JujuActions | None
+    assumes: list[str | dict[str, list | dict]] | None
+    containers: dict[str, Any] | None
+    devices: dict[str, Any] | None
+    title: pydantic.StrictStr | None
+    extra_bindings: dict[str, Any] | None
+    peers: dict[str, Any] | None
+    provides: dict[str, Any] | None
+    requires: dict[str, Any] | None
+    resources: dict[str, Any] | None
+    storage: dict[str, Any] | None
+    subordinate: bool | None
+    terms: list[str] | None
+    links: Links | None
+    config: JujuConfig | None
 
     @pydantic.validator("name", pre=True, always=True)
     def validate_name(cls, name, values):
@@ -177,7 +207,7 @@ class CharmcraftConfig(
             # extra error here, it gets confusing to the user)
             return None
 
-        if parts is None:
+        if not parts:
             # no parts indicated, default to the type of package
             parts = {values["type"]: {}}
 
@@ -205,7 +235,7 @@ class CharmcraftConfig(
     @pydantic.validator("parts", each_item=True)
     def validate_each_part(cls, item):
         """Verify each part in the parts section. Craft-parts will re-validate them."""
-        return process_part_config(item)
+        return parts.process_part_config(item)
 
     @pydantic.validator("bases", pre=True)
     def validate_bases_presence(cls, bases, values):
@@ -259,7 +289,7 @@ class CharmcraftConfig(
             return JujuConfig.parse_obj(config)
 
     @classmethod
-    def expand_short_form_bases(cls, bases: List[Dict[str, Any]]) -> None:
+    def expand_short_form_bases(cls, bases: list[dict[str, Any]]) -> None:
         """Expand short-form base configuration into long-form in-place."""
         for index, base in enumerate(bases):
             # Skip if already long-form. Account for common typos in case user
@@ -283,7 +313,9 @@ class CharmcraftConfig(
             base["run-on"] = [converted_base.dict()]
 
     @classmethod
-    def unmarshal(cls, obj: Dict[str, Any], project: Project):
+    def unmarshal(  # pyright: ignore[reportIncompatibleMethodOverride]
+        cls, obj: dict[str, Any], project: Project
+    ):
         """Unmarshal object with necessary translations and error handling.
 
         (1) Perform any necessary translations.
@@ -307,13 +339,13 @@ class CharmcraftConfig(
                 cls.expand_short_form_bases(obj["bases"])
 
             # If metadata.yaml exists, try merge it into config.
-            if os.path.isfile(project.dirpath / METADATA_FILENAME):
+            if os.path.isfile(project.dirpath / const.METADATA_FILENAME):
                 # metadata.yaml exists, so we can't specify metadata keys in charmcraft.yaml.
-                for key in CHARM_METADATA_KEYS.union(CHARM_METADATA_LEGACY_KEYS):
+                for key in const.CHARM_METADATA_KEYS.union(const.METADATA_YAML_KEYS):
                     if key in obj:
                         raise CraftError(
                             f"Cannot specify '{key}' in charmcraft.yaml when "
-                            f"'{METADATA_FILENAME}' exists"
+                            f"'{const.METADATA_FILENAME}' exists"
                         )
 
                 if obj.get("type") == "charm":
@@ -353,7 +385,9 @@ class CharmcraftConfig(
             raise CraftError(format_pydantic_errors(error.errors()))
 
     @classmethod
-    def schema(cls, **kwargs) -> Dict[str, Any]:
+    def schema(  # pyright: ignore[reportIncompatibleMethodOverride]
+        cls, **kwargs
+    ) -> dict[str, Any]:
         """Perform any schema fixups required to hide internal details."""
         schema = super().schema(**kwargs)
 

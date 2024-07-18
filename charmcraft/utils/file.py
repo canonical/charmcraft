@@ -18,16 +18,15 @@ import io
 import os
 import pathlib
 import zipfile
-from typing import Union
-
 from _stat import S_IRGRP, S_IROTH, S_IRUSR, S_IXGRP, S_IXOTH, S_IXUSR
+
 from craft_cli import CraftError
 
 # handy masks for execution and reading for everybody
 S_IXALL = S_IXUSR | S_IXGRP | S_IXOTH
 S_IRALL = S_IRUSR | S_IRGRP | S_IROTH
 
-PathOrString = Union[os.PathLike, str]
+PathOrString = os.PathLike | str
 
 
 def make_executable(fh: io.IOBase) -> None:

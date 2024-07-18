@@ -16,8 +16,10 @@
 
 import argparse
 import ast
+import datetime
 import itertools
 import os
+import pathlib
 import subprocess
 import sys
 from argparse import ArgumentParser
@@ -26,18 +28,15 @@ from unittest.mock import patch
 
 import pytest
 from craft_cli import (
-    ArgumentParsingError,
-    CommandGroup,
     CraftError,
-    EmitterMode,
-    ProvideHelpException,
 )
 from craft_store.errors import CraftStoreError
 
-from charmcraft import __version__, env, utils
+from charmcraft import const, models, utils
+from charmcraft.bases import get_host_as_base
 from charmcraft.cmdbase import FORMAT_HELP_STR, JSON_FORMAT, BaseCommand
-from charmcraft.commands.store.client import ALTERNATE_AUTH_ENV_VAR
 from charmcraft.main import COMMAND_GROUPS, _get_system_details, main
+from charmcraft.models.charmcraft import BasesConfiguration
 
 # --- Tests for the main entry point
 
@@ -46,41 +45,53 @@ from charmcraft.main import COMMAND_GROUPS, _get_system_details, main
 # make argument parsing system happy).
 
 
-def test_main_ok():
-    """Work ended ok: message handler notified properly, return code in 0."""
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.return_value = None
-            retcode = main(["charmcraft", "version"])
+@pytest.fixture()
+def config(tmp_path):
+    """Provide a config class with an extra set method for the test to change it."""
 
-    assert retcode == 0
-    emit_mock.ended_ok.assert_called_once_with()
+    class TestConfig(models.charmcraft.CharmcraftConfig, frozen=False):
+        """The Config, but with a method to set test values."""
 
-    # check how Emitter was initted
-    emit_mock.init.assert_called_once_with(
-        EmitterMode.BRIEF,
-        "charmcraft",
-        f"Starting charmcraft version {__version__}",
-        log_filepath=None,
+        def set(self, prime=None, **kwargs):
+            # prime is special, so we don't need to write all this structure in all tests
+            if prime is not None:
+                if self.parts is None:
+                    self.parts = {}
+                self.parts["charm"] = {"plugin": "charm", "prime": prime}
+
+            # the rest is direct
+            for k, v in kwargs.items():
+                object.__setattr__(self, k, v)
+
+    project = models.charmcraft.Project(
+        dirpath=tmp_path,
+        started_at=datetime.datetime.utcnow(),
+        config_provided=True,
+    )
+
+    base = BasesConfiguration(**{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]})
+
+    return TestConfig(
+        type="charm",
+        bases=[base],
+        project=project,
+        name="test-charm",
+        summary="test summary",
+        description="test description",
     )
 
 
 def test_main_managed_instance_init(monkeypatch):
     """Init emitter with a specific log filepath."""
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
 
     with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.run") as d_mock:
             d_mock.return_value = None
             main(["charmcraft", "version"])
 
-    # check how Emitter was initted
-    emit_mock.init.assert_called_once_with(
-        EmitterMode.BRIEF,
-        "charmcraft",
-        f"Starting charmcraft version {__version__}",
-        log_filepath=env.get_managed_environment_log_path(),
-    )
+    # Emitter is init'd by craft-application
+    emit_mock.init.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -94,7 +105,7 @@ def test_main_managed_instance_init(monkeypatch):
 )
 def test_main_managed_instance_error(monkeypatch, side_effect, config):
     """The managed instance will not expose the "internal" log filepath."""
-    monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", "1")
+    monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, "1")
 
     with patch("charmcraft.main.emit") as emit_mock:
         with patch("charmcraft.main.Dispatcher.pre_parse_args") as d_mock:
@@ -107,540 +118,12 @@ def test_main_managed_instance_error(monkeypatch, side_effect, config):
     assert error.logpath_report is False
 
 
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: bundle
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-        [
-            dedent(
-                """\
-                type: bundle
-                name: test-charm-name-from-charmcraft-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-            None,
-        ],
-    ],
-)
-def test_main_load_config_ok(
-    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
-):
-    """Command is properly executed, after loading and receiving the config."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = "cmdname"
-        overview = "test overview"
-
-        def run(self, parsed_args):
-            assert self.config.type == "bundle"
-
-    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
-        retcode = main(["charmcraft", "cmdname", f"--project-dir={tmp_path}"])
-    assert retcode == 0
-
-
-def test_main_load_config_not_present_ok():
-    """Config is not present but the command does not need it."""
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = "cmdname"
-        overview = "test overview"
-
-        def run(self, parsed_args):
-            assert not self.config.project.config_provided
-            self._check_config()
-
-    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
-        retcode = main(["charmcraft", "cmdname", "--project-dir=/whatever"])
-    assert retcode == 0
-
-
-def test_main_load_config_not_present_but_needed(capsys):
-    """Config is not present and the command needs it."""
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = "cmdname"
-        overview = "test overview"
-
-        def run(self, parsed_args):
-            assert not self.config.project.config_provided
-            self._check_config(config_file=True)
-
-    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
-        retcode = main(["charmcraft", "cmdname", "--project-dir=/whatever"])
-    assert retcode == 1
-
-    out, err = capsys.readouterr()
-    assert not out
-    assert err == (
-        "The specified command needs a valid 'charmcraft.yaml' configuration file (in "
-        "the current directory or where specified with --project-dir option); see "
-        "the reference: https://discourse.charmhub.io/t/charmcraft-configuration/4138\n"
-    )
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-        [
-            dedent(
-                """\
-                type: charm
-                name: test-charm-name-from-charmcraft-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-            None,
-        ],
-    ],
-)
-def test_main_load_config_bases_not_present_but_not_needed(
-    capsys,
-    tmp_path,
-    prepare_charmcraft_yaml,
-    prepare_metadata_yaml,
-    charmcraft_yaml,
-    metadata_yaml,
-):
-    """Config bases is not present and the command does not need it."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = "cmdname"
-        overview = "test overview"
-
-        def run(self, parsed_args):
-            self._check_config(config_file=True, bases=False)
-            assert self.config.type == "charm"
-
-    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
-        retcode = main(["charmcraft", "cmdname", f"--project-dir={tmp_path}"])
-    assert retcode == 0
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-        [
-            dedent(
-                """\
-                type: charm
-                name: test-charm-name-from-charmcraft-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-            None,
-        ],
-    ],
-)
-def test_main_load_config_bases_not_present_but_needed(
-    capsys,
-    tmp_path,
-    prepare_charmcraft_yaml,
-    prepare_metadata_yaml,
-    charmcraft_yaml,
-    metadata_yaml,
-):
-    """Config bases is not present and the command needs it."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    class MyCommand(BaseCommand):
-        help_msg = "some help"
-        name = "cmdname"
-        overview = "test overview"
-
-        def run(self, parsed_args):
-            assert self.config.type == "charm"
-            self._check_config(config_file=True, bases=True)
-
-    with patch("charmcraft.main.COMMAND_GROUPS", [CommandGroup("title", [MyCommand])]):
-        retcode = main(["charmcraft", "cmdname", f"--project-dir={tmp_path}"])
-    assert retcode == 1
-
-    out, err = capsys.readouterr()
-    assert not out
-    assert err.startswith(
-        "The specified command needs a valid 'bases' in 'charmcraft.yaml' configuration "
-        "file (in the current directory or where specified with --project-dir option)."
-    )
-
-
 def test_main_no_args():
     """The setup.py entry_point function needs to work with no arguments."""
     with patch("sys.argv", ["charmcraft"]):
-        retcode = main()
+        retcode = main(sys.argv)
 
     assert retcode == 1
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-    ],
-)
-def test_main_controlled_error(
-    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
-):
-    """Work raised CraftError: message handler notified properly, use indicated return code."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    simulated_exception = CraftError("boom", retcode=33)
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.side_effect = simulated_exception
-            retcode = main(["charmcraft", "version"])
-
-    assert retcode == 33
-    emit_mock.error.assert_called_once_with(simulated_exception)
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-        ["type: charm", None],
-        [None, None],
-        [
-            dedent(
-                """\
-                name: test-charm-name-from-charmcraft-yaml
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "20.04
-                """
-            ),
-            None,
-        ],
-        ["invalid file", "charmcraft shouldn't even read the files in this test."],
-    ],
-)
-def test_main_controlled_return_code(
-    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
-):
-    """Work ended ok, and the command indicated the return code."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.return_value = 9
-            retcode = main(["charmcraft", "version"])
-
-    assert retcode == 9
-    emit_mock.ended_ok.assert_called_once_with()
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-        ["type: charm", None],
-        [None, None],
-        [
-            dedent(
-                """\
-                name: test-charm-name-from-charmcraft-yaml
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "20.04
-                """
-            ),
-            None,
-        ],
-        ["invalid file", "charmcraft shouldn't even read the files in this test."],
-    ],
-)
-def test_main_crash(
-    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
-):
-    """Work crashed: message handler notified properly, return code in 1."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    simulated_exception = ValueError("boom")
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.side_effect = simulated_exception
-            retcode = main(["charmcraft", "version"])
-
-    assert retcode == 1
-    (call,) = emit_mock.error.mock_calls
-    (exc,) = call.args
-    assert isinstance(exc, CraftError)
-    assert str(exc) == "charmcraft internal error: ValueError('boom')"
-    assert exc.__cause__ == simulated_exception
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-        ["type: charm", None],
-        [None, None],
-        [
-            dedent(
-                """\
-                name: test-charm-name-from-charmcraft-yaml
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "20.04
-                """
-            ),
-            None,
-        ],
-        ["invalid file", "charmcraft shouldn't even read the files in this test."],
-    ],
-)
-def test_main_interrupted(
-    tmp_path, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
-):
-    """Work interrupted: message handler notified properly, return code in 1."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    simulated_exception = KeyboardInterrupt()
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.side_effect = simulated_exception
-            retcode = main(["charmcraft", "version"])
-
-    assert retcode == 1
-    (call,) = emit_mock.error.mock_calls
-    (exc,) = call.args
-    assert isinstance(exc, CraftError)
-    assert str(exc) == "Interrupted."
-    assert exc.__cause__ == simulated_exception
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-        ["type: charm", None],
-        [None, None],
-        [
-            dedent(
-                """\
-                name: test-charm-name-from-charmcraft-yaml
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "20.04
-                """
-            ),
-            None,
-        ],
-        ["invalid file", "charmcraft shouldn't even read the files in this test."],
-    ],
-)
-def test_main_controlled_arguments_error(
-    capsys, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
-):
-    """The execution failed because an argument parsing error."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.side_effect = ArgumentParsingError("test error")
-            retcode = main(["charmcraft", "version"])
-
-    assert retcode == 1
-    emit_mock.ended_ok.assert_called_once_with()
-
-    out, err = capsys.readouterr()
-    assert not out
-    assert err == "test error\n"
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "metadata_yaml"),
-    [
-        [
-            dedent(
-                """\
-                type: charm
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name-from-metadata-yaml
-                summary: test summary
-                description: test description
-                """
-            ),
-        ],
-        ["type: charm", None],
-        [None, None],
-        [
-            dedent(
-                """\
-                name: test-charm-name-from-charmcraft-yaml
-                type: charm
-                bases:
-                  - name: ubuntu
-                    channel: "20.04
-                """
-            ),
-            None,
-        ],
-        ["invalid file", "charmcraft shouldn't even read the files in this test."],
-    ],
-)
-def test_main_providing_help(
-    capsys, prepare_charmcraft_yaml, prepare_metadata_yaml, charmcraft_yaml, metadata_yaml
-):
-    """The execution ended up providing a help message."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-    prepare_metadata_yaml(metadata_yaml)
-
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as d_mock:
-            d_mock.side_effect = ProvideHelpException("nice and shiny help message")
-            retcode = main(["charmcraft", "version"])
-
-    assert retcode == 0
-    emit_mock.ended_ok.assert_called_once_with()
-
-    out, err = capsys.readouterr()
-    assert not out
-    assert err == "nice and shiny help message\n"
-
-
-def test_main_logs_system_details(emitter, config):
-    """Calling main ends up logging the system details."""
-    system_details = "test system details"
-
-    with patch("charmcraft.main.emit") as emit_mock:
-        with patch("charmcraft.main.Dispatcher.run") as run_mock:
-            with patch("charmcraft.main._get_system_details") as details_mock:
-                details_mock.return_value = system_details
-                run_mock.return_value = None
-                main(["charmcraft", "version"])
-    emit_mock.debug.assert_called_once_with(system_details)
 
 
 # -- tests for system details producer
@@ -691,7 +174,7 @@ def test_systemdetails_charmcraft_environment():
 
 def test_systemdetails_hidden_auth():
     """System details specifically hiding secrets."""
-    with patch("os.environ", {ALTERNATE_AUTH_ENV_VAR: "supersecret"}):
+    with patch("os.environ", {const.ALTERNATE_AUTH_ENV_VAR: "supersecret"}):
         with patch("charmcraft.utils.get_os_platform") as platform_mock:
             platform_mock.return_value = utils.OSPlatform(
                 system="test-system", release="test-release", machine="test-machine"
@@ -699,7 +182,7 @@ def test_systemdetails_hidden_auth():
             result = _get_system_details()
     assert result == (
         "System details: OSPlatform(system='test-system', release='test-release', "
-        f"machine='test-machine'); Environment: {ALTERNATE_AUTH_ENV_VAR}='<hidden>'"
+        f"machine='test-machine'); Environment: {const.ALTERNATE_AUTH_ENV_VAR}='<hidden>'"
     )
 
 
@@ -709,7 +192,7 @@ all_commands = list(itertools.chain(*(cgroup.commands for cgroup in COMMAND_GROU
 
 
 @pytest.mark.parametrize("command", all_commands)
-def test_commands(command):
+def test_legacy_commands(command):
     """Assert commands are valid.
 
     This is done through asking help for it *in real life*, which would mean that the
@@ -718,7 +201,7 @@ def test_commands(command):
     env = os.environ.copy()
 
     # Bypass unsupported environment error.
-    env["CHARMCRAFT_DEVELOPER"] = "1"
+    env[const.DEVELOPER_MODE_ENV_VAR] = "1"
 
     env_paths = [p for p in sys.path if "env/lib/python" in p]
     if env_paths:
@@ -727,7 +210,7 @@ def test_commands(command):
         else:
             env["PYTHONPATH"] = ":".join(env_paths)
 
-    external_command = [sys.executable, "-m", "charmcraft", command.name, "-h"]
+    external_command = [sys.executable, "-m", "charmcraft.main", command.name, "-h"]
     subprocess.run(external_command, check=True, env=env, stdout=subprocess.DEVNULL)
 
 
@@ -776,7 +259,7 @@ def test_usage_of_parsed_args(command_class, config):
 
     # build the abstract source tree for the command
     filepath = sys.modules[command_class.__module__].__file__
-    tree = ast.parse(open(filepath).read())
+    tree = ast.parse(pathlib.Path(filepath).read_text())
 
     # get the node for the command
     for node in ast.walk(tree):

@@ -1,0 +1,38 @@
+name: example-charm
+summary: An example charm with platforms
+description: |
+  A description for an example charm with platforms.
+type: charm
+base: ubuntu@22.04
+platforms:
+  amd64:
+
+parts:
+  charm:
+    plugin: charm
+
+actions:
+  pause:
+    description: Pause the database.
+  resume:
+    description: Resume a paused database.
+  snapshot:
+    description: Take a snapshot of the database.
+    params:
+      filename:
+        type: string
+        description: The name of the snapshot file.
+      compression:
+        type: object
+        description: The type of compression to use.
+        properties:
+          kind:
+            type: string
+            enum: [gzip, bzip2, xz]
+          quality:
+            description: Compression quality
+            type: integer
+            minimum: 0
+            maximum: 9
+    required: [filename]
+    additionalProperties: false

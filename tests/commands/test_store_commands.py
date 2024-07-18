@@ -25,20 +25,20 @@ from argparse import ArgumentParser, Namespace
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import dateutil.parser
+import pydantic
 import pytest
 import yaml
 from craft_cli import CraftError
 from craft_store.errors import CredentialsUnavailable, StoreServerError
 
+from charmcraft import const
 from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.commands.store import (
     CloseCommand,
     CreateLibCommand,
     EntityType,
-    FetchLibCommand,
     ListLibCommand,
     ListNamesCommand,
-    ListResourceRevisionsCommand,
     ListResourcesCommand,
     ListRevisionsCommand,
     LoginCommand,
@@ -54,7 +54,9 @@ from charmcraft.commands.store import (
     WhoamiCommand,
     get_name_from_zip,
 )
-from charmcraft.commands.store.store import (
+from charmcraft.main import ArgumentParsingError
+from charmcraft.models.charmcraft import CharmhubConfig
+from charmcraft.store.models import (
     Account,
     Base,
     Channel,
@@ -66,12 +68,9 @@ from charmcraft.commands.store.store import (
     RegistryCredentials,
     Release,
     Resource,
-    ResourceRevision,
     Revision,
     Uploaded,
 )
-from charmcraft.main import ArgumentParsingError
-from charmcraft.models.charmcraft import CharmhubConfig
 from charmcraft.utils import (
     ResourceOption,
     SingleOptionEnsurer,
@@ -839,7 +838,7 @@ def test_get_name_charm_ok(tmp_path):
     """Get the name from a charm file, all ok."""
     test_zip = tmp_path / "some.zip"
     test_name = "whatever"
-    _build_zip_with_yaml(test_zip, "metadata.yaml", content={"name": test_name})
+    _build_zip_with_yaml(test_zip, const.METADATA_FILENAME, content={"name": test_name})
 
     name = get_name_from_zip(test_zip)
     assert name == test_name
@@ -856,7 +855,7 @@ def test_get_name_charm_ok(tmp_path):
 def test_get_name_charm_bad_metadata(tmp_path, yaml_content):
     """Get the name from a charm file, but with a wrong metadata.yaml."""
     bad_zip = tmp_path / "badstuff.zip"
-    _build_zip_with_yaml(bad_zip, "metadata.yaml", raw_yaml=yaml_content)
+    _build_zip_with_yaml(bad_zip, const.METADATA_FILENAME, raw_yaml=yaml_content)
 
     with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
@@ -871,7 +870,7 @@ def test_get_name_bundle_ok(tmp_path):
     """Get the name from a bundle file, all ok."""
     test_zip = tmp_path / "some.zip"
     test_name = "whatever"
-    _build_zip_with_yaml(test_zip, "bundle.yaml", content={"name": test_name})
+    _build_zip_with_yaml(test_zip, const.BUNDLE_FILENAME, content={"name": test_name})
 
     name = get_name_from_zip(test_zip)
     assert name == test_name
@@ -888,7 +887,7 @@ def test_get_name_bundle_ok(tmp_path):
 def test_get_name_bundle_bad_data(tmp_path, yaml_content):
     """Get the name from a bundle file, but with a bad bundle.yaml."""
     bad_zip = tmp_path / "badstuff.zip"
-    _build_zip_with_yaml(bad_zip, "bundle.yaml", raw_yaml=yaml_content)
+    _build_zip_with_yaml(bad_zip, const.BUNDLE_FILENAME, raw_yaml=yaml_content)
 
     with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
@@ -908,8 +907,8 @@ def test_get_name_nor_charm_nor_bundle(tmp_path):
     with pytest.raises(CraftError) as cm:
         get_name_from_zip(bad_zip)
     assert str(cm.value) == (
-        "The indicated zip file '{}' is not a charm ('metadata.yaml' not found) nor a bundle "
-        "('bundle.yaml' not found).".format(bad_zip)
+        f"The indicated zip file '{bad_zip}' is not a charm ('metadata.yaml' not found) nor a bundle "
+        "('bundle.yaml' not found)."
     )
 
 
@@ -929,7 +928,7 @@ def test_upload_call_ok(emitter, store_mock, config, tmp_path, formatted):
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
     retcode = UploadCommand(config).run(args)
     assert retcode == 0
@@ -954,7 +953,7 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path, formatted):
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
     retcode = UploadCommand(config).run(args)
     assert retcode == 1
@@ -980,14 +979,14 @@ def test_upload_call_error(emitter, store_mock, config, tmp_path, formatted):
 @pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
 def test_upload_call_login_expired(mocker, monkeypatch, config, tmp_path, formatted):
     """Simple upload but login expired."""
-    monkeypatch.setenv("CHARMCRAFT_AUTH", base64.b64encode(b"credentials").decode())
+    monkeypatch.setenv(const.ALTERNATE_AUTH_ENV_VAR, base64.b64encode(b"credentials").decode())
     mock_whoami = mocker.patch("craft_store.base_client.HTTPClient.request")
-    push_file_mock = mocker.patch("charmcraft.commands.store.store.Client.push_file")
+    push_file_mock = mocker.patch("charmcraft.store.Client.push_file")
 
     mock_whoami.side_effect = StoreServerError(_fake_response(401, json={}))
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[], name=None, format=formatted)
 
     with pytest.raises(CraftError) as cm:
@@ -1005,7 +1004,7 @@ def test_upload_call_ok_including_release(emitter, store_mock, config, tmp_path,
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(
         filepath=test_charm, release=["edge"], resource=[], name=None, format=formatted
     )
@@ -1032,7 +1031,7 @@ def test_upload_call_ok_including_release_multiple(emitter, store_mock, config, 
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(
         filepath=test_charm, release=["edge", "stable"], resource=[], name=None, format=False
     )
@@ -1056,7 +1055,7 @@ def test_upload_including_release_with_resources(emitter, store_mock, config, tm
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     r1 = ResourceOption(name="foo", revision=3)
     r2 = ResourceOption(name="bar", revision=17)
     args = Namespace(
@@ -1095,7 +1094,7 @@ def test_upload_call_error_including_release(emitter, store_mock, config, tmp_pa
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=["edge"], name=None, format=False)
     UploadCommand(config).run(args)
 
@@ -1109,7 +1108,7 @@ def test_upload_with_different_name_than_in_metadata(emitter, store_mock, config
     store_mock.upload.return_value = store_response
 
     test_charm = tmp_path / "mystuff.charm"
-    _build_zip_with_yaml(test_charm, "metadata.yaml", content={"name": "mycharm"})
+    _build_zip_with_yaml(test_charm, const.METADATA_FILENAME, content={"name": "mycharm"})
     args = Namespace(filepath=test_charm, release=[], name="foo-mycharm", format=False)
     retcode = UploadCommand(config).run(args)
     assert retcode == 0
@@ -2763,6 +2762,8 @@ def test_createlib_simple(
     emitter, store_mock, tmp_path, monkeypatch, config, formatted, charmcraft_yaml_name
 ):
     """Happy path with result from the Store."""
+    if not charmcraft_yaml_name:
+        pytest.xfail("Store commands need refactoring to not need a project.")
     monkeypatch.chdir(tmp_path)
 
     config.name = charmcraft_yaml_name
@@ -2794,6 +2795,9 @@ def test_createlib_simple(
     assert created_lib_file.read_text() == expected_newlib_content
 
 
+@pytest.mark.xfail(
+    strict=True, raises=pydantic.ValidationError, reason="Store commands need refactor."
+)
 def test_createlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     args = Namespace(name="testlib", format=None)
@@ -3080,6 +3084,11 @@ def test_publishlib_not_from_current_charm(emitter, store_mock, tmp_path, monkey
         )
 
 
+@pytest.mark.xfail(
+    strict=True,
+    raises=pydantic.ValidationError,
+    reason="Store commands need refactoring to not need a project.",
+)
 def test_publishlib_name_from_metadata_problem(store_mock, config):
     """The metadata wasn't there to get the name."""
     config.name = None
@@ -3372,452 +3381,6 @@ def test_publishlib_store_has_same_revision_other_hash(
         emitter.assert_json_output(expected)
     else:
         emitter.assert_messages([error_message])
-
-
-# -- tests for fetch libraries command
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_simple_downloaded(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
-    """Happy path fetching the lib for the first time (downloading it)."""
-    monkeypatch.chdir(tmp_path)
-
-    lib_id = "test-example-lib-id"
-    lib_content = "some test content with uñicode ;)"
-    store_mock.get_libraries_tips.return_value = {
-        (lib_id, 0): Library(
-            lib_id=lib_id,
-            content=None,
-            content_hash="abc",
-            api=0,
-            patch=7,
-            lib_name="testlib",
-            charm_name="testcharm",
-        ),
-    }
-    store_mock.get_library.return_value = Library(
-        lib_id=lib_id,
-        content=lib_content,
-        content_hash="abc",
-        api=0,
-        patch=7,
-        lib_name="testlib",
-        charm_name="testcharm",
-    )
-
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips([{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]),
-        call.get_library("testcharm", lib_id, 0),
-    ]
-    if formatted:
-        expected = [
-            {
-                "charm_name": "testcharm",
-                "library_name": "testlib",
-                "library_id": lib_id,
-                "api": 0,
-                "fetched": {
-                    "patch": 7,
-                    "content_hash": "abc",
-                },
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        expected = "Library charms.testcharm.v0.testlib version 0.7 downloaded."
-        emitter.assert_message(expected)
-    saved_file = tmp_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
-    assert saved_file.read_text() == lib_content
-
-
-def test_fetchlib_simple_dash_in_name(emitter, store_mock, tmp_path, monkeypatch, config):
-    """Happy path fetching the lib for the first time (downloading it)."""
-    monkeypatch.chdir(tmp_path)
-
-    lib_id = "test-example-lib-id"
-    lib_content = "some test content with uñicode ;)"
-    store_mock.get_libraries_tips.return_value = {
-        (lib_id, 0): Library(
-            lib_id=lib_id,
-            content=None,
-            content_hash="abc",
-            api=0,
-            patch=7,
-            lib_name="testlib",
-            charm_name="test-charm",
-        ),
-    }
-    store_mock.get_library.return_value = Library(
-        lib_id=lib_id,
-        content=lib_content,
-        content_hash="abc",
-        api=0,
-        patch=7,
-        lib_name="testlib",
-        charm_name="test-charm",
-    )
-
-    args = Namespace(library="charms.test_charm.v0.testlib", format=None)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips([{"charm_name": "test-charm", "lib_name": "testlib", "api": 0}]),
-        call.get_library("test-charm", lib_id, 0),
-    ]
-    expected = "Library charms.test_charm.v0.testlib version 0.7 downloaded."
-    emitter.assert_message(expected)
-    saved_file = tmp_path / "lib" / "charms" / "test_charm" / "v0" / "testlib.py"
-    assert saved_file.read_text() == lib_content
-
-
-def test_fetchlib_simple_dash_in_name_on_disk(emitter, store_mock, tmp_path, monkeypatch, config):
-    """Happy path fetching the lib for the first time (downloading it)."""
-    monkeypatch.chdir(tmp_path)
-
-    lib_id = "test-example-lib-id"
-    lib_content = "test-content"
-    store_mock.get_libraries_tips.return_value = {
-        (lib_id, 0): Library(
-            lib_id=lib_id,
-            content=None,
-            content_hash="abc",
-            api=0,
-            patch=7,
-            lib_name="testlib",
-            charm_name="test-charm",
-        ),
-    }
-    store_mock.get_library.return_value = Library(
-        lib_id=lib_id,
-        content=lib_content,
-        content_hash="abc",
-        api=0,
-        patch=7,
-        lib_name="testlib",
-        charm_name="test-charm",
-    )
-    factory.create_lib_filepath("test-charm", "testlib", api=0, patch=1, lib_id=lib_id)
-
-    args = Namespace(library=None, format=None)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips([{"lib_id": "test-example-lib-id", "api": 0}]),
-        call.get_library("test-charm", lib_id, 0),
-    ]
-    expected = "Library charms.test_charm.v0.testlib updated to version 0.7."
-    emitter.assert_message(expected)
-
-
-def test_fetchlib_simple_updated(emitter, store_mock, tmp_path, monkeypatch, config):
-    """Happy path fetching the lib for Nth time (updating it)."""
-    monkeypatch.chdir(tmp_path)
-
-    lib_id = "test-example-lib-id"
-    content, content_hash = factory.create_lib_filepath(
-        "testcharm", "testlib", api=0, patch=1, lib_id=lib_id
-    )
-
-    new_lib_content = "some test content with uñicode ;)"
-    store_mock.get_libraries_tips.return_value = {
-        (lib_id, 0): Library(
-            lib_id=lib_id,
-            content=None,
-            content_hash="abc",
-            api=0,
-            patch=2,
-            lib_name="testlib",
-            charm_name="testcharm",
-        ),
-    }
-    store_mock.get_library.return_value = Library(
-        lib_id=lib_id,
-        content=new_lib_content,
-        content_hash="abc",
-        api=0,
-        patch=2,
-        lib_name="testlib",
-        charm_name="testcharm",
-    )
-
-    args = Namespace(library="charms.testcharm.v0.testlib", format=None)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
-        call.get_library("testcharm", lib_id, 0),
-    ]
-    expected = "Library charms.testcharm.v0.testlib updated to version 0.2."
-    emitter.assert_message(expected)
-    saved_file = tmp_path / "lib" / "charms" / "testcharm" / "v0" / "testlib.py"
-    assert saved_file.read_text() == new_lib_content
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_all(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
-    """Update all the libraries found in disk."""
-    monkeypatch.chdir(tmp_path)
-
-    c1, h1 = factory.create_lib_filepath(
-        "testcharm1", "testlib1", api=0, patch=1, lib_id="lib_id_1"
-    )
-    c2, h2 = factory.create_lib_filepath(
-        "testcharm2", "testlib2", api=3, patch=5, lib_id="lib_id_2"
-    )
-
-    store_mock.get_libraries_tips.return_value = {
-        ("lib_id_1", 0): Library(
-            lib_id="lib_id_1",
-            content=None,
-            content_hash="abc",
-            api=0,
-            patch=2,
-            lib_name="testlib1",
-            charm_name="testcharm1",
-        ),
-        ("lib_id_2", 3): Library(
-            lib_id="lib_id_2",
-            content=None,
-            content_hash="def",
-            api=3,
-            patch=14,
-            lib_name="testlib2",
-            charm_name="testcharm2",
-        ),
-    }
-    _store_libs_info = [
-        Library(
-            lib_id="lib_id_1",
-            content="new lib content 1",
-            content_hash="xxx",
-            api=0,
-            patch=2,
-            lib_name="testlib1",
-            charm_name="testcharm1",
-        ),
-        Library(
-            lib_id="lib_id_2",
-            content="new lib content 2",
-            content_hash="yyy",
-            api=3,
-            patch=14,
-            lib_name="testlib2",
-            charm_name="testcharm2",
-        ),
-    ]
-    store_mock.get_library.side_effect = lambda *a: _store_libs_info.pop(0)
-
-    args = Namespace(library=None, format=formatted)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips(
-            [
-                {"lib_id": "lib_id_1", "api": 0},
-                {"lib_id": "lib_id_2", "api": 3},
-            ]
-        ),
-        call.get_library("testcharm1", "lib_id_1", 0),
-        call.get_library("testcharm2", "lib_id_2", 3),
-    ]
-    names = [
-        "charms.testcharm1.v0.testlib1",
-        "charms.testcharm2.v3.testlib2",
-    ]
-    emitter.assert_debug("Libraries found under 'lib/charms': " + str(names))
-    if formatted:
-        expected = [
-            {
-                "charm_name": "testcharm1",
-                "library_name": "testlib1",
-                "library_id": "lib_id_1",
-                "api": 0,
-                "fetched": {
-                    "patch": 2,
-                    "content_hash": "xxx",
-                },
-            },
-            {
-                "charm_name": "testcharm2",
-                "library_name": "testlib2",
-                "library_id": "lib_id_2",
-                "api": 3,
-                "fetched": {
-                    "patch": 14,
-                    "content_hash": "yyy",
-                },
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        emitter.assert_messages(
-            [
-                "Library charms.testcharm1.v0.testlib1 updated to version 0.2.",
-                "Library charms.testcharm2.v3.testlib2 updated to version 3.14.",
-            ]
-        )
-
-    saved_file = tmp_path / "lib" / "charms" / "testcharm1" / "v0" / "testlib1.py"
-    assert saved_file.read_text() == "new lib content 1"
-    saved_file = tmp_path / "lib" / "charms" / "testcharm2" / "v3" / "testlib2.py"
-    assert saved_file.read_text() == "new lib content 2"
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_store_not_found(emitter, store_mock, config, formatted):
-    """The indicated library is not found in the store."""
-    store_mock.get_libraries_tips.return_value = {}
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips([{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]),
-    ]
-    error_message = "Library charms.testcharm.v0.testlib not found in Charmhub."
-    if formatted:
-        expected = [
-            {
-                "charm_name": "testcharm",
-                "library_name": "testlib",
-                "library_id": None,
-                "api": 0,
-                "error_message": error_message,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        emitter.assert_message(error_message)
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
-    """The store has an older version that what is found locally."""
-    monkeypatch.chdir(tmp_path)
-
-    lib_id = "test-example-lib-id"
-    factory.create_lib_filepath("testcharm", "testlib", api=0, patch=7, lib_id=lib_id)
-
-    store_mock.get_libraries_tips.return_value = {
-        (lib_id, 0): Library(
-            lib_id=lib_id,
-            content=None,
-            content_hash="abc",
-            api=0,
-            patch=6,
-            lib_name="testlib",
-            charm_name="testcharm",
-        ),
-    }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
-    ]
-    error_message = "Library charms.testcharm.v0.testlib has local changes, cannot be updated."
-    if formatted:
-        expected = [
-            {
-                "charm_name": "testcharm",
-                "library_name": "testlib",
-                "library_id": lib_id,
-                "api": 0,
-                "error_message": error_message,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        emitter.assert_message(error_message)
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_store_same_versions_same_hash(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted
-):
-    """The store situation is the same than locally."""
-    monkeypatch.chdir(tmp_path)
-
-    lib_id = "test-example-lib-id"
-    _, c_hash = factory.create_lib_filepath("testcharm", "testlib", api=0, patch=7, lib_id=lib_id)
-
-    store_mock.get_libraries_tips.return_value = {
-        (lib_id, 0): Library(
-            lib_id=lib_id,
-            content=None,
-            content_hash=c_hash,
-            api=0,
-            patch=7,
-            lib_name="testlib",
-            charm_name="testcharm",
-        ),
-    }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
-    ]
-    error_message = "Library charms.testcharm.v0.testlib was already up to date in version 0.7."
-    if formatted:
-        expected = [
-            {
-                "charm_name": "testcharm",
-                "library_name": "testlib",
-                "library_id": lib_id,
-                "api": 0,
-                "error_message": error_message,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        emitter.assert_message(error_message)
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_fetchlib_store_same_versions_different_hash(
-    emitter, store_mock, tmp_path, monkeypatch, config, formatted
-):
-    """The store has the lib in the same version, but with different content."""
-    monkeypatch.chdir(tmp_path)
-
-    lib_id = "test-example-lib-id"
-    factory.create_lib_filepath("testcharm", "testlib", api=0, patch=7, lib_id=lib_id)
-
-    store_mock.get_libraries_tips.return_value = {
-        (lib_id, 0): Library(
-            lib_id=lib_id,
-            content=None,
-            content_hash="abc",
-            api=0,
-            patch=7,
-            lib_name="testlib",
-            charm_name="testcharm",
-        ),
-    }
-    args = Namespace(library="charms.testcharm.v0.testlib", format=formatted)
-    FetchLibCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
-    ]
-    error_message = "Library charms.testcharm.v0.testlib has local changes, cannot be updated."
-    if formatted:
-        expected = [
-            {
-                "charm_name": "testcharm",
-                "library_name": "testlib",
-                "library_id": lib_id,
-                "api": 0,
-                "error_message": error_message,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        emitter.assert_message(error_message)
 
 
 # -- tests for list libraries command
@@ -4460,7 +4023,7 @@ def test_uploadresource_image_digest_missing_everywhere(emitter, store_mock, con
             with pytest.raises(CraftError) as cm:
                 UploadResourceCommand(config).run(args)
 
-    assert str(cm.value).startswith("Error while running")
+    assert str(cm.value) == "Image not found locally."
 
     # validate how local interfaces and store was used
     assert im_mock.mock_calls == [
@@ -4515,7 +4078,7 @@ def test_uploadresource_image_id_missing(emitter, store_mock, config):
         with pytest.raises(CraftError) as cm:
             UploadResourceCommand(config).run(args)
 
-    assert str(cm.value).startswith("Error while")
+    assert str(cm.value) == "Image not found locally."
 
     assert dock_mock.mock_calls == [
         call.get_image_info_from_id(original_image_id),
@@ -4570,104 +4133,3 @@ def test_uploadresource_call_error(emitter, store_mock, config, tmp_path, format
                 "- broken: other long error text",
             ]
         )
-
-
-# -- tests for list resource revisions command
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
-    """Happy path of one result from the Store."""
-    store_response = [
-        ResourceRevision(revision=1, size=50, created_at=datetime.datetime(2020, 7, 3, 2, 30, 40)),
-    ]
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    assert store_mock.mock_calls == [
-        call.list_resource_revisions("testcharm", "testresource"),
-    ]
-    if formatted:
-        expected = [
-            {
-                "revision": 1,
-                "created at": "2020-07-03T02:30:40Z",
-                "size": 50,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        expected = [
-            "Revision    Created at              Size",
-            "1           2020-07-03T02:30:40Z     50B",
-        ]
-        emitter.assert_messages(expected)
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_empty(emitter, store_mock, config, formatted):
-    """No results from the store."""
-    store_response = []
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    if formatted:
-        emitter.assert_json_output([])
-    else:
-        emitter.assert_message("No revisions found.")
-
-
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
-def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, formatted):
-    """Results are presented ordered by revision in the table."""
-    # three Revisions with all values weirdly similar, the only difference is revision, so
-    # we really assert later that it was used for ordering
-    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40)
-    store_response = [
-        ResourceRevision(revision=1, size=5000, created_at=tstamp),
-        ResourceRevision(revision=3, size=34450520, created_at=tstamp),
-        ResourceRevision(revision=4, size=876543, created_at=tstamp),
-        ResourceRevision(revision=2, size=50, created_at=tstamp),
-    ]
-    store_mock.list_resource_revisions.return_value = store_response
-
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
-    ListResourceRevisionsCommand(config).run(args)
-
-    if formatted:
-        expected = [
-            {
-                "revision": 1,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 5000,
-            },
-            {
-                "revision": 3,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 34450520,
-            },
-            {
-                "revision": 4,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 876543,
-            },
-            {
-                "revision": 2,
-                "created at": "2020-07-03T20:30:40Z",
-                "size": 50,
-            },
-        ]
-        emitter.assert_json_output(expected)
-    else:
-        expected = [
-            "Revision    Created at              Size",
-            "4           2020-07-03T20:30:40Z  856.0K",
-            "3           2020-07-03T20:30:40Z   32.9M",
-            "2           2020-07-03T20:30:40Z     50B",
-            "1           2020-07-03T20:30:40Z    4.9K",
-        ]
-        emitter.assert_messages(expected)

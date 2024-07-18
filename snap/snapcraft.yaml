@@ -63,8 +63,11 @@ apps:
       XDG_CACHE_HOME: $SNAP_USER_COMMON/cache
       # same for config
       XDG_CONFIG_HOME: $SNAP_USER_COMMON/config
+      CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
 
-grade: stable
+  spread:
+    command: bin/spread
+
 confinement: classic
 
 build-packages:
@@ -106,8 +109,18 @@ parts:
       - python3.10-minimal
     build-attributes:
       - enable-patchelf
+  libgit2:
+    source: https://github.com/libgit2/libgit2/archive/refs/tags/v1.7.2.tar.gz
+    source-checksum: sha256/de384e29d7efc9330c6cdb126ebf88342b5025d920dcb7c645defad85195ea7f
+    plugin: cmake
+    cmake-parameters:
+      - -DCMAKE_INSTALL_PREFIX=/usr
+    build-attributes:
+      - enable-patchelf
+    prime:
+      - -usr/include
   charmcraft:
-    after: [charmcraft-libs]
+    after: [charmcraft-libs, libgit2]
     source: .
     plugin: python
     python-requirements:
@@ -120,6 +133,9 @@ parts:
       # Build all packages from source. Prevents issues like #1369.
       # https://github.com/canonical/charmcraft/issues/1369
       - PIP_NO_BINARY: ":all:"
+      - CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
+    build-attributes:
+      - enable-patchelf
     override-pull: |
       craftctl default
       # Ensure we don't have a dubious ownership error from git with a remote build.
@@ -127,6 +143,8 @@ parts:
       # set the version
       version="$(python3 setup.py --version)"
       craftctl set version="${version}"
+      [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
+      craftctl set grade="${grade}"
     override-build: |
       craftctl default
       cp -v completion.bash ../install
@@ -159,6 +177,17 @@ parts:
       - pkg-config
     organize:
       bin/skopeo: libexec/charmcraft/skopeo
+
+  spread:
+    plugin: go
+    source: https://github.com/snapcore/spread.git
+    source-depth: 1
+    build-packages:
+      - golang-go
+    build-environment:
+      - CGO_ENABLED: 0
+    stage:
+      - -bin/humbox
 
 hooks:
   configure:

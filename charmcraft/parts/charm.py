@@ -20,8 +20,9 @@ import re
 import shlex
 import sys
 from contextlib import suppress
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, cast
 
+import overrides
 import pydantic
 from craft_parts import Step, callbacks, plugins
 from craft_parts.errors import OsReleaseIdError, OsReleaseVersionIdError
@@ -43,9 +44,9 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
 
     source: str
     charm_entrypoint: str = "src/charm.py"
-    charm_binary_python_packages: List[str] = []
-    charm_python_packages: List[str] = []
-    charm_requirements: List[str] = []
+    charm_binary_python_packages: list[str] = []
+    charm_python_packages: list[str] = []
+    charm_requirements: list[str] = []
     charm_strict_dependencies: bool = False
     """Whether to select strict dependencies only.
 
@@ -105,7 +106,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
 
     @pydantic.validator("charm_strict_dependencies")
     def validate_strict_dependencies(
-        cls, charm_strict_dependencies: bool, values: Dict[str, Any]
+        cls, charm_strict_dependencies: bool, values: dict[str, Any]
     ) -> bool:
         """Validate basic requirements if strict dependencies are enabled.
 
@@ -152,7 +153,7 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
         return charm_strict_dependencies
 
     @classmethod
-    def unmarshal(cls, data: Dict[str, Any]):
+    def unmarshal(cls, data: dict[str, Any]):
         """Populate charm properties from the part specification.
 
         :param data: A dictionary containing part properties.
@@ -201,18 +202,17 @@ class CharmPlugin(plugins.Plugin):
         dependency resolution will be used, requiring all dependencies, including
         library dependencies, to be defined in provided requirements files.
 
-    Extra files to be included in the charm payload must be listed under
-    the ``prime`` file filter.
+    Extra files to be included in the charm payload must use the ``dump`` plugin.
     """
 
     properties_class = CharmPluginProperties
 
-    @classmethod
-    def get_build_snaps(cls) -> Set[str]:
+    @overrides.override
+    def get_build_snaps(self) -> set[str]:
         """Return a set of required snaps to install in the build environment."""
         return set()
 
-    def get_build_packages(self) -> Set[str]:
+    def get_build_packages(self) -> set[str]:
         """Return a set of required packages to install in the build environment."""
         if platform.is_deb_based():
             return {
@@ -263,19 +263,30 @@ class CharmPlugin(plugins.Plugin):
         else:
             return set()
 
-    def get_build_environment(self) -> Dict[str, str]:
+    def get_build_environment(self) -> dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""
+        environment = {
+            # Cryptography fails to load OpenSSL legacy provider in some circumstances.
+            # Since we don't need the legacy provider, this works around that bug.
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"
+        }
         os_special_paths = self._get_os_special_priority_paths()
         if os_special_paths:
-            return {"PATH": os_special_paths + ":${PATH}"}
+            environment["PATH"] = os_special_paths + ":${PATH}"
 
-        return {}
+        return environment
 
-    def get_build_commands(self) -> List[str]:
+    def get_build_commands(self) -> list[str]:
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
 
-        build_env = {"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+        build_env = {
+            "LANG": "C.UTF-8",
+            "LC_ALL": "C.UTF-8",
+            # Cryptography fails to load OpenSSL legacy provider in some circumstances.
+            # Since we don't need the legacy provider, this works around that bug.
+            "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true",
+        }
         for key in [
             "PATH",
             "SNAP",
@@ -326,7 +337,7 @@ class CharmPlugin(plugins.Plugin):
 
         return commands
 
-    def _get_strict_dependencies_parameters(self) -> List[str]:
+    def _get_strict_dependencies_parameters(self) -> list[str]:
         """Get the parameters to pass to the charm builder if strict dependencies are enabled."""
         options = cast(CharmPluginProperties, self._options)
         return [
@@ -335,7 +346,7 @@ class CharmPlugin(plugins.Plugin):
             *(f"--requirement={reqs}" for reqs in options.charm_requirements),
         ]
 
-    def _get_legacy_dependencies_parameters(self) -> List[str]:
+    def _get_legacy_dependencies_parameters(self) -> list[str]:
         """Get the parameters to pass to the charm builder with strict dependencies disabled."""
         options = cast(CharmPluginProperties, self._options)
         parameters = []
@@ -345,7 +356,7 @@ class CharmPlugin(plugins.Plugin):
 
                 # remove base tools if defined in charm_python_packages
                 for pkg in options.charm_python_packages:
-                    pkg = re.split("[<=>]", pkg, 1)[0].strip()
+                    pkg = re.split("[<=>]", pkg, maxsplit=1)[0].strip()
                     if pkg in base_tools:
                         base_tools.remove(pkg)
 
@@ -376,7 +387,7 @@ class CharmPlugin(plugins.Plugin):
         """Collect metrics left by charm_builder.py."""
         instrum.merge_from(env.get_charm_builder_metrics_path())
 
-    def _get_os_special_priority_paths(self) -> Optional[str]:
+    def _get_os_special_priority_paths(self) -> str | None:
         """Return a str of PATH for special OS."""
         with suppress(OsReleaseIdError, OsReleaseVersionIdError):
             os_release = os_utils.OsRelease()

@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,23 +21,23 @@ import hashlib
 import os
 import pathlib
 from dataclasses import dataclass
-from typing import List, Optional, Set
+from typing import overload
 
 import yaml
 from craft_cli import CraftError
 
-from charmcraft.errors import BadLibraryNameError, BadLibraryPathError
+from charmcraft import const, errors
 
 
 @dataclass(frozen=True)
 class LibData:
     """All data fields for a library, including external ones."""
 
-    lib_id: Optional[str]
+    lib_id: str | None
     api: int
     patch: int
-    content: Optional[str]
-    content_hash: Optional[str]
+    content: str | None
+    content_hash: str | None
     full_name: str
     path: pathlib.Path
     lib_name: str
@@ -51,15 +51,15 @@ class LibInternals:
     lib_id: str
     api: int
     patch: int
-    pydeps: List[str]
+    pydeps: list[str]
     content_hash: str
     content: str
 
 
-def get_name_from_metadata() -> Optional[str]:
+def get_name_from_metadata() -> str | None:
     """Return the name if present and plausible in metadata.yaml."""
     try:
-        with open("metadata.yaml", "rb") as fh:
+        with open(const.METADATA_FILENAME, "rb") as fh:
             metadata = yaml.safe_load(fh)
         charm_name = metadata["name"]
     except (yaml.error.YAMLError, OSError, KeyError):
@@ -169,7 +169,35 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     )
 
 
-def get_lib_info(*, full_name=None, lib_path=None):
+def get_lib_path(charm: str, lib_name: str, api: int) -> pathlib.Path:
+    """Get a relative path for a library based on its home charm, name and API version.
+
+    :param charm: The name of the charm that owns this library
+    :param lib_name: The name of the library
+    :param api: The API version of the library
+    :returns: A relative path to the library python file.
+    """
+    return (
+        pathlib.Path("lib/charms") / create_importable_name(charm) / f"v{api}" / f"{lib_name}.py"
+    )
+
+
+def get_lib_module_name(charm: str, lib_name: str, api: int) -> str:
+    """Get a Python module path for a library based on its home charm, name and API version.
+
+    :param charm: The name of the charm that owns this library
+    :param lib_name: The name of the library
+    :param api: The API version of the library
+    :returns: A string of the full path to the charm.
+    """
+    return f"charms.{create_importable_name(charm)}.v{api}.{lib_name}"
+
+
+@overload
+def get_lib_info(*, full_name: str) -> LibData: ...
+@overload
+def get_lib_info(*, lib_path: pathlib.Path) -> LibData: ...
+def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None = None) -> LibData:
     """Get the whole lib info from the path/file.
 
     This will perform mutation of the charm name to create importable paths.
@@ -179,32 +207,33 @@ def get_lib_info(*, full_name=None, lib_path=None):
 
     This function needs to be called standing on the root directory of the project.
     """
-    if full_name is None:
+    if lib_path:
         # get it from the lib_path
         try:
             libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
         except ValueError:
-            raise BadLibraryPathError(lib_path)
+            raise errors.BadLibraryPathError(lib_path)
         if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":
-            raise BadLibraryPathError(lib_path)
+            raise errors.BadLibraryPathError(lib_path)
         full_name = ".".join((charmsdir, importable_charm_name, v_api, lib_path.stem))
-
-    else:
+    elif full_name:
         # build the path! convert a lib name with dots to the full path, including lib
         # dir and Python extension.
         #    e.g.: charms.mycharm.v4.foo -> lib/charms/mycharm/v4/foo.py
         try:
             charmsdir, charm_name, v_api, libfile = full_name.split(".")
         except ValueError:
-            raise BadLibraryNameError(full_name)
+            raise errors.BadLibraryNameError(full_name)
 
         # the lib full_name includes the charm_name which might not be importable (dashes)
         importable_charm_name = create_importable_name(charm_name)
 
         if charmsdir != "charms":
-            raise BadLibraryNameError(full_name)
+            raise errors.BadLibraryNameError(full_name)
         path = pathlib.Path("lib")
         lib_path = path / charmsdir / importable_charm_name / v_api / (libfile + ".py")
+    else:
+        raise TypeError("get_lib_info needs either a full name or a lib path")
 
     # charm names in the path can contain '_' to be importable
     # these should be '-', so change them back
@@ -233,9 +262,7 @@ def get_lib_info(*, full_name=None, lib_path=None):
     # validate internal API matches with what was used in the path
     if internals.api != api_from_path:
         raise CraftError(
-            "Library {!r} metadata field LIBAPI is different from the version in the path.".format(
-                str(lib_path)
-            )
+            f"Library {str(lib_path)!r} metadata field LIBAPI is different from the version in the path."
         )
 
     return LibData(
@@ -252,8 +279,8 @@ def get_lib_info(*, full_name=None, lib_path=None):
 
 
 def get_libs_from_tree(
-    charm_name: Optional[str] = None, root: Optional[pathlib.Path] = None
-) -> List[LibData]:
+    charm_name: str | None = None, root: pathlib.Path | None = None
+) -> list[LibData]:
     """Get library info from the directories tree (for a specific charm if specified).
 
     It only follows/uses the directories/files for a correct charmlibs
@@ -285,7 +312,7 @@ def get_libs_from_tree(
     return local_libs_data
 
 
-def collect_charmlib_pydeps(basedir: pathlib.Path) -> Set[str]:
+def collect_charmlib_pydeps(basedir: pathlib.Path) -> set[str]:
     """Collect the Python dependencies from all the project's charm libraries."""
     all_libs_data = get_libs_from_tree(root=basedir)
     charmlib_deps = set()

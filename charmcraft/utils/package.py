@@ -103,10 +103,6 @@ def get_pip_command(
     binary_packages = get_pypi_packages(binary_deps)
     requirements_packages = get_requirements_file_package_names(*requirements_files)
     all_packages = charm_packages | binary_packages | requirements_packages
-    source_only_packages = sorted(
-        get_package_names(all_packages) - get_package_names(binary_packages)
-    )
-
     non_requirements_packages = sorted(
         exclude_packages(
             set(source_deps) | set(binary_deps),
@@ -114,10 +110,18 @@ def get_pip_command(
         )
     )
 
-    if source_only_packages:
-        no_binary = [f"--no-binary={','.join(source_only_packages)}"]
-    else:
-        no_binary = []
+    if not binary_packages:
+        return [
+            *prefix,
+            "--no-binary=:all:",
+            *(f"--requirement={path}" for path in requirements_files),
+            *non_requirements_packages,
+        ]
+
+    source_only_packages = sorted(
+        get_package_names(all_packages) - get_package_names(binary_packages)
+    )
+    no_binary = [f"--no-binary={','.join(source_only_packages)}"] if source_only_packages else ()
 
     return [
         *prefix,

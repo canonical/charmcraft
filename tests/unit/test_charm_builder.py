@@ -106,7 +106,7 @@ def test_install_strict_dependencies_success(
             "/pip",
             "install",
             "--no-deps",
-            *([f"--no-binary={no_binary_packages_str}"] if no_binary_packages else []),
+            "--no-binary=:all:",
             "--requirement=requirements.txt",
         ],
         returncode=0,

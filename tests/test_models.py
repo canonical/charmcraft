@@ -1136,10 +1136,7 @@ def test_load_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
                   default: true
                   type: boolean
                 test-secret:
-<<<<<<< HEAD
                   default: secret:co1s9mnmp25c762drvtg
-=======
->>>>>>> 0f7a56d (feat(config): support `type:secret` in config.options (#1623))
                   type: secret
             """
         )
@@ -1152,11 +1149,7 @@ def test_load_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
             "test-string": {"description": "test-2", "type": "string"},
             "test-float": {"default": 1.23, "type": "float"},
             "test-bool": {"default": True, "type": "boolean"},
-<<<<<<< HEAD
             "test-secret": {"default": "secret:co1s9mnmp25c762drvtg", "type": "secret"},
-=======
-            "test-secret": {"type": "secret"},
->>>>>>> 0f7a56d (feat(config): support `type:secret` in config.options (#1623))
         },
     }
 
@@ -1191,10 +1184,7 @@ def test_load_config_in_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare_c
                 default: true
                 type: boolean
               test-secret:
-<<<<<<< HEAD
                 default: secret:co1s9mnmp25c762drvtg
-=======
->>>>>>> 0f7a56d (feat(config): support `type:secret` in config.options (#1623))
                 type: secret
             """
         ),
@@ -1207,11 +1197,7 @@ def test_load_config_in_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare_c
             "test-string": {"description": "test-2", "type": "string"},
             "test-float": {"default": 1.23, "type": "float"},
             "test-bool": {"default": True, "type": "boolean"},
-<<<<<<< HEAD
             "test-secret": {"default": "secret:co1s9mnmp25c762drvtg", "type": "secret"},
-=======
-            "test-secret": {"type": "secret"},
->>>>>>> 0f7a56d (feat(config): support `type:secret` in config.options (#1623))
         },
     }
 
@@ -1271,10 +1257,7 @@ def test_load_bad_config_in_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
                   default: true
                   type: boolean
                 test-secret:
-<<<<<<< HEAD
                   default: secret:co1s9mnmp25c762drvtg
-=======
->>>>>>> 0f7a56d (feat(config): support `type:secret` in config.options (#1623))
                   type: secret
             """
         )

@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Project-related models for Charmcraft."""
+
 import abc
 import datetime
 import pathlib
@@ -406,7 +407,10 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                     )
                 build_infos.append(
                     models.BuildInfo(
-                        platform_name, build_on=platform_name, build_for=platform_name, base=base
+                        platform_name,
+                        build_on=platform_name,
+                        build_for=platform_name,
+                        base=base,
                     )
                 )
             else:
@@ -776,7 +780,8 @@ class BasesCharm(CharmcraftProject):
         ],
     )
     extra_bindings: dict[str, Any] | None = pydantic.Field(
-        default=None, description="A key-only mapping representing extra bindings needed."
+        default=None,
+        description="A key-only mapping representing extra bindings needed.",
     )
     peers: dict[str, Any] | None = pydantic.Field(
         default=None,

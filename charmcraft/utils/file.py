@@ -63,8 +63,9 @@ def build_zip(zip_path: PathOrString, prime_dir: PathOrString) -> None:
     """
     zip_path = pathlib.Path(zip_path).resolve()
     prime_dir = pathlib.Path(prime_dir).resolve()
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as file:
-        for file_path in prime_dir.rglob("*"):
-            if not file_path.is_file():
-                continue
-            file.write(file_path, file_path.relative_to(prime_dir))
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        # Using os.walk() because Path.walk() is only added in 3.12
+        for dir_path_str, _, filenames in os.walk(prime_dir, followlinks=True):
+            for filename in filenames:
+                file_path = pathlib.Path(dir_path_str, filename)
+                zip_file.write(file_path, file_path.relative_to(prime_dir))

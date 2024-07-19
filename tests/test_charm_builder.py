@@ -788,17 +788,15 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
+        call([pip_cmd, "install", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", "--no-binary=:all:", "pkg3", "pkg4"]),
         call(
             [
                 pip_cmd,
                 "install",
-                "--no-binary=pkg3,pkg4,pkg5,pkg6",
+                "--no-binary=:all:",
                 f"--requirement={reqs_file_1}",
                 f"--requirement={reqs_file_2}",
-                "pkg1",
-                "pkg2",
-                "pkg3",
-                "pkg4",
                 "pkg5",
                 "pkg6",
             ]
@@ -835,7 +833,9 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output(
-        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+        "Handling dependencies",
+        "Dependencies directory not found",
+        "Installing dependencies",
     )
 
     # directory created and packages installed
@@ -854,7 +854,9 @@ def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output(
-        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+        "Handling dependencies",
+        "Dependencies directory not found",
+        "Installing dependencies",
     )
 
     # directory created and packages installed *again*
@@ -890,7 +892,9 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output(
-        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+        "Handling dependencies",
+        "Dependencies directory not found",
+        "Installing dependencies",
     )
 
     # directory created and packages installed
@@ -909,7 +913,9 @@ def test_build_dependencies_no_reused_missing_hash_file(tmp_path, assert_output)
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output(
-        "Handling dependencies", "Dependencies hash file not found", "Installing dependencies"
+        "Handling dependencies",
+        "Dependencies hash file not found",
+        "Installing dependencies",
     )
 
     # directory created and packages installed *again*
@@ -945,7 +951,9 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output(
-        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+        "Handling dependencies",
+        "Dependencies directory not found",
+        "Installing dependencies",
     )
 
     # directory created and packages installed
@@ -990,7 +998,12 @@ def test_build_dependencies_no_reused_problematic_hash_file(tmp_path, assert_out
     ],
 )
 def test_build_dependencies_no_reused_different_dependencies(
-    tmp_path, assert_output, new_reqs_content, new_pypackages, new_pybinaries, new_charmlibdeps
+    tmp_path,
+    assert_output,
+    new_reqs_content,
+    new_pypackages,
+    new_pybinaries,
+    new_charmlibdeps,
 ):
     """Dependencies are built again because changed from previous run."""
     build_dir = tmp_path / const.BUILD_DIRNAME
@@ -1023,7 +1036,9 @@ def test_build_dependencies_no_reused_different_dependencies(
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output(
-        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+        "Handling dependencies",
+        "Dependencies directory not found",
+        "Installing dependencies",
     )
 
     # directory created and packages installed
@@ -1090,7 +1105,9 @@ def test_build_dependencies_reused(tmp_path, assert_output):
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output(
-        "Handling dependencies", "Dependencies directory not found", "Installing dependencies"
+        "Handling dependencies",
+        "Dependencies directory not found",
+        "Installing dependencies",
     )
 
     # directory created and packages installed
@@ -1106,7 +1123,8 @@ def test_build_dependencies_reused(tmp_path, assert_output):
     with patch("shutil.copytree") as mock_copytree:
         builder.handle_dependencies()
     assert_output(
-        "Handling dependencies", "Reusing installed dependencies, they are equal to last run ones"
+        "Handling dependencies",
+        "Reusing installed dependencies, they are equal to last run ones",
     )
 
     # installation directory copied *again* to the build directory (this is always done as
@@ -1188,7 +1206,10 @@ def test_builder_arguments_full(tmp_path):
         assert self.builddir == pathlib.Path("builddir")
         assert self.installdir == pathlib.Path("installdir")
         assert self.entrypoint == pathlib.Path("src/charm.py")
-        assert self.requirement_paths == [pathlib.Path("reqs1.txt"), pathlib.Path("reqs2.txt")]
+        assert self.requirement_paths == [
+            pathlib.Path("reqs1.txt"),
+            pathlib.Path("reqs2.txt"),
+        ]
         sys.exit(42)
 
     fake_argv = ["cmd", "--builddir", "builddir", "--installdir", "installdir"]
@@ -1293,7 +1314,11 @@ def test_find_venv_site_packages(monkeypatch, platform, result):
         site_packages_dir = charm_builder._find_venv_site_packages(basedir)
     assert mock_run.mock_calls == [
         call(
-            ["python3", "-c", "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')"],
+            [
+                "python3",
+                "-c",
+                "import sys; v=sys.version_info; print(f'{v.major} {v.minor}')",
+            ],
             text=True,
         )
     ]

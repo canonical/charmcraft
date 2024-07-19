@@ -251,62 +251,37 @@ class CharmBuilder:
                 self._install_strict_dependencies(pip_cmd)
                 return
 
-            # Legacy non-strict dependencies.
-            # This method is not valid for any bases added after 2024-01-01 or for DEVEL bases.
-            try:
+            # Non-strict dependency resolution:
+            # 1. Install binary-allowed packages
+            # 2. Install source packages
+            # 3. Install from requirements files and charm libs dependencies
+            if self.binary_python_packages:
+                print(
+                    "Installing binary-allowed packages and their dependencies.\n"
+                    "WARNING: dependencies may also be installed from binary wheels.\n"
+                    "Use strict mode to avoid these issues."
+                )
                 _process_run(
                     get_pip_command(
                         [pip_cmd, "install"],
-                        self.requirement_paths,
-                        source_deps=[*self.python_packages, *self.charmlib_deps],
+                        requirements_files=[],
                         binary_deps=self.binary_python_packages,
                     )
                 )
-            except RuntimeError:
-                print(
-                    "WARNING: Initial package installation failed. "
-                    "Falling back to older method, which may leave your charm "
-                    "in an un-runnable state."
+            if self.python_packages:
+                print("Installing Python pre-dependencies from source.")
+                _process_run([pip_cmd, "install", "--no-binary=:all:", *self.python_packages])
+            if self.requirement_paths or self.charmlib_deps:
+                print("Installing packages from requirements files and charm lib dependencies.")
+                _process_run(
+                    [
+                        pip_cmd,
+                        "install",
+                        "--no-binary=:all:",
+                        *(f"--requirement={path}" for path in self.requirement_paths),
+                        *self.charmlib_deps,
+                    ]
                 )
-                if self.binary_python_packages:
-                    # install python packages, allowing binary packages
-                    cmd = [pip_cmd, "install", "--upgrade"]  # base command
-                    cmd.extend(self.binary_python_packages)  # the python packages to install
-                    _process_run(cmd)
-                if self.python_packages:
-                    # install python packages from source
-                    cmd = [
-                        pip_cmd,
-                        "install",
-                        "--upgrade",
-                        "--no-binary",
-                        ":all:",
-                    ]  # base command
-                    cmd.extend(self.python_packages)  # the python packages to install
-                    _process_run(cmd)
-                if self.requirement_paths:
-                    # install dependencies from requirement files
-                    cmd = [
-                        pip_cmd,
-                        "install",
-                        "--upgrade",
-                        "--no-binary",
-                        ":all:",
-                    ]  # base command
-                    for reqspath in self.requirement_paths:
-                        cmd.append(f"--requirement={reqspath}")  # the dependencies file(s)
-                    _process_run(cmd)
-                if self.charmlib_deps:
-                    # install charmlibs python dependencies
-                    cmd = [
-                        pip_cmd,
-                        "install",
-                        "--upgrade",
-                        "--no-binary",
-                        ":all:",
-                    ]  # base command
-                    cmd.extend(self.charmlib_deps)  # the python packages to install
-                _process_run(cmd)
 
     def _install_strict_dependencies(self, pip_cmd: str) -> None:
         if not self.requirement_paths:

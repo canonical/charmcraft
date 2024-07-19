@@ -158,7 +158,13 @@ class _GunicornBase(Extension):
                 "grafana-dashboard": {"interface": "grafana_dashboard"},
             },
             "config": {"options": {**self._WEBSERVER_OPTIONS, **self.options}},
-            "parts": {"charm": {"plugin": "charm", "source": "."}},
+            "parts": {
+                "charm": {
+                    "plugin": "charm",
+                    "source": ".",
+                    "build-snaps": ["rustup"],  # Needed to build pydantic.
+                }
+            },
         }
 
     @override
@@ -224,12 +230,6 @@ class FlaskFramework(_GunicornBase):
     def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
         return False
-
-    @override
-    def get_parts_snippet(self) -> dict[str, Any]:
-        """Return the parts to add to parts."""
-        # rust is needed to build pydantic-core, a dependency of flask.
-        return {"flask-framework/rust-deps": {"plugin": "nil", "build-packages": ["cargo"]}}
 
 
 class DjangoFramework(_GunicornBase):

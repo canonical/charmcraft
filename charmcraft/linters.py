@@ -88,8 +88,10 @@ class BaseChecker(metaclass=abc.ABCMeta):
         """Get the result of a single checker."""
         try:
             result = self.run(base_dir)
-        except Exception:
+        except Exception as exc:
             result = self.exception_result
+            if not self.text:
+                self.text = str(exc)
         return CheckResult(
             check_type=self.check_type,
             name=self.name,
@@ -189,13 +191,20 @@ class Framework(AttributeChecker):
 
     def __init__(self):
         self.result = None
+        self.__text = None
 
     @property
-    def text(self):
+    def text(self) -> str:
         """Return a text in function of the result state."""
+        if self.__text:
+            return self.__text
         if self.result is None:
-            return None
+            return ""
         return self.result_texts[self.result]
+
+    @text.setter
+    def text(self, value: str) -> None:
+        self.__text = value
 
     def _get_imports(self, filepath: pathlib.Path) -> Generator[list[str], None, None]:
         """Parse a Python filepath and yield its imports.
@@ -255,14 +264,12 @@ class Framework(AttributeChecker):
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
+        self.result = self.Result.UNKNOWN
         if self._check_operator(basedir):
-            result = self.Result.OPERATOR
+            self.result = self.Result.OPERATOR
         elif self._check_reactive(basedir):
-            result = self.Result.REACTIVE
-        else:
-            result = self.Result.UNKNOWN
-        self.result = result
-        return result
+            self.result = self.Result.REACTIVE
+        return self.result
 
 
 class JujuMetadata(Linter):

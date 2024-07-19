@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for CharmBuilder."""
-
 import pathlib
 
 import pytest
@@ -99,17 +98,13 @@ def test_install_strict_dependencies_success(
     fs: FakeFilesystem, fake_process: FakeProcess, builder, requirements
 ):
     fs.create_file("requirements.txt", contents=requirements)
-    no_binary_packages = utils.get_package_names(requirements.splitlines(keepends=False))
-    no_binary_packages_str = ",".join(sorted(no_binary_packages))
-    fake_process.register(
-        [
-            "/pip",
-            "install",
-            "--no-deps",
-            "--no-binary=:all:",
-            "--requirement=requirements.txt",
-        ],
-        returncode=0,
-    )
+    expected_command = [
+        "/pip",
+        "install",
+        "--no-deps",
+        "--no-binary=:all:",
+        "--requirement=requirements.txt",
+    ]
+    fake_process.register(expected_command, returncode=0)
 
     builder._install_strict_dependencies("/pip")

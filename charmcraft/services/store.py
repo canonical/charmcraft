@@ -21,6 +21,7 @@ from collections.abc import Collection, Mapping, Sequence
 
 import craft_application
 import craft_store
+from craft_cli import emit
 from craft_store import models
 from overrides import override
 
@@ -77,14 +78,30 @@ class BaseStoreService(craft_application.AppService):
         """Set up the store service."""
         super().setup()
 
-        self.client = self.ClientClass(
-            application_name=self._app.name,
-            base_url=self._base_url,
-            storage_base_url=self._storage_url,
-            endpoints=self._endpoints,
-            environment_auth=self._environment_auth,
-            user_agent=self._user_agent,
-        )
+        try:
+            self.client = self.ClientClass(
+                application_name=self._app.name,
+                base_url=self._base_url,
+                storage_base_url=self._storage_url,
+                endpoints=self._endpoints,
+                environment_auth=self._environment_auth,
+                user_agent=self._user_agent,
+            )
+        except craft_store.errors.NoKeyringError:
+            emit.progress(
+                "WARNING: Cannot get a keyring. Every store interaction that requires "
+                "authentication will require you to log in again.",
+                permanent=True,
+            )
+            self.client = self.ClientClass(
+                application_name=self._app.name,
+                base_url=self._base_url,
+                storage_base_url=self._storage_url,
+                endpoints=self._endpoints,
+                environment_auth=self._environment_auth,
+                user_agent=self._user_agent,
+                ephemeral=True,
+            )
 
     def _get_description(self, description: str | None = None) -> str:
         """Return the given description or a default one."""

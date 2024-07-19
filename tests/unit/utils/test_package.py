@@ -109,6 +109,8 @@ def test_get_requirements_file_package_names(tmp_path, file_contents, expected):
             "--no-binary=abc,ghi",
             ["ghi", "jkl"],
         ),
+        (["abc==1.0.0", "def>=1.2.3"], [], [], "--no-binary=:all:", []),
+        ([], ["abc==1.0.0", "def>=1.2.3"], [], "--no-binary=:all:", ["abc==1.0.0", "def>=1.2.3"]),
     ],
 )
 @pytest.mark.parametrize("prefix", [["/bin/pip"], ["/some/path/to/pip3"], ["pip", "--some-param"]])

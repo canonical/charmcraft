@@ -281,8 +281,7 @@ def test_build_generics_symlink_file(tmp_path):
     built_symlink = build_dir / "somehook.py"
     assert built_symlink.is_symlink()
     assert built_symlink.resolve() == build_dir / "crazycharm.py"
-    real_link = built_symlink.readlink()
-    assert real_link == pathlib.Path("crazycharm.py")
+    assert built_symlink.readlink() == pathlib.Path("crazycharm.py")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -511,8 +510,7 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     test_hook = build_dir / const.HOOKS_DIRNAME / "testhook"
     assert test_hook.is_symlink()
     assert test_hook.resolve() == included_dispatcher
-    real_link = test_hook.readlink()
-    assert real_link == pathlib.Path("..", const.DISPATCH_FILENAME)
+    assert test_hook.readlink() == pathlib.Path("..", const.DISPATCH_FILENAME)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
@@ -523,7 +521,7 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
     build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
-    built_hooks_dir = build_dir / const.DISPATCH_FILENAME
+    built_hooks_dir = build_dir / const.HOOKS_DIRNAME
     built_hooks_dir.mkdir()
     test_hook = built_hooks_dir / "testhook"
     with test_hook.open("wb") as fh:
@@ -610,14 +608,8 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call(
-            [
-                pip_cmd,
-                "install",
-                f"pip@{KNOWN_GOOD_PIP_URL}",
-            ]
-        ),
-        call([pip_cmd, "install", f"--requirement={reqs_file}"]),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
+        call([pip_cmd, "install", "--no-binary=:all:", f"--requirement={reqs_file}"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(
@@ -655,17 +647,12 @@ def test_build_dependencies_virtualenv_multiple(tmp_path, assert_output):
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
         call(
             [
                 pip_cmd,
                 "install",
-                f"pip@{KNOWN_GOOD_PIP_URL}",
-            ]
-        ),
-        call(
-            [
-                pip_cmd,
-                "install",
+                "--no-binary=:all:",
                 f"--requirement={reqs_file_1}",
                 f"--requirement={reqs_file_2}",
             ]
@@ -724,14 +711,8 @@ def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call(
-            [
-                pip_cmd,
-                "install",
-                f"pip@{KNOWN_GOOD_PIP_URL}",
-            ]
-        ),
-        call([pip_cmd, "install", "--no-binary=pkg1,pkg2", "pkg1", "pkg2"]),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
+        call([pip_cmd, "install", "--no-binary=:all:", "pkg1", "pkg2"]),
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(
@@ -765,13 +746,7 @@ def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call(
-            [
-                pip_cmd,
-                "install",
-                f"pip@{KNOWN_GOOD_PIP_URL}",
-            ]
-        ),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
         call([pip_cmd, "install", "pkg1", "pkg2"]),
     ]
 
@@ -812,13 +787,7 @@ def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
 
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call(
-            [
-                pip_cmd,
-                "install",
-                f"pip@{KNOWN_GOOD_PIP_URL}",
-            ]
-        ),
+        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
         call(
             [
                 pip_cmd,

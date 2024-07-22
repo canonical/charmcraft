@@ -9,7 +9,6 @@ environment:
   LAUNCHPAD_TOKEN: "$(HOST: echo ${LAUNCHPAD_TOKEN})"
   BASE_NAME: ubuntu
   BASE_CHANNEL/jammy: 22.04
-  BASE_CHANNEL/mantic: 23.10  # Non-LTS
 
 include:
   - tests/

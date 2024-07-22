@@ -132,7 +132,6 @@ def test_zipbuild_symlinks(tmp_path: pathlib.Path):
     external_dir_link = build_dir / "external_link_dir"
     external_dir_link.symlink_to(outside_dir)
 
-
     zip_filepath = tmp_path / "testresult.zip"
     build_zip(zip_filepath, build_dir)
 
@@ -143,7 +142,7 @@ def test_zipbuild_symlinks(tmp_path: pathlib.Path):
         "external_link_dir/some_file",
         "link.txt",
         "link_dir/real.txt",
-        "subdirectory/real.txt"
+        "subdirectory/real.txt",
     ]
 
     assert sorted(x.filename for x in zf.infolist()) == expected_files

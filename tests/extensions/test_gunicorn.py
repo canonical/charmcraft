@@ -66,8 +66,7 @@ def flask_input_yaml_fixture():
                     "options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}
                 },
                 "parts": {
-                    "charm": {"plugin": "charm", "source": "."},
-                    "flask-framework/rust-deps": {"plugin": "nil", "build-packages": ["cargo"]},
+                    "charm": {"plugin": "charm", "source": ".", "build-snaps": ["rustup"]},
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
@@ -121,7 +120,7 @@ def flask_input_yaml_fixture():
                 "config": {
                     "options": {**DjangoFramework.options, **DjangoFramework._WEBSERVER_OPTIONS}
                 },
-                "parts": {"charm": {"plugin": "charm", "source": "."}},
+                "parts": {"charm": {"plugin": "charm", "source": ".", "build-snaps": ["rustup"]}},
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
                     "metrics-endpoint": {"interface": "prometheus_scrape"},
@@ -255,4 +254,8 @@ def test_handle_charm_part(flask_input_yaml, tmp_path):
         apply_extensions(tmp_path, flask_input_yaml)
     del flask_input_yaml["parts"]
     applied = apply_extensions(tmp_path, flask_input_yaml)
-    assert applied["parts"]["charm"] == {"plugin": "charm", "source": "."}
+    assert applied["parts"]["charm"] == {
+        "plugin": "charm",
+        "source": ".",
+        "build-snaps": ["rustup"],
+    }

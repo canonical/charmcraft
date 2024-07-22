@@ -21,6 +21,7 @@ import pathlib
 import socket
 import subprocess
 import sys
+from collections.abc import Callable
 from unittest.mock import call, patch
 
 import pytest
@@ -581,22 +582,140 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_
 # -- tests about dependencies handling
 
 
-def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
+@pytest.mark.parametrize(
+    ("python_packages", "binary_packages", "reqs_contents", "charmlibs", "expected_call_params"),
+    [
+        pytest.param(
+            [],
+            [],
+            [],
+            [],
+            [["install", "--no-binary=:all:", "--requirement={reqs_file}"]],
+            id="simple",
+        ),
+        pytest.param(
+            ["pkg1", "pkg2"],
+            [],
+            [],
+            [],
+            [
+                ["install", "--no-binary=:all:", "pkg1", "pkg2"],
+                ["install", "--no-binary=:all:", "--requirement={reqs_file}"],
+            ],
+            id="packages-only",
+        ),
+        pytest.param(
+            [],
+            ["bin-pkg1", "bin-pkg2"],
+            [],
+            [],
+            [
+                ["install", "bin-pkg1", "bin-pkg2"],
+                ["install", "--no-binary=:all:", "--requirement={reqs_file}"],
+            ],
+            id="binary-packages-only",
+        ),
+        pytest.param(
+            ["pkg1", "pkg2"],
+            ["bin-pkg1", "bin-pkg2"],
+            [],
+            [],
+            [
+                ["install", "bin-pkg1", "bin-pkg2"],
+                ["install", "--no-binary=:all:", "pkg1", "pkg2"],
+                ["install", "--no-binary=:all:", "--requirement={reqs_file}"],
+            ],
+            id="binary-and-source-packages",
+        ),
+        pytest.param(
+            [],
+            [],
+            ["req1", "req2"],
+            [],
+            [
+                ["install", "--no-binary=:all:", "--requirement={reqs_file}"],
+            ],
+            id="requirements-only",
+        ),
+        pytest.param(
+            ["req1"],
+            ["req2"],
+            ["req1", "req2"],
+            [],
+            [
+                ["install", "req2"],
+                ["install", "--no-binary=:all:", "req1"],
+                ["install", "--no-binary=:all:", "--requirement={reqs_file}"],
+            ],
+            id="requirements-duplicated-in-charmcraft_yaml",
+        ),
+        pytest.param(
+            [],
+            [],
+            [],
+            ["charmlib-dep"],
+            [["install", "--no-binary=:all:", "--requirement={reqs_file}", "charmlib-dep"]],
+            id="charmlib-dep-only",
+        ),
+        pytest.param(
+            [],
+            [],
+            ["charmlib-dep==0.1", "req1"],
+            ["charmlib-dep"],
+            [["install", "--no-binary=:all:", "--requirement={reqs_file}"]],
+            id="charmlib-dep-in-requirements",
+        ),
+        pytest.param(
+            ["duplicate"],
+            ["duplicate"],
+            ["duplicate"],
+            ["duplicate"],
+            [
+                ["install", "duplicate"],
+                ["install", "--no-binary=:all:", "duplicate"],
+                ["install", "--no-binary=:all:", "--requirement={reqs_file}"],
+            ],
+            id="all-same",
+        ),
+        pytest.param(
+            ["duplicate", "pkg1"],
+            ["duplicate", "bin-pkg1"],
+            ["duplicate", "req1"],
+            ["duplicate", "lib-dep"],
+            [
+                ["install", "bin-pkg1", "duplicate"],
+                ["install", "--no-binary=:all:", "duplicate", "pkg1"],
+                ["install", "--no-binary=:all:", "--requirement={reqs_file}", "lib-dep"],
+            ],
+            id="all-overlap",
+        ),
+    ],
+)
+def test_build_dependencies_virtualenv(
+    tmp_path: pathlib.Path,
+    assert_output: Callable,
+    python_packages: list[str],
+    binary_packages: list[str],
+    reqs_contents: list[str],
+    charmlibs: list[str],
+    expected_call_params,
+):
     """A virtualenv is created with the specified requirements file."""
     build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     reqs_file = tmp_path / "reqs.txt"
-    reqs_file.touch()
+    reqs_file.write_text("\n".join(reqs_contents))
 
     builder = CharmBuilder(
         builddir=tmp_path,
         installdir=build_dir,
         entrypoint=pathlib.Path("whatever"),
-        binary_python_packages=[],
-        python_packages=[],
+        binary_python_packages=binary_packages,
+        python_packages=python_packages,
         requirements=[reqs_file],
     )
+    builder.charmlib_deps = set(charmlibs)
 
     with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
         mock_pip_version.return_value = (22, 0)
@@ -606,10 +725,15 @@ def test_build_dependencies_virtualenv_simple(tmp_path, assert_output):
 
     pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
 
+    formatted_calls = [
+        [param.format(reqs_file=str(reqs_file)) for param in call] for call in expected_call_params
+    ]
+    extra_pip_calls = [call([pip_cmd, *params]) for params in formatted_calls]
+
     assert mock.mock_calls == [
         call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
         call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
-        call([pip_cmd, "install", "--no-binary=:all:", f"--requirement={reqs_file}"]),
+        *extra_pip_calls,
     ]
 
     site_packages_dir = charm_builder._find_venv_site_packages(
@@ -685,129 +809,6 @@ def test_build_dependencies_virtualenv_none(tmp_path, assert_output):
 
     mock_run.assert_not_called()
     assert_output("Handling dependencies", "No dependencies to handle")
-
-
-def test_build_dependencies_virtualenv_packages(tmp_path, assert_output):
-    """A virtualenv is created with the specified packages."""
-    build_dir = tmp_path / const.BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = CharmBuilder(
-        builddir=tmp_path,
-        installdir=build_dir,
-        entrypoint=pathlib.Path("whatever"),
-        binary_python_packages=[],
-        python_packages=["pkg1", "pkg2"],
-        requirements=[],
-    )
-
-    with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
-        mock_pip_version.return_value = (22, 0)
-        with patch("charmcraft.charm_builder._process_run") as mock:
-            with patch("shutil.copytree") as mock_copytree:
-                builder.handle_dependencies()
-
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
-
-    assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
-        call([pip_cmd, "install", "--no-binary=:all:", "pkg1", "pkg2"]),
-    ]
-
-    site_packages_dir = charm_builder._find_venv_site_packages(
-        pathlib.Path(const.STAGING_VENV_DIRNAME)
-    )
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
-    assert_output("Handling dependencies", "Installing dependencies")
-
-
-def test_build_dependencies_virtualenv_binary_packages(tmp_path, assert_output):
-    """A virtualenv is created with the specified packages."""
-    build_dir = tmp_path / const.BUILD_DIRNAME
-    build_dir.mkdir()
-
-    builder = CharmBuilder(
-        builddir=tmp_path,
-        installdir=build_dir,
-        entrypoint=pathlib.Path("whatever"),
-        binary_python_packages=["pkg1", "pkg2"],
-        python_packages=[],
-        requirements=[],
-    )
-
-    with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
-        mock_pip_version.return_value = (22, 0)
-        with patch("charmcraft.charm_builder._process_run") as mock:
-            with patch("shutil.copytree") as mock_copytree:
-                builder.handle_dependencies()
-
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
-
-    assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
-        call([pip_cmd, "install", "pkg1", "pkg2"]),
-    ]
-
-    site_packages_dir = charm_builder._find_venv_site_packages(
-        pathlib.Path(const.STAGING_VENV_DIRNAME)
-    )
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
-    assert_output("Handling dependencies", "Installing dependencies")
-
-
-def test_build_dependencies_virtualenv_all(tmp_path, assert_output):
-    """A virtualenv is created with the specified packages."""
-    build_dir = tmp_path / const.BUILD_DIRNAME
-    build_dir.mkdir()
-
-    reqs_file_1 = tmp_path / "reqs.txt"
-    reqs_file_1.touch()
-    reqs_file_2 = tmp_path / "reqs.txt"
-    reqs_file_1.touch()
-
-    builder = CharmBuilder(
-        builddir=tmp_path,
-        installdir=build_dir,
-        entrypoint=pathlib.Path("whatever"),
-        binary_python_packages=["pkg1", "pkg2"],
-        python_packages=["pkg3", "pkg4"],
-        requirements=[reqs_file_1, reqs_file_2],
-    )
-    builder.charmlib_deps = ["pkg5", "pkg6"]
-
-    with patch("charmcraft.charm_builder.get_pip_version") as mock_pip_version:
-        mock_pip_version.return_value = (22, 0)
-        with patch("charmcraft.charm_builder._process_run") as mock:
-            with patch("shutil.copytree") as mock_copytree:
-                builder.handle_dependencies()
-
-    pip_cmd = str(charm_builder._find_venv_bin(tmp_path / const.STAGING_VENV_DIRNAME, "pip"))
-
-    assert mock.mock_calls == [
-        call(["python3", "-m", "venv", str(tmp_path / const.STAGING_VENV_DIRNAME)]),
-        call([pip_cmd, "install", f"pip@{KNOWN_GOOD_PIP_URL}"]),
-        call([pip_cmd, "install", "pkg1", "pkg2"]),
-        call([pip_cmd, "install", "--no-binary=:all:", "pkg3", "pkg4"]),
-        call(
-            [
-                pip_cmd,
-                "install",
-                "--no-binary=:all:",
-                f"--requirement={reqs_file_1}",
-                f"--requirement={reqs_file_2}",
-                "pkg5",
-                "pkg6",
-            ]
-        ),
-    ]
-
-    site_packages_dir = charm_builder._find_venv_site_packages(
-        pathlib.Path(const.STAGING_VENV_DIRNAME)
-    )
-    assert mock_copytree.mock_calls == [call(site_packages_dir, build_dir / const.VENV_DIRNAME)]
-    assert_output("Handling dependencies", "Installing dependencies")
 
 
 def test_build_dependencies_no_reused_missing_venv(tmp_path, assert_output):

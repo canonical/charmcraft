@@ -40,6 +40,7 @@ from charmcraft.utils import (
     make_executable,
     validate_strict_dependencies,
 )
+from charmcraft.utils.package import exclude_packages
 
 MINIMUM_PIP_VERSION = (24, 1)
 KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/c0/d0/9641dc7b05877874c6418f8034ddefc809495e65caa14d38c7551cd114bb/pip-24.1.1.tar.gz"
@@ -273,13 +274,19 @@ class CharmBuilder:
                 _process_run([pip_cmd, "install", "--no-binary=:all:", *self.python_packages])
             if self.requirement_paths or self.charmlib_deps:
                 print("Installing packages from requirements files and charm lib dependencies.")
+                requirements_packages = get_requirements_file_package_names(
+                    *self.requirement_paths
+                )
+                new_libs_deps = exclude_packages(
+                    set(self.charmlib_deps), excluded=requirements_packages
+                )
                 _process_run(
                     [
                         pip_cmd,
                         "install",
                         "--no-binary=:all:",
                         *(f"--requirement={path}" for path in self.requirement_paths),
-                        *self.charmlib_deps,
+                        *new_libs_deps,
                     ]
                 )
 

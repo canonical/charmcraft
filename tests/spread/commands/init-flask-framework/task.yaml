@@ -1,6 +1,6 @@
 summary: test charmcraft init with flask-framework profile
 priority: 500  # This builds pydantic, so do it early
-kill-timeout: 45m  # Because it builds pydantic, it takes a long time.
+kill-timeout: 75m  # Because it builds pydantic, it takes a long time.
 systems:
   # We only need to run this test once, and it takes a long time.
   - ubuntu-22.04-64

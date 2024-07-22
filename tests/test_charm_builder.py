@@ -647,27 +647,23 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_
                 ["install", "--no-binary=:all:", "req1"],
                 ["install", "--no-binary=:all:", "--requirement={reqs_file}"],
             ],
-            id="requirements-duplicated-in-charmcraft_yaml"
+            id="requirements-duplicated-in-charmcraft_yaml",
         ),
         pytest.param(
             [],
             [],
             [],
             ["charmlib-dep"],
-            [
-                ["install", "--no-binary=:all:", "--requirement={reqs_file}", "charmlib-dep"]
-            ],
-            id="charmlib-dep-only"
+            [["install", "--no-binary=:all:", "--requirement={reqs_file}", "charmlib-dep"]],
+            id="charmlib-dep-only",
         ),
         pytest.param(
             [],
             [],
             ["charmlib-dep==0.1", "req1"],
             ["charmlib-dep"],
-            [
-                ["install", "--no-binary=:all:", "--requirement={reqs_file}"]
-            ],
-            id="charmlib-dep-in-requirements"
+            [["install", "--no-binary=:all:", "--requirement={reqs_file}"]],
+            id="charmlib-dep-in-requirements",
         ),
         pytest.param(
             ["duplicate"],
@@ -679,7 +675,7 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_
                 ["install", "--no-binary=:all:", "duplicate"],
                 ["install", "--no-binary=:all:", "--requirement={reqs_file}"],
             ],
-            id="all-same"
+            id="all-same",
         ),
         pytest.param(
             ["duplicate", "pkg1"],
@@ -691,8 +687,8 @@ def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_
                 ["install", "--no-binary=:all:", "duplicate", "pkg1"],
                 ["install", "--no-binary=:all:", "--requirement={reqs_file}", "lib-dep"],
             ],
-            id="all-overlap"
-        )
+            id="all-overlap",
+        ),
     ],
 )
 def test_build_dependencies_virtualenv(

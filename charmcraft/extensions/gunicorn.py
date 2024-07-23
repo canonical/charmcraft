@@ -163,6 +163,7 @@ class _GunicornBase(Extension):
                     "plugin": "charm",
                     "source": ".",
                     "build-snaps": ["rustup"],  # Needed to build pydantic.
+                    "override-build": "rustup default stable\ncraftctl default",
                 }
             },
         }

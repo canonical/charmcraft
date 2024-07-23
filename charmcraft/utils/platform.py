@@ -65,12 +65,6 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
     return OSPlatform(system=system, release=release, machine=machine)
 
 
-def get_host_architecture():
-    """Get host architecture in deb format suitable for base definition."""
-    os_platform = get_os_platform()
-    return ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)
-
-
 def validate_architectures(architectures: Iterable[str], *, allow_all: bool = False) -> None:
     """Validate that all architectures provided are valid architecture names."""
     architectures = set(architectures)

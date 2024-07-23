@@ -19,6 +19,7 @@ import zipfile
 
 import pytest
 import yaml
+from craft_application import util
 
 from charmcraft import models, utils
 
@@ -101,10 +102,10 @@ def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, fil
                 "summary": "A test charm",
                 "description": "A charm for testing",
                 "base": "ubuntu@22.04",
-                "platforms": {utils.get_host_architecture(): None},
+                "platforms": {util.get_host_architecture(): None},
                 "parts": {},
             },
-            utils.get_host_architecture(),
+            util.get_host_architecture(),
             marks=pytest.mark.skipif(
                 CURRENT_PLATFORM.release != "22.04", reason="Jammy charms only tested on jammy"
             ),
@@ -118,10 +119,10 @@ def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, fil
                 "description": "A charm for testing",
                 "base": "ubuntu@24.04",
                 "build-base": "ubuntu@devel",
-                "platforms": {utils.get_host_architecture(): None},
+                "platforms": {util.get_host_architecture(): None},
                 "parts": {},
             },
-            utils.get_host_architecture(),
+            util.get_host_architecture(),
             marks=pytest.mark.skipif(
                 CURRENT_PLATFORM.release != "24.04", reason="Noble charm needs noble"
             ),

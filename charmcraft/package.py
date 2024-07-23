@@ -25,6 +25,7 @@ from collections.abc import Collection, Mapping, Sequence
 
 import craft_parts
 import yaml
+from craft_application import util
 from craft_cli import CraftError, emit
 from craft_providers.bases import get_base_alias
 
@@ -42,7 +43,6 @@ from charmcraft.models.lint import LintResult
 from charmcraft.utils import (
     build_zip,
     collect_charmlib_pydeps,
-    get_host_architecture,
     humanize_list,
     load_yaml,
 )
@@ -367,7 +367,7 @@ class Builder:
             build_on_index=build_on_index,
             project_name=self.config.name,
             project_path=self.charmdir,
-            target_arch=get_host_architecture(),
+            target_arch=util.get_host_architecture(),
         )
         base_configuration = charmcraft.providers.get_base_configuration(
             alias=build_base_alias,

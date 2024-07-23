@@ -22,6 +22,7 @@ import pathlib
 import sys
 from typing import NamedTuple
 
+from craft_application import util
 from craft_cli import CraftError, emit
 from craft_providers import Base, Executor, Provider, ProviderError, lxd, multipass
 from craft_providers.actions.snap_installer import Snap
@@ -43,7 +44,7 @@ from charmcraft.env import (
 )
 from charmcraft.models.charmcraft import BasesConfiguration
 from charmcraft.snap import get_snap_configuration
-from charmcraft.utils import confirm_with_user, get_host_architecture
+from charmcraft.utils import confirm_with_user
 
 
 class Plan(NamedTuple):
@@ -242,7 +243,7 @@ def is_base_available(base: Base) -> tuple[bool, str | None]:
     :returns: Tuple of bool indicating whether it is a match, with optional
             reason if not a match.
     """
-    arch = get_host_architecture()
+    arch = util.get_host_architecture()
     if arch not in base.architectures:
         return (
             False,

@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, cast
 
 import craft_application
 import yaml
-from craft_application import services
+from craft_application import services, util
 from craft_cli import emit
 from craft_providers import bases
 
@@ -121,7 +121,7 @@ class PackageService(services.PackageService):
         ).get_build_plan()
         platform = utils.get_os_platform()
         build_on_base = bases.BaseName(name=platform.system, version=platform.release)
-        host_arch = utils.get_host_architecture()
+        host_arch = util.get_host_architecture()
         for build_info in build_plan:
             print(build_info)
             if build_info.build_on != host_arch:
@@ -196,13 +196,13 @@ class PackageService(services.PackageService):
             return list(itertools.chain.from_iterable(base.run_on for base in self._project.bases))
         if isinstance(self._project, PlatformCharm):
             if not self._platform:
-                architectures = [utils.get_host_architecture()]
+                architectures = [util.get_host_architecture()]
             elif platform := self._project.platforms.get(self._platform):
                 architectures = [str(arch) for arch in platform.build_for]
             elif self._platform in (*const.SUPPORTED_ARCHITECTURES, "all"):
                 architectures = [self._platform]
             else:
-                architectures = [utils.get_host_architecture()]
+                architectures = [util.get_host_architecture()]
             return [models.Base.from_str_and_arch(self._project.base, architectures)]
         raise TypeError(f"Unknown charm type {self._project.__class__}, cannot get bases.")
 

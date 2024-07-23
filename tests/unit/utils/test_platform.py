@@ -24,7 +24,6 @@ from hypothesis import given, strategies
 from charmcraft import const
 from charmcraft.utils.platform import (
     OSPlatform,
-    get_host_architecture,
     get_os_platform,
     validate_architectures,
 )
@@ -125,24 +124,6 @@ def test_get_os_platform_non_linux(system, release, machine):
             with patch("platform.machine", return_value=machine):
                 os_platform = get_os_platform()
     assert os_platform == OSPlatform(system, release, machine)
-
-
-@pytest.mark.parametrize(
-    ("platform_arch", "deb_arch"),
-    [
-        ("AMD64", "amd64"),
-        ("aarch64", "arm64"),
-        ("armv7l", "armhf"),
-        ("ppc", "powerpc"),
-        ("ppc64le", "ppc64el"),
-        ("x86_64", "amd64"),
-        ("unknown-arch", "unknown-arch"),
-    ],
-)
-def test_get_host_architecture(platform_arch, deb_arch):
-    """Test all platform mappings in addition to unknown."""
-    with patch("platform.machine", return_value=platform_arch):
-        assert get_host_architecture() == deb_arch
 
 
 @given(strategies.iterables(strategies.sampled_from(sorted(const.SUPPORTED_ARCHITECTURES))))

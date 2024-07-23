@@ -40,7 +40,6 @@ from charmcraft.utils.cli import (
     humanize_list,
 )
 from charmcraft.utils.platform import (
-    ARCH_TRANSLATIONS,
     OSPlatform,
     get_os_platform,
     validate_architectures,
@@ -77,7 +76,6 @@ __all__ = [
     "get_lib_info",
     "get_libs_from_tree",
     "collect_charmlib_pydeps",
-    "ARCH_TRANSLATIONS",
     "OSPlatform",
     "get_os_platform",
     "validate_architectures",

@@ -66,7 +66,12 @@ def flask_input_yaml_fixture():
                     "options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}
                 },
                 "parts": {
-                    "charm": {"plugin": "charm", "source": ".", "build-snaps": ["rustup"]},
+                    "charm": {
+                        "plugin": "charm",
+                        "source": ".",
+                        "build-snaps": ["rustup"],
+                        "override-build": "rustup default stable\ncraftctl default",
+                    }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
@@ -120,7 +125,14 @@ def flask_input_yaml_fixture():
                 "config": {
                     "options": {**DjangoFramework.options, **DjangoFramework._WEBSERVER_OPTIONS}
                 },
-                "parts": {"charm": {"plugin": "charm", "source": ".", "build-snaps": ["rustup"]}},
+                "parts": {
+                    "charm": {
+                        "plugin": "charm",
+                        "source": ".",
+                        "build-snaps": ["rustup"],
+                        "override-build": "rustup default stable\ncraftctl default",
+                    }
+                },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
                     "metrics-endpoint": {"interface": "prometheus_scrape"},
@@ -258,4 +270,5 @@ def test_handle_charm_part(flask_input_yaml, tmp_path):
         "plugin": "charm",
         "source": ".",
         "build-snaps": ["rustup"],
+        "override-build": "rustup default stable\ncraftctl default",
     }

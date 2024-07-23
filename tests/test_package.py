@@ -25,6 +25,7 @@ from unittest.mock import ANY, MagicMock, call, patch
 
 import pytest
 import yaml
+from craft_application import util
 from craft_cli import CraftError, EmitterMode, emit
 from craft_providers import bases
 
@@ -41,7 +42,6 @@ from charmcraft.package import (
     launch_shell,
 )
 from charmcraft.providers import get_base_configuration
-from charmcraft.utils import get_host_architecture
 
 
 def get_builder(
@@ -1126,7 +1126,7 @@ def test_build_arguments_managed_charmcraft_simples(
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
     emit.set_mode(EmitterMode.BRIEF)
-    host_base = Base(name="ubuntu", channel="18.04", architectures=[get_host_architecture()])
+    host_base = Base(name="ubuntu", channel="18.04", architectures=[util.get_host_architecture()])
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 
@@ -1153,7 +1153,7 @@ def test_build_arguments_managed_charmcraft_measure(
 ):
     """Check that the command to run charmcraft inside the environment is properly built."""
     emit.set_mode(EmitterMode.BRIEF)
-    host_base = Base(name="ubuntu", channel="18.04", architectures=[get_host_architecture()])
+    host_base = Base(name="ubuntu", channel="18.04", architectures=[util.get_host_architecture()])
     bases_config = [BasesConfiguration(**{"build-on": [host_base], "run-on": [host_base]})]
     project_managed_path = pathlib.Path("/root/project")
 

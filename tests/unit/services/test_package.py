@@ -22,8 +22,9 @@ import zipfile
 import craft_cli.pytest_plugin
 import pytest
 import pytest_check
+from craft_application import util
 
-from charmcraft import const, models, services, utils
+from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
 
 SIMPLE_BUILD_BASE = models.charmcraft.Base(name="ubuntu", channel="22.04", architectures=["arm64"])
@@ -142,7 +143,7 @@ def test_do_not_overwrite_metadata_yaml(
                 {
                     "name": "ubuntu",
                     "channel": "20.04",
-                    "architectures": [utils.get_host_architecture()],
+                    "architectures": [util.get_host_architecture()],
                 }
             ],
         ),
@@ -203,7 +204,7 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
             "anything",
             ["all"],
         ),
-        ({utils.get_host_architecture(): None}, None, [utils.get_host_architecture()]),
+        ({util.get_host_architecture(): None}, None, [util.get_host_architecture()]),
     ],
 )
 def test_get_manifest_bases_from_platforms(

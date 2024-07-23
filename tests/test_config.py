@@ -22,12 +22,12 @@ from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
+from craft_application import util
 from craft_cli import CraftError
 
 from charmcraft import const, linters
 from charmcraft.config import load
 from charmcraft.models.charmcraft import Base, BasesConfiguration, CharmhubConfig
-from charmcraft.utils import get_host_architecture
 
 # -- tests for the config loading
 
@@ -1996,14 +1996,14 @@ def test_bases_minimal_long_form(
                     Base(
                         name="test-build-name",
                         channel="test-build-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                 ],
                 "run-on": [
                     Base(
                         name="test-run-name",
                         channel="test-run-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                 ],
             }
@@ -2231,14 +2231,14 @@ def test_minimal_long_form_bases(
                     Base(
                         name="test-build-name",
                         channel="test-build-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                 ],
                 "run-on": [
                     Base(
                         name="test-run-name",
                         channel="test-run-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                 ],
             }
@@ -2328,12 +2328,12 @@ def test_complex_long_form_bases(
                     Base(
                         name="test-build-name-1",
                         channel="test-build-channel-1",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                     Base(
                         name="test-build-name-2",
                         channel="test-build-channel-2",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                     Base(
                         name="test-build-name-3",
@@ -2437,7 +2437,7 @@ def test_multiple_long_form_bases(
                     Base(
                         name="test-build-name-1",
                         channel="test-build-channel-1",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                 ],
                 "run-on": [
@@ -2455,7 +2455,7 @@ def test_multiple_long_form_bases(
                     Base(
                         name="test-build-name-2",
                         channel="test-build-channel-2",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                 ],
                 "run-on": [
@@ -2520,14 +2520,14 @@ def test_bases_minimal_short_form(
                     Base(
                         name="test-name",
                         channel="test-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                 ],
                 "run-on": [
                     Base(
                         name="test-name",
                         channel="test-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     ),
                 ],
             }

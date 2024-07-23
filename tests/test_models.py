@@ -17,6 +17,7 @@
 from textwrap import dedent
 
 import pytest
+from craft_application import util
 from craft_cli import CraftError
 from pydantic import AnyHttpUrl
 from pydantic.tools import parse_obj_as
@@ -28,7 +29,6 @@ from charmcraft.models.charmcraft import (
     BasesConfiguration,
     Links,
 )
-from charmcraft.utils import get_host_architecture
 
 
 def test_load_minimal_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
@@ -61,14 +61,14 @@ def test_load_minimal_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft
                     Base(
                         name="test-name",
                         channel="test-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     )
                 ],
                 "run-on": [
                     Base(
                         name="test-name",
                         channel="test-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     )
                 ],
             }
@@ -203,14 +203,14 @@ def test_load_minimal_metadata_from_metadata_yaml(
                     Base(
                         name="test-name",
                         channel="test-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     )
                 ],
                 "run-on": [
                     Base(
                         name="test-name",
                         channel="test-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     )
                 ],
             }
@@ -507,14 +507,14 @@ def test_load_full_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_ya
                         Base(
                             name="test-name",
                             channel="test-channel",
-                            architectures=[get_host_architecture()],
+                            architectures=[util.get_host_architecture()],
                         )
                     ],
                     "run-on": [
                         Base(
                             name="test-name",
                             channel="test-channel",
-                            architectures=[get_host_architecture()],
+                            architectures=[util.get_host_architecture()],
                         )
                     ],
                 }
@@ -729,14 +729,14 @@ def test_load_full_metadata_from_metadata_yaml(
                     Base(
                         name="test-name",
                         channel="test-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     )
                 ],
                 "run-on": [
                     Base(
                         name="test-name",
                         channel="test-channel",
-                        architectures=[get_host_architecture()],
+                        architectures=[util.get_host_architecture()],
                     )
                 ],
             }

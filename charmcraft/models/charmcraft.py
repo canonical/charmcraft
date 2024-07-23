@@ -21,6 +21,7 @@ import pathlib
 from typing import Any, Literal, cast
 
 import pydantic
+from craft_application import util
 from craft_cli import CraftError
 from typing_extensions import Self
 
@@ -36,7 +37,6 @@ from charmcraft.metafiles.metadata import (
 from charmcraft.models.actions import JujuActions
 from charmcraft.models.basic import AttributeName, LinterName, ModelConfigDefaults
 from charmcraft.models.config import JujuConfig
-from charmcraft.utils import get_host_architecture
 
 
 class CharmhubConfig(
@@ -56,7 +56,7 @@ class Base(ModelConfigDefaults, frozen=True):
 
     name: pydantic.StrictStr
     channel: pydantic.StrictStr
-    architectures: list[pydantic.StrictStr] = [get_host_architecture()]
+    architectures: list[pydantic.StrictStr] = [util.get_host_architecture()]
 
     @classmethod
     def from_str_and_arch(cls, base_str: str, architectures: list[str]) -> Self:

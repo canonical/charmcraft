@@ -22,7 +22,7 @@ from charmcraft.models import metadata, project
 
 BASIC_CHARM_METADATA_DICT = {
     "name": "test-charm",
-    "summary": "A charm for testing",
+    "summary": "A charm for testing, with a summary string that is more than seventy-eight characters long.",
     "description": "A fake charm used for testing purposes.",
 }
 BASIC_CHARM_DICT = {

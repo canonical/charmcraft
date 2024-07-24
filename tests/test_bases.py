@@ -34,7 +34,7 @@ def mock_get_os_platform():
 @pytest.fixture()
 def mock_get_host_architecture():
     with patch(
-        "charmcraft.bases.get_host_architecture", return_value="host-ARCH"
+        "craft_application.util.get_host_architecture", return_value="host-ARCH"
     ) as mock_host_arch:
         yield mock_host_arch
 

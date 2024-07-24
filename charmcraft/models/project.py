@@ -28,8 +28,8 @@ from typing import (
 )
 
 import pydantic
-from craft_application import errors, models
-from craft_application.util import get_host_architecture, safe_yaml_load
+from craft_application import errors, models, util
+from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
 from pydantic import dataclasses
@@ -96,7 +96,7 @@ class CharmPlatform(pydantic.ConstrainedStr):
     min_length = 4
     strict = True
     strip_whitespace = True
-    _host_arch = get_host_architecture()
+    _host_arch = util.get_host_architecture()
 
     @classmethod
     def from_bases(cls: type[Self], bases: Iterable[charmcraft.Base]) -> Self:
@@ -377,7 +377,7 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
         """
         if self.type == "bundle":
             # A bundle can build anywhere, so just present the current system.
-            current_arch = utils.get_host_architecture()
+            current_arch = util.get_host_architecture()
             current_base = utils.get_os_platform()
             return [
                 models.BuildInfo(

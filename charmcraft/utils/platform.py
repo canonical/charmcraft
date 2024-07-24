@@ -35,20 +35,7 @@ class OSPlatform:
     machine: str
 
 
-# translations from what the platform module informs to the term deb and
-# snaps actually use
-ARCH_TRANSLATIONS = {
-    "aarch64": "arm64",
-    "armv7l": "armhf",
-    "i686": "i386",
-    "ppc": "powerpc",
-    "ppc64le": "ppc64el",
-    "x86_64": "amd64",
-    "AMD64": "amd64",  # Windows support
-}
-
-
-def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
+def get_os_platform(filepath: pathlib.Path = pathlib.Path("/etc/os-release")) -> OSPlatform:
     """Determine a system/release combo for an OS using /etc/os-release if available."""
     system = platform.system()
     release = platform.release()
@@ -63,12 +50,6 @@ def get_os_platform(filepath=pathlib.Path("/etc/os-release")):
         release = info.get("version", release)
 
     return OSPlatform(system=system, release=release, machine=machine)
-
-
-def get_host_architecture():
-    """Get host architecture in deb format suitable for base definition."""
-    os_platform = get_os_platform()
-    return ARCH_TRANSLATIONS.get(os_platform.machine, os_platform.machine)
 
 
 def validate_architectures(architectures: Iterable[str], *, allow_all: bool = False) -> None:

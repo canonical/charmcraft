@@ -29,12 +29,12 @@ import craft_parts
 import pytest
 import responses as responses_module
 import yaml
-from craft_application import models
+from craft_application import models, util
 from craft_parts import callbacks, plugins
 from craft_providers import Executor, Provider, bases
 
 import charmcraft.parts
-from charmcraft import const, deprecations, instrum, parts, services, store, utils
+from charmcraft import const, deprecations, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
@@ -103,7 +103,7 @@ def service_factory(
 
 @pytest.fixture()
 def default_build_plan():
-    arch = utils.get_host_architecture()
+    arch = util.get_host_architecture()
     return [
         models.BuildInfo(
             base=bases.BaseName("ubuntu", "22.04"),

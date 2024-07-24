@@ -39,7 +39,7 @@ class CharmMetadata(models.BaseMetadata):
 
     name: models.ProjectName
     display_name: models.ProjectTitle | None = None
-    summary: models.SummaryStr
+    summary: pydantic.StrictStr
     description: pydantic.StrictStr
     maintainers: list[pydantic.StrictStr] | None = None
     assumes: list[str | dict[str, list | dict]] | None = None

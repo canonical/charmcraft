@@ -53,6 +53,7 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "hypothesis",
     "pydocstyle",
     "pyfakefs",
+    "pylint",
     "pytest",
     "pytest-cov",
     "pytest-mock",

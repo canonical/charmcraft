@@ -31,13 +31,6 @@ else:
     CheckResult = "CheckResult"
 
 
-class ClassicFallback(BaseException):
-    """Exception used for falling back to classic charmcraft.
-
-    Only used during the transition to craft-application.
-    """
-
-
 class InvalidEnvironmentVariableError(CraftError):
     """A Charmcraft-related environment variable value is invalid."""
 

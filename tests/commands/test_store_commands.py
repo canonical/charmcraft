@@ -28,7 +28,7 @@ import dateutil.parser
 import pydantic
 import pytest
 import yaml
-from craft_cli import CraftError, ArgumentParsingError
+from craft_cli import ArgumentParsingError, CraftError
 from craft_store.errors import CredentialsUnavailable, StoreServerError
 
 from charmcraft import const

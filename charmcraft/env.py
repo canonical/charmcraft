@@ -25,7 +25,7 @@ from craft_application.util import strtobool
 from charmcraft import const
 
 
-def get_host_shared_cache_path():
+def get_host_shared_cache_path() -> pathlib.Path:
     """Path for host shared cache."""
     shared_cache_env = os.getenv(const.SHARED_CACHE_ENV_VAR)
     if shared_cache_env is not None:
@@ -36,27 +36,27 @@ def get_host_shared_cache_path():
     return platformdirs.user_cache_path(appname="charmcraft", ensure_exists=True)
 
 
-def get_managed_environment_home_path():
+def get_managed_environment_home_path() -> pathlib.Path:
     """Path for home when running in managed environment."""
     return pathlib.Path("/root")
 
 
-def get_managed_environment_log_path():
+def get_managed_environment_log_path() -> pathlib.Path:
     """Path for charmcraft log when running in managed environment."""
     return pathlib.Path("/tmp/charmcraft.log")
 
 
-def get_managed_environment_metrics_path():
+def get_managed_environment_metrics_path() -> pathlib.Path:
     """Path for charmcraft metrics when running in managed environment."""
     return pathlib.Path("/tmp/metrics.json")
 
 
-def get_charm_builder_metrics_path():
+def get_charm_builder_metrics_path() -> pathlib.Path:
     """Path for charmcraft metrics when running charm_builder."""
     return pathlib.Path("/tmp/charm_builder_metrics.json")
 
 
-def get_managed_environment_project_path():
+def get_managed_environment_project_path() -> pathlib.Path:
     """Path for project when running in managed environment."""
     return get_managed_environment_home_path() / "project"
 
@@ -69,18 +69,18 @@ def get_managed_environment_snap_channel() -> str | None:
     return os.getenv(const.SNAP_CHANNEL_ENV_VAR)
 
 
-def is_charmcraft_running_from_snap():
+def is_charmcraft_running_from_snap() -> bool:
     """Check if charmcraft is running from the snap."""
     return os.getenv("SNAP_NAME") == "charmcraft" and os.getenv("SNAP") is not None
 
 
-def is_charmcraft_running_in_developer_mode():
+def is_charmcraft_running_in_developer_mode() -> bool:
     """Check if Charmcraft is running under developer mode."""
     developer_flag = os.getenv(const.DEVELOPER_MODE_ENV_VAR, "n")
     return strtobool(developer_flag)
 
 
-def is_charmcraft_running_in_managed_mode():
+def is_charmcraft_running_in_managed_mode() -> bool:
     """Check if charmcraft is running in a managed environment."""
     managed_flag = os.getenv(const.MANAGED_MODE_ENV_VAR, os.getenv("CRAFT_MANAGED_MODE", "n"))
     return strtobool(managed_flag)

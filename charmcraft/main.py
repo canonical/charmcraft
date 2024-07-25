@@ -182,10 +182,11 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    if env.is_charmcraft_running_in_managed_mode():
-        logpath = env.get_managed_environment_log_path()
-    else:
-        logpath = None
+    logpath = (
+        env.get_managed_environment_log_path()
+        if env.is_charmcraft_running_in_managed_mode()
+        else None
+    )
 
     emit.init(
         EmitterMode.BRIEF,

@@ -18,9 +18,13 @@
 from __future__ import annotations
 
 import os
+import pathlib
 
+import craft_providers
 from craft_application import services
+from craft_providers import bases
 
+from charmcraft import env
 from charmcraft.const import EXPERIMENTAL_EXTENSIONS_ENV_VAR
 
 
@@ -35,3 +39,28 @@ class ProviderService(services.ProviderService):
         for env_key in ["http_proxy", "https_proxy", "no_proxy", EXPERIMENTAL_EXTENSIONS_ENV_VAR]:
             if env_key in os.environ:
                 self.environment[env_key] = os.environ[env_key]
+
+    def get_base(
+        self,
+        base_name: bases.BaseName | tuple[str, str],
+        *,
+        instance_name: str,
+        **kwargs: bool | str | None | pathlib.Path,
+    ) -> craft_providers.Base:
+        """Get the base configuration from a base name.
+
+        :param base_name: The base to lookup.
+        :param instance_name: A name to assign to the instance.
+        :param kwargs: Additional keyword arguments are sent directly to the base.
+
+        If no cache_path is included, adds one.
+        """
+        # Forward the shared cache path.
+        if "cache_path" not in kwargs:
+            kwargs["cache_path"] = env.get_host_shared_cache_path()
+        return super().get_base(
+            base_name,
+            instance_name=instance_name,
+            # craft-application annotation is incorrect
+            **kwargs,  # type: ignore[arg-type]
+        )

@@ -29,6 +29,7 @@ from craft_cli import CraftError, emit
 from charmcraft import const
 from charmcraft.format import format_pydantic_errors
 from charmcraft.models.metadata import BundleMetadata, CharmMetadataLegacy
+from charmcraft.utils.yaml import dump_yaml
 
 if TYPE_CHECKING:
     from charmcraft.models.charmcraft import CharmcraftConfig
@@ -143,6 +144,6 @@ def create_metadata_yaml(
             if (website := links.pop("website", None)) is not None:
                 metadata["website"] = website
 
-        target_file_path.write_text(yaml.dump(metadata))
+        target_file_path.write_text(dump_yaml(metadata))
 
     return target_file_path

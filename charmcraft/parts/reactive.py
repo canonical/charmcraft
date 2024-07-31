@@ -19,7 +19,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import overrides
 from craft_parts import plugins
@@ -29,23 +29,9 @@ from craft_parts.errors import PluginEnvironmentValidationError
 class ReactivePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack reactive charms using charm-tools."""
 
+    plugin: Literal["reactive"] = "reactive"
     source: str
     reactive_charm_build_arguments: list[str] = []
-
-    @classmethod
-    def unmarshal(cls, data: dict[str, Any]):
-        """Populate reactive plugin properties from the part specification.
-
-        :param data: A dictionary containing part properties.
-
-        :return: The populated plugin properties data object.
-
-        :raise pydantic.ValidationError: If validation fails.
-        """
-        plugin_data = plugins.extract_plugin_properties(
-            data, plugin_name="reactive", required=["source"]
-        )
-        return cls(**plugin_data)
 
 
 class ReactivePluginEnvironmentValidator(plugins.validator.PluginEnvironmentValidator):

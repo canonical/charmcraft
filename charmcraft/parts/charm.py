@@ -20,7 +20,7 @@ import re
 import shlex
 import sys
 from contextlib import suppress
-from typing import Any, cast
+from typing import Any, Literal, cast
 from typing_extensions import Self
 
 import overrides
@@ -43,6 +43,7 @@ PACKAGE_NAME_REGEX = re.compile(r"[A-Za-z0-9_.-]+")
 class CharmPluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used in charm building."""
 
+    plugin: Literal["charm"] = "charm"
     source: str
     charm_entrypoint: str = "src/charm.py"
     charm_binary_python_packages: list[str] = []
@@ -78,19 +79,20 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
         rel_entrypoint = (project_dirpath / charm_entrypoint).relative_to(project_dirpath)
         return rel_entrypoint.as_posix()
 
-    @pydantic.field_validator("charm_requirements", mode="after")
-    def _validate_requirements(cls, charm_requirements: list[str], info: pydantic.ValidationInfo) -> list[str]:
+    @pydantic.model_validator(mode="before")
+    def _validate_requirements(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Validate the specified requirement or dynamically default it.
 
         The default is dynamic because it's only requirements.txt if the
         file is there.
         """
         # the location of the project is needed
-        if "source" not in info.data:
+        if "source" not in values:
             raise ValueError(
                 "cannot validate 'charm-requirements' because invalid 'source' configuration"
             )
-        project_dirpath = pathlib.Path(info.data["source"])
+        project_dirpath = pathlib.Path(values["source"])
+        charm_requirements = values.setdefault("charm-requirements", [])
 
         # check that all indicated files are present
         for reqs_filename in charm_requirements:
@@ -103,7 +105,7 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
         if not charm_requirements and (project_dirpath / default_reqs_name).is_file():
             charm_requirements.append(default_reqs_name)
 
-        return charm_requirements
+        return values
 
     @pydantic.model_validator(mode="after")
     def _validate_strict_dependencies(self) -> Self:
@@ -146,7 +148,7 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
             )
         except DependencyError as e:
             raise ValueError(
-                "All dependencies must be specified in requirements files for strict dependencies."
+                "all dependencies must be specified in requirements files for strict dependencies."
             ) from e
 
         return self

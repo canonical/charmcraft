@@ -111,15 +111,6 @@ def test_get_build_commands(plugin, tmp_path):
     ]
 
 
-def test_invalid_properties(plugin):
-    with pytest.raises(pydantic.ValidationError) as raised:
-        plugin.properties_class.unmarshal({"source": ".", "reactive-invalid": True})
-    err = raised.value.errors()
-    assert len(err) == 1
-    assert err[0]["loc"] == ("reactive-invalid",)
-    assert err[0]["type"] == "value_error.extra"
-
-
 def test_validate_environment(plugin, plugin_properties, charm_exe):
     validator = plugin.validator_class(
         part_name="my-part",

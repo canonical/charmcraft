@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Bundle plugin for craft-parts."""
 import sys
-from typing import Any
+from typing import Any, Literal
 
 import overrides
 from craft_parts import plugins
@@ -24,22 +24,8 @@ from craft_parts import plugins
 class BundlePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack bundles."""
 
+    plugin: Literal["bundle"] = "bundle"
     source: str
-
-    @classmethod
-    def unmarshal(cls, data: dict[str, Any]):
-        """Populate bundle properties from the part specification.
-
-        :param data: A dictionary containing part properties.
-
-        :return: The populated plugin properties data object.
-
-        :raise pydantic.ValidationError: If validation fails.
-        """
-        plugin_data = plugins.extract_plugin_properties(
-            data, plugin_name="bundle", required=["source"]
-        )
-        return cls(**plugin_data)
 
 
 class BundlePlugin(plugins.Plugin):

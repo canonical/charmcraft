@@ -20,7 +20,7 @@ parts:
     charm-entrypoint: src/charm.py
     charm-binary-python-packages: []
     charm-python-packages: []
-    charm-requirements: []
+    charm-requirements: [requirements.txt]
     charm-strict-dependencies: false
   another-part:
     plugin: nil

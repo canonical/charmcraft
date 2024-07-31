@@ -79,33 +79,32 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
         rel_entrypoint = (project_dirpath / charm_entrypoint).relative_to(project_dirpath)
         return rel_entrypoint.as_posix()
 
-    @pydantic.model_validator(mode="before")
-    def _validate_requirements(cls, values: dict[str, Any]) -> dict[str, Any]:
+    @pydantic.model_validator(mode="after")
+    def _validate_requirements(self) -> Self:
         """Validate the specified requirement or dynamically default it.
 
         The default is dynamic because it's only requirements.txt if the
         file is there.
         """
         # the location of the project is needed
-        if "source" not in values:
+        if not self.source:
             raise ValueError(
-                "cannot validate 'charm-requirements' because invalid 'source' configuration"
+                "cannot validate 'charm-requirements' because no 'source' was provided"
             )
-        project_dirpath = pathlib.Path(values["source"])
-        charm_requirements = values.setdefault("charm-requirements", [])
+        project_dirpath = pathlib.Path(self.source)
 
         # check that all indicated files are present
-        for reqs_filename in charm_requirements:
+        for reqs_filename in self.charm_requirements:
             reqs_path = project_dirpath / reqs_filename
             if not reqs_path.is_file():
                 raise ValueError(f"requirements file {str(reqs_path)!r} not found")
 
         # if nothing indicated, and default file is there, use it
         default_reqs_name = "requirements.txt"
-        if not charm_requirements and (project_dirpath / default_reqs_name).is_file():
-            charm_requirements.append(default_reqs_name)
+        if not self.charm_requirements and (project_dirpath / default_reqs_name).is_file():
+            self.charm_requirements.append(default_reqs_name)
 
-        return values
+        return self
 
     @pydantic.model_validator(mode="after")
     def _validate_strict_dependencies(self) -> Self:

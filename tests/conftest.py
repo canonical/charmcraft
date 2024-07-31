@@ -23,7 +23,6 @@ import pathlib
 import tempfile
 import types
 from unittest import mock
-from unittest.mock import Mock
 
 import craft_parts
 import pytest
@@ -31,7 +30,7 @@ import responses as responses_module
 import yaml
 from craft_application import models, util
 from craft_parts import callbacks, plugins
-from craft_providers import Executor, Provider, bases
+from craft_providers import bases
 
 import charmcraft.parts
 from charmcraft import const, deprecations, instrum, parts, services, store
@@ -39,7 +38,7 @@ from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
 from charmcraft.models import project
-from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.models.charmcraft import BasesConfiguration
 
 
 @pytest.fixture()
@@ -252,60 +251,6 @@ def responses():
     """Simple helper to use responses module as a fixture, for easier integration in tests."""
     with responses_module.RequestsMock() as rsps:
         yield rsps
-
-
-@pytest.fixture()
-def mock_instance():
-    """Provide a mock instance (Executor)."""
-    return Mock(spec=Executor)
-
-
-@pytest.fixture(autouse=True)
-def fake_provider(mock_instance):
-    """Provide a minimal/fake provider."""
-
-    class FakeProvider(Provider):
-        name = "TestProvider"
-        install_recommendation = "Insert floppy disk."
-
-        def clean_project_environments(self, *, instance_name: str) -> None:
-            pass
-
-        @classmethod
-        def ensure_provider_is_available(cls) -> None:
-            pass
-
-        def environment(
-            self,
-            *,
-            instance_name: str,
-        ) -> Executor:
-            return mock_instance
-
-        def create_environment(self, *, instance_name: str):
-            yield mock_instance
-
-        @contextlib.contextmanager
-        def launched_environment(
-            self,
-            *,
-            project_name: str,
-            project_path: pathlib.Path,
-            base_configuration: Base,
-            instance_name: str,
-            allow_unstable: bool = False,
-        ):
-            yield mock_instance
-
-        @classmethod
-        def is_provider_installed(cls) -> bool:
-            """Check if provider is installed.
-
-            :returns: True if installed.
-            """
-            return True
-
-    return FakeProvider()
 
 
 @pytest.fixture()

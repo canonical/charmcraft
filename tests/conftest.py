@@ -21,7 +21,7 @@ import os
 import pathlib
 import tempfile
 import types
-from typing import Iterator
+from collections.abc import Iterator
 from unittest import mock
 
 import craft_parts

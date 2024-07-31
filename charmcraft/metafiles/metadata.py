@@ -26,7 +26,7 @@ from craft_application.util.error_formatting import format_pydantic_errors
 from craft_cli import CraftError, emit
 
 from charmcraft import const
-from charmcraft.models.metadata import BundleMetadata, CharmMetadataLegacy
+from charmcraft.models.metadata import CharmMetadataLegacy
 
 logger = logging.getLogger(__name__)
 
@@ -40,36 +40,3 @@ def read_metadata_yaml(charm_dir: pathlib.Path) -> dict[str, Any]:
     emit.debug(f"Reading {str(metadata_path)!r}")
     with metadata_path.open("rt", encoding="utf8") as fh:
         return yaml.safe_load(fh)
-
-
-def parse_charm_metadata_yaml(
-    charm_dir: pathlib.Path, allow_basic: bool = False
-) -> CharmMetadataLegacy:
-    """Parse project's legacy metadata.yaml that used for charms.
-
-    :returns: a CharmMetadataLegacy object.
-
-    :raises: CraftError if metadata.yaml does not exist or is not valid.
-    """
-    try:
-        metadata = read_metadata_yaml(charm_dir)
-    except OSError as exc:
-        raise CraftError(f"Cannot read the metadata.yaml file: {exc!r}") from exc
-    if not isinstance(metadata, dict):
-        raise CraftError(f"The {charm_dir / const.METADATA_FILENAME} file is not valid YAML.")
-
-    emit.debug("Validating metadata keys")
-    try:
-        return CharmMetadataLegacy.unmarshal(metadata)
-    except pydantic.ValidationError as error:
-        if allow_basic:
-            emit.progress(
-                format_pydantic_errors(error.errors(), file_name=const.METADATA_FILENAME),
-                permanent=True,
-            )
-            emit.debug("Falling back to basic metadata.yaml")
-            metadata_basic = {
-                k: v for k, v in metadata.items() if k in ("name", "summary", "description")
-            }
-            return CharmMetadataLegacy.unmarshal(metadata_basic)
-        raise

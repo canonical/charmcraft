@@ -27,8 +27,9 @@ from typing import final
 import yaml
 
 from charmcraft import const, utils
-from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
+from charmcraft.metafiles.metadata import read_metadata_yaml
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
+from charmcraft.models.metadata import CharmMetadataLegacy
 
 # the documentation page for "Analyzers and linters"
 BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
@@ -244,7 +245,7 @@ class Framework(AttributeChecker):
     def _check_reactive(self, basedir: pathlib.Path) -> bool:
         """Detect if the Reactive Framework is used."""
         try:
-            metadata = parse_charm_metadata_yaml(basedir)
+            metadata = CharmMetadataLegacy.from_yaml_file(basedir / const.METADATA_FILENAME)
         except Exception:
             # file not found, corrupted, or mandatory "name" not present
             return False

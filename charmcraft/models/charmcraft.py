@@ -15,22 +15,13 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft configuration pydantic model."""
-import datetime
-import os
-import pathlib
-from typing import Any, Literal, cast
+from typing import cast
 
 import pydantic
 from craft_application import util
-from craft_application.util.error_formatting import format_pydantic_errors
-from craft_cli import CraftError
 from typing_extensions import Self
 
-from charmcraft import const, parts
-from charmcraft.extensions import apply_extensions
-from charmcraft.models.actions import JujuActions
 from charmcraft.models.basic import AttributeName, LinterName, ModelConfigDefaults
-from charmcraft.models.config import JujuConfig
 
 
 class CharmhubConfig(

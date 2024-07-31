@@ -53,20 +53,6 @@ from charmcraft.models.charmcraft import (
 from charmcraft.parts import process_part_config
 
 
-class BaseDict(TypedDict, total=False):
-    """TypedDict that describes only one base.
-
-    This is equivalent to the short form base definition.
-    """
-
-    name: str
-    channel: str
-    architectures: list[str]
-
-
-LongFormBasesDict = TypedDict(
-    "LongFormBasesDict", {"build-on": list[BaseDict], "run-on": list[BaseDict]}
-)
 CharmcraftSummaryStr = Annotated[
     str,
     models.SummaryStr,
@@ -97,19 +83,6 @@ CharmPlatform = Annotated[
 ]
 
 
-class Platform(models.CraftBaseModel):
-    """Project platform definition."""
-
-    build_on: list[CharmArch] = pydantic.Field(min_length=1)
-    build_for: list[CharmArch | Literal["all"]] = pydantic.Field(min_length=1, max_length=1)
-
-    @pydantic.validator("build_on", "build_for", pre=True)
-    def _listify_architectures(cls, value: str | list[str]) -> list[str]:
-        if isinstance(value, str):
-            return [value]
-        return value
-
-
 class CharmLib(models.CraftBaseModel):
     """A Charm library dependency for this charm."""
 
@@ -122,7 +95,7 @@ class CharmLib(models.CraftBaseModel):
         pattern=r"[0-9]+(\.[0-9]+)?",
     )
 
-    @pydantic.validator("lib", pre=True)
+    @pydantic.field_validator("lib", mode="before")
     def _validate_name(cls, value: str) -> str:
         """Validate the lib field, providing a useful error message on failure."""
         charm_name, _, lib_name = str(value).partition(".")
@@ -143,7 +116,7 @@ class CharmLib(models.CraftBaseModel):
             )
         return f"{charm_name}.{lib_name}"
 
-    @pydantic.validator("version", pre=True)
+    @pydantic.field_validator("version", mode="before")
     def _validate_api_version(cls, value: str) -> str:
         """Validate the API version field, providing a useful error message on failure."""
         api, *_ = str(value).partition(".")
@@ -153,7 +126,7 @@ class CharmLib(models.CraftBaseModel):
             raise ValueError(f"API version not valid. Expected an integer, got {api!r}") from None
         return str(value)
 
-    @pydantic.validator("version", pre=True)
+    @pydantic.field_validator("version", mode="before")
     def _validate_patch_version(cls, value: str) -> str:
         """Validate the optional patch version, providing a useful error message."""
         api, separator, patch = value.partition(".")
@@ -344,14 +317,7 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
     bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
     base: str | None = None
     build_base: str | None = None
-    platforms: dict[str, Platform | None] | None = None  # type: ignore[assignment]
-
-    @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
-    def expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
-        """Expand short-form bases into long-form bases."""
-        if "name" not in base:  # Assume long-form base already.
-            return cast(LongFormBasesDict, base)
-        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+    platforms: dict[str, models.Platform | None] | None = None  # type: ignore[assignment]
 
     def get_build_plan(self) -> list[models.BuildInfo]:
         """Get build bases for this charm.
@@ -528,24 +494,26 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
         return project
 
-    @pydantic.root_validator(pre=True, allow_reuse=True)
-    def preprocess(cls, values: dict[str, Any]) -> dict[str, Any]:
+    @pydantic.model_validator(mode="before")
+    @classmethod
+    def _preprocess(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Preprocess any values that charmcraft infers, before attribute validation."""
         if "type" not in values:
             raise ValueError("Project type must be declared in charmcraft.yaml.")
 
         return values
 
-    @pydantic.validator("parts", pre=True, always=True, allow_reuse=True)
-    def preprocess_parts(
-        cls, parts: dict[str, dict[str, Any]] | None, values: dict[str, Any]
+    @pydantic.field_validator("parts", mode="before")
+    @classmethod
+    def _preprocess_parts(
+        cls, parts: dict[str, dict[str, Any]] | None, info: pydantic.ValidationInfo
     ) -> dict[str, dict[str, Any]]:
         """Preprocess parts object for a charm or bundle, creating an implicit part if needed."""
         if parts is not None and not isinstance(parts, dict):
             raise TypeError("'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec.")
         if not parts:
-            if "type" in values:
-                parts = {values["type"]: {"plugin": values["type"]}}
+            if "type" in info.data:
+                parts = {info.data["type"]: {"plugin": info.data["type"]}}
             else:
                 parts = {}
         for name, part in parts.items():
@@ -563,10 +531,13 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
                 part.setdefault("source", ".")
         return parts
 
-    @pydantic.validator("parts", each_item=True, allow_reuse=True)
-    def validate_each_part(cls, item):
+    @pydantic.field_validator("parts", mode="before")
+    def _validate_parts(cls, parts: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
         """Verify each part in the parts section. Craft-parts will re-validate them."""
-        return process_part_config(item)
+        return {
+            name: process_part_config(part)
+            for name, part in parts.items()
+        }
 
 
 class CharmProject(CharmcraftProject):
@@ -990,6 +961,34 @@ class CharmProject(CharmcraftProject):
         ],
     )
 
+def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:
+        """Check that the given base is a legacy base, usable with 'bases'."""
+        # This pyright ignore can go away once we're on Python minimum version 3.11.
+        # At that point we can mark items as required or not required.
+        # https://docs.python.org/3/library/typing.html#typing.Required
+        if (
+            base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+            and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+        ):
+            return True
+        return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
+
+
+def _validate_base(base: charmcraft.BaseDict | charmcraft.LongFormBasesDict) -> charmcraft.LongFormBasesDict:
+    if "name" in base:  # Convert short form to long form
+        base = cast(charmcraft.LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+    else:  # Cast to long form since we know it is one.
+        base = cast(charmcraft.LongFormBasesDict, base)
+
+    # Ensure we're only allowing legacy bases.
+    for build_base in base["build-on"]:
+        if not _check_base_is_legacy(build_base):
+            raise ValueError(f"Base requires 'platforms' definition: {build_base}")
+    for run_base in base["run-on"]:
+        if not _check_base_is_legacy(run_base):
+            raise ValueError(f"Base requires 'platforms' definition: {run_base}")
+    return base
+
 
 class BasesCharm(CharmProject):
     """A charm using the deprecated ``bases`` keyword.
@@ -1007,42 +1006,14 @@ class BasesCharm(CharmProject):
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydantic issues. This appears to be
     # solved with Pydantic 2.
-    bases: list[BasesConfiguration] = pydantic.Field(min_length=1)
+    bases: list[
+        Annotated[
+            BasesConfiguration,
+            pydantic.BeforeValidator(_validate_base)
+        ]
+    ] = pydantic.Field(min_length=1)
 
     base: None = None
-
-
-
-    @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
-    def _validate_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
-        """Expand short-form bases into long-form bases."""
-        if "name" in base:  # Convert short form to long form
-            base = cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
-        else:  # Cast to long form since we know it is one.
-            base = cast(LongFormBasesDict, base)
-
-        # Ensure we're only allowing legacy bases.
-        for build_base in base["build-on"]:
-            if not cls._check_base_is_legacy(build_base):
-                raise ValueError(f"Base requires 'platforms' definition: {build_base}")
-        for run_base in base["run-on"]:
-            if not cls._check_base_is_legacy(run_base):
-                raise ValueError(f"Base requires 'platforms' definition: {run_base}")
-
-        return base
-
-    @staticmethod
-    def _check_base_is_legacy(base: BaseDict) -> bool:
-        """Check that the given base is a legacy base, usable with 'bases'."""
-        # This pyright ignore can go away once we're on Python minimum version 3.11.
-        # At that point we can mark items as required or not required.
-        # https://docs.python.org/3/library/typing.html#typing.Required
-        if (
-            base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-            and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-        ):
-            return True
-        return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
 
 
 class PlatformCharm(CharmProject):
@@ -1051,31 +1022,16 @@ class PlatformCharm(CharmProject):
     # Silencing pyright because it complains about missing default value
     base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
     build_base: BuildBaseStr | None = None
-    platforms: dict[str, Platform | None]  # type: ignore[assignment]
+    platforms: dict[str, models.Platform | None]  # type: ignore[assignment]
     parts: dict[str, dict[str, Any]]  # pyright: ignore[reportGeneralTypeIssues]
 
-    @staticmethod
-    def _check_base_is_legacy(base: BaseDict) -> bool:
-        """Check that the given base is a legacy base, usable with 'bases'."""
-        # This pyright ignore can go away once we're on Python minimum version 3.11.
-        # At that point we can mark items as required or not required.
-        # https://docs.python.org/3/library/typing.html#typing.Required
-        if (
-            base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-            and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-        ):
-            return True
-        return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
-
-    @pydantic.validator("build_base", always=True)
-    def _validate_dev_base_needs_build_base(
-        cls, build_base: str | None, values: dict[str, Any]
-    ) -> str | None:
-        if not build_base and (base := values["base"]) in const.DEVEL_BASE_STRINGS:
+    @pydantic.model_validator(mode="after")
+    def _validate_dev_base_needs_build_base(self) -> Self:
+        if not self.build_base and self.base in const.DEVEL_BASE_STRINGS:
             raise ValueError(
-                f"Base {base} requires a build-base (recommended: 'build-base: ubuntu@devel')"
+                f"Base {self.base} requires a build-base (recommended: 'build-base: ubuntu@devel')"
             )
-        return build_base
+        return self
 
 
 Charm = BasesCharm | PlatformCharm

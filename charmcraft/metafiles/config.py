@@ -98,7 +98,7 @@ def create_config_yaml(
         if charmcraft_config.config:
             target_file_path.write_text(
                 yaml.dump(
-                    charmcraft_config.config.dict(
+                    charmcraft_config.config.model_dump(
                         include={"options"}, exclude_none=True, by_alias=True
                     )
                 )

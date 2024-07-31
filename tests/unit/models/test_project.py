@@ -162,24 +162,6 @@ VALID_PLATFORM_ARCHITECTURES = [
 ]
 
 
-@pytest.mark.parametrize("build_on", VALID_PLATFORM_ARCHITECTURES)
-@pytest.mark.parametrize("build_for", [[arch] for arch in (*const.CharmArch, "all")])
-def test_platform_validation_lists(build_on, build_for):
-    platform = project.Platform.model_validate({"build-on": build_on, "build-for": build_for})
-
-    assert platform.build_for == build_for
-    assert platform.build_on == build_on
-
-
-@pytest.mark.parametrize("build_on", const.CharmArch)
-@pytest.mark.parametrize("build_for", [*const.CharmArch, "all"])
-def test_platform_validation_strings(build_on, build_for):
-    platform = project.Platform.model_validate({"build-on": build_on, "build-for": build_for})
-
-    assert platform.build_for == [build_for]
-    assert platform.build_on == [build_on]
-
-
 # endregion
 # region CharmBuildInfo tests
 @pytest.mark.parametrize("build_on_base", [SIMPLE_BASE, BASE_WITH_ONE_ARCH, BASE_WITH_MULTIARCH])
@@ -367,7 +349,7 @@ def test_build_info_generator(given, expected):
                         "build-on": ["amd64", "arm64", "riscv64"],
                         "build-for": ["s390x"],
                     },
-                    "crossy": {"build-on": "s390x", "build-for": "ppc64el"},
+                    "crossy": {"build-on": ["s390x"], "build-for": ["ppc64el"]},
                     "amd64": None,
                     "arm64": None,
                     "riscv64": None,
@@ -768,7 +750,7 @@ def test_instantiate_bases_charm_error(
         project.BasesCharm(**values)
 
 
-@pytest.mark.parametrize("base", ["ubuntu@24.04"])
+@pytest.mark.parametrize("base", ["ubuntu@18.04", "ubuntu@24.04"])
 def test_devel_bases(monkeypatch, base):
     monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
 
@@ -864,7 +846,7 @@ def test_read_charm_from_yaml_file_error(filename, errors):
     ],
 )
 def test_check_legacy_bases(base, expected):
-    assert project.BasesCharm._check_base_is_legacy(base) == expected
+    assert project._check_base_is_legacy(base) == expected
 
 
 # endregion

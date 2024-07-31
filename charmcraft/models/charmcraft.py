@@ -18,7 +18,7 @@
 import datetime
 import os
 import pathlib
-from typing import Any, Literal, cast
+from typing import Any, Literal, TypedDict, cast
 
 from craft_application.models import CraftBaseModel
 import pydantic
@@ -38,6 +38,22 @@ from charmcraft.metafiles.config import parse_config_yaml
 from charmcraft.models.actions import JujuActions
 from charmcraft.models.basic import AttributeName, LinterName
 from charmcraft.models.config import JujuConfig
+
+
+class BaseDict(TypedDict, total=False):
+    """TypedDict that describes only one base.
+
+    This is equivalent to the short form base definition.
+    """
+
+    name: str
+    channel: str
+    architectures: list[str]
+
+
+LongFormBasesDict = TypedDict(
+    "LongFormBasesDict", {"build-on": list[BaseDict], "run-on": list[BaseDict]}
+)
 
 
 class Charmhub(CraftBaseModel):
@@ -87,6 +103,13 @@ class BasesConfiguration(CraftBaseModel):
 
     build_on: list[Base]
     run_on: list[Base]
+
+    @pydantic.model_validator(mode="before")
+    def _expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
+        """Expand short-form bases into long-form bases."""
+        if "build-on" in base:  # Assume long-form base already.
+            return cast(LongFormBasesDict, base)
+        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
 
 
 class Project(CraftBaseModel):
@@ -171,7 +194,7 @@ class Links(CraftBaseModel):
 #
 #         return name
 #
-#     @pydantic.validator("summary", pre=True, always=True)
+#     @pydantic.field_validator("summary", mode="before")
 #     def validate_summary(cls, summary, values):
 #         """Verify charm summary is valid with exception when instantiated without YAML."""
 #         if values.get("type") == "charm" and not summary:
@@ -179,7 +202,7 @@ class Links(CraftBaseModel):
 #
 #         return summary
 #
-#     @pydantic.validator("description", pre=True, always=True)
+#     @pydantic.field_validator("description", mode="before")
 #     def validate_description(cls, description, values):
 #         """Verify charm name is valid with exception when instantiated without YAML."""
 #         if values.get("type") == "charm" and not description:
@@ -187,7 +210,7 @@ class Links(CraftBaseModel):
 #
 #         return description
 #
-#     @pydantic.validator("parts", pre=True, always=True)
+#     @pydantic.field_validator("parts", mode="before")
 #     def validate_special_parts(cls, parts, values):
 #         """Verify parts type (craft-parts will re-validate the schemas for the plugins)."""
 #         if "type" not in values:
@@ -237,7 +260,7 @@ class Links(CraftBaseModel):
 #             raise ValueError("Field not allowed when type=bundle")
 #         return bases
 #
-#     @pydantic.validator("actions", pre=True, always=True)
+#     @pydantic.field_validator("actions", mode="before")
 #     def validate_actions(cls, actions, values):
 #         """Verify 'actions' in charms.
 #
@@ -257,7 +280,7 @@ class Links(CraftBaseModel):
 #
 #             return JujuActions.model_validate({"actions": actions})
 #
-#     @pydantic.validator("juju_config", pre=True, always=True)
+#     @pydantic.field_validator("juju_config", mode="before")
 #     def validate_config(cls, config, values):
 #         """Verify 'actions' in charms.
 #

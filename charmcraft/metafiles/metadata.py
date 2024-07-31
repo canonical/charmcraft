@@ -122,7 +122,7 @@ def create_metadata_yaml(
             shutil.copyfile(original_file_path, target_file_path)
     else:
         # metadata.yaml not exists, create it from config
-        metadata = charmcraft_config.dict(
+        metadata = charmcraft_config.model_dump(
             include=const.CHARM_METADATA_KEYS.union(const.CHARM_METADATA_KEYS_ALIAS),
             exclude_none=True,
             by_alias=True,

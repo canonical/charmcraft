@@ -64,8 +64,8 @@ class CharmMetadata(models.BaseMetadata):
 
         Performs the necessary renaming and reorganisation.
         """
-        charm_dict = charm.dict(
-            include=const.METADATA_YAML_KEYS | {"title"},
+        charm_dict = charm.model_dump(
+            include={"title"} | const.METADATA_YAML_KEYS,
             exclude_none=True,
             by_alias=True,
         )

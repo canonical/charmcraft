@@ -104,7 +104,7 @@ def create_actions_yaml(
         if charmcraft_config.actions:
             target_file_path.write_text(
                 yaml.dump(
-                    charmcraft_config.actions.dict(
+                    charmcraft_config.actions.model_dump(
                         include={"actions"}, exclude_none=True, by_alias=True
                     )["actions"]
                 )

@@ -81,7 +81,7 @@ apt = [
 docs = [
     "canonical-sphinx~=0.1",
     "pyspelling",
-    "autodoc-pydantic<=2.0",
+    "autodoc-pydantic~=2.0",
     "sphinx-autobuild~=2024.2",
     "sphinx-pydantic~=0.1",
     "sphinx-toolbox~=3.5",

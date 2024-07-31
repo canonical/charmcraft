@@ -22,12 +22,12 @@ from typing import Any, Literal, cast
 
 import pydantic
 from craft_application import util
+from craft_application.util.error_formatting import format_pydantic_errors
 from craft_cli import CraftError
 from typing_extensions import Self
 
 from charmcraft import const, parts
 from charmcraft.extensions import apply_extensions
-from craft_application.util.error_formatting import format_pydantic_errors
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
 from charmcraft.metafiles.metadata import (
@@ -306,7 +306,9 @@ class CharmcraftConfig(
                 for pydantic_error in pydantic_errors:
                     pydantic_error["loc"] = ("bases", index, pydantic_error["loc"][0])
 
-                raise CraftError(format_pydantic_errors(pydantic_errors, file_name="charmcraft.yaml"))
+                raise CraftError(
+                    format_pydantic_errors(pydantic_errors, file_name="charmcraft.yaml")
+                )
 
             base.clear()
             base["build-on"] = [converted_base.dict()]

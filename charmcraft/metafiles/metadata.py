@@ -24,10 +24,10 @@ from typing import TYPE_CHECKING, Any
 
 import pydantic
 import yaml
+from craft_application.util.error_formatting import format_pydantic_errors
 from craft_cli import CraftError, emit
 
 from charmcraft import const
-from craft_application.util.error_formatting import format_pydantic_errors
 from charmcraft.models.metadata import BundleMetadata, CharmMetadataLegacy
 from charmcraft.utils.yaml import dump_yaml
 

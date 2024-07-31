@@ -26,10 +26,10 @@ from typing import TYPE_CHECKING, Literal
 import pydantic
 import yaml
 from craft_application import util
+from craft_application.util.error_formatting import format_pydantic_errors
 from craft_cli import CraftError, emit
 
 from charmcraft import const
-from craft_application.util.error_formatting import format_pydantic_errors
 from charmcraft.models.actions import JujuActions
 
 if TYPE_CHECKING:

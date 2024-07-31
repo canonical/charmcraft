@@ -33,9 +33,8 @@ from craft_parts import callbacks, plugins
 from craft_providers import bases
 
 import charmcraft.parts
-from charmcraft import const, instrum, parts, services, store
+from charmcraft import const, env, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
-from charmcraft.models import charmcraft as config_module
 from charmcraft.models import project
 
 
@@ -154,14 +153,12 @@ def setup_parts():
 
 
 @pytest.fixture()
-def charmhub_config() -> config_module.Charmhub:
+def charmhub_config() -> env.CharmhubConfig:
     """Provide a charmhub config for use in tests"""
-    return config_module.Charmhub.parse_obj(
-        {
-            "api-url": "https://api.staging.charmhub.io",
-            "storage-url": "https://storage.staging.snapcraftcontent.com",
-            "registry-url": "https://registry.staging.jujucharms.com",
-        }
+    return env.CharmhubConfig(
+        api_url="https://api.staging.charmhub.io",
+        storage_url="https://storage.staging.snapcraftcontent.com",
+        registry_url="https://registry.staging.jujucharms.com",
     )
 
 

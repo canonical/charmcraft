@@ -183,7 +183,7 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
             {
                 "anything": {
                     "build-on": [*const.SUPPORTED_ARCHITECTURES],
-                    "build-for": "all",
+                    "build-for": ["all"],
                 }
             },
             "anything",
@@ -193,7 +193,7 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
             {
                 "anything": {
                     "build-on": [*const.SUPPORTED_ARCHITECTURES],
-                    "build-for": "all",
+                    "build-for": ["all"],
                 },
                 "amd64": None,
                 "riscy": {

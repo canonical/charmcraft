@@ -20,6 +20,8 @@ from typing import Annotated, Literal
 import pydantic
 
 from charmcraft.models.basic import ModelConfigDefaults
+from pydantic import StringConstraints
+from typing_extensions import Annotated
 
 
 class _BaseJujuOption(ModelConfigDefaults, frozen=True):
@@ -66,7 +68,7 @@ class JujuSecretOption(_BaseJujuOption, frozen=True):
     # that anyone would know what the secret ID (specific to
     # the deployment in a model) is at the time that they are
     # writing the config, but included for completeness.
-    default: Annotated[str, pydantic.constr(regex=r"^secret:[a-z0-9]{20}$")] | None = None
+    default: Annotated[str, Annotated[str, StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")]] | None = None
 
 
 JujuOption = Annotated[

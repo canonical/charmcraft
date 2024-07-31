@@ -33,6 +33,8 @@ class CustomStrictStr(pydantic.StrictStr):
     """Generic class to create custom strict strings validated by pydantic."""
 
     @classmethod
+    # TODO[pydantic]: We couldn't refactor `__get_validators__`, please create the `__get_pydantic_core_schema__` manually.
+    # Check https://docs.pydantic.dev/latest/migration/#defining-custom-types for more information.
     def __get_validators__(cls):
         """Yield the relevant validators."""
         yield from super().__get_validators__()

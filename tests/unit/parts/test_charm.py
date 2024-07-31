@@ -244,7 +244,10 @@ def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
-    assert err[0]["msg"] == f"Value error, charm entry point must be inside the project: {str(outside_path)!r}"
+    assert (
+        err[0]["msg"]
+        == f"Value error, charm entry point must be inside the project: {str(outside_path)!r}"
+    )
 
 
 def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
@@ -256,7 +259,10 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
-    assert err[0]["msg"] == f"Value error, charm entry point must be inside the project: {str(outside_path)!r}"
+    assert (
+        err[0]["msg"]
+        == f"Value error, charm entry point must be inside the project: {str(outside_path)!r}"
+    )
 
 
 def test_charmpluginproperties_requirements_default(tmp_path):

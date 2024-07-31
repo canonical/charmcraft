@@ -74,7 +74,10 @@ def test_correct_option_type(option, type_):
     [
         (None, "Input should be a valid dict"),
         ({}, "Unable to extract tag using discriminator 'type'"),
-        ({"type": "stargate"}, "Input tag 'stargate' found using 'type' does not match any of the expected tags:"),
+        (
+            {"type": "stargate"},
+            "Input tag 'stargate' found using 'type' does not match any of the expected tags:",
+        ),
         ({"type": "int", "default": 3.14}, "Input should be a valid integer"),
         ({"type": "float", "default": "pi"}, "Input should be a valid number"),
         ({"type": "boolean", "default": "maybe"}, "Input should be a valid boolean"),

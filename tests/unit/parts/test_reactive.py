@@ -20,7 +20,6 @@ from subprocess import CalledProcessError, CompletedProcess
 from unittest.mock import call, patch
 
 import craft_parts
-import pydantic
 import pytest
 import pytest_subprocess
 from craft_parts import plugins

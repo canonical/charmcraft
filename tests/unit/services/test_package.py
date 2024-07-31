@@ -171,7 +171,9 @@ def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expect
     )
     package_service._project = charm
 
-    assert package_service.get_manifest_bases() == [models.Base.model_validate(b) for b in expected]
+    assert package_service.get_manifest_bases() == [
+        models.Base.model_validate(b) for b in expected
+    ]
 
 
 @pytest.mark.parametrize("base", ["ubuntu@22.04", "almalinux@9"])

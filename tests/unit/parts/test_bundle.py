@@ -15,10 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 import sys
 
-import pydantic
 import pytest
-
-import charmcraft.parts
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
 

@@ -90,19 +90,6 @@ class BasesConfiguration(
     run_on: list[Base]
 
 
-class Project(ModelConfigDefaults, frozen=True):
-    """Internal-only project configuration."""
-
-    # do not verify that `dirpath` is a valid existing directory; it's used externally as a dir
-    # to load the config itself (so we're really do the validation there), and we want to support
-    # the case of a missing directory (and still load a default config structure)
-    dirpath: pathlib.Path
-    config_provided: bool = False
-
-    # this timestamp will be used in several places, even sent to Charmhub: needs to be UTC
-    started_at: datetime.datetime
-
-
 class Ignore(ModelConfigDefaults, frozen=True):
     """Definition of `analysis.ignore` configuration."""
 

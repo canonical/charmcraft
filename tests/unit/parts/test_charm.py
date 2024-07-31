@@ -37,6 +37,7 @@ def test_charmplugin_get_build_package_deb_based(charm_plugin):
             "python3-wheel",
             "python3-venv",
             "python3-dev",
+            "libyaml-dev",
         }
 
 

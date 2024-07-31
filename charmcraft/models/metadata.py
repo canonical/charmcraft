@@ -92,7 +92,7 @@ class CharmMetadataLegacy(CharmMetadata):
     """Object representing LEGACY charm metadata.yaml contents.
 
     This model only supports the legacy charm metadata.yaml format for compatibility.
-    New metadata defined in charmcraft.yaml is handled by the CharmcraftConfig model.
+    New metadata defined in charmcraft.yaml is handled by the CharmcraftProject models.
 
     specs: https://juju.is/docs/sdk/metadata-yaml
     """

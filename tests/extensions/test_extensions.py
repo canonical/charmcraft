@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-from textwrap import dedent
 from typing import Any
 
 import pytest

@@ -15,13 +15,13 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import contextlib
-import datetime
 import importlib
 import json
 import os
 import pathlib
 import tempfile
 import types
+from typing import Iterator
 from unittest import mock
 
 import craft_parts
@@ -35,10 +35,8 @@ from craft_providers import bases
 import charmcraft.parts
 from charmcraft import const, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
-from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
 from charmcraft.models import project
-from charmcraft.models.charmcraft import BasesConfiguration
 
 
 @pytest.fixture()
@@ -128,7 +126,7 @@ def fake_prime_dir(fs) -> pathlib.Path:
 
 
 @pytest.fixture()
-def fake_path(fs) -> pathlib.Path:
+def fake_path(fs) -> Iterator[pathlib.Path]:
     """Like tmp_path, but with a fake filesystem."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield pathlib.Path(tmp_dir)
@@ -156,71 +154,14 @@ def setup_parts():
 
 
 @pytest.fixture()
-def config(tmp_path):
-    """Provide a config class with an extra set method for the test to change it."""
-
-    class TestConfig(config_module.CharmcraftConfig, frozen=False):
-        """The Config, but with a method to set test values."""
-
-        def set(self, prime=None, **kwargs):
-            # prime is special, so we don't need to write all this structure in all tests
-            if prime is not None:
-                if self.parts is None:
-                    self.parts = {}
-                self.parts["charm"] = {"plugin": "charm", "prime": prime}
-
-            # the rest is direct
-            for k, v in kwargs.items():
-                object.__setattr__(self, k, v)
-
-    project = config_module.Project(
-        dirpath=tmp_path,
-        started_at=datetime.datetime.utcnow(),
-        config_provided=True,
-    )
-
-    base = BasesConfiguration(**{"build-on": [get_host_as_base()], "run-on": [get_host_as_base()]})
-
-    return TestConfig(
-        type="charm",
-        bases=[base],
-        project=project,
-        name="test-charm",
-        summary="test summary",
-        description="test description",
-    )
-
-
-@pytest.fixture()
-def bundle_config(tmp_path):
-    """Provide a config class with an extra set method for the test to change it."""
-
-    class TestConfig(config_module.CharmcraftConfig, frozen=False):
-        """The Config, but with a method to set test values."""
-
-        def set(self, prime=None, **kwargs):
-            # prime is special, so we don't need to write all this structure in all tests
-            if prime is not None:
-                if self.parts is None:
-                    self.parts = {}
-                self.parts["bundle"] = {"plugin": "bundle", "prime": prime}
-
-            # the rest is direct
-            for k, v in kwargs.items():
-                object.__setattr__(self, k, v)
-
-    project = config_module.Project(
-        dirpath=tmp_path,
-        started_at=datetime.datetime.utcnow(),
-        config_provided=True,
-    )
-
-    return TestConfig(
-        type="bundle",
-        project=project,
-        name="test-bundle",
-        summary="test summary",
-        description="test description",
+def charmhub_config() -> config_module.CharmhubConfig:
+    """Provide a charmhub config for use in tests"""
+    return config_module.CharmhubConfig.parse_obj(
+        {
+            "api-url": "https://api.staging.charmhub.io",
+            "storage-url": "https://storage.staging.snapcraftcontent.com",
+            "registry-url": "https://registry.staging.jujucharms.com",
+        }
     )
 
 

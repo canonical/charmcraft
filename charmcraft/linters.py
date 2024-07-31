@@ -27,7 +27,6 @@ from typing import final
 import yaml
 
 from charmcraft import const, utils
-from charmcraft.metafiles.metadata import read_metadata_yaml
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
 from charmcraft.models.metadata import CharmMetadataLegacy
 
@@ -292,7 +291,8 @@ class JujuMetadata(Linter):
     def run(self, basedir: pathlib.Path) -> str:
         """Run the proper verifications."""
         try:
-            metadata = read_metadata_yaml(basedir)
+            with (basedir / const.METADATA_FILENAME).open("rt") as md_file:
+                metadata = yaml.safe_load(md_file)
         except yaml.YAMLError:
             self.text = "The metadata.yaml file is not a valid YAML file."
             return self.Result.ERROR

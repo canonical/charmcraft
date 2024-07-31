@@ -28,12 +28,7 @@ from typing_extensions import Self
 
 from charmcraft import const, parts
 from charmcraft.extensions import apply_extensions
-from charmcraft.metafiles.actions import parse_actions_yaml
-from charmcraft.metafiles.config import parse_config_yaml
-from charmcraft.metafiles.metadata import (
-    parse_bundle_metadata_yaml,
-    parse_charm_metadata_yaml,
-)
+
 from charmcraft.models.actions import JujuActions
 from charmcraft.models.basic import AttributeName, LinterName, ModelConfigDefaults
 from charmcraft.models.config import JujuConfig
@@ -256,6 +251,7 @@ class CharmcraftConfig(
         And individual "actions.yaml" should not exists when actions
         is defined in charmcraft.yaml.
         """
+        from charmcraft.metafiles.actions import parse_actions_yaml
         actions_yaml = parse_actions_yaml(values["project"].dirpath, allow_broken=True)
         if actions is None:
             return actions_yaml
@@ -276,6 +272,7 @@ class CharmcraftConfig(
         And individual "actions.yaml" should not exists when actions
         is defined in charmcraft.yaml.
         """
+        from charmcraft.metafiles.config import parse_config_yaml
         config_yaml = parse_config_yaml(values["project"].dirpath, allow_broken=True)
         if config is None:
             return config_yaml
@@ -328,6 +325,12 @@ class CharmcraftConfig(
 
         :raises CraftError: On failure to unmarshal object.
         """
+        from charmcraft.metafiles.actions import parse_actions_yaml
+        from charmcraft.metafiles.config import parse_config_yaml
+        from charmcraft.metafiles.metadata import (
+            parse_bundle_metadata_yaml,
+            parse_charm_metadata_yaml,
+        )
         try:
             # Expand short-form bases if only the bases is a valid list. If it
             # is not a valid list, parse_obj() will properly handle the error.

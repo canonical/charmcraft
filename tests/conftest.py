@@ -176,7 +176,7 @@ def config(tmp_path):
 
     project = config_module.Project(
         dirpath=tmp_path,
-        started_at=datetime.datetime.utcnow(),
+        started_at=datetime.datetime.now(tz=datetime.timezone.utc),
         config_provided=True,
     )
 
@@ -212,7 +212,7 @@ def bundle_config(tmp_path):
 
     project = config_module.Project(
         dirpath=tmp_path,
-        started_at=datetime.datetime.utcnow(),
+        started_at=datetime.datetime.now(tz=datetime.timezone.utc),
         config_provided=True,
     )
 

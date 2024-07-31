@@ -484,7 +484,7 @@ def test_load_full_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_ya
     )
 
     config = load(tmp_path)
-    config_dict = config.dict()
+    config_dict = config.model_dump()
 
     # remove unrelated keys. but they should exist in the config
 
@@ -501,24 +501,22 @@ def test_load_full_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_ya
         "summary": "test-summary",
         "description": "test-description",
         "bases": [
-            BasesConfiguration(
-                **{
-                    "build-on": [
-                        Base(
-                            name="test-name",
-                            channel="test-channel",
-                            architectures=[util.get_host_architecture()],
-                        )
-                    ],
-                    "run-on": [
-                        Base(
-                            name="test-name",
-                            channel="test-channel",
-                            architectures=[util.get_host_architecture()],
-                        )
-                    ],
-                }
-            )
+            {
+                "build-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[util.get_host_architecture()],
+                    ).model_dump()
+                ],
+                "run-on": [
+                    Base(
+                        name="test-name",
+                        channel="test-channel",
+                        architectures=[util.get_host_architecture()],
+                    )
+                ],
+            }
         ],
         "assumes": [
             "test-feature",

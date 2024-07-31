@@ -92,7 +92,7 @@ from charmcraft.env import (
 #     else:
 #         path = pathlib.Path(dirpath).expanduser().resolve()
 #
-#     now = datetime.datetime.utcnow()
+#     now = datetime.datetime.now(tz=datetime.timezone.utc)
 #
 #     content = load_yaml(path / const.CHARMCRAFT_FILENAME)
 #     if content is None:

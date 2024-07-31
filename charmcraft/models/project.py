@@ -427,7 +427,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # These private attributes are not part of the project model but are attached here
     # because Charmcraft uses this metadata.
-    _started_at: datetime.datetime = pydantic.PrivateAttr(default_factory=datetime.datetime.utcnow)
+    _started_at: datetime.datetime = pydantic.PrivateAttr(default_factory=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
     _valid: bool = pydantic.PrivateAttr(default=False)
 
     @property

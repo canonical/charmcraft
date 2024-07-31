@@ -58,7 +58,7 @@ def test_write_metadata(monkeypatch, fs, package_service, project_path):
     expected_prime_dir = project_path / "prime"
 
     project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
-    project._started_at = datetime.datetime.utcnow()
+    project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
     package_service._project = project
 
     package_service.write_metadata(test_prime_dir)
@@ -88,7 +88,7 @@ def test_overwrite_metadata(monkeypatch, fs, package_service, project_path):
     expected_prime_dir = project_path / "prime"
 
     project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
-    project._started_at = datetime.datetime.utcnow()
+    project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
     package_service._project = project
 
     fs.create_file(test_prime_dir / const.METADATA_FILENAME, contents="INVALID!!")
@@ -116,7 +116,7 @@ def test_no_overwrite_reactive_metadata(monkeypatch, fs, package_service):
     fs.create_file(test_stage_dir / const.METADATA_FILENAME, contents="INVALID!!")
 
     project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
-    project._started_at = datetime.datetime.utcnow()
+    project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
     package_service._project = project
 
     package_service.write_metadata(test_prime_dir)

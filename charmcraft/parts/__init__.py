@@ -71,7 +71,7 @@ def process_part_config(data: dict[str, Any]) -> dict[str, Any]:
     # get plugin properties data if it's model based (otherwise it's empty), and
     # update with the received config
     if isinstance(plugin_properties, plugins.PluginProperties):
-        full_config = plugin_properties.dict(by_alias=True)
+        full_config = plugin_properties.model_dump(by_alias=True)
     else:
         full_config = {}
     full_config.update(data)

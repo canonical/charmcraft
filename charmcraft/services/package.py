@@ -233,7 +233,7 @@ class PackageService(services.PackageService):
             # crystal wine glass.
             (path / "manifest.yaml").write_text(
                 utils.dump_yaml(
-                    manifest.dict(by_alias=True, exclude_unset=False, exclude_none=True)
+                    manifest.model_dump(mode="json",by_alias=True, exclude_unset=False, exclude_none=True)
                 )
             )
 

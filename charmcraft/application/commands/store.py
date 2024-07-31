@@ -2205,7 +2205,7 @@ class ListResourceRevisionsCommand(CharmcraftCommand):
                     "revision": item.revision,
                     "created at": item.created_at.isoformat(),
                     "size": item.size,
-                    "bases": [base.dict() for base in item.bases],
+                    "bases": [base.model_dump() for base in item.bases],
                 }
                 for item in result
             ]

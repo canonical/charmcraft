@@ -73,37 +73,3 @@ def parse_config_yaml(charm_dir: pathlib.Path, allow_broken=False) -> JujuConfig
             emit.debug(f"Ignoring {const.JUJU_CONFIG_FILENAME}")
             return None
         raise
-
-
-def create_config_yaml(
-    basedir: pathlib.Path,
-    charmcraft_config: "CharmcraftConfig",
-) -> pathlib.Path | None:
-    """Create actions.yaml in basedir for given project configuration.
-
-    :param basedir: Directory to create Charm in.
-    :param charmcraft_config: Charmcraft configuration object.
-
-    :returns: Path to created config.yaml.
-    """
-    original_file_path = charmcraft_config.project.dirpath / const.JUJU_CONFIG_FILENAME
-    target_file_path = basedir / const.JUJU_CONFIG_FILENAME
-
-    # Copy config.yaml if it exists, otherwise create it from CharmcraftConfig.
-    if original_file_path.exists():
-        # In the build / test process, the original file may be the same as the target file.
-        with contextlib.suppress(shutil.SameFileError):
-            shutil.copyfile(original_file_path, target_file_path)
-    else:
-        if charmcraft_config.config:
-            target_file_path.write_text(
-                yaml.dump(
-                    charmcraft_config.config.dict(
-                        include={"options"}, exclude_none=True, by_alias=True
-                    )
-                )
-            )
-        else:
-            return None
-
-    return target_file_path

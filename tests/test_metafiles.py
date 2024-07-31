@@ -21,7 +21,6 @@ import yaml
 from charmcraft import const
 from charmcraft.config import load
 from charmcraft.metafiles.actions import create_actions_yaml
-from charmcraft.metafiles.config import create_config_yaml
 from charmcraft.metafiles.metadata import create_metadata_yaml
 
 
@@ -957,107 +956,5 @@ def test_copy_actions_from_actions_yaml(tmp_path, prepare_charmcraft_yaml, prepa
             },
             "required": ["filename"],
             "additionalProperties": False,
-        },
-    }
-
-
-def test_dump_config_from_charmcraft_yaml(tmp_path, prepare_charmcraft_yaml):
-    """Dump a config.yaml from charmcraft.yaml."""
-    prepare_charmcraft_yaml(
-        dedent(
-            """
-            name: test-charm-name
-            type: charm
-            summary: test-summary
-            description: test-description
-
-            config:
-              options:
-                test-int:
-                  default: 123
-                  description: test-1
-                  type: int
-                test-string:
-                  description: test-2
-                  type: string
-                test-float:
-                  default: 1.23
-                  type: float
-                test-bool:
-                  default: true
-                  type: boolean
-            """
-        ),
-    )
-
-    config = load(tmp_path)
-
-    create_config_yaml(tmp_path, config)
-
-    config_data = yaml.safe_load((tmp_path / const.JUJU_CONFIG_FILENAME).read_text())
-
-    assert config_data == {
-        "options": {
-            "test-int": {"default": 123, "description": "test-1", "type": "int"},
-            "test-string": {"description": "test-2", "type": "string"},
-            "test-float": {"default": 1.23, "type": "float"},
-            "test-bool": {"default": True, "type": "boolean"},
-        },
-    }
-
-
-def test_copy_config_from_config_yaml(tmp_path, prepare_charmcraft_yaml, prepare_config_yaml):
-    """Dump a actions.yaml from charmcraft.yaml."""
-    prepare_charmcraft_yaml(
-        dedent(
-            """
-            name: test-charm-name
-            type: charm
-            summary: test-summary
-            description: test-description
-            """
-        ),
-    )
-    prepare_config_yaml(
-        dedent(
-            """
-            options:
-              test-int:
-                default: 123
-                description: test-1
-                type: int
-              test-string:
-                description: test-2
-                type: string
-              test-float:
-                default: 1.23
-                type: float
-              test-bool:
-                default: true
-                type: boolean
-            #### TEST-COPY ####
-            """
-        ),
-    )
-
-    config = load(tmp_path)
-
-    os.mkdir(tmp_path / "new")
-
-    create_config_yaml(tmp_path / "new", config)
-
-    config_yaml = (tmp_path / "new" / const.JUJU_CONFIG_FILENAME).read_text()
-
-    # Copy will preserve the TEST-COPY comment
-    assert "TEST-COPY" in config_yaml
-
-    config_data = yaml.safe_load(config_yaml)
-
-    assert config_data == {
-        "options": {
-            "test-int": {"default": 123, "description": "test-1", "type": "int"},
-            "test-string": {"description": "test-2", "type": "string"},
-            "test-float": {"default": 1.23, "type": "float"},
-            "test-bool": {"default": True, "type": "boolean"},
         },
     }

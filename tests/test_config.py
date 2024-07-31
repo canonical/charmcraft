@@ -450,7 +450,7 @@ def test_schema_type_bad_type(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - unexpected value; permitted: 'bundle', 'charm' in field 'type'"""
+        - unexpected value; permitted: 'bundle', 'charm' (in field 'type')"""
     )
 
 
@@ -496,7 +496,7 @@ def test_schema_type_limited_values(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - unexpected value; permitted: 'bundle', 'charm' in field 'type'"""
+        - unexpected value; permitted: 'bundle', 'charm' (in field 'type')"""
     )
 
 
@@ -546,7 +546,7 @@ def test_schema_charmhub_api_url_bad_type(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - invalid or missing URL scheme in field 'charmhub.api-url'"""
+        - invalid or missing URL scheme (in field 'charmhub.api-url')"""
     )
 
 
@@ -596,7 +596,7 @@ def test_schema_charmhub_api_url_bad_format(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - invalid or missing URL scheme in field 'charmhub.api-url'"""
+        - invalid or missing URL scheme (in field 'charmhub.api-url')"""
     )
 
 
@@ -646,7 +646,7 @@ def test_schema_charmhub_storage_url_bad_type(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - invalid or missing URL scheme in field 'charmhub.storage-url'"""
+        - invalid or missing URL scheme (in field 'charmhub.storage-url')"""
     )
 
 
@@ -696,7 +696,7 @@ def test_schema_charmhub_storage_url_bad_format(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - invalid or missing URL scheme in field 'charmhub.storage-url'"""
+        - invalid or missing URL scheme (in field 'charmhub.storage-url')"""
     )
 
 
@@ -746,7 +746,7 @@ def test_schema_charmhub_registry_url_bad_type(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - invalid or missing URL scheme in field 'charmhub.registry-url'"""
+        - invalid or missing URL scheme (in field 'charmhub.registry-url')"""
     )
 
 
@@ -796,7 +796,7 @@ def test_schema_charmhub_registry_url_bad_format(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - invalid or missing URL scheme in field 'charmhub.registry-url'"""
+        - invalid or missing URL scheme (in field 'charmhub.registry-url')"""
     )
 
 
@@ -896,7 +896,7 @@ def test_schema_basicprime_bad_init_structure(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - value must be a dictionary in field 'parts'"""
+        - value must be a dictionary (in field 'parts')"""
     )
 
 
@@ -946,7 +946,7 @@ def test_schema_basicprime_bad_bundle_structure(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - part 'charm' must be a dictionary in field 'parts'"""
+        - part 'charm' must be a dictionary (in field 'parts')"""
     )
 
 
@@ -998,7 +998,7 @@ def test_schema_basicprime_bad_prime_structure(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - value is not a valid list in field 'parts.charm.prime'"""
+        - value is not a valid list (in field 'parts.charm.prime')"""
     )
 
 
@@ -1050,7 +1050,7 @@ def test_schema_basicprime_bad_prime_type(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - string type expected in field 'parts.charm.prime[0]'"""
+        - string type expected (in field 'parts.charm.prime[0]')"""
     )
 
 
@@ -1103,7 +1103,7 @@ def test_schema_basicprime_bad_prime_type_empty(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - path cannot be empty in field 'parts.charm.prime[0]'"""
+        - path cannot be empty (in field 'parts.charm.prime[0]')"""
     )
 
 
@@ -1138,7 +1138,7 @@ def test_schema_basicprime_bad_content_format(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - '/bar/foo' must be a relative path (cannot start with '/') in field 'parts.charm.prime[0]'"""
+        - '/bar/foo' must be a relative path (cannot start with '/') (in field 'parts.charm.prime[0]')"""
     )
 
 
@@ -1192,7 +1192,7 @@ def test_schema_additional_part(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - part 'other-part' must be a dictionary in field 'parts'"""
+        - part 'other-part' must be a dictionary (in field 'parts')"""
     )
 
 
@@ -1259,7 +1259,7 @@ def test_schema_other_charm_part_no_source(
         """\
         Bad charmcraft.yaml content:
         - field 'source' required in 'parts.other-part' configuration
-        - cannot validate 'charm-requirements' because invalid 'source' configuration in field 'parts.other-part.charm-requirements'"""
+        - cannot validate 'charm-requirements' because invalid 'source' configuration (in field 'parts.other-part.charm-requirements')"""
     )
 
 
@@ -1933,7 +1933,7 @@ def test_bases_forbidden_for_bundles(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - Field not allowed when type=bundle in field 'bases'"""
+        - field not allowed when type=bundle (in field 'bases')"""
     )
 
 
@@ -2169,7 +2169,7 @@ def test_channel_is_yaml_number(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - string type expected in field 'bases[0].build-on[0].channel'"""
+        - string type expected (in field 'bases[0].build-on[0].channel')"""
     )
 
 
@@ -2938,7 +2938,7 @@ def test_schema_analysis_ignore_attribute_missing(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - Bad attribute name 'check_missing' in field 'analysis.ignore.attributes[1]'"""
+        - bad attribute name 'check_missing' (in field 'analysis.ignore.attributes[1]')"""
     )
 
 
@@ -2999,7 +2999,7 @@ def test_schema_analysis_ignore_linter_missing(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - Bad lint name 'check_missing' in field 'analysis.ignore.linters[1]'"""
+        - bad lint name 'check_missing' (in field 'analysis.ignore.linters[1]')"""
     )
 
 
@@ -3313,7 +3313,7 @@ def test_actions_defined_in_charmcraft_yaml_and_actions_yaml(
     assert str(cm.value) == dedent(
         """\
         Bad charmcraft.yaml content:
-        - 'actions.yaml' file not allowed when an 'actions' section is defined in 'charmcraft.yaml' in field 'actions'"""
+        - 'actions.yaml' file not allowed when an 'actions' section is defined in 'charmcraft.yaml' (in field 'actions')"""
     )
 
 

@@ -27,7 +27,7 @@ import yaml
 from craft_cli import CraftError, emit
 
 from charmcraft import const
-from charmcraft.format import format_pydantic_errors
+from craft_application.util.error_formatting import format_pydantic_errors
 from charmcraft.metafiles import read_yaml
 from charmcraft.models.config import JujuConfig
 

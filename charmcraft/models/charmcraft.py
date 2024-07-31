@@ -27,7 +27,7 @@ from typing_extensions import Self
 
 from charmcraft import const, parts
 from charmcraft.extensions import apply_extensions
-from charmcraft.format import format_pydantic_errors
+from craft_application.util.error_formatting import format_pydantic_errors
 from charmcraft.metafiles.actions import parse_actions_yaml
 from charmcraft.metafiles.config import parse_config_yaml
 from charmcraft.metafiles.metadata import (
@@ -306,7 +306,7 @@ class CharmcraftConfig(
                 for pydantic_error in pydantic_errors:
                     pydantic_error["loc"] = ("bases", index, pydantic_error["loc"][0])
 
-                raise CraftError(format_pydantic_errors(pydantic_errors))
+                raise CraftError(format_pydantic_errors(pydantic_errors, file_name="charmcraft.yaml"))
 
             base.clear()
             base["build-on"] = [converted_base.dict()]
@@ -382,7 +382,7 @@ class CharmcraftConfig(
 
             return cls.parse_obj({"project": project, **obj})
         except pydantic.ValidationError as error:
-            raise CraftError(format_pydantic_errors(error.errors()))
+            raise CraftError(format_pydantic_errors(error.errors(), file_name="charmcraft.yaml"))
 
     @classmethod
     def schema(  # pyright: ignore[reportIncompatibleMethodOverride]

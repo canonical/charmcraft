@@ -95,7 +95,7 @@ def test_load_minimal_metadata_from_charmcraft_yaml_missing_name(
         )
     )
 
-    with pytest.raises(CraftError, match="needs value in field 'name'"):
+    with pytest.raises(CraftError, match=r"needs value \(in field 'name'\)"):
         load(tmp_path)
 
 
@@ -139,7 +139,7 @@ def test_load_minimal_metadata_from_charmcraft_yaml_missing_summary(
         ),
     )
 
-    with pytest.raises(CraftError, match="needs value in field 'summary'"):
+    with pytest.raises(CraftError, match=r"needs value \(in field 'summary'\)"):
         load(tmp_path)
 
 
@@ -161,7 +161,7 @@ def test_load_minimal_metadata_from_charmcraft_yaml_missing_description(
         ),
     )
 
-    with pytest.raises(CraftError, match="needs value in field 'description'"):
+    with pytest.raises(CraftError, match=r"needs value \(in field 'description'\)"):
         load(tmp_path)
 
 
@@ -1099,7 +1099,7 @@ def test_load_actions_in_charmcraft_yaml_and_actions_yaml(
 
     msg = (
         "'actions.yaml' file not allowed when an 'actions' section "
-        "is defined in 'charmcraft.yaml' in field 'actions'"
+        r"is defined in 'charmcraft.yaml' \(in field 'actions'\)"
     )
 
     with pytest.raises(CraftError, match=msg):

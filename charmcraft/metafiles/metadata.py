@@ -16,11 +16,9 @@
 
 """Handlers for metadata.yaml file."""
 
-import contextlib
 import logging
 import pathlib
-import shutil
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pydantic
 import yaml
@@ -29,10 +27,6 @@ from craft_cli import CraftError, emit
 
 from charmcraft import const
 from charmcraft.models.metadata import BundleMetadata, CharmMetadataLegacy
-from charmcraft.utils.yaml import dump_yaml
-
-if TYPE_CHECKING:
-    from charmcraft.models.charmcraft import CharmcraftConfig
 
 logger = logging.getLogger(__name__)
 

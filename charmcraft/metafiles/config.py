@@ -16,23 +16,16 @@
 
 """Charmcraft project handle config.yaml file."""
 
-import contextlib
 import logging
 import pathlib
-import shutil
-from typing import TYPE_CHECKING
 
 import pydantic
-import yaml
 from craft_application.util.error_formatting import format_pydantic_errors
 from craft_cli import CraftError, emit
 
 from charmcraft import const
 from charmcraft.metafiles import read_yaml
 from charmcraft.models.config import JujuConfig
-
-if TYPE_CHECKING:
-    from charmcraft.models.charmcraft import CharmcraftConfig
 
 logger = logging.getLogger(__name__)
 

@@ -26,7 +26,7 @@ from typing import final
 
 import yaml
 
-from charmcraft import config, const, utils
+from charmcraft import const, utils
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml, read_metadata_yaml
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
 
@@ -585,50 +585,3 @@ CHECKERS: list[type[BaseChecker]] = [
     Entrypoint,
     AdditionalFiles,
 ]
-
-
-def analyze(
-    config: config.CharmcraftConfig,
-    basedir: pathlib.Path,
-    *,
-    override_ignore_config: bool = False,
-) -> list[CheckResult]:
-    """Run all checkers and linters."""
-    all_results = []
-    for cls in CHECKERS:
-        # do not run the ignored ones
-        if cls.check_type == CheckType.ATTRIBUTE:
-            ignore_list = config.analysis.ignore.attributes
-        else:
-            ignore_list = config.analysis.ignore.linters
-        if cls.name in ignore_list and not override_ignore_config:
-            all_results.append(
-                CheckResult(
-                    check_type=cls.check_type,
-                    name=cls.name,
-                    result=LintResult.IGNORED,
-                    url=cls.url,
-                    text="",
-                )
-            )
-            continue
-
-        checker = cls()
-        try:
-            result = checker.run(basedir)
-        except Exception:
-            result = (
-                LintResult.UNKNOWN
-                if checker.check_type == CheckType.ATTRIBUTE
-                else LintResult.FATAL
-            )
-        all_results.append(
-            CheckResult(
-                check_type=checker.check_type,
-                name=checker.name,
-                url=checker.url,
-                text=checker.text or "n/a",
-                result=result,
-            )
-        )
-    return all_results

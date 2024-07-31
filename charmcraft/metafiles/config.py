@@ -63,7 +63,7 @@ def parse_config_yaml(charm_dir: pathlib.Path, allow_broken=False) -> JujuConfig
 
     emit.debug(f"Validating {const.JUJU_CONFIG_FILENAME}")
     try:
-        return JujuConfig.parse_obj(config)
+        return JujuConfig.model_validate(config)
     except pydantic.ValidationError as error:
         if allow_broken:
             emit.progress(

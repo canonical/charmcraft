@@ -22,12 +22,14 @@ import re
 import textwrap
 from collections.abc import Iterable, Iterator
 from typing import (
+    Annotated,
     Any,
     Literal,
     cast,
 )
 
 import pydantic
+import pydantic.v1
 from craft_application import errors, models, util
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
@@ -45,7 +47,7 @@ from charmcraft.models import charmcraft
 from charmcraft.models.charmcraft import (
     AnalysisConfig,
     BasesConfiguration,
-    CharmhubConfig,
+    Charmhub,
     Links,
 )
 from charmcraft.parts import process_part_config
@@ -65,56 +67,41 @@ class BaseDict(TypedDict, total=False):
 LongFormBasesDict = TypedDict(
     "LongFormBasesDict", {"build-on": list[BaseDict], "run-on": list[BaseDict]}
 )
-
-
-class CharmcraftSummaryStr(models.SummaryStr):
-    """A brief summary of this charm or bundle. Ideally, this should fit into one line."""
-
+CharmcraftSummaryStr = Annotated[
+    str,
+    models.SummaryStr,
+    pydantic.StringConstraints(max_length=200),
     # Maximum length was set to 200 characters because the 78 character maximum
     # inherited from craft-application is too restrictive, as several hundred charms
     # already exceed this maximum.
     # Eventually this limit will be reduced, ideally to 78 characters, though that may
     # never happen entirely. Reductions will only occur on major releases.
     # https://github.com/canonical/charmcraft/issues/1598
-    max_length = 200
+]
 
 
-class CharmPlatform(pydantic.ConstrainedStr):
-    """The platform string for a charm file.
+def get_charm_file_platform_str(bases: Iterable[charmcraft.Base]) -> str:
+    """Get the "platform" section of a charm file name from an iterable of bases."""
+    base_strings = []
+    for base in bases:
+        name = base.name
+        version = base.channel
+        architectures = "-".join(base.architectures)
+        base_strings.append(f"{name}-{version}-{architectures}")
+    return "_".join(base_strings)
 
-    This is to be generated in the form of the bases config in a charm file name.
-    A charm's filename may look as follows:
-        "{name}_{base0}_{base1}_{base...}.charm"
-    where each base takes the form of:
-        "{base_name}-{version}-{arch0}-{arch1}-{arch...}"
 
-    For example, a charm called "test" that's built to run on Alma Linux 9 and Ubuntu 22.04
-    on s390x and riscv64 platforms will have the name:
-        test_almalinux-9-riscv64-s390x_ubuntu-22.04-riscv64-s390x.charm
-    """
-
-    min_length = 4
-    strict = True
-    strip_whitespace = True
-    _host_arch = util.get_host_architecture()
-
-    @classmethod
-    def from_bases(cls: type[Self], bases: Iterable[charmcraft.Base]) -> Self:
-        """Generate a platform name from a list of charm bases."""
-        base_strings = []
-        for base in bases:
-            name = base.name
-            version = base.channel
-            architectures = "-".join(base.architectures)
-            base_strings.append(f"{name}-{version}-{architectures}")
-        return cls("_".join(base_strings))
+CharmPlatform = Annotated[
+    str,
+    pydantic.StringConstraints(min_length=4, strict=True)
+]
 
 
 class Platform(models.CraftBaseModel):
     """Project platform definition."""
 
-    build_on: list[CharmArch] = pydantic.Field(min_items=1)
-    build_for: list[CharmArch | Literal["all"]] = pydantic.Field(min_items=1, max_items=1)
+    build_on: list[CharmArch] = pydantic.Field(min_length=1)
+    build_for: list[CharmArch | Literal["all"]] = pydantic.Field(min_length=1, max_length=1)
 
     @pydantic.validator("build_on", "build_for", pre=True)
     def _listify_architectures(cls, value: str | list[str]) -> list[str]:
@@ -128,11 +115,11 @@ class CharmLib(models.CraftBaseModel):
 
     lib: str = pydantic.Field(
         title="Library Path (e.g. my-charm.my_library)",
-        regex=r"[a-z][a-z0-9_-]+\.[a-z][a-z0-9_]+",
+        pattern=r"[a-z][a-z0-9_-]+\.[a-z][a-z0-9_]+",
     )
     version: str = pydantic.Field(
         title="Version filter for the charm. Either an API version or a specific [api].[patch].",
-        regex=r"[0-9]+(\.[0-9]+)?",
+        pattern=r"[0-9]+(\.[0-9]+)?",
     )
 
     @pydantic.validator("lib", pre=True)
@@ -237,7 +224,7 @@ class CharmBuildInfo(models.BuildInfo):
 
         build_for = "-".join(sorted(all_architectures))
 
-        platform = CharmPlatform.from_bases(run_on)
+        platform = get_charm_file_platform_str(run_on)
 
         return cls(
             platform=platform,
@@ -441,9 +428,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     """
 
     type: Literal["charm", "bundle"]
-    title: models.ProjectTitle | None
-    summary: CharmcraftSummaryStr | None
-    description: str | None
+    title: models.ProjectTitle | None = None
+    summary: CharmcraftSummaryStr | None = None
+    description: str | None = None
 
     analysis: AnalysisConfig | None = pydantic.Field(
         default=None,
@@ -454,7 +441,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             Currently the only options are to ignore attributes or linters."""
         ),
     )
-    charmhub: CharmhubConfig | None = pydantic.Field(
+    charmhub: Charmhub | None = pydantic.Field(
         default=None, description="(DEPRECATED): Configuration for accessing charmhub."
     )
     parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
@@ -486,7 +473,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     def unmarshal(cls, data: dict[str, Any]):
         """Create a Charmcraft project from a dictionary of data."""
         if cls is not CharmcraftProject:
-            return cls.parse_obj(data)
+            return cls.model_validate(data)
         project_type = data.get("type")
         if project_type == "charm":
             if "bases" in data:
@@ -582,17 +569,8 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         return process_part_config(item)
 
 
-class BasesCharm(CharmcraftProject):
-    """A charm using the deprecated ``bases`` keyword.
-
-    This type of charm only supports the following bases:
-        - Ubuntu 18.04
-        - Ubuntu 20.04
-        - Ubuntu 22.04
-        - CentOS 7
-        - Alma Linux 9
-    """
-
+class CharmProject(CharmcraftProject):
+    """A base class for all charm types."""
     type: Literal["charm"]
     """The type of project. Must be the string ``charm``."""
     name: models.ProjectName = pydantic.Field(
@@ -615,14 +593,6 @@ class BasesCharm(CharmcraftProject):
         description="A brief (one-line) summary of your charm.",
     )
     description: str = pydantic.Field(description="A multi-line summary of your charm.")
-    platforms: None = None  # type: ignore[assignment]
-
-    # This is defined this way because using conlist makes mypy sad and using
-    # a ConstrainedList child class has pydantic issues. This appears to be
-    # solved with Pydantic 2.
-    bases: list[BasesConfiguration] = pydantic.Field(min_items=1)
-
-    base: None = None
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(
         default={"charm": {"plugin": "charm", "source": "."}},
@@ -1020,6 +990,29 @@ class BasesCharm(CharmcraftProject):
         ],
     )
 
+
+class BasesCharm(CharmProject):
+    """A charm using the deprecated ``bases`` keyword.
+
+    This type of charm only supports the following bases:
+        - Ubuntu 18.04
+        - Ubuntu 20.04
+        - Ubuntu 22.04
+        - CentOS 7
+        - Alma Linux 9
+    """
+
+    platforms: None = None  # type: ignore[assignment]
+
+    # This is defined this way because using conlist makes mypy sad and using
+    # a ConstrainedList child class has pydantic issues. This appears to be
+    # solved with Pydantic 2.
+    bases: list[BasesConfiguration] = pydantic.Field(min_length=1)
+
+    base: None = None
+
+
+
     @pydantic.validator("bases", pre=True, each_item=True, allow_reuse=True)
     def _validate_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
         """Expand short-form bases into long-form bases."""
@@ -1052,34 +1045,14 @@ class BasesCharm(CharmcraftProject):
         return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
 
 
-class PlatformCharm(CharmcraftProject):
+class PlatformCharm(CharmProject):
     """Model for defining a charm using Platforms."""
-
-    type: Literal["charm"]
-    name: models.ProjectName
-    summary: CharmcraftSummaryStr
-    description: str
 
     # Silencing pyright because it complains about missing default value
     base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
     build_base: BuildBaseStr | None = None
     platforms: dict[str, Platform | None]  # type: ignore[assignment]
     parts: dict[str, dict[str, Any]]  # pyright: ignore[reportGeneralTypeIssues]
-
-    actions: dict[str, Any] | None
-    assumes: list[str | dict[str, list | dict]] | None
-    containers: dict[str, Any] | None
-    devices: dict[str, Any] | None
-    extra_bindings: dict[str, Any] | None
-    peers: dict[str, Any] | None
-    provides: dict[str, Any] | None
-    requires: dict[str, Any] | None
-    resources: dict[str, Any] | None
-    storage: dict[str, Any] | None
-    subordinate: bool | None
-    terms: list[str] | None
-    links: Links | None
-    config: dict[str, Any] | None
 
     @staticmethod
     def _check_base_is_legacy(base: BaseDict) -> bool:
@@ -1114,13 +1087,13 @@ class Bundle(CharmcraftProject):
     type: Literal["bundle"]
     bundle: dict[str, Any] = {}
     name: models.ProjectName | None = None  # type: ignore[assignment]
-    title: models.ProjectTitle | None
-    summary: CharmcraftSummaryStr | None
-    description: pydantic.StrictStr | None
-    charmhub: CharmhubConfig = CharmhubConfig()
+    title: models.ProjectTitle | None = None
+    summary: CharmcraftSummaryStr | None = None
+    description: pydantic.StrictStr | None = None
     platforms: None = None  # type: ignore[assignment]
 
-    @pydantic.root_validator(pre=True)
+    @pydantic.model_validator(mode="before")
+    @classmethod
     def preprocess_bundle(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Preprocess any values that charmcraft infers, before attribute validation."""
         if "name" not in values:

@@ -69,7 +69,7 @@ def parse_actions_yaml(charm_dir, allow_broken=False):
 
     emit.debug(f"Validating {const.JUJU_ACTIONS_FILENAME}")
     try:
-        return JujuActions.parse_obj({"actions": actions})
+        return JujuActions.model_validate({"actions": actions})
     except pydantic.ValidationError as error:
         if allow_broken:
             emit.progress(

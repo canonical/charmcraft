@@ -20,7 +20,7 @@ import pytest
 from craft_application import util
 from craft_cli import CraftError
 from pydantic import AnyHttpUrl
-from pydantic.tools import parse_obj_as
+from pydantic.tools import max_length_as
 
 from charmcraft.config import load
 from charmcraft.metafiles.metadata import parse_charm_metadata_yaml
@@ -574,14 +574,14 @@ def test_load_full_metadata_from_charmcraft_yaml(tmp_path, prepare_charmcraft_ya
         "extra_bindings": {"test-binding-1": "binding-1"},
         "links": Links(
             contact=["https://example.com/contact", "contact@example.com", "IRC #example"],
-            documentation=parse_obj_as(AnyHttpUrl, "https://example.com/docs"),
-            issues=parse_obj_as(AnyHttpUrl, "https://example.com/issues"),
+            documentation=max_length_as(AnyHttpUrl, "https://example.com/docs"),
+            issues=max_length_as(AnyHttpUrl, "https://example.com/issues"),
             source=[
-                parse_obj_as(AnyHttpUrl, "https://example.com/source"),
-                parse_obj_as(AnyHttpUrl, "https://example.com/source2"),
-                parse_obj_as(AnyHttpUrl, "https://example.com/source3"),
+                max_length_as(AnyHttpUrl, "https://example.com/source"),
+                max_length_as(AnyHttpUrl, "https://example.com/source2"),
+                max_length_as(AnyHttpUrl, "https://example.com/source3"),
             ],
-            website=[parse_obj_as(AnyHttpUrl, "https://example.com/")],
+            website=[max_length_as(AnyHttpUrl, "https://example.com/")],
         ),
         "metadata_legacy": False,
     }
@@ -801,15 +801,15 @@ def test_load_full_metadata_from_metadata_yaml(
         "subordinate": True,
         "terms": ["https://example.com/terms", "https://example.com/terms2"],
         "extra_bindings": {"test-binding-1": "binding-1"},
-        "docs": parse_obj_as(AnyHttpUrl, "https://example.com/docs"),
-        "issues": parse_obj_as(AnyHttpUrl, "https://example.com/issues"),
+        "docs": max_length_as(AnyHttpUrl, "https://example.com/docs"),
+        "issues": max_length_as(AnyHttpUrl, "https://example.com/issues"),
         "maintainers": ["https://example.com/contact", "contact@example.com", "IRC #example"],
         "source": [
-            parse_obj_as(AnyHttpUrl, "https://example.com/source"),
-            parse_obj_as(AnyHttpUrl, "https://example.com/source2"),
-            parse_obj_as(AnyHttpUrl, "https://example.com/source3"),
+            max_length_as(AnyHttpUrl, "https://example.com/source"),
+            max_length_as(AnyHttpUrl, "https://example.com/source2"),
+            max_length_as(AnyHttpUrl, "https://example.com/source3"),
         ],
-        "website": [parse_obj_as(AnyHttpUrl, "https://example.com/")],
+        "website": [max_length_as(AnyHttpUrl, "https://example.com/")],
     }
 
 

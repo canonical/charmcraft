@@ -26,7 +26,7 @@ from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
 
-class ReactivePluginProperties(plugins.PluginProperties, plugins.PluginModel):
+class ReactivePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack reactive charms using charm-tools."""
 
     source: str

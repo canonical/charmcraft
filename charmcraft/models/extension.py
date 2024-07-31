@@ -16,11 +16,11 @@
 """Extension models."""
 from typing import Any
 
-from charmcraft.models.basic import ModelConfigDefaults
+from charmcraft.models.basic import CharmcraftModel
 
 
 # Mypy complaining about frozen inheritance.
-class ExtensionModel(ModelConfigDefaults, frozen=True):  # type: ignore[misc]
+class ExtensionModel(CraftBaseModel):  # type: ignore[misc]
     """Extension model for presentation."""
 
     name: str

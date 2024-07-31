@@ -19,12 +19,11 @@
 import keyword
 import re
 
+from craft_application.models import CraftBaseModel
 import pydantic
 
-from charmcraft.models.basic import ModelConfigDefaults
 
-
-class JujuActions(ModelConfigDefaults, frozen=True):
+class JujuActions(CraftBaseModel):
     """Juju actions for charms.
 
     See also: https://juju.is/docs/sdk/actions

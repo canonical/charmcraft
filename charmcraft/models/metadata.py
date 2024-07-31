@@ -85,7 +85,7 @@ class CharmMetadata(models.BaseMetadata):
         if "title" in charm_dict:
             charm_dict["display-name"] = charm_dict.pop("title")
 
-        return cls.parse_obj(charm_dict)
+        return cls.model_validate(charm_dict)
 
 
 class CharmMetadataLegacy(CharmMetadata):
@@ -122,7 +122,7 @@ class CharmMetadataLegacy(CharmMetadata):
             data["maintainers"] = [data["maintainer"]]
             del data["maintainer"]
 
-        return cls.parse_obj(data)
+        return cls.model_validate(data)
 
 
 class BundleMetadata(models.BaseMetadata):
@@ -136,6 +136,6 @@ class BundleMetadata(models.BaseMetadata):
         """Turn a populated bundle model into a metadata.yaml model."""
         bundle_dict = bundle.marshal()
         if "bundle" in bundle_dict:
-            return cls.parse_obj(bundle_dict["bundle"])
+            return cls.model_validate(bundle_dict["bundle"])
         del bundle_dict["type"]
-        return cls.parse_obj(bundle_dict)
+        return cls.model_validate(bundle_dict)

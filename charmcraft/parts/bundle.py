@@ -21,7 +21,7 @@ import overrides
 from craft_parts import plugins
 
 
-class BundlePluginProperties(plugins.PluginProperties, plugins.PluginModel):
+class BundlePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack bundles."""
 
     source: str

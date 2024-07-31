@@ -588,7 +588,7 @@ CHECKERS: list[type[BaseChecker]] = [
 
 
 def analyze(
-    config: config.CharmcraftConfig,
+    config: "config.CharmcraftConfig",
     basedir: pathlib.Path,
     *,
     override_ignore_config: bool = False,

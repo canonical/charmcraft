@@ -78,43 +78,43 @@ from charmcraft.env import (
     get_managed_environment_project_path,
     is_charmcraft_running_in_managed_mode,
 )
-from charmcraft.models.charmcraft import CharmcraftConfig, Project
-from charmcraft.utils import load_yaml
-
-
-def load(dirpath: str | None) -> CharmcraftConfig:
-    """Load the config from charmcraft.yaml in the indicated directory."""
-    if dirpath is None:
-        if is_charmcraft_running_in_managed_mode():
-            path = get_managed_environment_project_path()
-        else:
-            path = pathlib.Path.cwd()
-    else:
-        path = pathlib.Path(dirpath).expanduser().resolve()
-
-    now = datetime.datetime.utcnow()
-
-    content = load_yaml(path / const.CHARMCRAFT_FILENAME)
-    if content is None:
-        # configuration is mandatory only for some commands; when not provided, it will
-        # be initialized all with defaults (but marked as not provided for later verification)
-        return CharmcraftConfig(  # pyright: ignore[reportCallIssue]
-            type="charm",
-            project=Project(
-                dirpath=path,
-                config_provided=False,
-                started_at=now,
-            ),
-            name="missing-charm-name",
-            summary="missing-charm-summary",
-            description="missing-charm-description",
-        )
-
-    return CharmcraftConfig.unmarshal(
-        content,
-        project=Project(
-            dirpath=path,
-            config_provided=True,
-            started_at=now,
-        ),
-    )
+# from charmcraft.models.charmcraft import Charmcraft, Project
+# from charmcraft.utils import load_yaml
+#
+#
+# def load(dirpath: str | None) -> Charmcraft:
+#     """Load the config from charmcraft.yaml in the indicated directory."""
+#     if dirpath is None:
+#         if is_charmcraft_running_in_managed_mode():
+#             path = get_managed_environment_project_path()
+#         else:
+#             path = pathlib.Path.cwd()
+#     else:
+#         path = pathlib.Path(dirpath).expanduser().resolve()
+#
+#     now = datetime.datetime.utcnow()
+#
+#     content = load_yaml(path / const.CHARMCRAFT_FILENAME)
+#     if content is None:
+#         # configuration is mandatory only for some commands; when not provided, it will
+#         # be initialized all with defaults (but marked as not provided for later verification)
+#         return CharmcraftConfig(  # pyright: ignore[reportCallIssue]
+#             type="charm",
+#             project=Project(
+#                 dirpath=path,
+#                 config_provided=False,
+#                 started_at=now,
+#             ),
+#             name="missing-charm-name",
+#             summary="missing-charm-summary",
+#             description="missing-charm-description",
+#         )
+#
+#     return CharmcraftConfig.unmarshal(
+#         content,
+#         project=Project(
+#             dirpath=path,
+#             config_provided=True,
+#             started_at=now,
+#         ),
+#     )

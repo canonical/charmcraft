@@ -21,7 +21,7 @@ import pytest
 from overrides import override
 
 from charmcraft import const, errors, extensions
-from charmcraft.config import load
+# from charmcraft.config import load
 from charmcraft.extensions.extension import Extension
 
 

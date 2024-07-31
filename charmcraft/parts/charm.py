@@ -39,7 +39,7 @@ from charmcraft.utils import (
 PACKAGE_NAME_REGEX = re.compile(r"[A-Za-z0-9_.-]+")
 
 
-class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
+class CharmPluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used in charm building."""
 
     source: str
@@ -151,21 +151,6 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
             ) from e
 
         return charm_strict_dependencies
-
-    @classmethod
-    def unmarshal(cls, data: dict[str, Any]):
-        """Populate charm properties from the part specification.
-
-        :param data: A dictionary containing part properties.
-
-        :return: The populated plugin properties data object.
-
-        :raise pydantic.ValidationError: If validation fails.
-        """
-        plugin_data = plugins.extract_plugin_properties(
-            data, plugin_name="charm", required=["source"]
-        )
-        return cls(**plugin_data)
 
 
 class CharmPlugin(plugins.Plugin):

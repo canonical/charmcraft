@@ -119,12 +119,12 @@ SIMPLE_ACTIONS_DICT = {"snooze": {"description": "Take a little nap."}}
         ),
     ],
 )
-def test_platform_from_bases_backwards_compatible(bases, expected):
+def test_platform_from_bases_backwards_compatible(bases: list[Base], expected: str):
     """Replicates the format_charm_file_name tests in test_package.py.
 
     This ensures that charm names remain consistent as we move to platforms.
     """
-    assert project.CharmPlatform.from_bases(bases) == expected
+    assert project.get_charm_file_platform_str(bases) == expected
 
 
 @pytest.mark.parametrize("base", [*SIMPLE_BASES, *COMPLEX_BASES])
@@ -133,7 +133,7 @@ def test_platform_from_single_base(base):
     expected_architectures = "-".join(base.architectures)
     expected = f"{base.name}-{base.channel}-{expected_architectures}"
 
-    actual = project.CharmPlatform.from_bases([base])
+    actual = project.get_charm_file_platform_str([base])
 
     assert actual == expected
 
@@ -149,7 +149,7 @@ def test_platform_from_single_base(base):
     ],
 )
 def test_platform_from_multiple_bases(bases, expected):
-    assert project.CharmPlatform.from_bases(bases) == expected
+    assert project.get_charm_file_platform_str(bases) == expected
 
 
 # endregion
@@ -165,7 +165,7 @@ VALID_PLATFORM_ARCHITECTURES = [
 @pytest.mark.parametrize("build_on", VALID_PLATFORM_ARCHITECTURES)
 @pytest.mark.parametrize("build_for", [[arch] for arch in (*const.CharmArch, "all")])
 def test_platform_validation_lists(build_on, build_for):
-    platform = project.Platform.parse_obj({"build-on": build_on, "build-for": build_for})
+    platform = project.Platform.model_validate({"build-on": build_on, "build-for": build_for})
 
     assert platform.build_for == build_for
     assert platform.build_on == build_on
@@ -174,7 +174,7 @@ def test_platform_validation_lists(build_on, build_for):
 @pytest.mark.parametrize("build_on", const.CharmArch)
 @pytest.mark.parametrize("build_for", [*const.CharmArch, "all"])
 def test_platform_validation_strings(build_on, build_for):
-    platform = project.Platform.parse_obj({"build-on": build_on, "build-for": build_for})
+    platform = project.Platform.model_validate({"build-on": build_on, "build-for": build_for})
 
     assert platform.build_for == [build_for]
     assert platform.build_on == [build_on]
@@ -468,7 +468,7 @@ def test_build_info_generator(given, expected):
     ],
 )
 def test_build_planner_correct(data, expected):
-    planner = project.CharmcraftBuildPlanner.parse_obj(data)
+    planner = project.CharmcraftBuildPlanner.model_validate(data)
 
     assert planner.get_build_plan() == expected
 
@@ -744,7 +744,7 @@ def test_instantiate_bases_charm_success(values: dict[str, Any], expected_change
                 "description": "This charm has no bases and is thus invalid.",
             },
             pydantic.ValidationError,
-            r"bases\s+field required",
+            r"bases\s+Field required",
             id="no-bases",
         ),
         pytest.param(
@@ -756,7 +756,7 @@ def test_instantiate_bases_charm_success(values: dict[str, Any], expected_change
                 "bases": [],
             },
             pydantic.ValidationError,
-            r"bases\s+ensure this value has at least 1 item",
+            r"bases\s+List should have at least 1 item",
             id="empty-bases",
         ),
     ],
@@ -824,7 +824,7 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
                 - field 'name' required in top-level configuration
                 - field 'summary' required in top-level configuration
                 - field 'description' required in top-level configuration
-                - unexpected value; permitted: 'charm' (in field 'type')
+                - input should be 'charm' (in field 'type')
                 - field 'bases' required in top-level configuration"""
             ),
         ),
@@ -833,8 +833,8 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             dedent(
                 """\
                 Bad invalid-base.yaml content:
-                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
-                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
+                - value error, Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
+                - value error, Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
             ),
         ),
     ],

@@ -33,7 +33,7 @@ from craft_parts import callbacks, plugins
 from craft_providers import bases
 
 import charmcraft.parts
-from charmcraft import const, deprecations, instrum, parts, services, store
+from charmcraft import const, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
 from charmcraft.bases import get_host_as_base
 from charmcraft.models import charmcraft as config_module
@@ -242,7 +242,6 @@ def intertests_cleanups():
     """
     importlib.reload(instrum)
     yield
-    deprecations._ALREADY_NOTIFIED.clear()
     callbacks.unregister_all()
 
 

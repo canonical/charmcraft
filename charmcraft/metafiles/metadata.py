@@ -73,21 +73,3 @@ def parse_charm_metadata_yaml(
             }
             return CharmMetadataLegacy.unmarshal(metadata_basic)
         raise
-
-
-def parse_bundle_metadata_yaml(charm_dir: pathlib.Path) -> BundleMetadata:
-    """Parse project's legacy metadata.yaml that used for bundles.
-
-    :returns: a BundleMetadataLegacy object.
-
-    :raises: CraftError if metadata.yaml does not exist or is not valid.
-    """
-    try:
-        metadata = read_metadata_yaml(charm_dir)
-    except OSError as exc:
-        raise CraftError(f"Cannot read the metadata.yaml file: {exc!r}") from exc
-    if not isinstance(metadata, dict):
-        raise CraftError(f"The {charm_dir / const.METADATA_FILENAME} file is not valid YAML.")
-
-    emit.debug("Validating metadata keys")
-    return BundleMetadata.unmarshal(metadata)

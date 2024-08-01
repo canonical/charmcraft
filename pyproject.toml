@@ -345,3 +345,7 @@ classmethod-decorators = ["pydantic.validator"]
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.
 "__init__.py" = ["I001"]
+
+[[tool.rye.sources]]
+name = "python-apt"
+url = "https://people.canonical.com/~lengau/pypi/"

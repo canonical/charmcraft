@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Canonical Ltd.
+# Copyright 2020-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,8 +71,6 @@ apps:
 confinement: classic
 
 build-packages:
-  - cargo
-  - rustc
   - pkg-config
   - python3.10-dev
   - libpython3.10-dev
@@ -88,6 +86,8 @@ build-packages:
   - libxml2-dev
   - libxslt1-dev
   - libyaml-dev
+build-snaps:
+  - rustup
 
 
 parts:
@@ -125,7 +125,7 @@ parts:
     plugin: python
     python-requirements:
       - requirements-jammy.txt
-      - requirements.txt
+      - requirements.lock
     build-environment:
       # CFLAGS for Python 3.10 and libyaml. Allows cryptography and pyyaml to find
       # the appropriate system libraries.
@@ -134,6 +134,9 @@ parts:
       # https://github.com/canonical/charmcraft/issues/1369
       - PIP_NO_BINARY: ":all:"
       - CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
+      # Needed so python-apt knows which version it's building. Will no longer
+      # be needed once we move to core24.
+      - DEBVER: 2.4.0ubuntu3
     build-attributes:
       - enable-patchelf
     override-pull: |
@@ -145,6 +148,8 @@ parts:
       craftctl set version="${version}"
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       craftctl set grade="${grade}"
+      # Get the latest rust
+      rustup default stable
     override-build: |
       craftctl default
       cp -v completion.bash ../install

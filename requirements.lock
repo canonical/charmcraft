@@ -7,7 +7,7 @@
 #   all-features: false
 #   with-sources: false
 #   generate-hashes: false
-#   universal: false
+#   universal: true
 
 -e file:.
 annotated-types==0.7.0
@@ -42,7 +42,7 @@ craft-providers==1.24.1
     # via craft-application
 craft-store==2.6.2
     # via charmcraft
-cryptography==43.0.0
+cryptography==43.0.0 ; sys_platform == 'linux'
     # via secretstorage
 deprecated==1.2.14
     # via pydantic-yaml
@@ -65,7 +65,7 @@ importlib-metadata==8.1.0
     # via pydantic-yaml
 jaraco-classes==3.4.0
     # via keyring
-jeepney==0.8.0
+jeepney==0.8.0 ; sys_platform == 'linux'
     # via keyring
     # via secretstorage
 jinja2==3.1.4
@@ -133,6 +133,11 @@ python-dateutil==2.9.0.post0
     # via charmcraft
 pytz==2024.1
     # via pyrfc3339
+pywin32==306 ; sys_platform == 'win32'
+    # via craft-cli
+    # via docker
+pywin32-ctypes==0.2.2 ; sys_platform == 'win32'
+    # via keyring
 pyxdg==0.28
     # via craft-parts
     # via craft-store
@@ -167,11 +172,12 @@ requests-unixsocket==0.3.0
 rpds-py==0.19.0
     # via jsonschema
     # via referencing
-secretstorage==3.3.3
+secretstorage==3.3.3 ; sys_platform == 'linux'
     # via keyring
 setuptools==71.1.0
     # via lazr-restfulclient
     # via lazr-uri
+    # via pygit2
     # via wadllib
 six==1.16.0
     # via lazr-restfulclient

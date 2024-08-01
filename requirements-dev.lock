@@ -7,7 +7,7 @@
 #   all-features: false
 #   with-sources: false
 #   generate-hashes: false
-#   universal: false
+#   universal: true
 
 -e file:.
 annotated-types==0.7.0
@@ -30,6 +30,9 @@ click==8.1.7
     # via black
 codespell==2.3.0
     # via charmcraft
+colorama==0.4.6 ; platform_system == 'Windows' or sys_platform == 'win32'
+    # via click
+    # via pytest
 coverage==7.6.0
     # via charmcraft
     # via pytest-cov
@@ -52,7 +55,7 @@ craft-providers==1.24.1
     # via craft-application
 craft-store==2.6.2
     # via charmcraft
-cryptography==43.0.0
+cryptography==43.0.0 ; sys_platform == 'linux'
     # via secretstorage
 deprecated==1.2.14
     # via pydantic-yaml
@@ -63,7 +66,7 @@ distro==1.9.0
     # via lazr-restfulclient
 docker==7.1.0
     # via charmcraft
-exceptiongroup==1.2.2
+exceptiongroup==1.2.2 ; python_version < '3.11'
     # via hypothesis
     # via pytest
 flake8==7.1.0
@@ -86,7 +89,7 @@ iniconfig==2.0.0
     # via pytest
 jaraco-classes==3.4.0
     # via keyring
-jeepney==0.8.0
+jeepney==0.8.0 ; sys_platform == 'linux'
     # via keyring
     # via secretstorage
 jinja2==3.1.4
@@ -193,13 +196,18 @@ pytest-mock==3.14.0
     # via charmcraft
 pytest-subprocess==1.5.2
     # via charmcraft
-python-apt==2.4.0+ubuntu3
+python-apt==2.4.0+ubuntu3 ; sys_platform == 'linux'
     # via charmcraft
 python-dateutil==2.9.0.post0
     # via charmcraft
     # via freezegun
 pytz==2024.1
     # via pyrfc3339
+pywin32==306 ; sys_platform == 'win32'
+    # via craft-cli
+    # via docker
+pywin32-ctypes==0.2.2 ; sys_platform == 'win32'
+    # via keyring
 pyxdg==0.28
     # via craft-parts
     # via craft-store
@@ -239,11 +247,12 @@ responses==0.25.3
 rpds-py==0.19.0
     # via jsonschema
     # via referencing
-secretstorage==3.3.3
+secretstorage==3.3.3 ; sys_platform == 'linux'
     # via keyring
 setuptools==71.1.0
     # via lazr-restfulclient
     # via lazr-uri
+    # via pygit2
     # via wadllib
 six==1.16.0
     # via lazr-restfulclient
@@ -259,7 +268,7 @@ sortedcontainers==2.4.0
     # via hypothesis
 tabulate==0.9.0
     # via charmcraft
-tomli==2.0.1
+tomli==2.0.1 ; python_full_version <= '3.11.0a6' or python_version < '3.11'
     # via black
     # via coverage
     # via mypy

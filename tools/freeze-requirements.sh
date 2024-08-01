@@ -9,7 +9,7 @@ requirements_fixups() {
 
 venv_dir="$(mktemp -d)"
 
-python3 -m venv "$venv_dir"
+uv venv "$venv_dir"
 # shellcheck source=/dev/null
 . "$venv_dir/bin/activate"
 
@@ -22,12 +22,12 @@ dpkg -x ./*.deb .
 cp -r usr/lib/python3/dist-packages/* "$site_pkgs"
 popd
 
-pip install -e .
-pip freeze --exclude-editable > requirements.txt
+uv pip install -e .
+uv pip freeze --exclude-editable > requirements.txt
 requirements_fixups "requirements.txt"
 
-pip install -e .[dev]
-pip freeze --exclude-editable > requirements-dev.txt
+uv pip install -e .[dev]
+uv pip freeze --exclude-editable > requirements-dev.txt
 requirements_fixups "requirements-dev.txt"
 
 rm -rf "$venv_dir"

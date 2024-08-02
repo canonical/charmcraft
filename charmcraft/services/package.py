@@ -197,10 +197,13 @@ class PackageService(services.PackageService):
         if isinstance(self._project, PlatformCharm):
             if not self._platform:
                 architectures = [util.get_host_architecture()]
-            elif platform := self._project.platforms.get(self._platform):
-                architectures = [str(arch) for arch in platform.build_for]
             elif self._platform in (*const.SUPPORTED_ARCHITECTURES, "all"):
                 architectures = [self._platform]
+            elif platform := self._project.platforms.get(self._platform):
+                if platform.build_for:
+                    architectures = [str(arch) for arch in platform.build_for]
+                else:
+                    raise ValueError(f"Platform {self._platform} contains unknown build-for.")
             else:
                 architectures = [util.get_host_architecture()]
             return [models.Base.from_str_and_arch(self._project.base, architectures)]

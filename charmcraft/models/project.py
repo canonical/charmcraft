@@ -362,7 +362,8 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                     )
                 )
             else:
-                for build_on in platform.build_on:
+                # TODO: this should go to craft-platforms, so silence mypy for now.
+                for build_on in platform.build_on:  # type: ignore[union-attr]
                     build_infos.extend(
                         [
                             models.BuildInfo(
@@ -371,7 +372,7 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                                 build_for=str(build_for),
                                 base=base,
                             )
-                            for build_for in platform.build_for
+                            for build_for in platform.build_for  # type: ignore[union-attr]
                         ]
                     )
         return build_infos

@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Bundle plugin for craft-parts."""
 import sys
-from typing import Any, Literal
+from typing import Literal
 
 import overrides
 from craft_parts import plugins

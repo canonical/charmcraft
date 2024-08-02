@@ -16,7 +16,7 @@
 
 """Charmcraft basic pydantic model."""
 from typing import Annotated
-import craft_application.models
+
 import craft_parts.constraints
 import pydantic
 
@@ -49,7 +49,6 @@ def _validate_linter_name(value: str) -> str:
     return value
 
 
-
 RelativePath = craft_parts.constraints.RelativePathStr
 AttributeName = Annotated[  # TODO: Turn this into a StrEnum
     str,
@@ -57,5 +56,7 @@ AttributeName = Annotated[  # TODO: Turn this into a StrEnum
     pydantic.BeforeValidator(_validate_attribute_name),
 ]
 LinterName = Annotated[
-    str, pydantic.Field(strict=True), pydantic.BeforeValidator(_validate_linter_name),
+    str,
+    pydantic.Field(strict=True),
+    pydantic.BeforeValidator(_validate_linter_name),
 ]

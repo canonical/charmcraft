@@ -35,13 +35,12 @@ from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
 from pydantic import dataclasses
-from typing_extensions import Self, TypedDict
+from typing_extensions import Self
 
 from charmcraft import const, preprocess, utils
 from charmcraft.const import (
     BaseStr,
     BuildBaseStr,
-    CharmArch,
 )
 from charmcraft.models import charmcraft
 from charmcraft.models.charmcraft import (
@@ -51,7 +50,6 @@ from charmcraft.models.charmcraft import (
     Links,
 )
 from charmcraft.parts import process_part_config
-
 
 CharmcraftSummaryStr = Annotated[
     str,
@@ -77,10 +75,7 @@ def get_charm_file_platform_str(bases: Iterable[charmcraft.Base]) -> str:
     return "_".join(base_strings)
 
 
-CharmPlatform = Annotated[
-    str,
-    pydantic.StringConstraints(min_length=4, strict=True)
-]
+CharmPlatform = Annotated[str, pydantic.StringConstraints(min_length=4, strict=True)]
 
 
 class CharmLib(models.CraftBaseModel):
@@ -427,7 +422,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # These private attributes are not part of the project model but are attached here
     # because Charmcraft uses this metadata.
-    _started_at: datetime.datetime = pydantic.PrivateAttr(default_factory=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+    _started_at: datetime.datetime = pydantic.PrivateAttr(
+        default_factory=lambda: datetime.datetime.now(tz=datetime.timezone.utc)
+    )
     _valid: bool = pydantic.PrivateAttr(default=False)
 
     @property
@@ -534,14 +531,12 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     @pydantic.field_validator("parts", mode="before")
     def _validate_parts(cls, parts: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
         """Verify each part in the parts section. Craft-parts will re-validate them."""
-        return {
-            name: process_part_config(part)
-            for name, part in parts.items()
-        }
+        return {name: process_part_config(part) for name, part in parts.items()}
 
 
 class CharmProject(CharmcraftProject):
     """A base class for all charm types."""
+
     type: Literal["charm"]
     """The type of project. Must be the string ``charm``."""
     name: models.ProjectName = pydantic.Field(
@@ -961,20 +956,23 @@ class CharmProject(CharmcraftProject):
         ],
     )
 
+
 def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:
-        """Check that the given base is a legacy base, usable with 'bases'."""
-        # This pyright ignore can go away once we're on Python minimum version 3.11.
-        # At that point we can mark items as required or not required.
-        # https://docs.python.org/3/library/typing.html#typing.Required
-        if (
-            base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-            and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-        ):
-            return True
-        return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
+    """Check that the given base is a legacy base, usable with 'bases'."""
+    # This pyright ignore can go away once we're on Python minimum version 3.11.
+    # At that point we can mark items as required or not required.
+    # https://docs.python.org/3/library/typing.html#typing.Required
+    if (
+        base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+        and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+    ):
+        return True
+    return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
 
 
-def _validate_base(base: charmcraft.BaseDict | charmcraft.LongFormBasesDict) -> charmcraft.LongFormBasesDict:
+def _validate_base(
+    base: charmcraft.BaseDict | charmcraft.LongFormBasesDict,
+) -> charmcraft.LongFormBasesDict:
     if "name" in base:  # Convert short form to long form
         base = cast(charmcraft.LongFormBasesDict, {"build-on": [base], "run-on": [base]})
     else:  # Cast to long form since we know it is one.
@@ -1006,12 +1004,9 @@ class BasesCharm(CharmProject):
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydantic issues. This appears to be
     # solved with Pydantic 2.
-    bases: list[
-        Annotated[
-            BasesConfiguration,
-            pydantic.BeforeValidator(_validate_base)
-        ]
-    ] = pydantic.Field(min_length=1)
+    bases: list[Annotated[BasesConfiguration, pydantic.BeforeValidator(_validate_base)]] = (
+        pydantic.Field(min_length=1)
+    )
 
     base: None = None
 

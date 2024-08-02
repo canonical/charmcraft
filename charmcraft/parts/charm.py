@@ -20,8 +20,7 @@ import re
 import shlex
 import sys
 from contextlib import suppress
-from typing import Any, Literal, cast
-from typing_extensions import Self
+from typing import Literal, cast
 
 import overrides
 import pydantic
@@ -29,6 +28,7 @@ from craft_parts import Step, callbacks, plugins
 from craft_parts.errors import OsReleaseIdError, OsReleaseVersionIdError
 from craft_parts.packages import platform
 from craft_parts.utils import os_utils
+from typing_extensions import Self
 
 from charmcraft import charm_builder, env, instrum
 from charmcraft.errors import DependencyError

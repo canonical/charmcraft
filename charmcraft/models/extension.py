@@ -16,8 +16,6 @@
 """Extension models."""
 from typing import Any
 
-from charmcraft.models.basic import CharmcraftModel
-
 
 # Mypy complaining about frozen inheritance.
 class ExtensionModel(CraftBaseModel):  # type: ignore[misc]

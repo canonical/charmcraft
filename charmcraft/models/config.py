@@ -17,10 +17,8 @@
 """Charmcraft Juju Config pydantic model."""
 from typing import Annotated, Literal
 
-from craft_application.models import CraftBaseModel
 import pydantic
-
-from typing_extensions import Annotated
+from craft_application.models import CraftBaseModel
 
 
 class _BaseJujuOption(CraftBaseModel):
@@ -66,7 +64,9 @@ class JujuSecretOption(_BaseJujuOption):
     # that anyone would know what the secret ID (specific to
     # the deployment in a model) is at the time that they are
     # writing the config, but included for completeness.
-    default: Annotated[str, pydantic.StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")] | None = None
+    default: (
+        Annotated[str, pydantic.StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")] | None
+    ) = None
 
 
 JujuOption = Annotated[

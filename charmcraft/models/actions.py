@@ -19,8 +19,8 @@
 import keyword
 import re
 
-from craft_application.models import CraftBaseModel
 import pydantic
+from craft_application.models import CraftBaseModel
 
 
 class JujuActions(CraftBaseModel):

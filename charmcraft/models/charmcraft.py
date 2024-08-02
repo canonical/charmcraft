@@ -15,22 +15,14 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft configuration pydantic model."""
-import datetime
-import os
-import pathlib
-from typing import Any, Literal, TypedDict, cast
-from typing import cast
+from typing import TypedDict, cast
 
-from craft_application.models import CraftBaseModel
 import pydantic
 from craft_application import util
+from craft_application.models import CraftBaseModel
 from typing_extensions import Self
 
-from charmcraft import const, parts
-from charmcraft.extensions import apply_extensions
-from charmcraft.models.actions import JujuActions
 from charmcraft.models.basic import AttributeName, LinterName
-from charmcraft.models.config import JujuConfig
 
 
 class BaseDict(TypedDict, total=False):
@@ -103,6 +95,7 @@ class BasesConfiguration(CraftBaseModel):
         if "build-on" in base:  # Assume long-form base already.
             return cast(LongFormBasesDict, base)
         return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+
 
 class Ignore(CraftBaseModel):
     """Definition of `analysis.ignore` configuration."""

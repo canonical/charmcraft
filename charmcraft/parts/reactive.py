@@ -19,7 +19,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Literal, cast
 
 import overrides
 from craft_parts import plugins

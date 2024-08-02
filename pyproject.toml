@@ -5,7 +5,7 @@ description = "The main tool to build, upload, and develop in general the Juju c
 readme = "README.md"
 dependencies = [
     # TODO: Undo these
-    "craft-application@git+https://github.com/canonical/craft-application@work/345/pydantic-2",
+    "craft-application@git+https://github.com/canonical/craft-application@feature/pydantic-2",
     "craft-cli>=2.3.0",
     "craft-grammar@git+https://github.com/canonical/craft-grammar@feature/pydantic-2",
     "craft-parts@git+https://github.com/canonical/craft-parts@feature/2.0",

@@ -4,14 +4,14 @@ certifi==2024.7.4
 cffi==1.16.0
 charset-normalizer==3.3.2
 coverage==7.6.0
-craft-application @ git+https://github.com/canonical/craft-application@c838b246797a67f3fbe41662e831522f7036fe03
-craft-archives @ git+https://github.com/canonical/craft-archives@00b9b3b69346ae3c6b2d8da2939cc94ba00843bf
+craft-application @ git+https://github.com/canonical/craft-application@feature/pydantic-2
+craft-archives @ git+https://github.com/canonical/craft-archives@feature/2.0
 craft-cli==2.6.0
-craft-grammar @ git+https://github.com/canonical/craft-grammar@5e225fb806eafbbefa7ffc19b0349e3c34910ca5
-craft-parts @ git+https://github.com/canonical/craft-parts@09a998112ab7a065adf8c3c7df5ed52da7845954
+craft-grammar @ git+https://github.com/canonical/craft-grammar@feature/pydantic-2
+craft-parts @ git+https://github.com/canonical/craft-parts@feature/2.0
 craft-platforms==0.1.1
-craft-providers @ git+https://github.com/canonical/craft-providers@9f2f487e722c3b9c06f7556228b0b9a19861791e
-craft-store @ git+https://github.com/canonical/craft-store@3e6fe7ae93c4243d0a3b8ec02afe8805294c3d1e
+craft-providers @ git+https://github.com/canonical/craft-providers@feature/2.0-git-modules
+craft-store @ git+https://github.com/canonical/craft-store@feature/3.0
 cryptography==43.0.0
 distro==1.9.0
 docker==7.1.0

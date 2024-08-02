@@ -19,6 +19,7 @@
 import pathlib
 
 import pytest
+
 from charmcraft import charm_builder
 
 
@@ -26,7 +27,7 @@ from charmcraft import charm_builder
     "requirements",
     [
         ["ops==2.15.0"],  # Requires pyyaml and websocket-client
-    ]
+    ],
 )
 def test_install_strict_dependencies_pip_check_error(
     new_path: pathlib.Path, requirements: list[str]
@@ -46,10 +47,10 @@ def test_install_strict_dependencies_pip_check_error(
         installdir=install_dir,
         entrypoint=entrypoint,
         requirements=[requirements_file],
-        strict_dependencies=True
+        strict_dependencies=True,
     )
 
-    with pytest.raises(RuntimeError, match="failed with retcode 1") as exc_info:
+    with pytest.raises(RuntimeError, match="failed with retcode 1"):
         builder.handle_dependencies()
 
 
@@ -57,7 +58,7 @@ def test_install_strict_dependencies_pip_check_error(
     "requirements",
     [
         ["craft-platforms==0.1.0"],  # No dependencies
-    ]
+    ],
 )
 def test_install_strict_dependencies_pip_check_success(
     new_path: pathlib.Path, requirements: list[str]
@@ -77,8 +78,8 @@ def test_install_strict_dependencies_pip_check_success(
         installdir=install_dir,
         entrypoint=entrypoint,
         requirements=[requirements_file],
-        strict_dependencies=True
+        strict_dependencies=True,
     )
 
-    with pytest.raises(RuntimeError, match="failed with retcode 1") as exc_info:
+    with pytest.raises(RuntimeError, match="failed with retcode 1"):
         builder.handle_dependencies()

@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Canonical Ltd.
+# Copyright 2021-2024 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@ class ReactivePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack reactive charms using charm-tools."""
 
     plugin: Literal["reactive"] = "reactive"
-    source: str
+    source: str  # pyright: ignore[reportGeneralTypeIssues]
     reactive_charm_build_arguments: list[str] = []
 
 

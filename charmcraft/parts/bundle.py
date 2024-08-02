@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ class BundlePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack bundles."""
 
     plugin: Literal["bundle"] = "bundle"
-    source: str
+    source: str  # pyright: ignore[reportGeneralTypeIssues]
 
 
 class BundlePlugin(plugins.Plugin):

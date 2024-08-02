@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used in charm building."""
 
     plugin: Literal["charm"] = "charm"
-    source: str
+    source: str  # pyright: ignore[reportGeneralTypeIssues]
     charm_entrypoint: str = "src/charm.py"
     charm_binary_python_packages: list[str] = []
     charm_python_packages: list[str] = []

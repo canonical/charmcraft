@@ -556,10 +556,12 @@ class CharmProject(CharmcraftProject):
             "mysql-k8s",
         ],
     )
-    summary: CharmcraftSummaryStr = pydantic.Field(
+    summary: CharmcraftSummaryStr = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]
         description="A brief (one-line) summary of your charm.",
     )
-    description: str = pydantic.Field(description="A multi-line summary of your charm.")
+    description: str = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]
+        description="A multi-line summary of your charm."
+    )
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(
         default={"charm": {"plugin": "charm", "source": "."}},

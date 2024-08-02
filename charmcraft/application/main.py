@@ -41,10 +41,11 @@ APP_METADATA = AppMetadata(
 )
 
 PRIME_BEHAVIOUR_CHANGE_MESSAGE = (
-    "WARNING: the behaviour of the 'prime' keyword has changed in Charmcraft 3. This "
+    "IMPORTANT: The behaviour of the 'prime' keyword has changed in Charmcraft 3. This "
     "keyword will no longer add files that would otherwise be excluded from the "
     "charm, instead filtering existing files. Additional files may be added using the "
-    "'dump' plugin. See: https://juju.is/docs/sdk/include-extra-files-in-a-charm"
+    "'dump' plugin.\n"
+    "To include extra files, see: https://juju.is/docs/sdk/include-extra-files-in-a-charm"
 )
 
 

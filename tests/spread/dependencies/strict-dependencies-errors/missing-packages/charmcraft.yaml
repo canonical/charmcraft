@@ -1,0 +1,14 @@
+name: charm
+type: charm
+title: Strict dependencies test charm
+summary: a test charm for checking strict dependency build failures.
+description: |
+  This charm fails to build because it has strict dependencies enabled but does not
+  include the full dependency tree in its requirements file.
+bases:
+  - name: ubuntu
+    channel: "22.04"
+
+parts:
+  charm:
+    charm-strict-dependencies: true

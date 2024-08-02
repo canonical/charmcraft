@@ -243,3 +243,24 @@ def test_deprecated_prime_warning_not_raised(
 
     with pytest.raises(AssertionError, match="^Expected call"):
         emitter.assert_progress(PRIME_BEHAVIOUR_CHANGE_MESSAGE, permanent=True)
+
+
+@pytest.mark.parametrize(
+    "charm_yaml",
+    [
+        {
+            "name": "test-charm",
+            "summary": "A test charm",
+            "description": "A charm for testing!",
+            "parts": {"charm": {"prime": ["something"]}}
+        },
+    ]
+)
+def test_deprecated_prime_warning_not_raised_in_managed_mode(
+    monkeypatch, emitter, service_factory: services.CharmcraftServiceFactory, charm_yaml
+):
+    monkeypatch.setenv("CRAFT_MANAGED_MODE", "1")
+
+    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
+
+    app._extra_yaml_transform(charm_yaml, build_for=None, build_on="riscv64")

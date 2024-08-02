@@ -72,6 +72,9 @@ class Charmcraft(Application):
 
     def _check_deprecated(self, yaml_data: dict[str, Any]) -> None:
         """Check for deprecated fields in the yaml_data."""
+        # We only need to warn people once.
+        if self.is_managed():
+            return
         has_primed_part = False
         if "parts" in yaml_data:
             prime_changed_extensions = {"charm", "reactive", "bundle"}

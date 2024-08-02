@@ -40,6 +40,13 @@ APP_METADATA = AppMetadata(
     BuildPlannerClass=models.CharmcraftBuildPlanner,
 )
 
+PRIME_BEHAVIOUR_CHANGE_MESSAGE = (
+    "WARNING: the behaviour of the 'prime' keyword has changed in Charmcraft 3. This "
+    "keyword will no longer add files that would otherwise be excluded from the "
+    "charm, instead filtering existing files. Additional files may be added using the "
+    "'dump' plugin. See: https://juju.is/docs/sdk/include-extra-files-in-a-charm"
+)
+
 
 class Charmcraft(Application):
     """Charmcraft application definition."""
@@ -65,23 +72,20 @@ class Charmcraft(Application):
 
     def _check_deprecated(self, yaml_data: dict[str, Any]) -> None:
         """Check for deprecated fields in the yaml_data."""
+        has_primed_part = False
         if "parts" in yaml_data:
-            for k, v in yaml_data["parts"].items():
-                if (k in ("charm", "reactive", "bundle")) or (
-                    v.get("plugin", None) in ("charm", "reactive", "bundle")
-                ):
-                    if "prime" in v:
-                        craft_cli.emit.progress(
-                            "Warning: use of 'prime' in a charm part "
-                            "is deprecated and no longer works, "
-                            "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
-                            permanent=True,
-                        )
+            prime_changed_extensions = {"charm", "reactive", "bundle"}
+            for name, part in yaml_data["parts"].items():
+                if not {name, part.get("plugin", None)} & prime_changed_extensions:
+                    continue
+                if "prime" in part:
+                    has_primed_part = True
+        if has_primed_part:
+            craft_cli.emit.progress(PRIME_BEHAVIOUR_CHANGE_MESSAGE, permanent=True)
 
     def _extra_yaml_transform(
         self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
     ) -> dict[str, Any]:
-        self._check_deprecated(yaml_data)
 
         # Extensions get applied on as close as possible to what the user provided.
         yaml_data = extensions.apply_extensions(self.project_dir, yaml_data.copy())
@@ -93,6 +97,7 @@ class Charmcraft(Application):
         preprocess.add_actions(self.project_dir, yaml_data)
         preprocess.add_metadata(self.project_dir, yaml_data)
 
+        self._check_deprecated(yaml_data)
         return yaml_data
 
     def _configure_services(self, provider_name: str | None) -> None:

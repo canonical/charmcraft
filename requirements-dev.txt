@@ -11,7 +11,7 @@ craft-parts==1.33.0
 craft-platforms==0.1.1
 craft-providers==1.24.1
 craft-store==2.6.2
-cryptography==42.0.8
+cryptography==43.0.0
 Deprecated==1.2.14
 distro==1.9.0
 docker==7.1.0

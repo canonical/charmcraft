@@ -68,7 +68,7 @@ requests==2.31.0
 requests-toolbelt==1.0.0
 requests-unixsocket==0.3.0
 responses==0.25.0
-rpds-py==0.18.1
+rpds-py==0.19.1
 SecretStorage==3.3.3
 setuptools==70.0.0
 six==1.16.0

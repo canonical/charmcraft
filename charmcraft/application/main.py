@@ -38,6 +38,7 @@ APP_METADATA = AppMetadata(
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,
     BuildPlannerClass=models.CharmcraftBuildPlanner,
+    source_ignore_patterns=["*.charm", "charmcraft.yaml"],
 )
 
 

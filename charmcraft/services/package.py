@@ -17,7 +17,6 @@
 """Service class for packing."""
 from __future__ import annotations
 
-import itertools
 import json
 import os
 import pathlib
@@ -34,7 +33,6 @@ from craft_providers import bases
 import charmcraft
 from charmcraft import const, errors, models, utils
 from charmcraft.models import lint
-from charmcraft.models.charmcraft import Base
 from charmcraft.models.manifest import Attribute, Manifest
 from charmcraft.models.metadata import BundleMetadata, CharmMetadata
 from charmcraft.models.project import (

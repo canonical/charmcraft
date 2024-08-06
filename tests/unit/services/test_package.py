@@ -20,12 +20,12 @@ import pathlib
 import sys
 import zipfile
 
-from craft_application.models import BuildInfo
 import craft_cli.pytest_plugin
-from craft_providers.bases import BaseName
 import pytest
 import pytest_check
 from craft_application import util
+from craft_application.models import BuildInfo
+from craft_providers.bases import BaseName
 
 from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
@@ -146,7 +146,7 @@ def test_do_not_overwrite_metadata_yaml(
                 platform=util.get_host_architecture(),
                 build_for=util.get_host_architecture(),
                 build_on=util.get_host_architecture(),
-                base=BaseName("ubuntu", "20.04")
+                base=BaseName("ubuntu", "20.04"),
             ),
             [
                 {
@@ -159,17 +159,19 @@ def test_do_not_overwrite_metadata_yaml(
         (
             [
                 {
-                    "build-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["riscv64"]}],
+                    "build-on": [
+                        {"name": "ubuntu", "channel": "22.04", "architectures": ["riscv64"]}
+                    ],
                     "run-on": [
                         {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
-                    ]
+                    ],
                 },
             ],
             BuildInfo(
                 platform="riscv64",
                 build_for="riscv64",
                 build_on="riscv64",
-                base=BaseName("ubuntu", "22.04")
+                base=BaseName("ubuntu", "22.04"),
             ),
             [
                 {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
@@ -183,9 +185,7 @@ def test_do_not_overwrite_metadata_yaml(
                 build_for=util.get_host_architecture(),
                 base=BaseName("centos", "7"),
             ),
-            [
-                {"name": "centos", "channel": "7", "architectures": [util.get_host_architecture()]}
-            ],
+            [{"name": "centos", "channel": "7", "architectures": [util.get_host_architecture()]}],
         ),
         pytest.param(
             [
@@ -195,12 +195,11 @@ def test_do_not_overwrite_metadata_yaml(
                     "run-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["all"]}],
                 },
                 {
-                    "build-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["amd64", "arm64"]}],
-                    "run-on": [
-                        {"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}
-                    ]
-                }
-
+                    "build-on": [
+                        {"name": "ubuntu", "channel": "22.04", "architectures": ["amd64", "arm64"]}
+                    ],
+                    "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+                },
             ],
             BuildInfo(
                 platform="amd64",
@@ -208,14 +207,14 @@ def test_do_not_overwrite_metadata_yaml(
                 build_for="arm64",
                 base=BaseName("ubuntu", "22.04"),
             ),
-            [
-                {"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}
-            ],
-            id="cross-compile"
-        )
+            [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+            id="cross-compile",
+        ),
     ],
 )
-def test_get_manifest_bases_from_bases(fake_path: pathlib.Path, package_service: services.PackageService, bases, build_item, expected):
+def test_get_manifest_bases_from_bases(
+    fake_path: pathlib.Path, package_service: services.PackageService, bases, build_item, expected
+):
     charm = models.BasesCharm.parse_obj(
         {
             "name": "my-charm",
@@ -227,8 +226,6 @@ def test_get_manifest_bases_from_bases(fake_path: pathlib.Path, package_service:
     )
     package_service._project = charm
     package_service._build_plan = [build_item]
-
-    # breakpoint()
 
     assert package_service.get_manifest_bases() == [models.Base.parse_obj(b) for b in expected]
 

@@ -252,9 +252,9 @@ def test_deprecated_prime_warning_not_raised(
             "name": "test-charm",
             "summary": "A test charm",
             "description": "A charm for testing!",
-            "parts": {"charm": {"prime": ["something"]}}
+            "parts": {"charm": {"prime": ["something"]}},
         },
-    ]
+    ],
 )
 def test_deprecated_prime_warning_not_raised_in_managed_mode(
     monkeypatch, emitter, service_factory: services.CharmcraftServiceFactory, charm_yaml

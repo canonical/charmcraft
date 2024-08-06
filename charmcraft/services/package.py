@@ -17,7 +17,6 @@
 """Service class for packing."""
 from __future__ import annotations
 
-import itertools
 import json
 import os
 import pathlib
@@ -193,7 +192,19 @@ class PackageService(services.PackageService):
     def get_manifest_bases(self) -> list[models.Base]:
         """Get the bases used for a charm manifest from the project."""
         if isinstance(self._project, BasesCharm):
-            return list(itertools.chain.from_iterable(base.run_on for base in self._project.bases))
+            run_on_bases = []
+            for project_base in self._project.bases:
+                for build_base in project_base.build_on:
+                    if build_base.name != self._build_plan[0].base.name:
+                        continue
+                    if build_base.channel != self._build_plan[0].base.version:
+                        continue
+                    if self._build_plan[0].build_on not in build_base.architectures:
+                        continue
+                    run_on_bases.extend(project_base.run_on)
+            if not run_on_bases:
+                raise RuntimeError("Could not determine run-on bases.")
+            return run_on_bases
         if isinstance(self._project, PlatformCharm):
             if not self._platform:
                 architectures = [util.get_host_architecture()]

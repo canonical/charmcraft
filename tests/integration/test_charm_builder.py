@@ -17,10 +17,15 @@
 
 
 import pathlib
+import sys
 
 import pytest
 
 from charmcraft import charm_builder
+
+pytestmark = pytest.mark.skipif(
+    sys.platform != "linux", reason="The charm builder only runs in managed mode."
+)
 
 
 @pytest.mark.parametrize(

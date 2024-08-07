@@ -43,6 +43,7 @@ def test_install_strict_dependencies_pip_check_error(
 
     build_dir.mkdir()
     install_dir.mkdir()
+    monkeypatch.chdir(build_dir)
 
     requirements_file = build_dir / "requirements.txt"
     requirements_file.write_text("\n".join(requirements))

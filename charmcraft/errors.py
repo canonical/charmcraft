@@ -31,29 +31,6 @@ else:
     CheckResult = "CheckResult"
 
 
-class ClassicFallback(BaseException):
-    """Exception used for falling back to classic charmcraft.
-
-    Only used during the transition to craft-application.
-    """
-
-
-class InvalidEnvironmentVariableError(CraftError):
-    """A Charmcraft-related environment variable value is invalid."""
-
-    def __init__(
-        self, variable: str, *, details: str, resolution: str, docs_url: str | None = None
-    ):
-        super().__init__(
-            f"Environment variable {variable!r} contains an invalid value.",
-            details=details,
-            resolution=resolution,
-            docs_url=docs_url,
-            reportable=False,
-            retcode=65,  # Data format error
-        )
-
-
 class LibraryError(CraftError):
     """Errors related to charm libraries."""
 
@@ -132,30 +109,8 @@ class DuplicateCharmsError(CraftError):
         return details.getvalue()
 
 
-class LintingError(CraftError):
-    """Lint failures."""
-
-    def __init__(self, errors: list[CheckResult], warnings: list[CheckResult]):
-        self.errors = errors
-        self.warnings = warnings
-        detail_lines = ["ERRORS:"]
-        for err in errors:
-            detail_lines.append(f"- {err.name}: {err.text} ({err.url})")
-        for warning in warnings:
-            detail_lines.append(f"- {warning.name}: {warning.text} ({warning.url})")
-
-        super().__init__(
-            f"There were {len(errors)} linting errors and {len(warnings)} warnings."
-            "\n".join(detail_lines)
-        )
-
-
 class DependencyError(CraftError):
     """Errors related to dependencies."""
-
-
-class InvalidDependenciesError(DependencyError):
-    """In strict dependencies mode, some binary dependencies."""
 
 
 class MissingDependenciesError(DependencyError):

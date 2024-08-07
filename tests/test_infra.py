@@ -21,8 +21,6 @@ import re
 
 import pytest
 
-from charmcraft import main
-
 
 def get_python_filepaths(*, roots=None, python_paths=None):
     """Helper to retrieve paths of Python files."""
@@ -59,23 +57,3 @@ def test_ensure_copyright():
     if issues:
         msg = "Please add copyright headers to the following files:\n" + "\n".join(issues)
         pytest.fail(msg, pytrace=False)
-
-
-def test_bashcompletion_all_commands():
-    """Verify that all commands are represented in the bash completion file."""
-    # get the line where all commands are specified in the completion file; this is custom
-    # to our file, but simple and good enough
-    completed_commands = None
-    with open("completion.bash", encoding="utf8") as fh:
-        completion_text = fh.read()
-    m = re.search(r"cmds=\((.*?)\)", completion_text, re.DOTALL)
-    if m:
-        completed_commands = set(m.groups()[0].split())
-    else:
-        pytest.fail("Failed to find commands in the bash completion file")
-
-    real_command_names = set()
-    for cgroup in main.COMMAND_GROUPS:
-        real_command_names.update(cmd.name for cmd in cgroup.commands if not cmd.hidden)
-
-    assert real_command_names.issubset(set(completed_commands))

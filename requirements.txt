@@ -15,7 +15,7 @@ Deprecated==1.2.14
 distro==1.9.0
 docker==7.1.0
 httplib2==0.22.0
-humanize==4.9.0
+humanize==4.10.0
 idna==3.7
 importlib_metadata==7.1.0
 jaraco.classes==3.4.0

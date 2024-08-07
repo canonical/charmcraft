@@ -18,7 +18,7 @@ docker==7.1.0
 flake8==7.0.0
 freezegun==1.5.1
 httplib2==0.22.0
-humanize==4.9.0
+humanize==4.10.0
 hypothesis==6.100.5
 idna==3.7
 importlib_metadata==7.1.0

@@ -35,7 +35,7 @@ pytestmark = pytest.mark.skipif(
     ],
 )
 def test_install_strict_dependencies_pip_check_error(
-    new_path: pathlib.Path, requirements: list[str]
+    monkeypatch, new_path: pathlib.Path, requirements: list[str]
 ):
     build_dir = new_path / "build"
     install_dir = new_path / "install"

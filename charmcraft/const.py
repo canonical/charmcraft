@@ -32,7 +32,6 @@ STORE_STORAGE_ENV_VAR = "CHARMCRAFT_UPLOAD_URL"
 STORE_REGISTRY_ENV_VAR = "CHARMCRAFT_REGISTRY_URL"
 # These are only for use within the managed environment
 MANAGED_MODE_ENV_VAR = "CHARMCRAFT_MANAGED_MODE"
-SNAP_CHANNEL_ENV_VAR = "CHARMCRAFT_INSTALL_SNAP_CHANNEL"
 # endregion
 # region Project files and directories
 CHARMCRAFT_FILENAME = "charmcraft.yaml"

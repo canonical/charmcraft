@@ -4,8 +4,6 @@
   ignoreDeps: [
     // Each ignore is probably connected with an ignore in pyproject.toml.
     // Ensure you change this and those simultaneously.
-    "pydantic",  // Needs to wait for libraries.
-    "pydantic-yaml", // Needs to wait for pydantic
     "urllib3",
     "windows",  // We'll update Windows versions manually.
   ],

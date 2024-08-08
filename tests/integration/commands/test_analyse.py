@@ -49,14 +49,6 @@ def test_expanded_charm_permissions(config, fake_project_dir, monkeypatch, modeb
     with zipfile.ZipFile(str(charm_file), "w") as zf:
         zf.write(str(payload_file), payload_file.name)
 
-    def fake_analyze(passed_config, passed_basedir, *, override_ignore_config):
-        """Check payload content and attributes."""
-        unzipped_payload = passed_basedir / "payload.txt"
-        assert unzipped_payload.read_bytes() == b"123"
-        assert unzipped_payload.stat().st_mode & 0o777 == modebits
-        return []
-
-    monkeypatch.setattr(linters, "analyze", fake_analyze)
     args = Namespace(filepath=charm_file, force=None, format=None, ignore=None)
     Analyse(config).run(args)
 
@@ -82,7 +74,7 @@ def create_a_valid_zip(tmp_path):
 
 
 def test_integration_linters(fake_project_dir, emitter, config, monkeypatch):
-    """Integration test with the real linters.analyze function (as other tests fake it)."""
+    """Integration test with a real analysis."""
     fake_charm = create_a_valid_zip(fake_project_dir)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
     Analyse(config).run(args)

@@ -18,6 +18,7 @@
 import itertools
 import json
 import pathlib
+import textwrap
 from textwrap import dedent
 from typing import Any
 
@@ -67,6 +68,17 @@ FULL_BASE_CONFIG_DICT = {
     "run-on": [{"channel": "22.04", "name": "ubuntu"}],
 }
 BASIC_CHARM_PARTS = {"charm": {"plugin": "charm", "source": "."}}
+BASIC_CHARM_PARTS_EXPANDED = {
+    "charm": {
+        "plugin": "charm",
+        "source": ".",
+        "charm-binary-python-packages": [],
+        "charm-entrypoint": "src/charm.py",
+        "charm-python-packages": [],
+        "charm-requirements": [],
+        "charm-strict-dependencies": False,
+    }
+}
 
 MINIMAL_CHARMCRAFT_YAML = """\
 type: charm
@@ -119,12 +131,12 @@ SIMPLE_ACTIONS_DICT = {"snooze": {"description": "Take a little nap."}}
         ),
     ],
 )
-def test_platform_from_bases_backwards_compatible(bases, expected):
+def test_platform_from_bases_backwards_compatible(bases: list[Base], expected: str):
     """Replicates the format_charm_file_name tests in test_package.py.
 
     This ensures that charm names remain consistent as we move to platforms.
     """
-    assert project.CharmPlatform.from_bases(bases) == expected
+    assert project.get_charm_file_platform_str(bases) == expected
 
 
 @pytest.mark.parametrize("base", [*SIMPLE_BASES, *COMPLEX_BASES])
@@ -133,7 +145,7 @@ def test_platform_from_single_base(base):
     expected_architectures = "-".join(base.architectures)
     expected = f"{base.name}-{base.channel}-{expected_architectures}"
 
-    actual = project.CharmPlatform.from_bases([base])
+    actual = project.get_charm_file_platform_str([base])
 
     assert actual == expected
 
@@ -149,7 +161,7 @@ def test_platform_from_single_base(base):
     ],
 )
 def test_platform_from_multiple_bases(bases, expected):
-    assert project.CharmPlatform.from_bases(bases) == expected
+    assert project.get_charm_file_platform_str(bases) == expected
 
 
 # endregion
@@ -160,24 +172,6 @@ VALID_PLATFORM_ARCHITECTURES = [
     ),  # A single architecture in a list
     *(list(x) for x in itertools.combinations(const.CharmArch, 2)),  # Two architectures in a list
 ]
-
-
-@pytest.mark.parametrize("build_on", VALID_PLATFORM_ARCHITECTURES)
-@pytest.mark.parametrize("build_for", [[arch] for arch in (*const.CharmArch, "all")])
-def test_platform_validation_lists(build_on, build_for):
-    platform = project.Platform.parse_obj({"build-on": build_on, "build-for": build_for})
-
-    assert platform.build_for == build_for
-    assert platform.build_on == build_on
-
-
-@pytest.mark.parametrize("build_on", const.CharmArch)
-@pytest.mark.parametrize("build_for", [*const.CharmArch, "all"])
-def test_platform_validation_strings(build_on, build_for):
-    platform = project.Platform.parse_obj({"build-on": build_on, "build-for": build_for})
-
-    assert platform.build_for == [build_for]
-    assert platform.build_on == [build_on]
 
 
 # endregion
@@ -367,7 +361,7 @@ def test_build_info_generator(given, expected):
                         "build-on": ["amd64", "arm64", "riscv64"],
                         "build-for": ["s390x"],
                     },
-                    "crossy": {"build-on": "s390x", "build-for": "ppc64el"},
+                    "crossy": {"build-on": ["s390x"], "build-for": ["ppc64el"]},
                     "amd64": None,
                     "arm64": None,
                     "riscv64": None,
@@ -468,7 +462,7 @@ def test_build_info_generator(given, expected):
     ],
 )
 def test_build_planner_correct(data, expected):
-    planner = project.CharmcraftBuildPlanner.parse_obj(data)
+    planner = project.CharmcraftBuildPlanner.model_validate(data)
 
     assert planner.get_build_plan() == expected
 
@@ -573,28 +567,28 @@ def test_unmarshal_invalid_type(type_):
             None,
             None,
             None,
-            {"parts": BASIC_CHARM_PARTS},
+            {"parts": BASIC_CHARM_PARTS_EXPANDED},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             None,
             None,
-            {"parts": BASIC_CHARM_PARTS},
+            {"parts": BASIC_CHARM_PARTS_EXPANDED},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             SIMPLE_CONFIG_YAML,
             None,
-            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS},
+            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS_EXPANDED},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
             SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS},
+            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS_EXPANDED},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
@@ -604,8 +598,49 @@ def test_unmarshal_invalid_type(type_):
             {
                 "actions": SIMPLE_ACTIONS_DICT,
                 "config": SIMPLE_CONFIG_DICT,
-                "parts": BASIC_CHARM_PARTS,
+                "parts": BASIC_CHARM_PARTS_EXPANDED,
             },
+        ),
+        pytest.param(
+            textwrap.dedent(
+                """\
+                type: charm
+                bases: [{name: ubuntu, channel: "22.04", architectures: [arm64]}]
+                name: charmy-mccharmface
+                summary: Charmy!
+                description: Very charming!
+                parts:
+                  charm: {}
+                  reactive: {}
+                  bundle: {}
+                """
+            ),
+            None,
+            None,
+            None,
+            {
+                "parts": {
+                    "charm": {
+                        "charm-binary-python-packages": [],
+                        "charm-entrypoint": "src/charm.py",
+                        "charm-python-packages": [],
+                        "charm-requirements": [],
+                        "charm-strict-dependencies": False,
+                        "plugin": "charm",
+                        "source": ".",
+                    },
+                    "reactive": {
+                        "plugin": "reactive",
+                        "reactive-charm-build-arguments": [],
+                        "source": ".",
+                    },
+                    "bundle": {
+                        "plugin": "bundle",
+                        "source": ".",
+                    },
+                }
+            },
+            id="implicit-parts-plugins",
         ),
     ],
 )
@@ -618,9 +653,8 @@ def test_from_yaml_file_success(
     actions_yaml: str | None,
     expected_diff: dict[str, Any],
 ):
-    expected_dict = simple_charm.marshal()
+    expected_dict = simple_charm.marshal().copy()
     expected_dict.update(expected_diff)
-    expected = project.CharmcraftProject.unmarshal(expected_dict)
 
     fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
     if metadata_yaml:
@@ -632,7 +666,7 @@ def test_from_yaml_file_success(
 
     actual = project.CharmcraftProject.from_yaml_file(pathlib.Path("/charmcraft.yaml"))
 
-    assert actual.marshal() == expected.marshal()
+    assert actual.marshal() == expected_dict
 
 
 @pytest.mark.parametrize(
@@ -744,7 +778,7 @@ def test_instantiate_bases_charm_success(values: dict[str, Any], expected_change
                 "description": "This charm has no bases and is thus invalid.",
             },
             pydantic.ValidationError,
-            r"bases\s+field required",
+            r"bases\s+Field required",
             id="no-bases",
         ),
         pytest.param(
@@ -756,7 +790,7 @@ def test_instantiate_bases_charm_success(values: dict[str, Any], expected_change
                 "bases": [],
             },
             pydantic.ValidationError,
-            r"bases\s+ensure this value has at least 1 item",
+            r"bases\s+List should have at least 1 item",
             id="empty-bases",
         ),
     ],
@@ -768,7 +802,7 @@ def test_instantiate_bases_charm_error(
         project.BasesCharm(**values)
 
 
-@pytest.mark.parametrize("base", ["ubuntu@24.04"])
+@pytest.mark.parametrize("base", ["ubuntu@18.04", "ubuntu@22.04"])
 def test_devel_bases(monkeypatch, base):
     monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
 
@@ -824,7 +858,7 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
                 - field 'name' required in top-level configuration
                 - field 'summary' required in top-level configuration
                 - field 'description' required in top-level configuration
-                - unexpected value; permitted: 'charm' (in field 'type')
+                - input should be 'charm' (in field 'type')
                 - field 'bases' required in top-level configuration"""
             ),
         ),
@@ -864,7 +898,7 @@ def test_read_charm_from_yaml_file_error(filename, errors):
     ],
 )
 def test_check_legacy_bases(base, expected):
-    assert project.BasesCharm._check_base_is_legacy(base) == expected
+    assert project._check_base_is_legacy(base) == expected
 
 
 # endregion

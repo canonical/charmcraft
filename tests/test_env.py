@@ -39,18 +39,6 @@ def test_get_managed_environment_project_path():
     assert dirpath == pathlib.Path("/root/project")
 
 
-def test_get_managed_environment_snap_channel_none(monkeypatch):
-    monkeypatch.delenv(const.SNAP_CHANNEL_ENV_VAR, raising=False)
-
-    assert env.get_managed_environment_snap_channel() is None
-
-
-def test_get_managed_environment_snap_channel(monkeypatch):
-    monkeypatch.setenv(const.SNAP_CHANNEL_ENV_VAR, "latest/edge")
-
-    assert env.get_managed_environment_snap_channel() == "latest/edge"
-
-
 @pytest.mark.parametrize(
     ("snap_name", "snap", "result"),
     [
@@ -72,35 +60,6 @@ def test_is_charmcraft_running_from_snap(monkeypatch, snap_name, snap, result):
         monkeypatch.setenv("SNAP", snap)
 
     assert env.is_charmcraft_running_from_snap() == result
-
-
-@pytest.mark.parametrize(
-    ("developer", "result"),
-    [
-        (None, False),
-        ("y", True),
-        ("n", False),
-        ("Y", True),
-        ("N", False),
-        ("true", True),
-        ("false", False),
-        ("TRUE", True),
-        ("FALSE", False),
-        ("yes", True),
-        ("no", False),
-        ("YES", True),
-        ("NO", False),
-        ("1", True),
-        ("0", False),
-    ],
-)
-def test_is_charmcraft_running_in_developer_mode(monkeypatch, developer, result):
-    if developer is None:
-        monkeypatch.delenv(const.DEVELOPER_MODE_ENV_VAR, raising=False)
-    else:
-        monkeypatch.setenv(const.DEVELOPER_MODE_ENV_VAR, developer)
-
-    assert env.is_charmcraft_running_in_developer_mode() == result
 
 
 @pytest.mark.parametrize(

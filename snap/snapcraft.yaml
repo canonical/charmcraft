@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Canonical Ltd.
+# Copyright 2020-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,8 +71,6 @@ apps:
 confinement: classic
 
 build-packages:
-  - cargo
-  - rustc
   - pkg-config
   - python3.10-dev
   - libpython3.10-dev
@@ -88,6 +86,8 @@ build-packages:
   - libxml2-dev
   - libxslt1-dev
   - libyaml-dev
+build-snaps:
+  - rustup
 
 
 parts:
@@ -145,6 +145,8 @@ parts:
       craftctl set version="${version}"
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       craftctl set grade="${grade}"
+      # Set up the rust compiler
+      rustup default 1.79
     override-build: |
       craftctl default
       cp -v completion.bash ../install

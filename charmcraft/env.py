@@ -46,11 +46,6 @@ def get_managed_environment_log_path() -> pathlib.Path:
     return pathlib.Path("/tmp/charmcraft.log")
 
 
-def get_managed_environment_metrics_path() -> pathlib.Path:
-    """Path for charmcraft metrics when running in managed environment."""
-    return pathlib.Path("/tmp/metrics.json")
-
-
 def get_charm_builder_metrics_path() -> pathlib.Path:
     """Path for charmcraft metrics when running charm_builder."""
     return pathlib.Path("/tmp/charm_builder_metrics.json")
@@ -61,23 +56,9 @@ def get_managed_environment_project_path() -> pathlib.Path:
     return get_managed_environment_home_path() / "project"
 
 
-def get_managed_environment_snap_channel() -> str | None:
-    """User-specified channel to use when installing Charmcraft snap from Snap Store.
-
-    :returns: Channel string if specified, else None.
-    """
-    return os.getenv(const.SNAP_CHANNEL_ENV_VAR)
-
-
 def is_charmcraft_running_from_snap() -> bool:
     """Check if charmcraft is running from the snap."""
     return os.getenv("SNAP_NAME") == "charmcraft" and os.getenv("SNAP") is not None
-
-
-def is_charmcraft_running_in_developer_mode() -> bool:
-    """Check if Charmcraft is running under developer mode."""
-    developer_flag = os.getenv(const.DEVELOPER_MODE_ENV_VAR, "n")
-    return strtobool(developer_flag)
 
 
 def is_charmcraft_running_in_managed_mode() -> bool:

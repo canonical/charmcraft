@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,31 +15,17 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Bundle plugin for craft-parts."""
 import sys
-from typing import Any
+from typing import Literal
 
 import overrides
 from craft_parts import plugins
 
 
-class BundlePluginProperties(plugins.PluginProperties, plugins.PluginModel):
+class BundlePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack bundles."""
 
-    source: str
-
-    @classmethod
-    def unmarshal(cls, data: dict[str, Any]):
-        """Populate bundle properties from the part specification.
-
-        :param data: A dictionary containing part properties.
-
-        :return: The populated plugin properties data object.
-
-        :raise pydantic.ValidationError: If validation fails.
-        """
-        plugin_data = plugins.extract_plugin_properties(
-            data, plugin_name="bundle", required=["source"]
-        )
-        return cls(**plugin_data)
+    plugin: Literal["bundle"] = "bundle"
+    source: str = "."
 
 
 class BundlePlugin(plugins.Plugin):

@@ -20,11 +20,10 @@ import keyword
 import re
 
 import pydantic
+from craft_application.models import CraftBaseModel
 
-from charmcraft.models.basic import ModelConfigDefaults
 
-
-class JujuActions(ModelConfigDefaults, frozen=True):
+class JujuActions(CraftBaseModel):
     """Juju actions for charms.
 
     See also: https://juju.is/docs/sdk/actions
@@ -33,7 +32,7 @@ class JujuActions(ModelConfigDefaults, frozen=True):
     _action_name_regex = re.compile(r"^[a-zA-Z_][a-zA-Z0-9-_]*$")
     actions: dict[str, dict] | None
 
-    @pydantic.validator("actions")
+    @pydantic.field_validator("actions", mode="after")
     def validate_actions(cls, actions):
         """Verify actions names and descriptions."""
         if not isinstance(actions, dict):
@@ -48,8 +47,8 @@ class JujuActions(ModelConfigDefaults, frozen=True):
 
         return actions
 
-    @pydantic.validator("actions", each_item=True)
-    def validate_each_action(cls, action):
+    @pydantic.field_validator("actions", mode="after")
+    def _validate_actions(cls, action):
         """Verify actions names and descriptions."""
         if not isinstance(action, dict):
             raise TypeError(f"'{action}' is not a dictionary")

@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for charm plugin."""
+import pathlib
 import sys
 from unittest.mock import patch
 
@@ -206,9 +207,10 @@ def test_charmpluginproperties_invalid_properties():
     with pytest.raises(pydantic.ValidationError) as raised:
         parts.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
+
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-invalid",)
-    assert err[0]["type"] == "value_error.extra"
+    assert err[0]["type"] == "extra_forbidden"
 
 
 def test_charmpluginproperties_entrypoint_ok():
@@ -242,7 +244,10 @@ def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
-    assert err[0]["msg"] == f"charm entry point must be inside the project: {str(outside_path)!r}"
+    assert (
+        err[0]["msg"]
+        == f"Value error, charm entry point must be inside the project: {str(outside_path)!r}"
+    )
 
 
 def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
@@ -254,7 +259,10 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
-    assert err[0]["msg"] == f"charm entry point must be inside the project: {str(outside_path)!r}"
+    assert (
+        err[0]["msg"]
+        == f"Value error, charm entry point must be inside the project: {str(outside_path)!r}"
+    )
 
 
 def test_charmpluginproperties_requirements_default(tmp_path):
@@ -267,20 +275,20 @@ def test_charmpluginproperties_requirements_default(tmp_path):
 def test_charmpluginproperties_requirements_must_exist(tmp_path):
     """The configured files must be present."""
     reqs_path = tmp_path / "reqs.txt"  # not in disk, really
-    content = {"source": str(tmp_path), "charm-requirements": [str(reqs_path)]}
+    content = {"source": str(tmp_path), "charm-requirements": ["reqs.txt"]}
     with pytest.raises(pydantic.ValidationError) as raised:
         parts.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
     assert len(err) == 1
-    assert err[0]["loc"] == ("charm-requirements",)
-    assert err[0]["msg"] == f"requirements file {str(reqs_path)!r} not found"
+    assert err[0]["loc"] == ()
+    assert err[0]["msg"] == f"Value error, requirements file {str(reqs_path)!r} not found"
 
 
-def test_charmpluginproperties_requirements_filepresent_ok(tmp_path):
+def test_charmpluginproperties_requirements_filepresent_ok(tmp_path: pathlib.Path):
     """If a specific file is present in disk it's used."""
     (tmp_path / "requirements.txt").write_text("somedep")
     content = {"source": str(tmp_path)}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.CharmPluginProperties.unmarshal(content)
     assert properties.charm_requirements == ["requirements.txt"]
 
 

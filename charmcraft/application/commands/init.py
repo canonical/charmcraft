@@ -38,6 +38,7 @@ PROFILES = {
     "machine": "init-machine",
     "flask-framework": "init-flask-framework",
     "django-framework": "init-django-framework",
+    "go-framework": "init-go-framework",
 }
 DEFAULT_PROFILE = "simple"
 

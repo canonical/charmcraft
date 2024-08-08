@@ -25,7 +25,7 @@ class BundlePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack bundles."""
 
     plugin: Literal["bundle"] = "bundle"
-    source: str  # pyright: ignore[reportGeneralTypeIssues]
+    source: str = "."
 
 
 class BundlePlugin(plugins.Plugin):

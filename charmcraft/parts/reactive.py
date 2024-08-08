@@ -30,7 +30,7 @@ class ReactivePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack reactive charms using charm-tools."""
 
     plugin: Literal["reactive"] = "reactive"
-    source: str  # pyright: ignore[reportGeneralTypeIssues]
+    source: str = "."
     reactive_charm_build_arguments: list[str] = []
 
 

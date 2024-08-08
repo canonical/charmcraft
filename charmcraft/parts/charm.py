@@ -44,7 +44,7 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used in charm building."""
 
     plugin: Literal["charm"] = "charm"
-    source: str  # pyright: ignore[reportGeneralTypeIssues]
+    source: str = "."
     charm_entrypoint: str = "src/charm.py"
     charm_binary_python_packages: list[str] = []
     charm_python_packages: list[str] = []

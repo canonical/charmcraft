@@ -19,7 +19,8 @@ import textwrap
 import pyfakefs.fake_filesystem
 import pytest
 
-from charmcraft import application, errors
+from charmcraft import application, errors, services
+from charmcraft.application.main import PRIME_BEHAVIOUR_CHANGE_MESSAGE
 
 
 @pytest.mark.parametrize(
@@ -189,8 +190,77 @@ def test_deprecated_prime_warning(
 
     app._extra_yaml_transform(charmcraft_dict, build_for=None, build_on="amd64")
 
-    emitter.assert_progress(
-        "Warning: use of 'prime' in a charm part is deprecated and no longer works, "
-        "see https://juju.is/docs/sdk/include-extra-files-in-a-charm",
-        permanent=True,
-    )
+    emitter.assert_progress(PRIME_BEHAVIOUR_CHANGE_MESSAGE, permanent=True)
+
+
+@pytest.mark.parametrize(
+    "base_charm",
+    [
+        {
+            "name": "test-charm",
+            "summary": "A test charm",
+            "description": "A charm for testing!",
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("parts"),
+    [
+        pytest.param({}, id="no-parts"),
+        pytest.param(
+            {
+                "parts": {"charm": {}},
+            },
+            id="named-charm",
+        ),
+        pytest.param({"parts": {"my-part": {"plugin": "charm"}}}, id="charm-plugin"),
+        pytest.param(
+            {
+                "parts": {"reactive": {}},
+            },
+            id="named-reactive",
+        ),
+        pytest.param({"parts": {"my-part": {"plugin": "reactive"}}}, id="reactive-plugin"),
+        pytest.param(
+            {
+                "parts": {"bundle": {}},
+            },
+            id="named-bundle",
+        ),
+        pytest.param({"parts": {"my-part": {"plugin": "bundle"}}}, id="bundle-plugin"),
+    ],
+)
+def test_deprecated_prime_warning_not_raised(
+    emitter,
+    service_factory: services.CharmcraftServiceFactory,
+    base_charm: dict[str, str],
+    parts: dict[str, dict[str, str]],
+):
+    charmcraft_dict = base_charm | parts
+    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
+
+    app._extra_yaml_transform(charmcraft_dict, build_for=None, build_on="amd64")
+
+    with pytest.raises(AssertionError, match="^Expected call"):
+        emitter.assert_progress(PRIME_BEHAVIOUR_CHANGE_MESSAGE, permanent=True)
+
+
+@pytest.mark.parametrize(
+    "charm_yaml",
+    [
+        {
+            "name": "test-charm",
+            "summary": "A test charm",
+            "description": "A charm for testing!",
+            "parts": {"charm": {"prime": ["something"]}},
+        },
+    ],
+)
+def test_deprecated_prime_warning_not_raised_in_managed_mode(
+    monkeypatch, emitter, service_factory: services.CharmcraftServiceFactory, charm_yaml
+):
+    monkeypatch.setenv("CRAFT_MANAGED_MODE", "1")
+
+    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
+
+    app._extra_yaml_transform(charm_yaml, build_for=None, build_on="riscv64")

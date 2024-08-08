@@ -16,21 +16,26 @@
 """Tests for package service."""
 
 import datetime
+import pathlib
 import sys
 import zipfile
+from typing import Any
 
 import craft_cli.pytest_plugin
 import pytest
 import pytest_check
 from craft_application import util
+from craft_application.models import BuildInfo
+from craft_providers.bases import BaseName
 
 from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
+from charmcraft.models.project import BasesCharm
 
 SIMPLE_BUILD_BASE = models.charmcraft.Base(name="ubuntu", channel="22.04", architectures=["arm64"])
 SIMPLE_MANIFEST = models.Manifest(
     charmcraft_started_at="1970-01-01T00:00:00+00:00",
-    bases=[models.Base(name="ubuntu", channel="22.04", architectures=["arm64"])],
+    bases=[SIMPLE_BUILD_BASE],
 )
 MANIFEST_WITH_ATTRIBUTE = models.Manifest(
     **SIMPLE_MANIFEST.marshal(),
@@ -70,7 +75,7 @@ def package_service(fake_path, simple_charm, service_factory, default_build_plan
         ),
     ],
 )
-def test_get_metadata(package_service, simple_charm, metadata):
+def test_get_metadata(package_service, simple_charm: BasesCharm, metadata):
     package_service._project = simple_charm
 
     assert package_service.metadata == metadata
@@ -135,10 +140,16 @@ def test_do_not_overwrite_metadata_yaml(
 
 # region Tests for getting bases for manifest.yaml
 @pytest.mark.parametrize(
-    ("bases", "expected"),
+    ("bases", "build_item", "expected"),
     [
         (
             [{"name": "ubuntu", "channel": "20.04"}],
+            BuildInfo(
+                platform=util.get_host_architecture(),
+                build_for=util.get_host_architecture(),
+                build_on=util.get_host_architecture(),
+                base=BaseName("ubuntu", "20.04"),
+            ),
             [
                 {
                     "name": "ubuntu",
@@ -149,27 +160,78 @@ def test_do_not_overwrite_metadata_yaml(
         ),
         (
             [
-                {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
-                {"name": "ubuntu", "channel": "20.04", "architectures": ["riscv64"]},
+                {
+                    "build-on": [
+                        {"name": "ubuntu", "channel": "22.04", "architectures": ["riscv64"]}
+                    ],
+                    "run-on": [
+                        {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
+                    ],
+                },
             ],
+            BuildInfo(
+                platform="riscv64",
+                build_for="riscv64",
+                build_on="riscv64",
+                base=BaseName("ubuntu", "22.04"),
+            ),
             [
                 {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
-                {"name": "ubuntu", "channel": "20.04", "architectures": ["riscv64"]},
             ],
+        ),
+        (
+            [{"name": "centos", "channel": "7"}],
+            BuildInfo(
+                platform=util.get_host_architecture(),
+                build_on=util.get_host_architecture(),
+                build_for=util.get_host_architecture(),
+                base=BaseName("centos", "7"),
+            ),
+            [{"name": "centos", "channel": "7", "architectures": [util.get_host_architecture()]}],
+        ),
+        pytest.param(
+            [
+                {"name": "centos", "channel": "7"},
+                {
+                    "build-on": [{"name": "ubuntu", "channel": "20.04"}],
+                    "run-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["all"]}],
+                },
+                {
+                    "build-on": [
+                        {"name": "ubuntu", "channel": "22.04", "architectures": ["amd64", "arm64"]}
+                    ],
+                    "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+                },
+            ],
+            BuildInfo(
+                platform="amd64",
+                build_on="amd64",
+                build_for="arm64",
+                base=BaseName("ubuntu", "22.04"),
+            ),
+            [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+            id="cross-compile",
         ),
     ],
 )
-def test_get_manifest_bases_from_bases(fake_path, package_service, bases, expected):
+def test_get_manifest_bases_from_bases(
+    fake_path: pathlib.Path,
+    package_service: services.PackageService,
+    bases: list[dict[str, Any]],
+    build_item: BuildInfo,
+    expected: list[dict[str, Any]],
+):
     charm = models.BasesCharm.parse_obj(
         {
             "name": "my-charm",
             "description": "",
             "summary": "",
             "type": "charm",
-            "bases": [{"build-on": bases, "run-on": bases}],
+            "bases": bases,
         }
     )
     package_service._project = charm
+    package_service._build_plan = [build_item]
 
     assert package_service.get_manifest_bases() == [models.Base.parse_obj(b) for b in expected]
 

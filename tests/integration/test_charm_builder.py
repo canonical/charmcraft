@@ -17,10 +17,15 @@
 
 
 import pathlib
+import sys
 
 import pytest
 
 from charmcraft import charm_builder
+
+pytestmark = pytest.mark.skipif(
+    sys.platform != "linux", reason="The charm builder only runs in managed mode."
+)
 
 
 @pytest.mark.parametrize(
@@ -30,7 +35,7 @@ from charmcraft import charm_builder
     ],
 )
 def test_install_strict_dependencies_pip_check_error(
-    new_path: pathlib.Path, requirements: list[str]
+    monkeypatch, new_path: pathlib.Path, requirements: list[str]
 ):
     build_dir = new_path / "build"
     install_dir = new_path / "install"
@@ -38,6 +43,7 @@ def test_install_strict_dependencies_pip_check_error(
 
     build_dir.mkdir()
     install_dir.mkdir()
+    monkeypatch.chdir(build_dir)
 
     requirements_file = build_dir / "requirements.txt"
     requirements_file.write_text("\n".join(requirements))
@@ -57,11 +63,11 @@ def test_install_strict_dependencies_pip_check_error(
 @pytest.mark.parametrize(
     "requirements",
     [
-        ["craft-platforms==0.1.0"],  # No dependencies
+        ["distro==1.9.0"],  # No dependencies
     ],
 )
 def test_install_strict_dependencies_pip_check_success(
-    new_path: pathlib.Path, requirements: list[str]
+    monkeypatch, new_path: pathlib.Path, requirements: list[str]
 ):
     build_dir = new_path / "build"
     install_dir = new_path / "install"
@@ -69,6 +75,7 @@ def test_install_strict_dependencies_pip_check_success(
 
     build_dir.mkdir()
     install_dir.mkdir()
+    monkeypatch.chdir(build_dir)
 
     requirements_file = build_dir / "requirements.txt"
     requirements_file.write_text("\n".join(requirements))
@@ -81,5 +88,4 @@ def test_install_strict_dependencies_pip_check_success(
         strict_dependencies=True,
     )
 
-    with pytest.raises(RuntimeError, match="failed with retcode 1"):
-        builder.handle_dependencies()
+    builder.handle_dependencies()

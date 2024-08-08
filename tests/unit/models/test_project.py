@@ -68,17 +68,33 @@ FULL_BASE_CONFIG_DICT = {
 }
 BASIC_CHARM_PARTS = {"charm": {"plugin": "charm", "source": "."}}
 
-MINIMAL_CHARMCRAFT_YAML = """\
+MINIMAL_CHARMCRAFT_YAML = f"""\
 type: charm
-bases: [{name: ubuntu, channel: "22.04", architectures: [arm64]}]
+bases:
+  - build-on:
+      - name: ubuntu
+        channel: "22.04"
+        architectures: [{util.get_host_architecture()}]
+    run-on:
+      - name: ubuntu
+        channel: "22.04"
+        architectures: [arm64]
 """
 SIMPLE_METADATA_YAML = "{name: charmy-mccharmface, summary: Charmy!, description: Very charming!}"
-SIMPLE_CHARMCRAFT_YAML = """\
+SIMPLE_CHARMCRAFT_YAML = f"""\
 type: charm
 name: charmy-mccharmface
 summary: Charmy!
 description: Very charming!
-bases: [{name: ubuntu, channel: "22.04", architectures: [arm64]}]
+bases:
+  - build-on:
+      - name: ubuntu
+        channel: "22.04"
+        architectures: [{util.get_host_architecture()}]
+    run-on:
+      - name: ubuntu
+        channel: "22.04"
+        architectures: [arm64]
 """
 SIMPLE_CONFIG_YAML = "options: {admin: {default: root, description: Admin user, type: string}}"
 SIMPLE_CONFIG_DICT = {

@@ -19,6 +19,7 @@ import itertools
 import json
 import pathlib
 from textwrap import dedent
+import textwrap
 from typing import Any
 
 import hypothesis
@@ -67,6 +68,17 @@ FULL_BASE_CONFIG_DICT = {
     "run-on": [{"channel": "22.04", "name": "ubuntu"}],
 }
 BASIC_CHARM_PARTS = {"charm": {"plugin": "charm", "source": "."}}
+BASIC_CHARM_PARTS_EXPANDED = {
+    "charm": {
+        "plugin": "charm",
+        "source": ".",
+        "charm-binary-python-packages": [],
+        "charm-entrypoint": "src/charm.py",
+        "charm-python-packages": [],
+        "charm-requirements": [],
+        "charm-strict-dependencies": False,
+    }
+}
 
 MINIMAL_CHARMCRAFT_YAML = """\
 type: charm
@@ -555,28 +567,28 @@ def test_unmarshal_invalid_type(type_):
             None,
             None,
             None,
-            {"parts": BASIC_CHARM_PARTS},
+            {"parts": BASIC_CHARM_PARTS_EXPANDED},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             None,
             None,
-            {"parts": BASIC_CHARM_PARTS},
+            {"parts": BASIC_CHARM_PARTS_EXPANDED},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             SIMPLE_CONFIG_YAML,
             None,
-            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS},
+            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS_EXPANDED},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
             SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS},
+            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS_EXPANDED},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
@@ -586,9 +598,50 @@ def test_unmarshal_invalid_type(type_):
             {
                 "actions": SIMPLE_ACTIONS_DICT,
                 "config": SIMPLE_CONFIG_DICT,
-                "parts": BASIC_CHARM_PARTS,
+                "parts": BASIC_CHARM_PARTS_EXPANDED,
             },
         ),
+        pytest.param(
+            textwrap.dedent(
+                """\
+                type: charm
+                bases: [{name: ubuntu, channel: "22.04", architectures: [arm64]}]
+                name: charmy-mccharmface
+                summary: Charmy!
+                description: Very charming!
+                parts:
+                  charm: {}
+                  reactive: {}
+                  bundle: {}
+                """
+            ),
+            None,
+            None,
+            None,
+            {
+                "parts": {
+                    "charm": {
+                        'charm-binary-python-packages': [],
+                        'charm-entrypoint': 'src/charm.py',
+                        'charm-python-packages': [],
+                        'charm-requirements': [],
+                        'charm-strict-dependencies': False,
+                        'plugin': 'charm',
+                        'source': '.',
+                    },
+                    "reactive": {
+                        "plugin": "reactive",
+                        "reactive-charm-build-arguments": [],
+                        "source": ".",
+                    },
+                    "bundle": {
+                        "plugin": "bundle",
+                        "source": ".",
+                    },
+                }
+            },
+            id="implicit-parts-plugins",
+        )
     ],
 )
 def test_from_yaml_file_success(
@@ -600,9 +653,8 @@ def test_from_yaml_file_success(
     actions_yaml: str | None,
     expected_diff: dict[str, Any],
 ):
-    expected_dict = simple_charm.marshal()
+    expected_dict = simple_charm.marshal().copy()
     expected_dict.update(expected_diff)
-    expected = project.CharmcraftProject.unmarshal(expected_dict)
 
     fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
     if metadata_yaml:
@@ -614,7 +666,9 @@ def test_from_yaml_file_success(
 
     actual = project.CharmcraftProject.from_yaml_file(pathlib.Path("/charmcraft.yaml"))
 
-    assert actual.marshal() == expected.marshal()
+    # breakpoint()
+
+    assert actual.marshal() == expected_dict
 
 
 @pytest.mark.parametrize(

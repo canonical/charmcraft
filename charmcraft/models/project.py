@@ -527,11 +527,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
             if name == "bundle" and part["plugin"] == "bundle":
                 part.setdefault("source", ".")
-        return parts
-
-    @pydantic.field_validator("parts", mode="before")
-    def _validate_parts(cls, parts: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-        """Verify each part in the parts section. Craft-parts will re-validate them."""
         return {name: process_part_config(part) for name, part in parts.items()}
 
 
@@ -1021,7 +1016,6 @@ class PlatformCharm(CharmProject):
     base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
     build_base: BuildBaseStr | None = None
     platforms: dict[str, models.Platform | None]  # type: ignore[assignment]
-    parts: dict[str, dict[str, Any]]  # pyright: ignore[reportGeneralTypeIssues]
 
     @pydantic.model_validator(mode="after")
     def _validate_dev_base_needs_build_base(self) -> Self:

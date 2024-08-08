@@ -510,7 +510,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         if parts is not None and not isinstance(parts, dict):
             raise TypeError("'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec.")
         if not parts:
-            if "type" in info.data:
+            if info.config and info.config.get("title") == "Bundle":
+                parts = {"bundle": {"plugin": "bundle"}}
+            elif "type" in info.data:
                 parts = {info.data["type"]: {"plugin": info.data["type"]}}
             else:
                 parts = {}

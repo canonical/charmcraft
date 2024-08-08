@@ -9,7 +9,7 @@ craft-cli==2.6.0
 craft-grammar @ git+https://github.com/canonical/craft-grammar@feature/pydantic-2
 craft-parts @ git+https://github.com/canonical/craft-parts@feature/2.0
 craft-platforms==0.1.1
-craft-providers @ git+https://github.com/canonical/craft-providers@feature/2.0-git-modules
+craft-providers @ git+https://github.com/canonical/craft-providers@feature/2.0
 craft-store @ git+https://github.com/canonical/craft-store@feature/3.0
 cryptography==43.0.0
 distro==1.9.0

@@ -750,7 +750,7 @@ def test_instantiate_bases_charm_error(
         project.BasesCharm(**values)
 
 
-@pytest.mark.parametrize("base", ["ubuntu@18.04", "ubuntu@24.04"])
+@pytest.mark.parametrize("base", ["ubuntu@18.04", "ubuntu@22.04"])
 def test_devel_bases(monkeypatch, base):
     monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
 
@@ -815,8 +815,8 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             dedent(
                 """\
                 Bad invalid-base.yaml content:
-                - value error, Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
-                - value error, Base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
+                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
+                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
             ),
         ),
     ],

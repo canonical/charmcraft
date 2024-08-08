@@ -17,7 +17,11 @@ import pytest
 
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions import apply_extensions
-from charmcraft.extensions.gunicorn import DjangoFramework, FlaskFramework
+from charmcraft.extensions.twelvefactor import (
+    DjangoFramework,
+    FlaskFramework,
+    GoFramework,
+)
 
 
 def make_flask_input_yaml():
@@ -63,7 +67,7 @@ def flask_input_yaml_fixture():
                     {"lib": "saml_integrator.saml", "version": "0"},
                 ],
                 "config": {
-                    "options": {**FlaskFramework.options, **FlaskFramework._WEBSERVER_OPTIONS}
+                    "options": {**FlaskFramework.options},
                 },
                 "parts": {
                     "charm": {
@@ -123,7 +127,7 @@ def flask_input_yaml_fixture():
                     {"lib": "saml_integrator.saml", "version": "0"},
                 ],
                 "config": {
-                    "options": {**DjangoFramework.options, **DjangoFramework._WEBSERVER_OPTIONS}
+                    "options": {**DjangoFramework.options},
                 },
                 "parts": {
                     "charm": {
@@ -145,6 +149,66 @@ def flask_input_yaml_fixture():
                 "resources": {
                     "django-app-image": {
                         "description": "django application image.",
+                        "type": "oci-image",
+                    },
+                },
+                "summary": "test summary",
+                "type": "charm",
+            },
+        ),
+        (
+            {
+                "type": "charm",
+                "name": "test-go",
+                "summary": "test summary",
+                "description": "test description",
+                "bases": [{"name": "ubuntu", "channel": "22.04"}],
+                "extensions": ["go-framework"],
+            },
+            True,
+            {
+                "actions": GoFramework.actions,
+                "assumes": ["k8s-api"],
+                "bases": [{"channel": "22.04", "name": "ubuntu"}],
+                "containers": {
+                    "app": {"resource": "app-image"},
+                },
+                "description": "test description",
+                "name": "test-go",
+                "charm-libs": [
+                    {"lib": "traefik_k8s.ingress", "version": "2"},
+                    {"lib": "observability_libs.juju_topology", "version": "0"},
+                    {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+                    {"lib": "loki_k8s.loki_push_api", "version": "0"},
+                    {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+                    {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "data_platform_libs.s3", "version": "0"},
+                    {"lib": "saml_integrator.saml", "version": "0"},
+                ],
+                "config": {
+                    "options": {**GoFramework.options},
+                },
+                "parts": {
+                    "charm": {
+                        "plugin": "charm",
+                        "source": ".",
+                        "build-snaps": ["rustup"],
+                        "override-build": "rustup default stable\ncraftctl default",
+                    }
+                },
+                "peers": {"secret-storage": {"interface": "secret-storage"}},
+                "provides": {
+                    "metrics-endpoint": {"interface": "prometheus_scrape"},
+                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                },
+                "requires": {
+                    "logging": {"interface": "loki_push_api"},
+                    "ingress": {"interface": "ingress", "limit": 1},
+                },
+                "resources": {
+                    "app-image": {
+                        "description": "go application image.",
                         "type": "oci-image",
                     },
                 },
@@ -184,7 +248,6 @@ def test_flask_merge_options(flask_input_yaml, tmp_path):
     assert applied["config"] == {
         "options": {
             **FlaskFramework.options,
-            **FlaskFramework._WEBSERVER_OPTIONS,
             **added_options,
         }
     }

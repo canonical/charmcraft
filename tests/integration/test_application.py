@@ -20,7 +20,7 @@ import pathlib
 import pytest
 from craft_application import util
 
-from charmcraft import models, utils
+from charmcraft import utils
 
 
 @pytest.mark.parametrize(

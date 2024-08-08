@@ -18,8 +18,8 @@
 import itertools
 import json
 import pathlib
-from textwrap import dedent
 import textwrap
+from textwrap import dedent
 from typing import Any
 
 import hypothesis
@@ -621,13 +621,13 @@ def test_unmarshal_invalid_type(type_):
             {
                 "parts": {
                     "charm": {
-                        'charm-binary-python-packages': [],
-                        'charm-entrypoint': 'src/charm.py',
-                        'charm-python-packages': [],
-                        'charm-requirements': [],
-                        'charm-strict-dependencies': False,
-                        'plugin': 'charm',
-                        'source': '.',
+                        "charm-binary-python-packages": [],
+                        "charm-entrypoint": "src/charm.py",
+                        "charm-python-packages": [],
+                        "charm-requirements": [],
+                        "charm-strict-dependencies": False,
+                        "plugin": "charm",
+                        "source": ".",
                     },
                     "reactive": {
                         "plugin": "reactive",
@@ -641,7 +641,7 @@ def test_unmarshal_invalid_type(type_):
                 }
             },
             id="implicit-parts-plugins",
-        )
+        ),
     ],
 )
 def test_from_yaml_file_success(
@@ -665,8 +665,6 @@ def test_from_yaml_file_success(
         fs.create_file("/actions.yaml", contents=actions_yaml)
 
     actual = project.CharmcraftProject.from_yaml_file(pathlib.Path("/charmcraft.yaml"))
-
-    # breakpoint()
 
     assert actual.marshal() == expected_dict
 

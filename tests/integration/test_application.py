@@ -36,7 +36,8 @@ def test_load_charm(app, charm_dir):
     project = app.get_project()
     with (charm_dir / "expected.yaml").open() as f:
         expected_data = util.safe_yaml_load(f)
-    expected_project = models.CharmcraftProject.unmarshal(expected_data)
 
-    assert project == expected_project
-    assert utils.dump_yaml(project.marshal()) == (charm_dir / "expected.yaml").read_text()
+    project_dict = project.marshal()
+
+    assert project_dict == expected_data
+    assert utils.dump_yaml(project_dict) == (charm_dir / "expected.yaml").read_text()

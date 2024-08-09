@@ -47,11 +47,19 @@ jobs:
       matrix:
         os: [ubuntu-22.04, macos-12, macos-13, windows-2019, windows-2022]
         include:
-          - os: [windows-2019, windows-2022]
+          - os: windows-2019
             python-version: |
               3.11
               3.12
-          - os: [macos-12, macos-13]
+          - os: windows-2022
+            python-version: |
+              3.11
+              3.12
+          - os: macos-12
+            python_version: |
+              3.10
+              3.12
+          - os: macos-13
             python_version: |
               3.10
               3.12
@@ -72,8 +80,6 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
-          export $(cat /etc/os-release | grep VERSION_CODENAME)
-          pip install -U -r "requirements-${VERSION_CODENAME}.txt"
       - name: Install external dependencies with homebrew
         # This is only necessary for Linux until skopeo >= 1.11 is in repos.
         # Once we're running on Noble, we can get skopeo from apt.

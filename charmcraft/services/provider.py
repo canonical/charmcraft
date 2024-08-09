@@ -42,7 +42,7 @@ class ProviderService(services.ProviderService):
 
     def get_base(
         self,
-        base_name: bases.BaseName | tuple[str, str],
+        base_name: bases.BaseName,
         *,
         instance_name: str,
         **kwargs: bool | str | None | pathlib.Path,

@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+import platform
 import sys
 from textwrap import dedent
 from typing import Any
@@ -41,6 +42,10 @@ def fake_extensions(stub_extensions):
     extensions.register(TestExtension.name, TestExtension)
 
 
+@pytest.mark.xfail(
+    platform.system() == "Windows" and sys.version_info < (3, 11),
+    reason="'os' module doesn't have EX_OK on Windows until 3.11",
+)
 @pytest.mark.parametrize(
     ("charmcraft_yaml", "expected"),
     [

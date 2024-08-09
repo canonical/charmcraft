@@ -85,7 +85,7 @@ jobs:
           brew install skopeo
       - name: Configure environment
         run: |
-          python -m pip install tox
+          pipx install tox
           tox run --colored yes -m tests --notest
       - name: Run tests
         shell: bash

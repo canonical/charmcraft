@@ -18,47 +18,45 @@
 from typing import Annotated, Literal
 
 import pydantic
+from craft_application.models import CraftBaseModel
 
-from charmcraft.models.basic import ModelConfigDefaults
 
-
-class _BaseJujuOption(ModelConfigDefaults, frozen=True):
+class _BaseJujuOption(CraftBaseModel):
     """A Juju option field. Do not use (use the child classes below)."""
 
-    type: str
     description: str | None = None
     default: str | int | float | bool | None = None
 
 
-class JujuStringOption(_BaseJujuOption, frozen=True):
+class JujuStringOption(_BaseJujuOption):
     """A Juju option field containing a string."""
 
     type: Literal["string"]
     default: str | None = None
 
 
-class JujuIntOption(_BaseJujuOption, frozen=True):
+class JujuIntOption(_BaseJujuOption):
     """A Juju option field containing an integer."""
 
     type: Literal["int"]
     default: pydantic.StrictInt | None = None
 
 
-class JujuFloatOption(_BaseJujuOption, frozen=True):
+class JujuFloatOption(_BaseJujuOption):
     """A Juju option field containing a floating-point number."""
 
     type: Literal["float"]
     default: float | None = None
 
 
-class JujuBooleanOption(_BaseJujuOption, frozen=True):
+class JujuBooleanOption(_BaseJujuOption):
     """A Juju option field containing a boolean value."""
 
     type: Literal["boolean"]
     default: bool | None = None
 
 
-class JujuSecretOption(_BaseJujuOption, frozen=True):
+class JujuSecretOption(_BaseJujuOption):
     """A Juju option field containing a secret ID."""
 
     type: Literal["secret"]
@@ -66,7 +64,9 @@ class JujuSecretOption(_BaseJujuOption, frozen=True):
     # that anyone would know what the secret ID (specific to
     # the deployment in a model) is at the time that they are
     # writing the config, but included for completeness.
-    default: Annotated[str, pydantic.constr(regex=r"^secret:[a-z0-9]{20}$")] | None = None
+    default: (
+        Annotated[str, pydantic.StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")] | None
+    ) = None
 
 
 JujuOption = Annotated[
@@ -75,11 +75,11 @@ JujuOption = Annotated[
 ]
 
 
-class JujuConfig(ModelConfigDefaults, frozen=True):
+class JujuConfig(CraftBaseModel):
     """Juju configs for charms.
 
     See also: https://juju.is/docs/sdk/config
     and: https://juju.is/docs/sdk/config-yaml
     """
 
-    options: dict[str, JujuOption] | None
+    options: dict[str, JujuOption] | None = None

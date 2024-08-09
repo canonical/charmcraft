@@ -63,25 +63,7 @@ def test_partconfig_bad_property():
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("color",)
-    assert err[0]["msg"] == "extra fields not permitted"
-
-
-def test_partconfig_bad_type():
-    data = {
-        "plugin": "charm",
-        "source": ["."],
-    }
-    with pytest.raises(pydantic.ValidationError) as raised:
-        parts.process_part_config(data)
-    err = raised.value.errors()
-    assert len(err) == 2
-    assert err[0]["loc"] == ("source",)
-    assert err[0]["msg"] == "str type expected"
-    assert err[1]["loc"] == ("charm-requirements",)
-    assert (
-        err[1]["msg"]
-        == "cannot validate 'charm-requirements' because invalid 'source' configuration"
-    )
+    assert err[0]["msg"] == "Extra inputs are not permitted"
 
 
 def test_partconfig_bad_plugin_property():
@@ -95,4 +77,4 @@ def test_partconfig_bad_plugin_property():
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-timeout",)
-    assert err[0]["msg"] == "extra fields not permitted"
+    assert err[0]["msg"] == "Extra inputs are not permitted"

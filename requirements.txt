@@ -3,14 +3,14 @@ attrs==23.2.0
 certifi==2024.7.4
 cffi==1.16.0
 charset-normalizer==3.3.2
-craft-application @ git+https://github.com/canonical/craft-application@feature/pydantic-2
-craft-archives @ git+https://github.com/canonical/craft-archives@feature/2.0
+craft-application==4.0.0
+craft-archives==2.0.0
 craft-cli==2.6.0
-craft-grammar @ git+https://github.com/canonical/craft-grammar@feature/pydantic-2
-craft-parts @ git+https://github.com/canonical/craft-parts@feature/2.0
+craft-grammar==2.0.0
+craft-parts==2.0.0
 craft-platforms==0.1.1
-craft-providers @ git+https://github.com/canonical/craft-providers@feature/2.0
-craft-store @ git+https://github.com/canonical/craft-store@feature/3.0
+craft-providers==2.0.0
+craft-store==3.0.0
 cryptography==43.0.0
 distro==1.9.0
 docker==7.1.0

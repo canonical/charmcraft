@@ -1,0 +1,71 @@
+name: TICS
+
+on:
+  push:
+    branches:
+    - main
+    # to easy test changes to the workflow
+    - tiobe
+
+jobs:
+  CI:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          echo "::group::apt-get update"
+          sudo apt-get update
+          echo "::endgroup::"
+          echo "::group::apt-get install..."
+          sudo apt-get install -y python3 python3-dev libapt-pkg-dev libyaml-dev
+          echo "::endgroup::"
+          echo "::group::pip install"
+          python -m pip install 'tox<5.0' tox-gh
+          echo "::endgroup::"
+
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install skopeo
+
+      - name: Setup Tox environment
+        run: tox --workdir /tmp/tox run-parallel --parallel auto --parallel-no-spinner --parallel-live --colored yes -e test-py3.10 --notest
+
+      - name: Test with tox
+        run: |
+          echo "::group::skopeo"
+          # From tests.yaml
+          # Ensure the version of skopeo comes from homebrew
+          # This is only necessary until we move to noble.
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          # Allow skopeo to access the contents of /run/containers
+          sudo chmod 777 /run/containers
+          # Add an xdg runtime dir for skopeo to look into for an auth.json file
+          sudo mkdir -p /run/user/$(id -u)
+          sudo chown $USER /run/user/$(id -u)
+          export XDG_RUNTIME_DIR=/run/user/$(id -u)
+          echo "::endgroup::"
+
+          tox --workdir /tmp/tox run --skip-pkg-install --no-list-dependencies --result-json results/tox-py310.json --colored yes -e test-py3.10
+
+      - name: Upload test results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-ubuntu-22.04
+          path: results/
+
+      - name: Run TICS analysis
+        uses: tiobe/tics-github-action@v3
+        env:
+          PATH: "/tmp/tox/test-py3.10/bin:/snap/bin:/home/runner/.local/bin:/home/runner/.cargo/bin:/bin:/usr/bin:/usr/local/bin:"
+        with:
+          mode: qserver
+          project: charmcraft
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
+          branchdir: ${{ github.workspace }}
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true

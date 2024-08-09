@@ -1,3 +1,4 @@
+astroid==3.2.4
 attrs==23.2.0
 certifi==2024.7.4
 cffi==1.16.0
@@ -13,6 +14,7 @@ craft-providers==1.24.1
 craft-store==2.6.2
 cryptography==42.0.8
 Deprecated==1.2.14
+dill==0.3.8
 distro==1.9.0
 docker==7.1.0
 flake8==7.0.0
@@ -23,6 +25,7 @@ hypothesis==6.100.5
 idna==3.7
 importlib_metadata==7.1.0
 iniconfig==2.0.0
+isort==5.13.2
 jaraco.classes==3.4.0
 jeepney==0.8.0
 Jinja2==3.1.4
@@ -50,6 +53,7 @@ pydocstyle==6.3.0
 pyfakefs==5.4.1
 pyflakes==3.2.0
 pygit2==1.14.1
+pylint==3.2.6
 pymacaroons==0.13.0
 PyNaCl==1.5.0
 pyparsing==3.1.2
@@ -76,6 +80,7 @@ snap-helpers==0.4.2
 snowballstemmer==2.2.0
 sortedcontainers==2.4.0
 tabulate==0.9.0
+tomlkit==0.13.0
 types-Deprecated==1.2.9.20240311
 types-PyYAML==6.0.12.20240311
 typing_extensions==4.11.0

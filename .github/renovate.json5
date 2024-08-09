@@ -76,12 +76,17 @@
         "types/.*"
       ],
       matchPackagePatterns: [
-        // Generated from the dependency dashboard, may not be complete.
+        // Brought from charmcraft. May not be complete.
+        // This helps group dependencies in requirements-dev.txt files.
         "^(.*/)?autoflake$",
         "^(.*/)?black$",
+        "^(.*/)?codespell$",
+        "^(.*/)?coverage$",
         "^(.*/)?flake8$",
         "^(.*/)?hypothesis$",
+        "^(.*/)?mypy$",
         "^(.*/)?pycodestyle$",
+        "^(.*/)?docstyle$",
         "^(.*/)?pyfakefs$",
         "^(.*/)?pyflakes$",
         "^(.*/)?pylint$",
@@ -89,7 +94,8 @@
         "^(.*/)?responses$",
         "^(.*/)?ruff$",
         "^(.*/)?twine$",
-        "^(.*/)?types-"
+        "^(.*/)?tox$",
+        "^(.*/)?types-",
       ],
       matchUpdateTypes: ["minor", "patch", "pin", "digest"],
       prPriority: -1,

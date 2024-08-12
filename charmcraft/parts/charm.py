@@ -30,11 +30,6 @@ from craft_parts.packages import platform
 from craft_parts.utils import os_utils
 
 from charmcraft import charm_builder, env, instrum
-from charmcraft.errors import DependencyError
-from charmcraft.utils import (
-    get_requirements_file_package_names,
-    validate_strict_dependencies,
-)
 
 PACKAGE_NAME_REGEX = re.compile(r"[A-Za-z0-9_.-]+")
 
@@ -119,30 +114,6 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
             raise ValueError(
                 "'charm-strict-dependencies' requires at least one requirements file."
             )
-
-        invalid_binaries = set()
-        for binary_package in values.get("charm_binary_python_packages", []):
-            if not PACKAGE_NAME_REGEX.fullmatch(binary_package):
-                invalid_binaries.add(binary_package)
-
-        if invalid_binaries:
-            raise ValueError(
-                "'charm-binary-python-packages' may contain only package names allowed "
-                "to be installed from binary if 'charm-strict-dependencies' is enabled. "
-                f"Invalid package names: {sorted(invalid_binaries)}"
-            )
-
-        try:
-            validate_strict_dependencies(
-                get_requirements_file_package_names(
-                    *(pathlib.Path(r) for r in values["charm_requirements"])
-                ),
-                values.get("charm_binary_python_packages", []),
-            )
-        except DependencyError as e:
-            raise ValueError(
-                "All dependencies must be specified in requirements files for strict dependencies."
-            ) from e
 
         return charm_strict_dependencies
 

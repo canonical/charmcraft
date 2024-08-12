@@ -48,7 +48,9 @@ def _repr_str(dumper: yaml.SafeDumper, data: str) -> yaml.ScalarNode:
 def dump_yaml(data: Any) -> str:  # noqa: ANN401: yaml.dump takes anything, so why can't we?
     """Dump a craft model to a YAML string."""
     yaml.add_representer(str, _repr_str, Dumper=yaml.SafeDumper)
-    yaml.add_representer(pydantic.AnyHttpUrl, _repr_str, Dumper=yaml.SafeDumper)
+    yaml.add_representer(
+        pydantic.AnyHttpUrl, lambda dumper, s: _repr_str(dumper, str(s)), Dumper=yaml.SafeDumper
+    )
     yaml.add_representer(
         const.CharmArch,
         yaml.representer.SafeRepresenter.represent_str,

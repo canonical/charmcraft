@@ -91,12 +91,6 @@ class CharmPluginProperties(plugins.PluginProperties, plugins.PluginModel):
             )
         project_dirpath = pathlib.Path(values["source"])
 
-        # check that all indicated files are present
-        for reqs_filename in charm_requirements:
-            reqs_path = project_dirpath / reqs_filename
-            if not reqs_path.is_file():
-                raise ValueError(f"requirements file {str(reqs_path)!r} not found")
-
         # if nothing indicated, and default file is there, use it
         default_reqs_name = "requirements.txt"
         if not charm_requirements and (project_dirpath / default_reqs_name).is_file():

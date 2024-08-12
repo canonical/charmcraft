@@ -178,12 +178,16 @@ class Store:
         if needs_auth:
             try:
                 self._client = Client(
-                    charmhub_config.api_url, charmhub_config.storage_url, ephemeral=ephemeral
+                    str(charmhub_config.api_url),
+                    str(charmhub_config.storage_url),
+                    ephemeral=ephemeral,
                 )
             except craft_store.errors.NoKeyringError as error:
                 raise CraftError(str(error)) from error
         else:
-            self._client = AnonymousClient(charmhub_config.api_url, charmhub_config.storage_url)
+            self._client = AnonymousClient(
+                str(charmhub_config.api_url), str(charmhub_config.storage_url)
+            )
 
     def login(self, permissions=None, ttl=None, charms=None, bundles=None, channels=None):
         """Login into the store."""

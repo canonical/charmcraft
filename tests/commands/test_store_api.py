@@ -75,7 +75,7 @@ def test_client_init(charmhub_config):
     with patch("charmcraft.store.store.Client") as client_mock:
         Store(charmhub_config)
     assert client_mock.mock_calls == [
-        call(charmhub_config.api_url, charmhub_config.storage_url, ephemeral=False),
+        call(str(charmhub_config.api_url), str(charmhub_config.storage_url), ephemeral=False),
     ]
 
 
@@ -84,7 +84,7 @@ def test_client_init_ephemeral(charmhub_config):
     with patch("charmcraft.store.store.Client") as client_mock:
         Store(charmhub_config, ephemeral=True)
     assert client_mock.mock_calls == [
-        call(charmhub_config.api_url, charmhub_config.storage_url, ephemeral=True),
+        call(str(charmhub_config.api_url), str(charmhub_config.storage_url), ephemeral=True),
     ]
 
 
@@ -96,7 +96,7 @@ def test_anonymous_client_init(charmhub_config):
     with patch("charmcraft.store.store.AnonymousClient") as anonymous_client_mock:
         Store(charmhub_config, needs_auth=False)
     assert anonymous_client_mock.mock_calls == [
-        call(charmhub_config.api_url, charmhub_config.storage_url),
+        call(str(charmhub_config.api_url), str(charmhub_config.storage_url)),
     ]
 
 

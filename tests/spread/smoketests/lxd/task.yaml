@@ -8,6 +8,11 @@ prepare: |
   cd charm
   sed -i "s/22.04/$(echo $SPREAD_SYSTEM | cut -c 8-12)/g" charmcraft.yaml
 
+  # The charm itself doesn't matter, so replace the dependencies with something
+  # simple and small so we don't have to build pyyaml.
+  # NOTE: We still do need at least one dependency here so we can trigger the cache.
+  echo "distro" > requirements.txt
+
   # delete charmcraft instances
   ALL_INSTANCES="$(lxc list --project=charmcraft --format=csv --columns="n")"
   if [ -n "$ALL_INSTANCES" ]; then
@@ -25,7 +30,7 @@ restore: |
 
 execute: |
   cd charm
-  charmcraft pack --verbose
+  charmcraft pack
   test -f charm*.charm
 
   # Check that deleting the instance and recreating it from base after deleting

@@ -4,6 +4,7 @@ environment:
   CHARM/no_requirements: no-requirements/
   CHARM/extra_packages: extra-packages/
   CHARM/extra_binary_packages: extra-binary-packages/
+  CHARM/missing_packages: missing-packages/
 
 execute: |
   cd $CHARM

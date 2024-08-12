@@ -18,6 +18,10 @@ annotated-types==0.7.0 \
     --hash=sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89
     # via craft-platforms
     # via pydantic
+astroid==3.2.4 \
+    --hash=sha256:0e14202810b30da1b735827f78f5157be2bbd4a7a59b7707ca0bfc2fb4c0063a \
+    --hash=sha256:413658a61eeca6202a59231abb473f932038fbcbf1666587f66d482083413a25
+    # via pylint
 attrs==24.2.0 \
     --hash=sha256:5cfb1b9148b5b086569baec03f20d7b6bf3bcacc9a42bebf87ffaaca362f6346 \
     --hash=sha256:81921eb96de3191c8258c199618104dd27ac608d9366f5e35d011eae1867ede2
@@ -231,6 +235,7 @@ colorama==0.4.6 ; platform_system == 'Windows' or sys_platform == 'win32' \
     --hash=sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44 \
     --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
     # via click
+    # via pylint
     # via pytest
 coverage==7.6.1 \
     --hash=sha256:06a737c882bd26d0d6ee7269b20b12f14a8704807a01056c80bb881a4b2ce6ca \
@@ -372,6 +377,10 @@ cryptography==43.0.0 ; sys_platform == 'linux' \
     --hash=sha256:ee0c405832ade84d4de74b9029bedb7b31200600fa524d218fc29bfa371e97f5 \
     --hash=sha256:fdcb265de28585de5b859ae13e3846a8e805268a823a12a4da2597f1f5afc9f0
     # via secretstorage
+dill==0.3.8 \
+    --hash=sha256:3ebe3c479ad625c4553aca177444d89b486b1d84982eeacded644afc0cf797ca \
+    --hash=sha256:c36ca9ffb54365bdd2f8eb3eff7d2a21237f8452b57ace88b1ac615b7e815bd7
+    # via pylint
 distro==1.9.0 \
     --hash=sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed \
     --hash=sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2
@@ -422,6 +431,10 @@ iniconfig==2.0.0 \
     --hash=sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3 \
     --hash=sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374
     # via pytest
+isort==5.13.2 \
+    --hash=sha256:48fdfcb9face5d58a4f6dde2e72a1fb8dcaf8ab26f95ab49fab84c2ddefb0109 \
+    --hash=sha256:8ca5e72a8d85860d5a3fa69b8745237f2939afe12dbf656afbcb47fe72d947a6
+    # via pylint
 jaraco-classes==3.4.0 \
     --hash=sha256:47a024b51d0239c0dd8c8540c6c7f484be3b8fcf0b2d85c13825780d3b3f3acd \
     --hash=sha256:f662826b6bed8cace05e7ff873ce0f9283b5c924470fe664fff1c2f00f581790
@@ -679,6 +692,7 @@ mccabe==0.7.0 \
     --hash=sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325 \
     --hash=sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e
     # via flake8
+    # via pylint
 more-itertools==10.4.0 \
     --hash=sha256:0f7d9f83a0a8dcfa8a2694a770590d98a67ea943e3d9f5298309a484758c4e27 \
     --hash=sha256:fe0e63c4ab068eac62410ab05cccca2dc71ec44ba8ef29916a0090df061cf923
@@ -749,6 +763,7 @@ platformdirs==4.2.2 \
     # via black
     # via craft-application
     # via craft-cli
+    # via pylint
 pluggy==1.5.0 \
     --hash=sha256:2cffa88e94fdc978c4c574f15f9e59b7f4201d439195c3715ca9e2486f1d0cf1 \
     --hash=sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669
@@ -919,6 +934,10 @@ pygit2==1.14.1 \
     --hash=sha256:f35152b96a31ab705cdd63aef08fb199d6c1e87fc6fd45b1945f8cd040a43b7b \
     --hash=sha256:f5a87744e6c36f03fe488b975c73d3eaef22eadce433152516a2b8dbc4015233
     # via craft-application
+pylint==3.2.6 \
+    --hash=sha256:03c8e3baa1d9fb995b12c1dbe00aa6c4bcef210c2a2634374aedeb22fb4a8f8f \
+    --hash=sha256:a5d01678349454806cff6d886fb072294f56a58c4761278c97fb557d708e1eb3
+    # via charmcraft
 pymacaroons==0.13.0 \
     --hash=sha256:1e6bba42a5f66c245adf38a5a4006a99dcc06a0703786ea636098667d42903b8 \
     --hash=sha256:3e14dff6a262fdbf1a15e769ce635a8aea72e6f8f91e408f9a97166c53b91907
@@ -1307,10 +1326,19 @@ tomli==2.0.1 ; python_full_version <= '3.11.0a6' or python_version < '3.11' \
     # via black
     # via coverage
     # via mypy
+    # via pylint
     # via pytest
+tomlkit==0.13.0 \
+    --hash=sha256:08ad192699734149f5b97b45f1f18dad7eb1b6d16bc72ad0c2335772650d7b72 \
+    --hash=sha256:7075d3042d03b80f603482d69bf0c8f345c2b30e41699fd8883227f89972b264
+    # via pylint
 types-python-dateutil==2.9.0.20240316 \
     --hash=sha256:5d2f2e240b86905e40944dd787db6da9263f0deabef1076ddaed797351ec0202 \
     --hash=sha256:6b8cb66d960771ce5ff974e9dd45e38facb81718cc1e208b10b1baccbfdbee3b
+    # via charmcraft
+types-pyyaml==6.0.12.20240808 \
+    --hash=sha256:b8f76ddbd7f65440a8bda5526a9607e4c7a322dc2f8e1a8c405644f9a6f4b9af \
+    --hash=sha256:deda34c5c655265fc517b546c902aa6eed2ef8d3e921e4765fe606fe2afe8d35
     # via charmcraft
 types-requests==2.31.0.6 \
     --hash=sha256:a2db9cb228a81da8348b49ad6db3f5519452dd20a9c1e1a868c83c5fe88fd1a9 \
@@ -1332,6 +1360,7 @@ types-urllib3==1.26.25.14 \
 typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
     --hash=sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8
+    # via astroid
     # via black
     # via craft-application
     # via craft-platforms

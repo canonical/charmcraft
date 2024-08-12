@@ -33,9 +33,10 @@ from craft_parts import callbacks, plugins
 from craft_providers import bases
 
 import charmcraft.parts
-from charmcraft import const, env, instrum, parts, services, store
+from charmcraft import const, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models import project
+from charmcraft.models.charmcraft import Charmhub
 
 
 @pytest.fixture()
@@ -45,7 +46,18 @@ def simple_charm():
         name="charmy-mccharmface",
         summary="Charmy!",
         description="Very charming!",
-        bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+        bases=[
+            {
+                "build-on": [
+                    {
+                        "name": "ubuntu",
+                        "channel": "22.04",
+                        "architectures": [util.get_host_architecture()],
+                    }
+                ],
+                "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+            }
+        ],
     )
 
 
@@ -104,7 +116,7 @@ def default_build_plan():
         models.BuildInfo(
             base=bases.BaseName("ubuntu", "22.04"),
             build_on=arch,
-            build_for=arch,
+            build_for="arm64",
             platform="distro-1-test64",
         )
     ]
@@ -153,12 +165,14 @@ def setup_parts():
 
 
 @pytest.fixture()
-def charmhub_config() -> env.CharmhubConfig:
+def charmhub_config() -> Charmhub:
     """Provide a charmhub config for use in tests"""
-    return env.CharmhubConfig(
-        api_url="https://api.staging.charmhub.io",
-        storage_url="https://storage.staging.snapcraftcontent.com",
-        registry_url="https://registry.staging.jujucharms.com",
+    return Charmhub.model_validate(
+        {
+            "api-url": "https://api.staging.charmhub.io",
+            "storage-url": "https://storage.staging.snapcraftcontent.com",
+            "registry-url": "https://registry.staging.jujucharms.com",
+        }
     )
 
 

@@ -53,6 +53,7 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "hypothesis",
     "pydocstyle",
     "pyfakefs",
+    "pylint",
     "pytest",
     "pytest-cov",
     "pytest-mock",
@@ -122,7 +123,7 @@ line-length = 99
 
 [tool.codespell]
 ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread,socio-economic"
-skip = ".tox,.git,build,.*_cache,__pycache__,*.tar,*.snap,*.png,./node_modules,./docs/_build,.direnv,.venv,venv,.vscode,charmcraft.spec"
+skip = "requirements*.txt,.tox,.git,build,.*_cache,__pycache__,*.tar,*.snap,*.png,./node_modules,./docs/_build,.direnv,.venv,venv,.vscode,charmcraft.spec"
 quiet-level = 3
 check-filenames = true
 

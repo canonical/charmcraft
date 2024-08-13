@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import pathlib
 import shutil
-import sys
 from typing import Any
 
 import craft_cli
@@ -26,12 +25,19 @@ from craft_application import Application, AppMetadata
 from craft_parts.plugins import plugins
 from overrides import override
 
-from charmcraft import errors, extensions, models, preprocess, services
+from charmcraft import extensions, models, preprocess, services
 from charmcraft.application import commands
-from charmcraft.main import GENERAL_SUMMARY
-from charmcraft.main import main as old_main
 from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
 from charmcraft.services import CharmcraftServiceFactory
+
+GENERAL_SUMMARY = """
+Charmcraft helps build, package and publish operators on Charmhub.
+
+Together with the Python Operator Framework, charmcraft simplifies
+operator development and collaboration.
+
+See https://charmhub.io/publishing for more information.
+"""
 
 APP_METADATA = AppMetadata(
     name="charmcraft",
@@ -159,14 +165,11 @@ class Charmcraft(Application):
 
 
 def main() -> int:
-    """Run craft-application based charmcraft with classic fallback."""
+    """Run craft-application based charmcraft."""
     charmcraft_services = services.CharmcraftServiceFactory(app=APP_METADATA)
 
     app = Charmcraft(app=APP_METADATA, services=charmcraft_services)
 
     commands.fill_command_groups(app)
 
-    try:
-        return app.run()
-    except errors.ClassicFallback:
-        return old_main(sys.argv)
+    return app.run()

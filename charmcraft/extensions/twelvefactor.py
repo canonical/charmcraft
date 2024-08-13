@@ -52,7 +52,12 @@ class _TwelveFactorBase(Extension):
         return True
 
     framework: str
-    actions: dict
+    actions: dict = {
+        "rotate-secret-key": {
+            "description": "Rotate the secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
+        }
+    }
+
     options: dict
 
     def _get_nested(self, obj: dict, path: str) -> dict:
@@ -198,11 +203,6 @@ class FlaskFramework(_TwelveFactorBase):
     """Extension for 12-factor Flask applications."""
 
     framework = "flask"
-    actions = {
-        "rotate-secret-key": {
-            "description": "Rotate the flask secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
-        }
-    }
     options = {
         **GUNICORN_WEBSERVER_OPTIONS,
         "flask-application-root": {
@@ -248,9 +248,7 @@ class DjangoFramework(_TwelveFactorBase):
 
     framework = "django"
     actions = {
-        "rotate-secret-key": {
-            "description": "Rotate the django secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
-        },
+        **_TwelveFactorBase.actions,
         "create-superuser": {
             "description": "Create a new Django superuser account.",
             "params": {"username": {"type": "string"}, "email": {"type": "string"}},
@@ -279,11 +277,6 @@ class GoFramework(_TwelveFactorBase):
     """Extension for 12-factor Go applications."""
 
     framework = "go"
-    actions = {
-        "rotate-secret-key": {
-            "description": "Rotate the go secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
-        }
-    }
     options = {
         "port": {
             "type": "int",

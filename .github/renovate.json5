@@ -1,23 +1,21 @@
 {
   // Configuration file for RenovateBot: https://docs.renovatebot.com/configuration-options
-  extends: ["config:recommended"],
-  baseBranches: ["$default", "/^hotfix\\/.*/"],
+  extends: ["config:recommended", ":semanticCommitTypeAll(build)"],
   ignoreDeps: [
     // Each ignore is probably connected with an ignore in pyproject.toml.
     // Ensure you change this and those simultaneously.
-    "pydantic",  // Needs to wait for libraries.
-    "pydantic-yaml", // Needs to wait for pydantic
     "urllib3",
     "windows",  // We'll update Windows versions manually.
   ],
   labels: ["dependencies"],  // For convenient searching in GitHub
+  baseBranches: ["$default", "/^hotfix\\/.*/"],
   pip_requirements: {
     fileMatch: ["^tox.ini$", "(^|/)requirements([\\w-]*)\\.txt$", "^.pre-commit-config.yaml$"]
   },
    packageRules: [
     {
       // Internal package minor patch updates get top priority, with auto-merging
-      groupName: "internal package patch releases",
+      groupName: "internal package minor releases",
       matchPackagePatterns: ["^craft-.*"],
       matchUpdateTypes: ["minor", "patch", "pin", "digest"],
       prPriority: 10,
@@ -34,13 +32,13 @@
       prPriority: 10,
       minimumReleaseAge: "0 seconds",
       schedule: ["at any time"],
-      matchBaseBranches: ["/^hotfix/.*/"],  // All hotfix branches
+      matchBaseBranches: ["/^hotfix\\/.*/"],  // All hotfix branches
     },
     {
       // Automerge patches, pin changes and digest changes.
       // Also groups these changes together.
       groupName: "bugfixes",
-      excludePackagePrefixes: ["lint", "types"],
+      excludeDepPatterns: ["lint/.*", "types/.*"],
       matchUpdateTypes: ["patch", "pin", "digest"],
       prPriority: 3, // Patches should go first!
       automerge: true
@@ -48,7 +46,7 @@
     {
       // Update all internal packages in one higher-priority PR
       groupName: "internal packages",
-      matchPackagePrefixes: ["craft-", "snap-"],
+      matchDepPatterns: ["craft-.*", "snap-.*"],
       matchCategories: ["python"],
       prPriority: 2,
       matchBaseBranches: ["$default"],  // Not for hotfix branches
@@ -107,11 +105,11 @@
       groupSlug: "doc-dependencies",
       matchPackageNames: ["Sphinx", "furo"],
       matchPackagePatterns: ["[Ss]phinx.*$"],
-      matchPackagePrefixes: ["docs"],
+      matchDepPatterns: ["docs/.*"],
       matchBaseBranches: ["$default"],  // Not for hotfix branches
     },
     {
-          // Other major dependencies get deprioritised below minor dev dependencies.
+      // Other major dependencies get deprioritised below minor dev dependencies.
       matchUpdateTypes: ["major"],
       prPriority: -2,
       matchBaseBranches: ["$default"],  // Not for hotfix branches
@@ -123,6 +121,7 @@
       matchDepTypes: ["devDependencies"],
       matchUpdateTypes: ["major"],
       prPriority: -3,
+      matchBaseBranches: ["$default"],  // Not for hotfix branches
       matchPackagePatterns: [
         // Generated from the dependency dashboard, may not be complete.
         "^(.*/)?autoflake$",
@@ -139,12 +138,11 @@
         "^(.*/)?twine$",
         "^(.*/)?types-"
       ],
-      matchBaseBranches: ["$default"],  // Not for hotfix branches
     },
     {
       // Pyright makes regular breaking changes in patch releases, so we separate these
       // and do them independently.
-      matchPackageNames: ["pyright"],
+      matchPackageNames: ["pyright", "types/pyright"],
       prPriority: -4,
       matchBaseBranches: ["$default"],  // Not for hotfix branches
     }

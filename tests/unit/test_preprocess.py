@@ -32,8 +32,12 @@ BASIC_BASES_CHARM = {**BASIC_CHARM, "bases": [{"name": "ubuntu", "channel": "22.
         pytest.param({}, {}, id="no-type"),
         pytest.param({"type": "bundle"}, BASIC_BUNDLE, id="empty-bundle"),
         pytest.param(BASIC_BUNDLE.copy(), BASIC_BUNDLE, id="prefilled-bundle"),
-        pytest.param({"type": "charm"}, {"type": "charm"}, id="empty-charm"),
-        pytest.param(BASIC_CHARM.copy(), BASIC_CHARM, id="empty-charm"),
+        pytest.param(
+            {"type": "charm", "bases": []},
+            {"type": "charm", "bases": [], "parts": {"charm": {"plugin": "charm", "source": "."}}},
+            id="empty-charm",
+        ),
+        pytest.param(BASIC_CHARM.copy(), BASIC_CHARM, id="basic-charm"),
     ],
 )
 def test_add_default_parts_correct(yaml_data, expected):

@@ -45,7 +45,18 @@ def simple_charm():
         name="charmy-mccharmface",
         summary="Charmy!",
         description="Very charming!",
-        bases=[{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+        bases=[
+            {
+                "build-on": [
+                    {
+                        "name": "ubuntu",
+                        "channel": "22.04",
+                        "architectures": [util.get_host_architecture()],
+                    }
+                ],
+                "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+            }
+        ],
     )
 
 
@@ -104,7 +115,7 @@ def default_build_plan():
         models.BuildInfo(
             base=bases.BaseName("ubuntu", "22.04"),
             build_on=arch,
-            build_for=arch,
+            build_for="arm64",
             platform="distro-1-test64",
         )
     ]

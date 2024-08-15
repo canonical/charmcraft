@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Canonical Ltd.
+# Copyright 2020-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -61,18 +61,18 @@ class CharmBuilder:
         installdir: pathlib.Path,
         entrypoint: pathlib.Path,
         allow_pip_binary: bool = None,
-        binary_python_packages: list[str] = None,
-        python_packages: list[str] = None,
-        requirements: list[pathlib.Path] = None,
+        binary_python_packages: list[str] | None = None,
+        python_packages: list[str] | None = None,
+        requirements: list[pathlib.Path] | None = None,
         strict_dependencies: bool = False,
     ) -> None:
         self.builddir = builddir
         self.installdir = installdir
         self.entrypoint = entrypoint
         self.allow_pip_binary = allow_pip_binary
-        self.binary_python_packages = binary_python_packages
-        self.python_packages = python_packages
-        self.requirement_paths = requirements
+        self.binary_python_packages = binary_python_packages or []
+        self.python_packages = python_packages or []
+        self.requirement_paths = requirements or []
         self.strict_dependencies = strict_dependencies
         self.ignore_rules = self._load_juju_ignore()
         self.ignore_rules.extend_patterns([f"/{const.STAGING_VENV_DIRNAME}"])
@@ -227,7 +227,7 @@ class CharmBuilder:
         return hashlib.sha1(deps_mashup.encode("utf8")).hexdigest()
 
     @instrum.Timer("Installing dependencies")
-    def _install_dependencies(self, staging_venv_dir):
+    def _install_dependencies(self, staging_venv_dir: pathlib.Path):
         """Install all dependencies in a specific directory."""
         # create virtualenv using the host environment python
         with instrum.Timer("Creating venv"):
@@ -309,6 +309,8 @@ class CharmBuilder:
                 binary_deps=self.binary_python_packages or [],
             )
         )
+        # Validate that the environment is consistent.
+        _process_run([pip_cmd, "check"])
 
     def handle_dependencies(self):
         """Handle from-directory and virtualenv dependencies."""

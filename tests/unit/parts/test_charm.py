@@ -272,18 +272,6 @@ def test_charmpluginproperties_requirements_default(tmp_path):
     assert properties.charm_requirements == []
 
 
-def test_charmpluginproperties_requirements_must_exist(tmp_path):
-    """The configured files must be present."""
-    reqs_path = tmp_path / "reqs.txt"  # not in disk, really
-    content = {"source": str(tmp_path), "charm-requirements": ["reqs.txt"]}
-    with pytest.raises(pydantic.ValidationError) as raised:
-        parts.CharmPlugin.properties_class.unmarshal(content)
-    err = raised.value.errors()
-    assert len(err) == 1
-    assert err[0]["loc"] == ()
-    assert err[0]["msg"] == f"Value error, requirements file {str(reqs_path)!r} not found"
-
-
 def test_charmpluginproperties_requirements_filepresent_ok(tmp_path: pathlib.Path):
     """If a specific file is present in disk it's used."""
     (tmp_path / "requirements.txt").write_text("somedep")

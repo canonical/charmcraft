@@ -61,16 +61,6 @@ def test_partconfig_strict_dependencies_success(fs: FakeFilesystem, part_config,
             {"charm-requirements": ["req.txt"], "charm-python-packages": ["ops"]},
             "Value error, 'charm-python-packages' must not be set if 'charm-strict-dependencies' is enabled",
         ),
-        (
-            {"charm-requirements": ["req.txt"], "charm-binary-python-packages": ["not-here"]},
-            "Value error, all dependencies must be specified in requirements files for strict dependencies.",
-        ),
-        (
-            {"charm-requirements": ["req.txt"], "charm-binary-python-packages": ["ops>=2.6"]},
-            "Value error, 'charm-binary-python-packages' may contain only package names allowed to be "
-            "installed from binary if 'charm-strict-dependencies' is enabled. Invalid "
-            "package names: ['ops>=2.6']",
-        ),
         ({}, "Value error, 'charm-strict-dependencies' requires at least one requirements file."),
     ],
 )

@@ -31,11 +31,6 @@ from craft_parts.utils import os_utils
 from typing_extensions import Self
 
 from charmcraft import charm_builder, env, instrum
-from charmcraft.errors import DependencyError
-from charmcraft.utils import (
-    get_requirements_file_package_names,
-    validate_strict_dependencies,
-)
 
 PACKAGE_NAME_REGEX = re.compile(r"[A-Za-z0-9_.-]+")
 
@@ -93,12 +88,6 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
             )
         project_dirpath = pathlib.Path(self.source)
 
-        # check that all indicated files are present
-        for reqs_filename in self.charm_requirements:
-            reqs_path = project_dirpath / reqs_filename
-            if not reqs_path.is_file():
-                raise ValueError(f"requirements file {str(reqs_path)!r} not found")
-
         # if nothing indicated, and default file is there, use it
         default_reqs_name = "requirements.txt"
         if not self.charm_requirements and (project_dirpath / default_reqs_name).is_file():
@@ -137,18 +126,6 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
                 "to be installed from binary if 'charm-strict-dependencies' is enabled. "
                 f"Invalid package names: {sorted(invalid_binaries)}"
             )
-
-        try:
-            validate_strict_dependencies(
-                get_requirements_file_package_names(
-                    *(pathlib.Path(r) for r in self.charm_requirements)
-                ),
-                self.charm_binary_python_packages,
-            )
-        except DependencyError as e:
-            raise ValueError(
-                "all dependencies must be specified in requirements files for strict dependencies."
-            ) from e
 
         return self
 

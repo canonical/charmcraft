@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -105,6 +105,10 @@ def test_install_strict_dependencies_success(
         "--no-binary=:all:",
         "--requirement=requirements.txt",
     ]
-    fake_process.register(expected_command, returncode=0)
+    install_cmd = fake_process.register(expected_command, returncode=0)
+    check_cmd = fake_process.register(["/pip", "check"], returncode=0)
 
     builder._install_strict_dependencies("/pip")
+
+    assert install_cmd.call_count() == 1
+    assert check_cmd.call_count() == 1

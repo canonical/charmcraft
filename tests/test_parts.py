@@ -26,21 +26,35 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [ye
 
 
 @pytest.mark.usefixtures("new_path")
-def test_partconfig_happy_validation_and_completion():
-    data = {
+@pytest.mark.parametrize(
+    "binary_packages",
+    [
+        {},
+        {"charm-binary-python-packages": ["pydantic-core"]},
+    ],
+)
+@pytest.mark.parametrize("packages", [{}, {"charm-python-packages": ["pytest"]}])
+@pytest.mark.parametrize("reqs", [{}, {"charm-requirements": ["requirements.lock"]}])
+@pytest.mark.parametrize("strict_deps", [{}, {"charm-strict-dependencies": False}])
+@pytest.mark.parametrize("entrypoint", [{}, {"charm-entrypoint": "my_charm.py"}])
+def test_partconfig_happy_validation_and_completion(
+    binary_packages: dict[str, str],
+    packages: dict[str, str],
+    reqs: dict[str, str],
+    strict_deps: dict[str, bool],
+    entrypoint: dict[str, str],
+):
+    data: dict[str, str | bool] = {
         "plugin": "charm",
         "source": ".",
     }
+    data.update(binary_packages)
+    data.update(packages)
+    data.update(strict_deps)
+    data.update(entrypoint)
+
     completed = parts.process_part_config(data)
-    assert completed == {
-        "plugin": "charm",
-        "source": ".",
-        "charm-binary-python-packages": [],
-        "charm-entrypoint": "src/charm.py",
-        "charm-python-packages": [],
-        "charm-requirements": [],
-        "charm-strict-dependencies": False,
-    }
+    assert completed == data
 
 
 def test_partconfig_no_plugin():

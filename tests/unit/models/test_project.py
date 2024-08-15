@@ -567,28 +567,28 @@ def test_unmarshal_invalid_type(type_):
             None,
             None,
             None,
-            {"parts": BASIC_CHARM_PARTS_EXPANDED},
+            {"parts": BASIC_CHARM_PARTS},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             None,
             None,
-            {"parts": BASIC_CHARM_PARTS_EXPANDED},
+            {"parts": BASIC_CHARM_PARTS},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             SIMPLE_CONFIG_YAML,
             None,
-            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS_EXPANDED},
+            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
             SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS_EXPANDED},
+            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
@@ -598,7 +598,7 @@ def test_unmarshal_invalid_type(type_):
             {
                 "actions": SIMPLE_ACTIONS_DICT,
                 "config": SIMPLE_CONFIG_DICT,
-                "parts": BASIC_CHARM_PARTS_EXPANDED,
+                "parts": BASIC_CHARM_PARTS,
             },
         ),
         pytest.param(
@@ -621,18 +621,11 @@ def test_unmarshal_invalid_type(type_):
             {
                 "parts": {
                     "charm": {
-                        "charm-binary-python-packages": [],
-                        "charm-entrypoint": "src/charm.py",
-                        "charm-python-packages": [],
-                        "charm-requirements": [],
-                        "charm-strict-dependencies": False,
                         "plugin": "charm",
                         "source": ".",
                     },
                     "reactive": {
                         "plugin": "reactive",
-                        "reactive-charm-build-arguments": [],
-                        "source": ".",
                     },
                     "bundle": {
                         "plugin": "bundle",

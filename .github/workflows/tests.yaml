@@ -80,15 +80,28 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
-      - name: Install external dependencies with homebrew
+      - name: Install skopeo (mac)
         # This is only necessary for Linux until skopeo >= 1.11 is in repos.
         # Once we're running on Noble, we can get skopeo from apt.
-        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
+        if: ${{ runner.os == 'macOS' }}
         run: |
-          if [[ $(uname --kernel-name) == "Linux" ]]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          fi
           brew install skopeo
+      - name: Install skopeo (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          if [[ $(cat /etc/os-release | grep VERSION_CODENAME) == 'VERSION_CODENAME=jammy' ]]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            brew install skopeo
+            sudo rm -f /bin/skopeo
+            sudo ln -s $(which skopeo) /bin/skopeo
+          else
+            sudo apt install skopeo
+          fi
+          # Allow skopeo to access the contents of /run/containers
+          sudo chmod 777 /run/containers
+          # Add an xdg runtime dir for skopeo to look into for an auth.json file
+          sudo mkdir -p /run/user/$(id -u)
+          sudo chown $USER /run/user/$(id -u)
       - name: Configure environment
         run: |
           pipx install tox
@@ -97,14 +110,6 @@ jobs:
         shell: bash
         run: |
           if [[ $(uname --kernel-name) == "Linux" ]]; then
-            # Ensure the version of skopeo comes from homebrew
-            # This is only necessary until we move to noble.
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-            # Allow skopeo to access the contents of /run/containers
-            sudo chmod 777 /run/containers
-            # Add an xdg runtime dir for skopeo to look into for an auth.json file
-            sudo mkdir -p /run/user/$(id -u)
-            sudo chown $USER /run/user/$(id -u)
             export XDG_RUNTIME_DIR=/run/user/$(id -u)
           fi
           tox run --skip-pkg-install --no-list-dependencies --result-json results/tox-${{ matrix.platform }}.json --colored yes -m tests

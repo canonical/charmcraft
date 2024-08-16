@@ -28,7 +28,7 @@ restore: |
 
 execute: |
   cd charm
-  charmcraft pack --verbose
+  charmcraft pack
   test -f *.charm
   unzip -l *.charm | MATCH "src/charm.py"
   unzip -l *.charm | MATCH "venv/ops/charm.py"

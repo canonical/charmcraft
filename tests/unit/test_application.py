@@ -15,9 +15,13 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for application class."""
 import textwrap
+from unittest import mock
 
+import craft_application
+import craft_cli.pytest_plugin
 import pyfakefs.fake_filesystem
 import pytest
+from craft_application import util
 
 from charmcraft import application, errors, services
 from charmcraft.application.main import PRIME_BEHAVIOUR_CHANGE_MESSAGE
@@ -264,3 +268,31 @@ def test_deprecated_prime_warning_not_raised_in_managed_mode(
     app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
 
     app._extra_yaml_transform(charm_yaml, build_for=None, build_on="riscv64")
+
+
+@pytest.mark.parametrize(
+    "build_for",
+    [
+        "amd64-arm64",
+        "s390x-ppc64el-riscv64",
+    ],
+)
+def test_expand_environment_multi_arch(
+    monkeypatch: pytest.MonkeyPatch,
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: services.CharmcraftServiceFactory,
+    build_for,
+) -> None:
+    mock_parent_expand_environment = mock.Mock()
+    monkeypatch.setattr(
+        craft_application.Application, "_expand_environment", mock_parent_expand_environment
+    )
+    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
+
+    app._expand_environment({}, build_for)
+
+    emitter.assert_debug(
+        "Expanding environment variables with the host architecture "
+        f"{util.get_host_architecture()!r} as the build-for architecture "
+        "because multiple run-on architectures were specified."
+    )

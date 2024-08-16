@@ -25,7 +25,7 @@ from charmcraft.services.lifecycle import LifecycleService
 HOST_ARCH = util.get_host_architecture()
 
 
-@pytest.fixture()
+@pytest.fixture
 def service(service_factory) -> LifecycleService:
     return service_factory.lifecycle
 

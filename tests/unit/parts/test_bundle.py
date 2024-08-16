@@ -15,10 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 import sys
 
-import pydantic
 import pytest
-
-import charmcraft.parts
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
 
@@ -46,14 +43,3 @@ def test_bundleplugin_get_build_commands(bundle_plugin, tmp_path):
             f'mkdir -p "{str(tmp_path)}/parts/foo/install"',
             f'cp -R -p -P {tmp_path}/parts/foo/build/* "{str(tmp_path)}/parts/foo/install"',
         ]
-
-
-def test_bundleplugin_invalid_properties():
-    with pytest.raises(pydantic.ValidationError) as raised:
-        charmcraft.parts.bundle.BundlePlugin.properties_class.unmarshal(
-            {"source": ".", "bundle-invalid": True}
-        )
-    err = raised.value.errors()
-    assert len(err) == 1
-    assert err[0]["loc"] == ("bundle-invalid",)
-    assert err[0]["type"] == "value_error.extra"

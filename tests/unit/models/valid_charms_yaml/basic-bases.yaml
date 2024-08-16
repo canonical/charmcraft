@@ -12,4 +12,7 @@ bases:
   - name: ubuntu
     channel: '22.04'
 
-parts: {}
+parts:
+  charm:
+    source: .
+    plugin: charm

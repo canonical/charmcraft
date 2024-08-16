@@ -115,7 +115,7 @@ class PackageService(services.PackageService):
         """Get a charm file name for the appropriate set of run-on bases."""
         if self._platform:
             return dest_dir / f"{self._project.name}_{self._platform}.charm"
-        build_plan = models.CharmcraftBuildPlanner.parse_obj(
+        build_plan = models.CharmcraftBuildPlanner.model_validate(
             self._project.marshal()
         ).get_build_plan()
         platform = utils.get_os_platform()
@@ -208,10 +208,13 @@ class PackageService(services.PackageService):
         if isinstance(self._project, PlatformCharm):
             if not self._platform:
                 architectures = [util.get_host_architecture()]
-            elif platform := self._project.platforms.get(self._platform):
-                architectures = [str(arch) for arch in platform.build_for]
             elif self._platform in (*const.SUPPORTED_ARCHITECTURES, "all"):
                 architectures = [self._platform]
+            elif platform := self._project.platforms.get(self._platform):
+                if platform.build_for:
+                    architectures = [str(arch) for arch in platform.build_for]
+                else:
+                    raise ValueError(f"Platform {self._platform} contains unknown build-for.")
             else:
                 architectures = [util.get_host_architecture()]
             return [models.Base.from_str_and_arch(self._project.base, architectures)]
@@ -244,7 +247,9 @@ class PackageService(services.PackageService):
             # crystal wine glass.
             (path / "manifest.yaml").write_text(
                 utils.dump_yaml(
-                    manifest.dict(by_alias=True, exclude_unset=False, exclude_none=True)
+                    manifest.model_dump(
+                        mode="json", by_alias=True, exclude_unset=False, exclude_none=True
+                    )
                 )
             )
 

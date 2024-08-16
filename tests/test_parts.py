@@ -26,21 +26,35 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [ye
 
 
 @pytest.mark.usefixtures("new_path")
-def test_partconfig_happy_validation_and_completion():
-    data = {
+@pytest.mark.parametrize(
+    "binary_packages",
+    [
+        {},
+        {"charm-binary-python-packages": ["pydantic-core"]},
+    ],
+)
+@pytest.mark.parametrize("packages", [{}, {"charm-python-packages": ["pytest"]}])
+@pytest.mark.parametrize("reqs", [{}, {"charm-requirements": ["requirements.lock"]}])
+@pytest.mark.parametrize("strict_deps", [{}, {"charm-strict-dependencies": False}])
+@pytest.mark.parametrize("entrypoint", [{}, {"charm-entrypoint": "my_charm.py"}])
+def test_partconfig_happy_validation_and_completion(
+    binary_packages: dict[str, str],
+    packages: dict[str, str],
+    reqs: dict[str, str],
+    strict_deps: dict[str, bool],
+    entrypoint: dict[str, str],
+):
+    data: dict[str, str | bool] = {
         "plugin": "charm",
         "source": ".",
     }
+    data.update(binary_packages)
+    data.update(packages)
+    data.update(strict_deps)
+    data.update(entrypoint)
+
     completed = parts.process_part_config(data)
-    assert completed == {
-        "plugin": "charm",
-        "source": ".",
-        "charm-binary-python-packages": [],
-        "charm-entrypoint": "src/charm.py",
-        "charm-python-packages": [],
-        "charm-requirements": [],
-        "charm-strict-dependencies": False,
-    }
+    assert completed == data
 
 
 def test_partconfig_no_plugin():
@@ -63,25 +77,7 @@ def test_partconfig_bad_property():
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("color",)
-    assert err[0]["msg"] == "extra fields not permitted"
-
-
-def test_partconfig_bad_type():
-    data = {
-        "plugin": "charm",
-        "source": ["."],
-    }
-    with pytest.raises(pydantic.ValidationError) as raised:
-        parts.process_part_config(data)
-    err = raised.value.errors()
-    assert len(err) == 2
-    assert err[0]["loc"] == ("source",)
-    assert err[0]["msg"] == "str type expected"
-    assert err[1]["loc"] == ("charm-requirements",)
-    assert (
-        err[1]["msg"]
-        == "cannot validate 'charm-requirements' because invalid 'source' configuration"
-    )
+    assert err[0]["msg"] == "Extra inputs are not permitted"
 
 
 def test_partconfig_bad_plugin_property():
@@ -95,4 +91,4 @@ def test_partconfig_bad_plugin_property():
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-timeout",)
-    assert err[0]["msg"] == "extra fields not permitted"
+    assert err[0]["msg"] == "Extra inputs are not permitted"

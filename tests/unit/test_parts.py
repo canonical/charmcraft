@@ -19,15 +19,6 @@ from pyfakefs.fake_filesystem import FakeFilesystem
 
 from charmcraft import parts
 
-FULLY_DEFINED_STRICT_CHARM = {
-    "source": ".",
-    "plugin": "charm",
-    "charm-strict-dependencies": True,
-    "charm-binary-python-packages": [],
-    "charm-python-packages": [],
-    "charm-requirements": [],
-    "charm-entrypoint": "src/charm.py",
-}
 MINIMAL_STRICT_CHARM = {
     "source": ".",
     "plugin": "charm",
@@ -38,7 +29,7 @@ MINIMAL_STRICT_CHARM = {
 @pytest.mark.parametrize(
     ("part_config", "expected"),
     [
-        ({}, {"charm-requirements": ["requirements.txt"]}),
+        ({}, {}),
         (
             {"charm-requirements": ["requirements.txt"]},
             {"charm-requirements": ["requirements.txt"]},
@@ -55,7 +46,7 @@ def test_partconfig_strict_dependencies_success(fs: FakeFilesystem, part_config,
         fs.create_file(file, contents="ops~=2.5")
 
     part_config.update(MINIMAL_STRICT_CHARM)
-    real_expected = FULLY_DEFINED_STRICT_CHARM.copy()
+    real_expected = MINIMAL_STRICT_CHARM.copy()
     real_expected.update(expected)
 
     actual = parts.process_part_config(part_config)
@@ -68,9 +59,9 @@ def test_partconfig_strict_dependencies_success(fs: FakeFilesystem, part_config,
     [
         (
             {"charm-requirements": ["req.txt"], "charm-python-packages": ["ops"]},
-            "'charm-python-packages' must not be set if 'charm-strict-dependencies' is enabled",
+            "Value error, 'charm-python-packages' must not be set if 'charm-strict-dependencies' is enabled",
         ),
-        ({}, "'charm-strict-dependencies' requires at least one requirements file."),
+        ({}, "Value error, 'charm-strict-dependencies' requires at least one requirements file."),
     ],
 )
 def test_partconfig_strict_dependencies_failure(fs: FakeFilesystem, part_config, message):

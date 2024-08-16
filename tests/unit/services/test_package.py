@@ -221,7 +221,7 @@ def test_get_manifest_bases_from_bases(
     build_item: BuildInfo,
     expected: list[dict[str, Any]],
 ):
-    charm = models.BasesCharm.parse_obj(
+    charm = models.BasesCharm.model_validate(
         {
             "name": "my-charm",
             "description": "",
@@ -233,7 +233,9 @@ def test_get_manifest_bases_from_bases(
     package_service._project = charm
     package_service._build_plan = [build_item]
 
-    assert package_service.get_manifest_bases() == [models.Base.parse_obj(b) for b in expected]
+    assert package_service.get_manifest_bases() == [
+        models.Base.model_validate(b) for b in expected
+    ]
 
 
 @pytest.mark.parametrize("base", ["ubuntu@22.04", "almalinux@9"])
@@ -245,7 +247,7 @@ def test_get_manifest_bases_from_bases(
             {
                 "anything": {
                     "build-on": [*const.SUPPORTED_ARCHITECTURES],
-                    "build-for": "all",
+                    "build-for": ["all"],
                 }
             },
             "anything",
@@ -255,7 +257,7 @@ def test_get_manifest_bases_from_bases(
             {
                 "anything": {
                     "build-on": [*const.SUPPORTED_ARCHITECTURES],
-                    "build-for": "all",
+                    "build-for": ["all"],
                 },
                 "amd64": None,
                 "riscy": {
@@ -272,7 +274,7 @@ def test_get_manifest_bases_from_bases(
 def test_get_manifest_bases_from_platforms(
     package_service, base, platforms, selected_platform, expected_architectures
 ):
-    charm = models.PlatformCharm.parse_obj(
+    charm = models.PlatformCharm.model_validate(
         {
             "name": "my-charm",
             "description": "",

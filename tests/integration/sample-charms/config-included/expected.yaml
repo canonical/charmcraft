@@ -11,13 +11,8 @@ platforms:
     - amd64
 parts:
   charm:
-    source: .
-    charm-entrypoint: src/charm.py
-    charm-binary-python-packages: []
-    charm-python-packages: []
-    charm-requirements: []
-    charm-strict-dependencies: false
     plugin: charm
+    source: .
 type: charm
 config:
   options:

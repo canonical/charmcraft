@@ -25,7 +25,6 @@ from craft_application import services
 from craft_providers import bases
 
 from charmcraft import env
-from charmcraft.const import EXPERIMENTAL_EXTENSIONS_ENV_VAR
 
 
 class ProviderService(services.ProviderService):
@@ -33,12 +32,14 @@ class ProviderService(services.ProviderService):
 
     def setup(self) -> None:
         """Set up the provider service for Charmcraft."""
-        self.environment["CHARMCRAFT_MANAGED_MODE"] = "1"
+        super().setup()
 
-        # Pass-through host environment that target may need.
-        for env_key in ["http_proxy", "https_proxy", "no_proxy", EXPERIMENTAL_EXTENSIONS_ENV_VAR]:
-            if env_key in os.environ:
-                self.environment[env_key] = os.environ[env_key]
+        # Forward all charmcraft environment variables
+        for key, value in os.environ.items():
+            if key.startswith("CHARMCRAFT_"):
+                self.environment[key] = value
+
+        self.environment["CHARMCRAFT_MANAGED_MODE"] = "1"
 
     def get_base(
         self,

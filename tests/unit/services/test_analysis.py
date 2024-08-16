@@ -153,10 +153,10 @@ from textwrap import dedent
 
 @dataclass
 class Imports:
-    """dummy"""
+    """Represents names by which items of interest are known in charm.py"""
 
-    main: list[str]
-    CharmBase: list[str]
+    main: list[str]  # typically "ops.main" or "main"
+    charm_base: list[str]
     charms: list[str]
 
 
@@ -251,11 +251,11 @@ def test_ops_main(code: str):
     if not imports.main:
         warnings.warn("I: could not detect import for `ops.main`")
 
-    if not imports.CharmBase:
+    if not imports.charm_base:
         warnings.warn("I: could not detect any charm classes")
 
     classes = detect_charm_classes(tree, imports=imports)
-    assert check_ops_main(tree, imports=imports, charm_classes=classes + imports.charms)
+    assert detect_main_calls(tree, imports=imports, charm_classes=classes + imports.charms)
 
 
 def detect_imports(tree) -> Imports:
@@ -264,19 +264,19 @@ def detect_imports(tree) -> Imports:
     class ImportVisitor(ast.NodeVisitor):
         def visit_Import(self, node: ast.Import):
             for alias in node.names:
+                # import ops
                 if alias.name == "ops":
                     rv.main.append(f"{alias.asname or alias.name}.main")
-                    rv.CharmBase.append(f"{alias.asname or alias.name}.CharmBase")
-                if alias.name.endswith("Charm"):
-                    rv.charms.append(alias.asname or alias.name)
+                    rv.charm_base.append(f"{alias.asname or alias.name}.CharmBase")
 
         def visit_ImportFrom(self, node: ast.ImportFrom):
             for alias in node.names:
+                # from ops import main [as ops_main]
                 if node.module == "ops":
                     if alias.name == "main":
                         rv.main.append(alias.asname or alias.name)
                     if alias.name == "CharmBase":
-                        rv.CharmBase.append(alias.asname or alias.name)
+                        rv.charm_base.append(alias.asname or alias.name)
                 else:
                     if alias.name.endswith("Charm"):
                         rv.charms.append(alias.asname or alias.name)
@@ -292,25 +292,27 @@ def detect_charm_classes(tree, *, imports: Imports):
         def visit_ClassDef(self, node: ast.ClassDef):
             bases = []
             for base in node.bases:
+                # class X(SomeBase): ...
                 if isinstance(base, ast.Name):
                     bases.append(base.id)
+                # class X(some_mod.SomeBase): ...
                 elif isinstance(base, ast.Attribute) and isinstance(base.value, ast.Name):
                     bases.append(f"{base.value.id}.{base.attr}")
                 else:
                     # Unsupported:
-                    # class X(very.deep.mod.Base): ...
+                    # class X(nested.mod.Base): ...
                     # class X(parents[0]): ...
                     # ...
                     pass
 
-            if any(b in imports.CharmBase for b in bases):
+            if any(b in imports.charm_base for b in bases):
                 rv.append(node.name)
 
     TopLevelClassVisitor().visit(tree)
     return rv
 
 
-def check_ops_main(tree, *, imports: Imports, charm_classes: list[str]):
+def detect_main_calls(tree, *, imports: Imports, charm_classes: list[str]):
     main_call_sites = []
 
     class OpsMainFinder(ast.NodeVisitor):

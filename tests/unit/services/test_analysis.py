@@ -143,3 +143,228 @@ def test_lint_file_results(fs, mock_temp_dir, mock_zip_file, monkeypatch, analys
     with pytest_check.check:
         mock_checker.get_result.assert_called_once_with(fake_temp_path)
     pytest_check.equal(results, [mock_checker.get_result.return_value])
+
+
+import ast
+import warnings
+from dataclasses import dataclass
+from textwrap import dedent
+
+
+@dataclass
+class Imports:
+    """dummy"""
+
+    main: list[str]
+    CharmBase: list[str]
+    charms: list[str]
+
+
+MODULE_IMPORT = """
+import ops
+
+class SomeCharm(ops.CharmBase):
+    ...
+
+ops.main(SomeCharm)
+"""
+
+
+MODULE_IMPORT_KWARG = """
+import ops
+
+class SomeCharm(ops.CharmBase):
+    ...
+
+ops.main(charm_class=SomeCharm)
+"""
+
+
+FUNCTION_IMPORT = """
+from ops import CharmBase, main
+
+class Some(dep.Base):
+    ...
+
+class Other:
+    ...
+
+class SomeCharm(CharmBase):
+    ...
+
+main(SomeCharm)
+"""
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(MODULE_IMPORT, id="module import"),
+        pytest.param(MODULE_IMPORT_KWARG, id="module import with kwarg"),
+        pytest.param(FUNCTION_IMPORT, id="function import"),
+        pytest.param(
+            dedent(
+                """
+                import ops
+                from some.library.module import AnExternalCharm
+
+                ops.main(AnExternalCharm)
+                """
+            ),
+            id="imported charm",
+        ),
+        pytest.param(
+            dedent(
+                """
+                import ops
+                from some_place import ACharm
+
+                ops_main = ops.main
+                ops_main(ACharm)
+                """
+            ),
+            id="local ops.main alias",
+            marks=pytest.mark.xfail(reason="Can't track all local variables"),
+        ),
+        pytest.param(
+            dedent(
+                """
+                import ops
+                from lib.something import ExtendedCharmBase
+
+                class SomeCharm(ExtendedCharmBase):
+                    ...
+
+                ops.main(SomeCharm)
+                """
+            ),
+            id="intermediate charm base",
+            marks=pytest.mark.xfail(reason="Deep class hierarchy"),
+        ),
+    ],
+)
+def test_ops_main(code: str):
+    tree = ast.parse(code)
+
+    imports = detect_imports(tree)
+
+    if not imports.main:
+        warnings.warn("I: could not detect import for `ops.main`")
+
+    if not imports.CharmBase:
+        warnings.warn("I: could not detect any charm classes")
+
+    classes = detect_charm_classes(tree, imports=imports)
+    assert check_ops_main(tree, imports=imports, charm_classes=classes + imports.charms)
+
+
+def detect_imports(tree) -> Imports:
+    rv = Imports([], [], [])
+
+    class ImportVisitor(ast.NodeVisitor):
+        def visit_Import(self, node: ast.Import):
+            for alias in node.names:
+                if alias.name == "ops":
+                    rv.main.append(f"{alias.asname or alias.name}.main")
+                    rv.CharmBase.append(f"{alias.asname or alias.name}.CharmBase")
+                if alias.name.endswith("Charm"):
+                    rv.charms.append(alias.asname or alias.name)
+
+        def visit_ImportFrom(self, node: ast.ImportFrom):
+            for alias in node.names:
+                if node.module == "ops":
+                    if alias.name == "main":
+                        rv.main.append(alias.asname or alias.name)
+                    if alias.name == "CharmBase":
+                        rv.CharmBase.append(alias.asname or alias.name)
+                else:
+                    if alias.name.endswith("Charm"):
+                        rv.charms.append(alias.asname or alias.name)
+
+    ImportVisitor().visit(tree)
+    return rv
+
+
+def detect_charm_classes(tree, *, imports: Imports):
+    rv = []
+
+    class TopLevelClassVisitor(ast.NodeVisitor):
+        def visit_ClassDef(self, node: ast.ClassDef):
+            bases = []
+            for base in node.bases:
+                if isinstance(base, ast.Name):
+                    bases.append(base.id)
+                elif isinstance(base, ast.Attribute) and isinstance(base.value, ast.Name):
+                    bases.append(f"{base.value.id}.{base.attr}")
+                else:
+                    # Unsupported:
+                    # class X(very.deep.mod.Base): ...
+                    # class X(parents[0]): ...
+                    # ...
+                    pass
+
+            if any(b in imports.CharmBase for b in bases):
+                rv.append(node.name)
+
+    TopLevelClassVisitor().visit(tree)
+    return rv
+
+
+def check_ops_main(tree, *, imports: Imports, charm_classes: list[str]):
+    main_call_sites = []
+
+    class OpsMainFinder(ast.NodeVisitor):
+        def visit_Call(self, node: ast.Call):
+            match node.func:
+                # ops.main(...)
+                case ast.Attribute(value=ast.Name(id=obj_name), attr=func_name):
+                    name = f"{obj_name}.{func_name}"
+                # main(...)
+                case ast.Name(id=func_name):
+                    name = func_name
+                # Unsupported:
+                # get_main(...)
+                # nested.ops.main(...)
+                # (some + expr)(...)
+                # ...
+                case _:
+                    name = None
+
+            match node:
+                # some_main(arg, ...)
+                case ast.Call(args=[arg, *_]) if isinstance(arg, (ast.Name, ast.Attribute)):
+                    pass
+                # some_main(charm_class=arg, ...)
+                case ast.Call(keywords=[*_, ast.keyword(arg="charm_class", value=arg)]):
+                    pass
+                # Unsupported:
+                # some_main(*[Charm])
+                # some_main(**{charm_class=Charm})
+                # some_main(get_charm())
+                # ...
+                case _:
+                    arg = None
+
+            match arg:
+                # SomeCharm
+                case ast.Name(id=charm_class):
+                    pass
+                # some_mod.SomeCharm
+                case ast.Attribute(value=ast.Name(id=mod_name), attr=attr_name):
+                    charm_class = f"{mod_name}.{attr_name}"
+                # Unsupported:
+                # charm_table["some_key"]
+                # get_some_charm()
+                # ...
+                case _:
+                    charm_class = None
+
+            if name in imports.main and charm_class in charm_classes:
+                main_call_sites.append(f"{name}({charm_class})")
+            else:
+                warnings.warn(f"Test debug: skipped call {name}({charm_class}) vs {charm_classes}")
+
+            self.generic_visit(node)
+
+    OpsMainFinder().visit(tree)
+    return main_call_sites

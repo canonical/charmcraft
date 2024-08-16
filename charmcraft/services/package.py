@@ -49,6 +49,14 @@ else:
     CharmcraftServiceFactory = "CharmcraftServiceFactory"
 
 
+DISPATCH_SCRIPT_TEMPLATE = """\
+#!/bin/sh
+
+dispatch_path="$(dirname $(realpath $0))"
+exec "${{dispatch_path}}/bin/python" "${{dispatch_path}}/{entrypoint}"
+"""
+
+
 class PackageService(services.PackageService):
     """Business logic for creating packages."""
 
@@ -209,6 +217,19 @@ class PackageService(services.PackageService):
             return [models.Base.from_str_and_arch(self._project.base, architectures)]
         raise TypeError(f"Unknown charm type {self._project.__class__}, cannot get bases.")
 
+    def create_dispatch(self, prime_dir: pathlib.Path) -> None:
+        """If the charm has no hooks or dispatch, create a dispatch file."""
+        dispatch_path = prime_dir / const.DISPATCH_FILENAME
+        hooks_path = prime_dir / const.HOOKS_DIRNAME
+
+        if hooks_path.is_dir() or dispatch_path.is_file():
+            return
+
+        dispatch_path.write_text(
+            DISPATCH_SCRIPT_TEMPLATE.format(entrypoint="src/charm.py")
+        )
+        dispatch_path.chmod(mode=0o755)
+
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write additional charm metadata.
 
@@ -241,6 +262,7 @@ class PackageService(services.PackageService):
                     )
                 )
             )
+            self.create_dispatch(path)
 
         project_dict = self._project.marshal()
 

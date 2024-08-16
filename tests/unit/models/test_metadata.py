@@ -46,8 +46,8 @@ BASIC_BUNDLE_DICT = {
     [
         (BASIC_CHARM_DICT, BASIC_CHARM_METADATA_DICT),
         (
-            dict(**BASIC_CHARM_DICT, links={"documentation": "https://docs.url"}),
-            {**BASIC_CHARM_METADATA_DICT, "docs": "https://docs.url"},
+            dict(**BASIC_CHARM_DICT, links={"documentation": "https://docs.url/"}),
+            {**BASIC_CHARM_METADATA_DICT, "docs": "https://docs.url/"},
         ),
         (
             dict(**BASIC_CHARM_DICT, links={"contact": "someone@company.com"}),

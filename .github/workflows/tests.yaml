@@ -45,7 +45,24 @@ jobs:
   run-tests:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-12, macos-13, windows-2019, windows-2022]
+        os: [ubuntu-22.04, ubuntu-24.04, macos-12, macos-13, windows-2019, windows-2022]
+        include:
+          - os: windows-2019
+            python-version: |
+              3.11
+              3.12
+          - os: windows-2022
+            python-version: |
+              3.11
+              3.12
+          - os: macos-12
+            python_version: |
+              3.10
+              3.12
+          - os: macos-13
+            python_version: |
+              3.10
+              3.12
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -53,44 +70,46 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python
+        if: ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: |
-            3.10
-            3.12
+          python-version: ${{ matrix.python-version }}
           cache: "pip"
       - name: Install Ubuntu-specific dependencies
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
-          export $(cat /etc/os-release | grep VERSION_CODENAME)
-          pip install -U -r "requirements-${VERSION_CODENAME}.txt"
-      - name: Install external dependencies with homebrew
+      - name: Install skopeo (mac)
         # This is only necessary for Linux until skopeo >= 1.11 is in repos.
         # Once we're running on Noble, we can get skopeo from apt.
-        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
+        if: ${{ runner.os == 'macOS' }}
         run: |
-          if [[ $(uname --kernel-name) == "Linux" ]]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          fi
           brew install skopeo
+      - name: Install skopeo (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          if [[ $(cat /etc/os-release | grep VERSION_CODENAME) == 'VERSION_CODENAME=jammy' ]]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            brew install skopeo
+            sudo rm -f /bin/skopeo
+            sudo ln -s $(which skopeo) /bin/skopeo
+          else
+            sudo apt install skopeo
+          fi
+          # Allow skopeo to access the contents of /run/containers
+          sudo chmod 777 /run/containers
+          # Add an xdg runtime dir for skopeo to look into for an auth.json file
+          sudo mkdir -p /run/user/$(id -u)
+          sudo chown $USER /run/user/$(id -u)
       - name: Configure environment
         run: |
-          python -m pip install tox
+          pipx install tox
           tox run --colored yes -m tests --notest
       - name: Run tests
         shell: bash
         run: |
           if [[ $(uname --kernel-name) == "Linux" ]]; then
-            # Ensure the version of skopeo comes from homebrew
-            # This is only necessary until we move to noble.
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-            # Allow skopeo to access the contents of /run/containers
-            sudo chmod 777 /run/containers
-            # Add an xdg runtime dir for skopeo to look into for an auth.json file
-            sudo mkdir -p /run/user/$(id -u)
-            sudo chown $USER /run/user/$(id -u)
             export XDG_RUNTIME_DIR=/run/user/$(id -u)
           fi
           tox run --skip-pkg-install --no-list-dependencies --result-json results/tox-${{ matrix.platform }}.json --colored yes -m tests
@@ -211,7 +230,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install dependencies
         run: |
           pip install -U pyinstaller -r requirements.txt

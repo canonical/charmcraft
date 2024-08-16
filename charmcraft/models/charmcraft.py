@@ -15,20 +15,33 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft configuration pydantic model."""
-from typing import cast
+from typing import TypedDict, cast
 
 import pydantic
 from craft_application import util
+from craft_application.models import CraftBaseModel
 from typing_extensions import Self
 
-from charmcraft.models.basic import AttributeName, LinterName, ModelConfigDefaults
+from charmcraft.models.basic import AttributeName, LinterName
 
 
-class CharmhubConfig(
-    ModelConfigDefaults,
-    alias_generator=lambda s: s.replace("_", "-"),
-    frozen=True,
-):
+class BaseDict(TypedDict, total=False):
+    """TypedDict that describes only one base.
+
+    This is equivalent to the short form base definition.
+    """
+
+    name: str
+    channel: str
+    architectures: list[str]
+
+
+LongFormBasesDict = TypedDict(
+    "LongFormBasesDict", {"build-on": list[BaseDict], "run-on": list[BaseDict]}
+)
+
+
+class Charmhub(CraftBaseModel):
     """Definition of Charmhub endpoint configuration."""
 
     api_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://api.charmhub.io")
@@ -36,7 +49,7 @@ class CharmhubConfig(
     registry_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://registry.jujucharms.com")
 
 
-class Base(ModelConfigDefaults, frozen=True):
+class Base(CraftBaseModel):
     """Represents a base."""
 
     name: pydantic.StrictStr
@@ -54,11 +67,7 @@ class Base(ModelConfigDefaults, frozen=True):
         return cls(name=name, channel=channel, architectures=architectures)
 
 
-class BasesConfiguration(
-    ModelConfigDefaults,
-    alias_generator=lambda s: s.replace("_", "-"),
-    frozen=True,
-):
+class BasesConfiguration(CraftBaseModel):
     """Definition of build-on/run-on combinations.
 
     Example::
@@ -80,30 +89,37 @@ class BasesConfiguration(
     build_on: list[Base]
     run_on: list[Base]
 
+    @pydantic.model_validator(mode="before")
+    def _expand_base(cls, base: BaseDict | LongFormBasesDict) -> LongFormBasesDict:
+        """Expand short-form bases into long-form bases."""
+        if "build-on" in base:  # Assume long-form base already.
+            return cast(LongFormBasesDict, base)
+        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
 
-class Ignore(ModelConfigDefaults, frozen=True):
+
+class Ignore(CraftBaseModel):
     """Definition of `analysis.ignore` configuration."""
 
     attributes: list[AttributeName] = []
     linters: list[LinterName] = []
 
 
-class AnalysisConfig(ModelConfigDefaults, allow_population_by_field_name=True, frozen=True):
+class AnalysisConfig(CraftBaseModel):
     """Definition of `analysis` configuration."""
 
     ignore: Ignore = Ignore()
 
 
-class Links(ModelConfigDefaults, frozen=True):
+class Links(CraftBaseModel):
     """Definition of `links` in metadata."""
 
-    contact: pydantic.StrictStr | list[pydantic.StrictStr] | None
+    contact: pydantic.StrictStr | list[pydantic.StrictStr] | None = None
     """Instructions for contacting the owner of the charm."""
-    documentation: pydantic.AnyHttpUrl | None
+    documentation: pydantic.AnyHttpUrl | None = None
     """The URL of the documentation for this charm."""
-    issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
     """A link to the issue tracker for this charm."""
-    source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
     """Where to find this charm's source code."""
-    website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None
+    website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
     """The website for this charm."""

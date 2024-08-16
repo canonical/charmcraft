@@ -11,8 +11,8 @@ analysis:
     linters:
     - entrypoint
 charmhub:
-  api-url: https://api.staging.charmhub.io
-  storage-url: https://storage.staging.snapcraftcontent.com
+  api-url: https://api.staging.charmhub.io/
+  storage-url: https://storage.staging.snapcraftcontent.com/
 parts:
   im-not-calling-this-what-you-expect:
     plugin: charm
@@ -20,10 +20,11 @@ parts:
     charm-entrypoint: src/charm.py
     charm-binary-python-packages: []
     charm-python-packages: []
-    charm-requirements: []
+    charm-requirements: [requirements.txt]
     charm-strict-dependencies: false
   another-part:
     plugin: nil
+    source:
 charm-libs:
   - lib: my-charm.my_lib
     version: '1'

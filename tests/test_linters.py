@@ -33,6 +33,7 @@ from charmcraft.linters import (
     JujuMetadata,
     Language,
     NamingConventions,
+    OpsMainCall,
     check_dispatch_with_python_entrypoint,
     get_entrypoint_from_dispatch,
 )
@@ -1066,3 +1067,149 @@ def test_additional_files_checker_generated_ignore(tmp_path, file):
 
     assert result == LintResult.OK
     assert linter.text == "No additional files found in the charm."
+
+
+CODE_SAMPLES = {
+    "canonical example": dedent(
+        """
+        import ops
+        if __name__ == "__main__":
+            ops.main(SomeCharm)
+        """
+    ),
+    "recommended import style": dedent(
+        """
+        import ops
+        ops.main(SomeCharm)
+        """
+    ),
+    "recommended import style, legacy call": dedent(
+        """
+        import ops
+        ops.main.main(SomeCharm)
+        """
+    ),
+    "call with kwarg": dedent(
+        """
+        import ops
+        ops.main(charm_class=SomeCharm)
+        """
+    ),
+    "import side effect": dedent(
+        """
+        import ops.charm  # makes `ops` visible
+        ops.main(SomeCharm)
+        """
+    ),
+    "import alias": dedent(
+        """
+        import ops as mops
+        mops.main(SomeCharm)
+        """
+    ),
+    "function import": dedent(
+        """
+        from ops import main
+        main(SomeCharm)
+        """
+    ),
+    "function import, legacy call": dedent(
+        """
+        from ops import main
+        main.main(SomeCharm)
+        """
+    ),
+    "submodule import": dedent(
+        """
+        import ops.main
+        ops.main(SomeCharm)  # type: ignore
+        """
+    ),
+    "submodule import, legacy call": dedent(
+        """
+        import ops.main
+        ops.main.main(SomeCharm)
+        """
+    ),
+    "multiple imports, simple": dedent(
+        """
+        import ops
+        import ops.main
+        ops.main(SomeCharm)
+        """
+    ),
+    "multiple imports, earlier": dedent(
+        """
+        import ops
+        from ops.main import main
+        ops.main(SomeCharm)
+        """
+    ),
+    "multiple imports, latter": dedent(
+        """
+        import ops
+        from ops.main import main
+        main(SomeCharm)
+        """
+    ),
+    "function import from submodule": dedent(
+        """
+        from ops.main import main
+        main(SomeCharm)
+        """
+    ),
+    "function alias import from submodule": dedent(
+        """
+        from ops.main import main as alias
+        alias(SomeCharm)
+        """
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "code",
+    [pytest.param(v, id=k) for k, v in CODE_SAMPLES.items()],
+)
+def test_ops_main(code: str):
+    assert OpsMainCall()._check_main_calls(code)
+
+
+NEGATIVE_CODE_SAMPLES = {
+    "missing ops import": dedent(
+        """
+        ops.main(SomeCharm)
+        """
+    ),
+    "missing main call": dedent(
+        """
+        import ops
+        """
+    ),
+    "wrong import alias": dedent(
+        """
+        import ops as oops
+        ops.main(SomeCharm)
+        """
+    ),
+    "no side effect from an alias": dedent(
+        """
+        import ops.charm as the_charm
+        ops.main(SomeCharm)
+        """
+    ),
+    "wrong function alias import from submodule": dedent(
+        """
+        from ops.main import main as whatchamacallit
+        main(SomeCharm)
+        """
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "code",
+    [pytest.param(v, id=k) for k, v in NEGATIVE_CODE_SAMPLES.items()],
+)
+def test_ops_main_negative(code: str):
+    assert not OpsMainCall()._check_main_calls(code)

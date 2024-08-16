@@ -141,6 +141,7 @@ dmypy.json
 *~
 /charmcraft/_version.py
 /results/
+.*.swp
 
 # Spread files
 .spread-reuse*.yaml

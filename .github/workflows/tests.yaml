@@ -291,7 +291,20 @@ jobs:
         os: [macos-12, macos-13]
     runs-on: ${{ matrix.os }}
     steps:
+      # Installing and caching homebrew using the action should speed up subsequent CI:
+      # https://github.com/Homebrew/actions/tree/master/setup-homebrew
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Cache Homebrew Bundler RubyGems
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ${{ runner.os }}-rubygems-
       - name: Install Multipass
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           brew update
           brew install multipass

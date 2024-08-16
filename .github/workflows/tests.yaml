@@ -284,3 +284,36 @@ jobs:
           path: |
             dist\charmcraft-installer-self-signed.exe
             dist\charmcraft-installer.msix
+
+  macos-smoke-test:
+    strategy:
+      matrix:
+        os: [macos-12, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install Multipass
+        run: |
+          brew update
+          brew install multipass
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Build and install Charmcraft
+        run: |
+          pipx install .
+      - name: Check for fully-configured multipass
+        run: |
+          while ! multipass version; do
+            sleep 1
+          done
+      - name: Init and pack
+        run: |
+          mkdir test-charm
+          cd test-charm
+          export CRAFT_VERBOSITY_LEVEL=trace
+          charmcraft init --profile=machine
+          charmcraft pack

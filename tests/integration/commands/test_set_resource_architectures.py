@@ -25,7 +25,7 @@ from charmcraft.application.commands import SetResourceArchitecturesCommand
 from tests import get_fake_revision
 
 
-@pytest.fixture()
+@pytest.fixture
 def cmd(service_factory):
     return SetResourceArchitecturesCommand(
         config={"app": application.APP_METADATA, "services": service_factory}

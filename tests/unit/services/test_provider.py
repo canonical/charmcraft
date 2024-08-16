@@ -23,7 +23,7 @@ from craft_providers import bases
 from charmcraft import models, services
 
 
-@pytest.fixture()
+@pytest.fixture
 def provider_service(
     fake_path: pathlib.Path,
     service_factory: services.CharmcraftServiceFactory,

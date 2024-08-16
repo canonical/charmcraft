@@ -23,14 +23,14 @@ from charmcraft import application, services
 from charmcraft.application import commands
 
 
-@pytest.fixture()
+@pytest.fixture
 def service_factory():
     factory = services.CharmcraftServiceFactory(app=application.APP_METADATA)
     factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
     return factory
 
 
-@pytest.fixture()
+@pytest.fixture
 def app(monkeypatch, new_path, service_factory):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
     app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)

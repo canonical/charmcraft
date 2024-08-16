@@ -20,6 +20,6 @@ import pytest
 from charmcraft import application
 
 
-@pytest.fixture()
+@pytest.fixture
 def config(service_factory):
     return {"app": application.APP_METADATA, "services": service_factory}

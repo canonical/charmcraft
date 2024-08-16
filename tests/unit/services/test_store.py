@@ -32,7 +32,7 @@ from charmcraft.store import client
 from tests import get_fake_revision
 
 
-@pytest.fixture()
+@pytest.fixture
 def store(service_factory) -> services.StoreService:
     store = services.StoreService(app=application.APP_METADATA, services=service_factory)
     store.client = mock.Mock(spec_set=client.Client)

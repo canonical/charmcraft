@@ -83,21 +83,21 @@ LINTER_NAMES = frozenset(linter.name for linter in STUB_LINTERS)
 ALL_CHECKER_NAMES = ATTRIBUTE_CHECKER_NAMES | LINTER_NAMES
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_temp_dir(monkeypatch):
     mock_obj = mock.MagicMock(spec=tempfile.TemporaryDirectory)
     monkeypatch.setattr(tempfile, "TemporaryDirectory", mock.Mock(return_value=mock_obj))
     return mock_obj
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_zip_file(monkeypatch):
     mock_obj = mock.MagicMock(spec=zipfile.ZipFile)
     monkeypatch.setattr(zipfile, "ZipFile", mock.Mock(return_value=mock_obj))
     return mock_obj
 
 
-@pytest.fixture()
+@pytest.fixture
 def analysis_service():
     return analysis.AnalysisService(app=application.APP_METADATA, services=None)
 

@@ -21,7 +21,7 @@ import pytest
 from charmcraft import models, services
 
 
-@pytest.fixture()
+@pytest.fixture
 def store_service(service_factory):
     return service_factory.store
 

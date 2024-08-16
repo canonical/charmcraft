@@ -85,8 +85,7 @@ class Analyse(base.CharmcraftCommand):
                 filepath, ignore=ignore, include_ignored=False
             ):
                 emit.progress(str(result), permanent=True)
-                if result.level > max_level:
-                    max_level = result.level
+                max_level = max(result.level, max_level)
                 progress.advance(1)
 
         return max_level.return_code

@@ -27,7 +27,7 @@ from charmcraft.store.models import Library
 from tests import factory
 
 
-@pytest.fixture()
+@pytest.fixture
 def store_mock():
     """The fixture to fake the store layer in all the tests."""
     store_mock = mock.MagicMock()

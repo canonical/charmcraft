@@ -47,19 +47,19 @@ COMPOUND_DICTS_STRATEGY = strategies.dictionaries(
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_isatty():
     with patch("sys.stdin.isatty", return_value=True) as mock_isatty:
         yield mock_isatty
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_input():
     with patch("charmcraft.utils.cli.input", return_value="") as mock_input:
         yield mock_input
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_is_charmcraft_running_in_managed_mode():
     with patch(
         "charmcraft.utils.cli.is_charmcraft_running_in_managed_mode", return_value=False

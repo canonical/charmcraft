@@ -31,7 +31,7 @@ from charmcraft.parts import reactive
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 
 
-@pytest.fixture()
+@pytest.fixture
 def charm_exe(tmp_path):
     """Provide a fake charm executable."""
     charm_bin = pathlib.Path(tmp_path, "mock_bin", "charm")
@@ -44,7 +44,7 @@ def charm_exe(tmp_path):
     return charm_bin
 
 
-@pytest.fixture()
+@pytest.fixture
 def broken_charm_exe(tmp_path):
     """Provide a fake charm executable that fails to run."""
     charm_bin = pathlib.Path(tmp_path, "mock_bin", "charm")
@@ -54,7 +54,7 @@ def broken_charm_exe(tmp_path):
     return charm_bin
 
 
-@pytest.fixture()
+@pytest.fixture
 def spec(tmp_path):
     """Provide a common spec to build the different artifacts."""
     return {
@@ -67,12 +67,12 @@ def spec(tmp_path):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def plugin_properties(spec):
     return reactive.ReactivePluginProperties.unmarshal(spec)
 
 
-@pytest.fixture()
+@pytest.fixture
 def plugin(tmp_path, plugin_properties, spec):
     project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
     part_spec = plugins.extract_part_properties(spec, plugin_name="reactive")
@@ -153,7 +153,7 @@ def test_validate_broken_charm(plugin, plugin_properties, broken_charm_exe):
     assert raised.value.reason == "charm tools failed with error code 2"
 
 
-@pytest.fixture()
+@pytest.fixture
 def build_dir(tmp_path):
     build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
@@ -161,7 +161,7 @@ def build_dir(tmp_path):
     return build_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def install_dir(tmp_path):
     install_dir = tmp_path / "install"
     install_dir.mkdir()
@@ -169,7 +169,7 @@ def install_dir(tmp_path):
     return install_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_run():
     patcher = patch("subprocess.run")
     yield patcher.start()

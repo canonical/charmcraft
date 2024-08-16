@@ -38,7 +38,7 @@ from charmcraft.application.main import APP_METADATA
 from charmcraft.models import project
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_charm():
     return project.BasesCharm(
         type="charm",
@@ -60,7 +60,7 @@ def simple_charm():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_store_client():
     client = mock.Mock(spec_set=store.Client)
 
@@ -71,12 +71,12 @@ def mock_store_client():
     return client
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_store_anonymous_client() -> mock.Mock:
     return mock.Mock(spec_set=store.AnonymousClient)
 
 
-@pytest.fixture()
+@pytest.fixture
 def service_factory(
     fs,
     fake_project_dir,
@@ -108,7 +108,7 @@ def service_factory(
     return factory
 
 
-@pytest.fixture()
+@pytest.fixture
 def default_build_plan():
     arch = util.get_host_architecture()
     return [
@@ -121,33 +121,33 @@ def default_build_plan():
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_project_dir(fs) -> pathlib.Path:
     project_dir = pathlib.Path("/root/project")
     fs.create_dir(project_dir)
     return project_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_prime_dir(fs) -> pathlib.Path:
     prime_dir = pathlib.Path("/root/prime")
     fs.create_dir(prime_dir)
     return prime_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_path(fs) -> Iterator[pathlib.Path]:
     """Like tmp_path, but with a fake filesystem."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield pathlib.Path(tmp_dir)
 
 
-@pytest.fixture()
+@pytest.fixture
 def global_debug():
     os.environ["CRAFT_DEBUG"] = "1"
 
 
-@pytest.fixture()
+@pytest.fixture
 def new_path(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     return tmp_path
@@ -163,7 +163,7 @@ def setup_parts():
     parts.setup_parts()
 
 
-@pytest.fixture()
+@pytest.fixture
 def charmhub_config() -> env.CharmhubConfig:
     """Provide a charmhub config for use in tests"""
     return env.CharmhubConfig(
@@ -194,14 +194,14 @@ def intertests_cleanups():
     callbacks.unregister_all()
 
 
-@pytest.fixture()
+@pytest.fixture
 def responses():
     """Simple helper to use responses module as a fixture, for easier integration in tests."""
     with responses_module.RequestsMock() as rsps:
         yield rsps
 
 
-@pytest.fixture()
+@pytest.fixture
 def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     """Helper to create a charmcraft.yaml file in disk.
 
@@ -238,7 +238,7 @@ def prepare_file(tmp_path: pathlib.Path, filename: str):
     return prepare
 
 
-@pytest.fixture()
+@pytest.fixture
 def prepare_metadata_yaml(tmp_path: pathlib.Path):
     """Helper to create a metadata.yaml file in disk.
 
@@ -247,7 +247,7 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
     return prepare_file(tmp_path, const.METADATA_FILENAME)
 
 
-@pytest.fixture()
+@pytest.fixture
 def prepare_actions_yaml(tmp_path: pathlib.Path):
     """Helper to create a actions.yaml file in disk.
 
@@ -256,7 +256,7 @@ def prepare_actions_yaml(tmp_path: pathlib.Path):
     return prepare_file(tmp_path, const.JUJU_ACTIONS_FILENAME)
 
 
-@pytest.fixture()
+@pytest.fixture
 def prepare_config_yaml(tmp_path: pathlib.Path):
     """Helper to create a config.yaml file in disk.
 
@@ -265,7 +265,7 @@ def prepare_config_yaml(tmp_path: pathlib.Path):
     return prepare_file(tmp_path, const.JUJU_CONFIG_FILENAME)
 
 
-@pytest.fixture()
+@pytest.fixture
 def emitter(emitter):
     """Monkeypatch craft-cli's emitter fixture to easily test the JSON encoded output."""
 
@@ -284,7 +284,7 @@ def emitter(emitter):
     return emitter
 
 
-@pytest.fixture()
+@pytest.fixture
 def assert_output(capsys):
     """Assert that a given string was sent to stdout.
 
@@ -305,7 +305,7 @@ def assert_output(capsys):
     return helper
 
 
-@pytest.fixture()
+@pytest.fixture
 def build_charm_directory():
     def helper(tmp_path, fake_charms, file_type="charm"):
         expected = {}
@@ -324,7 +324,7 @@ def build_charm_directory():
     return helper
 
 
-@pytest.fixture()
+@pytest.fixture
 def stub_extensions(monkeypatch):
     from charmcraft.extensions import registry
 
@@ -334,7 +334,7 @@ def stub_extensions(monkeypatch):
     return extensions_dict
 
 
-@pytest.fixture()
+@pytest.fixture
 def charm_plugin(tmp_path):
     requirement_files = ["reqs1.txt", "reqs2.txt"]
     for req in requirement_files:
@@ -363,7 +363,7 @@ def charm_plugin(tmp_path):
     return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
 
 
-@pytest.fixture()
+@pytest.fixture
 def bundle_plugin(tmp_path):
     project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
     spec = {

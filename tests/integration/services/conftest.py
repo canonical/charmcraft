@@ -24,7 +24,7 @@ from charmcraft import services
 from charmcraft.application.main import APP_METADATA, Charmcraft
 
 
-@pytest.fixture()
+@pytest.fixture
 def service_factory(
     fs: pyfakefs.fake_filesystem.FakeFilesystem, fake_path, simple_charm
 ) -> services.CharmcraftServiceFactory:

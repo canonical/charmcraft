@@ -58,7 +58,7 @@ def get_namespace(
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def pack(service_factory: services.ServiceFactory) -> lifecycle.PackCommand:
     return lifecycle.PackCommand({"app": application.APP_METADATA, "services": service_factory})
 

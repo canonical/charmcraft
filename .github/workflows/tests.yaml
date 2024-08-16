@@ -306,7 +306,6 @@ jobs:
       - name: Install Multipass
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          brew update
           brew install multipass
       - name: Checkout code
         uses: actions/checkout@v4

@@ -20,6 +20,7 @@ import datetime
 import pathlib
 import re
 import textwrap
+import warnings
 from collections.abc import Iterable, Iterator
 from typing import (
     Annotated,
@@ -32,7 +33,7 @@ import pydantic
 import pydantic.v1
 from craft_application import errors, models, util
 from craft_application.util import safe_yaml_load
-from craft_cli import CraftError
+from craft_cli import CraftError, emit
 from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self
@@ -404,7 +405,13 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         ),
     )
     charmhub: Charmhub | None = pydantic.Field(
-        default=None, description="(DEPRECATED): Configuration for accessing charmhub."
+        default=None,
+        description="(DEPRECATED): Configuration for accessing charmhub.",
+        deprecated=(
+            "The 'charmhub' field is deprecated and no longer used. It will be removed in a "
+            f"future release. Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} "
+            f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
+        ),
     )
     parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
 
@@ -530,6 +537,23 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             if name == "bundle" and part["plugin"] == "bundle":
                 part.setdefault("source", ".")
         return {name: process_part_config(part) for name, part in parts.items()}
+
+    @pydantic.model_validator(mode="after")
+    def _warn_charmhub_deprecated(self) -> Self:
+        repeat = False
+        with warnings.catch_warnings(record=True) as caught:
+            if self.charmhub:
+                repeat = True
+                for warning in caught:
+                    if isinstance(warning.message, Warning):
+                        message = warning.message.args[0]
+                    else:
+                        message = warning.message
+                    emit.progress(f"WARNING: {message}", permanent=True)
+        if repeat:
+            for warning in caught:
+                warnings.warn(warning.message, stacklevel=1)
+        return self
 
 
 class CharmProject(CharmcraftProject):

@@ -22,6 +22,7 @@ import textwrap
 from textwrap import dedent
 from typing import Any
 
+import craft_cli.pytest_plugin
 import hypothesis
 import pydantic
 import pyfakefs.fake_filesystem
@@ -742,6 +743,48 @@ def test_from_yaml_file_exception(
     assert exc.value.details == details
 
 
+@pytest.mark.parametrize(
+    ("cls", "content"),
+    [
+        (
+            project.BasesCharm,
+            {
+                "type": "charm",
+                "name": "blah",
+                "summary": "",
+                "description": "",
+                "bases": [{"name": "ubuntu", "channel": "22.04"}],
+                "charmhub": {"api_url": "http://charmhub.io"},
+            },
+        ),
+        (
+            project.PlatformCharm,
+            {
+                "type": "charm",
+                "name": "blah",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "platforms": {"amd64": None},
+                "charmhub": {"api_url": "http://charmhub.io"},
+            },
+        ),
+        (project.Bundle, {"type": "bundle", "charmhub": {"api_url": "http://charmhub.io"}}),
+    ],
+)
+def test_warn_on_deprecated_charmhub(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter, cls, content
+):
+    with pytest.warns(DeprecationWarning):
+        cls.model_validate(content)
+    emitter.assert_progress(
+        "WARNING: The 'charmhub' field is deprecated and no longer used. It will be removed in a "
+        f"future release. Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} and "
+        f"${const.STORE_REGISTRY_ENV_VAR} environment variables instead.",
+        permanent=True,
+    )
+
+
 # endregion
 # region Charm tests
 @pytest.mark.parametrize(
@@ -767,7 +810,7 @@ def test_instantiate_bases_charm_success(values: dict[str, Any], expected_change
     expected = values.copy()
     expected.update(expected_changes)
 
-    actual = project.BasesCharm(**values)
+    actual = project.BasesCharm.model_validate(values)
 
     assert actual.marshal() == expected
 

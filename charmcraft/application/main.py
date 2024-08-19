@@ -20,8 +20,9 @@ import pathlib
 import shutil
 from typing import Any
 
+import craft_application
 import craft_cli
-from craft_application import Application, AppMetadata
+from craft_application import util
 from craft_parts.plugins import plugins
 from overrides import override
 
@@ -39,7 +40,7 @@ operator development and collaboration.
 See https://charmhub.io/publishing for more information.
 """
 
-APP_METADATA = AppMetadata(
+APP_METADATA = craft_application.AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,
@@ -56,12 +57,12 @@ PRIME_BEHAVIOUR_CHANGE_MESSAGE = (
 )
 
 
-class Charmcraft(Application):
+class Charmcraft(craft_application.Application):
     """Charmcraft application definition."""
 
     def __init__(
         self,
-        app: AppMetadata,
+        app: craft_application.AppMetadata,
         services: CharmcraftServiceFactory,
     ) -> None:
         super().__init__(app=app, services=services, extra_loggers={"charmcraft"})
@@ -162,6 +163,21 @@ class Charmcraft(Application):
                     package_file_path.unlink(missing_ok=True)
                     for filename in package_files:
                         shutil.move(str(self._work_dir / filename), output_path / filename)
+
+    def _expand_environment(self, yaml_data: dict[str, Any], build_for: str) -> None:
+        """Perform expansion of project environment variables.
+
+        :param yaml_data: The project's yaml data.
+        :param build_for: The architecture to build for.
+        """
+        if "-" in build_for:
+            build_for = util.get_host_architecture()
+            craft_cli.emit.debug(
+                "Expanding environment variables with the host architecture "
+                f"{build_for!r} as the build-for architecture because multiple "
+                "run-on architectures were specified."
+            )
+        super()._expand_environment(yaml_data, build_for)
 
 
 def main() -> int:

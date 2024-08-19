@@ -284,3 +284,51 @@ jobs:
           path: |
             dist\charmcraft-installer-self-signed.exe
             dist\charmcraft-installer.msix
+
+  macos-smoke-test:
+    strategy:
+      matrix:
+        os: [macos-12, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Installing and caching homebrew using the action should speed up subsequent CI:
+      # https://github.com/Homebrew/actions/tree/master/setup-homebrew
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Cache Homebrew Bundler RubyGems
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ${{ runner.os }}-rubygems-
+      - name: Install Homebrew Bundler RubyGems
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: brew install-bundler-gems
+      - name: Install Multipass
+        run: |
+          brew install multipass
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Build and install Charmcraft
+        run: |
+          pipx install .
+      - name: Check for fully-configured multipass
+        run: |
+          while ! multipass version; do
+            sleep 1
+          done
+      - name: Init and pack
+        run: |
+          mkdir test-charm
+          cd test-charm
+          export CRAFT_VERBOSITY_LEVEL=trace
+          charmcraft init --profile=machine
+          charmcraft pack
+          test -f *.charm

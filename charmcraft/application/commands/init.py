@@ -39,6 +39,7 @@ PROFILES = {
     "flask-framework": "init-flask-framework",
     "django-framework": "init-django-framework",
     "go-framework": "init-go-framework",
+    "fastapi-framework": "init-fastapi-framework",
 }
 DEFAULT_PROFILE = "simple"
 

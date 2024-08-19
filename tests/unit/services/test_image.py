@@ -28,18 +28,18 @@ import pytest
 from charmcraft import application, const, services, utils
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_docker() -> mock.Mock:
     return mock.Mock(spec_set=docker.DockerClient)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_skopeo(fake_process) -> mock.Mock:
     fake_process.register(["/skopeo", "--version"])
     return mock.Mock(wraps=utils.Skopeo(skopeo_path="/skopeo"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def image_service(service_factory, mock_skopeo, mock_docker) -> services.ImageService:
     service = services.ImageService(app=application.APP_METADATA, services=service_factory)
     service._skopeo = mock_skopeo

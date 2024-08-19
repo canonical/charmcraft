@@ -95,7 +95,7 @@ VALID_AUTHORS = [
 ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def init_command():
     return commands.InitCommand({"app": charmcraft.application.APP_METADATA, "services": None})
 
@@ -257,7 +257,7 @@ def test_executable_set(new_path, init_command):
         assert path.stat().st_mode & S_IXALL == S_IXALL
 
 
-@pytest.mark.slow()
+@pytest.mark.slow
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.skipif(
     bool(os.getenv("RUNNING_TOX")) and sys.version_info < (3, 11),

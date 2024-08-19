@@ -98,7 +98,7 @@ class FullExtension(FakeExtension):
         return {"full-extension/new-part": {"plugin": "nil", "source": None}}
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_extensions(stub_extensions):
     extensions.register(FakeExtension.name, FakeExtension)
     extensions.register(ExperimentalExtension.name, ExperimentalExtension)

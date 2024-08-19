@@ -100,7 +100,7 @@ class FakeResponse(requests.Response):
         return self.content
 
 
-@pytest.fixture()
+@pytest.fixture
 def client_class():
     """Return a client instance with craft-store's StoreClient methods mocked."""
 

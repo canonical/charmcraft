@@ -55,7 +55,7 @@ class FakeExtension3(Extension):
     name = "fake-extension-3"
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_extensions(stub_extensions):
     fakes = [FakeExtension1, FakeExtension2]
     for ext_class in fakes:

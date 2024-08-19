@@ -49,7 +49,7 @@ class YourFakeExtension(FakeExtension):
         return {"terms": ["https://example.com/test2"]}
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_extensions(stub_extensions):
     extensions.register(MyFakeExtension.name, MyFakeExtension)
     extensions.register(YourFakeExtension.name, YourFakeExtension)

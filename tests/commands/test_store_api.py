@@ -47,7 +47,7 @@ from charmcraft.utils import ResourceOption
 from tests.commands.test_store_client import FakeResponse
 
 
-@pytest.fixture()
+@pytest.fixture
 def client_mock(monkeypatch):
     """Fixture to provide a mocked client."""
     monkeypatch.setattr(platform, "node", lambda: "fake-host")
@@ -56,7 +56,7 @@ def client_mock(monkeypatch):
         yield client_mock
 
 
-@pytest.fixture()
+@pytest.fixture
 def anonymous_client_mock(monkeypatch):
     """Fixture to provide a mocked anonymous client."""
     anonymous_client_mock = MagicMock(spec=AnonymousClient)

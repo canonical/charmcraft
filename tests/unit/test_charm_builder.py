@@ -30,7 +30,7 @@ pytestmark = [
 REQUIREMENTS_FILES = [pytest.param("", id="empty"), "ops~=2.5", "requests\nops"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def builder(fs: FakeFilesystem) -> charm_builder.CharmBuilder:
     fs.cwd = "/root"
     fs.makedirs(const.BUILD_DIRNAME)

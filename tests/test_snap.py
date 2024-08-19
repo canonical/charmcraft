@@ -27,7 +27,7 @@ from charmcraft.snap import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_snap_config():
     with mock.patch("charmcraft.snap.snaphelpers.SnapConfig", autospec=True) as mock_snap_config:
         yield mock_snap_config

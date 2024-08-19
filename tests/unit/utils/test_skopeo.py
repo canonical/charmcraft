@@ -87,7 +87,7 @@ def test_get_global_command(fake_process, kwargs, expected):
     assert skopeo.get_global_command() == ["/skopeo", *expected]
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_skopeo(fake_process):
     fake_process.register(["/skopeo", "--version"])
     return Skopeo(skopeo_path="/skopeo")

@@ -27,7 +27,7 @@ from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
 
 
-@pytest.fixture()
+@pytest.fixture
 def package_service(fake_path, service_factory, default_build_plan):
     fake_project_dir = fake_path
     svc = services.PackageService(

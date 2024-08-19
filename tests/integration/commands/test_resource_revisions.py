@@ -31,7 +31,7 @@ from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.env import CharmhubConfig
 
 
-@pytest.fixture()
+@pytest.fixture
 def store_mock():
     """The fixture to fake the store layer in all the tests."""
     store_mock = mock.Mock(spec_set=store.Store)

@@ -43,7 +43,7 @@ MANIFEST_WITH_ATTRIBUTE = models.Manifest(
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def package_service(fake_path, simple_charm, service_factory, default_build_plan):
     fake_project_dir = fake_path / "project"
     fake_project_dir.mkdir(parents=True)

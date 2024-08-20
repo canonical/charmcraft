@@ -27,7 +27,7 @@ from overrides import override
 
 from charmcraft import extensions, models, preprocess, services
 from charmcraft.application import commands
-from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
+from charmcraft.parts import BundlePlugin, CharmPlugin, PoetryPlugin, ReactivePlugin
 from charmcraft.services import CharmcraftServiceFactory
 
 GENERAL_SUMMARY = """
@@ -121,7 +121,10 @@ class Charmcraft(Application):
 
     @override
     def _get_app_plugins(self) -> dict[str, plugins.PluginType]:
-        return {"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin}
+        return {
+            "charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin,
+            "poetry": PoetryPlugin,
+        }
 
     @override
     def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:

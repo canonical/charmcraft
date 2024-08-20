@@ -24,11 +24,13 @@ from craft_parts.parts import PartSpec
 from charmcraft.parts.bundle import BundlePlugin
 from charmcraft.parts.charm import CharmPlugin, CharmPluginProperties
 from charmcraft.parts.lifecycle import PartsLifecycle
+from charmcraft.parts.poetry import PoetryPlugin
 from charmcraft.parts.reactive import ReactivePlugin, ReactivePluginProperties
 
 __all__ = [
     "CharmPlugin",
     "CharmPluginProperties",
+    "PoetryPlugin",
     "ReactivePlugin",
     "ReactivePluginProperties",
     "setup_parts",
@@ -39,7 +41,10 @@ __all__ = [
 
 def setup_parts():
     """Initialize craft-parts plugins."""
-    plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
+    plugins.unregister("poetry")
+    plugins.register(
+        {"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin, "poetry": PoetryPlugin}
+    )
 
 
 def process_part_config(data: dict[str, Any]) -> dict[str, Any]:

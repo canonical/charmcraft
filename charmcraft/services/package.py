@@ -53,6 +53,8 @@ DISPATCH_SCRIPT_TEMPLATE = """\
 #!/bin/sh
 
 dispatch_path="$(dirname $(realpath $0))"
+export PYTHONPATH="${{dispatch_path}}/lib"
+export LD_LIBRARY_PATH="${{dispatch_path}}/usr/lib:${{dispatch_path}}/lib:${{dispatch_path}}/usr/lib/$(uname -m)-linux-gnu"
 exec "${{dispatch_path}}/bin/python" "${{dispatch_path}}/{entrypoint}"
 """
 

@@ -107,6 +107,10 @@ parts:
       - python3-distutils
       - python3-pkg-resources
       - python3.10-minimal
+      # For allowing charms to stage packages
+      - apt
+      - apt-transport-https
+      - apt-utils
     build-attributes:
       - enable-patchelf
   libgit2:

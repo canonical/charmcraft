@@ -17,7 +17,7 @@ import pytest
 
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions import apply_extensions
-from charmcraft.extensions.twelvefactor import (
+from charmcraft.extensions.app import (
     DjangoFramework,
     FlaskFramework,
     GoFramework,

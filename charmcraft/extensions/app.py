@@ -24,7 +24,7 @@ from ..errors import ExtensionError
 from .extension import Extension
 
 
-class _TwelveFactorBase(Extension):
+class _AppBase(Extension):
     """A base class for 12-factor applications."""
 
     _CHARM_LIBS = [
@@ -199,7 +199,7 @@ GUNICORN_WEBSERVER_OPTIONS = {
 }
 
 
-class FlaskFramework(_TwelveFactorBase):
+class FlaskFramework(_AppBase):
     """Extension for 12-factor Flask applications."""
 
     framework = "flask"
@@ -243,12 +243,12 @@ class FlaskFramework(_TwelveFactorBase):
         return False
 
 
-class DjangoFramework(_TwelveFactorBase):
+class DjangoFramework(_AppBase):
     """Extension for 12-factor Django applications."""
 
     framework = "django"
     actions = {
-        **_TwelveFactorBase.actions,
+        **_AppBase.actions,
         "create-superuser": {
             "description": "Create a new Django superuser account.",
             "params": {"username": {"type": "string"}, "email": {"type": "string"}},
@@ -273,12 +273,12 @@ class DjangoFramework(_TwelveFactorBase):
     }
 
 
-class GoFramework(_TwelveFactorBase):
+class GoFramework(_AppBase):
     """Extension for 12-factor Go applications."""
 
     framework = "go"
     options = {
-        "port": {
+        "app-port": {
             "type": "int",
             "default": 8080,
             "description": "Default port where the application will listen on.",
@@ -293,7 +293,7 @@ class GoFramework(_TwelveFactorBase):
             "default": "/metrics",
             "description": "Path where the prometheus metrics will be scraped.",
         },
-        "secret-key": {
+        "app-secret-key": {
             "type": "string",
             "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
         },

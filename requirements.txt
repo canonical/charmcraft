@@ -7,7 +7,7 @@ craft-application==4.0.0
 craft-archives==2.0.0
 craft-cli==2.6.0
 craft-grammar==2.0.0
-craft-parts @ git+https://github.com/canonical/craft-parts.git@work/707/poetry
+craft-parts @ git+https://github.com/canonical/craft-parts.git@experimental/uv
 craft-platforms==0.1.1
 craft-providers==2.0.0
 craft-store==3.0.0

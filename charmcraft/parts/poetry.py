@@ -59,3 +59,13 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
             f"cp -arf {self._part_info.part_build_dir}/src {self._part_info.part_install_dir}",
             f"cp -arf {self._part_info.part_build_dir}/lib {self._part_info.part_install_dir}"
         ]
+
+    def _should_remove_symlinks(self) -> bool:
+        """Configure executables symlink removal.
+
+        This method can be overridden by application-specific subclasses to control
+        whether symlinks in the virtual environment should be removed. Default is
+        False.  If True, the venv-created symlinks to python* in bin/ will be
+        removed and will not be recreated.
+        """
+        return True

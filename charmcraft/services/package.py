@@ -53,9 +53,13 @@ DISPATCH_SCRIPT_TEMPLATE = """\
 #!/bin/sh
 
 dispatch_path="$(dirname $(realpath $0))"
+python_path="${{dispatch_path}}/venv/bin/python"
+if [ ! -e "${{python_path}}" ]; then
+    ln -s $(which python3) "${{python_path}}"
+fi
 export PYTHONPATH="${{dispatch_path}}/lib"
 export LD_LIBRARY_PATH="${{dispatch_path}}/usr/lib:${{dispatch_path}}/lib:${{dispatch_path}}/usr/lib/$(uname -m)-linux-gnu"
-exec "${{dispatch_path}}/bin/python" "${{dispatch_path}}/{entrypoint}"
+exec "${{python_path}}" "${{dispatch_path}}/{entrypoint}"
 """
 
 

@@ -81,8 +81,6 @@ Changelog
 3.1.2 (2024-08-07)
 ------------------
 
-Bug fixes:
-
 * fix(app): clarify wording on 'prime' change
 * fix(strict-deps): fail if venv is inconsistent
 * fix(application): exclude files from charm
@@ -91,8 +89,6 @@ Bug fixes:
 
 3.1.1 (2024-07-24)
 ------------------
-
-Bug fixes:
 
 * fix(ci): fix tox ensure_version_matches
 * fix(metadata): allow long summaries in output
@@ -124,8 +120,8 @@ New Features
   for example, `rocks with the flask-framework extension`_.
 * New releases are automatically published to PyPI (thanks @bittner)!
 
-Bugfixes
-========
+Bug fixes
+=========
 
 * flask-framework charms now automatically include the ``rustup`` snap
 * Symlinked directories are correctly included in charms (previously only symlinked
@@ -202,8 +198,6 @@ For a complete list of commits, see the `2.5.4`_ release on GitHub.
 
 2.5.3 (2023-12-07)
 ------------------
-
-Bugs fixed:
 
 - Clearing the shared cache can cause errors
 - Internal error when running from outside of a charm repository

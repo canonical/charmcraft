@@ -75,6 +75,8 @@ extensions.extend(
 
 # endregion
 
+autodoc_default_options = {"exclude-members": "model_post_init"}
+
 # region Options for extensions
 # Intersphinx extension
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#configuration

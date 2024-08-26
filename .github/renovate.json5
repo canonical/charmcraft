@@ -38,7 +38,11 @@
       // Automerge patches, pin changes and digest changes.
       // Also groups these changes together.
       groupName: "bugfixes",
-      excludeDepPatterns: ["lint/.*", "types/.*"],
+      excludeDepPatterns: [
+        "lint/.*",
+        "types/.*",
+        "pyright",  // Pyright needs to be done separately.
+      ],
       matchUpdateTypes: ["patch", "pin", "digest"],
       prPriority: 3, // Patches should go first!
       automerge: true

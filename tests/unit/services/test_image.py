@@ -61,8 +61,8 @@ def image_service(service_factory, mock_skopeo, mock_docker) -> services.ImageSe
         (
             "docker://ghcr.io/canonical/charmed-mysql@sha256:89b8305613f6ce94f78a7c9b4baedef78f2816fd6bc74c00f6607bc5e57bd8e6",
             "charmed-mysql@sha256:89b8305613f6ce94f78a7c9b4baedef78f2816fd6bc74c00f6607bc5e57bd8e6",
-        )
-    ]
+        ),
+    ],
 )
 def test_get_name_from_url(url: str, name: str):
     assert services.ImageService.get_name_from_url(url) == name
@@ -71,15 +71,12 @@ def test_get_name_from_url(url: str, name: str):
 @pytest.mark.parametrize(
     ("go_arch", "charm_arch"),
     [
-        *(
-            (key, const.CharmArch(value))
-            for key, value in const.GO_ARCH_TO_CHARM_ARCH.items()
-        ),
+        *((key, const.CharmArch(value)) for key, value in const.GO_ARCH_TO_CHARM_ARCH.items()),
         ("amd64", "amd64"),
         ("arm64", "arm64"),
         ("riscv64", "riscv64"),
         ("s390x", "s390x"),
-    ]
+    ],
 )
 def test_convert_go_acrh_to_charm_arch(go_arch: str, charm_arch: const.CharmArch):
     assert services.ImageService.convert_go_arch_to_charm_arch(go_arch) == charm_arch

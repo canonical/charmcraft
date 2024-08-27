@@ -155,7 +155,7 @@ class ImageService(craft_application.AppService):
                 except ValueError:
                     logger.debug(f"Ignoring unknown architecture {arch}")
                     continue
-                architectures.append(arch)
+                architectures.append(charm_arch)
             if not architectures:
                 raise errors.CraftError("No architectures found in image for Linux OS.")
         else:

@@ -178,7 +178,7 @@ def flask_input_yaml_fixture():
                 "name": "test-go",
                 "summary": "test summary",
                 "description": "test description",
-                "bases": [{"name": "ubuntu", "channel": "22.04"}],
+                "bases": [{"name": "ubuntu", "channel": "24.04"}],
                 "extensions": ["go-framework"],
             },
             True,

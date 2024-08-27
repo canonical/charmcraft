@@ -71,9 +71,7 @@ EntityType = _EntityType()
 ResourceType = _ResourceType()
 # the list of valid attenuations to restrict login credentials
 VALID_ATTENUATIONS = {getattr(attenuations, x) for x in dir(attenuations) if x.isupper()}
-BUNDLE_REGISTRATION_REMOVAL_URL = (
-    "https://discourse.charmhub.io/t/discontinuing-new-charmhub-bundle-registrations/15344"
-)
+BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
 
 
 class LoginCommand(CharmcraftCommand):

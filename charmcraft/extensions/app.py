@@ -299,6 +299,10 @@ class GoFramework(_AppBase):
         },
     }
 
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "24.04")]
+
     @override
     def get_image_name(self) -> str:
         """Return name of the app image."""

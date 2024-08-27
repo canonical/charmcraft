@@ -185,7 +185,7 @@ def flask_input_yaml_fixture():
             {
                 "actions": GoFramework.actions,
                 "assumes": ["k8s-api"],
-                "bases": [{"channel": "22.04", "name": "ubuntu"}],
+                "bases": [{"channel": "24.04", "name": "ubuntu"}],
                 "containers": {
                     "app": {"resource": "app-image"},
                 },

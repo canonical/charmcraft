@@ -2030,11 +2030,13 @@ class UploadResourceCommand(CharmcraftCommand):
                     dest_password=credentials.password,
                 )
 
-            image_arch = [
-                craft_platforms.DebianArchitecture.from_machine(arch).value
+            image_arch = {
+                image_service.convert_go_arch_to_charm_arch(arch).value
                 for arch in image_metadata.architectures
+            }
+            bases = [
+                {"name": "all", "channel": "all", "architectures": sorted(image_arch)}
             ]
-            bases = [{"name": "all", "channel": "all", "architectures": image_arch}]
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(

@@ -47,6 +47,44 @@ def image_service(service_factory, mock_skopeo, mock_docker) -> services.ImageSe
     return service
 
 
+@pytest.mark.parametrize(
+    ("url", "name"),
+    [
+        (
+            "docker://hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346",
+            "hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346",
+        ),
+        (
+            "hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346",
+            "hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346",
+        ),
+        (
+            "docker://ghcr.io/canonical/charmed-mysql@sha256:89b8305613f6ce94f78a7c9b4baedef78f2816fd6bc74c00f6607bc5e57bd8e6",
+            "charmed-mysql@sha256:89b8305613f6ce94f78a7c9b4baedef78f2816fd6bc74c00f6607bc5e57bd8e6",
+        )
+    ]
+)
+def test_get_name_from_url(url: str, name: str):
+    assert services.ImageService.get_name_from_url(url) == name
+
+
+@pytest.mark.parametrize(
+    ("go_arch", "charm_arch"),
+    [
+        *(
+            (key, const.CharmArch(value))
+            for key, value in const.GO_ARCH_TO_CHARM_ARCH.items()
+        ),
+        ("amd64", "amd64"),
+        ("arm64", "arm64"),
+        ("riscv64", "riscv64"),
+        ("s390x", "s390x"),
+    ]
+)
+def test_convert_go_acrh_to_charm_arch(go_arch: str, charm_arch: const.CharmArch):
+    assert services.ImageService.convert_go_arch_to_charm_arch(go_arch) == charm_arch
+
+
 def test_get_maybe_id_from_docker_success(image_service: services.ImageService, mock_docker):
     expected = "sha256:some-sha-hash"
     mock_docker.images.get.return_value = docker.models.images.Image(attrs={"Id": expected})

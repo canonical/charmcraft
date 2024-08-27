@@ -106,9 +106,9 @@ execute: |
   test $oci_revision -ge $uploaded_revision  # Expected to be newer because the OCI archive is normally slightly different from the Docker file.
 
   # Check that skopeo upload-resource works.
-  # TEMPORARILY DISABLED
-  # See: https://github.com/canonical/charmcraft/issues/1760
-  # charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=docker://hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
+  charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=docker://hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
+  # Try with a file from the GitHub container registry.
+  charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=docker://ghcr.io/infrastructure-as-code/hello-world@sha256:fe2e9828b415a64d1f65e1c6ddd29f53b26dea5d359c39a3c5ef9c96c1987a45
 
   # release and check full status
   charmcraft release $CHARM_DEFAULT_NAME -r $last_charm_revno -c edge --resource=example-file:$last_file_revno --resource=example-image:$last_image_revno

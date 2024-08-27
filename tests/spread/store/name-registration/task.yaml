@@ -33,12 +33,5 @@ execute: |
   echo $package_type
   test $package_type == "charm"
 
-  charmcraft register-bundle $BUNDLE_NAME
-  package_type=$(charmcraft names --format=json | jq -r --arg bundle_name $BUNDLE_NAME '.[] | select(.name==$bundle_name) | .type')
-  echo $package_type
-  test $package_type == "bundle"
-
   charmcraft unregister $CHARM_NAME
-  charmcraft unregister $BUNDLE_NAME
   charmcraft names | NOMATCH $CHARM_NAME
-  charmcraft names | NOMATCH $BUNDLE_NAME

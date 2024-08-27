@@ -630,6 +630,24 @@ class CharmProject(CharmcraftProject):
             """
         ),
     )
+    charm_user: Literal["root", "sudoer", "non-root"] | None = pydantic.Field(
+        default=None,
+        description=textwrap.dedent(
+            """\
+            Specifies that the charm code does not need to be run as root. Possible
+            values are:
+
+            - ``root``: the charm will run as root
+            - ``sudoer``: the charm will run as a non-root user with access to root
+              privileges using ``sudo``.
+            - ``non-root``: the charm will run as a non-root user without ``sudo``.
+
+            Only affects Kubernetes charms on Juju 3.6.0 or later. If not specified,
+            Juju will use
+            `its default behaviour <https://juju.is/docs/sdk/metadata-yaml#heading--charm-user>`_.
+            """
+        ),
+    )
     containers: dict[str, Any] | None = pydantic.Field(
         default=None,
         description=textwrap.dedent(

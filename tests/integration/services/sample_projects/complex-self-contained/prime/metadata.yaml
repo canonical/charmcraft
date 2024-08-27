@@ -5,6 +5,7 @@ assumes:
     - juju >= 3.0
     - juju < 4.0
 - k8s-api
+charm-user: non-root
 containers:
   super-app:
     mounts:
@@ -26,6 +27,8 @@ devices:
     description: Some sweet AMD GPU
     type: amd.com/gpu
 docs: https://juju.is/docs/sdk/charmcraft-yaml
+extra-bindings:
+  Ring of Power: null
 issues:
 - https://launchpad.net/~charmcraft-team
 - https://github.com/canonical/charmcraft/issues

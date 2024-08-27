@@ -72,6 +72,11 @@ BASIC_BUNDLE_DICT = {
             dict(**BASIC_CHARM_DICT, title="Title becomes display name"),
             {**BASIC_CHARM_METADATA_DICT, "display-name": "Title becomes display name"},
         ),
+        pytest.param(
+            {**BASIC_CHARM_DICT, "charm-user": "sudoer"},
+            {**BASIC_CHARM_METADATA_DICT, "charm-user": "sudoer"},
+            id="sudoer",
+        ),
     ],
 )
 def test_charm_metadata_from_charm_success(charm_dict, expected):

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any
 
 import pydantic
 from craft_application import models
+from craft_application.models import base
 from craft_cli import CraftError
 from typing_extensions import Self, override
 
@@ -37,12 +38,20 @@ class CharmMetadata(models.BaseMetadata):
     of a charm.
     """
 
+    model_config = pydantic.ConfigDict(
+        validate_assignment=True,
+        extra="ignore",
+        populate_by_name=True,
+        alias_generator=base.alias_generator,
+    )
+
     name: models.ProjectName
     display_name: models.ProjectTitle | None = None
     summary: pydantic.StrictStr
     description: pydantic.StrictStr
     maintainers: list[pydantic.StrictStr] | None = None
     assumes: list[str | dict[str, list | dict]] | None = None
+    charm_user: str | None = None
     containers: dict[str, Any] | None = None
     devices: dict[str, Any] | None = None
     docs: pydantic.AnyHttpUrl | None = None
@@ -65,12 +74,12 @@ class CharmMetadata(models.BaseMetadata):
         Performs the necessary renaming and reorganisation.
         """
         charm_dict = charm.model_dump(
-            include={"title"} | const.METADATA_YAML_KEYS,
             exclude_none=True,
             by_alias=True,
+            exclude_defaults=False,
         )
 
-        # Flatten links and match to the appropriate metadata.yaml name
+        # Flatten links and match to the appropriate metadata.yaml schema
         if charm.links is not None:
             links = charm.links.marshal()
             if "documentation" in links:

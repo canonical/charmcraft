@@ -399,7 +399,8 @@ class RegisterBundleNameCommand(CharmcraftCommand):
         store = Store(env.get_store_config())
         store.register_name(parsed_args.name, EntityType.bundle)
         emit.message(f"You are now the publisher of bundle {parsed_args.name!r} in Charmhub.")
-        return os.EX_OK
+        # TODO(#1810): Replace this with os.EX_OK
+        return 0
 
 
 class UnregisterNameCommand(CharmcraftCommand):

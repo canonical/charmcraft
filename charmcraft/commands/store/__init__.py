@@ -1873,7 +1873,7 @@ class UploadResourceCommand(BaseCommand):
                         "Image not found locally. Passing path directly to skopeo.",
                         permanent=True,
                     )
-                    skopeo = utils.Skopeo()
+                    skopeo = utils.Skopeo(insecure_policy=True)
                     registry_url_without_https = self.config.charmhub.registry_url[8:]
                     with emit.open_stream("Running Skopeo") as stream:
                         skopeo.copy(

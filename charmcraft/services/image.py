@@ -120,6 +120,7 @@ class ImageService(craft_application.AppService):
             logger.debug(f"API error when querying local Docker: {exc}", exc_info=exc)
         else:
             return image.id
+        return None
 
     @staticmethod
     def convert_go_arch_to_charm_arch(architecture: str) -> const.CharmArch:

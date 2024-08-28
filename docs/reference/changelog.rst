@@ -77,7 +77,7 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
-3.2.0 (2024-08-27)
+3.2.0 (2024-08-28)
 ------------------
 
 We have some fixes to the 3.1 series, as well as the features below.

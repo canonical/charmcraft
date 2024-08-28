@@ -1,5 +1,5 @@
 annotated-types==0.7.0
-astroid==3.2.4
+astroid==3.3.2
 attrs==24.2.0
 boolean-py==4.0
 certifi==2024.7.4

@@ -1,5 +1,10 @@
 ## Development environment
 
+It's recommended to use `uv` for setting up your development environment, but
+this is not required. `uv` is available [as a snap](https://snapcraft.io/astral-uv)
+and from [official sources](https://docs.astral.sh/uv/getting-started/installation/).
+If using `uv`, substitute `virtualenv` with `uv venv` and `pip` with `uv pip`.
+
 To set up an initial development environment:
 
     git clone https://github.com/canonical/charmcraft.git

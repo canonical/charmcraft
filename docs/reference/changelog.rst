@@ -108,7 +108,7 @@ New ``go-framework`` extension for easily charming go applications.
 Documentation
 =============
 
-Documentation now contains a changelog, and you're reading it right now.
+The changelog is now included in the Charmcraft documentation. For completeness, we've back-filled the log with all the important changes from previous releases documented on GitHub.
 
 For a complete list of commits, see the `3.2.0`_ release on GitHub.
 

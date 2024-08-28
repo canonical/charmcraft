@@ -5,7 +5,9 @@
     // Each ignore is probably connected with an ignore in pyproject.toml.
     // Ensure you change this and those simultaneously.
     "urllib3",
+    // Temporary until we remove Windows. https://github.com/canonical/charmcraft/issues/1810
     "windows",  // We'll update Windows versions manually.
+    "tox-gh",  // As of 1.3.2 tox-gh doesn't support Windows 2019's python 3.7.
   ],
   labels: ["dependencies"],  // For convenient searching in GitHub
   baseBranches: ["$default", "/^hotfix\\/.*/"],

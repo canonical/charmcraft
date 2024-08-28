@@ -103,7 +103,7 @@ Extensions
 go-framework
 """"""""""""
 
-New ``go-framework`` extension for easily charming go applications
+New ``go-framework`` extension for easily charming go applications.
 
 Documentation
 =============

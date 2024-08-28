@@ -39,7 +39,7 @@ platformdirs==4.2.2
 protobuf==5.27.3
 pycparser==2.22
 pydantic==2.8.2
-pydantic-core==2.20.1
+pydantic-core==2.23.0
 pydantic-yaml==1.3.0
 pygit2==1.14.1
 pymacaroons==0.13.0

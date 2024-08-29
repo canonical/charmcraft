@@ -123,6 +123,8 @@ parts:
     after: [charmcraft-libs, libgit2]
     source: .
     plugin: python
+    build-snaps:
+      - astral-uv/latest/beta
     python-requirements:
       - requirements-jammy.txt
       - requirements.txt
@@ -141,7 +143,7 @@ parts:
       # Ensure we don't have a dubious ownership error from git with a remote build.
       git config --global --add safe.directory $CRAFT_PART_SRC
       # set the version
-      version="$(python3 setup.py --version)"
+      version="$(/usr/bin/python3 setup.py --version)"
       craftctl set version="${version}"
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       craftctl set grade="${grade}"
@@ -187,7 +189,7 @@ parts:
     build-packages:
       - golang-go
     build-environment:
-      - CGO_ENABLED: 0
+      - CGO_ENABLED: "0"
     stage:
       - -bin/humbox
 

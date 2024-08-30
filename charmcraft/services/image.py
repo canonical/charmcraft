@@ -18,6 +18,7 @@
 import dataclasses
 import io
 import logging
+import re
 import subprocess
 from collections.abc import Sequence
 
@@ -54,14 +55,17 @@ class ImageService(craft_application.AppService):
     """
 
     _skopeo: utils.Skopeo
-    _docker: docker.DockerClient
+    _docker: docker.DockerClient | None
 
     @override
     def setup(self) -> None:
         """Set up the image service."""
         super().setup()
         self._skopeo = utils.Skopeo(insecure_policy=True)
-        self._docker = docker.from_env()
+        try:
+            self._docker = docker.from_env()
+        except docker.errors.DockerException:
+            self._docker = None
 
     def copy(
         self,
@@ -100,7 +104,7 @@ class ImageService(craft_application.AppService):
         if "://" not in url:
             return url
         # Return only the name, even if something is on ghcr or somewhere.
-        return url.rpartition("/")[2]
+        return url.partition("://")[2]
 
     def get_maybe_id_from_docker(self, url: str) -> str | None:
         """Get the ID of an image from Docker.
@@ -111,6 +115,8 @@ class ImageService(craft_application.AppService):
         The digest will match the OCI digest spec:
         https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests
         """
+        if self._docker is None:
+            return None
         name = self.get_name_from_url(url)
         try:
             image = self._docker.images.get(name)

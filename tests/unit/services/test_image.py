@@ -60,8 +60,16 @@ def image_service(service_factory, mock_skopeo, mock_docker) -> services.ImageSe
         ),
         (
             "docker://ghcr.io/canonical/charmed-mysql@sha256:89b8305613f6ce94f78a7c9b4baedef78f2816fd6bc74c00f6607bc5e57bd8e6",
-            "charmed-mysql@sha256:89b8305613f6ce94f78a7c9b4baedef78f2816fd6bc74c00f6607bc5e57bd8e6",
+            "ghcr.io/canonical/charmed-mysql@sha256:89b8305613f6ce94f78a7c9b4baedef78f2816fd6bc74c00f6607bc5e57bd8e6",
         ),
+        (
+            "docker://quay.io/prometheus/blackbox-exporter:v0.24.0",
+            "quay.io/prometheus/blackbox-exporter:v0.24.0",
+        ),
+        (
+            "docker://quay.io/prometheus/blackbox-exporter:v0.24.0@sha256:3af31f8bd1ad2907b4b0f7c485fde3de0a8ee0b498d42fc971f0698885c03acb",
+            "quay.io/prometheus/blackbox-exporter:v0.24.0@sha256:3af31f8bd1ad2907b4b0f7c485fde3de0a8ee0b498d42fc971f0698885c03acb",
+        )
     ],
 )
 def test_get_name_from_url(url: str, name: str):
@@ -94,6 +102,12 @@ def test_get_maybe_id_from_docker_success(image_service: services.ImageService, 
 
 def test_get_maybe_id_from_docker_failure(image_service: services.ImageService, mock_docker):
     mock_docker.images.get.side_effect = docker.errors.ImageNotFound("womp womp")
+
+    assert image_service.get_maybe_id_from_docker("some-image") is None
+
+
+def test_get_maybe_id_from_docker_no_docker(image_service: services.ImageService):
+    image_service._docker = None
 
     assert image_service.get_maybe_id_from_docker("some-image") is None
 

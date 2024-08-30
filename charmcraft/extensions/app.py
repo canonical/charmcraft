@@ -314,3 +314,56 @@ class GoFramework(_AppBase):
     def get_container_name(self) -> str:
         """Return name of the container for the app image."""
         return "app"
+
+
+class FastAPIFramework(_AppBase):
+    """Extension for 12-factor FastAPI applications."""
+
+    framework = "fastapi"
+    options = {
+        "webserver-workers": {
+            "type": "int",
+            "default": 1,
+            "description": "Number of workers for uvicorn. Sets env variable WEB_CONCURRENCY. See https://www.uvicorn.org/#command-line-options.",
+        },
+        "webserver-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Bind to a socket with this port. Default: 8000. Sets env variable  UVICORN_PORT.",
+        },
+        "webserver-log-level": {
+            "type": "string",
+            "default": "info",
+            "description": "Set the log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Sets the env variable UVICORN_LOG_LEVEL.",
+        },
+        "metrics-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Port where the prometheus metrics will be scraped.",
+        },
+        "metrics-path": {
+            "type": "string",
+            "default": "/metrics",
+            "description": "Path where the prometheus metrics will be scraped.",
+        },
+        "secret-key": {
+            "type": "string",
+            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+        },
+    }
+
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "24.04")]
+
+    @override
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return "app-image"
+
+    @override
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return "app"

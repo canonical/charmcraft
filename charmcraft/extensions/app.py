@@ -346,7 +346,7 @@ class FastAPIFramework(_AppBase):
             "default": "/metrics",
             "description": "Path where the prometheus metrics will be scraped.",
         },
-        "secret-key": {
+        "app-secret-key": {
             "type": "string",
             "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
         },

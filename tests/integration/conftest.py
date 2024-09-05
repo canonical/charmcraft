@@ -24,9 +24,16 @@ from charmcraft.application import commands
 
 
 @pytest.fixture
-def service_factory():
-    factory = services.CharmcraftServiceFactory(app=application.APP_METADATA)
+def service_factory(simple_charm):
+    factory = services.CharmcraftServiceFactory(
+        app=application.APP_METADATA,
+        project=simple_charm,
+    )
     factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
+
+    app = application.Charmcraft(app=application.APP_METADATA, services=factory)
+    app._configure_services(provider_name=None)
+
     return factory
 
 

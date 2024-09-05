@@ -16,6 +16,9 @@
 """Integration tests for the lifecycle service."""
 
 
+import pathlib
+from unittest import mock
+from craft_parts import lifecycle_manager
 import distro
 import pytest
 from craft_application import errors, models, util
@@ -84,3 +87,38 @@ def test_lifecycle_build_for_multi(service_factory: CharmcraftServiceFactory):
     lcm = lifecycle._init_lifecycle_manager()
 
     assert lcm._target_arch == foreign_arch
+
+
+@pytest.mark.skipif(
+    distro.id() != "ubuntu", reason="Only valid on Ubuntu"
+)
+def test_lifecycle_correct_stage_packages(new_path: pathlib.Path, service_factory: CharmcraftServiceFactory, simple_charm):
+    simple_charm.parts = {"stage": {"plugin": "nil", "stage-packages": ["curl"]}}
+    service_factory.set_kwargs(
+        "lifecycle",
+        project=simple_charm,
+        work_dir=new_path,
+        cache_dir=new_path,
+        build_plan=[models.BuildInfo(
+            platform="something",
+            build_on=util.get_host_architecture(),
+            build_for=util.get_host_architecture(),
+            base=bases.BaseName(distro.id(), distro.version()),
+        )],
+    )
+    lifecycle = service_factory.lifecycle
+
+    # Pretend the build plan is always valid.
+    with mock.patch("craft_application.services.lifecycle._validate_build_plan"):
+        lifecycle.run("stage")
+
+    doc_dir = new_path / "stage/usr/share/doc"
+    # We should only need to stage the curl package, as all other packages are
+    # included in the filter list.
+    dir_names = [
+        package.name
+        for package in doc_dir.iterdir()
+        if package.is_dir
+    ]
+
+    assert dir_names == ["curl"]

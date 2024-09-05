@@ -139,6 +139,7 @@ def fake_prime_dir(fs) -> pathlib.Path:
 def fake_path(fs) -> Iterator[pathlib.Path]:
     """Like tmp_path, but with a fake filesystem."""
     with tempfile.TemporaryDirectory() as tmp_dir:
+        fs.add_real_file("/etc/os-release")
         yield pathlib.Path(tmp_dir)
 
 

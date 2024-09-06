@@ -18,9 +18,46 @@
 
 """Setup script for Charmcraft."""
 
+import subprocess
+
 from setuptools import find_packages, setup
 
-from tools.version import determine_version
+
+def determine_version():
+    """Get the version of Charmcraft.
+
+    Examples (git describe -> python package version):
+    4.1.1-0-gad012482d -> 4.1.1
+    4.1.1-16-g2d8943dbc -> 4.1.1.post16+g2d8943dbc
+
+    For shallow clones or repositories missing tags:
+    0ae7c04
+    This was copied from tools/version.py to fix #1472
+    """
+    desc = (
+        subprocess.run(
+            ["git", "describe", "--always", "--long"],
+            check=True,
+            stdout=subprocess.PIPE,
+        )
+        .stdout.decode()
+        .strip()
+    )
+
+    split_desc = desc.split("-")
+    assert (  # noqa: S101
+        len(split_desc) == 3
+    ), f"Failed to parse Charmcraft git version description {desc!r}. Confirm that git repository is present and has the required tags/history."
+
+    version = split_desc[0]
+    distance = split_desc[1]
+    commit = split_desc[2]
+
+    if distance == "0":
+        return version
+
+    return f"{version}.post{distance}+git{commit[1:]}"
+
 
 with open("README.md", encoding="utf8") as fh:
     long_description = fh.read()

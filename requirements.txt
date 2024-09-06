@@ -6,7 +6,7 @@ craft-cli==2.4.0
 craft-parts==1.25.2
 craft-providers==1.20.3
 craft-store==2.5.0
-cryptography==41.0.7
+cryptography==43.0.1
 Deprecated==1.2.14
 distro==1.8.0
 humanize==4.8.0

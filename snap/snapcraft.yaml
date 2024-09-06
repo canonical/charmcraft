@@ -63,6 +63,8 @@ apps:
       XDG_CACHE_HOME: $SNAP_USER_COMMON/cache
       # same for config
       XDG_CONFIG_HOME: $SNAP_USER_COMMON/config
+      # Disable legacy openssl algorithms with cryptography
+      CRYPTOGRAPHY_OPENSSL_NO_LEGACY: 1
 
 grade: stable
 confinement: classic

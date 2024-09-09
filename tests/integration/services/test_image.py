@@ -19,9 +19,12 @@ import pytest
 
 from charmcraft import application, services
 
+
 @pytest.fixture
 def image_service() -> services.ImageService:
-    service = services.ImageService(app=application.APP_METADATA, services=None)  # pyright: ignore[reportArgumentType]
+    service = services.ImageService(
+        app=application.APP_METADATA, services=None  # pyright: ignore[reportArgumentType]
+    )
     service.setup()
     return service
 
@@ -37,4 +40,4 @@ def image_service() -> services.ImageService:
     ],
 )
 def test_get_maybe_id_from_docker_no_exceptions(image_service: services.ImageService, url):
-    result = image_service.get_maybe_id_from_docker(url)
+    image_service.get_maybe_id_from_docker(url)

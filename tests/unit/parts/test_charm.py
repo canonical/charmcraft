@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for charm plugin."""
+import pathlib
 import sys
 from unittest.mock import patch
 
@@ -36,6 +37,7 @@ def test_charmplugin_get_build_package_deb_based(charm_plugin):
             "python3-wheel",
             "python3-venv",
             "python3-dev",
+            "libyaml-dev",
         }
 
 
@@ -88,7 +90,7 @@ def test_charmplugin_get_build_environment_ubuntu(charm_plugin, mocker):
     mock_version = mocker.patch("craft_parts.utils.os_utils.OsRelease.version_id")
     mock_id.return_value = "ubuntu"
     mock_version.return_value = "22.04"
-    assert charm_plugin.get_build_environment() == {}
+    assert charm_plugin.get_build_environment() == {"CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"}
 
 
 def test_charmplugin_get_build_environment_centos_7(charm_plugin, mocker, monkeypatch):
@@ -98,7 +100,8 @@ def test_charmplugin_get_build_environment_centos_7(charm_plugin, mocker, monkey
     mock_id.return_value = "centos"
     mock_version.return_value = "7"
     assert charm_plugin.get_build_environment() == {
-        "PATH": "/opt/rh/rh-python38/root/usr/bin:${PATH}"
+        "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true",
+        "PATH": "/opt/rh/rh-python38/root/usr/bin:${PATH}",
     }
 
 
@@ -120,7 +123,9 @@ def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, m
     mock_version.return_value = "22.04"
 
     assert charm_plugin.get_build_commands() == [
-        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/some/path SNAP=snap_value "
+        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 "
+        "CRYPTOGRAPHY_OPENSSL_NO_LEGACY=true "
+        "PATH=/some/path SNAP=snap_value "
         "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
         "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
         "https_proxy=https_proxy_value no_proxy=no_proxy_value "
@@ -162,7 +167,9 @@ def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker,
     mock_version.return_value = "7"
 
     assert charm_plugin.get_build_commands() == [
-        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH=/opt/rh/rh-python38/root/usr/bin:/some/path "
+        "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 "
+        "CRYPTOGRAPHY_OPENSSL_NO_LEGACY=true "
+        "PATH=/opt/rh/rh-python38/root/usr/bin:/some/path "
         "SNAP=snap_value SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
         "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
         "https_proxy=https_proxy_value no_proxy=no_proxy_value "
@@ -200,9 +207,10 @@ def test_charmpluginproperties_invalid_properties():
     with pytest.raises(pydantic.ValidationError) as raised:
         parts.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
+
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-invalid",)
-    assert err[0]["type"] == "value_error.extra"
+    assert err[0]["type"] == "extra_forbidden"
 
 
 def test_charmpluginproperties_entrypoint_ok():
@@ -236,7 +244,10 @@ def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
-    assert err[0]["msg"] == f"charm entry point must be inside the project: {str(outside_path)!r}"
+    assert (
+        err[0]["msg"]
+        == f"Value error, charm entry point must be inside the project: {str(outside_path)!r}"
+    )
 
 
 def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
@@ -248,7 +259,10 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
-    assert err[0]["msg"] == f"charm entry point must be inside the project: {str(outside_path)!r}"
+    assert (
+        err[0]["msg"]
+        == f"Value error, charm entry point must be inside the project: {str(outside_path)!r}"
+    )
 
 
 def test_charmpluginproperties_requirements_default(tmp_path):
@@ -258,23 +272,11 @@ def test_charmpluginproperties_requirements_default(tmp_path):
     assert properties.charm_requirements == []
 
 
-def test_charmpluginproperties_requirements_must_exist(tmp_path):
-    """The configured files must be present."""
-    reqs_path = tmp_path / "reqs.txt"  # not in disk, really
-    content = {"source": str(tmp_path), "charm-requirements": [str(reqs_path)]}
-    with pytest.raises(pydantic.ValidationError) as raised:
-        parts.CharmPlugin.properties_class.unmarshal(content)
-    err = raised.value.errors()
-    assert len(err) == 1
-    assert err[0]["loc"] == ("charm-requirements",)
-    assert err[0]["msg"] == f"requirements file {str(reqs_path)!r} not found"
-
-
-def test_charmpluginproperties_requirements_filepresent_ok(tmp_path):
+def test_charmpluginproperties_requirements_filepresent_ok(tmp_path: pathlib.Path):
     """If a specific file is present in disk it's used."""
     (tmp_path / "requirements.txt").write_text("somedep")
     content = {"source": str(tmp_path)}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.CharmPluginProperties.unmarshal(content)
     assert properties.charm_requirements == ["requirements.txt"]
 
 

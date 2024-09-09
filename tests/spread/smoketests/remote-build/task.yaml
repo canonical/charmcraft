@@ -1,0 +1,45 @@
+summary: pack a simple init-created charm on Launchpad
+kill-timeout: 30m
+manual: true
+
+systems:
+  - ubuntu-22.04-64
+
+environment:
+  LAUNCHPAD_TOKEN: "$(HOST: echo ${LAUNCHPAD_TOKEN})"
+  BASE_NAME: ubuntu
+  BASE_CHANNEL/jammy: 22.04
+
+include:
+  - tests/
+
+prepare: |
+  tests.pkgs install unzip
+  charmcraft init --project-dir=charm
+
+  # Workaround for https://github.com/canonical/craft-application/issues/248
+  date --utc +%Y-%m-%dT%R:%S.%N > charm/build_time.txt  # Ensure we get a unique build name
+
+  sed -i "s/- name: ubuntu/- name: ${BASE_NAME}/g" charm/charmcraft.yaml
+  # This limits us to amd64 since it tends to be the fastest build queue on launchpad.
+  # We only need to do one build to test this anyway.
+  sed -i -E "s/( *)channel: .*/\1channel: '${BASE_CHANNEL}'\n\1architectures: [amd64]/g" charm/charmcraft.yaml
+
+  mkdir -p ~/.local/share/charmcraft
+  # To get this on your machine, you can run:
+  # export LAUNCHPAD_TOKEN="$(awk '{printf "%s\\n", $0}' ~/.local/share/charmcraft/launchpad-credentials)"
+  echo -e "${LAUNCHPAD_TOKEN}" > ~/.local/share/charmcraft/launchpad-credentials
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft remote-build --verbose --launchpad-accept-public-upload
+  test -f charm*.charm
+  unzip -l charm*.charm | MATCH "venv/ops/charm.py"
+  test ! -d build

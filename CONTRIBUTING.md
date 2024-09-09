@@ -1,12 +1,21 @@
 ## Development environment
 
 To set up an initial development environment:
-    
+
     git clone https://github.com/canonical/charmcraft.git
     cd charmcraft
     virtualenv venv
     . venv/bin/activate
     pip install -r requirements-dev.txt -e .
+
+You will need a copy of `ruff` installed. On many Linux distributions, you
+can install ruff with:
+
+    sudo snap install ruff
+
+Otherwise, you can install ruff in your virtual environment with:
+
+    pip install ruff
 
 
 ## Developing against Charmcraft source

@@ -71,6 +71,9 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+# Auto-generated command reference
+/docs/reference/commands/
+/docs/reference/_autosummary/
 
 # PyBuilder
 target/
@@ -84,6 +87,9 @@ ipython_config.py
 
 # pyenv
 .python-version
+
+# Pycharm
+.idea
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
@@ -133,3 +139,8 @@ dmypy.json
 
 # backups
 *~
+/charmcraft/_version.py
+/results/
+
+# Spread files
+.spread-reuse*.yaml

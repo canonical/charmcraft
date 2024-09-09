@@ -1,44 +1,42 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
-include: 
+environment:
+  PROFILE/simple: simple
+  PROFILE/machine: machine
+  PROFILE/kubernetes: kubernetes
+
+include:
   - tests/
 
 kill-timeout: 30m
 
 prepare: |
-  tests.pkgs install unzip
-  charmcraft init --project-dir=charm
+  tests.pkgs install pipx python3-venv
+  pipx install --force tox
+  rm -rf charm
+  charmcraft init --project-dir=charm --profile=${PROFILE}
+
+  cp charmcraft-${PROFILE}.yaml charm/charmcraft.yaml
+
   cd charm
   echo "ignore me" > secrets.txt
   touch extra_file.txt
-
-  cat <<- EOF >> charmcraft.yaml
-  parts:
-    charm:
-      prime:
-        - extra_file.txt
-    hello:
-      plugin: nil
-      build-packages: [hello]
-      override-build: |
-        hello > "\$CRAFT_PART_INSTALL/hello.txt"
-      override-prime: |
-        echo "Running the prime step"
-        craftctl default
-  EOF
 
 restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |
   cd charm
   charmcraft pack --verbose
-  test -f charm*.charm
-  unzip -c charm*.charm hello.txt | grep "^Hello, world!"
-  unzip -l charm*.charm | grep "venv/ops/charm.py"
-  unzip -l charm*.charm | grep extra_file.txt
-  ! unzip -l charm*.charm | grep secrets.txt
+  ~/.local/bin/tox run
+  test -f *.charm
+  # Charmcraft 3.0 uses the craft-parts standard prime keyword that only
+  # includes the specifically mentioned files
+  unzip -c *.charm hello.txt | grep "^Hello, world!"
+  unzip -l *.charm | NOMATCH "venv/ops/charm.py"
+  unzip -l *.charm | MATCH extra_file.txt
+  unzip -l *.charm | NOMATCH secrets.txt

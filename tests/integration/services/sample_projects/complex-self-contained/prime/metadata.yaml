@@ -1,0 +1,75 @@
+assumes:
+- any-of:
+  - juju >= 2.9
+  - all-of:
+    - juju >= 3.0
+    - juju < 4.0
+- k8s-api
+charm-user: non-root
+containers:
+  super-app:
+    mounts:
+    - location: /logs
+      storage: logs
+    resource: super-app-image
+description: |
+  This is intentionally designed to be a fairly complex charm definition. It makes use
+  of every available keyword in charmcraft.yaml, expressing as much as possible.
+devices:
+  lame-gpu:
+    countmax: 1
+    countmin: 0
+    description: A GPU I regret buying
+    type: nvidia.com/gpu
+  super-cool-gpu:
+    countmax: 420
+    countmin: 69
+    description: Some sweet AMD GPU
+    type: amd.com/gpu
+docs: https://juju.is/docs/sdk/charmcraft-yaml
+extra-bindings:
+  Ring of Power: null
+issues:
+- https://launchpad.net/~charmcraft-team
+- https://github.com/canonical/charmcraft/issues
+maintainers:
+- Please send your answer to Old Pink, care of the Funny Farm, Chalfont
+name: full-charm
+peers:
+  friend:
+    interface: life
+    limit: 150
+    optional: true
+    scope: container
+provides:
+  self:
+    interface: identity
+requires:
+  parent:
+    interface: birth
+    limit: 2
+    optional: false
+    scope: global
+resources:
+  super-app-image:
+    description: OCI image for the Super App (hub.docker.com/_/super-app)
+    type: oci-image
+  water:
+    filename: /dev/h2o
+    type: file
+source:
+- https://github.com/canonical/charmcraft
+storage:
+  jbod:
+    description: A nice block storage for me to use as swap space
+    properties:
+    - transient
+    shared: false
+    type: block
+subordinate: false
+summary: A fully-defined charm, making use of all the available charm keywords.
+terms:
+- Butterscotch is regal
+- Cara is adorable
+website:
+- https://snapcraft.io/charmcraft

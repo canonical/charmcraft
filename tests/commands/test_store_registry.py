@@ -21,6 +21,7 @@ import gzip
 import hashlib
 import io
 import json
+import pathlib
 import sys
 import tarfile
 from unittest.mock import call, patch
@@ -29,8 +30,9 @@ import pytest
 import requests
 from craft_cli import CraftError
 
-from charmcraft.commands.store import registry
-from charmcraft.commands.store.registry import (
+from charmcraft import const
+from charmcraft.store import registry
+from charmcraft.store.registry import (
     CONFIG_MIMETYPE,
     LAYER_MIMETYPE,
     MANIFEST_V2_MIMETYPE,
@@ -932,7 +934,7 @@ class FakeRegistry:
         return reference in self.stored_blobs
 
     def upload_blob(self, filepath, size, digest):
-        self.stored_blobs[digest] = (open(filepath, "rb").read(), size)
+        self.stored_blobs[digest] = (pathlib.Path(filepath).read_bytes(), size)
 
 
 class FakeDockerd:
@@ -999,7 +1001,7 @@ def test_imagehandler_extract_file_simple(tmp_path, emitter):
 
     assert size == len(test_content)
     assert digest == "sha256:" + hashlib.sha256(test_content).hexdigest()
-    assert open(tmp_filepath, "rb").read() == test_content
+    assert pathlib.Path(tmp_filepath).read_bytes() == test_content
 
     emitter.assert_progress("Extracting file 'testfile.txt' from local tar (compress=False)")
 
@@ -1018,7 +1020,7 @@ def test_imagehandler_extract_file_compressed_ok(tmp_path, emitter):
     with tarfile.open(tar_filepath, "r") as tar:
         tmp_filepath, size, digest = im._extract_file(tar, "testfile.txt", compress=True)
 
-    compressed_content = open(tmp_filepath, "rb").read()
+    compressed_content = pathlib.Path(tmp_filepath).read_bytes()
     assert size == len(compressed_content)
     assert digest == "sha256:" + hashlib.sha256(compressed_content).hexdigest()
     assert gzip.decompress(compressed_content) == test_content
@@ -1095,7 +1097,7 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
     test_manifest_content = json.dumps(
         [
             {
-                "Config": "config.yaml",
+                "Config": const.JUJU_CONFIG_FILENAME,
                 "Layers": ["layer1.bin", "layer2.bin"],
             }
         ]
@@ -1103,7 +1105,7 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
     tar_file = tarfile.TarFile(test_tar_image, "w")
     tar_content = [
         ("manifest.json", test_manifest_content),
-        ("config.yaml", test_tar_config_content),
+        (const.JUJU_CONFIG_FILENAME, test_tar_config_content),
         ("layer1.bin", test_tar_layer1_content),
         ("layer2.bin", test_tar_layer2_content),
     ]
@@ -1201,16 +1203,12 @@ def test_imagehandler_uploadfromlocal_complete(emitter, tmp_path, responses, mon
             call("progress", "Extracting file 'layer1.bin' from local tar (compress=True)"),
             call(
                 "progress",
-                "Uploading layer blob 1/2, size={}, digest={}".format(
-                    u_layer1_size, u_layer1_digest
-                ),
+                f"Uploading layer blob 1/2, size={u_layer1_size}, digest={u_layer1_digest}",
             ),
             call("progress", "Extracting file 'layer2.bin' from local tar (compress=True)"),
             call(
                 "progress",
-                "Uploading layer blob 2/2, size={}, digest={}".format(
-                    u_layer2_size, u_layer2_digest
-                ),
+                f"Uploading layer blob 2/2, size={u_layer2_size}, digest={u_layer2_digest}",
             ),
         ]
     )
@@ -1293,9 +1291,7 @@ def test_imagehandler_uploadfromlocal_no_config(emitter, tmp_path, monkeypatch):
             call("progress", "Extracting file 'layer.bin' from local tar (compress=True)"),
             call(
                 "progress",
-                "Uploading layer blob 1/1, size={}, digest={}".format(
-                    u_layer_size, u_layer_digest
-                ),
+                f"Uploading layer blob 1/1, size={u_layer_size}, digest={u_layer_digest}",
             ),
         ]
     )

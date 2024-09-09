@@ -4,8 +4,9 @@ title: Strict dependencies test charm
 summary: a test charm for checking that strict dependencies are used.
 description: |
   This charm should build successfully, even with strict dependencies, but
-  will only use the dependencies from requirements.txt. The ops package, declared
-  in charm-binary-python-packages, is allowed to be installed from a wheel.
+  will only use the dependencies from requirements.txt. requirements.txt must include
+  the full dependency tree. The three packages are allowed as binary here to speed
+  up the test.
 bases:
   - name: ubuntu
     channel: "22.04"
@@ -13,4 +14,4 @@ bases:
 parts:
   charm:
     charm-strict-dependencies: true
-    charm-binary-python-packages: ["ops"]
+    charm-binary-python-packages: ["ops", "pyyaml", "websocket-client"]

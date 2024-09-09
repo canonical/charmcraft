@@ -20,18 +20,18 @@ from subprocess import CalledProcessError, CompletedProcess
 from unittest.mock import call, patch
 
 import craft_parts
-import pydantic
 import pytest
 import pytest_subprocess
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
+from charmcraft import const
 from charmcraft.parts import reactive
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 
 
-@pytest.fixture()
+@pytest.fixture
 def charm_exe(tmp_path):
     """Provide a fake charm executable."""
     charm_bin = pathlib.Path(tmp_path, "mock_bin", "charm")
@@ -44,7 +44,7 @@ def charm_exe(tmp_path):
     return charm_bin
 
 
-@pytest.fixture()
+@pytest.fixture
 def broken_charm_exe(tmp_path):
     """Provide a fake charm executable that fails to run."""
     charm_bin = pathlib.Path(tmp_path, "mock_bin", "charm")
@@ -54,7 +54,7 @@ def broken_charm_exe(tmp_path):
     return charm_bin
 
 
-@pytest.fixture()
+@pytest.fixture
 def spec(tmp_path):
     """Provide a common spec to build the different artifacts."""
     return {
@@ -67,12 +67,12 @@ def spec(tmp_path):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def plugin_properties(spec):
     return reactive.ReactivePluginProperties.unmarshal(spec)
 
 
-@pytest.fixture()
+@pytest.fixture
 def plugin(tmp_path, plugin_properties, spec):
     project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
     part_spec = plugins.extract_part_properties(spec, plugin_name="reactive")
@@ -99,7 +99,7 @@ def test_get_build_snaps(plugin):
 
 
 def test_get_build_environment(plugin):
-    assert plugin.get_build_environment() == {}
+    assert plugin.get_build_environment() == {"CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"}
 
 
 def test_get_build_commands(plugin, tmp_path):
@@ -108,15 +108,6 @@ def test_get_build_commands(plugin, tmp_path):
         f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
         "--charm-argument --charm-argument-with argument"
     ]
-
-
-def test_invalid_properties(plugin):
-    with pytest.raises(pydantic.ValidationError) as raised:
-        plugin.properties_class.unmarshal({"source": ".", "reactive-invalid": True})
-    err = raised.value.errors()
-    assert len(err) == 1
-    assert err[0]["loc"] == ("reactive-invalid",)
-    assert err[0]["type"] == "value_error.extra"
 
 
 def test_validate_environment(plugin, plugin_properties, charm_exe):
@@ -162,15 +153,15 @@ def test_validate_broken_charm(plugin, plugin_properties, broken_charm_exe):
     assert raised.value.reason == "charm tools failed with error code 2"
 
 
-@pytest.fixture()
+@pytest.fixture
 def build_dir(tmp_path):
-    build_dir = tmp_path / "build"
+    build_dir = tmp_path / const.BUILD_DIRNAME
     build_dir.mkdir()
 
     return build_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def install_dir(tmp_path):
     install_dir = tmp_path / "install"
     install_dir.mkdir()
@@ -178,7 +169,7 @@ def install_dir(tmp_path):
     return install_dir
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_run():
     patcher = patch("subprocess.run")
     yield patcher.start()

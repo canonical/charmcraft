@@ -1,0 +1,27 @@
+summary: test charmcraft init with flask-framework profile
+priority: 500  # This builds pydantic, so do it early
+kill-timeout: 75m  # Because it builds pydantic, it takes a long time.
+systems:
+  # We only need to run this test once, and it takes a long time.
+  - ubuntu-22.04-64
+
+execute: |
+  # Required for fetch-libs to succeed since the libraries are not available on
+  # the staging environment
+  unset CHARMCRAFT_STORE_API_URL
+  unset CHARMCRAFT_UPLOAD_URL
+  unset CHARMCRAFT_REGISTRY_URL
+
+  mkdir -p test-init
+  cd test-init
+  charmcraft init --profile flask-framework
+  charmcraft fetch-libs
+  charmcraft pack --verbose
+  test -f *.charm
+
+restore: |
+  pushd test-init
+  charmcraft clean
+  popd
+
+  rm -rf test-init

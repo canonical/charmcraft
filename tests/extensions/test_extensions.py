@@ -14,14 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-from textwrap import dedent
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import pytest
 from overrides import override
 
-from charmcraft import errors, extensions
-from charmcraft.config import load
+from charmcraft import const, errors, extensions
 from charmcraft.extensions.extension import Extension
 
 
@@ -32,24 +30,24 @@ class FakeExtension(Extension):
     bases = [("ubuntu", "22.04")]
 
     @classmethod
-    def get_supported_bases(cls) -> List[Tuple[str, ...]]:
+    def get_supported_bases(cls) -> list[tuple[str, ...]]:
         """Return a list of tuple of supported bases."""
         return cls.bases
 
     @staticmethod
-    def is_experimental(_base: Optional[Tuple[str, ...]]) -> bool:
+    def is_experimental(_base: tuple[str, ...] | None) -> bool:
         """Return whether or not this extension is unstable for given base."""
         return False
 
-    def get_root_snippet(self) -> Dict[str, Any]:
+    def get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to apply."""
         return {}
 
-    def get_part_snippet(self) -> Dict[str, Any]:
+    def get_part_snippet(self) -> dict[str, Any]:
         """Return the part snippet to apply to existing parts."""
         return {}
 
-    def get_parts_snippet(self) -> Dict[str, Any]:
+    def get_parts_snippet(self) -> dict[str, Any]:
         """Return the parts to add to parts."""
         return {}
 
@@ -61,7 +59,7 @@ class ExperimentalExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(_base: Optional[str]) -> bool:
+    def is_experimental(_base: str | None) -> bool:
         return True
 
 
@@ -72,7 +70,7 @@ class InvalidPartExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @override
-    def get_parts_snippet(self) -> Dict[str, Any]:
+    def get_parts_snippet(self) -> dict[str, Any]:
         return {"bad-name": {"plugin": "dump", "source": None}}
 
 
@@ -83,24 +81,24 @@ class FullExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @override
-    def get_root_snippet(self) -> Dict[str, Any]:
+    def get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to apply."""
         return {
             "terms": ["https://example.com/terms", "https://example.com/terms2"],
         }
 
     @override
-    def get_part_snippet(self) -> Dict[str, Any]:
+    def get_part_snippet(self) -> dict[str, Any]:
         """Return the part snippet to apply to existing parts."""
         return {"stage-packages": ["new-package-1"]}
 
     @override
-    def get_parts_snippet(self) -> Dict[str, Any]:
+    def get_parts_snippet(self) -> dict[str, Any]:
         """Return the parts to add to parts."""
         return {"full-extension/new-part": {"plugin": "nil", "source": None}}
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_extensions(stub_extensions):
     extensions.register(FakeExtension.name, FakeExtension)
     extensions.register(ExperimentalExtension.name, ExperimentalExtension)
@@ -117,7 +115,7 @@ def test_experimental_with_env(fake_extensions, tmp_path, monkeypatch):
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
         "extensions": [ExperimentalExtension.name],
     }
-    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
     project_root = tmp_path
     extensions.apply_extensions(project_root, charmcraft_config)
 
@@ -204,90 +202,3 @@ def test_apply_extensions(fake_extensions, tmp_path):
 
     # New part
     assert parts[f"{FullExtension.name}/new-part"] == {"plugin": "nil", "source": None}
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml"),
-    [
-        dedent(
-            f"""\
-            type: charm
-            name: test-charm-name-from-charmcraft-yaml
-            summary: test summary
-            description: test description
-            bases:
-              - name: ubuntu
-                channel: "22.04"
-            extensions:
-              - {FullExtension.name}
-            parts:
-              foo:
-                plugin: nil
-                stage-packages:
-                  - old-package
-            """
-        ),
-    ],
-)
-def test_load_charmcraft_yaml_with_extensions(
-    tmp_path,
-    prepare_charmcraft_yaml,
-    charmcraft_yaml,
-    fake_extensions,
-):
-    """Load the config using charmcraft.yaml with extensions."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-
-    config = load(tmp_path)
-    assert config.type == "charm"
-    assert config.project.dirpath == tmp_path
-    assert config.parts["foo"]["stage-packages"] == [
-        "new-package-1",
-        "old-package",
-    ]
-
-    # New part
-    assert config.parts[f"{FullExtension.name}/new-part"] == {"plugin": "nil", "source": None}
-    assert config.terms == ["https://example.com/terms", "https://example.com/terms2"]
-
-
-@pytest.mark.parametrize(
-    ("charmcraft_yaml"),
-    [
-        dedent(
-            f"""\
-            type: charm
-            name: test-charm-name-from-charmcraft-yaml
-            summary: test summary
-            description: test description
-            bases:
-              - name: ubuntu
-                channel: "20.04"
-              - name: ubuntu
-                channel: "22.04"
-            extensions:
-              - {FullExtension.name}
-            parts:
-              foo:
-                plugin: nil
-                stage-packages:
-                  - old-package
-            """
-        ),
-    ],
-)
-def test_load_charmcraft_yaml_with_extensions_unsupported_base(
-    tmp_path,
-    prepare_charmcraft_yaml,
-    charmcraft_yaml,
-    fake_extensions,
-):
-    """Load the config using charmcraft.yaml with extensions."""
-    prepare_charmcraft_yaml(charmcraft_yaml)
-
-    with pytest.raises(errors.ExtensionError) as exc:
-        load(tmp_path)
-
-    assert str(exc.value) == (
-        "Extension 'full-extension' does not support base: ('ubuntu', '20.04')"
-    )

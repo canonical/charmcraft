@@ -1,0 +1,36 @@
+name: example-charm
+summary: An example charm with platforms
+description: |
+  A description for an example charm with platforms.
+base: ubuntu@22.04
+platforms:
+  amd64:
+    build-on:
+    - amd64
+    build-for:
+    - amd64
+parts:
+  charm:
+    plugin: charm
+    source: .
+type: charm
+config:
+  options:
+    admins:
+      description: 'Comma-separated list of admin users to create: user:pass[,user:pass]+'
+      type: string
+    debug:
+      default: false
+      description: turn on debugging features of mediawiki
+      type: boolean
+    logo:
+      description: URL to fetch logo from
+      type: string
+    name:
+      default: Wiki
+      description: The name, or Title of the Wiki
+      type: string
+    skin:
+      default: vector
+      description: skin for the Wiki
+      type: string

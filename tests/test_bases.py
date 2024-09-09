@@ -24,17 +24,17 @@ from charmcraft.models.charmcraft import Base
 from charmcraft.utils import OSPlatform
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_get_os_platform():
     os_platform = OSPlatform(system="host-OS", release="host-CHANNEL", machine="host-ARCH")
     with patch("charmcraft.bases.get_os_platform", return_value=os_platform) as mock_platform:
         yield mock_platform
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_get_host_architecture():
     with patch(
-        "charmcraft.bases.get_host_architecture", return_value="host-ARCH"
+        "craft_application.util.get_host_architecture", return_value="host-ARCH"
     ) as mock_host_arch:
         yield mock_host_arch
 

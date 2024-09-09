@@ -1,0 +1,147 @@
+project: {{ name }}-tests
+
+environment:
+  PROVIDER: lxd
+  CHARMCRAFT_CHANNEL: latest/stable
+  JUJU_CHANNEL: 3/stable
+  LXD_CHANNEL: latest/stable
+
+  JUJU_BOOTSTRAP_OPTIONS: --model-default test-mode=true --model-default automatically-retry-hooks=false --model-default
+  JUJU_EXTRA_BOOTSTRAP_OPTIONS: ""
+  JUJU_BOOTSTRAP_CONSTRAINTS: ""
+
+  # important to ensure adhoc and linode/qemu behave the same
+  SUDO_USER: ""
+  SUDO_UID: ""
+
+  LANG: "C.UTF-8"
+  LANGUAGE: "en"
+
+  PROJECT_PATH: /home/spread/proj
+  CRAFT_TEST_LIB_PATH: /home/spread/proj/tests/spread/lib
+
+backends:
+  multipass:
+    type: adhoc
+    allocate: |
+      # Mitigate issues found when launching multiple mutipass instances
+      # concurrently. See https://github.com/canonical/multipass/issues/3336
+      sleep 0.$RANDOM
+      sleep 0.$RANDOM
+      sleep 0.$RANDOM
+
+      mkdir -p "$HOME/.spread"
+      export counter_file="$HOME/.spread/multipass-count"
+
+      # Sequential variable for unique instance names
+      instance_num=$(flock -x $counter_file bash -c '
+        [ -s $counter_file ] || echo 0 > $counter_file
+        num=$(< $counter_file)
+        echo $num
+        echo $(( $num + 1 )) > $counter_file')
+
+      multipass_image=$(echo "${SPREAD_SYSTEM}" | sed -e s/ubuntu-// -e s/-64//)
+
+      system=$(echo "${SPREAD_SYSTEM}" | tr . -)
+      instance_name="spread-${SPREAD_BACKEND}-${instance_num}-${system}"
+
+      multipass launch -vv --cpus 2 --disk 20G --memory 4G --name "${instance_name}" \
+        --cloud-init tests/spread/lib/cloud-config.yaml "${multipass_image}"
+
+      # Get the IP from the instance
+      ip=$(multipass info --format csv "$instance_name" | tail -1 | cut -d\, -f3)
+      ADDRESS "$ip"
+
+    discard: |
+      instance_name=$(multipass list --format csv | grep $SPREAD_SYSTEM_ADDRESS | cut -f1 -d\,)
+      multipass delete --purge "${instance_name}"
+
+    systems:
+      - ubuntu-22.04:
+          username: spread
+          password: spread
+          workers: 1
+
+      - ubuntu-20.04:
+          username: spread
+          password: spread
+          workers: 1
+
+  github-ci:
+    type: adhoc
+
+    allocate: |
+      echo "Allocating ad-hoc $SPREAD_SYSTEM"
+      if [ -z "${GITHUB_RUN_ID:-}" ]; then
+        FATAL "this back-end only works inside GitHub CI"
+        exit 1
+      fi
+      echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/99-spread-users
+      ADDRESS localhost:22
+
+    discard: |
+      echo "Discarding ad-hoc $SPREAD_SYSTEM"
+
+    systems:
+      - ubuntu-22.04-amd64:
+          username: ubuntu
+          password: ubuntu
+          workers: 1
+
+
+suites:
+  tests/spread/general/:
+    summary: Charm functionality tests
+
+    systems:
+      - ubuntu-22.04*
+
+    environment:
+      CHARMCRAFT_CHANNEL/charmcraft_current: latest/stable
+      # CHARMCRAFT_CHANNEL/charmcraft_next: latest/candidate
+
+    prepare: |
+      set -e
+      . "$CRAFT_TEST_LIB_PATH"/test-helpers.sh
+      apt update -y
+      apt install -y python3-pip
+      pip3 install tox
+
+      install_lxd
+      install_charmcraft
+      install_juju
+      bootstrap_juju
+
+      juju add-model testing
+
+    restore: |
+      set -e
+      . "$CRAFT_TEST_LIB_PATH"/test-helpers.sh
+      rm -f "$PROJECT_PATH"/*.charm
+      charmcraft clean -p "$PROJECT_PATH"
+
+      restore_juju
+      restore_charmcraft
+      restore_lxd
+
+exclude:
+  - .git
+  - .tox
+
+path: /home/spread/proj
+
+prepare: |
+  snap refresh --hold
+
+  if systemctl is-enabled unattended-upgrades.service; then
+    systemctl stop unattended-upgrades.service
+    systemctl mask unattended-upgrades.service
+  fi
+
+restore: |
+  apt autoremove -y --purge
+  rm -Rf "$PROJECT_PATH"
+  mkdir -p "$PROJECT_PATH"
+
+
+kill-timeout: 1h

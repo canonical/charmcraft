@@ -19,22 +19,32 @@ import pathlib
 import shlex
 import subprocess
 import textwrap
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING, cast
 
 from craft_cli import CraftError
+from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from charmcraft.linters import CheckResult
+else:
+    CheckResult = "CheckResult"
 
 
-class BadLibraryPathError(CraftError):
+class LibraryError(CraftError):
+    """Errors related to charm libraries."""
+
+
+class BadLibraryPathError(LibraryError):
     """Subclass to provide a specific error for a bad library path."""
 
     def __init__(self, path):
         super().__init__(
-            "Charm library path {} must conform to lib/charms/<charm>/vN/<libname>.py"
-            "".format(path)
+            f"Charm library path {path} must conform to lib/charms/<charm>/vN/<libname>.py"
         )
 
 
-class BadLibraryNameError(CraftError):
+class BadLibraryNameError(LibraryError):
     """Subclass to provide a specific error for a bad library name."""
 
     def __init__(self, name):
@@ -103,10 +113,6 @@ class DependencyError(CraftError):
     """Errors related to dependencies."""
 
 
-class InvalidDependenciesError(DependencyError):
-    """In strict dependencies mode, some binary dependencies."""
-
-
 class MissingDependenciesError(DependencyError):
     """In strict dependencies mode, some dependencies are missing from requirements files."""
 
@@ -130,15 +136,13 @@ class SubprocessError(CraftError):
     """A craft-cli friendly subprocess error."""
 
     @classmethod
-    def from_subprocess(cls, error: subprocess.CalledProcessError):
+    def from_subprocess(cls, error: subprocess.CalledProcessError) -> Self:
         """Convert a CalledProcessError to a craft-cli error."""
         error_details = f"Full command: {shlex.join(error.cmd)}\nError text:\n"
         if isinstance(error.stderr, str):
             error_details += textwrap.indent(error.stderr, "  ")
-        elif error.stderr is None:
-            pass
         else:
-            stderr = error.stderr
+            stderr = cast(io.TextIOBase, error.stderr)
             stderr.seek(io.SEEK_SET)
             error_details += textwrap.indent(stderr.read(), "  ")
         return cls(

@@ -23,17 +23,16 @@ from unittest.mock import patch
 
 import pytest
 
+from charmcraft import const
 from charmcraft.linters import (
-    CHECKERS,
-    BaseChecker,
-    CheckType,
+    AdditionalFiles,
     Entrypoint,
     Framework,
     JujuActions,
     JujuConfig,
     JujuMetadata,
     Language,
-    analyze,
+    NamingConventions,
     check_dispatch_with_python_entrypoint,
     get_entrypoint_from_dispatch,
 )
@@ -45,12 +44,13 @@ EXAMPLE_DISPATCH = """
 PYTHONPATH=lib:venv ./charm.py
 """
 
+
 # --- tests for helper functions
 
 
 def test_epfromdispatch_ok(tmp_path):
     """An entrypoint is found in the dispatch."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
     result = get_entrypoint_from_dispatch(tmp_path)
@@ -65,7 +65,7 @@ def test_epfromdispatch_no_dispatch(tmp_path):
 
 def test_epfromdispatch_inaccessible_dispatch(tmp_path):
     """The charm has a dispatch we can't use."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.touch()
     dispatch.chmod(0o000)
     result = get_entrypoint_from_dispatch(tmp_path)
@@ -74,7 +74,7 @@ def test_epfromdispatch_inaccessible_dispatch(tmp_path):
 
 def test_epfromdispatch_broken_dispatch(tmp_path):
     """The charm has a dispatch which we can't decode."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_bytes(b"\xC0\xC0")
     result = get_entrypoint_from_dispatch(tmp_path)
     assert result is None
@@ -82,7 +82,7 @@ def test_epfromdispatch_broken_dispatch(tmp_path):
 
 def test_epfromdispatch_empty_dispatch(tmp_path):
     """The charm dispatch is empty."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text("")
     result = get_entrypoint_from_dispatch(tmp_path)
     assert result is None
@@ -114,7 +114,7 @@ def test_checkdispatchpython_nothing_from_dispatch(tmp_path):
 
 def test_checkdispatchpython_entrypoint_is_not_python(tmp_path):
     """The charm entrypoint has not a .py extension."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text(
         """
         #!/bin/sh
@@ -131,7 +131,7 @@ def test_checkdispatchpython_entrypoint_is_not_python(tmp_path):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_checkdispatchpython_entrypoint_no_exec(tmp_path):
     """The charm entrypoint is not executable."""
-    dispatch = tmp_path / "dispatch"
+    dispatch = tmp_path / const.DISPATCH_FILENAME
     dispatch.write_text(EXAMPLE_DISPATCH)
     entrypoint = tmp_path / "charm.py"
     entrypoint.touch()
@@ -209,7 +209,7 @@ def test_framework_operator_used_ok(tmp_path, import_line):
     entrypoint.write_text(f"{import_line}")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = tmp_path / const.VENV_DIRNAME / "ops"
     opsdir.mkdir(parents=True)
 
     # check
@@ -227,7 +227,7 @@ def test_framework_operator_language_not_python(tmp_path):
     entrypoint.write_text("no python :)")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = tmp_path / const.VENV_DIRNAME / "ops"
     opsdir.mkdir(parents=True)
 
     # check
@@ -257,7 +257,7 @@ def test_framework_operator_no_venv_ops_directory(tmp_path):
     entrypoint.write_text("import ops")
 
     # an empty venv
-    venvdir = tmp_path / "venv"
+    venvdir = tmp_path / const.VENV_DIRNAME
     venvdir.mkdir()
 
     # check
@@ -274,7 +274,7 @@ def test_framework_operator_venv_ops_directory_is_not_a_dir(tmp_path):
     entrypoint.write_text("import ops")
 
     # an ops *file* inside venv
-    opsfile = tmp_path / "venv" / "ops"
+    opsfile = tmp_path / const.VENV_DIRNAME / "ops"
     opsfile.parent.mkdir()
     opsfile.touch()
 
@@ -292,7 +292,7 @@ def test_framework_operator_corrupted_entrypoint(tmp_path):
     entrypoint.write_text("xx --")  # not really Python
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = tmp_path / const.VENV_DIRNAME / "ops"
     opsdir.mkdir(parents=True)
 
     # check
@@ -318,7 +318,7 @@ def test_framework_operator_no_ops_imported(tmp_path, monkeypatch, import_line):
     entrypoint.write_text(f"{import_line}")
 
     # an ops directory inside venv
-    opsdir = tmp_path / "venv" / "ops"
+    opsdir = tmp_path / const.VENV_DIRNAME / "ops"
     opsdir.mkdir(parents=True)
 
     # check
@@ -446,7 +446,7 @@ def test_framework_reactive_no_metadata(tmp_path, monkeypatch):
 def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
     """Missing entrypoint file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # the reactive lib is used
@@ -463,7 +463,7 @@ def test_framework_reactive_no_entrypoint(tmp_path, monkeypatch):
 def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
     """Cannot read the entrypoint file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -485,7 +485,7 @@ def test_framework_reactive_unaccesible_entrypoint(tmp_path, monkeypatch):
 def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
     """The entrypoint is not really a Python file."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -506,7 +506,7 @@ def test_framework_reactive_corrupted_entrypoint(tmp_path, monkeypatch):
 def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
     """The wheelhouse directory does not exist."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -522,7 +522,7 @@ def test_framework_reactive_no_wheelhouse(tmp_path, monkeypatch):
 def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
     """The wheelhouse directory has no reactive lib."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -554,7 +554,7 @@ def test_framework_reactive_no_reactive_lib(tmp_path, monkeypatch):
 def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_line):
     """Different imports that are NOT importing the Reactive Framework."""
     # metadata file with needed name field
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text("name: foobar")
 
     # a Python file that imports charms.reactive
@@ -578,7 +578,7 @@ def test_framework_reactive_no_reactive_imported(tmp_path, monkeypatch, import_l
 def test_jujumetadata_all_ok(tmp_path):
     """All conditions ok for JujuMetadata to result ok."""
     # metadata file with proper fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text(
         """
         name: foobar
@@ -594,17 +594,17 @@ def test_jujumetadata_missing_file(tmp_path):
     """No metadata.yaml file at all."""
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.ERRORS
+    assert result == JujuMetadata.Result.ERROR
     assert linter.text == "Cannot read the metadata.yaml file."
 
 
 def test_jujumetadata_file_corrupted(tmp_path):
     """The metadata.yaml file is not valid YAML."""
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text(" - \n-")
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.ERRORS
+    assert result == JujuMetadata.Result.ERROR
     assert linter.text == "The metadata.yaml file is not a valid YAML file."
 
 
@@ -618,12 +618,12 @@ def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
     missing = included_fields.pop(to_miss)
 
     # metadata file with not all fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     content = "\n".join(f"{field}: some text" for field in included_fields)
     metadata_file.write_text(content)
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.ERRORS
+    assert result == JujuMetadata.Result.ERROR
     assert linter.text == (
         f"The metadata.yaml file is missing the following attribute(s): '{missing}'."
     )
@@ -632,7 +632,7 @@ def test_jujumetadata_missing_field_simple(tmp_path, to_miss):
 def test_jujumetadata_missing_field_multiple(tmp_path):
     """More than one required field is missing in the metadata file."""
     # metadata file with not all fields
-    metadata_file = tmp_path / "metadata.yaml"
+    metadata_file = tmp_path / const.METADATA_FILENAME
     metadata_file.write_text(
         """
         name: foobar
@@ -640,223 +640,31 @@ def test_jujumetadata_missing_field_multiple(tmp_path):
     )
     linter = JujuMetadata()
     result = linter.run(tmp_path)
-    assert result == JujuMetadata.Result.ERRORS
+    assert result == JujuMetadata.Result.ERROR
     assert linter.text == (
         "The metadata.yaml file is missing the following attribute(s): "
         "'description' and 'summary'."
     )
 
 
-# --- tests for analyze function
-
-
-def create_fake_checker(**kwargs):
-    """Create a fake Checker.
-
-    Receive generic kwargs and process them as a dict for the defaults, as we can't declare
-    the name in the function definition and then use it in the class definition.
+def test_jujumetadata_series_is_deprecated(tmp_path):
+    """A deprecated field is included in the metadata file"""
+    metadata_file = tmp_path / const.METADATA_FILENAME
+    metadata_file.write_text(
+        """
+        name: foobar
+        summary: summary
+        description: desc
+        series: focal
     """
-    params = {
-        "check_type": "type",
-        "name": "name",
-        "url": "url",
-        "text": "text",
-        "result": "result",
-    }
-    params.update(kwargs)
-
-    class FakeChecker(BaseChecker):
-        check_type = params["check_type"]
-        name = params["name"]
-        url = params["url"]
-        text = params["text"]
-
-        def run(self, basedir):
-            return params["result"]
-
-    return FakeChecker
-
-
-def test_analyze_run_everything(config):
-    """Check that analyze runs all and collect the results."""
-    FakeChecker1 = create_fake_checker(
-        check_type=CheckType.ATTRIBUTE, name="name1", url="url1", text="text1", result="result1"
     )
-    FakeChecker2 = create_fake_checker(
-        check_type=CheckType.LINT, name="name2", url="url2", text="text2", result="result2"
+    linter = JujuMetadata()
+    result = linter.run(tmp_path)
+    assert result == JujuMetadata.Result.WARNING
+    assert linter.text == (
+        "The metadata.yaml file contains the deprecated attribute: series."
+        "This attribute will be rejected starting in Juju 4.0."
     )
-    FakeChecker3 = create_fake_checker(
-        check_type=CheckType.LINT, name="returns_none", url="url3", text=None, result="result3"
-    )
-
-    # hack the first fake checker to validate that it receives the indicated path
-    def dir_validator(self, basedir):
-        assert basedir == pathlib.Path("test-buildpath")
-        return "result1"
-
-    FakeChecker1.run = dir_validator
-
-    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2, FakeChecker3]):
-        result = analyze(config, pathlib.Path("test-buildpath"))
-
-    r1, r2, r3 = result
-    assert r1.check_type == "attribute"
-    assert r1.name == "name1"
-    assert r1.url == "url1"
-    assert r1.text == "text1"
-    assert r1.result == "result1"
-    assert r2.check_type == "lint"
-    assert r2.name == "name2"
-    assert r2.url == "url2"
-    assert r2.text == "text2"
-    assert r2.result == "result2"
-    assert r3.name == "returns_none"
-    assert r3.url == "url3"
-    assert r3.text == "n/a"
-    assert r3.result == "result3"
-
-
-def test_analyze_ignore_attribute(config):
-    """Run all checkers except the ignored attribute."""
-    FakeChecker1 = create_fake_checker(
-        check_type=CheckType.ATTRIBUTE,
-        name="name1",
-        result="res1",
-        text="text1",
-        url="url1",
-    )
-    FakeChecker2 = create_fake_checker(
-        check_type=CheckType.LINT,
-        name="name2",
-        result="res2",
-        text="text2",
-        url="url2",
-    )
-
-    config.analysis.ignore.attributes.append("name1")
-    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
-        result = analyze(config, pathlib.Path("somepath"))
-
-    res1, res2 = result
-    assert res1.check_type == CheckType.ATTRIBUTE
-    assert res1.name == "name1"
-    assert res1.result == LintResult.IGNORED
-    assert res1.text == ""
-    assert res1.url == "url1"
-    assert res2.check_type == CheckType.LINT
-    assert res2.name == "name2"
-    assert res2.result == "res2"
-    assert res2.text == "text2"
-    assert res2.url == "url2"
-
-
-def test_analyze_ignore_linter(config):
-    """Run all checkers except the ignored linter."""
-    FakeChecker1 = create_fake_checker(
-        check_type=CheckType.ATTRIBUTE,
-        name="name1",
-        result="res1",
-        text="text1",
-        url="url1",
-    )
-    FakeChecker2 = create_fake_checker(
-        check_type=CheckType.LINT,
-        name="name2",
-        result="res2",
-        text="text2",
-        url="url2",
-    )
-
-    config.analysis.ignore.linters.append("name2")
-    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
-        result = analyze(config, pathlib.Path("somepath"))
-
-    res1, res2 = result
-    assert res1.check_type == CheckType.ATTRIBUTE
-    assert res1.name == "name1"
-    assert res1.result == "res1"
-    assert res1.text == "text1"
-    assert res1.url == "url1"
-    assert res2.check_type == CheckType.LINT
-    assert res2.name == "name2"
-    assert res2.result == LintResult.IGNORED
-    assert res2.text == ""
-    assert res2.url == "url2"
-
-
-def test_analyze_override_ignore(config):
-    """Run all checkers even the ignored ones, if requested."""
-    FakeChecker1 = create_fake_checker(check_type=CheckType.ATTRIBUTE, name="name1", result="res1")
-    FakeChecker2 = create_fake_checker(check_type=CheckType.LINT, name="name2", result="res2")
-
-    config.analysis.ignore.attributes.append("name1")
-    config.analysis.ignore.linters.append("name2")
-    with patch("charmcraft.linters.CHECKERS", [FakeChecker1, FakeChecker2]):
-        result = analyze(config, pathlib.Path("somepath"), override_ignore_config=True)
-
-    res1, res2 = result
-    assert res1.check_type == CheckType.ATTRIBUTE
-    assert res1.name == "name1"
-    assert res1.result == "res1"
-    assert res2.check_type == CheckType.LINT
-    assert res2.name == "name2"
-    assert res2.result == "res2"
-
-
-def test_analyze_crash_attribute(config):
-    """The attribute checker crashes."""
-    FakeChecker = create_fake_checker(
-        check_type=CheckType.ATTRIBUTE, name="name", text="text", url="url"
-    )
-
-    def raises(*a):
-        raise ValueError
-
-    FakeChecker.run = raises
-
-    with patch("charmcraft.linters.CHECKERS", [FakeChecker]):
-        result = analyze(config, pathlib.Path("somepath"))
-
-    (res,) = result
-    assert res.check_type == CheckType.ATTRIBUTE
-    assert res.name == "name"
-    assert res.result == LintResult.UNKNOWN
-    assert res.text == "text"
-    assert res.url == "url"
-
-
-def test_analyze_crash_lint(config):
-    """The lint checker crashes."""
-    FakeChecker = create_fake_checker(
-        check_type=CheckType.LINT, name="name", text="text", url="url"
-    )
-
-    def raises(*a):
-        raise ValueError
-
-    FakeChecker.run = raises
-
-    with patch("charmcraft.linters.CHECKERS", [FakeChecker]):
-        result = analyze(config, pathlib.Path("somepath"))
-
-    (res,) = result
-    assert res.check_type == CheckType.LINT
-    assert res.name == "name"
-    assert res.result == LintResult.FATAL
-    assert res.text == "text"
-    assert res.url == "url"
-
-
-def test_analyze_all_can_be_ignored(config):
-    """Control that all real life checkers can be ignored."""
-    config.analysis.ignore.attributes.extend(
-        c.name for c in CHECKERS if c.check_type == CheckType.ATTRIBUTE
-    )
-    config.analysis.ignore.linters.extend(
-        c.name for c in CHECKERS if c.check_type == CheckType.LINT
-    )
-    result = analyze(config, pathlib.Path("somepath"))
-    assert all(r.result == LintResult.IGNORED for r in result)
 
 
 # --- tests for JujuActions checker
@@ -864,7 +672,7 @@ def test_analyze_all_can_be_ignored(config):
 
 def test_jujuactions_ok(tmp_path):
     """The actions.yaml file is valid."""
-    actions_file = tmp_path / "actions.yaml"
+    actions_file = tmp_path / const.JUJU_ACTIONS_FILENAME
     actions_file.write_text("stuff: foobar")
     result = JujuActions().run(tmp_path)
     assert result == JujuActions.Result.OK
@@ -878,10 +686,71 @@ def test_jujuactions_missing_file(tmp_path):
 
 def test_jujuactions_file_corrupted(tmp_path):
     """The actions.yaml file is not valid YAML."""
-    actions_file = tmp_path / "actions.yaml"
+    actions_file = tmp_path / const.JUJU_ACTIONS_FILENAME
     actions_file.write_text(" - \n-")
     result = JujuActions().run(tmp_path)
-    assert result == JujuActions.Result.ERRORS
+    assert result == JujuActions.Result.ERROR
+
+
+@pytest.mark.parametrize(
+    ("action_file_content", "expected_result"),
+    [
+        pytest.param(
+            dedent(
+                """
+                my_action:
+                    params:
+                        my_first_param:
+                            type: str
+                            description: foo
+                        my_second_param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="snake_case",
+        ),
+        pytest.param(
+            dedent(
+                """
+                my_action:
+                    params:
+                        my_first_param:
+                            type: str
+                            description: foo
+                        my-second-param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="convention_mismatch",
+        ),
+        pytest.param(
+            dedent(
+                """
+                my-action:
+                    params:
+                        my-first-param:
+                            type: str
+                            description: foo
+                        my-second-param:
+                            type: str
+                            description: bar
+            """
+            ),
+            LintResult.OK,
+            id="ok",
+        ),
+    ],
+)
+def test_jujuactions_naming_convention(tmp_path, action_file_content, expected_result):
+    """The config.yaml file has consistent snake case convention."""
+    action_file = tmp_path / const.JUJU_ACTIONS_FILENAME
+    action_file.write_text(action_file_content)
+    result = NamingConventions().run(tmp_path)
+    assert result == expected_result
 
 
 # --- tests for JujuConfig checker
@@ -889,7 +758,7 @@ def test_jujuactions_file_corrupted(tmp_path):
 
 def test_jujuconfig_ok(tmp_path):
     """The config.yaml file is valid."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         options:
@@ -909,17 +778,17 @@ def test_jujuconfig_missing_file(tmp_path):
 
 def test_jujuconfig_file_corrupted(tmp_path):
     """The config.yaml file is not valid YAML."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(" - \n-")
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "The config.yaml file is not a valid YAML file."
 
 
 def test_jujuconfig_no_options(tmp_path):
     """The config.yaml file does not have an options key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         summary: Small text.
@@ -927,13 +796,13 @@ def test_jujuconfig_no_options(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
 def test_jujuconfig_empty_options(tmp_path):
     """The config.yaml file has an empty options key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         options:
@@ -941,13 +810,13 @@ def test_jujuconfig_empty_options(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
 def test_jujuconfig_options_not_dict(tmp_path):
     """The config.yaml file has an options key that is not a dict."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         options:
@@ -957,13 +826,13 @@ def test_jujuconfig_options_not_dict(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: must have an 'options' dictionary."
 
 
 def test_jujuconfig_no_type_in_options_items(tmp_path):
     """The items under 'options' must have a 'type' key."""
-    config_file = tmp_path / "config.yaml"
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
     config_file.write_text(
         """
         options:
@@ -973,8 +842,80 @@ def test_jujuconfig_no_type_in_options_items(tmp_path):
     )
     linter = JujuConfig()
     result = linter.run(tmp_path)
-    assert result == JujuConfig.Result.ERRORS
+    assert result == JujuConfig.Result.ERROR
     assert linter.text == "Error in config.yaml: items under 'options' must have a 'type' key."
+
+
+@pytest.mark.parametrize(
+    ("config_file_content", "expected_result"),
+    [
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my_first_param:
+                    type: str
+                    description: foo
+                my_second_param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="snake_case",
+        ),
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my_first_param:
+                    type: str
+                    description: foo
+                my-second-param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.WARNING,
+            id="convention_mismatch",
+        ),
+        pytest.param(
+            dedent(
+                """\
+            options:
+                my-first-param:
+                    type: str
+                    description: foo
+                my-second-param:
+                    type: str
+                    description: bar
+            """
+            ),
+            LintResult.OK,
+            id="ok",
+        ),
+    ],
+)
+def test_jujuconfig_naming_convention(tmp_path, config_file_content, expected_result):
+    """The config.yaml file has consistent snake case convention."""
+    config_file = tmp_path / const.JUJU_CONFIG_FILENAME
+    config_file.write_text(config_file_content)
+    result = NamingConventions().run(tmp_path)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        pytest.param(const.JUJU_CONFIG_FILENAME, id="config"),
+        pytest.param(const.JUJU_ACTIONS_FILENAME, id="action"),
+    ],
+)
+def test_empty_file(tmp_path, file):
+    file = tmp_path / file
+    file.write_text("")
+    result = NamingConventions().run(tmp_path)
+    assert result == LintResult.OK
 
 
 # --- tests for Entrypoint checker
@@ -1006,7 +947,7 @@ def test_entrypoint_missing(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.ERRORS
+    assert result == Entrypoint.Result.ERROR
     assert linter.text == f"Cannot find the entrypoint file: {str(entrypoint)!r}"
 
 
@@ -1017,7 +958,7 @@ def test_entrypoint_directory(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.ERRORS
+    assert result == Entrypoint.Result.ERROR
     assert linter.text == f"The entrypoint is not a file: {str(entrypoint)!r}"
 
 
@@ -1029,5 +970,99 @@ def test_entrypoint_non_exec(tmp_path):
     linter = Entrypoint()
     with patch("charmcraft.linters.get_entrypoint_from_dispatch", return_value=entrypoint):
         result = linter.run(tmp_path)
-    assert result == Entrypoint.Result.ERRORS
+    assert result == Entrypoint.Result.ERROR
     assert linter.text == f"The entrypoint file is not executable: {str(entrypoint)!r}"
+
+
+# --- tests for Additional Files checker
+
+
+def test_additional_files_checker(tmp_path):
+    """The additional files checker can find additional files."""
+    stage_dir = tmp_path / "stage"
+    stage_dir.mkdir()
+    prime_dir = tmp_path / "prime"
+    prime_dir.mkdir()
+
+    file_added = prime_dir / "file_added"
+    file_added.write_text("")
+
+    linter = AdditionalFiles()
+    result = linter.run(prime_dir)
+
+    assert result == LintResult.ERROR
+    assert linter.text == (
+        "Error: Additional files found in the charm:\n"
+        "File 'file_added' is not staged but in the charm."
+    )
+
+
+def test_additional_files_checker_ok(tmp_path):
+    """The additional files checker OK with same file list."""
+    stage_dir = tmp_path / "stage"
+    stage_dir.mkdir()
+    prime_dir = tmp_path / "prime"
+    prime_dir.mkdir()
+
+    file_added = prime_dir / "file_added"
+    file_added.write_text("")
+
+    file_added = stage_dir / "file_added"
+    file_added.write_text("")
+
+    linter = AdditionalFiles()
+    result = linter.run(prime_dir)
+
+    assert result == LintResult.OK
+    assert linter.text == "No additional files found in the charm."
+
+
+def test_additional_files_checker_not_applicable(tmp_path):
+    """The additional files checker cannot work without a stage dir."""
+    prime_dir = tmp_path / "prime"
+    prime_dir.mkdir()
+
+    file_added = prime_dir / "file_added"
+    file_added.write_text("")
+
+    linter = AdditionalFiles()
+    result = linter.run(prime_dir)
+
+    assert result == LintResult.NONAPPLICABLE
+    assert linter.text == "Additional files check not applicable without a build environment."
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        (pathlib.Path(const.BUNDLE_FILENAME)),
+        (pathlib.Path(const.CHARMCRAFT_FILENAME)),
+        (pathlib.Path(const.MANIFEST_FILENAME)),
+        (pathlib.Path(const.METADATA_FILENAME)),
+        (pathlib.Path(const.JUJU_ACTIONS_FILENAME)),
+        (pathlib.Path(const.JUJU_CONFIG_FILENAME)),
+        (pathlib.Path(const.HOOKS_DIRNAME)),
+        (pathlib.Path("README.md")),
+    ],
+)
+def test_additional_files_checker_generated_ignore(tmp_path, file):
+    """The additional files checker OK with generated files."""
+    stage_dir = tmp_path / "stage"
+    stage_dir.mkdir()
+    prime_dir = tmp_path / "prime"
+    prime_dir.mkdir()
+
+    file_added = prime_dir / "file_added"
+    file_added.write_text("")
+
+    file_added = stage_dir / "file_added"
+    file_added.write_text("")
+
+    file_added = prime_dir / file
+    file_added.write_text("")
+
+    linter = AdditionalFiles()
+    result = linter.run(prime_dir)
+
+    assert result == LintResult.OK
+    assert linter.text == "No additional files found in the charm."

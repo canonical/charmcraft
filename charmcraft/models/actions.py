@@ -18,27 +18,25 @@
 
 import keyword
 import re
-from typing import Dict, Optional
 
 import pydantic
+from craft_application.models import CraftBaseModel
 
-from charmcraft.models.basic import ModelConfigDefaults
 
-
-class JujuActions(ModelConfigDefaults):
+class JujuActions(CraftBaseModel):
     """Juju actions for charms.
 
     See also: https://juju.is/docs/sdk/actions
     """
 
     _action_name_regex = re.compile(r"^[a-zA-Z_][a-zA-Z0-9-_]*$")
-    actions: Optional[Dict[str, Dict]]
+    actions: dict[str, dict] | None
 
-    @pydantic.validator("actions")
+    @pydantic.field_validator("actions", mode="after")
     def validate_actions(cls, actions):
         """Verify actions names and descriptions."""
         if not isinstance(actions, dict):
-            raise ValueError("actions.yaml is not a valid actions configuration")
+            raise TypeError("actions.yaml is not a valid actions configuration")
         for action in actions:
             if keyword.iskeyword(action):
                 raise ValueError(
@@ -49,11 +47,11 @@ class JujuActions(ModelConfigDefaults):
 
         return actions
 
-    @pydantic.validator("actions", each_item=True)
-    def validate_each_action(cls, action):
+    @pydantic.field_validator("actions", mode="after")
+    def _validate_actions(cls, action):
         """Verify actions names and descriptions."""
         if not isinstance(action, dict):
-            raise ValueError(f"'{action}' is not a dictionary")
+            raise TypeError(f"'{action}' is not a dictionary")
 
         if "description" not in action:
             raise ValueError(f"'{action}' is missing a description")

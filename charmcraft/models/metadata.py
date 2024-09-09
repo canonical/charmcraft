@@ -13,55 +13,108 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-
 """Charmcraft metadata pydantic model."""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import pydantic
+from craft_application import models
+from craft_application.models import base
 from craft_cli import CraftError
+from typing_extensions import Self, override
 
-from charmcraft.const import METADATA_FILENAME
+from charmcraft import const
+
+if TYPE_CHECKING:
+    from charmcraft.models.project import Bundle, Charm
+else:
+    Charm = Bundle = None
 
 
-class CharmMetadataLegacy(
-    pydantic.BaseModel,
-    extra=pydantic.Extra.allow,
-    frozen=True,
-    validate_all=True,
-    alias_generator=lambda s: s.replace("_", "-"),
-):
+class CharmMetadata(models.BaseMetadata):
+    """A charm's metadata.yaml file.
+
+    This model represents the metadata.yaml file that gets placed in the root
+    of a charm.
+    """
+
+    model_config = pydantic.ConfigDict(
+        validate_assignment=True,
+        extra="ignore",
+        populate_by_name=True,
+        alias_generator=base.alias_generator,
+    )
+
+    name: models.ProjectName
+    display_name: models.ProjectTitle | None = None
+    summary: pydantic.StrictStr
+    description: pydantic.StrictStr
+    maintainers: list[pydantic.StrictStr] | None = None
+    assumes: list[str | dict[str, list | dict]] | None = None
+    charm_user: str | None = None
+    containers: dict[str, Any] | None = None
+    devices: dict[str, Any] | None = None
+    docs: pydantic.AnyHttpUrl | None = None
+    extra_bindings: dict[str, Any] | None = None
+    issues: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
+    peers: dict[str, Any] | None = None
+    provides: dict[str, Any] | None = None
+    requires: dict[str, Any] | None = None
+    resources: dict[str, Any] | None = None
+    source: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
+    storage: dict[str, Any] | None = None
+    subordinate: bool | None = None
+    terms: list[pydantic.StrictStr] | None = None
+    website: pydantic.AnyHttpUrl | list[pydantic.AnyHttpUrl] | None = None
+
+    @classmethod
+    def from_charm(cls, charm: Charm) -> Self:
+        """Turn a populated charm model into a metadata model.
+
+        Performs the necessary renaming and reorganisation.
+        """
+        charm_dict = charm.model_dump(
+            exclude_none=True,
+            by_alias=True,
+            exclude_defaults=False,
+        )
+
+        # Flatten links and match to the appropriate metadata.yaml schema
+        if charm.links is not None:
+            links = charm.links.marshal()
+            if "documentation" in links:
+                charm_dict["docs"] = links.pop("documentation")
+            if "contact" in links:
+                contact = links.pop("contact")
+                if isinstance(contact, str):
+                    contact = [contact]
+                charm_dict["maintainers"] = contact
+            charm_dict.update(links)
+
+        if "title" in charm_dict:
+            charm_dict["display-name"] = charm_dict.pop("title")
+
+        return cls.model_validate(charm_dict)
+
+
+class CharmMetadataLegacy(CharmMetadata):
     """Object representing LEGACY charm metadata.yaml contents.
 
     This model only supports the legacy charm metadata.yaml format for compatibility.
-    New metadata defined in charmcraft.yaml is handled by the CharmcraftConfig model.
+    New metadata defined in charmcraft.yaml is handled by the CharmcraftProject models.
 
     specs: https://juju.is/docs/sdk/metadata-yaml
     """
 
-    name: pydantic.StrictStr
-    summary: pydantic.StrictStr
+    # These are looser in the metadata.yaml schema than charmcraft requires.
+    name: pydantic.StrictStr  # type: ignore[assignment]
+    summary: pydantic.StrictStr  # type: ignore[assignment]
     description: pydantic.StrictStr
-    assumes: Optional[List[Union[str, Dict[str, Union[List, Dict]]]]]
-    containers: Optional[Dict[str, Any]]
-    devices: Optional[Dict[str, Any]]
-    display_name: Optional[pydantic.StrictStr]
-    docs: Optional[pydantic.AnyHttpUrl]
-    extra_bindings: Optional[Dict[str, Any]]
-    issues: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    maintainers: Optional[List[pydantic.StrictStr]]
-    peers: Optional[Dict[str, Any]]
-    provides: Optional[Dict[str, Any]]
-    requires: Optional[Dict[str, Any]]
-    resources: Optional[Dict[str, Any]]
-    source: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
-    storage: Optional[Dict[str, Any]]
-    subordinate: Optional[bool]
-    terms: Optional[List[pydantic.StrictStr]]
-    website: Optional[Union[pydantic.AnyHttpUrl, List[pydantic.AnyHttpUrl]]]
+    display_name: pydantic.StrictStr | None = None  # type: ignore[assignment]
 
+    @override
     @classmethod
-    def unmarshal(cls, obj: Dict[str, Any]):
+    def unmarshal(cls, data: dict[str, Any]) -> Self:
         """Unmarshal object with necessary translations and error handling.
 
         :returns: valid CharmMetadataLegacy object.
@@ -69,41 +122,29 @@ class CharmMetadataLegacy(
         :raises CraftError: On failure to unmarshal object.
         """
         # convert undocumented "maintainer" to documented "maintainers"
-        if "maintainer" in obj and "maintainers" in obj:
+        if "maintainer" in data and "maintainers" in data:
             raise CraftError(
-                f"Cannot specify both 'maintainer' and 'maintainers' in {METADATA_FILENAME}"
+                f"Cannot specify both 'maintainer' and 'maintainers' in {const.METADATA_FILENAME}"
             )
 
-        if "maintainer" in obj:
-            obj["maintainers"] = [obj["maintainer"]]
-            del obj["maintainer"]
+        if "maintainer" in data:
+            data["maintainers"] = [data["maintainer"]]
+            del data["maintainer"]
 
-        return cls.parse_obj(obj)
+        return cls.model_validate(data)
 
 
-class BundleMetadataLegacy(
-    pydantic.BaseModel,
-    extra=pydantic.Extra.allow,
-    frozen=True,
-    validate_all=True,
-    alias_generator=lambda s: s.replace("_", "-"),
-):
-    """Object representing LEGACY bundle metadata.yaml contents.
+class BundleMetadata(models.BaseMetadata):
+    """metadata.yaml for a bundle zip."""
 
-    This model only supports the legacy bundle metadata.yaml format.
-
-    specs: https://juju.is/docs/sdk/metadata-yaml
-    """
-
-    name: pydantic.StrictStr
-    description: Optional[pydantic.StrictStr]
+    name: models.ProjectName | None = None
+    description: pydantic.StrictStr | None = None
 
     @classmethod
-    def unmarshal(cls, obj: Dict[str, Any]):
-        """Unmarshal object with necessary translations and error handling.
-
-        :returns: valid BundleMetadataLegacy.
-
-        :raises CraftError: On failure to unmarshal object.
-        """
-        return cls.parse_obj(obj)
+    def from_bundle(cls, bundle: Bundle) -> Self:
+        """Turn a populated bundle model into a metadata.yaml model."""
+        bundle_dict = bundle.marshal()
+        if "bundle" in bundle_dict:
+            return cls.model_validate(bundle_dict["bundle"])
+        del bundle_dict["type"]
+        return cls.model_validate(bundle_dict)

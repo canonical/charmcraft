@@ -16,11 +16,10 @@
 
 import itertools
 import os
+import pathlib
 import re
 
 import pytest
-
-from charmcraft import main
 
 
 def get_python_filepaths(*, roots=None, python_paths=None):
@@ -30,7 +29,7 @@ def get_python_filepaths(*, roots=None, python_paths=None):
     if roots is None:
         roots = ["charmcraft", "tests"]
     for root in roots:
-        for dirpath, dirnames, filenames in os.walk(root):
+        for dirpath, _, filenames in os.walk(root):
             for filename in filenames:
                 if filename.endswith(".py"):
                     python_paths.append(os.path.join(dirpath, filename))
@@ -42,7 +41,11 @@ def test_ensure_copyright():
     issues = []
     regex = re.compile(r"# Copyright \d{4}(-\d{4})? Canonical Ltd.$")
     for filepath in get_python_filepaths():
-        if os.stat(filepath).st_size == 0:
+        if pathlib.Path(filepath).stat().st_size == 0:
+            continue
+        if filepath.endswith("charmcraft/_version.py") or filepath.endswith(
+            "charmcraft\\_version.py"
+        ):
             continue
 
         with open(filepath, encoding="utf8") as fh:
@@ -54,23 +57,3 @@ def test_ensure_copyright():
     if issues:
         msg = "Please add copyright headers to the following files:\n" + "\n".join(issues)
         pytest.fail(msg, pytrace=False)
-
-
-def test_bashcompletion_all_commands():
-    """Verify that all commands are represented in the bash completion file."""
-    # get the line where all commands are specified in the completion file; this is custom
-    # to our file, but simple and good enough
-    completed_commands = None
-    with open("completion.bash", encoding="utf8") as fh:
-        completion_text = fh.read()
-    m = re.search(r"cmds=\((.*?)\)", completion_text, re.DOTALL)
-    if m:
-        completed_commands = set(m.groups()[0].split())
-    else:
-        pytest.fail("Failed to find commands in the bash completion file")
-
-    real_command_names = set()
-    for cgroup in main.COMMAND_GROUPS:
-        real_command_names.update(cmd.name for cmd in cgroup.commands if not cmd.hidden)
-
-    assert completed_commands == real_command_names

@@ -2,9 +2,12 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - "feature/**"
 
   pull_request:
+  merge_group:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -13,21 +16,21 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Begin snap installs
+        run: |
+          echo "Installing snaps in the background while running apt and pip..."
+          sudo snap install --no-wait shellcheck ruff
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           cache: 'pip'
       - name: Configure environment
         run: |
-          echo "::group::Begin snap install"
-          echo "Installing snaps in the background while running apt and pip..."
-          sudo snap install --no-wait shellcheck
-          echo "::endgroup::"
           echo "::group::pip install"
           python -m pip install tox
           echo "::endgroup::"
@@ -38,81 +41,78 @@ jobs:
           snap watch --last=install
           echo "::endgroup::"
       - name: Run Linters
-        # Currently picking specific linters that pass until we can enable them all.
-        # Still missing: pyright, yamllint
-        # run: tox run --skip-pkg-install --no-list-dependencies -m lint
-        run: tox run --skip-pkg-install --no-list-dependencies -e lint-black,lint-ruff,lint-shellcheck,lint-codespell,lint-mypy
+        run: tox run --skip-pkg-install --no-list-dependencies -m lint
   run-tests:
     strategy:
       matrix:
-        os: [macos-12, windows-2019, windows-2022]
-        python-version: [3.8, "3.10", "3.11"]
+        os: [ubuntu-22.04, ubuntu-24.04, macos-12, macos-13, windows-2019, windows-2022]
         include:
-          - os: ubuntu-20.04
-            python-version: "3.8"
-          - os: ubuntu-22.04
-            python-version: "3.10"
-
+          - os: windows-2019
+            python-version: |
+              3.11
+              3.12
+          - os: windows-2022
+            python-version: |
+              3.11
+              3.12
+          - os: macos-12
+            python_version: |
+              3.10
+              3.12
+          - os: macos-13
+            python_version: |
+              3.10
+              3.12
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        if: ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install/update pip, wheel, and setuptools on non Windows
-        if: ${{ matrix.os != 'windows-2019' && matrix.os != 'windows-2022' }}
-        run: |
-          pip install -U pip wheel setuptools
-      - name: Install/update pip, wheel, and setuptools on Windows
-        if: ${{ matrix.os == 'windows-2019' || matrix.os == 'windows-2022' }}
-        run: |
-          pip install -U wheel setuptools
+          cache: "pip"
       - name: Install Ubuntu-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04' }}
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
-      - name: Install Ubuntu 20.04-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
-        run: |
-          pip install -U -r requirements-focal.txt
-      - name: Install Ubuntu 22.04-specific dependencies
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
-        run: |
-          pip install -U -r requirements-jammy.txt
-      - name: Install charmcraft and dependencies
-        run: |
-          pip install -U -r requirements-dev.txt
-          pip install -e .
-          pip install tox setuptools
-      - name: Install external dependencies with homebrew
+      - name: Install skopeo (mac)
         # This is only necessary for Linux until skopeo >= 1.11 is in repos.
         # Once we're running on Noble, we can get skopeo from apt.
-        if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
+        if: ${{ runner.os == 'macOS' }}
         run: |
-          if [[ $(uname --kernel-name) == "Linux" ]]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          fi
           brew install skopeo
+      - name: Install skopeo (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          if [[ $(cat /etc/os-release | grep VERSION_CODENAME) == 'VERSION_CODENAME=jammy' ]]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            brew install skopeo
+            sudo rm -f /bin/skopeo
+            sudo ln -s $(which skopeo) /bin/skopeo
+          else
+            sudo apt install skopeo
+          fi
+          # Allow skopeo to access the contents of /run/containers
+          sudo chmod 777 /run/containers
+          # Add an xdg runtime dir for skopeo to look into for an auth.json file
+          sudo mkdir -p /run/user/$(id -u)
+          sudo chown $USER /run/user/$(id -u)
+      - name: Configure environment
+        run: |
+          pipx install tox
+          tox run --colored yes -m tests --notest
       - name: Run tests
         shell: bash
         run: |
           if [[ $(uname --kernel-name) == "Linux" ]]; then
-            # Ensure the version of skopeo comes from homebrew
-            # This is only necessary until we move to noble.
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-            # Allow skopeo to access the contents of /run/containers
-            sudo chmod 777 /run/containers || true
-            # Add an xdg runtime dir for skopeo to look into for an auth.json file
-            sudo mkdir -p /run/user/$(id -u)
-            sudo chown $USER /run/user/$(id -u)
             export XDG_RUNTIME_DIR=/run/user/$(id -u)
           fi
-          pytest -ra tests
+          tox run --skip-pkg-install --no-list-dependencies --result-json results/tox-${{ matrix.platform }}.json --colored yes -m tests
 
   snap-build:
     runs-on: ubuntu-22.04
@@ -125,32 +125,56 @@ jobs:
         uses: snapcore/action-build@v1
         id: snapcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
+      - name: Get branch name
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]
+          then
+            echo "branch=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "merge_group" ]]
+          then
+            echo "branch=merge" >> "$GITHUB_OUTPUT"
+          else
+            branch=$(echo ${{ github.base_ref }} | sed -e 's|feature/\(.*\)|\1|')
+            if [ -z "${branch}" ]; then
+              branch=$(echo ${{ github.ref_name }} | sed -e 's|/|_|')
+            fi
+            echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish feature branch to edge/${{ steps.vars.outputs.branch }}
+        if: ${{ env.SNAPCRAFT_STORE_CREDENTIALS != '' }}
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: edge/${{ steps.vars.outputs.branch }}
 
-# Commented out until we can provide the necessary launchpad credentials.
-#  snap-remote-build:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Start installing snapcraft
-#        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
-#        id: install
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 0
-#      - name: Remote-build snap
-#        id: snapcraft
-#        run: |
-#          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
-#          snapcraft remote-build --launchpad-accept-public-upload
-#      - name: Upload snap artifacts
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: snap
-#          path: ./*.snap
+  # Commented out until we can provide the necessary launchpad credentials.
+  #  snap-remote-build:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - name: Start installing snapcraft
+  #        run: echo SNAP_JOB=$(sudo snap install --classic --no-wait snapcraft) >> $GITHUB_OUTPUT
+  #        id: install
+  #      - name: Checkout code
+  #        uses: actions/checkout@v3
+  #        with:
+  #          fetch-depth: 0
+  #      - name: Remote-build snap
+  #        id: snapcraft
+  #        run: |
+  #          sudo snap watch ${{ steps.install.outputs.SNAP_JOB }}
+  #          snapcraft remote-build --launchpad-accept-public-upload
+  #      - name: Upload snap artifacts
+  #        uses: actions/upload-artifact@v4
+  #        with:
+  #          name: snap
+  #          path: ./*.snap
 
   snap-tests:
     needs: [snap-build]
@@ -161,7 +185,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
           path: snap-artifacts
@@ -204,19 +228,20 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install dependencies
         run: |
           pip install -U pyinstaller -r requirements.txt
+          pip install .
       - name: Build
         run: |
           pyinstaller charmcraft.spec
       - name: Upload unsigned exe
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: snap
+          name: windows-exe
           path: dist\charmcraft.exe
       - name: Smoke test executable
         run: |
@@ -253,9 +278,57 @@ jobs:
           echo "Test signing charmcraft msix installer..."
           & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
       - name: Upload installer(s)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: installers
           path: |
             dist\charmcraft-installer-self-signed.exe
             dist\charmcraft-installer.msix
+
+  macos-smoke-test:
+    strategy:
+      matrix:
+        os: [macos-12, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Installing and caching homebrew using the action should speed up subsequent CI:
+      # https://github.com/Homebrew/actions/tree/master/setup-homebrew
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Cache Homebrew Bundler RubyGems
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+          key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+          restore-keys: ${{ runner.os }}-rubygems-
+      - name: Install Homebrew Bundler RubyGems
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: brew install-bundler-gems
+      - name: Install Multipass
+        run: |
+          brew install multipass
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Build and install Charmcraft
+        run: |
+          pipx install .
+      - name: Check for fully-configured multipass
+        run: |
+          while ! multipass version; do
+            sleep 1
+          done
+      - name: Init and pack
+        run: |
+          mkdir test-charm
+          cd test-charm
+          export CRAFT_VERBOSITY_LEVEL=trace
+          charmcraft init --profile=machine
+          charmcraft pack
+          test -f *.charm

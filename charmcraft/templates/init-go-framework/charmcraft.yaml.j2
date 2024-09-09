@@ -1,0 +1,55 @@
+# This file configures Charmcraft.
+# See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+name: {{ name }}
+
+type: charm
+
+base: ubuntu@24.04
+
+# the platforms this charm should be built on and run on.
+# you can check your architecture with `dpkg --print-architecture`
+platforms:
+  amd64:
+  # arm64:
+  # ppc64el:
+  # s390x:
+
+# (Required)
+summary: A very short one-line summary of the Go application.
+
+# (Required)
+description: |
+  A comprehensive overview of your Go application.
+
+extensions:
+  - go-framework
+
+# Uncomment the integrations used by your application
+# Integrations set to "optional: false" will block the charm
+# until the applications are integrated.
+# requires:
+#   mysql:
+#     interface: mysql_client
+#     optional: false
+#     limit: 1
+#   postgresql:
+#     interface: postgresql_client
+#     optional: false
+#     limit: 1
+#   mongodb:
+#     interface: mongodb_client
+#     optional: false
+#     limit: 1
+#   redis:
+#     interface: redis
+#     optional: false
+#     limit: 1
+#   s3:
+#     interface: s3
+#     optional: false
+#     limit: 1
+#   saml:
+#     interface: saml
+#     optional: false
+#     limit: 1

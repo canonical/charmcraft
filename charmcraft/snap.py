@@ -17,7 +17,6 @@
 """Logic for snap configuration."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 import snaphelpers
 
@@ -26,7 +25,7 @@ import snaphelpers
 class CharmcraftSnapConfiguration:
     """Charmcraft's snap configuration options."""
 
-    provider: Optional[str] = None
+    provider: str | None = None
 
 
 def _get_config_key(*, snap_config: snaphelpers.SnapConfig, key: str, default=None):
@@ -36,7 +35,7 @@ def _get_config_key(*, snap_config: snaphelpers.SnapConfig, key: str, default=No
     """
     try:
         return snap_config.get(key)
-    except snaphelpers._conf.UnknownConfigKey:
+    except snaphelpers.UnknownConfigKey:
         return default
 
 

@@ -16,7 +16,7 @@
 
 """Craft-parts setup, lifecycle and plugins."""
 
-from typing import Any, Dict
+from typing import Any
 
 from craft_parts import plugins
 from craft_parts.parts import PartSpec
@@ -42,7 +42,7 @@ def setup_parts():
     plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
 
 
-def process_part_config(data: Dict[str, Any]) -> Dict[str, Any]:
+def process_part_config(data: dict[str, Any]) -> dict[str, Any]:
     """Validate and fill the given part data against/with common and plugin models.
 
     :param data: The part data to use.
@@ -70,8 +70,8 @@ def process_part_config(data: Dict[str, Any]) -> Dict[str, Any]:
 
     # get plugin properties data if it's model based (otherwise it's empty), and
     # update with the received config
-    if isinstance(plugin_properties, plugins.PluginModel):
-        full_config = plugin_properties.dict(by_alias=True)
+    if isinstance(plugin_properties, plugins.PluginProperties):
+        full_config = plugin_properties.model_dump(by_alias=True, exclude_unset=True)
     else:
         full_config = {}
     full_config.update(data)

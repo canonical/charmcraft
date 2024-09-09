@@ -16,10 +16,10 @@
 
 """Logic dealing with bases."""
 
-from typing import Tuple, Union
+from craft_application import util
 
 from charmcraft.models.charmcraft import Base
-from charmcraft.utils import get_host_architecture, get_os_platform
+from charmcraft.utils import get_os_platform
 
 
 def get_host_as_base() -> Base:
@@ -30,14 +30,14 @@ def get_host_as_base() -> Base:
     :returns: Base configuration matching host.
     """
     os_platform = get_os_platform()
-    host_arch = get_host_architecture()
+    host_arch = util.get_host_architecture()
     name = os_platform.system.lower()
     channel = os_platform.release
 
     return Base(name=name, channel=channel, architectures=[host_arch])
 
 
-def check_if_base_matches_host(base: Base) -> Tuple[bool, Union[str, None]]:
+def check_if_base_matches_host(base: Base) -> tuple[bool, str | None]:
     """Check if given base matches the host.
 
     :param base: Base to check.

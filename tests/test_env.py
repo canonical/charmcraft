@@ -18,7 +18,7 @@ import pathlib
 
 import pytest
 
-from charmcraft import env
+from charmcraft import const, env
 
 
 def test_get_managed_environment_home_path():
@@ -37,18 +37,6 @@ def test_get_managed_environment_project_path():
     dirpath = env.get_managed_environment_project_path()
 
     assert dirpath == pathlib.Path("/root/project")
-
-
-def test_get_managed_environment_snap_channel_none(monkeypatch):
-    monkeypatch.delenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", raising=False)
-
-    assert env.get_managed_environment_snap_channel() is None
-
-
-def test_get_managed_environment_snap_channel(monkeypatch):
-    monkeypatch.setenv("CHARMCRAFT_INSTALL_SNAP_CHANNEL", "latest/edge")
-
-    assert env.get_managed_environment_snap_channel() == "latest/edge"
 
 
 @pytest.mark.parametrize(
@@ -75,35 +63,6 @@ def test_is_charmcraft_running_from_snap(monkeypatch, snap_name, snap, result):
 
 
 @pytest.mark.parametrize(
-    ("developer", "result"),
-    [
-        (None, False),
-        ("y", True),
-        ("n", False),
-        ("Y", True),
-        ("N", False),
-        ("true", True),
-        ("false", False),
-        ("TRUE", True),
-        ("FALSE", False),
-        ("yes", True),
-        ("no", False),
-        ("YES", True),
-        ("NO", False),
-        ("1", True),
-        ("0", False),
-    ],
-)
-def test_is_charmcraft_running_in_developer_mode(monkeypatch, developer, result):
-    if developer is None:
-        monkeypatch.delenv("CHARMCRAFT_DEVELOPER", raising=False)
-    else:
-        monkeypatch.setenv("CHARMCRAFT_DEVELOPER", developer)
-
-    assert env.is_charmcraft_running_in_developer_mode() == result
-
-
-@pytest.mark.parametrize(
     ("managed", "result"),
     [
         (None, False),
@@ -115,8 +74,8 @@ def test_is_charmcraft_running_in_developer_mode(monkeypatch, developer, result)
 )
 def test_is_charmcraft_running_in_managed_mode(monkeypatch, managed, result):
     if managed is None:
-        monkeypatch.delenv("CHARMCRAFT_MANAGED_MODE", raising=False)
+        monkeypatch.delenv(const.MANAGED_MODE_ENV_VAR, raising=False)
     else:
-        monkeypatch.setenv("CHARMCRAFT_MANAGED_MODE", managed)
+        monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, managed)
 
     assert env.is_charmcraft_running_in_managed_mode() == result

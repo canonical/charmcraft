@@ -17,11 +17,19 @@
 """Service class for creating providers."""
 from __future__ import annotations
 
+import atexit
+
+try:
+    import fcntl
+except ModuleNotFoundError:  # Not available on Windows.
+    fcntl = None  # type: ignore[assignment]
 import os
 import pathlib
+from typing import cast
 
 import craft_providers
 from craft_application import services
+from craft_cli import emit
 from craft_providers import bases
 
 from charmcraft import env
@@ -56,12 +64,42 @@ class ProviderService(services.ProviderService):
 
         If no cache_path is included, adds one.
         """
+        cache_path = cast(pathlib.Path, kwargs.get("cache_path", env.get_host_shared_cache_path()))
+        our_lock = _maybe_lock_cache(cache_path)
+
         # Forward the shared cache path.
-        if "cache_path" not in kwargs:
-            kwargs["cache_path"] = env.get_host_shared_cache_path()
+        kwargs["cache_path"] = cache_path if our_lock else None
         return super().get_base(
             base_name,
             instance_name=instance_name,
             # craft-application annotation is incorrect
             **kwargs,  # type: ignore[arg-type]
         )
+
+
+def _maybe_lock_cache(path: pathlib.Path) -> bool:
+    """Lock the cache so we only have one copy of Charmcraft using it at a time."""
+    if fcntl is None:  # Don't lock on Windows - just don't cache.
+        return False
+    cache_lock_path = path / "charmcraft.lock"
+
+    emit.trace("Attempting to lock the cache path")
+    lock_file = cache_lock_path.open("w+")
+    try:
+        # Exclusive lock, but non-blocking.
+        fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        emit.progress(
+            "Shared cache locked by another process; running without cache.", permanent=True
+        )
+        return False
+    else:
+        pid = str(os.getpid())
+        lock_file.write(pid)
+        lock_file.flush()
+        os.fsync(lock_file.fileno())
+        emit.trace(f"Cache path locked by this process ({pid})")
+        atexit.register(fcntl.flock, lock_file, fcntl.LOCK_UN)
+        atexit.register(cache_lock_path.unlink, missing_ok=True)
+
+        return True

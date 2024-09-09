@@ -64,6 +64,7 @@ class ImageService(craft_application.AppService):
         try:
             self._docker = docker.from_env()
         except docker.errors.DockerException:
+            logger.debug("could not create Docker client. Docker may not be installed. Ignoring...")
             self._docker = None
 
     def copy(

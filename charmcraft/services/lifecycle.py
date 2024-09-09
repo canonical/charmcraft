@@ -15,10 +15,15 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Service class for running craft lifecycle commands."""
 from __future__ import annotations
+from collections.abc import Iterable
 
 from craft_application import services, util
 from craft_cli import emit
+import craft_parts
+import craft_parts.callbacks
 from overrides import override
+
+from charmcraft import const
 
 
 class LifecycleService(services.LifecycleService):
@@ -28,6 +33,7 @@ class LifecycleService(services.LifecycleService):
         """Do Charmcraft-specific setup work."""
         self._manager_kwargs.setdefault("project_name", self._project.name)
         super().setup()
+        craft_parts.callbacks.register_stage_packages_filter(self._filter_stage_packages)
 
     @override
     def _get_build_for(self) -> str:
@@ -55,3 +61,16 @@ class LifecycleService(services.LifecycleService):
                 return arch
 
         return host_arch
+
+
+    def _filter_stage_packages(self, project_info: craft_parts.ProjectInfo) -> Iterable[str]:
+        """Filter stage packages for craft-parts.
+
+        This function is a callback to be used with craft-parts's register_stage_packages_filter.
+
+        :param project_info: The information about the craft-parts project.
+        :returns: An iterable of package names to be filtered.
+        """
+        return const.FILTERED_STAGE_PACKAGES.get(
+            self._build_plan[0].base, []
+        )

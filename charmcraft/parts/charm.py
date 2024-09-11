@@ -186,26 +186,6 @@ class CharmPlugin(plugins.Plugin):
                 "libyaml-dev",
             }
         elif platform.is_yum_based():
-            try:
-                os_release = os_utils.OsRelease()
-                if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
-                    # CentOS 7 Python 3.8 from SCL repo
-                    return {
-                        "autoconf",
-                        "automake",
-                        "gcc",
-                        "gcc-c++",
-                        "git",
-                        "make",
-                        "patch",
-                        "rh-python38-python-devel",
-                        "rh-python38-python-pip",
-                        "rh-python38-python-setuptools",
-                        "rh-python38-python-wheel",
-                    }
-            except (OsReleaseIdError, OsReleaseVersionIdError):
-                pass
-
             return {
                 "autoconf",
                 "automake",
@@ -233,9 +213,6 @@ class CharmPlugin(plugins.Plugin):
             # Since we don't need the legacy provider, this works around that bug.
             "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"
         }
-        os_special_paths = self._get_os_special_priority_paths()
-        if os_special_paths:
-            environment["PATH"] = os_special_paths + ":${PATH}"
 
         return environment
 
@@ -324,10 +301,6 @@ class CharmPlugin(plugins.Plugin):
                         base_tools.remove(pkg)
 
                 os_release = os_utils.OsRelease()
-                if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
-                    # CentOS 7 compatibility, bootstrap base tools use binary packages
-                    for pkg in base_tools:
-                        parameters.extend(["-b", pkg])
 
                 # build base tools from source
                 for pkg in base_tools:
@@ -349,13 +322,3 @@ class CharmPlugin(plugins.Plugin):
     def post_build_callback(self, step_info):
         """Collect metrics left by charm_builder.py."""
         instrum.merge_from(env.get_charm_builder_metrics_path())
-
-    def _get_os_special_priority_paths(self) -> str | None:
-        """Return a str of PATH for special OS."""
-        with suppress(OsReleaseIdError, OsReleaseVersionIdError):
-            os_release = os_utils.OsRelease()
-            if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
-                # CentOS 7 Python 3.8 from SCL repo
-                return "/opt/rh/rh-python38/root/usr/bin"
-
-        return None

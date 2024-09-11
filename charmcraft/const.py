@@ -60,7 +60,6 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@22.04",
     "ubuntu@23.10",
     "ubuntu@24.04",
-    "centos@7",
     "almalinux@9",
 ]
 BaseStr = CommonBaseStr
@@ -76,7 +75,6 @@ SUPPORTED_BASES = frozenset(
         BaseName("ubuntu", "23.10"),
         BaseName("ubuntu", "24.04"),
         BaseName("ubuntu", "devel"),
-        BaseName("centos", "7"),
         BaseName("almalinux", "9"),
     )
 )

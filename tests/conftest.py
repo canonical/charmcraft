@@ -348,7 +348,7 @@ def charm_plugin(tmp_path):
         "charm-python-packages": ["pkg3", "pkg4"],
         "charm-requirements": requirement_files,
     }
-    plugin_properties = parts.CharmPluginProperties.unmarshal(spec)
+    plugin_properties = charmcraft.parts.plugins.CharmPluginProperties.unmarshal(spec)
     part_spec = plugins.extract_part_properties(spec, plugin_name="charm")
     part = craft_parts.Part(
         "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
@@ -370,7 +370,7 @@ def bundle_plugin(tmp_path):
         "plugin": "bundle",
         "source": str(tmp_path),
     }
-    plugin_properties = charmcraft.parts.bundle.BundlePluginProperties.unmarshal(spec)
+    plugin_properties = charmcraft.parts.plugins.BundlePluginProperties.unmarshal(spec)
     part_spec = plugins.extract_part_properties(spec, plugin_name="bundle")
     part = craft_parts.Part(
         "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties

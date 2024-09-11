@@ -14,19 +14,56 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """General fixtures for integration tests."""
+import pathlib
+from typing import Any
 from unittest import mock
 
 import craft_store
+import distro
 import pytest
+from craft_application import util
 
 from charmcraft import application, services
 from charmcraft.application import commands
+from charmcraft.models import project
 
 
 @pytest.fixture
-def service_factory():
+def project_path(tmp_path: pathlib.Path):
+    path = tmp_path / "project"
+    path.mkdir()
+    return path
+
+
+@pytest.fixture
+def charm_project(basic_charm_dict: dict[str, Any], project_path: pathlib.Path, request):
+    return project.PlatformCharm.unmarshal(
+        basic_charm_dict
+        | {
+            "base": f"{distro.id()}@{distro.version()}",
+            "platforms": {util.get_host_architecture(): None},
+            "parts": {
+                "my-charm": {
+                    "plugin": "poetry",
+                    "source": str(project_path),
+                    "source-type": "local",
+                }
+            },
+        },
+    )
+
+
+@pytest.fixture
+def service_factory(new_path: pathlib.Path, charm_project, default_build_plan, project_path):
     factory = services.CharmcraftServiceFactory(app=application.APP_METADATA)
     factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
+    factory.project = charm_project
+    factory.set_kwargs(
+        "lifecycle",
+        work_dir=new_path,
+        build_plan=default_build_plan,
+        cache_dir="~/.cache",
+    )
     return factory
 
 

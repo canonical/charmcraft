@@ -22,6 +22,7 @@ import pathlib
 import tempfile
 import types
 from collections.abc import Iterator
+from typing import Any
 from unittest import mock
 
 import craft_parts
@@ -30,6 +31,7 @@ import responses as responses_module
 import yaml
 from craft_application import models, util
 from craft_parts import callbacks, plugins
+from craft_parts.plugins.poetry_plugin import PoetryPluginProperties
 from craft_providers import bases
 
 import charmcraft.parts
@@ -39,24 +41,33 @@ from charmcraft.models import project
 
 
 @pytest.fixture
-def simple_charm():
-    return project.BasesCharm(
-        type="charm",
-        name="charmy-mccharmface",
-        summary="Charmy!",
-        description="Very charming!",
-        bases=[
-            {
-                "build-on": [
-                    {
-                        "name": "ubuntu",
-                        "channel": "22.04",
-                        "architectures": [util.get_host_architecture()],
-                    }
-                ],
-                "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
-            }
-        ],
+def basic_charm_dict() -> dict[str, Any]:
+    return {
+        "type": "charm",
+        "name": "charmy-mccharmface",
+        "summary": "Charmy!",
+        "description": "Very charming!",
+    }
+
+
+@pytest.fixture
+def simple_charm(basic_charm_dict: dict[str, Any]):
+    return project.BasesCharm.unmarshal(
+        basic_charm_dict
+        | {
+            "bases": [
+                {
+                    "build-on": [
+                        {
+                            "name": "ubuntu",
+                            "channel": "22.04",
+                            "architectures": [util.get_host_architecture()],
+                        }
+                    ],
+                    "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+                }
+            ],
+        }
     )
 
 
@@ -383,3 +394,27 @@ def bundle_plugin(tmp_path):
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
     return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
+
+
+@pytest.fixture
+def poetry_plugin(tmp_path: pathlib.Path):
+    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+    spec = {
+        "plugin": "poetry",
+        "source": str(tmp_path),
+    }
+    plugin_properties = PoetryPluginProperties.unmarshal(spec)
+    part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name="poetry")
+    part = craft_parts.Part(
+        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+    )
+    project_info = craft_parts.ProjectInfo(
+        application_name="test",
+        project_dirs=project_dirs,
+        cache_dir=tmp_path,
+    )
+    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
+
+    return craft_parts.plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )

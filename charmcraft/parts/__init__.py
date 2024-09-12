@@ -39,13 +39,13 @@ def get_app_plugins() -> dict[str, type[craft_parts.plugins.Plugin]]:
         "bundle": plugins.BundlePlugin,
         "charm": plugins.CharmPlugin,
         "poetry": plugins.PoetryPlugin,
+        "python": plugins.PythonPlugin,
         "reactive": plugins.ReactivePlugin,
     }
 
 
 def setup_parts() -> None:
     """Initialize craft-parts plugins."""
-    craft_parts.plugins.unregister("poetry")
     craft_parts.plugins.register(get_app_plugins())
 
 

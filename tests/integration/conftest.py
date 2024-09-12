@@ -18,6 +18,7 @@ import pathlib
 from typing import Any
 from unittest import mock
 
+import craft_platforms
 import craft_store
 import distro
 import pytest
@@ -37,18 +38,16 @@ def project_path(tmp_path: pathlib.Path):
 
 @pytest.fixture
 def charm_project(basic_charm_dict: dict[str, Any], project_path: pathlib.Path, request):
+    # Workaround for testing across systems. If we're not on Ubuntu, make an Ubuntu 24.04 charm.
+    # If we are on Ubuntu, use the current version.
+    distro_id = "ubuntu"
+    distro_version = distro.version() if craft_platforms.is_ubuntu_like() else "24.04"
+
     return project.PlatformCharm.unmarshal(
         basic_charm_dict
         | {
-            "base": f"{distro.id()}@{distro.version()}",
+            "base": f"{distro_id}@{distro_version}",
             "platforms": {util.get_host_architecture(): None},
-            "parts": {
-                "my-charm": {
-                    "plugin": "poetry",
-                    "source": str(project_path),
-                    "source-type": "local",
-                }
-            },
         },
     )
 

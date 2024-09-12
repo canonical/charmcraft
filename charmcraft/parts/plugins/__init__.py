@@ -18,7 +18,8 @@
 
 from ._bundle import BundlePlugin, BundlePluginProperties
 from ._charm import CharmPlugin, CharmPluginProperties
-from ._poetry import PoetryPlugin
+from ._poetry import PoetryPlugin, PoetryPluginProperties
+from ._python import PythonPlugin, PythonPluginProperties
 from ._reactive import ReactivePlugin, ReactivePluginProperties
 
 __all__ = [
@@ -27,6 +28,9 @@ __all__ = [
     "CharmPlugin",
     "CharmPluginProperties",
     "PoetryPlugin",
+    "PoetryPluginProperties",
+    "PythonPlugin",
+    "PythonPluginProperties",
     "ReactivePlugin",
     "ReactivePluginProperties",
 ]

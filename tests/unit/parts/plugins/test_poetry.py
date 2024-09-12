@@ -16,55 +16,22 @@
 """Unit tests for the Charmcraft-specific poetry plugin."""
 
 import pathlib
+import sys
 
-import craft_parts
 import pytest
 import pytest_check
-from craft_parts.plugins.poetry_plugin import PoetryPluginProperties
 
 from charmcraft.parts import plugins
 from charmcraft.parts.plugins._poetry import POETRY_INSTALL_COMMAND
 
-
-@pytest.fixture
-def poetry(tmp_path: pathlib.Path):
-    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
-    spec = {
-        "plugin": "poetry",
-        "source": str(tmp_path),
-    }
-    plugin_properties = PoetryPluginProperties.unmarshal(spec)
-    part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name="poetry")
-    part = craft_parts.Part(
-        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
-    )
-    project_info = craft_parts.ProjectInfo(
-        application_name="test",
-        project_dirs=project_dirs,
-        cache_dir=tmp_path,
-    )
-    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
-
-    return craft_parts.plugins.get_plugin(
-        part=part, part_info=part_info, properties=plugin_properties
-    )
-
-
-@pytest.fixture
-def build_path(tmp_path: pathlib.Path) -> pathlib.Path:
-    return tmp_path / "parts" / "foo" / "build"
-
-
-@pytest.fixture
-def install_path(tmp_path: pathlib.Path) -> pathlib.Path:
-    return tmp_path / "parts" / "foo" / "install"
+pytestmark = [pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")]
 
 
 def test_get_build_environment(poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path):
     env = poetry_plugin.get_build_environment()
 
     assert env["PIP_NO_BINARY"] == ":all:"
-    assert env["PATH"] == f"${{HOME}}/.local/bin:{install_path}/bin:${{PATH}}"
+    assert env["PATH"] == f"{install_path}/bin:${{PATH}}:${{HOME}}/.local/bin"
 
 
 def test_get_build_packages(poetry_plugin: plugins.PoetryPlugin):
@@ -79,6 +46,15 @@ def test_get_pull_commands(poetry_plugin: plugins.PoetryPlugin):
 
 def test_get_venv_directory(poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path):
     assert poetry_plugin._get_venv_directory() == install_path / "venv"
+
+
+def test_get_pip_install_commands(poetry_plugin: plugins.PoetryPlugin):
+    poetry_plugin._get_pip = lambda: "/python -m pip"
+
+    assert poetry_plugin._get_pip_install_commands(pathlib.Path("/my dir/reqs.txt")) == [
+        "/python -m pip install --no-deps '--requirement=/my dir/reqs.txt'",
+        "/python -m pip check",
+    ]
 
 
 def test_get_package_install_commands(
@@ -114,3 +90,19 @@ def test_get_package_install_commands(
     pytest_check.equal(
         poetry_plugin._get_package_install_commands(), [*default_commands, copy_lib_cmd]
     )
+
+
+def test_get_rm_command(poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path):
+    assert f"rm -rf {install_path / 'venv/bin'}" in poetry_plugin.get_build_commands()
+
+
+def test_no_get_rm_command(
+    tmp_path, poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path
+):
+    spec = {
+        "plugin": "poetry",
+        "source": str(tmp_path),
+        "poetry-keep-bins": True,
+    }
+    poetry_plugin._options = plugins.PoetryPluginProperties.unmarshal(spec)
+    assert f"rm -rf {install_path / 'venv/bin'}" not in poetry_plugin.get_build_commands()

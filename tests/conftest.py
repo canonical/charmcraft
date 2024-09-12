@@ -31,7 +31,6 @@ import responses as responses_module
 import yaml
 from craft_application import models, util
 from craft_parts import callbacks, plugins
-from craft_parts.plugins.poetry_plugin import PoetryPluginProperties
 from craft_providers import bases
 
 import charmcraft.parts
@@ -403,8 +402,32 @@ def poetry_plugin(tmp_path: pathlib.Path):
         "plugin": "poetry",
         "source": str(tmp_path),
     }
-    plugin_properties = PoetryPluginProperties.unmarshal(spec)
+    plugin_properties = parts.plugins.PoetryPluginProperties.unmarshal(spec)
     part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name="poetry")
+    part = craft_parts.Part(
+        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+    )
+    project_info = craft_parts.ProjectInfo(
+        application_name="test",
+        project_dirs=project_dirs,
+        cache_dir=tmp_path,
+    )
+    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
+
+    return craft_parts.plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )
+
+
+@pytest.fixture
+def python_plugin(tmp_path: pathlib.Path):
+    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+    spec = {
+        "plugin": "python",
+        "source": str(tmp_path),
+    }
+    plugin_properties = parts.plugins.PythonPluginProperties.unmarshal(spec)
+    part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name="python")
     part = craft_parts.Part(
         "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
     )

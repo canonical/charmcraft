@@ -13,10 +13,9 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Integration tests for the Charmcraft-specific poetry plugin."""
+"""Integration tests for the Charmcraft-specific python plugin."""
 
 import pathlib
-import subprocess
 import sys
 from typing import Any
 
@@ -39,7 +38,7 @@ def charm_project(basic_charm_dict: dict[str, Any], project_path: pathlib.Path, 
             "platforms": {util.get_host_architecture(): None},
             "parts": {
                 "my-charm": {
-                    "plugin": "poetry",
+                    "plugin": "python",
                     "source": str(project_path),
                     "source-type": "local",
                 }
@@ -49,18 +48,15 @@ def charm_project(basic_charm_dict: dict[str, Any], project_path: pathlib.Path, 
 
 
 @pytest.fixture
-def poetry_project(project_path: pathlib.Path) -> None:
-    subprocess.run(
-        ["poetry", "init", "--name=test-charm", f"--directory={project_path}", "--no-interaction"],
-        check=False,
-    )
-    source_dir = project_path / "src"
-    source_dir.mkdir()
-    (source_dir / "charm.py").write_text("# Charm file")
+def python_project(project_path: pathlib.Path) -> None:
+    source_path = project_path / "src"
+    source_path.mkdir()
+    (source_path / "charm.py").write_text("# Charm file")
+    (project_path / "requirements.txt").write_text("distro==1.4.0")
 
 
-@pytest.mark.usefixtures("poetry_project")
-def test_poetry_plugin(
+@pytest.mark.usefixtures("python_project")
+def test_python_plugin(
     build_plan,
     service_factory: services.CharmcraftServiceFactory,
     tmp_path: pathlib.Path,
@@ -74,6 +70,7 @@ def test_poetry_plugin(
     # Check that the part install directory looks correct.
     assert (install_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (install_path / "venv" / "lib").is_dir()
+    assert len(list((install_path / "venv" / "lib").glob("python*/site-packages/distro.py"))) == 1
 
     # Check that the stage directory looks correct.
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"

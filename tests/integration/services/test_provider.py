@@ -27,25 +27,50 @@ from charmcraft.services.provider import _maybe_lock_cache
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
-def test_locks_cache(
+def test_lock_cache(
     service_factory: services.CharmcraftServiceFactory,
     tmp_path: pathlib.Path,
     default_build_info: BuildInfo,
     emitter: RecordingEmitter,
 ):
-    _maybe_lock_cache(tmp_path)
-    assert (tmp_path / "charmcraft.lock").exists()
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
         "work_dir": pathlib.Path(__file__).parent,
-        "cache_path": tmp_path,
+        "cache_path": cache_path,
+    }
+    assert not (cache_path / "charmcraft.lock").exists()
+
+    with provider.instance(**provider_kwargs):
+        # Test that the cache lock gets created
+        assert (cache_path / "charmcraft.lock").is_file()
+
+    (cache_path / "charmcraft.lock").write_text("Test that file isn't locked.")
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
+def test_locked_cache_no_cache(
+    service_factory: services.CharmcraftServiceFactory,
+    tmp_path: pathlib.Path,
+    default_build_info: BuildInfo,
+    emitter: RecordingEmitter,
+):
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+    _maybe_lock_cache(cache_path)
+    assert (cache_path / "charmcraft.lock").exists()
+    provider = service_factory.provider
+    provider_kwargs = {
+        "build_info": default_build_info,
+        "work_dir": pathlib.Path(__file__).parent,
+        "cache_path": cache_path,
     }
 
     with provider.instance(**provider_kwargs) as instance:
-        # Because we've already locked the cache, we shouldn't see the lockfile.
-        lock_test = instance.execute_run(["test", "-f", "/root/.cache/charmcraft.lock"])
-        assert lock_test.returncode == 1
+        # Because we've already locked the cache, we don't get a subdirectory in the cache.
+        assert list(cache_path.iterdir()) == [cache_path / "charmcraft.lock"]
 
         # Create a file in the cache and ensure it's not visible in the outer fs
         instance.execute_run(["touch", "/root/.cache/cache_cached"])

@@ -243,6 +243,7 @@ class CharmBuilder:
                     [
                         pip_cmd,
                         "install",
+                        "--force-reinstall",
                         f"pip@{KNOWN_GOOD_PIP_URL}",
                     ]
                 )

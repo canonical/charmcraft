@@ -24,27 +24,8 @@ from ..errors import ExtensionError
 from .extension import Extension
 
 
-class _GunicornBase(Extension):
-    """A base class for 12-factor WSGI applications."""
-
-    _WEBSERVER_OPTIONS = {
-        "webserver-keepalive": {
-            "type": "int",
-            "description": "Time in seconds for webserver to wait for requests on a Keep-Alive connection.",
-        },
-        "webserver-threads": {
-            "type": "int",
-            "description": "Run each webserver worker with the specified number of threads.",
-        },
-        "webserver-timeout": {
-            "type": "int",
-            "description": "Time in seconds to kill and restart silent webserver workers.",
-        },
-        "webserver-workers": {
-            "type": "int",
-            "description": "The number of webserver worker processes for handling requests.",
-        },
-    }
+class _AppBase(Extension):
+    """A base class for 12-factor applications."""
 
     _CHARM_LIBS = [
         {"lib": "traefik_k8s.ingress", "version": "2"},
@@ -71,7 +52,12 @@ class _GunicornBase(Extension):
         return True
 
     framework: str
-    actions: dict
+    actions: dict = {
+        "rotate-secret-key": {
+            "description": "Rotate the secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
+        }
+    }
+
     options: dict
 
     def _get_nested(self, obj: dict, path: str) -> dict:
@@ -138,10 +124,10 @@ class _GunicornBase(Extension):
         return {
             "assumes": ["k8s-api"],
             "containers": {
-                f"{self.framework}-app": {"resource": f"{self.framework}-app-image"},
+                self.get_container_name(): {"resource": self.get_image_name()},
             },
             "resources": {
-                f"{self.framework}-app-image": {
+                self.get_image_name(): {
                     "type": "oci-image",
                     "description": f"{self.framework} application image.",
                 },
@@ -157,7 +143,7 @@ class _GunicornBase(Extension):
                 "metrics-endpoint": {"interface": "prometheus_scrape"},
                 "grafana-dashboard": {"interface": "grafana_dashboard"},
             },
-            "config": {"options": {**self._WEBSERVER_OPTIONS, **self.options}},
+            "config": {"options": self.options},
             "parts": {
                 "charm": {
                     "plugin": "charm",
@@ -184,17 +170,41 @@ class _GunicornBase(Extension):
         """Return the parts to add to parts."""
         return {}
 
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return f"{self.framework}-app"
 
-class FlaskFramework(_GunicornBase):
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return f"{self.framework}-app-image"
+
+
+GUNICORN_WEBSERVER_OPTIONS = {
+    "webserver-keepalive": {
+        "type": "int",
+        "description": "Time in seconds for webserver to wait for requests on a Keep-Alive connection.",
+    },
+    "webserver-threads": {
+        "type": "int",
+        "description": "Run each webserver worker with the specified number of threads.",
+    },
+    "webserver-timeout": {
+        "type": "int",
+        "description": "Time in seconds to kill and restart silent webserver workers.",
+    },
+    "webserver-workers": {
+        "type": "int",
+        "description": "The number of webserver worker processes for handling requests.",
+    },
+}
+
+
+class FlaskFramework(_AppBase):
     """Extension for 12-factor Flask applications."""
 
     framework = "flask"
-    actions = {
-        "rotate-secret-key": {
-            "description": "Rotate the flask secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
-        }
-    }
     options = {
+        **GUNICORN_WEBSERVER_OPTIONS,
         "flask-application-root": {
             "type": "string",
             "description": "Path in which the application / web server is mounted. This configuration will set the FLASK_APPLICATION_ROOT environment variable. Run `app.config.from_prefixed_env()` in your Flask application in order to receive this configuration.",
@@ -233,14 +243,12 @@ class FlaskFramework(_GunicornBase):
         return False
 
 
-class DjangoFramework(_GunicornBase):
+class DjangoFramework(_AppBase):
     """Extension for 12-factor Django applications."""
 
     framework = "django"
     actions = {
-        "rotate-secret-key": {
-            "description": "Rotate the django secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
-        },
+        **_AppBase.actions,
         "create-superuser": {
             "description": "Create a new Django superuser account.",
             "params": {"username": {"type": "string"}, "email": {"type": "string"}},
@@ -248,6 +256,7 @@ class DjangoFramework(_GunicornBase):
         },
     }
     options = {
+        **GUNICORN_WEBSERVER_OPTIONS,
         "django-debug": {
             "type": "boolean",
             "default": False,
@@ -262,3 +271,46 @@ class DjangoFramework(_GunicornBase):
             "description": "A comma-separated list of host/domain names that this Django site can serve. This configuration will set the DJANGO_ALLOWED_HOSTS environment variable with its content being a JSON encoded list.",
         },
     }
+
+
+class GoFramework(_AppBase):
+    """Extension for 12-factor Go applications."""
+
+    framework = "go"
+    options = {
+        "app-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Default port where the application will listen on.",
+        },
+        "metrics-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Port where the prometheus metrics will be scraped.",
+        },
+        "metrics-path": {
+            "type": "string",
+            "default": "/metrics",
+            "description": "Path where the prometheus metrics will be scraped.",
+        },
+        "app-secret-key": {
+            "type": "string",
+            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+        },
+    }
+
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "24.04")]
+
+    @override
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return "app-image"
+
+    @override
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return "app"

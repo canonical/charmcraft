@@ -77,6 +77,61 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
+2.7.2 (2024-09-09)
+------------------
+
+We've backported some 3.x bugfixes to the 2.7 series.
+
+Store
+=====
+
+Skopeo now uses an insecure policy when copying OCI images, allowing it to run
+even when the user hasn't set up OCI image policies.
+
+Meta
+====
+
+Build fixes to the published version
+
+For a complete list of commits, see the `2.7.2`_ release on GitHub.
+
+
+3.2.0 (2024-08-28)
+------------------
+
+We have some fixes to the 3.1 series, as well as the features below.
+The most notable under-the-hood work is that Charmcraft now uses pydantic 2.
+
+Core
+====
+
+You can now set ``charm-user`` in ``charmcraft.yaml`` to set what user Juju 3.6.0+ will
+use for running a kubernetes charm.
+
+Plugins
+#######
+
+reactive
+""""""""
+
+Fix: ``actions.yaml`` is no longer overwritten.
+
+Extensions
+##########
+
+go-framework
+""""""""""""
+
+New ``go-framework`` extension for easily charming go applications.
+
+Documentation
+=============
+
+The changelog is now included in the Charmcraft documentation. For completeness, we've
+back-filled the log with all the important changes from previous releases documented
+on GitHub.
+
+For a complete list of commits, see the `3.2.0`_ release on GitHub.
 
 3.1.2 (2024-08-07)
 ------------------
@@ -252,7 +307,9 @@ page.
 .. _2.6.0: https://github.com/canonical/charmcraft/releases/tag/2.6.0
 .. _2.7.0: https://github.com/canonical/charmcraft/releases/tag/2.7.0
 .. _2.7.1: https://github.com/canonical/charmcraft/releases/tag/2.7.1
+.. _2.7.2: https://github.com/canonical/charmcraft/releases/tag/2.7.2
 .. _3.0.0: https://github.com/canonical/charmcraft/releases/tag/3.0.0
 .. _3.1.0: https://github.com/canonical/charmcraft/releases/tag/3.1.0
 .. _3.1.1: https://github.com/canonical/charmcraft/releases/tag/3.1.1
 .. _3.1.2: https://github.com/canonical/charmcraft/releases/tag/3.1.2
+.. _3.2.0: https://github.com/canonical/charmcraft/releases/tag/3.2.0

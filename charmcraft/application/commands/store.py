@@ -18,6 +18,7 @@
 import argparse
 import collections
 import dataclasses
+import datetime
 import os
 import pathlib
 import re
@@ -31,7 +32,6 @@ from collections.abc import Collection
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
-import craft_platforms
 import yaml
 from craft_application import util
 from craft_cli import ArgumentParsingError, emit
@@ -70,6 +70,7 @@ EntityType = _EntityType()
 ResourceType = _ResourceType()
 # the list of valid attenuations to restrict login credentials
 VALID_ATTENUATIONS = {getattr(attenuations, x) for x in dir(attenuations) if x.isupper()}
+BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
 
 
 class LoginCommand(CharmcraftCommand):
@@ -349,7 +350,7 @@ class RegisterBundleNameCommand(CharmcraftCommand):
     name = "register-bundle"
     help_msg = "Register a bundle name in the Store"
     overview = textwrap.dedent(
-        """
+        f"""
         Register a bundle name in the Store.
 
         Claim a name for your bundle in Charmhub. Once you have registered
@@ -368,18 +369,35 @@ class RegisterBundleNameCommand(CharmcraftCommand):
            https://discourse.charmhub.io/c/charm
 
         Registration will take you through login if needed.
+
+        \u001b[31mWARNING:\u001b[0m Charmhub will stop accepting new bundle registrations on 2024-11-01.
+        For more information, see:
+        {BUNDLE_REGISTRATION_REMOVAL_URL}
     """
     )
 
-    def fill_parser(self, parser):
+    def fill_parser(self, parser: argparse.ArgumentParser):
         """Add own parameters to the general parser."""
         parser.add_argument("name", help="The name to register in Charmhub")
 
-    def run(self, parsed_args):
+    def run(self, parsed_args: argparse.Namespace) -> int:
         """Run the command."""
+        if datetime.date.today() >= datetime.date(2024, 11, 1):
+            emit.message(
+                "\u001b[31mERROR:\u001b[0m New bundle registration is discontinued as of 2024-11-01.  For more "
+                f"information, see: {BUNDLE_REGISTRATION_REMOVAL_URL}"
+            )
+            return 1
+        emit.progress(
+            "\u001b[31mWARNING:\u001b[0m New bundle registration will stop working on 2024-11-01. For "
+            f"more information, see: {BUNDLE_REGISTRATION_REMOVAL_URL}",
+            permanent=True,
+        )
         store = Store(env.get_store_config())
         store.register_name(parsed_args.name, EntityType.bundle)
         emit.message(f"You are now the publisher of bundle {parsed_args.name!r} in Charmhub.")
+        # TODO(#1810): Replace this with os.EX_OK
+        return 0
 
 
 class UnregisterNameCommand(CharmcraftCommand):
@@ -2011,11 +2029,11 @@ class UploadResourceCommand(CharmcraftCommand):
                     dest_password=credentials.password,
                 )
 
-            image_arch = [
-                craft_platforms.DebianArchitecture.from_machine(arch).value
+            image_arch = {
+                image_service.convert_go_arch_to_charm_arch(arch).value
                 for arch in image_metadata.architectures
-            ]
-            bases = [{"name": "all", "channel": "all", "architectures": image_arch}]
+            }
+            bases = [{"name": "all", "channel": "all", "architectures": sorted(image_arch)}]
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(

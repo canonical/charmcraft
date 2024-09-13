@@ -94,6 +94,7 @@ assumes:
     - juju >= 3.0
     - juju < 4.0
 - k8s-api
+charm-user: non-root
 containers:
   super-app:
     resource: super-app-image

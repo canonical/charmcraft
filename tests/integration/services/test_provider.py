@@ -16,6 +16,7 @@
 """Integration tests for the provider service."""
 
 import pathlib
+import shutil
 import subprocess
 import sys
 
@@ -37,7 +38,7 @@ def test_lock_cache(
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
     lock_file = cache_path / "charmcraft.lock"
-    bash_lock_cmd = ["bash", "-c", f"flock -n {lock_file} true"]
+    bash_lock_cmd = ["bash", "-c", f"flock -n {lock_file} true"] if shutil.which("flock") else None
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
@@ -49,12 +50,14 @@ def test_lock_cache(
     with provider.instance(**provider_kwargs):
         # Test that the cache lock gets created
         assert lock_file.is_file()
-        with pytest.raises(subprocess.CalledProcessError):
-            # Another process should not be able to lock the file.
-            subprocess.run(bash_lock_cmd, check=True)
+        if bash_lock_cmd:
+            with pytest.raises(subprocess.CalledProcessError):
+                # Another process should not be able to lock the file.
+                subprocess.run(bash_lock_cmd, check=True)
 
     # After exiting we should be able to lock the file.
-    subprocess.run(bash_lock_cmd, check=True)
+    if bash_lock_cmd:
+        subprocess.run(bash_lock_cmd, check=True)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
@@ -68,13 +71,15 @@ def test_locked_cache_no_cache(
     cache_path.mkdir()
     lock_file = cache_path / "charmcraft.lock"
 
-    bash_lock_cmd = ["bash", "-c", f"flock -n {lock_file} true"]
+    bash_lock_cmd = ["bash", "-c", f"flock -n {lock_file} true"] if shutil.which("flock") else None
     # Check that we can lock the file from another process.
-    subprocess.run(bash_lock_cmd, check=True)
+    if bash_lock_cmd:
+        subprocess.run(bash_lock_cmd, check=True)
     _ = _maybe_lock_cache(cache_path)
     # And now we can't.
-    with pytest.raises(subprocess.CalledProcessError):
-        subprocess.run(bash_lock_cmd, check=True)
+    if bash_lock_cmd:
+        with pytest.raises(subprocess.CalledProcessError):
+            subprocess.run(bash_lock_cmd, check=True)
 
     provider = service_factory.provider
     provider_kwargs = {

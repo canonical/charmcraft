@@ -22,7 +22,6 @@ import pytest
 import pytest_check
 
 from charmcraft.parts import plugins
-from charmcraft.parts.plugins._poetry import POETRY_INSTALL_COMMAND
 
 pytestmark = [pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")]
 
@@ -31,17 +30,6 @@ def test_get_build_environment(poetry_plugin: plugins.PoetryPlugin, install_path
     env = poetry_plugin.get_build_environment()
 
     assert env["PIP_NO_BINARY"] == ":all:"
-    assert env["PATH"] == f"{install_path}/bin:${{PATH}}:${{HOME}}/.local/bin"
-
-
-def test_get_build_packages(poetry_plugin: plugins.PoetryPlugin):
-    assert "curl" in poetry_plugin.get_build_packages()
-
-
-def test_get_pull_commands(poetry_plugin: plugins.PoetryPlugin):
-    poetry_plugin._system_has_poetry = lambda: False
-
-    assert poetry_plugin.get_pull_commands()[-1] == POETRY_INSTALL_COMMAND
 
 
 def test_get_venv_directory(poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path):

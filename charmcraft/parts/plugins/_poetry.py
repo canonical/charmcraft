@@ -23,8 +23,6 @@ from overrides import override
 
 from charmcraft import utils
 
-POETRY_INSTALL_COMMAND = "curl -sSL https://install.python-poetry.org | python3 -"
-
 
 class PoetryPluginProperties(poetry_plugin.PoetryPluginProperties, frozen=True):
 
@@ -39,20 +37,7 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
     _options: PoetryPluginProperties  # type: ignore[reportIncompatibleVariableOverride]
 
     def get_build_environment(self) -> dict[str, str]:
-        env = utils.extend_python_build_environment(super().get_build_environment())
-
-        # Needed for installing poetry through its install script.
-        old_path = env.get("PATH", "${PATH}")
-        env["PATH"] = f"{old_path}:${{HOME}}/.local/bin"
-
-        return env
-
-    def get_build_packages(self) -> set[str]:
-        return super().get_build_packages() | {"curl"}
-
-    def get_pull_commands(self) -> list[str]:
-        install_poetry = [] if self._system_has_poetry() else [POETRY_INSTALL_COMMAND]
-        return [*super().get_pull_commands(), *install_poetry]
+        return utils.extend_python_build_environment(super().get_build_environment())
 
     def _get_venv_directory(self) -> Path:
         return self._part_info.part_install_dir / "venv"

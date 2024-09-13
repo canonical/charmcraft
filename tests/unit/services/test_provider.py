@@ -151,16 +151,13 @@ def test_get_base_no_cache_if_locked(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
-def test_maybe_lock_cache_locks_single_lock(tmp_path: pathlib.Path, mock_register) -> None:
-    assert _maybe_lock_cache(tmp_path) is True
-    mock_register.assert_has_calls([mock.call(fcntl.flock, mock.ANY, fcntl.LOCK_UN)])
+def test_maybe_lock_cache_locks_single_lock(tmp_path: pathlib.Path) -> None:
+    assert _maybe_lock_cache(tmp_path)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
-def test_maybe_lock_cache_with_another_lock(tmp_path: pathlib.Path, mock_register) -> None:
-    assert _maybe_lock_cache(tmp_path) is True
-    assert _maybe_lock_cache(tmp_path) is False
-    assert mock_register.mock_calls == [
-        mock.call(fcntl.flock, mock.ANY, fcntl.LOCK_UN),
-        mock.call(mock.ANY, missing_ok=True),
-    ]
+def test_maybe_lock_cache_with_another_lock(tmp_path: pathlib.Path) -> None:
+    # Need to save the open file so it's not closed when we try a second time.
+    first_file_descriptor = _maybe_lock_cache(tmp_path)
+    assert first_file_descriptor
+    assert _maybe_lock_cache(tmp_path) is None

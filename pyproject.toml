@@ -330,6 +330,9 @@ lint.ignore = [
 # Allow Pydantic's `@validator` decorator to trigger class method treatment.
 classmethod-decorators = ["pydantic.validator"]
 
+[tool.ruff.lint.pydocstyle]
+ignore-decorators = ["overrides.overrides", "overrides.override", "typing.overload", "typing.override"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = [  # Some things we want for the moin project are unnecessary in tests.
     "D",  # Ignore docstring rules in tests

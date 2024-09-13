@@ -16,6 +16,7 @@
 """Integration tests for the provider service."""
 
 import pathlib
+import subprocess
 import sys
 
 import pytest
@@ -35,19 +36,25 @@ def test_lock_cache(
 ):
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
+    lock_file = cache_path / "charmcraft.lock"
+    bash_lock_cmd = ["bash", "-c", f"flock -n {lock_file} true"]
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
         "work_dir": pathlib.Path(__file__).parent,
         "cache_path": cache_path,
     }
-    assert not (cache_path / "charmcraft.lock").exists()
+    assert not lock_file.exists()
 
     with provider.instance(**provider_kwargs):
         # Test that the cache lock gets created
-        assert (cache_path / "charmcraft.lock").is_file()
+        assert lock_file.is_file()
+        with pytest.raises(subprocess.CalledProcessError):
+            # Another process should not be able to lock the file.
+            subprocess.run(bash_lock_cmd, check=True)
 
-    (cache_path / "charmcraft.lock").write_text("Test that file isn't locked.")
+    # After exiting we should be able to lock the file.
+    subprocess.run(bash_lock_cmd, check=True)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
@@ -59,8 +66,16 @@ def test_locked_cache_no_cache(
 ):
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
-    _maybe_lock_cache(cache_path)
-    assert (cache_path / "charmcraft.lock").exists()
+    lock_file = cache_path / "charmcraft.lock"
+
+    bash_lock_cmd = ["bash", "-c", f"flock -n {lock_file} true"]
+    # Check that we can lock the file from another process.
+    subprocess.run(bash_lock_cmd, check=True)
+    _ = _maybe_lock_cache(cache_path)
+    # And now we can't.
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(bash_lock_cmd, check=True)
+
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
@@ -69,9 +84,15 @@ def test_locked_cache_no_cache(
     }
 
     with provider.instance(**provider_kwargs) as instance:
-        # Because we've already locked the cache, we don't get a subdirectory in the cache.
-        assert list(cache_path.iterdir()) == [cache_path / "charmcraft.lock"]
-
         # Create a file in the cache and ensure it's not visible in the outer fs
         instance.execute_run(["touch", "/root/.cache/cache_cached"])
+
+        # Because we've already locked the cache, we don't get a subdirectory in
+        # the cache, and thus the touch command inside there only affected the
+        # instance cache and not the shared cache.
+        assert list(cache_path.iterdir()) == [cache_path / "charmcraft.lock"]
+        emitter.assert_progress(
+            "Shared cache locked by another process; running without cache.", permanent=True
+        )
+
         assert not (tmp_path / "cache_cached").exists()

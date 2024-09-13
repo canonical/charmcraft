@@ -5,9 +5,10 @@ priority: 50  # Because these can take a while, run them early.
 environment:
   BASE_CHANNEL/focal_bases: 20.04
   BASE_CHANNEL/jammy_bases,jammy_platforms: 22.04
-  BASE_CHANNEL/noble_platforms: 24.04
+  BASE_CHANNEL/noble_platforms,noble_platforms_python: 24.04
   CHARM_TYPE/focal_bases,jammy_bases: bases
-  CHARM_TYPE/jammy_platforms,noble_platforms: platforms
+  CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_python: platforms
+  EXTRA/noble_platforms_python: "-python"
   # Alma Linux is disabled temporarily: https://github.com/canonical/charmcraft/issues/1496
   # BASE_CHANNEL/alma: alma9
   # CHARM_TYPE/alma: bases
@@ -17,7 +18,7 @@ include:
 
 prepare: |
   charmcraft init --project-dir=charm
-  cp charmcraft-$CHARM_TYPE-$BASE_CHANNEL.yaml charm/charmcraft.yaml
+  cp charmcraft-$CHARM_TYPE-$BASE_CHANNEL${EXTRA:+}.yaml charm/charmcraft.yaml
 
 restore: |
   pushd charm

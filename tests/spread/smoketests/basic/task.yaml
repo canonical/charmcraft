@@ -33,4 +33,11 @@ execute: |
   test -f *.charm
   unzip -l *.charm | MATCH "src/charm.py"
   unzip -l *.charm | MATCH "venv/ops/charm.py"
+
+  if [[ ${EXTRA:+} == '-all' ]]; then
+    if [[ $(unzip -p *.charm manifest.yaml | yq '.bases[].architectures[]' | uniq) != 'all' ]]; then
+      ERROR "Charm does not have single architecture 'all'."
+    fi
+  fi
+
   test ! -d build

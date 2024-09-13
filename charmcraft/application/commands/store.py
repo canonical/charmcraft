@@ -32,7 +32,6 @@ from collections.abc import Collection
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
-import craft_platforms
 import yaml
 from craft_application import util
 from craft_cli import ArgumentParsingError, emit
@@ -2030,11 +2029,11 @@ class UploadResourceCommand(CharmcraftCommand):
                     dest_password=credentials.password,
                 )
 
-            image_arch = [
-                craft_platforms.DebianArchitecture.from_machine(arch).value
+            image_arch = {
+                image_service.convert_go_arch_to_charm_arch(arch).value
                 for arch in image_metadata.architectures
-            ]
-            bases = [{"name": "all", "channel": "all", "architectures": image_arch}]
+            }
+            bases = [{"name": "all", "channel": "all", "architectures": sorted(image_arch)}]
 
             # all is green, get the blob to upload to Charmhub
             content = store.get_oci_image_blob(

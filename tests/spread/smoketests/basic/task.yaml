@@ -8,6 +8,11 @@ environment:
   BASE_CHANNEL/noble_platforms,noble_platforms_python: 24.04
   CHARM_TYPE/focal_bases,jammy_bases: bases
   CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_python: platforms
+  BASE_CHANNEL/jammy_bases,jammy_bases_all,jammy_platforms: 22.04
+  BASE_CHANNEL/noble_platforms,noble_platforms_all,noble_platforms_python: 24.04
+  CHARM_TYPE/focal_bases,jammy_bases,jammy_bases_all: bases
+  CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_all,noble_platforms_python: platforms
+  EXTRA/jammy_bases_all,noble_platforms_all: "-all"
   EXTRA/noble_platforms_python: "-python"
   # Alma Linux is disabled temporarily: https://github.com/canonical/charmcraft/issues/1496
   # BASE_CHANNEL/alma: alma9
@@ -33,4 +38,11 @@ execute: |
   test -f *.charm
   unzip -l *.charm | MATCH "src/charm.py"
   unzip -l *.charm | MATCH "venv/ops/charm.py"
+
+  if [[ ${EXTRA:+} == '-all' ]]; then
+    if [[ $(unzip -p *.charm manifest.yaml | yq '.bases[].architectures[]' | uniq) != 'all' ]]; then
+      ERROR "Charm does not have single architecture 'all'."
+    fi
+  fi
+
   test ! -d build

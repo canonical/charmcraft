@@ -2,7 +2,7 @@ attrs==23.1.0
 black==23.12.1
 cachetools==5.3.2
 certifi==2023.7.22
-cffi==1.16.0
+cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.3.2
 click==8.1.7

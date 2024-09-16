@@ -39,6 +39,7 @@ def charm_project(basic_charm_dict: dict[str, Any], project_path: pathlib.Path, 
             "parts": {
                 "my-charm": {
                     "plugin": "python",
+                    "python-requirements": ["requirements.txt"],
                     "source": str(project_path),
                     "source-type": "local",
                 }

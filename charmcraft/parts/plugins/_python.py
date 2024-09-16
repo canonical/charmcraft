@@ -26,7 +26,6 @@ from charmcraft import utils
 
 class PythonPluginProperties(python_plugin.PythonPluginProperties, frozen=True):
 
-    python_requirements: list[str] = ["requirements.txt"]  # By default use requirements.txt
     python_packages: list[str] = []  # No default packages.
     python_keep_bins: bool = False
     """Keep the virtual environment's 'bin' directory."""

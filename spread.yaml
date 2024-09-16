@@ -204,10 +204,10 @@ suites:
 
       # Ensure that the reused charms and bundles are registered if necessary.
       if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
-        charmcraft register $CHARM_DEFAULT_NAME || ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
+        charmcraft register $CHARM_DEFAULT_NAME
       fi
       if ! charmcraft status $BUNDLE_DEFAULT_NAME; then
-        charmcraft register-bundle $BUNDLE_DEFAULT_NAME || ERROR Charm $BUNDLE_DEFAULT_NAME cannot be registered to this account.
+        charmcraft register-bundle $BUNDLE_DEFAULT_NAME
       fi
 
       rm -f charmcraft.yaml

@@ -245,7 +245,7 @@ class WhoamiCommand(CharmcraftCommand):
     )
     format_option = True
 
-    def run(self, parsed_args):
+    def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
         try:
             macaroon_info = self._services.store.client.whoami()
@@ -276,18 +276,18 @@ class WhoamiCommand(CharmcraftCommand):
         if packages := macaroon_info.get("packages"):
             grouped = {}
             for package in packages:
-                grouped.setdefault(package.type, []).append(package)
+                grouped.setdefault(package["type"], []).append(package)
             for package_type, title in [("charm", "charms"), ("bundle", "bundles")]:
                 if package_type in grouped:
                     human_msgs.append(f"{title}:")
                     pkg_info = []
                     for item in grouped[package_type]:
-                        if item.name is not None:
-                            human_msgs.append(f"- name: {item.name}")
-                            pkg_info.append({"name": item.name})
-                        elif item.id is not None:
-                            human_msgs.append(f"- id: {item.id}")
-                            pkg_info.append({"id": item.id})
+                        if (name := item.get("name")) is not None:
+                            human_msgs.append(f"- name: {name}")
+                            pkg_info.append({"name": name})
+                        elif (pkg_id := item.get("id")) is not None:
+                            human_msgs.append(f"- id: {pkg_id}")
+                            pkg_info.append({"id": pkg_id})
                     prog_info[title] = pkg_info
 
         if channels := macaroon_info.get("channels"):

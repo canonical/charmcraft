@@ -77,6 +77,21 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
+2.7.3 (2024-09-16)
+------------------
+
+Core
+====
+
+Plugins
+#######
+
+charm
+"""""
+
+The charm plugin now force-reinstalls pip when necessary, guaranteeing a correct
+version of pip.
+
 2.7.2 (2024-09-09)
 ------------------
 

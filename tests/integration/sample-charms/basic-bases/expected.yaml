@@ -1,0 +1,16 @@
+name: example-charm
+summary: An example charm with bases
+description: |
+  A description for an example charm with bases.
+parts:
+  charm:
+    plugin: charm
+    source: .
+type: charm
+bases:
+- build-on:
+  - name: ubuntu
+    channel: '22.04'
+  run-on:
+  - name: ubuntu
+    channel: '22.04'

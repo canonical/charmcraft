@@ -1,0 +1,14 @@
+name: build-for-all
+type: charm
+title: Build for all
+summary: A platforms charm that's architecture independent.
+description: A platforms charm that's architecture independent.
+base: ubuntu@24.04
+platforms:
+  all:
+    build-on: [amd64, arm64, riscv64]
+    build-for: [all]
+parts:
+  my-charm:
+    plugin: charm
+    source: .

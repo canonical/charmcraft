@@ -1,10 +1,130 @@
+[project]
+name = "charmcraft"
+dynamic = ["version"]
+description = "The main tool to build, upload, and develop in general the Juju charms."
+readme = "README.md"
+dependencies = [
+    "craft-application~=4.1",
+    "craft-cli>=2.3.0",
+    "craft-grammar>=2.0.0",
+    "craft-parts>=2.0.0",
+    "craft-providers>=2.0.0",
+    "craft-platforms~=0.3",
+    "craft-providers>=2.0.0",
+    "craft-store>=3.0.0",
+    "distro>=1.3.0",
+    "docker>=7.0.0",
+    "humanize>=2.6.0",
+    "jsonschema",
+    "jinja2",
+    "pydantic~=2.0",
+    "python-dateutil",
+    "pyyaml",
+    "requests",
+    "requests-toolbelt",
+    "requests-unixsocket",
+    "snap-helpers",
+    "tabulate",
+    # Needed until requests-unixsocket supports urllib3 v2
+    # https://github.com/msabramo/requests-unixsocket/pull/69
+    # When updating, remove the urllib3 constraint from renovate config.
+    "urllib3<2.0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+
+[project.scripts]
+charmcraft = "charmcraft.application.main:main"
+
+[project.optional-dependencies]
+dev = [  # When updating these, also update the dev/lint/types groups in renovate.
+    "coverage",
+    "flake8",
+    "freezegun",
+    "hypothesis",
+    "pydocstyle",
+    "pyfakefs",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-check",
+    "pytest-subprocess",
+    "responses",
+]
+lint = [
+    "black~=24.0",
+    "codespell[tomli]",
+    "yamllint",
+]
+types = [
+    "mypy[reports]~=1.5",
+    "pyright==1.1.366",
+    "types-python-dateutil",
+    "types-PyYAML",
+    "types-requests<2.31.0.20240312",  # Frozen until we can get urllib3 v2
+    "types-setuptools",
+    "types-tabulate",
+    "types-urllib3",
+]
+apt = [
+    "python-apt>=2.4.0;sys_platform=='linux'"
+]
+docs = [
+    "canonical-sphinx~=0.1",
+    "pyspelling",
+    "autodoc-pydantic~=2.0",
+    "sphinx-autobuild~=2024.2",
+    "sphinx-pydantic~=0.1",
+    "sphinx-toolbox~=3.5",
+    "sphinx-lint~=0.9",
+    "sphinxcontrib-details-directive",
+    "matplotlib",
+]
+
+[build-system]
+requires = [
+    "setuptools>=67.7.2",
+    "setuptools_scm[toml]>=7.1"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "charmcraft/_version.py"
+# the version comes from the latest annotated git tag formatted as 'X.Y.Z'
+# standard version scheme:
+#   'X.Y.Z.post<commits since tag>+g<hash>'
+# scheme when no tags exist:
+#   '0.0.post<total commits>+g<hash>
+# scheme when no tags exist and working dir is dirty:
+#   '0.0.post<total commits>+g<hash>.d<date formatted as %Y%m%d>'
+version_scheme = "post-release"
+# deviations from the default 'git describe' command:
+# - only match annotated tags
+# - only match tags formatted as 'X.Y.Z'
+# - exclude '+dirty<hash>' suffix
+git_describe_command = "git describe --long --match '[0-9]*.[0-9]*.[0-9]*' --exclude '*[^0-9.]*'"
+
+[tool.setuptools.packages.find]
+include = ["*craft*"]
+namespaces = false
+
 [tool.black]
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ["py310", "py311"]
 line-length = 99
 
 [tool.codespell]
-ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented"
-skip = ".tox,.git,build,.*_cache,__pycache__,*.tar,*.snap,*.png,./node_modules,./docs/_build,.direnv,.venv,venv,.vscode,charmcraft.spec"
+ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread,socio-economic"
+skip = "requirements*.txt,.tox,.git,build,.*_cache,__pycache__,*.tar,*.snap,*.png,./node_modules,./docs/_build,.direnv,.venv,venv,.vscode,charmcraft.spec"
 quiet-level = 3
 check-filenames = true
 
@@ -20,6 +140,9 @@ line_length = 88
 minversion = "7.0"
 testpaths = "tests"
 xfail_strict = true
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 
 [tool.coverage.run]
 branch = true
@@ -31,17 +154,32 @@ skip_empty = true
 #fail_under = 80
 
 [tool.pyright]
-strict = ["charmcraft"]
-pythonVersion = "3.8"
+# strict = ["charmcraft"]
+pythonVersion = "3.10"
 pythonPlatform = "Linux"
-venvPath = ".tox"
-venv = "py38"
+ignore = [
+    "tools/measurements-viewer.py",
+]
+include = [
+    "charmcraft",
+    "tests/unit",
+    "tests/integration",
+]
+analyzeUnannotatedFunctions = false
+reportArgumentType = "warning"
+reportAttributeAccessIssue = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportOptionalMemberAccess = "warning"
+
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 packages = [
     "charmcraft",
+    "tests.unit",
+    "tests.integration",
 ]
+plugins = ["pydantic.mypy"]
 exclude = [
     "build",
     "results",
@@ -64,14 +202,10 @@ module=[
     "charmcraft.commands.extensions",
     "charmcraft.commands.pack",
     "charmcraft.commands.store",
-    "charmcraft.commands.store.registry",
-    "charmcraft.commands.store.store",
-    "charmcraft.config",
+    "charmcraft.store.registry",
+    "charmcraft.store.store",
     "charmcraft.extensions._utils",
     "charmcraft.linters",
-    "charmcraft.models.actions",
-    "charmcraft.models.basic",
-    "charmcraft.models.config",
     "charmcraft.models.charmcraft",
     "charmcraft.package",
     "charmcraft.providers",
@@ -89,15 +223,16 @@ strict = false
 
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py310"
 extend-exclude = [
     "docs",
     "__pycache__",
     "tools",
     "snap/local",
+    "charmcraft/_version.py",  # setuptools_scm generates old-style type annotations.
 ]
 # Follow ST063 - Maintaining and updating linting specifications for updating these.
-select = [  # Base linting rule selections.
+lint.select = [  # Base linting rule selections.
     # See the internal document for discussion:
     # https://docs.google.com/document/d/1i1n8pDmFmWi4wTDpk-JfnWCVUThPJiggyPi2DYwBBu4/edit
     # All sections here are stable in ruff and shouldn't randomly introduce
@@ -134,11 +269,11 @@ select = [  # Base linting rule selections.
     "PL",  # Pylint
     "TRY",  # Cleaner try/except,
 ]
-extend-select = [
+lint.extend-select = [
     # Pyupgrade: https://github.com/charliermarsh/ruff#pyupgrade-up
     "UP00", "UP01", "UP02", "UP030", "UP032", "UP033",
     # "UP034",  # Very new, not yet enabled in ruff 0.0.227
-    # Annotations: https://github.com/charliermarsh/ruff#flake8-annotations-ann
+    # Annotations: https://github.com/charliermarsh/ruff#lint.flake8-annotations-ann
     "ANN0",  # Type annotations for arguments other than `self` and `cls`
     "ANN2",  # Return type annotations
     "B026",  # Keyword arguments must come after starred arguments
@@ -159,7 +294,7 @@ extend-select = [
     "RUF008",  # Do not use mutable default values for dataclass attributes
     "RUF100",  # #noqa directive that doesn't flag anything
 ]
-ignore = [
+lint.ignore = [
     "ANN10",  # Type annotations for `self` and `cls`
     #"E203",  # Whitespace before ":"  -- Commented because ruff doesn't currently check E203
     "E501",  # Line too long (reason: black will automatically fix this for us)
@@ -178,9 +313,7 @@ ignore = [
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "ANN0", "ANN2",
     "ARG001", "ARG002", "ARG005",
-    "B034",
     "BLE",
-    "D417",
     "FBT",
     "N805", "N806",
     "PGH003",
@@ -191,14 +324,13 @@ ignore = [
     "RET505", "RET506", "RET508",
     "S108", "S113", "S324", "S701",
     "SIM102",
-    "TRY004", "TRY200",
 ]
 
-[tool.ruff.pep8-naming]
+[tool.ruff.lint.pep8-naming]
 # Allow Pydantic's `@validator` decorator to trigger class method treatment.
 classmethod-decorators = ["pydantic.validator"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/**.py" = [  # Some things we want for the moin project are unnecessary in tests.
     "D",  # Ignore docstring rules in tests
     "ANN", # Ignore type annotations in tests
@@ -210,13 +342,8 @@ classmethod-decorators = ["pydantic.validator"]
 
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "A001", "A002",
-    "B007", "B015",
-    "D100",
-    "N802",
     "PT004", "PT012",
-    "PTH1",
     "S105", "S106",
-    "SIM105", "SIM115",
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.
 "__init__.py" = ["I001"]

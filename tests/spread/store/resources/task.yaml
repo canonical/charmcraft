@@ -63,25 +63,58 @@ execute: |
   test $last_charm_resources = "example-file,example-image"
 
   # upload and verify the file resource
-  charmcraft upload-resource $CHARM_DEFAULT_NAME example-file --file=resourcefile.txt
-  last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-file --format=json | jq -r .[0])
+  upload_revision_number=$(charmcraft upload-resource $CHARM_DEFAULT_NAME example-file --format=json --file=resourcefile.txt --arch=amd64,riscv64 | jq -r '.revision')
+  charmcraft resource-revisions $CHARM_DEFAULT_NAME example-file --format=json > file_revisions.json
+  upload_revision=$(cat file_revisions.json | jq -c ".[] | select(.revision == $upload_revision_number)" )
+  upload_revision_architectures=$(echo "$upload_revision" | jq -c '.bases[0].architectures')
+  [[ "$upload_revision_architectures" = '["amd64","riscv64"]' ]]
+  last_revision=$(jq -r .[-1] file_revisions.json)
   last_file_revno=$(echo $last_revision | jq .revision)
+  [[ "$upload_revision_number" -le "$last_file_revno" ]]
   last_revision_created=$(echo $last_revision | jq -r .created_at)
   [[ $start_datetime < $last_revision_created ]]
 
-  # upload and verify the OCI image resource
-  charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
-  last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-image --format=json | jq -r .[0])
+  # change architectures for uploaded revision
+  new_architectures=$(charmcraft set-resource-architectures $CHARM_DEFAULT_NAME example-file --format=json --revision=$upload_revision_number arm64,armhf | jq -c '.[0].architectures')
+  [[ "$new_architectures" == '["arm64","armhf"]' ]]
+  new_architectures=$(charmcraft set-resource-architectures $CHARM_DEFAULT_NAME example-file --format=json --revision=$upload_revision_number all | jq -c '.[0].architectures')
+  [[ "$new_architectures" == '["all"]' ]]
+
+  # upload and verify the OCI image resource by digest
+  # This is a different image hash because it's what Docker contains locally on amd64.
+  uploaded_revision=$(charmcraft upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=sha256:feb5d9fea6a5e9606aa995e879d862b825965ba48de054caab5ef356dc6b3412 | jq -r '.revision')
+  sleep 3  # Give the store a bit of time to process it
+  last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-image --format=json | jq -r 'max_by(.revision)')
   last_image_revno=$(echo $last_revision | jq .revision)
-  last_revision_created=$(echo $last_revision | jq -r .created_at)
-  [[ $start_datetime < $last_revision_created ]]
+  test $last_image_revno -ge $uploaded_revision
+  last_revision_created=$(echo $last_revision | jq -r '.["created at"]')
+
+  # Upload and verify the OCI image resource by image ID.
+  uploaded_revision=$(charmcraft upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=feb5d9fea6a5 | jq -r '.revision')
+  sleep 3  # Give the store a bit of time to process it
+  last_revision=$(charmcraft resource-revisions $CHARM_DEFAULT_NAME example-image --format=json | jq -r 'max_by(.revision)')
+  last_image_revno=$(echo $last_revision | jq .revision)
+  test $last_image_revno -ge $uploaded_revision
+  last_revision_created=$(echo $last_revision | jq -r '.["created at"]')
+
+  # Upload and verify a docker image resource file.
+  docker save hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346 > hello-world.docker
+  docker_revision=$(charmcraft upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=docker-archive:hello-world.docker | jq -r '.revision')
+  /snap/charmcraft/current/libexec/charmcraft/skopeo --insecure-policy copy docker-archive:hello-world.docker oci-archive:hello-world.tar
+  oci_revision=$(charmcraft upload-resource --format=json $CHARM_DEFAULT_NAME example-image --image=oci-archive:hello-world.tar | jq -r '.revision')
+  test $docker_revision -eq $uploaded_revision
+  test $oci_revision -ge $uploaded_revision  # Expected to be newer because the OCI archive is normally slightly different from the Docker file.
 
   # Check that skopeo upload-resource works.
   charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=docker://hello-world@sha256:18a657d0cc1c7d0678a3fbea8b7eb4918bba25968d3e1b0adebfa71caddbc346
+  # Try with a file from the GitHub container registry.
+  charmcraft upload-resource $CHARM_DEFAULT_NAME example-image --image=docker://ghcr.io/infrastructure-as-code/hello-world@sha256:fe2e9828b415a64d1f65e1c6ddd29f53b26dea5d359c39a3c5ef9c96c1987a45
 
   # release and check full status
   charmcraft release $CHARM_DEFAULT_NAME -r $last_charm_revno -c edge --resource=example-file:$last_file_revno --resource=example-image:$last_image_revno
   edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
-  test $last_charm_revno == $(echo $edge_release | jq -r .revision)
-  test $last_file_revno == $(echo $edge_release | jq '.resources | .[] | select(.name=="example-file").revision')
-  test $last_image_revno == $(echo $edge_release | jq '.resources | .[] | select(.name=="example-image").revision')
+  # These are <= rather than == because it's possible another test bumped the revision
+  # before we got the status.
+  test $last_charm_revno -le $(echo $edge_release | jq -r .revision)
+  test $last_file_revno -le $(echo $edge_release | jq '.resources | .[] | select(.name=="example-file").revision')
+  test $last_image_revno -le $(echo $edge_release | jq '.resources | .[] | select(.name=="example-image").revision')

@@ -155,7 +155,7 @@ class JujuIgnore:
     """Track a set of ignore patterns from a .jujuignore file."""
 
     def __init__(self, patterns: typing.Iterable[str]):
-        self._matchers: typing.List[_Matcher] = []
+        self._matchers: list[_Matcher] = []
         self._compile_from(patterns)
 
     def extend_patterns(self, patterns: typing.Iterable[str]) -> None:
@@ -195,15 +195,11 @@ class JujuIgnore:
     def match(self, path: str, is_dir: bool) -> bool:
         """Check if the given path should be ignored.
 
-        Args:
-        ----
-            path: A local path (eg /foo/bar or foo/bar) from the root directory of the project.
-            is_dir: Indicate whether the given path is a directory (because of special handling
+        :param path: A local path (eg /foo/bar or foo/bar) from the root directory of the project.
+        :param is_dir: Indicate whether the given path is a directory (because of special handling
             from ignore files when the path ends with a '/')
 
-        Return:
-        ------
-            A boolean indicating whether the ignore rules matched the given path (thus the path
+        :returns: A boolean indicating whether the ignore rules matched the given path (thus the path
             should be ignored).
 
         """

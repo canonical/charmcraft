@@ -15,45 +15,71 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft Juju Config pydantic model."""
-
-from typing import Any, Dict, Optional
+from typing import Annotated, Literal
 
 import pydantic
+from craft_application.models import CraftBaseModel
 
-from charmcraft.models.basic import ModelConfigDefaults
+
+class _BaseJujuOption(CraftBaseModel):
+    """A Juju option field. Do not use (use the child classes below)."""
+
+    description: str | None = None
+    default: str | int | float | bool | None = None
 
 
-class JujuConfig(ModelConfigDefaults):
+class JujuStringOption(_BaseJujuOption):
+    """A Juju option field containing a string."""
+
+    type: Literal["string"]
+    default: str | None = None
+
+
+class JujuIntOption(_BaseJujuOption):
+    """A Juju option field containing an integer."""
+
+    type: Literal["int"]
+    default: pydantic.StrictInt | None = None
+
+
+class JujuFloatOption(_BaseJujuOption):
+    """A Juju option field containing a floating-point number."""
+
+    type: Literal["float"]
+    default: float | None = None
+
+
+class JujuBooleanOption(_BaseJujuOption):
+    """A Juju option field containing a boolean value."""
+
+    type: Literal["boolean"]
+    default: bool | None = None
+
+
+class JujuSecretOption(_BaseJujuOption):
+    """A Juju option field containing a secret ID."""
+
+    type: Literal["secret"]
+    # A secret doesn't really make sense, since it's unlikely
+    # that anyone would know what the secret ID (specific to
+    # the deployment in a model) is at the time that they are
+    # writing the config, but included for completeness.
+    default: (
+        Annotated[str, pydantic.StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")] | None
+    ) = None
+
+
+JujuOption = Annotated[
+    JujuStringOption | JujuIntOption | JujuFloatOption | JujuBooleanOption | JujuSecretOption,
+    pydantic.Field(discriminator="type"),
+]
+
+
+class JujuConfig(CraftBaseModel):
     """Juju configs for charms.
 
     See also: https://juju.is/docs/sdk/config
+    and: https://juju.is/docs/sdk/config-yaml
     """
 
-    options: Optional[Dict[str, Dict[str, Any]]]
-
-    @pydantic.validator("options", pre=True)
-    def validate_actions(cls, options):
-        """Verify options section."""
-        if options is None:
-            return None
-        if not isinstance(options, dict):
-            raise ValueError("'options' is not a dictionary")
-        for name, option in options.items():
-            if not isinstance(option, dict):
-                raise ValueError(f"'{name}' is not a dictionary")
-
-            option_keys = set(option.keys())
-            if not option_keys.issubset({"description", "type", "default"}):
-                invalid_keys = option_keys - {"description", "type", "default"}
-                raise ValueError(f"'{name}' has an invalid key(s): {invalid_keys}")
-
-            if "type" not in option:
-                raise ValueError(f"'{name}' is missing a type")
-
-            if option["type"] not in ["string", "int", "float", "boolean", "secret"]:
-                raise ValueError(
-                    f"'{option}' has an invalid type '{option['type']}', "
-                    "must be one of: string, int, float, boolean, secret"
-                )
-
-        return options
+    options: dict[str, JujuOption] | None = None

@@ -1,0 +1,179 @@
+type: charm
+name: full-charm
+summary: A fully-defined charm, making use of all the available charm keywords.
+description: |
+  This is intentionally designed to be a fairly complex charm definition. It makes use
+  of every available keyword in charmcraft.yaml, expressing as much as possible.
+analysis:
+  ignore:
+    attributes:
+    - framework
+    linters:
+    - entrypoint
+charmhub:
+  api-url: https://api.staging.charmhub.io
+  storage-url: https://storage.staging.snapcraftcontent.com
+parts:
+  im-not-calling-this-what-you-expect:
+    plugin: charm
+    source: .
+    charm-entrypoint: src/charm.py
+    charm-binary-python-packages: []
+    charm-python-packages: []
+    charm-requirements: []
+    charm-strict-dependencies: false
+  another-part:
+    plugin: nil
+bases:
+- build-on:
+  - name: ubuntu
+    channel: '22.04'
+    architectures:
+    - amd64
+    - riscv64
+  - name: ubuntu
+    channel: '20.04'
+    architectures:
+    - amd64
+    - arm64
+  run-on:
+  - name: ubuntu
+    channel: '22.04'
+    architectures:
+    - amd64
+  - name: ubuntu
+    channel: '22.04'
+    architectures:
+    - riscv64
+  - name: ubuntu
+    channel: '22.04'
+    architectures:
+    - arm64
+- build-on:
+  - name: ubuntu
+    channel: '20.04'
+  run-on:
+  - name: ubuntu
+    channel: '20.04'
+    architectures:
+    - amd64
+    - arm64
+    - riscv64
+    - s390x
+    - ppc64el
+    - armhf
+actions:
+  snapshot:
+    description: Take a snapshot of the database.
+    params:
+      filename:
+        type: string
+        description: The name of the snapshot file.
+      compression:
+        type: object
+        description: The type of compression to use.
+        properties:
+          kind:
+            type: string
+            enum:
+            - gzip
+            - bzip2
+            - xz
+          quality:
+            description: Compression quality
+            type: integer
+            minimum: 0
+            maximum: 9
+    required:
+    - my-favourite-photo.tiff
+    additionalProperties: false
+assumes:
+- any-of:
+  - juju >= 2.9
+  - all-of:
+    - juju >= 3.0
+    - juju < 4.0
+- k8s-api
+charm-user: non-root
+containers:
+  super-app:
+    resource: super-app-image
+    mounts:
+    - storage: logs
+      location: /logs
+devices:
+  super-cool-gpu:
+    type: amd.com/gpu
+    description: Some sweet AMD GPU
+    countmin: 69
+    countmax: 420
+  lame-gpu:
+    type: nvidia.com/gpu
+    description: A GPU I regret buying
+    countmin: 0
+    countmax: 1
+extra-bindings:
+  Ring of Power: null
+peers:
+  friend:
+    interface: life
+    limit: 150
+    optional: true
+    scope: container
+provides:
+  self:
+    interface: identity
+requires:
+  parent:
+    interface: birth
+    limit: 2
+    optional: false
+    scope: global
+resources:
+  water:
+    type: file
+    filename: /dev/h2o
+  super-app-image:
+    type: oci-image
+    description: OCI image for the Super App (hub.docker.com/_/super-app)
+storage:
+  jbod:
+    type: block
+    description: A nice block storage for me to use as swap space
+    shared: false
+    properties:
+    - transient
+subordinate: false
+terms:
+- Butterscotch is regal
+- Cara is adorable
+links:
+  contact: Please send your answer to Old Pink, care of the Funny Farm, Chalfont
+  documentation: https://juju.is/docs/sdk/charmcraft-yaml
+  issues:
+  - https://launchpad.net/~charmcraft-team
+  - https://github.com/canonical/charmcraft/issues
+  source:
+  - https://github.com/canonical/charmcraft
+  website:
+  - https://snapcraft.io/charmcraft
+config:
+  options:
+    name:
+      default: Wiki
+      description: The name, or Title of the Wiki
+      type: string
+    skin:
+      default: vector
+      description: skin for the Wiki
+      type: string
+    logo:
+      description: URL to fetch logo from
+      type: string
+    admins:
+      description: 'Comma-separated list of admin users to create: user:pass[,user:pass]+'
+      type: string
+    debug:
+      default: false
+      type: boolean
+      description: turn on debugging features of mediawiki

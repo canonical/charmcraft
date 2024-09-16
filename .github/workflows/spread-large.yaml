@@ -1,10 +1,15 @@
-name: Large Manual Spread
+name: Weekly Spread
 on:
   schedule:
     # At 00:00 on Wednesday and Sunday.
     - cron: "0 0 * * WED,SUN"
 
   workflow_dispatch:
+
+# Only ever run one of this test at a time.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   snap-build:
@@ -18,18 +23,26 @@ jobs:
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
 
   pack-charm:
-    runs-on: self-hosted
+    runs-on: spread-installed
     needs: [snap-build]
     strategy:
       fail-fast: false
+      # Each of these tasks can spin up several machines in spread.
+      max-parallel: 2
       matrix:
-        charm: [k8s-operator, operator, bundle, reactive]
+        task:
+          - charms/k8s-operator
+          - charms/operator
+          - charms/bundle
+          - charms/reactive
+          - smoketests/parallel-build
+          - smoketests/remote-build
 
     steps:
       - name: Cleanup job workspace
@@ -42,9 +55,19 @@ jobs:
           fetch-depth: 0
           submodules: true
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: snap
       - name: Spread k8s operator
+        env:
+          LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}
         run: |
-          spread google:ubuntu-22.04-64:tests/spread/charms/${{ matrix.charm }}
+          spread google:tests/spread/${{ matrix.task }}
+      - name: Clean up jobs
+        if: ${{ always() }}
+        run: |
+          spread -discard
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

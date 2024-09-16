@@ -1,0 +1,21 @@
+charmcraft-version: 3.0-test-version
+charmcraft-started-at: '2020-03-14T00:00:00+00:00'
+bases:
+- name: ubuntu
+  channel: '22.04'
+  architectures:
+  - amd64
+- name: ubuntu
+  channel: '22.04'
+  architectures:
+  - riscv64
+- name: ubuntu
+  channel: '22.04'
+  architectures:
+  - arm64
+analysis:
+  attributes:
+  - name: language
+    result: unknown
+  - name: framework
+    result: unknown

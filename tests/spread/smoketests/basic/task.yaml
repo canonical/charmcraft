@@ -1,22 +1,24 @@
-summary: pack a simple init-created charm
+summary: pack a simple charm on various bases
+kill-timeout: 30m  # These sometimes take a while to download bases.
+priority: 50  # Because these can take a while, run them early.
 
 environment:
-  BASE_NAME: ubuntu
-  BASE_CHANNEL/focal: 20.04
-  BASE_CHANNEL/jammy: 22.04
+  BASE_CHANNEL/focal_bases: 20.04
+  BASE_CHANNEL/jammy_bases,jammy_bases_all,jammy_platforms: 22.04
+  BASE_CHANNEL/noble_platforms,noble_platforms_all: 24.04
+  CHARM_TYPE/focal_bases,jammy_bases,jammy_bases_all: bases
+  CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_all: platforms
+  EXTRA/jammy_bases_all,noble_platforms_all: "-all"
   # Alma Linux is disabled temporarily: https://github.com/canonical/charmcraft/issues/1496
-  #BASE_NAME/alma: almalinux
-  #BASE_CHANNEL/alma: 9
+  # BASE_CHANNEL/alma: alma9
+  # CHARM_TYPE/alma: bases
 
 include:
   - tests/
 
 prepare: |
-  tests.pkgs install unzip
   charmcraft init --project-dir=charm
-
-  sed -i "s/- name: ubuntu/- name: ${BASE_NAME}/g" charm/charmcraft.yaml
-  sed -i "s/channel:.*/channel: '${BASE_CHANNEL}'/g" charm/charmcraft.yaml
+  cp charmcraft-$CHARM_TYPE-$BASE_CHANNEL${EXTRA:+}.yaml charm/charmcraft.yaml
 
 restore: |
   pushd charm
@@ -27,7 +29,15 @@ restore: |
 
 execute: |
   cd charm
-  charmcraft pack --verbose
-  test -f charm*.charm
-  unzip -l charm*.charm | grep "venv/ops/charm.py"
+  charmcraft pack
+  test -f *.charm
+  unzip -l *.charm | MATCH "src/charm.py"
+  unzip -l *.charm | MATCH "venv/ops/charm.py"
+
+  if [[ ${EXTRA:+} == '-all' ]]; then
+    if [[ $(unzip -p *.charm manifest.yaml | yq '.bases[].architectures[]' | uniq) != 'all' ]]; then
+      ERROR "Charm does not have single architecture 'all'."
+    fi
+  fi
+
   test ! -d build

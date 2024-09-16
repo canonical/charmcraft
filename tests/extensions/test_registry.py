@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+import contextlib
 
 import pytest
 
@@ -25,11 +26,27 @@ class FakeExtension1(Extension):
 
     name = "fake-extension-1"
 
+    @staticmethod
+    def get_supported_bases() -> list[tuple[str, str]]:
+        return [("ubuntu", "22.04")]
+
+    @staticmethod
+    def is_experimental(_base: tuple[str, str] | None) -> bool:
+        return False
+
 
 class FakeExtension2(Extension):
     """A fake test Extension"""
 
     name = "fake-extension-2"
+
+    @staticmethod
+    def get_supported_bases() -> list[tuple[str, str]]:
+        return [("ubuntu", "24.04"), ("ubuntu", "22.04")]
+
+    @staticmethod
+    def is_experimental(base: tuple[str, str] | None) -> bool:
+        return base == ("ubuntu", "24.04")
 
 
 class FakeExtension3(Extension):
@@ -38,10 +55,15 @@ class FakeExtension3(Extension):
     name = "fake-extension-3"
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_extensions(stub_extensions):
-    for ext_class in (FakeExtension1, FakeExtension2):
+    fakes = [FakeExtension1, FakeExtension2]
+    for ext_class in fakes:
         extensions.register(ext_class.name, ext_class)
+    yield fakes
+    for ext_class in fakes:
+        with contextlib.suppress(KeyError):
+            extensions.unregister(ext_class.name)
 
 
 def test_get_extension_names(fake_extensions):
@@ -59,6 +81,17 @@ def test_get_extension_class(fake_extensions):
 def test_get_extension_class_error(fake_extensions):
     with pytest.raises(errors.ExtensionError):
         extensions.get_extension_class(FakeExtension3.name)
+
+
+def test_get_extensions(fake_extensions):
+    assert extensions.get_extensions() == [
+        {"name": "fake-extension-1", "bases": [("ubuntu@22.04")], "experimental_bases": []},
+        {
+            "name": "fake-extension-2",
+            "bases": [("ubuntu@22.04")],
+            "experimental_bases": [("ubuntu@24.04")],
+        },
+    ]
 
 
 def test_register(fake_extensions):

@@ -320,7 +320,7 @@ def test_log_matching_rule(assert_output):
     assert_output(r"Translated .jujuignore 1 'foo/bar\n' => '.*/foo/bar\\Z'")
 
 
-def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):
+def assert_matched_and_non_matched(globs, matched, unmatched, skip_git=False):
     """For a given set of globs, check that it does and doesn't match as expected"""
     ignore = jujuignore.JujuIgnore(globs)
     for m in matched:
@@ -347,14 +347,14 @@ def assertMatchedAndNonMatched(globs, matched, unmatched, skip_git=False):
             text=True,
         )
     matched_out = p.stdout.splitlines()
-    assert sorted(matched) == sorted(matched_out), "expected exactly {} to match not {}".format(
-        matched, matched_out
-    )
+    assert sorted(matched) == sorted(
+        matched_out
+    ), f"expected exactly {matched} to match not {matched_out}"
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_star_vs_star_start():
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         ["/*.py", "**/foo"],
         # Only top level .py files, but foo at any level
         ["a.py", "b.py", "foo", "bar/foo"],
@@ -366,7 +366,7 @@ def test_star_vs_star_start():
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_questionmark():
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         ["foo?.py"],
         ["fooa.py", "foob.py"],
         ["foo.py", "footwo.py", "foo/.py"],
@@ -375,7 +375,7 @@ def test_questionmark():
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_brackets():
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         ["*.py[cod]"],
         ["a.pyc", "b.pyo", "d.pyd", "foo/.pyc", "bar/__pycache__.pyc"],
         ["a.py", "b.pyq", "c.so", "foo/__pycache__/bar.py"],
@@ -384,7 +384,7 @@ def test_brackets():
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_bracket_ranges():
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         ["foo[1-9].py"],
         ["foo1.py", "foo2.py", "foo9.py"],
         ["foo0.py", "foo10.py", "fooa.py"],
@@ -393,7 +393,7 @@ def test_bracket_ranges():
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_bracket_inverted():
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         ["foo[!1-9].py", "bar[!a].py"],
         ["fooa.py", "foob.py", "fooc.py", "barb.py", "barc.py"],
         ["foo1.py", "foo2.py", "foo10.py", "bara.py"],
@@ -401,7 +401,7 @@ def test_bracket_inverted():
 
 
 def test_slashes_in_brackets():
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         [r"foo[\\].py"],
         [r"foo\.py"],
         [r"fooa.py"],
@@ -413,33 +413,33 @@ def test_slashes_in_brackets():
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_special_chars_in_brackets():
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         [r"foo[a|b].py"],
         [r"fooa.py", "foob.py", "foo|.py"],
         [r"foo.py", r"fooc.py"],
     )
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         [r"foo[ab|cd].py"],
         [r"fooa.py", "foob.py", "fooc.py", "food.py", "foo|.py"],
         [r"foo.py", "fooe.py", "fooab.py", "fooac.py"],
     )
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         [r"foo[a&].py"],
         [r"fooa.py", r"foo&.py"],
         [r"foo.py", r"fooa&.py", "foob.py"],
     )
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         [r"foo[a~].py"],
         [r"fooa.py", r"foo~.py"],
         [r"foo.py", r"fooa~.py", "foob.py"],
     )
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         [r"foo[[a].py"],
         [r"fooa.py", r"foo[.py"],
         [r"foo.py", r"fooa[.py", "foob.py"],
     )
     # Git allows ! or ^ to mean negate the glob
-    assertMatchedAndNonMatched(
+    assert_matched_and_non_matched(
         [r"foo[^a].py"],
         ["foob.py", "fooc.py", "foo^.py"],
         [r"foo.py", r"fooa.py", r"fooa^.py"],

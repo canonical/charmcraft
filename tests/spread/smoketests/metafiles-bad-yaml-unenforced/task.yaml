@@ -2,7 +2,7 @@ summary: >
   create a charm that use charmcraft.yaml, but bad
   metadata.yaml, config.yaml, actions.yaml
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -73,7 +73,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |
@@ -95,4 +95,3 @@ execute: |
   unzip -p charm*.charm metadata.yaml | MATCH "#### TEST-COPY ####"
 
   test ! -d build
-

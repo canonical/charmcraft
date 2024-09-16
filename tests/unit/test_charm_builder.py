@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_subprocess import FakeProcess
 
-from charmcraft import charm_builder, errors, utils
+from charmcraft import charm_builder, const, errors, utils
 
 pytestmark = [
     # Always use pyfakefs and pytest-subprocess
@@ -30,15 +30,15 @@ pytestmark = [
 REQUIREMENTS_FILES = [pytest.param("", id="empty"), "ops~=2.5", "requests\nops"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def builder(fs: FakeFilesystem) -> charm_builder.CharmBuilder:
     fs.cwd = "/root"
-    fs.makedirs("build")
+    fs.makedirs(const.BUILD_DIRNAME)
     fs.makedirs("install")
     charm_file = fs.create_file("src/charm.py")
 
     return charm_builder.CharmBuilder(
-        builddir=pathlib.Path("build"),
+        builddir=pathlib.Path(const.BUILD_DIRNAME),
         installdir=pathlib.Path("install"),
         entrypoint=charm_file.path,
         requirements=[pathlib.Path("requirements.txt")],
@@ -101,9 +101,14 @@ def test_install_strict_dependencies_success(
     expected_command = [
         "/pip",
         "install",
+        "--no-deps",
         "--no-binary=:all:",
         "--requirement=requirements.txt",
     ]
-    fake_process.register(expected_command, returncode=0)
+    install_cmd = fake_process.register(expected_command, returncode=0)
+    check_cmd = fake_process.register(["/pip", "check"], returncode=0)
 
     builder._install_strict_dependencies("/pip")
+
+    assert install_cmd.call_count() == 1
+    assert check_cmd.call_count() == 1

@@ -54,10 +54,11 @@ class PythonPlugin(python_plugin.PythonPlugin):
     def _get_package_install_commands(self) -> list[str]:
         """Get the package installation commands.
 
-        This overrides the generic class to also:
+        This overrides the generic class in the following ways:
 
-        1. Copy the charm source into the charm.
-        2. Copy the charmlibs into the charm.
+        1. Doesn't try to install '.' (charms are not installable packages)
+        2. Copy the charm source into the charm.
+        3. Copy the charmlibs into the charm.
         """
         pip = self._get_pip()
         install_params = shlex.join(

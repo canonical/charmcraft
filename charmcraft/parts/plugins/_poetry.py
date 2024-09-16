@@ -49,7 +49,8 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
     def _get_pip_install_commands(self, requirements_path: pathlib.Path) -> list[str]:
         """Get the commands for installing with pip.
 
-        This only installs the dependencies from requirements, unlike the upstream version.
+        This only installs the dependencies from requirements, unlike the upstream
+        version, because charms are not installable Python packages.
 
         :param requirements_path: The path of the requirements.txt file to write to.
         :returns: A list of strings forming the install script.

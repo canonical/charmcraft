@@ -29,11 +29,13 @@ from typing import (
     cast,
 )
 
+import craft_platforms
 import pydantic
 import pydantic.v1
 from craft_application import errors, models, util
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError, emit
+from craft_platforms import charm
 from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self
@@ -345,38 +347,28 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
 
         if self.platforms is None:
             raise CraftError("Must define at least one platform.")
-        build_infos = []
-        for platform_name, platform in self.platforms.items():
-            if platform is None:
-                if platform_name not in const.SUPPORTED_ARCHITECTURES:
-                    raise CraftError(
-                        f"Invalid platform {platform_name}.",
-                        details="A platform name must either be a valid architecture name or the "
-                        "platform must specify one or more build-on and build-for architectures.",
-                    )
-                build_infos.append(
-                    models.BuildInfo(
-                        platform_name,
-                        build_on=platform_name,
-                        build_for=platform_name,
-                        base=base,
-                    )
-                )
-            else:
-                # TODO: this should go to craft-platforms, so silence mypy for now.
-                for build_on in platform.build_on:  # type: ignore[union-attr]
-                    build_infos.extend(
-                        [
-                            models.BuildInfo(
-                                platform_name,
-                                build_on=str(build_on),
-                                build_for=str(build_for),
-                                base=base,
-                            )
-                            for build_for in platform.build_for  # type: ignore[union-attr]
-                        ]
-                    )
-        return build_infos
+        platforms = cast(
+            # https://github.com/canonical/craft-platforms/issues/43
+            craft_platforms.Platforms,  # pyright: ignore[reportPrivateImportUsage]
+            {
+                name: (platform.marshal() if platform else None)
+                for name, platform in self.platforms.items()
+            },
+        )
+        build_infos = charm.get_platforms_charm_build_plan(
+            base=self.base,
+            build_base=self.build_base,
+            platforms=platforms,
+        )
+        return [
+            models.BuildInfo(
+                platform=info.platform,
+                build_on=str(info.build_on),
+                build_for=str(info.build_for),
+                base=base,
+            )
+            for info in build_infos
+        ]
 
 
 class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):

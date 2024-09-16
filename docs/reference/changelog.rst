@@ -77,6 +77,28 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
+3.2.1 (2024-09-16)
+------------------
+
+This is a bugfix release for 3.2, bringing in two fixes:
+
+Core
+====
+
+The shared cache directory now gets locked. Builds that run while another copy of
+Charmcraft has the cache directory locked will run without a shared cache.
+
+Plugins
+#######
+
+charm
+"""""
+
+The charm plugin will now force-install pip if the installed venv version is older
+than the minimum version, guaranteeing that pip gets updated correctly.
+
+For a complete list of commits, see the `3.2.1`_ release on GitHub.
+
 3.2.0 (2024-08-28)
 ------------------
 
@@ -293,3 +315,4 @@ page.
 .. _3.1.1: https://github.com/canonical/charmcraft/releases/tag/3.1.1
 .. _3.1.2: https://github.com/canonical/charmcraft/releases/tag/3.1.2
 .. _3.2.0: https://github.com/canonical/charmcraft/releases/tag/3.2.0
+.. _3.2.1: https://github.com/canonical/charmcraft/releases/tag/3.2.1

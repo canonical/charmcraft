@@ -131,7 +131,14 @@ def test_get_pip_command(
 
 @pytest.mark.parametrize(
     ("pip_cmd", "stdout", "expected"),
-    [("pip", "pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)\n", (22, 0, 2))],
+    [
+        ("pip", "pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)\n", (22, 0, 2)),
+        (
+            "venv/bin/pip",
+            "pip 20.0.2 from /root/venv/lib/python3.8/site-packages/pip (python 3.8)",
+            (20, 0, 2),
+        ),
+    ],
 )
 def test_get_pip_version_success(
     fake_process,

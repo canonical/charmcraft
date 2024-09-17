@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for init command."""
 import argparse
-import contextlib
 import os
 import pathlib
 import re
@@ -28,7 +27,6 @@ import pydocstyle
 import pytest
 import pytest_check
 
-import charmcraft
 from charmcraft import application, errors
 from charmcraft.application import commands
 from charmcraft.utils import S_IXALL
@@ -105,7 +103,7 @@ def init_command() -> commands.InitCommand:
 def create_namespace(
     *,
     name="my-charm",
-    author="J Doe",
+    author: str | None = "J Doe",
     force=False,
     profile=commands.init.DEFAULT_PROFILE,
     project_dir: pathlib.Path | None = None,

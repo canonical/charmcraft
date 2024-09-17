@@ -126,7 +126,7 @@ class _Matcher:
         orig_rule: str,
         invert: bool,
         only_dirs: bool,
-        regex: typing.Pattern,
+        regex: re.Pattern[str] | str,
     ):
         self.line_num = line_num
         self.orig_rule = orig_rule

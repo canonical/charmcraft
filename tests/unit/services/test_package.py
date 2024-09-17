@@ -37,9 +37,11 @@ SIMPLE_MANIFEST = models.Manifest(
     charmcraft_started_at="1970-01-01T00:00:00+00:00",
     bases=[SIMPLE_BUILD_BASE],
 )
-MANIFEST_WITH_ATTRIBUTE = models.Manifest(
-    **SIMPLE_MANIFEST.marshal(),
-    analysis={"attributes": [models.Attribute(name="boop", result="success")]},
+MANIFEST_WITH_ATTRIBUTE = models.Manifest.unmarshal(
+    {
+        **SIMPLE_MANIFEST.marshal(),
+        "analysis": {"attributes": [models.Attribute(name="boop", result="success")]},
+    },
 )
 
 

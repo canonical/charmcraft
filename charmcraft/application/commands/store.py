@@ -259,7 +259,7 @@ class WhoamiCommand(CharmcraftCommand):
             return
 
         human_msgs = []
-        prog_info = {"logged": True}
+        prog_info: dict[str, Any] = {"logged": True}
 
         human_msgs.append(f"name: {macaroon_info['account']['display-name']}")
         prog_info["name"] = macaroon_info["account"]["display-name"]
@@ -281,7 +281,7 @@ class WhoamiCommand(CharmcraftCommand):
             for package_type, title in [("charm", "charms"), ("bundle", "bundles")]:
                 if package_type in grouped:
                     human_msgs.append(f"{title}:")
-                    pkg_info = []
+                    pkg_info: list[dict[str, str]] = []
                     for item in grouped[package_type]:
                         if item.name is not None:
                             human_msgs.append(f"- name: {item.name}")

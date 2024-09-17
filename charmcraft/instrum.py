@@ -1,4 +1,4 @@
-# Copyright 2022 Canonical Ltd.
+# Copyright 2022,2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 """Provide utilities to measure performance in different parts of the app."""
 
 import json
+import pathlib
 import uuid
 from time import time
 from typing import Any
@@ -34,7 +35,7 @@ class _Measurements:
         # ancestors list when a measure starts (last item is direct parent); the
         # first value is special, None, to reflect the "root", the rest are
         # measurement ids
-        self.parents = [None]  # start with a unique "root"
+        self.parents: list[str | None] = [None]  # start with a unique "root"
 
         # simple dict to hold measurements information; the key is the measurement
         # id and each value holds all it info
@@ -74,7 +75,7 @@ class _Measurements:
         with open(filename, "w") as fh:
             json.dump(measurements, fh, indent=4)
 
-    def merge_from(self, filename: str) -> None:
+    def merge_from(self, filename: str | pathlib.Path) -> None:
         """Merge measurements from a file to the current ongoing structure."""
         with open(filename) as fh:
             to_merge = json.load(fh)

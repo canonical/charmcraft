@@ -18,11 +18,14 @@
 
 import pathlib
 import textwrap
+from typing import cast
 
 from charmcraft.utils import create_importable_name, get_lib_info
 
 
-def create_lib_filepath(charm_name, lib_name, api=0, patch=1, lib_id="test-lib-id"):
+def create_lib_filepath(
+    charm_name: str, lib_name: str, api: int = 0, patch: int = 1, lib_id: str = "test-lib-id"
+) -> tuple[str, str]:
     """Helper to create the structures on disk for a given lib."""
     charm_name = create_importable_name(charm_name)
     base_dir = pathlib.Path("lib")
@@ -46,4 +49,4 @@ def create_lib_filepath(charm_name, lib_name, api=0, patch=1, lib_id="test-lib-i
     # use get_lib_info to get the hash of the file, as the used hash is WITHOUT the metadata
     # files (no point in duplicating that logic here)
     libdata = get_lib_info(lib_path=lib_file)
-    return content, libdata.content_hash
+    return content, cast(str, libdata.content_hash)

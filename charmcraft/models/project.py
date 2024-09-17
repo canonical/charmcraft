@@ -15,6 +15,8 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Project-related models for Charmcraft."""
 
+from __future__ import annotations
+
 import abc
 import datetime
 import pathlib
@@ -433,7 +435,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         return self._started_at
 
     @classmethod
-    def unmarshal(cls, data: dict[str, Any]):
+    def unmarshal(cls, data: dict[str, Any]) -> CharmcraftProject:
         """Create a Charmcraft project from a dictionary of data."""
         if cls is not CharmcraftProject:
             return cls.model_validate(data)
@@ -447,7 +449,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         raise ValueError(f"field type cannot be {project_type!r}")
 
     @classmethod
-    def from_yaml_file(cls, path: pathlib.Path) -> Self:
+    def from_yaml_file(cls, path: pathlib.Path) -> CharmcraftProject:
         """Instantiate this model from a YAML file.
 
         For use with craft-application.

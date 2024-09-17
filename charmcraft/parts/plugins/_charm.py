@@ -22,6 +22,7 @@ import sys
 from contextlib import suppress
 from typing import Literal, cast
 
+import craft_parts
 import overrides
 import pydantic
 from craft_parts import Step, callbacks, plugins
@@ -346,9 +347,10 @@ class CharmPlugin(plugins.Plugin):
 
         return parameters
 
-    def post_build_callback(self, step_info):
+    def post_build_callback(self, step_info: craft_parts.StepInfo) -> Literal[False]:
         """Collect metrics left by charm_builder.py."""
         instrum.merge_from(env.get_charm_builder_metrics_path())
+        return False
 
     def _get_os_special_priority_paths(self) -> str | None:
         """Return a str of PATH for special OS."""

@@ -78,7 +78,7 @@ def _apply_extension(
 
 
 def _apply_extension_property(
-    existing_property: dict | list, extension_property: dict | list
+    existing_property: dict | list | None, extension_property: dict | list
 ) -> dict | list:
     if existing_property:
         # If the property is not scalar, merge them

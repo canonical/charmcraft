@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,23 +13,26 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-import pathlib
+
 import sys
 
+import craft_platforms
+import distro
 import pytest
+from craft_application import models
+from craft_providers import bases
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
-
-
-@pytest.fixture
-def build_path(tmp_path: pathlib.Path) -> pathlib.Path:
-    path = tmp_path / "parts" / "foo" / "build"
-    path.mkdir(parents=True)
-    return path
+pytestmark = [pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")]
 
 
 @pytest.fixture
-def install_path(tmp_path: pathlib.Path) -> pathlib.Path:
-    path = tmp_path / "parts" / "foo" / "install"
-    path.mkdir(parents=True)
-    return path
+def build_plan() -> list[models.BuildInfo]:
+    arch = craft_platforms.DebianArchitecture.from_host().value
+    return [
+        models.BuildInfo(
+            base=bases.BaseName(distro.id(), distro.version()),
+            build_on=arch,
+            build_for="arm64",
+            platform="distro-1-test64",
+        )
+    ]

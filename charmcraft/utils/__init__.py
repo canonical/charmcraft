@@ -55,6 +55,7 @@ from charmcraft.utils.package import (
     get_requirements_file_package_names,
     validate_strict_dependencies,
 )
+from charmcraft.utils.parts import extend_python_build_environment, get_charm_copy_commands
 from charmcraft.utils.project import (
     find_charm_sources,
     get_charm_name_from_path,
@@ -100,6 +101,8 @@ __all__ = [
     "confirm_with_user",
     "format_content",
     "humanize_list",
+    "extend_python_build_environment",
+    "get_charm_copy_commands",
     "find_charm_sources",
     "get_charm_name_from_path",
     "get_templates_environment",

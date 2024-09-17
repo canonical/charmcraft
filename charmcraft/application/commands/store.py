@@ -258,7 +258,7 @@ class WhoamiCommand(CharmcraftCommand):
             return
 
         human_msgs = []
-        prog_info = {"logged": True}
+        prog_info: dict[str, Any] = {"logged": True}
 
         human_msgs.append(f"name: {macaroon_info['account']['display-name']}")
         prog_info["name"] = macaroon_info["account"]["display-name"]
@@ -274,7 +274,7 @@ class WhoamiCommand(CharmcraftCommand):
             prog_info["permissions"] = permissions
 
         if packages := macaroon_info.get("packages"):
-            grouped = {}
+            grouped: dict[str, list[dict[str, str]]] = {}
             for package in packages:
                 grouped.setdefault(package["type"], []).append(package)
             for package_type, title in [("charm", "charms"), ("bundle", "bundles")]:

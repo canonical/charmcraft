@@ -22,7 +22,6 @@ import pytest
 
 from charmcraft import env
 from charmcraft.application.commands import FetchLibCommand
-from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.store.models import Library
 from tests import factory
 
@@ -44,7 +43,7 @@ def store_mock():
 
 
 # region fetch-lib tests
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_simple_downloaded(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
     """Happy path fetching the lib for the first time (downloading it)."""
     monkeypatch.chdir(tmp_path)
@@ -228,7 +227,7 @@ def test_fetchlib_simple_updated(emitter, store_mock, tmp_path, monkeypatch, con
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_all(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
     """Update all the libraries found in disk."""
     monkeypatch.chdir(tmp_path)
@@ -338,7 +337,7 @@ def test_fetchlib_all(emitter, store_mock, tmp_path, monkeypatch, config, format
     assert saved_file.read_text() == "new lib content 2"
 
 
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_store_not_found(emitter, store_mock, config, formatted):
     """The indicated library is not found in the store."""
     store_mock.get_libraries_tips.return_value = {}
@@ -364,7 +363,7 @@ def test_fetchlib_store_not_found(emitter, store_mock, config, formatted):
         emitter.assert_message(error_message)
 
 
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
     """The store has an older version that what is found locally."""
     monkeypatch.chdir(tmp_path)
@@ -403,7 +402,7 @@ def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, confi
         emitter.assert_message(error_message)
 
 
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_store_same_versions_same_hash(
     emitter, store_mock, tmp_path, monkeypatch, config, formatted
 ):
@@ -444,7 +443,7 @@ def test_fetchlib_store_same_versions_same_hash(
         emitter.assert_message(error_message)
 
 
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_store_same_versions_different_hash(
     emitter, store_mock, tmp_path, monkeypatch, config, formatted
 ):

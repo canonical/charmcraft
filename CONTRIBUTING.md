@@ -3,15 +3,14 @@
 It's recommended to use `uv` for setting up your development environment, but
 this is not required. `uv` is available [as a snap](https://snapcraft.io/astral-uv)
 and from [official sources](https://docs.astral.sh/uv/getting-started/installation/).
-If using `uv`, substitute `virtualenv` with `uv venv` and `pip` with `uv pip`.
 
 To set up an initial development environment:
 
     git clone https://github.com/canonical/charmcraft.git
     cd charmcraft
-    virtualenv venv
-    . venv/bin/activate
-    pip install -r requirements-dev.txt -e .
+    uv venv
+    . .venv/bin/activate
+    uv pip install -r requirements-dev.txt -e .
 
 You will need a copy of `ruff` installed. On many Linux distributions, you
 can install ruff with:
@@ -20,7 +19,7 @@ can install ruff with:
 
 Otherwise, you can install ruff in your virtual environment with:
 
-    pip install ruff
+    uv pip install ruff
 
 
 ## Developing against Charmcraft source
@@ -36,7 +35,7 @@ When you're done, make sure you run the tests.
 
 You can do so with
 
-    pip install -r requirements-dev.txt
+    uv pip install -r requirements-dev.txt
     ./run_tests
 
 Contributions welcome!

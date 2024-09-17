@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Canonical Ltd.
+# Copyright 2021-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,9 +54,9 @@ def test_expanded_charm_permissions(config, fake_project_dir, monkeypatch, modeb
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_corrupt_charm(fake_project_dir, config):
+def test_corrupt_charm(new_path, config):
     """There was a problem opening the indicated charm."""
-    charm_file = fake_project_dir / "foobar.charm"
+    charm_file = new_path / "foobar.charm"
     charm_file.write_text("this is not a real zip content")
 
     args = Namespace(filepath=charm_file, force=None, format=None, ignore=None)
@@ -73,9 +73,9 @@ def create_a_valid_zip(tmp_path):
     return zip_file
 
 
-def test_integration_linters(fake_project_dir, emitter, config, monkeypatch):
+def test_integration_linters(new_path, emitter, config, monkeypatch):
     """Integration test with a real analysis."""
-    fake_charm = create_a_valid_zip(fake_project_dir)
+    fake_charm = create_a_valid_zip(new_path)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
     Analyse(config).run(args)
 

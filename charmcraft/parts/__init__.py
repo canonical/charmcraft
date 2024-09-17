@@ -26,21 +26,27 @@ from charmcraft.parts.lifecycle import PartsLifecycle
 
 __all__ = [
     "plugins",
+    "get_app_plugins",
     "setup_parts",
     "process_part_config",
     "PartsLifecycle",
 ]
 
 
-def setup_parts():
+def get_app_plugins() -> dict[str, type[craft_parts.plugins.Plugin]]:
+    """Get the app-specific plugins for Charmcraft."""
+    return {
+        "bundle": plugins.BundlePlugin,
+        "charm": plugins.CharmPlugin,
+        "poetry": plugins.PoetryPlugin,
+        "python": plugins.PythonPlugin,
+        "reactive": plugins.ReactivePlugin,
+    }
+
+
+def setup_parts() -> None:
     """Initialize craft-parts plugins."""
-    craft_parts.plugins.register(
-        {
-            "charm": plugins.CharmPlugin,
-            "bundle": plugins.BundlePlugin,
-            "reactive": plugins.ReactivePlugin,
-        }
-    )
+    craft_parts.plugins.register(get_app_plugins())
 
 
 def process_part_config(data: dict[str, Any]) -> dict[str, Any]:

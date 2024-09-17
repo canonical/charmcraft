@@ -24,7 +24,6 @@ from craft_cli import CraftError
 
 from charmcraft import linters
 from charmcraft.application.commands.analyse import Analyse
-from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.models.lint import LintResult
 
 
@@ -85,7 +84,7 @@ def test_integration_linters(fake_project_dir, emitter, config, monkeypatch):
     )
 
 
-@pytest.mark.parametrize("indicated_format", [None, JSON_FORMAT])
+@pytest.mark.parametrize("indicated_format", [None, "json"])
 def test_complete_set_of_results(
     check, emitter, service_factory, config, monkeypatch, fake_project_dir, indicated_format
 ):

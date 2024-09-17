@@ -4,11 +4,16 @@ priority: 50  # Because these can take a while, run them early.
 
 environment:
   BASE_CHANNEL/focal_bases: 20.04
+  BASE_CHANNEL/jammy_bases,jammy_platforms: 22.04
+  BASE_CHANNEL/noble_platforms,noble_platforms_python: 24.04
+  CHARM_TYPE/focal_bases,jammy_bases: bases
+  CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_python: platforms
   BASE_CHANNEL/jammy_bases,jammy_bases_all,jammy_platforms: 22.04
-  BASE_CHANNEL/noble_platforms,noble_platforms_all: 24.04
+  BASE_CHANNEL/noble_platforms,noble_platforms_all,noble_platforms_python: 24.04
   CHARM_TYPE/focal_bases,jammy_bases,jammy_bases_all: bases
-  CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_all: platforms
+  CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_all,noble_platforms_python: platforms
   EXTRA/jammy_bases_all,noble_platforms_all: "-all"
+  EXTRA/noble_platforms_python: "-python"
   BASE_CHANNEL/alma: alma9
   CHARM_TYPE/alma: bases
 

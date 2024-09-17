@@ -29,12 +29,14 @@ import pytest
 import pytest_check
 
 import charmcraft
-from charmcraft import errors
+from charmcraft import application, errors
 from charmcraft.application import commands
 from charmcraft.utils import S_IXALL
 
-with contextlib.suppress(ImportError):
+try:
     import pwd
+except ImportError:
+    pwd = None
 
 BASIC_INIT_FILES = frozenset(
     pathlib.Path(p)
@@ -96,8 +98,8 @@ VALID_AUTHORS = [
 
 
 @pytest.fixture
-def init_command():
-    return commands.InitCommand({"app": charmcraft.application.APP_METADATA, "services": None})
+def init_command() -> commands.InitCommand:
+    return commands.InitCommand({"app": application.APP_METADATA, "services": None})
 
 
 def create_namespace(

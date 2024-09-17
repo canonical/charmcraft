@@ -165,12 +165,11 @@ include = [
     "tests/unit",
     "tests/integration",
 ]
-analyzeUnannotatedFunctions = false
+analyzeUnannotatedFunctions = true
 reportArgumentType = "warning"
 reportAttributeAccessIssue = "warning"
 reportIncompatibleVariableOverride = "warning"
 reportOptionalMemberAccess = "warning"
-
 
 [tool.mypy]
 python_version = "3.10"
@@ -198,17 +197,10 @@ disallow_untyped_decorators = true
 # Ignore typing errors in most legacy packages until we fix them.
 module=[
     "charmcraft.charm_builder",
-    "charmcraft.cmdbase",
-    "charmcraft.commands.extensions",
-    "charmcraft.commands.pack",
-    "charmcraft.commands.store",
-    "charmcraft.store.registry",
     "charmcraft.store.store",
     "charmcraft.extensions._utils",
     "charmcraft.linters",
     "charmcraft.models.charmcraft",
-    "charmcraft.package",
-    "charmcraft.providers",
 ]
 ignore_errors = true
 

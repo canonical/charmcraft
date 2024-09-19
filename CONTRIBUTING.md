@@ -19,7 +19,7 @@ can install ruff with:
 
 Otherwise, you can install ruff in your virtual environment with:
 
-    uv pip install ruff
+    uv tool install ruff
 
 
 ## Developing against Charmcraft source

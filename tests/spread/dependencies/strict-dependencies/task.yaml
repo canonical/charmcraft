@@ -14,6 +14,6 @@ execute: |
   charmcraft pack --verbose
   test -f charm*.charm
 
-  # This should be exactly version 2.5.1. Newer versions have been released,
-  # but are not valid. Non-strict dependencies would install ops 2.7.0 or newer.
-  unzip -p charm_*.charm venv/ops/version.py | MATCH "version = '2.5.1'"
+  # This should be exactly version 2.15.0. Newer versions have been released,
+  # but are not valid. Non-strict dependencies would install ops 2.16 or newer.
+  unzip -p charm_*.charm venv/ops/version.py | MATCH "version: str = '2.15.0'"

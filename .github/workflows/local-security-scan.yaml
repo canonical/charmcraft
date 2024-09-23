@@ -1,0 +1,50 @@
+name: Local security scan
+on:
+  pull_request:
+    paths:
+      - "requiremests*.txt"
+      - ".github/workflows/local-security-scan.yaml"
+      - "*.lock"
+      - "pyproject.toml"
+  push:
+    tags:
+      # These tags should be protected, remember to enable the rule:
+      # https://github.com/canonical/starbase/settings/tag_protection
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  security-scans:
+    runs-on: [self-hosted, noble]
+    steps:
+      - name: Install tools
+        run: |
+          sudo snap install --no-wait osv-scanner trivy > ${{ runner.temp }}/snap.watch
+          sudo snap install --no-wait --classic astral-uv >> ${{ runner.temp }}/snap.watch
+          sudo apt-get update
+          sudo apt-get --yes install python3-venv python3-build python-apt-dev
+          xargs --arg-file=${{ runner.temp }}/snap.watch -n 1 snap watch
+      - uses: actions/checkout@v4
+      - name: Prepare venv
+        run: |
+          pyproject-build
+      - name: Scan requirements with osv-scanner
+        if: ${{ !cancelled() }}
+        run: |
+          ls -1 requirements*.txt | xargs -I{} osv-scanner --config=.osv-config.toml --lockfile=requirements.txt:{}
+      - name: Scan source directory with osv-scanner
+        if: ${{ !cancelled() }}
+        run: osv-scanner --config=.osv-config.toml --recursive .
+      - name: Scan requirements with trivy
+        if: ${{ !cancelled() }}
+        run: |
+          ls -1 requirements*.txt | xargs -n 1 trivy filesystem --ignorefile .trivyignore.yaml
+          trivy filesystem --ignorefile .trivyignore.yaml pyproject.toml
+      - name: Scan installed venv with trivy
+        if: ${{ !cancelled() }}
+        run: |
+          uv venv
+          uv pip install -r requirements-dev.txt -r requirements-noble.txt -e .[dev]
+          trivy filesystem --ignorefile .trivyignore.yaml .venv
+      - name: Scan distributable files with trivy
+        if: ${{ !cancelled() }}
+        run: ls -1 dist/* | xargs -n 1 trivy filesystem --ignorefile .trivyignore.yaml

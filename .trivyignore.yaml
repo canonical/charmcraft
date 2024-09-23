@@ -1,0 +1,4 @@
+vulnerabilities:
+  - id: CVE-2024-35195
+    expired_at: "2025-01-01T00:00:00Z"
+    statement: Needed for requests-unixsocket, which we're replacing with requests-unixsocket2

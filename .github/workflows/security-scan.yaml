@@ -1,0 +1,50 @@
+# # NOTE: This job is currently commented out, as the self-hosted runners don't have
+# # access to the internal security scanning API.
+#
+# name: Security Scan
+# on:
+#   schedule:
+#     - cron: "0 0 13 * *"  # Midnight UTC on the 13th of the month
+#   workflow_dispatch:  # Allow manual run too.
+#   push:
+#     branches:
+#       - work/secscan  # Allow checks to happen on this branch for workflow development
+#
+# concurrency: # No concurrency for this workflow. We don't need to overload the server.
+#   group: ${{ github.workflow }}
+#   cancel-in-progress: true
+#
+# jobs:
+#   standalone-secscan:
+#     runs-on: [self-hosted, X64]  # The client is currently only published for amd64
+#     strategy:
+#       max-parallel: 1  # We'll be queueing anyway, so only run one job at a time.
+#       matrix:
+#         scanner:
+#           - blackduck
+#           - osv
+#           - trivy
+#         channel:
+#           - latest
+#           - 3.x
+#           - 2.x
+#     steps:
+#       - name: Begin snap install
+#         id: snap-install
+#         run: |
+#           echo -n "secscan_snap=" >> "$GITHUB_OUTPUT"
+#           sudo snap install --no-wait canonical-secscan-client >> "$GITHUB_OUTPUT"
+#       - name: Download snaps
+#         run: |
+#           for arch in amd64 arm64 s390x ppc64el riscv64; do
+#             for risk in stable candidate beta edge; do
+#               UBUNTU_STORE_ARCH=${arch} snap download --channel=${{ matrix.channel }}/${risk} charmcraft
+#             done
+#           done
+#       - name: Wait for snap
+#         run: |
+#           snap watch ${{ steps.snap-install.outputs.secscan_snap }}
+#           sudo snap connect canonical-secscan-client:home system:home
+#       - name: Scan channel ${{ matrix.channel }} with ${{ matrix.scanner }}
+#         run: |
+#           ls -1 *.snap | xargs -I {} secscan-client submit --scanner ${{ matrix.scanner }} --type package --format snap --wait-and-print {}

@@ -1,0 +1,37 @@
+summary: test charmlibs dependencies download and update on pack
+
+environment:
+  # Use the real store.
+  CHARMCRAFT_STORE_API_URL: https://api.charmhub.io
+
+include:
+  - tests/spread/dependencies
+
+kill-timeout: 30m
+
+prepare: |
+  mkdir -p charm
+  pushd charm
+  charmcraft init --profile=machine
+  popd
+
+  cp charmcraft.yaml charm/charmcraft.yaml
+
+execute: |
+  pushd charm
+  charmcraft pack
+  test -f *.charm
+  test -f lib/charms/data_platform_libs/v0/upgrade.py
+  cat lib/charms/data_platform_libs/v0/upgrade.py | MATCH 'LIBPATCH = 18'
+
+  sed -i 's/version: "0.18"/version: "0.10"/' charmcraft.yaml
+  charmcraft pack
+  cat lib/charms/data_platform_libs/v0/upgrade.py | MATCH 'LIBPATCH = 10'
+
+restore: |
+  rm -f ~/*.charm
+
+  pushd charm
+  charmcraft clean
+  popd
+  rm -rf charm

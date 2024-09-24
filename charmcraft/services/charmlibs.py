@@ -17,14 +17,10 @@
 from __future__ import annotations
 
 import pathlib
-import tempfile
-import zipfile
-from collections.abc import Container, Iterator
 
 import craft_application
 
-from charmcraft import errors, linters, models, utils
-from charmcraft.models.lint import CheckResult
+from charmcraft import models, utils
 from charmcraft.store.models import Library
 
 
@@ -33,10 +29,16 @@ class CharmLibsService(craft_application.ProjectService):
 
     _project: models.CharmcraftProject  # type: ignore[assignment]
 
-    def __init__(self, app: craft_application.AppMetadata, services: craft_application.ServiceFactory, *, project: models.CharmcraftProject, project_dir: pathlib.Path) -> None:
+    def __init__(
+        self,
+        app: craft_application.AppMetadata,
+        services: craft_application.ServiceFactory,
+        *,
+        project: models.CharmcraftProject,
+        project_dir: pathlib.Path,
+    ) -> None:
         super().__init__(app, services, project=project)
         self._project_dir = project_dir
-
 
     def is_lib_downloaded(
         self, *, charm_name: str, lib_name: str, api: int, patch: int | None = None

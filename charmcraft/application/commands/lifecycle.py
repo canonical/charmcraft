@@ -16,7 +16,6 @@
 """craft-application based lifecycle commands."""
 from __future__ import annotations
 
-from argparse import RawTextHelpFormatter
 import pathlib
 import sys
 import textwrap
@@ -26,7 +25,6 @@ import craft_cli
 from craft_application.commands import lifecycle
 from craft_cli import ArgumentParsingError, CraftError
 from typing_extensions import override
-from yaml import emit
 
 from charmcraft import models, services, utils
 
@@ -180,9 +178,7 @@ class PackCommand(lifecycle.PackCommand):
 
     def _update_charm_libs(self) -> None:
         """Update charm libs attached to the project."""
-        craft_cli.emit.progress(
-            "Checking that charmlibs match 'charmcraft.yaml' values"
-        )
+        craft_cli.emit.progress("Checking that charmlibs match 'charmcraft.yaml' values")
         project = cast(models.CharmcraftProject, self._services.project)
         libs_svc = cast(services.CharmLibsService, self._services.charm_libs)
         updatable_libs: list[models.CharmLib] = []
@@ -192,7 +188,7 @@ class PackCommand(lifecycle.PackCommand):
                 charm_name=charm_name,
                 lib_name=lib_name,
                 api=lib.api_version,
-                patch=lib.patch_version
+                patch=lib.patch_version,
             ):
                 updatable_libs.append(lib)
         if updatable_libs:
@@ -201,13 +197,13 @@ class PackCommand(lifecycle.PackCommand):
             with craft_cli.emit.progress_bar(
                 "Downloading charmlibs...", len(updatable_libs)
             ) as progress:
-                for lib in libraries_md:
-                    craft_cli.emit.debug(repr(lib))
+                for library in libraries_md:
+                    craft_cli.emit.debug(repr(library))
                     lib_contents = store.get_library(
-                        lib.charm_name,
-                        library_id=lib.lib_id,
-                        api=lib.api,
-                        patch=lib.patch
+                        library.charm_name,
+                        library_id=library.lib_id,
+                        api=library.api,
+                        patch=library.patch,
                     )
                     libs_svc.write_lib(lib_contents)
                     progress.advance(1)

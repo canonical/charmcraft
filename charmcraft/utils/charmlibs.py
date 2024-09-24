@@ -210,7 +210,7 @@ def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None 
     if lib_path:
         # get it from the lib_path
         try:
-            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
+            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[-5:-1]
         except ValueError:
             raise errors.BadLibraryPathError(lib_path)
         if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":

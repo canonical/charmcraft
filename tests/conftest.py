@@ -109,6 +109,10 @@ def service_factory(
         cache_dir=pathlib.Path("/cache"),
         build_plan=default_build_plan,
     )
+    factory.update_kwargs(
+        "charm_libs",
+        project_dir=fake_project_dir,
+    )
 
     factory.project = simple_charm
 

@@ -162,6 +162,23 @@ def test_getlibinfo_success_simple(tmp_path, monkeypatch):
     assert lib_data.charm_name == "testcharm"
 
 
+def test_getlibinfo_success_absolute_path(tmp_path, monkeypatch):
+    """Simple basic case of success getting info from the library."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib()
+
+    lib_data = get_lib_info(lib_path=test_path.absolute())
+    assert lib_data.lib_id == "test-lib-id"
+    assert lib_data.api == 3
+    assert lib_data.patch == 14
+    assert lib_data.content_hash is not None
+    assert lib_data.content is not None
+    assert lib_data.full_name == "charms.testcharm.v3.testlib"
+    assert lib_data.path == test_path.absolute()
+    assert lib_data.lib_name == "testlib"
+    assert lib_data.charm_name == "testcharm"
+
+
 @pytest.mark.parametrize(
     "name",
     [

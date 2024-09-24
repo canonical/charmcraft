@@ -2,7 +2,7 @@ name: Local security scan
 on:
   pull_request:
     paths:
-      - "requiremests*.txt"
+      - "requirements*.txt"
       - ".github/workflows/local-security-scan.yaml"
       - "*.lock"
       - "pyproject.toml"

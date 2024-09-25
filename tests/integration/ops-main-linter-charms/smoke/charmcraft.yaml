@@ -1,0 +1,16 @@
+---
+name: smoke
+type: charm
+title: n/a
+summary: n/a
+description: n/a
+
+base: ubuntu@24.04
+build-base: ubuntu@24.04
+platforms:
+    arm64:
+
+parts:
+    charm:
+        plugin: charm
+        source: .

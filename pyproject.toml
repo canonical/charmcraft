@@ -67,8 +67,8 @@ lint = [
     "yamllint",
 ]
 types = [
-    "mypy[reports]~=1.5",
-    "pyright==1.1.366",
+    "mypy[reports]~=1.11",
+    "pyright==1.1.380",
     "types-python-dateutil",
     "types-PyYAML",
     "types-requests<2.31.0.20240312",  # Frozen until we can get urllib3 v2

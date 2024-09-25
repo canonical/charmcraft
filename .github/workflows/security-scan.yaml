@@ -1,0 +1,20 @@
+name: Security scan
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - hotfix/*
+      - work/secscan  # For development
+
+jobs:
+  python-scans:
+    name: Scan Python project
+    uses: lengau/starflow/.github/workflows/scan-python.yaml@work/secscan
+    with:
+      packages: python-apt-dev
+      # 1. requirements-noble.txt can't build on jammy
+      # 2. Ignore requirements files in spread tests, as some of these intentionally
+      #    contain vulnerable versions.
+      requirements-find-args: '! -name requirements-noble.txt ! -path "./tests/spread/*"'
+      osv-extra-args: '--config=source/osv-scanner.toml'

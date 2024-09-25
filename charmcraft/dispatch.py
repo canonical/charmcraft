@@ -17,6 +17,8 @@
 
 import pathlib
 
+import craft_cli
+
 from charmcraft import const
 
 DISPATCH_SCRIPT_TEMPLATE = """\
@@ -54,6 +56,7 @@ def create_dispatch(*, prime_dir: pathlib.Path, entrypoint: str = "src/charm.py"
     if not (prime_dir / entrypoint).exists():
         return False
 
+    craft_cli.emit.progress("Creating dispatch file")
     dispatch_path.write_text(DISPATCH_SCRIPT_TEMPLATE.format(entrypoint=entrypoint))
     dispatch_path.chmod(mode=0o755)
 

@@ -36,7 +36,7 @@ pytz==2023.4
 pyxdg==0.28
 PyYAML==6.0.2
 referencing==0.30.2
-requests==2.31.0
+requests==2.32.2
 requests-toolbelt==1.0.0
 requests-unixsocket==0.3.0
 rpds-py==0.10.6

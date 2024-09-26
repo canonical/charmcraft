@@ -31,7 +31,7 @@ class _AppBase(Extension):
         {"lib": "traefik_k8s.ingress", "version": "2"},
         {"lib": "observability_libs.juju_topology", "version": "0"},
         {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
-        {"lib": "loki_k8s.loki_push_api", "version": "0"},
+        {"lib": "loki_k8s.loki_push_api", "version": "1"},
         {"lib": "data_platform_libs.data_interfaces", "version": "0"},
         {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
         {"lib": "redis_k8s.redis", "version": "0"},

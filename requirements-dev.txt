@@ -71,7 +71,7 @@ pytz==2024.1
 pyxdg==0.28
 pyyaml==6.0.2
 referencing==0.35.1
-requests==2.31.0
+requests==2.32.2
 requests-toolbelt==1.0.0
 requests-unixsocket==0.3.0
 responses==0.25.3

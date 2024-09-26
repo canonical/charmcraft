@@ -11,7 +11,7 @@ include:
 kill-timeout: 30m
 
 prepare: |
-  tests.pkgs install pipx python3-venv
+  tests.pkgs install pipx python3-venv nodejs
   pipx install --force tox
   rm -rf charm
   charmcraft init --project-dir=charm --profile=${PROFILE}

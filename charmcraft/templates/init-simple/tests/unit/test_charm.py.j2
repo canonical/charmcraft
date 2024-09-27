@@ -62,7 +62,7 @@ def test_config_changed_valid_can_connect():
             }
         },
     }
-    assert expected_plan == updated_plan
+    assert updated_plan == expected_plan
     assert state_out.unit_status == testing.ActiveStatus()
 
 

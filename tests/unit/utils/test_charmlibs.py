@@ -25,6 +25,7 @@ from craft_cli import CraftError
 from charmcraft import const
 from charmcraft.utils.charmlibs import (
     collect_charmlib_pydeps,
+    get_lib_charm_path,
     get_lib_info,
     get_lib_internals,
     get_lib_module_name,
@@ -89,6 +90,16 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 )
 def test_get_lib_path(charm: str, lib: str, api: int, expected: pathlib.Path):
     assert get_lib_path(charm, lib, api) == expected
+
+
+@pytest.mark.parametrize(
+    ("charm", "expected"),
+    [
+        ("my-charm", pathlib.Path("lib/charms/my_charm")),
+    ],
+)
+def test_get_lib_charm_path(charm: str, expected: pathlib.Path):
+    assert get_lib_charm_path(charm) == expected
 
 
 @pytest.mark.parametrize(

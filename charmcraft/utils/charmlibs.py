@@ -177,9 +177,16 @@ def get_lib_path(charm: str, lib_name: str, api: int) -> pathlib.Path:
     :param api: The API version of the library
     :returns: A relative path to the library python file.
     """
-    return (
-        pathlib.Path("lib/charms") / create_importable_name(charm) / f"v{api}" / f"{lib_name}.py"
-    )
+    return get_lib_charm_path(charm) / f"v{api}" / f"{lib_name}.py"
+
+
+def get_lib_charm_path(charm: str) -> pathlib.Path:
+    """Get a relative path where the libraries for a charm would be stored.
+
+    :param charm: the name of the charm
+    :returns: A relative path to the charm's libraries directory.
+    """
+    return pathlib.Path("lib/charms") / create_importable_name(charm)
 
 
 def get_lib_module_name(charm: str, lib_name: str, api: int) -> str:

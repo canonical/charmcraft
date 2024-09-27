@@ -181,21 +181,16 @@ class PackCommand(lifecycle.PackCommand):
         craft_cli.emit.progress("Checking that charmlibs match 'charmcraft.yaml' values")
         project = cast(models.CharmcraftProject, self._services.project)
         libs_svc = cast(services.CharmLibsService, self._services.charm_libs)
-        updatable_libs: list[models.CharmLib] = []
+        installable_libs: list[models.CharmLib] = []
         for lib in project.charm_libs:
             charm_name, _, lib_name = lib.lib.partition(".")
-            if not libs_svc.is_lib_downloaded(
-                charm_name=charm_name,
-                lib_name=lib_name,
-                api=lib.api_version,
-                patch=lib.patch_version,
-            ):
-                updatable_libs.append(lib)
-        if updatable_libs:
+            if not libs_svc.get_lib_version(charm_name=charm_name, lib_name=lib_name):
+                installable_libs.append(lib)
+        if installable_libs:
             store = cast(services.StoreService, self._services.store)
-            libraries_md = store.get_libraries_metadata(updatable_libs)
+            libraries_md = store.get_libraries_metadata(installable_libs)
             with craft_cli.emit.progress_bar(
-                "Downloading charmlibs...", len(updatable_libs)
+                "Downloading charmlibs...", len(installable_libs)
             ) as progress:
                 for library in libraries_md:
                     craft_cli.emit.debug(repr(library))

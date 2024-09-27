@@ -60,6 +60,26 @@ class CharmLibsService(craft_application.ProjectService):
         lib_info = utils.get_lib_info(lib_path=self._project_dir / lib_path)
         return lib_info.patch == patch
 
+    def get_lib_version(self, *, charm_name: str, lib_name: str) -> tuple[int, int] | None:
+        """Get the version of the library on the machine, or None.
+
+        :param charm_name: The name of the charm where the lib is published
+        :param lib_name: The name of the library itself
+        :returns: Either the version of the library as a pair of integers or None
+            if the library cannot be found.
+        """
+        charm_libs_path = self._project_dir / utils.get_lib_charm_path(charm_name)
+        if not charm_libs_path.is_dir():
+            return None
+        for api_version_path in charm_libs_path.iterdir():
+            lib_path = api_version_path / f"{lib_name}.py"
+            if lib_path.exists() and lib_path.is_file() or lib_path.is_symlink():
+                info = utils.get_lib_info(lib_path=lib_path)
+                if info.patch == -1:
+                    return None
+                return (info.api, info.patch)
+        return None
+
     def write_lib(self, library: Library) -> None:
         """Write the given library to disk.
 

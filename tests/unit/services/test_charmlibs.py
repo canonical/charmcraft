@@ -81,6 +81,41 @@ def test_is_lib_downloaded_with_file(
 
 
 @pytest.mark.parametrize(
+    ("charm_name", "lib_name", "lib_contents", "expected"),
+    [
+        pytest.param(
+            "my-charm", "my_lib", "LIBID='abc'\nLIBAPI=0\nLIBPATCH=1\n", (0, 1), id="0.1"
+        ),
+        pytest.param(
+            "my-charm", "my_lib", "LIBID='abc'\nLIBAPI=16\nLIBPATCH=19\n", (16, 19), id="16.19"
+        ),
+        pytest.param(
+            "my-charm",
+            "my_lib",
+            "LIBID='abc'\nLIBAPI=0\nLIBPATCH=-1\n",
+            None,
+            id="patch_negative_1",
+        ),
+        pytest.param("my-charm", "my_lib", None, None, id="nonexistent"),
+    ],
+)
+def test_get_lib_version(
+    fake_project_dir: pathlib.Path,
+    service: services.CharmLibsService,
+    charm_name: str,
+    lib_name: str,
+    lib_contents: str | None,
+    expected: tuple[int, int] | None,
+):
+    if expected is not None:
+        lib_path = fake_project_dir / utils.get_lib_path(charm_name, lib_name, expected[0])
+        (fake_project_dir / lib_path).parent.mkdir(parents=True)
+        (fake_project_dir / lib_path).write_text(lib_contents)
+
+    assert service.get_lib_version(charm_name=charm_name, lib_name=lib_name) == expected
+
+
+@pytest.mark.parametrize(
     "lib",
     [
         Library("lib_id", "lib_name", "charm_name", 0, 0, "some content", "hashy"),

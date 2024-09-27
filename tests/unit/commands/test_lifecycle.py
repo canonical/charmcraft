@@ -185,6 +185,7 @@ def test_pack_update_charm_libs_needs_update(
 
     pack._update_charm_libs()
 
-    emitter.assert_debug(repr(store_lib))
+    with pytest.raises(AssertionError):
+        emitter.assert_debug(repr(store_lib))
 
-    assert path.read_text() == "Lib contents"
+    assert path.read_text() != "Lib contents"

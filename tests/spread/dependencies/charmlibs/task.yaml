@@ -26,7 +26,8 @@ execute: |
 
   sed -i 's/version: "0.18"/version: "0.10"/' charmcraft.yaml
   charmcraft pack
-  cat lib/charms/data_platform_libs/v0/upgrade.py | MATCH 'LIBPATCH = 10'
+  # Should remain the same, no update.
+  cat lib/charms/data_platform_libs/v0/upgrade.py | MATCH 'LIBPATCH = 18'
 
 restore: |
   rm -f ~/*.charm

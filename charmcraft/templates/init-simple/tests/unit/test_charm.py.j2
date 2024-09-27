@@ -59,8 +59,8 @@ def test_config_changed_valid_can_connect(harness: ops.testing.Harness[{{ class_
 def test_config_changed_valid_cannot_connect(harness: ops.testing.Harness[{{ class_name }}]):
     # Trigger a config-changed event with an updated value
     harness.update_config({"log-level": "debug"})
-    # Check the charm is in WaitingStatus
-    assert isinstance(harness.model.unit.status, ops.WaitingStatus)
+    # Check the charm is in MaintenanceStatus
+    assert isinstance(harness.model.unit.status, ops.MaintenanceStatus)
 
 
 def test_config_changed_invalid(harness: ops.testing.Harness[{{ class_name }}]):

@@ -3,6 +3,8 @@ summary: test charmlibs dependencies download and update on pack
 environment:
   # Use the real store.
   CHARMCRAFT_STORE_API_URL: https://api.charmhub.io
+  # Ensure that the authentication variable is unset, testing anonymous store access.
+  CHARMCRAFT_AUTH: null
 
 include:
   - tests/spread/dependencies

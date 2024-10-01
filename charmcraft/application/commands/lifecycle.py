@@ -184,7 +184,7 @@ class PackCommand(lifecycle.PackCommand):
         installable_libs: list[models.CharmLib] = []
         for lib in project.charm_libs:
             charm_name, _, lib_name = lib.lib.partition(".")
-            if not libs_svc.get_lib_version(charm_name=charm_name, lib_name=lib_name):
+            if not libs_svc.get_local_version(charm_name=charm_name, lib_name=lib_name):
                 installable_libs.append(lib)
         if installable_libs:
             store = cast(services.StoreService, self._services.store)
@@ -200,7 +200,7 @@ class PackCommand(lifecycle.PackCommand):
                         api=library.api,
                         patch=library.patch,
                     )
-                    libs_svc.write_lib(lib_contents)
+                    libs_svc.write(lib_contents)
                     progress.advance(1)
 
     def _run(

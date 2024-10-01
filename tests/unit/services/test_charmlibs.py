@@ -48,7 +48,7 @@ def patch(request) -> int | None:
     return request.param
 
 
-def test_is_lib_downloaded_no_file(
+def test_is_downloaded_no_file(
     fake_project_dir: pathlib.Path,
     service: services.CharmLibsService,
     charm_name: str,
@@ -56,13 +56,13 @@ def test_is_lib_downloaded_no_file(
     api: int,
     patch: int | None,
 ):
-    assert not service.is_lib_downloaded(
+    assert not service.is_downloaded(
         charm_name=charm_name, lib_name=lib_name, api=api, patch=patch
     )
 
 
 @pytest.mark.parametrize(("patch", "expected"), [(None, True), (1, True), (2, False)])
-def test_is_lib_downloaded_with_file(
+def test_is_downloaded_with_file(
     fake_project_dir: pathlib.Path,
     service: services.CharmLibsService,
     charm_name: str,
@@ -75,7 +75,7 @@ def test_is_lib_downloaded_with_file(
     lib_path.write_text("LIBID='abc'\nLIBAPI=0\nLIBPATCH=1\n")
 
     assert (
-        service.is_lib_downloaded(charm_name=charm_name, lib_name=lib_name, api=0, patch=patch)
+        service.is_downloaded(charm_name=charm_name, lib_name=lib_name, api=0, patch=patch)
         == expected
     )
 
@@ -99,7 +99,7 @@ def test_is_lib_downloaded_with_file(
         pytest.param("my-charm", "my_lib", None, None, id="nonexistent"),
     ],
 )
-def test_get_lib_version(
+def test_get_local_version(
     fake_project_dir: pathlib.Path,
     service: services.CharmLibsService,
     charm_name: str,
@@ -112,7 +112,7 @@ def test_get_lib_version(
         (fake_project_dir / lib_path).parent.mkdir(parents=True)
         (fake_project_dir / lib_path).write_text(lib_contents)
 
-    assert service.get_lib_version(charm_name=charm_name, lib_name=lib_name) == expected
+    assert service.get_local_version(charm_name=charm_name, lib_name=lib_name) == expected
 
 
 @pytest.mark.parametrize(
@@ -121,10 +121,10 @@ def test_get_lib_version(
         Library("lib_id", "lib_name", "charm_name", 0, 0, "some content", "hashy"),
     ],
 )
-def test_write_lib_success(
+def test_write_success(
     fake_project_dir: pathlib.Path, service: services.CharmLibsService, lib: Library
 ):
-    service.write_lib(lib)
+    service.write(lib)
 
     actual = (
         fake_project_dir / utils.get_lib_path(lib.charm_name, lib.lib_name, lib.api)
@@ -139,8 +139,8 @@ def test_write_lib_success(
         Library("lib_id", "lib_name", "charm_name", 0, 0, None, "hashy"),
     ],
 )
-def test_write_lib_error(
+def test_write_error(
     fake_project_dir: pathlib.Path, service: services.CharmLibsService, lib: Library
 ):
     with pytest.raises(ValueError, match="Library has no content"):
-        service.write_lib(lib)
+        service.write(lib)

@@ -40,7 +40,7 @@ class CharmLibsService(craft_application.ProjectService):
         super().__init__(app, services, project=project)
         self._project_dir = project_dir
 
-    def is_lib_downloaded(
+    def is_downloaded(
         self, *, charm_name: str, lib_name: str, api: int, patch: int | None = None
     ) -> bool:
         """Check if the given charm lib is already downloaded on disk.
@@ -60,7 +60,7 @@ class CharmLibsService(craft_application.ProjectService):
         lib_info = utils.get_lib_info(lib_path=self._project_dir / lib_path)
         return lib_info.patch == patch
 
-    def get_lib_version(self, *, charm_name: str, lib_name: str) -> tuple[int, int] | None:
+    def get_local_version(self, *, charm_name: str, lib_name: str) -> tuple[int, int] | None:
         """Get the version of the library on the machine, or None.
 
         :param charm_name: The name of the charm where the lib is published
@@ -80,7 +80,7 @@ class CharmLibsService(craft_application.ProjectService):
                 return (info.api, info.patch)
         return None
 
-    def write_lib(self, library: Library) -> None:
+    def write(self, library: Library) -> None:
         """Write the given library to disk.
 
         :param library: A store library object with valid content.

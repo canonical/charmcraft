@@ -24,6 +24,7 @@ from craft_cli import CraftError
 
 from charmcraft import const
 from charmcraft.utils.charmlibs import (
+    QualifiedLibraryName,
     collect_charmlib_pydeps,
     get_lib_charm_path,
     get_lib_info,
@@ -33,6 +34,30 @@ from charmcraft.utils.charmlibs import (
     get_libs_from_tree,
     get_name_from_metadata,
 )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"), [("my-charm.my_lib", QualifiedLibraryName("my_charm", "my_lib"))]
+)
+def test_qualified_library_name_from_string_success(
+    value: str, expected: QualifiedLibraryName
+) -> None:
+    assert QualifiedLibraryName.from_string(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"), [(QualifiedLibraryName("my_charm", "my_lib"), "my-charm.my_lib")]
+)
+def test_qualified_library_name_to_string_success(
+    value: str, expected: QualifiedLibraryName
+) -> None:
+    assert str(value) == expected
+
+
+@pytest.mark.parametrize("value", ["", "charm-name", "charm-name.", ".", ".lib_name"])
+def test_qualified_library_name_from_string_error(value: str):
+    with pytest.raises(ValueError, match="Not a valid library name: "):
+        QualifiedLibraryName.from_string(value)
 
 
 # region Name-related tests

@@ -19,6 +19,7 @@
 from charmcraft.utils.charmlibs import (
     LibData,
     LibInternals,
+    QualifiedLibraryName,
     get_name_from_metadata,
     create_charm_name_from_importable,
     create_importable_name,
@@ -69,6 +70,7 @@ from charmcraft.utils.yaml import dump_yaml, load_yaml
 __all__ = [
     "LibData",
     "LibInternals",
+    "QualifiedLibraryName",
     "get_name_from_metadata",
     "create_charm_name_from_importable",
     "create_importable_name",

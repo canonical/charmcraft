@@ -183,8 +183,10 @@ class PackCommand(lifecycle.PackCommand):
         libs_svc = cast(services.CharmLibsService, self._services.charm_libs)
         installable_libs: list[models.CharmLib] = []
         for lib in project.charm_libs:
-            charm_name, _, lib_name = lib.lib.partition(".")
-            if not libs_svc.get_local_version(charm_name=charm_name, lib_name=lib_name):
+            library_name = utils.QualifiedLibraryName.from_string(lib.lib)
+            if not libs_svc.get_local_version(
+                charm_name=library_name.charm_name, lib_name=library_name.lib_name
+            ):
                 installable_libs.append(lib)
         if installable_libs:
             store = cast(services.StoreService, self._services.store)

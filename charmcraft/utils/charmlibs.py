@@ -25,6 +25,7 @@ from typing import overload
 
 import yaml
 from craft_cli import CraftError
+from typing_extensions import Self
 
 from charmcraft import const, errors
 
@@ -54,6 +55,25 @@ class LibInternals:
     pydeps: list[str]
     content_hash: str
     content: str
+
+
+@dataclass
+class QualifiedLibraryName:
+    """The parts of a library's name."""
+
+    charm_name: str
+    lib_name: str
+
+    @classmethod
+    def from_string(cls, value: str) -> Self:
+        """Convert a string of <charm-name>.<lib_name> to a LibraryName."""
+        charm_name, _, lib_name = value.partition(".")
+        if not charm_name or not lib_name or "." in lib_name:
+            raise ValueError(f"Not a valid library name: {value!r}")
+        return cls(create_importable_name(charm_name), lib_name)
+
+    def __str__(self) -> str:
+        return f"{create_charm_name_from_importable(self.charm_name)}.{self.lib_name}"
 
 
 def get_name_from_metadata() -> str | None:

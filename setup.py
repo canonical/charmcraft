@@ -34,6 +34,11 @@ def determine_version():
     0ae7c04
     This was copied from tools/version.py to fix #1472
     """
+    import charmcraft
+    version = charmcraft.__version__
+
+    if version != "devel":
+        return version
     desc = (
         subprocess.run(
             ["git", "describe", "--always", "--long"],
@@ -79,9 +84,6 @@ install_requires = [
     "requests-unixsocket",
     "snap-helpers",
     "tabulate",
-    # Needed until requests-unixsocket supports urllib3 v2
-    # https://github.com/msabramo/requests-unixsocket/pull/69
-    "urllib3<2.0",
 ]
 
 lint_requires = [

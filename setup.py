@@ -81,7 +81,7 @@ install_requires = [
     "pyyaml",
     "requests",
     "requests-toolbelt",
-    "requests-unixsocket",
+    "requests-unixsocket2",
     "snap-helpers",
     "tabulate",
 ]

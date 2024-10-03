@@ -77,6 +77,16 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
+X.Y.Z (2024-MM-DD)
+------------------
+
+Command line
+============
+
+The pack command now updates charm the libs in the project directory if they don't meet
+the requirements in the ``charm-libs`` key of ``charmcraft.yaml``.
+
+
 2.7.3 (2024-09-16)
 ------------------
 

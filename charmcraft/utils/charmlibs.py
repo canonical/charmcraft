@@ -25,6 +25,7 @@ from typing import overload
 
 import yaml
 from craft_cli import CraftError
+from typing_extensions import Self
 
 from charmcraft import const, errors
 
@@ -54,6 +55,25 @@ class LibInternals:
     pydeps: list[str]
     content_hash: str
     content: str
+
+
+@dataclass
+class QualifiedLibraryName:
+    """The parts of a library's name."""
+
+    charm_name: str
+    lib_name: str
+
+    @classmethod
+    def from_string(cls, value: str) -> Self:
+        """Convert a string of <charm-name>.<lib_name> to a LibraryName."""
+        charm_name, _, lib_name = value.partition(".")
+        if not charm_name or not lib_name or "." in lib_name:
+            raise ValueError(f"Not a valid library name: {value!r}")
+        return cls(create_importable_name(charm_name), lib_name)
+
+    def __str__(self) -> str:
+        return f"{create_charm_name_from_importable(self.charm_name)}.{self.lib_name}"
 
 
 def get_name_from_metadata() -> str | None:
@@ -177,9 +197,16 @@ def get_lib_path(charm: str, lib_name: str, api: int) -> pathlib.Path:
     :param api: The API version of the library
     :returns: A relative path to the library python file.
     """
-    return (
-        pathlib.Path("lib/charms") / create_importable_name(charm) / f"v{api}" / f"{lib_name}.py"
-    )
+    return get_lib_charm_path(charm) / f"v{api}" / f"{lib_name}.py"
+
+
+def get_lib_charm_path(charm: str) -> pathlib.Path:
+    """Get a relative path where the libraries for a charm would be stored.
+
+    :param charm: the name of the charm
+    :returns: A relative path to the charm's libraries directory.
+    """
+    return pathlib.Path("lib/charms") / create_importable_name(charm)
 
 
 def get_lib_module_name(charm: str, lib_name: str, api: int) -> str:
@@ -210,7 +237,7 @@ def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None 
     if lib_path:
         # get it from the lib_path
         try:
-            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
+            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[-5:-1]
         except ValueError:
             raise errors.BadLibraryPathError(lib_path)
         if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":

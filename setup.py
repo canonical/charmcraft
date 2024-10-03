@@ -35,6 +35,7 @@ def determine_version():
     This was copied from tools/version.py to fix #1472
     """
     import charmcraft
+
     version = charmcraft.__version__
 
     if version != "devel":

@@ -41,32 +41,31 @@ def test_httpbin_pebble_ready():
 
 
 def test_config_changed_valid_can_connect():
+    """Test a config-changed event when the config is valid and the container can be reached."""
     # Arrange:
-    ctx = testing.Context({{ class_name }})
+    ctx = testing.Context({{ class_name }})  # The default config will be read from charmcraft.yaml
     container = testing.Container("httpbin", can_connect=True)
-    state_in = testing.State(containers={container}, config={"log-level": "debug"})
+    state_in = testing.State(
+        containers={container},
+        config={"log-level": "debug"},  # This is the config the charmer passed with `juju config`
+    )
 
     # Act:
     state_out = ctx.run(ctx.on.config_changed(), state_in)
 
     # Assert:
     updated_plan = state_out.get_container(container.name).plan
-    expected_plan = {
-        "services": {
-            "httpbin": {
-                "override": "replace",
-                "summary": "httpbin",
-                "command": "gunicorn -b 0.0.0.0:80 httpbin:app -k gevent",
-                "startup": "enabled",
-                "environment": {"GUNICORN_CMD_ARGS": "--log-level debug"},
-            }
-        },
-    }
-    assert updated_plan == expected_plan
+    gunicorn_args = updated_plan.services["httpbin"].environment["GUNICORN_CMD_ARGS"]
+    assert gunicorn_args == "--log-level debug"
     assert state_out.unit_status == testing.ActiveStatus()
 
 
 def test_config_changed_valid_cannot_connect():
+    """Test a config-changed event when the config is valid but the container cannot be reached.
+
+    We expect to end up in MaintenanceStatus waiting for the deferred event to
+    be retried.
+    """
     # Arrange:
     ctx = testing.Context({{ class_name }})
     container = testing.Container("httpbin", can_connect=False)
@@ -80,6 +79,7 @@ def test_config_changed_valid_cannot_connect():
 
 
 def test_config_changed_invalid():
+    """Test a config-changed event when the config is invalid."""
     # Arrange:
     ctx = testing.Context({{ class_name }})
     container = testing.Container("httpbin", can_connect=True)

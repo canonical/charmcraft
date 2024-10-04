@@ -71,7 +71,7 @@ with open("README.md", encoding="utf8") as fh:
 install_requires = [
     "craft-cli>=2.3.0",
     "craft-parts>=1.18",
-    "craft-providers",
+    "craft-providers~=1.20.4",
     "craft-store>=2.4",
     "distro>=1.3.0",
     "humanize>=2.6.0",

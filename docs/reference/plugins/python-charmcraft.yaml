@@ -1,0 +1,14 @@
+name: my-charm
+type: charm
+title: My operator charm
+summary: A charm that uses the operator framework
+description: A charm that uses the operator framework
+base: ubuntu@24.04
+platforms:
+  amd64:
+parts:
+  my-charm:
+    source: .
+    plugin: python
+    python-requirements:
+      - requirements.txt

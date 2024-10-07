@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 name: charmcraft
-base: core22
+base: core24
 summary: Charmcraft supports Kubernetes operator development and collaboration
 license: Apache-2.0
 description: |
@@ -40,13 +40,13 @@ description: |
   multi-cloud application management.
 
 adopt-info: charmcraft  # look for 'craftctl set *' in the charmcraft part
-architectures:
-  - build-on: s390x
-  - build-on: ppc64el
-  - build-on: arm64
-  - build-on: armhf
-  - build-on: amd64
-  - build-on: riscv64
+platforms:
+  s390x:
+  ppc64el:
+  arm64:
+  armhf:
+  amd64:
+  riscv64:
 
 # https://github.com/snapcore/snapcraft/issues/4187
 environment:
@@ -72,8 +72,8 @@ confinement: classic
 
 build-packages:
   - pkg-config
-  - python3.10-dev
-  - libpython3.10-dev
+  - python3.12-dev
+  - libpython3.12-dev
   - libsodium-dev
   - libssl-dev
   - libffi-dev
@@ -86,41 +86,37 @@ build-packages:
   - libxml2-dev
   - libxslt1-dev
   - libyaml-dev
+  - libgit2-dev
 build-snaps:
   - rustup
 
 
 parts:
   charmcraft-libs:
-    plugin: nil
+    plugin: rust  # Uses the rust plugin to grab rust and cargo
+    rust-channel: "1.79"
+    source: .
     stage-packages:
-      - libffi7      # Python3 foreign functions - used for rust modules
+      - libffi8      # Python3 foreign functions - used for rust modules
       - libsodium23  # PyNaCl uses this
       - libpython3-stdlib
-      - libpython3.10-stdlib
-      - libpython3.10-minimal
+      - libpython3.12-stdlib
+      - libpython3.12-minimal
       - python3-pip
       - python3-setuptools
       - python3-wheel
       - python3-venv
       - python3-minimal
-      - python3-distutils
       - python3-pkg-resources
-      - python3.10-minimal
+      - python3.12-minimal
+      - libgit2-1.7
     build-attributes:
       - enable-patchelf
-  libgit2:
-    source: https://github.com/libgit2/libgit2/archive/refs/tags/v1.7.2.tar.gz
-    source-checksum: sha256/de384e29d7efc9330c6cdb126ebf88342b5025d920dcb7c645defad85195ea7f
-    plugin: cmake
-    cmake-parameters:
-      - -DCMAKE_INSTALL_PREFIX=/usr
-    build-attributes:
-      - enable-patchelf
-    prime:
-      - -usr/include
+    override-build: |
+      # We don't have a rust project, so no-op the build.
+      true
   charmcraft:
-    after: [charmcraft-libs, libgit2]
+    after: [charmcraft-libs]
     source: .
     plugin: python
     python-requirements:
@@ -145,8 +141,6 @@ parts:
       craftctl set version="${version}"
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       craftctl set grade="${grade}"
-      # Set up the rust compiler
-      rustup default 1.79
     override-build: |
       craftctl default
       cp -v completion.bash ../install

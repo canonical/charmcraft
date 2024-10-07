@@ -16,9 +16,14 @@
 """Service class for running craft lifecycle commands."""
 from __future__ import annotations
 
+from typing import cast
+
+import craft_parts
 from craft_application import services, util
 from craft_cli import emit
 from overrides import override
+
+from charmcraft import dispatch
 
 
 class LifecycleService(services.LifecycleService):
@@ -55,3 +60,11 @@ class LifecycleService(services.LifecycleService):
                 return arch
 
         return host_arch
+
+    @override
+    def post_prime(self, step_info: craft_parts.StepInfo) -> bool:
+        return_value = super().post_prime(step_info)
+
+        project_info = cast(craft_parts.ProjectInfo, step_info.project_info)
+        # TODO: include an entrypoint override. #1896
+        return return_value | dispatch.create_dispatch(prime_dir=project_info.dirs.prime_dir)

@@ -205,7 +205,7 @@ def test_charmplugin_post_build_metric_collection(charm_plugin):
 def test_charmpluginproperties_invalid_properties():
     content = {"source": ".", "charm-invalid": True}
     with pytest.raises(pydantic.ValidationError) as raised:
-        parts.CharmPlugin.properties_class.unmarshal(content)
+        parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
 
     assert len(err) == 1
@@ -216,14 +216,14 @@ def test_charmpluginproperties_invalid_properties():
 def test_charmpluginproperties_entrypoint_ok():
     """Simple valid entrypoint."""
     content = {"source": ".", "charm-entrypoint": "myep.py"}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_entrypoint == "myep.py"
 
 
 def test_charmpluginproperties_entrypoint_default():
     """Specific default if not configured."""
     content = {"source": "."}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_entrypoint == "src/charm.py"
 
 
@@ -231,7 +231,7 @@ def test_charmpluginproperties_entrypoint_relative(tmp_path):
     """The configuration is stored relative no matter what."""
     absolute_path = tmp_path / "myep.py"
     content = {"source": str(tmp_path), "charm-entrypoint": str(absolute_path)}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_entrypoint == "myep.py"
 
 
@@ -240,7 +240,7 @@ def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
     outside_path = tmp_path.parent / "charm.py"
     content = {"source": str(tmp_path), "charm-entrypoint": str(outside_path)}
     with pytest.raises(pydantic.ValidationError) as raised:
-        parts.CharmPlugin.properties_class.unmarshal(content)
+        parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
@@ -255,7 +255,7 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
     outside_path = tmp_path.parent / "charm.py"
     content = {"source": str(tmp_path), "charm-entrypoint": "../charm.py"}
     with pytest.raises(pydantic.ValidationError) as raised:
-        parts.CharmPlugin.properties_class.unmarshal(content)
+        parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
@@ -268,7 +268,7 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
 def test_charmpluginproperties_requirements_default(tmp_path):
     """The configuration is empty by default."""
     content = {"source": str(tmp_path)}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_requirements == []
 
 
@@ -276,7 +276,7 @@ def test_charmpluginproperties_requirements_filepresent_ok(tmp_path: pathlib.Pat
     """If a specific file is present in disk it's used."""
     (tmp_path / "requirements.txt").write_text("somedep")
     content = {"source": str(tmp_path)}
-    properties = parts.CharmPluginProperties.unmarshal(content)
+    properties = parts.plugins.CharmPluginProperties.unmarshal(content)
     assert properties.charm_requirements == ["requirements.txt"]
 
 
@@ -285,5 +285,5 @@ def test_charmpluginproperties_requirements_filepresent_but_configured(tmp_path)
     (tmp_path / "requirements.txt").write_text("somedep")
     (tmp_path / "alternative.txt").write_text("somedep")
     content = {"source": str(tmp_path), "charm-requirements": ["alternative.txt"]}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_requirements == ["alternative.txt"]

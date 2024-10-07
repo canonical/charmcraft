@@ -1,7 +1,7 @@
 annotated-types==0.7.0
 attrs==24.2.0
 boolean-py==4.0
-certifi==2024.7.4
+certifi==2024.8.30
 cffi==1.17.1
 charset-normalizer==3.3.2
 craft-application==4.2.5

@@ -906,7 +906,7 @@ def test_localdockerinterface_get_streamed_content(responses):
     assert next(streamed) == b"12345"
     assert test_content._test_read_chunks == [chunk_size]
     assert next(streamed) == b"6789"
-    assert test_content._test_read_chunks == [chunk_size, chunk_size]
+    assert test_content._test_read_chunks == [chunk_size, chunk_size, chunk_size]
     with pytest.raises(StopIteration):
         next(streamed)
 

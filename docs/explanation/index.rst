@@ -9,6 +9,9 @@ explanation is hosted on the `Charm SDK docs <https://juju.is/docs/sdk/explanati
 .. toctree::
    :maxdepth: 1
 
+   /common/craft-parts/explanation/dump_plugin
+   /common/craft-parts/explanation/filesets
+
 
 `Charm SDK docs <https://juju.is/docs/sdk/explanation>`_
 ========================================================

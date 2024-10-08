@@ -1,0 +1,14 @@
+type: charm
+name: test-charm
+summary: test-charm
+description: test-charm
+
+base: ubuntu@24.04
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+
+parts:
+  my-part:
+    plugin: nil

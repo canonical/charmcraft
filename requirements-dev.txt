@@ -73,7 +73,7 @@ pyyaml==6.0.2
 referencing==0.35.1
 requests==2.32.3
 requests-toolbelt==1.0.0
-requests-unixsocket==0.4.2
+requests-unixsocket2==0.4.2
 responses==0.25.3
 rpds-py==0.20.0
 ruamel-yaml==0.18.6

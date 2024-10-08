@@ -24,7 +24,6 @@ import subprocess
 import sys
 from unittest import mock
 
-import pydocstyle
 import pytest
 import pytest_check
 
@@ -285,7 +284,7 @@ def test_tox_success(new_path, init_command, profile):
         pytest.skip("init template doesn't contain tox.ini file")
 
     result = subprocess.run(
-        ["tox", "-v"],
+        ["tox", "-v", "run", "-e", "lint,static"],
         cwd=new_path,
         env=env,
         text=True,
@@ -295,23 +294,14 @@ def test_tox_success(new_path, init_command, profile):
     )
     assert result.returncode == 0, "Tox run failed:\n" + result.stdout
 
-
-@pytest.mark.parametrize("profile", list(commands.init.PROFILES))
-def test_pep257(new_path, init_command, profile):
-    to_ignore = {
-        "D105",  # Missing docstring in magic method
-        "D107",  # Missing docstring in __init__
-    }
-    to_include = pydocstyle.violations.conventions.pep257 - to_ignore
-
-    init_command.run(create_namespace(profile=profile))
-
-    python_paths = (str(path) for path in new_path.rglob("*.py"))
-    python_paths = (path for path in python_paths if "tests" not in path)
-    errors = list(pydocstyle.check(python_paths, select=to_include))
-
-    if errors:
-        report = [f"Please fix files as suggested by pydocstyle ({len(errors):d} issues):"]
-        report.extend(str(e) for e in errors)
-        msg = "\n".join(report)
-        pytest.fail(msg, pytrace=False)
+    if list((new_path / "tests").glob("*.py")):  # If any tests exist
+        result = subprocess.run(
+            ["tox", "-v", "run", "-e", "unit"],
+            cwd=new_path,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        assert result.returncode == 0, "Tox run failed:\n" + result.stdout

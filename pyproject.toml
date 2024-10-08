@@ -48,10 +48,8 @@ charmcraft = "charmcraft.application.main:main"
 [project.optional-dependencies]
 dev = [  # When updating these, also update the dev/lint/types groups in renovate.
     "coverage",
-    "flake8",
     "freezegun",
     "hypothesis",
-    "pydocstyle",
     "pyfakefs",
     "pylint",
     "pytest",

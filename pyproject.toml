@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "The main tool to build, upload, and develop in general the Juju charms."
 readme = "README.md"
 dependencies = [
-    "craft-application~=4.1",
+    "craft-application~=4.2",
     "craft-cli>=2.3.0",
     "craft-grammar>=2.0.0",
     "craft-parts>=2.1.0",
@@ -68,7 +68,7 @@ lint = [
 ]
 types = [
     "mypy[reports]~=1.11",
-    "pyright==1.1.380",
+    "pyright==1.1.383",
     "types-python-dateutil",
     "types-PyYAML",
     "types-requests<2.31.0.20240312",  # Frozen until we can get urllib3 v2

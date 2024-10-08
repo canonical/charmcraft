@@ -272,6 +272,12 @@ class DjangoFramework(_AppBase):
         },
     }
 
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
+
 
 class GoFramework(_AppBase):
     """Extension for 12-factor Go applications."""

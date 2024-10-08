@@ -24,7 +24,7 @@ httplib2==0.22.0
 humanize==4.10.0
 hypothesis==6.112.2
 idna==3.10
-importlib-metadata==8.2.0
+importlib-metadata==8.5.0
 iniconfig==2.0.0
 isort==5.13.2
 jaraco-classes==3.4.0

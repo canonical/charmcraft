@@ -35,7 +35,7 @@ more-itertools==10.5.0
 oauthlib==3.2.2
 overrides==7.7.0
 packaging==24.1
-platformdirs==4.2.2
+platformdirs==4.3.6
 protobuf==5.27.3
 pycparser==2.22
 pydantic==2.8.2

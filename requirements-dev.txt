@@ -67,7 +67,7 @@ pytest-cov==5.0.0
 pytest-mock==3.14.0
 pytest-subprocess==1.5.2
 python-dateutil==2.9.0.post0
-pytz==2024.1
+pytz==2024.2
 pyxdg==0.28
 pyyaml==6.0.2
 referencing==0.35.1

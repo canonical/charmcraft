@@ -47,7 +47,7 @@ pynacl==1.5.0
 pyparsing==3.1.4
 pyrfc3339==1.1
 python-dateutil==2.9.0.post0
-pytz==2024.1
+pytz==2024.2
 pyxdg==0.28
 pyyaml==6.0.2
 referencing==0.35.1

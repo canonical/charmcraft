@@ -108,6 +108,13 @@ than the minimum version, guaranteeing that pip gets updated correctly.
 
 For a complete list of commits, see the `3.2.1`_ release on GitHub.
 
+2.7.4 (2024-10-07)
+------------------
+
+This release bumps some dependencies to fix a security issue with requests.
+
+For a complete list of commits, see the `2.7.4`_ release on GitHub.
+
 2.7.3 (2024-09-16)
 ------------------
 
@@ -119,6 +126,8 @@ Charmcraft has the cache directory locked will run without a shared cache.
 
 The charm plugin now force-reinstalls pip when necessary, guaranteeing a correct
 version of pip.
+
+For a complete list of commits, see the `2.7.3`_ release on GitHub.
 
 2.7.2 (2024-09-09)
 ------------------
@@ -351,6 +360,8 @@ page.
 .. _2.7.0: https://github.com/canonical/charmcraft/releases/tag/2.7.0
 .. _2.7.1: https://github.com/canonical/charmcraft/releases/tag/2.7.1
 .. _2.7.2: https://github.com/canonical/charmcraft/releases/tag/2.7.2
+.. _2.7.3: https://github.com/canonical/charmcraft/releases/tag/2.7.3
+.. _2.7.4: https://github.com/canonical/charmcraft/releases/tag/2.7.4
 .. _3.0.0: https://github.com/canonical/charmcraft/releases/tag/3.0.0
 .. _3.1.0: https://github.com/canonical/charmcraft/releases/tag/3.1.0
 .. _3.1.1: https://github.com/canonical/charmcraft/releases/tag/3.1.1

@@ -31,7 +31,7 @@ class _AppBase(Extension):
         {"lib": "traefik_k8s.ingress", "version": "2"},
         {"lib": "observability_libs.juju_topology", "version": "0"},
         {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
-        {"lib": "loki_k8s.loki_push_api", "version": "0"},
+        {"lib": "loki_k8s.loki_push_api", "version": "1"},
         {"lib": "data_platform_libs.data_interfaces", "version": "0"},
         {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
         {"lib": "redis_k8s.redis", "version": "0"},
@@ -272,6 +272,12 @@ class DjangoFramework(_AppBase):
         },
     }
 
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
+
 
 class GoFramework(_AppBase):
     """Extension for 12-factor Go applications."""
@@ -282,6 +288,59 @@ class GoFramework(_AppBase):
             "type": "int",
             "default": 8080,
             "description": "Default port where the application will listen on.",
+        },
+        "metrics-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Port where the prometheus metrics will be scraped.",
+        },
+        "metrics-path": {
+            "type": "string",
+            "default": "/metrics",
+            "description": "Path where the prometheus metrics will be scraped.",
+        },
+        "app-secret-key": {
+            "type": "string",
+            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+        },
+    }
+
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "24.04")]
+
+    @override
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return "app-image"
+
+    @override
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return "app"
+
+
+class FastAPIFramework(_AppBase):
+    """Extension for 12-factor FastAPI applications."""
+
+    framework = "fastapi"
+    options = {
+        "webserver-workers": {
+            "type": "int",
+            "default": 1,
+            "description": "Number of workers for uvicorn. Sets env variable WEB_CONCURRENCY. See https://www.uvicorn.org/#command-line-options.",
+        },
+        "webserver-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Bind to a socket with this port. Default: 8000. Sets env variable  UVICORN_PORT.",
+        },
+        "webserver-log-level": {
+            "type": "string",
+            "default": "info",
+            "description": "Set the log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Sets the env variable UVICORN_LOG_LEVEL.",
         },
         "metrics-port": {
             "type": "int",

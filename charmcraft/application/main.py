@@ -23,12 +23,11 @@ from typing import Any
 import craft_application
 import craft_cli
 from craft_application import util
-from craft_parts.plugins import plugins
+from craft_parts.plugins.plugins import PluginType
 from overrides import override
 
-from charmcraft import extensions, models, preprocess, services
+from charmcraft import extensions, models, parts, preprocess, services
 from charmcraft.application import commands
-from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
 from charmcraft.services import CharmcraftServiceFactory
 
 GENERAL_SUMMARY = """
@@ -119,6 +118,10 @@ class Charmcraft(craft_application.Application):
             project_dir=self.project_dir,
             build_plan=self._build_plan,
         )
+        self.services.update_kwargs(
+            "charm_libs",
+            project_dir=self.project_dir,
+        )
 
     def configure(self, global_args: dict[str, Any]) -> None:
         """Configure the application using any global arguments."""
@@ -131,8 +134,8 @@ class Charmcraft(craft_application.Application):
         return self._dispatcher
 
     @override
-    def _get_app_plugins(self) -> dict[str, plugins.PluginType]:
-        return {"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin}
+    def _get_app_plugins(self) -> dict[str, PluginType]:
+        return parts.get_app_plugins()
 
     @override
     def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:

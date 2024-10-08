@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Canonical Ltd.
+# Copyright 2021-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,28 +18,35 @@
 
 from typing import Any
 
-from craft_parts import plugins
+import craft_parts
 from craft_parts.parts import PartSpec
 
-from charmcraft.parts.bundle import BundlePlugin
-from charmcraft.parts.charm import CharmPlugin, CharmPluginProperties
+from . import plugins
 from charmcraft.parts.lifecycle import PartsLifecycle
-from charmcraft.parts.reactive import ReactivePlugin, ReactivePluginProperties
 
 __all__ = [
-    "CharmPlugin",
-    "CharmPluginProperties",
-    "ReactivePlugin",
-    "ReactivePluginProperties",
+    "plugins",
+    "get_app_plugins",
     "setup_parts",
     "process_part_config",
     "PartsLifecycle",
 ]
 
 
-def setup_parts():
+def get_app_plugins() -> dict[str, type[craft_parts.plugins.Plugin]]:
+    """Get the app-specific plugins for Charmcraft."""
+    return {
+        "bundle": plugins.BundlePlugin,
+        "charm": plugins.CharmPlugin,
+        "poetry": plugins.PoetryPlugin,
+        "python": plugins.PythonPlugin,
+        "reactive": plugins.ReactivePlugin,
+    }
+
+
+def setup_parts() -> None:
     """Initialize craft-parts plugins."""
-    plugins.register({"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin})
+    craft_parts.plugins.register(get_app_plugins())
 
 
 def process_part_config(data: dict[str, Any]) -> dict[str, Any]:
@@ -59,18 +66,18 @@ def process_part_config(data: dict[str, Any]) -> dict[str, Any]:
     if not plugin_name:
         raise ValueError("'plugin' not defined")
 
-    plugin_class = plugins.get_plugin_class(plugin_name)
+    plugin_class = craft_parts.plugins.get_plugin_class(plugin_name)
 
     # validate plugin properties
     plugin_properties = plugin_class.properties_class.unmarshal(spec)
 
     # validate common part properties
-    part_spec = plugins.extract_part_properties(spec, plugin_name=plugin_name)
+    part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name=plugin_name)
     PartSpec(**part_spec)
 
     # get plugin properties data if it's model based (otherwise it's empty), and
     # update with the received config
-    if isinstance(plugin_properties, plugins.PluginProperties):
+    if isinstance(plugin_properties, craft_parts.plugins.PluginProperties):
         full_config = plugin_properties.model_dump(by_alias=True, exclude_unset=True)
     else:
         full_config = {}

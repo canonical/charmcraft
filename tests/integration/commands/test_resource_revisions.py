@@ -27,7 +27,6 @@ from craft_store.models.resource_revision_model import (
 
 from charmcraft import store
 from charmcraft.application.commands import ListResourceRevisionsCommand
-from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.env import CharmhubConfig
 
 
@@ -47,7 +46,7 @@ def store_mock():
         yield store_mock
 
 
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
     """Happy path of one result from the Store."""
     store_response = [
@@ -90,7 +89,7 @@ def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
         emitter.assert_messages(expected)
 
 
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_resourcerevisions_empty(emitter, store_mock, config, formatted):
     """No results from the store."""
     store_response = []
@@ -105,7 +104,7 @@ def test_resourcerevisions_empty(emitter, store_mock, config, formatted):
         emitter.assert_message("No revisions found.")
 
 
-@pytest.mark.parametrize("formatted", [None, JSON_FORMAT])
+@pytest.mark.parametrize("formatted", [None, "json"])
 def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, formatted):
     """Results are presented ordered by revision in the table."""
     # three Revisions with all values weirdly similar, the only difference is revision, so

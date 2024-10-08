@@ -98,6 +98,20 @@ class CharmArch(str, enum.Enum):
         return str(self.value)
 
 
+GO_ARCH_TO_CHARM_ARCH = {
+    "arm": "armhf",
+    "ppc64le": "ppc64el",
+}
+"""Mapping to convert go architectures to charm architecture strings.
+
+Architectures not included here are the same in GOARCH as charm arch names.
+
+go architectures are also used as OCI image architectures.
+Reference 1: https://github.com/opencontainers/image-spec/blob/main/config.md#properties
+Reference 2: https://go.dev/doc/install/source#environment
+"""
+
+
 SUPPORTED_ARCHITECTURES = frozenset(arch.value for arch in CharmArch)
 
 

@@ -29,6 +29,7 @@ dependencies = [
     # https://github.com/msabramo/requests-unixsocket/pull/69
     # When updating, remove the urllib3 constraint from renovate config.
     "urllib3<2.0",
+    "pip>=24.2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

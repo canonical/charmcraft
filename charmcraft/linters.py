@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Canonical Ltd.
+# Copyright 2021-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import os
 import pathlib
 import re
 import shlex
+import subprocess
+import sys
 import typing
 from collections.abc import Generator
 from typing import final
@@ -666,6 +668,49 @@ class AdditionalFiles(Linter):
             return self.Result.NONAPPLICABLE
 
         return self._check_additional_files(stage_dir, basedir)
+
+
+class PipCheck(Linter):
+    """Check that the pip virtual environment is valid."""
+
+    name = "pip-check"
+    text = "Virtual environment is valid."
+    url = "https://pip.pypa.io/en/stable/cli/pip_check/"
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run pip check."""
+        venv_dir = basedir / "venv"
+        if not venv_dir.is_dir():
+            self.text = "Charm does not contain a Python venv."
+            return self.Result.NONAPPLICABLE
+        python_exe = venv_dir / "bin" / "python"
+        delete_parent = False
+        if not python_exe.parent.exists():
+            delete_parent = True
+            python_exe.parent.mkdir()
+        if not python_exe.exists():
+            delete_python_exe = True
+            python_exe.symlink_to(sys.executable)
+        else:
+            delete_python_exe = False
+
+        pip_cmd = [sys.executable, "-m", "pip", "--python", str(python_exe), "check"]
+        check = subprocess.run(
+            pip_cmd,
+            text=True,
+            capture_output=True,
+        )
+        if check.returncode == 0:
+            result = self.Result.OK
+        else:
+            self.text = check.stdout
+            result = self.Result.WARNING
+        if delete_python_exe:
+            python_exe.unlink()
+        if delete_parent:
+            python_exe.parent.rmdir()
+
+        return result
 
 
 # all checkers to run; the order here is important, as some checkers depend on the

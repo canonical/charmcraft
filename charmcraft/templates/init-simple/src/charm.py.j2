@@ -75,10 +75,10 @@ class {{ class_name }}(ops.CharmBase):
             else:
                 # We were unable to connect to the Pebble API, so we defer this event
                 event.defer()
-                self.unit.status = ops.WaitingStatus("waiting for Pebble API")
+                self.unit.status = ops.MaintenanceStatus("waiting for Pebble API")
         else:
             # In this case, the config option is bad, so block the charm and notify the operator.
-            self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
+            self.unit.status = ops.BlockedStatus(f"invalid log level: '{log_level}'")
 
     @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:

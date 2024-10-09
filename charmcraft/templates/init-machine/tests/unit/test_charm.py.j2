@@ -5,20 +5,15 @@
 
 import unittest
 
-import ops
-import ops.testing
+from ops import testing
 
 from charm import {{ class_name }}
 
 
-class TestCharm(unittest.TestCase):
-    def setUp(self):
-        self.harness = ops.testing.Harness({{ class_name }})
-        self.addCleanup(self.harness.cleanup)
-
-    def test_start(self):
-        # Simulate the charm starting
-        self.harness.begin_with_initial_hooks()
-
-        # Ensure we set an ActiveStatus with no message
-        self.assertEqual(self.harness.model.unit.status, ops.ActiveStatus())
+def test_start():
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    # Act:
+    state_out = ctx.run(ctx.on.start(), testing.State())
+    # Assert:
+    assert state_out.unit_status == testing.ActiveStatus()

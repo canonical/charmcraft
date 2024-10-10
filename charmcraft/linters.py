@@ -726,4 +726,5 @@ CHECKERS: list[type[BaseChecker]] = [
     Entrypoint,
     OpsMainCall,
     AdditionalFiles,
+    PipCheck,
 ]

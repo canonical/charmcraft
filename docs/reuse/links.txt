@@ -1,0 +1,17 @@
+.. _Charmcraft: https://canonical-charmcraft.readthedocs-hosted.com
+.. _Chisel: https://github.com/canonical/chisel
+.. _`Chisel releases`: https://github.com/canonical/chisel-releases
+.. _`Craft-parts`: https://canonical-craft-parts.readthedocs-hosted.com
+.. _Docker: https://docs.docker.com/
+.. _`feature request`: https://github.com/canonical/charmcraft/issues/new?assignees=&labels=Enhancement&projects=&template=task.yaml
+.. _`OCI archive format`: https://github.com/opencontainers/image-spec/blob/main/layer.md#distributable-format
+.. _OCI_image_spec: https://github.com/opencontainers/image-spec/blob/main/spec.md
+.. _`OCI layers`: https://github.com/opencontainers/image-spec/blob/main/layer.md
+.. _LXD: https://canonical.com/lxd
+.. _Multipass: https://multipass.run/docs
+.. _`Open Container Initiative`: https://opencontainers.org/
+.. _Rockcraft: https://documentation.ubuntu.com/rockcraft/
+.. _skopeo: https://github.com/containers/skopeo
+.. _Snapcraft: https://snapcraft.io/docs/snapcraft-overview
+
+.. Potentially use a glossary to create indirect references to explanations.

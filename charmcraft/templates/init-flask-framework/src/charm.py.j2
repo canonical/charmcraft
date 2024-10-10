@@ -8,7 +8,6 @@ import logging
 import typing
 
 import ops
-
 import paas_app_charmer.flask
 
 logger = logging.getLogger(__name__)

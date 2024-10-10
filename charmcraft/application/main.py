@@ -118,6 +118,10 @@ class Charmcraft(craft_application.Application):
             project_dir=self.project_dir,
             build_plan=self._build_plan,
         )
+        self.services.update_kwargs(
+            "charm_libs",
+            project_dir=self.project_dir,
+        )
 
     def configure(self, global_args: dict[str, Any]) -> None:
         """Configure the application using any global arguments."""

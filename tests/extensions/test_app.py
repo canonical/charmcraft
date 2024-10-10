@@ -114,7 +114,7 @@ def flask_input_yaml_fixture():
                 },
                 "extensions": ["django-framework"],
             },
-            True,
+            False,
             {
                 "actions": DjangoFramework.actions,
                 "assumes": ["k8s-api"],

@@ -281,7 +281,7 @@ class WhoamiCommand(CharmcraftCommand):
             for package_type, title in [("charm", "charms"), ("bundle", "bundles")]:
                 if package_type in grouped:
                     human_msgs.append(f"{title}:")
-                    pkg_info = []
+                    pkg_info: list[dict[str, str]] = []
                     for item in grouped[package_type]:
                         if (name := item.get("name")) is not None:
                             human_msgs.append(f"- name: {name}")

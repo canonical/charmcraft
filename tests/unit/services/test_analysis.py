@@ -99,7 +99,9 @@ def mock_zip_file(monkeypatch):
 
 @pytest.fixture
 def analysis_service():
-    return analysis.AnalysisService(app=application.APP_METADATA, services=None)
+    return analysis.AnalysisService(
+        app=application.APP_METADATA, services=None  # pyright: ignore[reportArgumentType]
+    )
 
 
 @pytest.mark.parametrize(

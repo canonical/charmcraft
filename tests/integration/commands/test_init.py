@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for init command."""
 import argparse
-import contextlib
 import os
 import pathlib
 import re
@@ -28,13 +27,14 @@ import pydocstyle
 import pytest
 import pytest_check
 
-import charmcraft
-from charmcraft import errors
+from charmcraft import application, errors
 from charmcraft.application import commands
 from charmcraft.utils import S_IXALL
 
-with contextlib.suppress(ImportError):
+try:
     import pwd
+except ImportError:
+    pwd = None
 
 BASIC_INIT_FILES = frozenset(
     pathlib.Path(p)
@@ -96,14 +96,14 @@ VALID_AUTHORS = [
 
 
 @pytest.fixture
-def init_command():
-    return commands.InitCommand({"app": charmcraft.application.APP_METADATA, "services": None})
+def init_command() -> commands.InitCommand:
+    return commands.InitCommand({"app": application.APP_METADATA, "services": None})
 
 
 def create_namespace(
     *,
     name="my-charm",
-    author="J Doe",
+    author: str | None = "J Doe",
     force=False,
     profile=commands.init.DEFAULT_PROFILE,
     project_dir: pathlib.Path | None = None,

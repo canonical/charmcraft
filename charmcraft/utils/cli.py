@@ -187,7 +187,7 @@ def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "ta
 
 @overload
 def format_content(
-    content: str | (numbers.Real | (list | dict)), fmt: OutputFormat | (str | None)
+    content: str | (numbers.Real | (list | dict)) | None, fmt: OutputFormat | (str | None)
 ) -> str: ...
 
 

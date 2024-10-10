@@ -42,7 +42,9 @@ def store(service_factory) -> services.StoreService:
 
 @pytest.fixture(scope="module")
 def reusable_store():
-    store = services.StoreService(app=application.APP_METADATA, services=None)
+    store = services.StoreService(
+        app=application.APP_METADATA, services=None  # pyright: ignore[reportArgumentType]
+    )
     store.client = mock.Mock(spec_set=craft_store.StoreClient)
     return store
 

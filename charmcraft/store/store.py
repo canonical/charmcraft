@@ -85,7 +85,7 @@ def _build_errors(item):
 
 def _build_revision(item: dict[str, Any]) -> Revision:
     """Build a Revision from a response item."""
-    bases = [(None if base is None else Base(**base)) for base in item["bases"]]
+    bases = [Base(**base) for base in item["bases"] if base is not None]
     return Revision(
         revision=item["revision"],
         version=item["version"],
@@ -387,7 +387,7 @@ class Store:
                     channel=item["channel"],
                     expires_at=expires_at,
                     resources=resources,
-                    base=base,
+                    base=base,  # pyright: ignore[reportArgumentType]
                 )
             )
 

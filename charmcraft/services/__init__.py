@@ -23,6 +23,7 @@ from charmcraft.services.remotebuild import RemoteBuildService
 from craft_application import ServiceFactory
 
 from .analysis import AnalysisService
+from .charmlibs import CharmLibsService
 from .image import ImageService
 from .lifecycle import LifecycleService
 from .package import PackageService
@@ -39,6 +40,7 @@ class CharmcraftServiceFactory(ServiceFactory):
     LifecycleClass: type[LifecycleService] = LifecycleService
     ProviderClass: type[ProviderService] = ProviderService
     AnalysisClass: type[AnalysisService] = AnalysisService
+    CharmLibsClass: type[CharmLibsService] = CharmLibsService
     StoreClass: type[StoreService] = StoreService
     RemoteBuildClass: type[RemoteBuildService] = RemoteBuildService
     ImageClass: type[ImageService] = ImageService
@@ -47,6 +49,7 @@ class CharmcraftServiceFactory(ServiceFactory):
         # Cheeky hack that lets static type checkers report the correct types.
         # Any apps that add their own services should do this too.
         analysis: AnalysisService = None  # type: ignore[assignment]
+        charm_libs: CharmLibsService = None  # type: ignore[assignment]
         image: ImageService = None  # type: ignore[assignment]
         lifecycle: LifecycleService = None  # type: ignore[assignment]
         package: PackageService = None  # type: ignore[assignment]

@@ -31,7 +31,7 @@ class _AppBase(Extension):
         {"lib": "traefik_k8s.ingress", "version": "2"},
         {"lib": "observability_libs.juju_topology", "version": "0"},
         {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
-        {"lib": "loki_k8s.loki_push_api", "version": "0"},
+        {"lib": "loki_k8s.loki_push_api", "version": "1"},
         {"lib": "data_platform_libs.data_interfaces", "version": "0"},
         {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
         {"lib": "redis_k8s.redis", "version": "0"},
@@ -271,6 +271,12 @@ class DjangoFramework(_AppBase):
             "description": "A comma-separated list of host/domain names that this Django site can serve. This configuration will set the DJANGO_ALLOWED_HOSTS environment variable with its content being a JSON encoded list.",
         },
     }
+
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
 
 
 class GoFramework(_AppBase):

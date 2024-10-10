@@ -19,6 +19,7 @@ import abc
 import ast
 import os
 import pathlib
+import re
 import shlex
 import typing
 from collections.abc import Generator
@@ -523,6 +524,99 @@ class Entrypoint(Linter):
         return self.Result.OK
 
 
+class OpsMainCall(Linter):
+    """Check that the entrypoint contains call to ops.main()."""
+
+    name = "ops-main-call"
+    url = f"{BASE_DOCS_URL}#heading--ops-main-call"
+    text = ""
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Check preconditions and validate there's an ops.main() call."""
+        if Framework().run(basedir) != Framework.Result.OPERATOR:
+            self.text = "The charm is not based on the operator framework"
+            return self.Result.NONAPPLICABLE
+
+        entrypoint = get_entrypoint_from_dispatch(basedir)
+        if entrypoint is None:
+            self.text = "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            return self.Result.NONAPPLICABLE
+
+        if not entrypoint.exists():
+            self.text = f"Cannot find the entrypoint file: {str(entrypoint)!r}"
+            return self.Result.NONAPPLICABLE
+
+        if not self._check_main_calls(entrypoint.read_text()):
+            self.text = f"The ops.main() call missing from {str(entrypoint)!r}."
+            return self.Result.ERROR
+
+        return self.Result.OK
+
+    def _check_main_calls(self, code: str):
+        tree = ast.parse(code)
+        imports = self._ops_main_imports(tree)
+        return self._detect_main_calls(tree, imports=imports)
+
+    def _ops_main_imports(self, tree: ast.AST) -> dict[str, str]:
+        """Analyze imports and return a mapping {local_name: imported thing}."""
+        rv = {}
+
+        class ImportVisitor(ast.NodeVisitor):
+            def visit_Import(self, node: ast.Import):  # noqa: N802
+                for alias in node.names:
+                    # Detect statements like `import ops`
+                    if alias.name == "ops":
+                        rv[alias.asname or alias.name] = "ops"
+                    if alias.name == "ops.main" and alias.asname:
+                        rv[alias.asname] = "ops.main"
+                    elif alias.name.startswith("ops.") and not alias.asname:
+                        rv["ops"] = "ops"
+
+            def visit_ImportFrom(self, node: ast.ImportFrom):  # noqa: N802
+                for alias in node.names:
+                    # Detect statements like `from ops import main [as ops_main]`
+                    if node.module in ("ops", "ops.main") and alias.name == "main":
+                        rv[alias.asname or alias.name] = f"{node.module}.main"
+
+        ImportVisitor().visit(tree)
+        return rv
+
+    def _detect_main_calls(self, tree: ast.AST, *, imports: dict[str, str]) -> bool:
+        main_call_sites = []
+
+        class OpsMainFinder(ast.NodeVisitor):
+            def visit_Call(self, node: ast.Call):  # noqa: N802
+                match node.func:
+                    # Matches statements like `ops.main.main(...)`
+                    case ast.Attribute(
+                        value=ast.Attribute(value=ast.Name(id=first), attr=second),
+                        attr=third,
+                    ):
+                        call_site = f"{first}.{second}.{third}(...)"
+                    # Matches statements like `ops.main(...)`
+                    case ast.Attribute(value=ast.Name(id=first), attr=second):
+                        call_site = f"{first}.{second}(...)"
+                    # Matches statements like `main(...)`
+                    case ast.Name(id=first):
+                        call_site = f"{first}(...)"
+                    case _:
+                        call_site = "_dummy()"
+
+                match = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*)(.*)", call_site)
+                if not match:
+                    raise ValueError("impossible")
+                alias, rest = match.groups()
+                resolved = f"{imports.get(alias, '_dummy')}{rest}"
+
+                if resolved in ("ops.main(...)", "ops.main.main(...)"):
+                    main_call_sites.append(call_site)
+
+                self.generic_visit(node)
+
+        OpsMainFinder().visit(tree)
+        return any(main_call_sites)
+
+
 class AdditionalFiles(Linter):
     """Check that the charm does not contain any additional files in the prime directory.
 
@@ -584,5 +678,6 @@ CHECKERS: list[type[BaseChecker]] = [
     NamingConventions,
     Framework,
     Entrypoint,
+    OpsMainCall,
     AdditionalFiles,
 ]

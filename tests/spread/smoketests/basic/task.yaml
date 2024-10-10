@@ -14,9 +14,8 @@ environment:
   CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_all,noble_platforms_python: platforms
   EXTRA/jammy_bases_all,noble_platforms_all: "-all"
   EXTRA/noble_platforms_python: "-python"
-  # Alma Linux is disabled temporarily: https://github.com/canonical/charmcraft/issues/1496
-  # BASE_CHANNEL/alma: alma9
-  # CHARM_TYPE/alma: bases
+  BASE_CHANNEL/alma: alma9
+  CHARM_TYPE/alma: bases
 
 include:
   - tests/

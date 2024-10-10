@@ -699,6 +699,7 @@ class PipCheck(Linter):
             pip_cmd,
             text=True,
             capture_output=True,
+            check=False,
         )
         if check.returncode == 0:
             result = self.Result.OK

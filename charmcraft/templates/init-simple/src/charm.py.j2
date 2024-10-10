@@ -64,18 +64,18 @@ class {{ class_name }}(ops.CharmBase):
         if log_level in VALID_LOG_LEVELS:
             # The config is good, so update the configuration of the workload
             container = self.unit.get_container("httpbin")
-            # Verify that we can connect to the Pebble API in the workload container
-            if container.can_connect():
-                # Push an updated layer with the new config
+            # Push an updated layer with the new config
+            try:
                 container.add_layer("httpbin", self._pebble_layer, combine=True)
                 container.replan()
-
-                logger.debug("Log level for gunicorn changed to '%s'", log_level)
-                self.unit.status = ops.ActiveStatus()
-            else:
+            except ops.pebble.ConnectionError:
                 # We were unable to connect to the Pebble API, so we defer this event
+                self.unit.status = ops.MaintenanceStatus("waiting for Pebble API")
                 event.defer()
-                self.unit.status = ops.WaitingStatus("waiting for Pebble API")
+                return
+
+            logger.debug("Log level for gunicorn changed to '%s'", log_level)
+            self.unit.status = ops.ActiveStatus()
         else:
             # In this case, the config option is bad, so block the charm and notify the operator.
             self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")

@@ -14,10 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+
 import json
 import sys
 import zipfile
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 
 import pytest
 from craft_cli import CraftError
@@ -368,3 +370,39 @@ def test_only_fatal(emitter, service_factory, config, monkeypatch, fake_project_
 
     emitter.assert_progress("check-lint: [FATAL] text (url)", permanent=True)
     assert retcode == 1
+
+
+def zip_directory(directory_path: Path, zip_path: Path):
+    """Directory to zip with contents and permissions."""
+    with zipfile.ZipFile(str(zip_path), "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in directory_path.rglob("*"):
+            rel_path = file_path.relative_to(directory_path)
+            zip_info = zipfile.ZipInfo(str(rel_path))
+            zip_info.external_attr = (file_path.stat().st_mode & 0o777) << 16
+
+            if file_path.is_dir():
+                zip_info.filename += "/"
+                zipf.writestr(zip_info, "")
+            else:
+                zipf.writestr(zip_info, file_path.read_bytes())
+
+
+@pytest.fixture
+def linter_charms(request):
+    return request.config.rootpath / "tests/integration/ops-main-linter-charms"
+
+
+@pytest.mark.parametrize(("charm", "rv"), [("smoke", 0), ("negative", 2)])
+def test_ops_main_linter(
+    tmp_path: Path, linter_charms: Path, emitter, config, charm: str, rv: int
+):
+    zip_directory(linter_charms / charm, (charm_path := tmp_path / "this.charm"))
+
+    retcode = Analyse(config=config).run(
+        Namespace(filepath=charm_path, force=None, format=None, ignore=None)
+    )
+
+    assert retcode == rv
+
+    if rv:
+        assert "ops.main() call missing" in str(emitter.interactions)

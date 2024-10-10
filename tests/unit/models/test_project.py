@@ -93,6 +93,23 @@ bases:
         channel: "22.04"
         architectures: [arm64]
 """
+MINIMAL_CHARMCRAFT_DICT = {
+    "type": "charm",
+    "bases": [
+        {
+            "build-on": [
+                {
+                    "name": "ubuntu",
+                    "channel": "22.04",
+                    "architectures": [util.get_host_architecture()],
+                },
+            ],
+            "run-on": [
+                {"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]},
+            ],
+        }
+    ],
+}
 SIMPLE_METADATA_YAML = "{name: charmy-mccharmface, summary: Charmy!, description: Very charming!}"
 SIMPLE_CHARMCRAFT_YAML = f"""\
 type: charm
@@ -109,12 +126,56 @@ bases:
         channel: "22.04"
         architectures: [arm64]
 """
+SIMPLE_CHARMCRAFT_DICT = MINIMAL_CHARMCRAFT_DICT | {
+    "name": "charmy-mccharmface",
+    "summary": "Charmy!",
+    "description": "Very charming!",
+}
 SIMPLE_CONFIG_YAML = "options: {admin: {default: root, description: Admin user, type: string}}"
 SIMPLE_CONFIG_DICT = {
     "options": {"admin": {"type": "string", "default": "root", "description": "Admin user"}}
 }
 SIMPLE_ACTIONS_YAML = "snooze: {description: Take a little nap.}"
 SIMPLE_ACTIONS_DICT = {"snooze": {"description": "Take a little nap."}}
+CHARMCRAFT_YAML_NON_VECTORISED_PLATFORMS = """\
+type: charm
+name: test-1874-regression
+summary: Regression test for #1874
+description: A charm for regression testing https://github.com/canonical/charmcraft/issues/1874
+
+parts:
+  charm:
+    plugin: dump
+    source: .
+    prime:
+      - actions/*
+      - files/*
+      - hooks/*
+      - lib/*
+      - templates/*
+      - config.yaml
+      - copyright
+      - icon.svg
+      - LICENSE
+      - Makefile
+      - metadata.yaml
+      - README.md
+
+base: ubuntu@24.04
+platforms:
+ amd64:
+   build-on: amd64
+   build-for: amd64
+ arm64:
+   build-on: arm64
+   build-for: arm64
+ ppc64el:
+   build-on: ppc64el
+   build-for: ppc64el
+ s390x:
+   build-on: s390x
+   build-for: s390x
+"""
 
 
 # region CharmPlatform tests
@@ -576,7 +637,7 @@ def test_unmarshal_invalid_type(type_):
         "metadata_yaml",
         "config_yaml",
         "actions_yaml",
-        "expected_diff",
+        "expected_dict",
     ),
     [
         (
@@ -584,35 +645,36 @@ def test_unmarshal_invalid_type(type_):
             None,
             None,
             None,
-            {"parts": BASIC_CHARM_PARTS},
+            SIMPLE_CHARMCRAFT_DICT | {"parts": BASIC_CHARM_PARTS},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             None,
             None,
-            {"parts": BASIC_CHARM_PARTS},
+            SIMPLE_CHARMCRAFT_DICT | {"parts": BASIC_CHARM_PARTS},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             SIMPLE_CONFIG_YAML,
             None,
-            {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS},
+            SIMPLE_CHARMCRAFT_DICT | {"config": SIMPLE_CONFIG_DICT, "parts": BASIC_CHARM_PARTS},
         ),
         (
             SIMPLE_CHARMCRAFT_YAML,
             None,
             None,
             SIMPLE_ACTIONS_YAML,
-            {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS},
+            SIMPLE_CHARMCRAFT_DICT | {"actions": SIMPLE_ACTIONS_DICT, "parts": BASIC_CHARM_PARTS},
         ),
         (
             MINIMAL_CHARMCRAFT_YAML,
             SIMPLE_METADATA_YAML,
             SIMPLE_CONFIG_YAML,
             SIMPLE_ACTIONS_YAML,
-            {
+            SIMPLE_CHARMCRAFT_DICT
+            | {
                 "actions": SIMPLE_ACTIONS_DICT,
                 "config": SIMPLE_CONFIG_DICT,
                 "parts": BASIC_CHARM_PARTS,
@@ -631,7 +693,8 @@ def test_unmarshal_invalid_type(type_):
             None,
             None,
             None,
-            {
+            SIMPLE_CHARMCRAFT_DICT
+            | {
                 "parts": {
                     "charm": {
                         "plugin": "charm",
@@ -648,6 +711,46 @@ def test_unmarshal_invalid_type(type_):
             },
             id="implicit-parts-plugins",
         ),
+        pytest.param(
+            CHARMCRAFT_YAML_NON_VECTORISED_PLATFORMS,
+            None,
+            None,
+            None,
+            {
+                "name": "test-1874-regression",
+                "summary": "Regression test for",
+                "description": "A charm for regression testing https://github.com/canonical/charmcraft/issues/1874",
+                "base": "ubuntu@24.04",
+                "platforms": {
+                    "amd64": {"build-on": ["amd64"], "build-for": ["amd64"]},
+                    "arm64": {"build-on": ["arm64"], "build-for": ["arm64"]},
+                    "ppc64el": {"build-on": ["ppc64el"], "build-for": ["ppc64el"]},
+                    "s390x": {"build-on": ["s390x"], "build-for": ["s390x"]},
+                },
+                "parts": {
+                    "charm": {
+                        "plugin": "dump",
+                        "source": ".",
+                        "prime": [
+                            "actions/*",
+                            "files/*",
+                            "hooks/*",
+                            "lib/*",
+                            "templates/*",
+                            "config.yaml",
+                            "copyright",
+                            "icon.svg",
+                            "LICENSE",
+                            "Makefile",
+                            "metadata.yaml",
+                            "README.md",
+                        ],
+                    }
+                },
+                "type": "charm",
+            },
+            id="1874-regression",
+        ),
     ],
 )
 def test_from_yaml_file_success(
@@ -657,11 +760,8 @@ def test_from_yaml_file_success(
     metadata_yaml: str | None,
     config_yaml: str | None,
     actions_yaml: str | None,
-    expected_diff: dict[str, Any],
+    expected_dict: dict[str, Any],
 ):
-    expected_dict = simple_charm.marshal().copy()
-    expected_dict.update(expected_diff)
-
     fs.create_file("/charmcraft.yaml", contents=charmcraft_yaml)
     if metadata_yaml:
         fs.create_file("/metadata.yaml", contents=metadata_yaml)

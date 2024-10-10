@@ -238,7 +238,12 @@ class CharmBuilder:
             # known working version of pip.
             if get_pip_version(pip_cmd) < MINIMUM_PIP_VERSION:
                 _process_run(
-                    [pip_cmd, "install", "--force-reinstall", f"pip@{KNOWN_GOOD_PIP_URL}"]
+                    [
+                        pip_cmd,
+                        "install",
+                        "--force-reinstall",
+                        f"pip@{KNOWN_GOOD_PIP_URL}",
+                    ]
                 )
 
         with instrum.Timer("Installing all dependencies"):

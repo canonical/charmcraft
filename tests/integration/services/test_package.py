@@ -14,7 +14,6 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for package service."""
-import contextlib
 import datetime
 import pathlib
 
@@ -28,8 +27,8 @@ from charmcraft.application.main import APP_METADATA
 
 
 @pytest.fixture
-def package_service(fake_path, service_factory, default_build_plan):
-    fake_project_dir = fake_path
+def package_service(new_path: pathlib.Path, service_factory, default_build_plan):
+    fake_project_dir = new_path
     svc = services.PackageService(
         app=APP_METADATA,
         project=service_factory.project,
@@ -49,12 +48,10 @@ def package_service(fake_path, service_factory, default_build_plan):
     ],
 )
 @freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
-def test_write_metadata(monkeypatch, fs, package_service, project_path):
+def test_write_metadata(monkeypatch, new_path, package_service, project_path):
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
-    with contextlib.suppress(FileExistsError):
-        fs.add_real_directory(project_path)
-    test_prime_dir = pathlib.Path("/prime")
-    fs.create_dir(test_prime_dir)
+    test_prime_dir = new_path / "prime"
+    test_prime_dir.mkdir()
     expected_prime_dir = project_path / "prime"
 
     project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
@@ -75,23 +72,21 @@ def test_write_metadata(monkeypatch, fs, package_service, project_path):
     ],
 )
 @freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
-def test_overwrite_metadata(monkeypatch, fs, package_service, project_path):
+def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path):
     """Test that the metadata file gets rewritten for a charm.
 
     Regression test for https://github.com/canonical/charmcraft/issues/1654
     """
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
-    with contextlib.suppress(FileExistsError):
-        fs.add_real_directory(project_path)
-    test_prime_dir = pathlib.Path("/prime")
-    fs.create_dir(test_prime_dir)
+    test_prime_dir = new_path / "prime"
+    test_prime_dir.mkdir()
     expected_prime_dir = project_path / "prime"
 
     project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
     project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
     package_service._project = project
 
-    fs.create_file(test_prime_dir / const.METADATA_FILENAME, contents="INVALID!!")
+    (test_prime_dir / const.METADATA_FILENAME).write_text("INVALID!!")
 
     package_service.write_metadata(test_prime_dir)
 
@@ -100,20 +95,18 @@ def test_overwrite_metadata(monkeypatch, fs, package_service, project_path):
 
 
 @freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
-def test_no_overwrite_reactive_metadata(monkeypatch, fs, package_service):
+def test_no_overwrite_reactive_metadata(monkeypatch, new_path, package_service):
     """Test that the metadata file doesn't get overwritten for a reactive charm..
 
     Regression test for https://github.com/canonical/charmcraft/issues/1654
     """
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
     project_path = pathlib.Path(__file__).parent / "sample_projects" / "basic-reactive"
-    with contextlib.suppress(FileExistsError):
-        fs.add_real_directory(project_path)
-    test_prime_dir = pathlib.Path("/prime")
-    fs.create_dir(test_prime_dir)
-    test_stage_dir = pathlib.Path("/stage")
-    fs.create_dir(test_stage_dir)
-    fs.create_file(test_stage_dir / const.METADATA_FILENAME, contents="INVALID!!")
+    test_prime_dir = new_path / "prime"
+    test_prime_dir.mkdir()
+    test_stage_dir = new_path / "stage"
+    test_stage_dir.mkdir()
+    (test_stage_dir / const.METADATA_FILENAME).write_text("INVALID!!")
 
     project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
     project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)

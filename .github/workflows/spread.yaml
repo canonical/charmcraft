@@ -85,6 +85,7 @@ jobs:
         name: Run spread
         env:
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
+          CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
           CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
           BUNDLE_DEFAULT_NAME: gh-ci-charmcraft-bundle
         run: |

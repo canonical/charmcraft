@@ -19,11 +19,13 @@
 from charmcraft.utils.charmlibs import (
     LibData,
     LibInternals,
+    QualifiedLibraryName,
     get_name_from_metadata,
     create_charm_name_from_importable,
     create_importable_name,
     get_lib_internals,
     get_lib_path,
+    get_lib_charm_path,
     get_lib_module_name,
     get_lib_info,
     get_libs_from_tree,
@@ -55,6 +57,7 @@ from charmcraft.utils.package import (
     get_requirements_file_package_names,
     validate_strict_dependencies,
 )
+from charmcraft.utils.parts import extend_python_build_environment, get_charm_copy_commands
 from charmcraft.utils.project import (
     find_charm_sources,
     get_charm_name_from_path,
@@ -67,11 +70,13 @@ from charmcraft.utils.yaml import dump_yaml, load_yaml
 __all__ = [
     "LibData",
     "LibInternals",
+    "QualifiedLibraryName",
     "get_name_from_metadata",
     "create_charm_name_from_importable",
     "create_importable_name",
     "get_lib_internals",
     "get_lib_path",
+    "get_lib_charm_path",
     "get_lib_module_name",
     "get_lib_info",
     "get_libs_from_tree",
@@ -100,6 +105,8 @@ __all__ = [
     "confirm_with_user",
     "format_content",
     "humanize_list",
+    "extend_python_build_environment",
+    "get_charm_copy_commands",
     "find_charm_sources",
     "get_charm_name_from_path",
     "get_templates_environment",

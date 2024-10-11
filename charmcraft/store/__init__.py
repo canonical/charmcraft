@@ -18,22 +18,12 @@
 from charmcraft.store.client import build_user_agent, AnonymousClient, Client
 from charmcraft.store import models
 from charmcraft.store.models import LibraryMetadataRequest
-from charmcraft.store.registry import (
-    OCIRegistry,
-    HashingTemporaryFile,
-    LocalDockerdInterface,
-    ImageHandler,
-)
 from charmcraft.store.store import Store, AUTH_DEFAULT_TTL, AUTH_DEFAULT_PERMISSIONS
 
 __all__ = [
     "build_user_agent",
     "AnonymousClient",
     "Client",
-    "OCIRegistry",
-    "HashingTemporaryFile",
-    "ImageHandler",
-    "LocalDockerdInterface",
     "AUTH_DEFAULT_PERMISSIONS",
     "AUTH_DEFAULT_TTL",
     "Store",

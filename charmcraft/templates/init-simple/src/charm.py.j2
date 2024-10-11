@@ -78,7 +78,7 @@ class {{ class_name }}(ops.CharmBase):
             self.unit.status = ops.ActiveStatus()
         else:
             # In this case, the config option is bad, so block the charm and notify the operator.
-            self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
+            self.unit.status = ops.BlockedStatus(f"invalid log level: '{log_level}'")
 
     @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:
@@ -101,4 +101,4 @@ class {{ class_name }}(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main({{ class_name }})  # type: ignore
+    ops.main({{ class_name }})

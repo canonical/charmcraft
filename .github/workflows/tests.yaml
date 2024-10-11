@@ -80,6 +80,11 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
+          pipx install poetry
+          # Jammy runners have too old a version of pip.
+          if [[ $(lsb_release --codename --short) == 'jammy' ]]; then
+            python3 -m pip install -U pip
+          fi
       - name: Setup LXD
         uses: canonical/setup-lxd@v0.1.1
         if: ${{ runner.os == 'Linux' }}
@@ -125,7 +130,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Build snap
-        uses: snapcore/action-build@v1
+        uses: canonical/action-build@v1
         id: snapcraft
       - name: Upload snap artifact
         uses: actions/upload-artifact@v4
@@ -150,7 +155,7 @@ jobs:
           fi
       - name: Publish feature branch to edge/${{ steps.vars.outputs.branch }}
         if: ${{ env.SNAPCRAFT_STORE_CREDENTIALS != '' }}
-        uses: snapcore/action-publish@v1
+        uses: canonical/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         with:

@@ -25,7 +25,8 @@ jobs:
           sudo apt-get install -y python3 python3-dev libapt-pkg-dev libyaml-dev
           echo "::endgroup::"
           echo "::group::pip install"
-          python -m pip install 'tox<5.0' tox-gh
+          python -m pip install 'tox<5.0' tox-gh poetry
+          pip install -U pip
           echo "::endgroup::"
 
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

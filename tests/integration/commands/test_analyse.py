@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Canonical Ltd.
+# Copyright 2021-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +14,18 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+
 import json
 import sys
 import zipfile
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 
 import pytest
 from craft_cli import CraftError
 
 from charmcraft import linters
 from charmcraft.application.commands.analyse import Analyse
-from charmcraft.cmdbase import JSON_FORMAT
 from charmcraft.models.lint import LintResult
 
 
@@ -54,9 +55,9 @@ def test_expanded_charm_permissions(config, fake_project_dir, monkeypatch, modeb
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
-def test_corrupt_charm(fake_project_dir, config):
+def test_corrupt_charm(new_path, config):
     """There was a problem opening the indicated charm."""
-    charm_file = fake_project_dir / "foobar.charm"
+    charm_file = new_path / "foobar.charm"
     charm_file.write_text("this is not a real zip content")
 
     args = Namespace(filepath=charm_file, force=None, format=None, ignore=None)
@@ -73,9 +74,9 @@ def create_a_valid_zip(tmp_path):
     return zip_file
 
 
-def test_integration_linters(fake_project_dir, emitter, config, monkeypatch):
+def test_integration_linters(new_path, emitter, config, monkeypatch):
     """Integration test with a real analysis."""
-    fake_charm = create_a_valid_zip(fake_project_dir)
+    fake_charm = create_a_valid_zip(new_path)
     args = Namespace(filepath=fake_charm, force=None, format=None, ignore=None)
     Analyse(config).run(args)
 
@@ -85,7 +86,7 @@ def test_integration_linters(fake_project_dir, emitter, config, monkeypatch):
     )
 
 
-@pytest.mark.parametrize("indicated_format", [None, JSON_FORMAT])
+@pytest.mark.parametrize("indicated_format", [None, "json"])
 def test_complete_set_of_results(
     check, emitter, service_factory, config, monkeypatch, fake_project_dir, indicated_format
 ):
@@ -369,3 +370,39 @@ def test_only_fatal(emitter, service_factory, config, monkeypatch, fake_project_
 
     emitter.assert_progress("check-lint: [FATAL] text (url)", permanent=True)
     assert retcode == 1
+
+
+def zip_directory(directory_path: Path, zip_path: Path):
+    """Directory to zip with contents and permissions."""
+    with zipfile.ZipFile(str(zip_path), "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in directory_path.rglob("*"):
+            rel_path = file_path.relative_to(directory_path)
+            zip_info = zipfile.ZipInfo(str(rel_path))
+            zip_info.external_attr = (file_path.stat().st_mode & 0o777) << 16
+
+            if file_path.is_dir():
+                zip_info.filename += "/"
+                zipf.writestr(zip_info, "")
+            else:
+                zipf.writestr(zip_info, file_path.read_bytes())
+
+
+@pytest.fixture
+def linter_charms(request):
+    return request.config.rootpath / "tests/integration/ops-main-linter-charms"
+
+
+@pytest.mark.parametrize(("charm", "rv"), [("smoke", 0), ("negative", 2)])
+def test_ops_main_linter(
+    tmp_path: Path, linter_charms: Path, emitter, config, charm: str, rv: int
+):
+    zip_directory(linter_charms / charm, (charm_path := tmp_path / "this.charm"))
+
+    retcode = Analyse(config=config).run(
+        Namespace(filepath=charm_path, force=None, format=None, ignore=None)
+    )
+
+    assert retcode == rv
+
+    if rv:
+        assert "ops.main() call missing" in str(emitter.interactions)

@@ -1,0 +1,18 @@
+type: charm
+name: test-charm
+summary: Test charm
+description: Test charm
+
+base: ubuntu@24.04
+
+platforms:
+  amd64:
+  arm64:
+
+charm-libs:
+  - lib: data-platform-libs.upgrade
+    version: "0.18"
+
+parts:
+  nothing:
+    plugin: nil

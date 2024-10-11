@@ -22,13 +22,9 @@ dependencies = [
     "pyyaml",
     "requests",
     "requests-toolbelt",
-    "requests-unixsocket",
+    "requests-unixsocket2",
     "snap-helpers",
     "tabulate",
-    # Needed until requests-unixsocket supports urllib3 v2
-    # https://github.com/msabramo/requests-unixsocket/pull/69
-    # When updating, remove the urllib3 constraint from renovate config.
-    "urllib3<2.0",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

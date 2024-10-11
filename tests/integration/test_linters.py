@@ -34,6 +34,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not sup
         ["install", "pytest", "hypothesis"],
     ],
 )
+@pytest.mark.skipif(sys.platform == "win32", reason = "Windows not [yet] supported")
 def test_pip_check_success(tmp_path: pathlib.Path, pip_cmd: list[str]):
     venv_path = tmp_path / "venv"
     subprocess.run([sys.executable, "-m", "venv", venv_path], check=True)

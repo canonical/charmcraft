@@ -123,16 +123,19 @@ def service_factory(
 
 
 @pytest.fixture
-def default_build_plan():
+def default_build_info() -> models.BuildInfo:
     arch = util.get_host_architecture()
-    return [
-        models.BuildInfo(
-            base=bases.BaseName("ubuntu", "22.04"),
-            build_on=arch,
-            build_for="arm64",
-            platform="distro-1-test64",
-        )
-    ]
+    return models.BuildInfo(
+        base=bases.BaseName("ubuntu", "22.04"),
+        build_on=arch,
+        build_for="arm64",
+        platform="distro-1-test64",
+    )
+
+
+@pytest.fixture
+def default_build_plan(default_build_info: models.BuildInfo):
+    return [default_build_info]
 
 
 @pytest.fixture

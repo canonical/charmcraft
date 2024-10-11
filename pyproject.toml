@@ -75,7 +75,7 @@ apt = [
     "python-apt>=2.4.0;sys_platform=='linux'"
 ]
 docs = [
-    "canonical-sphinx~=0.1",
+    "canonical-sphinx[full]~=0.2",
     "pyspelling",
     "autodoc-pydantic~=2.0",
     "sphinx-autobuild~=2024.2",

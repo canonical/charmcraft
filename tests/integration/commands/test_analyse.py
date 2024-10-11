@@ -63,7 +63,9 @@ def test_corrupt_charm(new_path, config):
     args = Namespace(filepath=charm_file, force=None, format=None, ignore=None)
     with pytest.raises(CraftError) as cm:
         Analyse(config).run(args)
-    assert str(cm.value) == (f"Cannot open charm file '{charm_file}': File is not a zip file")
+    assert str(cm.value) == (
+        f"Cannot open charm file '{charm_file}': File is not a zip file"
+    )
 
 
 def create_a_valid_zip(tmp_path):
@@ -88,7 +90,13 @@ def test_integration_linters(new_path, emitter, config, monkeypatch):
 
 @pytest.mark.parametrize("indicated_format", [None, "json"])
 def test_complete_set_of_results(
-    check, emitter, service_factory, config, monkeypatch, fake_project_dir, indicated_format
+    check,
+    emitter,
+    service_factory,
+    config,
+    monkeypatch,
+    fake_project_dir,
+    indicated_format,
 ):
     """Show a complete basic case of results."""
     # fake results from the analyzer
@@ -145,7 +153,9 @@ def test_complete_set_of_results(
     ]
 
     fake_charm = create_a_valid_zip(fake_project_dir)
-    args = Namespace(filepath=fake_charm, force=None, format=indicated_format, ignore=None)
+    args = Namespace(
+        filepath=fake_charm, force=None, format=indicated_format, ignore=None
+    )
     monkeypatch.setattr(
         service_factory.analysis, "lint_directory", lambda *a, **k: linting_results
     )
@@ -220,7 +230,9 @@ def test_complete_set_of_results(
         assert expected == json.loads(text)
 
 
-def test_only_attributes(emitter, service_factory, config, monkeypatch, fake_project_dir):
+def test_only_attributes(
+    emitter, service_factory, config, monkeypatch, fake_project_dir
+):
     """Show only attribute results (the rest may be ignored)."""
     # fake results from the analyzer
     linting_results = [
@@ -240,7 +252,9 @@ def test_only_attributes(emitter, service_factory, config, monkeypatch, fake_pro
     )
     retcode = Analyse(config).run(args)
 
-    emitter.assert_progress("check-attribute: [CHECK-RESULT] text (url)", permanent=True)
+    emitter.assert_progress(
+        "check-attribute: [CHECK-RESULT] text (url)", permanent=True
+    )
     assert retcode == 0
 
 
@@ -292,7 +306,9 @@ def test_only_errors(emitter, service_factory, config, monkeypatch, fake_project
     assert retcode == 2
 
 
-def test_both_errors_and_warnings(emitter, service_factory, config, monkeypatch, fake_project_dir):
+def test_both_errors_and_warnings(
+    emitter, service_factory, config, monkeypatch, fake_project_dir
+):
     """Show error and warnings results."""
     # fake results from the analyzer
     linting_results = [

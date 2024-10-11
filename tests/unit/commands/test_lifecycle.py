@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for lifecycle commands."""
+
 import argparse
 import pathlib
 
@@ -63,7 +64,9 @@ def get_namespace(
 
 @pytest.fixture
 def pack(service_factory: services.ServiceFactory) -> lifecycle.PackCommand:
-    return lifecycle.PackCommand({"app": application.APP_METADATA, "services": service_factory})
+    return lifecycle.PackCommand(
+        {"app": application.APP_METADATA, "services": service_factory}
+    )
 
 
 @pytest.mark.parametrize(
@@ -133,7 +136,9 @@ def test_pack_update_charm_libs_empty(
 ):
     simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
     store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
+        store_lib
+    ]
     service_factory.store.anonymous_client.get_library.return_value = store_lib
 
     pack._update_charm_libs()
@@ -157,7 +162,9 @@ def test_pack_update_charm_libs_no_update(
     path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
     path.parent.mkdir(parents=True)
     path.write_text("LIBID='id'\nLIBAPI=0\nLIBPATCH=1")
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
+        store_lib
+    ]
     service_factory.store.anonymous_client.get_library.return_value = store_lib
 
     pack._update_charm_libs()
@@ -180,7 +187,9 @@ def test_pack_update_charm_libs_needs_update(
     path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
     path.parent.mkdir(parents=True)
     path.write_text("LIBID='id'\nLIBAPI=0\nLIBPATCH=1")
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
+        store_lib
+    ]
     service_factory.store.anonymous_client.get_library.return_value = store_lib
 
     pack._update_charm_libs()

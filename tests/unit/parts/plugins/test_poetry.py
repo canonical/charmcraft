@@ -23,33 +23,47 @@ import pytest_check
 
 from charmcraft.parts import plugins
 
-pytestmark = [pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")]
+pytestmark = [
+    pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
+]
 
 
-def test_get_build_environment(poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path):
+def test_get_build_environment(
+    poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path
+):
     env = poetry_plugin.get_build_environment()
 
     assert env["PIP_NO_BINARY"] == ":all:"
 
 
-def test_get_venv_directory(poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path):
+def test_get_venv_directory(
+    poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path
+):
     assert poetry_plugin._get_venv_directory() == install_path / "venv"
 
 
 def test_get_pip_install_commands(poetry_plugin: plugins.PoetryPlugin):
     poetry_plugin._get_pip = lambda: "/python -m pip"
 
-    assert poetry_plugin._get_pip_install_commands(pathlib.Path("/my dir/reqs.txt")) == [
+    assert poetry_plugin._get_pip_install_commands(
+        pathlib.Path("/my dir/reqs.txt")
+    ) == [
         "/python -m pip install --no-deps '--requirement=/my dir/reqs.txt'",
         "/python -m pip check",
     ]
 
 
 def test_get_package_install_commands(
-    poetry_plugin: plugins.PoetryPlugin, build_path: pathlib.Path, install_path: pathlib.Path
+    poetry_plugin: plugins.PoetryPlugin,
+    build_path: pathlib.Path,
+    install_path: pathlib.Path,
 ):
-    copy_src_cmd = f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
-    copy_lib_cmd = f"cp --archive --recursive --reflink=auto {build_path}/lib {install_path}"
+    copy_src_cmd = (
+        f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
+    )
+    copy_lib_cmd = (
+        f"cp --archive --recursive --reflink=auto {build_path}/lib {install_path}"
+    )
 
     # Check if no src or libs exist
     default_commands = poetry_plugin._get_package_install_commands()
@@ -80,7 +94,9 @@ def test_get_package_install_commands(
     )
 
 
-def test_get_rm_command(poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path):
+def test_get_rm_command(
+    poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path
+):
     assert f"rm -rf {install_path / 'venv/bin'}" in poetry_plugin.get_build_commands()
 
 
@@ -93,4 +109,6 @@ def test_no_get_rm_command(
         "poetry-keep-bins": True,
     }
     poetry_plugin._options = plugins.PoetryPluginProperties.unmarshal(spec)
-    assert f"rm -rf {install_path / 'venv/bin'}" not in poetry_plugin.get_build_commands()
+    assert (
+        f"rm -rf {install_path / 'venv/bin'}" not in poetry_plugin.get_build_commands()
+    )

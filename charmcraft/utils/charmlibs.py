@@ -117,15 +117,18 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     simple_fields = {
         "LIBAPI": (
             _api_patch_validator,
-            _msg_prefix + "LIBAPI must be a constant assignment of zero or a positive integer.",
+            _msg_prefix
+            + "LIBAPI must be a constant assignment of zero or a positive integer.",
         ),
         "LIBPATCH": (
             _api_patch_validator,
-            _msg_prefix + "LIBPATCH must be a constant assignment of zero or a positive integer.",
+            _msg_prefix
+            + "LIBPATCH must be a constant assignment of zero or a positive integer.",
         ),
         "LIBID": (
             lambda value: isinstance(value, str) and value and value.isascii(),
-            _msg_prefix + "LIBID must be a constant assignment of a non-empty ASCII string.",
+            _msg_prefix
+            + "LIBID must be a constant assignment of a non-empty ASCII string.",
         ),
     }
     pydeps_error = _msg_prefix + "PYDEPS must be a constant list of non-empty strings"
@@ -224,7 +227,9 @@ def get_lib_module_name(charm: str, lib_name: str, api: int) -> str:
 def get_lib_info(*, full_name: str) -> LibData: ...
 @overload
 def get_lib_info(*, lib_path: pathlib.Path) -> LibData: ...
-def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None = None) -> LibData:
+def get_lib_info(
+    *, full_name: str | None = None, lib_path: pathlib.Path | None = None
+) -> LibData:
     """Get the whole lib info from the path/file.
 
     This will perform mutation of the charm name to create importable paths.
@@ -267,7 +272,9 @@ def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None 
     charm_name = create_charm_name_from_importable(importable_charm_name)
 
     if v_api[0] != "v" or not v_api[1:].isdigit():
-        raise CraftError("The API version in the library path must be 'vN' where N is an integer.")
+        raise CraftError(
+            "The API version in the library path must be 'vN' where N is an integer."
+        )
     api_from_path = int(v_api[1:])
 
     lib_name = lib_path.stem

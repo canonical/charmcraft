@@ -65,8 +65,12 @@ def test_get_package_names(packages, expected):
     [
         pytest.param(set(), set(), set(), id="empty"),
         pytest.param({"abc==1.0.0"}, {"abc"}, set(), id="make-empty"),
-        pytest.param({"abc==1.0.0", "def==1.2.3"}, {"abc"}, {"def==1.2.3"}, id="remove-one"),
-        pytest.param({"abc==1.0.0"}, {"invalid"}, {"abc==1.0.0"}, id="irrelevant-exclusion"),
+        pytest.param(
+            {"abc==1.0.0", "def==1.2.3"}, {"abc"}, {"def==1.2.3"}, id="remove-one"
+        ),
+        pytest.param(
+            {"abc==1.0.0"}, {"invalid"}, {"abc==1.0.0"}, id="irrelevant-exclusion"
+        ),
     ],
 )
 def test_exclude_packages(requirements, excluded, expected):
@@ -110,20 +114,37 @@ def test_get_requirements_file_package_names(tmp_path, file_contents, expected):
             ["ghi", "jkl"],
         ),
         (["abc==1.0.0", "def>=1.2.3"], [], [], "--no-binary=:all:", []),
-        ([], ["abc==1.0.0", "def>=1.2.3"], [], "--no-binary=:all:", ["abc==1.0.0", "def>=1.2.3"]),
+        (
+            [],
+            ["abc==1.0.0", "def>=1.2.3"],
+            [],
+            "--no-binary=:all:",
+            ["abc==1.0.0", "def>=1.2.3"],
+        ),
     ],
 )
-@pytest.mark.parametrize("prefix", [["/bin/pip"], ["/some/path/to/pip3"], ["pip", "--some-param"]])
+@pytest.mark.parametrize(
+    "prefix", [["/bin/pip"], ["/some/path/to/pip3"], ["pip", "--some-param"]]
+)
 def test_get_pip_command(
-    prefix, requirements, source_deps, binary_deps, expected_no_binary, expected_other_packages
+    prefix,
+    requirements,
+    source_deps,
+    binary_deps,
+    expected_no_binary,
+    expected_other_packages,
 ):
     with tempfile.TemporaryDirectory() as tmp_dir:
         path = pathlib.Path(tmp_dir, "requirements.txt")
         path.write_text("\n".join(requirements))
 
-        command = get_pip_command(prefix, [path], source_deps=source_deps, binary_deps=binary_deps)
+        command = get_pip_command(
+            prefix, [path], source_deps=source_deps, binary_deps=binary_deps
+        )
         assert command[: len(prefix)] == prefix
-        actual_no_binary, actual_requirement, *actual_other_packgaes = command[len(prefix) :]
+        actual_no_binary, actual_requirement, *actual_other_packgaes = command[
+            len(prefix) :
+        ]
         assert actual_no_binary == expected_no_binary
         assert actual_other_packgaes == expected_other_packages
         assert actual_requirement == f"--requirement={path}"
@@ -132,7 +153,11 @@ def test_get_pip_command(
 @pytest.mark.parametrize(
     ("pip_cmd", "stdout", "expected"),
     [
-        ("pip", "pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)\n", (22, 0, 2)),
+        (
+            "pip",
+            "pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)\n",
+            (22, 0, 2),
+        ),
         (
             "venv/bin/pip",
             "pip 20.0.2 from /root/venv/lib/python3.8/site-packages/pip (python 3.8)",
@@ -187,7 +212,9 @@ def test_validate_strict_dependencies_success(dependencies, other_packages):
         ([], ["zyx", "wvut"], ["wvut", "zyx"]),
     ],
 )
-def test_validate_strict_dependencies_missing(dependencies, other_packages, extra_packages):
+def test_validate_strict_dependencies_missing(
+    dependencies, other_packages, extra_packages
+):
     with pytest.raises(MissingDependenciesError) as exc_info:
         validate_strict_dependencies(dependencies, other_packages)
 

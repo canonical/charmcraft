@@ -80,7 +80,11 @@ class _AppBase(Extension):
                 f"the '{self.framework}-framework' extension is incompatible with "
                 f"customized charm part"
             )
-        incompatible_fields = {"devices", "extra-bindings", "storage"} & self.yaml_data.keys()
+        incompatible_fields = {
+            "devices",
+            "extra-bindings",
+            "storage",
+        } & self.yaml_data.keys()
         if incompatible_fields:
             raise ExtensionError(
                 f"the '{self.framework}-framework' extension is incompatible with the provided "
@@ -100,7 +104,9 @@ class _AppBase(Extension):
             user_provided: dict[str, Any] = self._get_nested(self.yaml_data, merging)
             if not user_provided:
                 continue
-            overlap = user_provided.keys() & self._get_nested(root_snippet, merging).keys()
+            overlap = (
+                user_provided.keys() & self._get_nested(root_snippet, merging).keys()
+            )
             if overlap:
                 raise ExtensionError(
                     f"overlapping keys {overlap} in {merging} of charmcraft.yaml "

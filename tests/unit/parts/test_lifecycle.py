@@ -178,7 +178,9 @@ def test_partslifecycle_run_actions_progress(tmp_path, monkeypatch, emitter):
 
     with patch("craft_parts.LifecycleManager.plan") as mock_plan:
         mock_plan.return_value = [action1, action2]
-        with patch("craft_parts.executor.executor.ExecutionContext.execute") as mock_exec:
+        with patch(
+            "craft_parts.executor.executor.ExecutionContext.execute"
+        ) as mock_exec:
             lc.run(Step.PRIME)
 
     emitter.assert_progress("Running step STAGE for part 'testpart'")

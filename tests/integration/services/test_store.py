@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for the store service."""
 
-
 import pytest
 
 from charmcraft import models, services

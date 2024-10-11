@@ -52,7 +52,10 @@ def client_mock(monkeypatch):
     """Fixture to provide a mocked client."""
     monkeypatch.setattr(platform, "node", lambda: "fake-host")
     client_mock = MagicMock(spec=Client)
-    with patch("charmcraft.store.store.Client", lambda api, storage, ephemeral=True: client_mock):
+    with patch(
+        "charmcraft.store.store.Client",
+        lambda api, storage, ephemeral=True: client_mock,
+    ):
         yield client_mock
 
 
@@ -287,14 +290,16 @@ def test_auth_bad_credentials(charmhub_config, monkeypatch):
         Store(charmhub_config)
 
     assert (
-        str(error.value) == "Credentials could not be parsed. Expected base64 encoded credentials."
+        str(error.value)
+        == "Credentials could not be parsed. Expected base64 encoded credentials."
     )
 
 
 def test_no_keyring(charmhub_config):
     """Verify CraftStore is raised from Store when no keyring is available."""
     with patch(
-        "craft_store.StoreClient.__init__", side_effect=craft_store.errors.NoKeyringError()
+        "craft_store.StoreClient.__init__",
+        side_effect=craft_store.errors.NoKeyringError(),
     ):
         with pytest.raises(CraftError) as error:
             Store(charmhub_config)
@@ -497,7 +502,9 @@ def test_register_name(client_mock, charmhub_config):
     result = store.register_name("testname", "stuff")
 
     assert client_mock.mock_calls == [
-        call.request_urlpath_json("POST", "/v1/charm", json={"name": "testname", "type": "stuff"}),
+        call.request_urlpath_json(
+            "POST", "/v1/charm", json={"name": "testname", "type": "stuff"}
+        ),
     ]
     assert result is None
 
@@ -512,7 +519,9 @@ def test_register_name_unauthorized_logs_in(client_mock, charmhub_config):
     store.register_name("testname", "stuff")
 
     assert client_mock.mock_calls == [
-        call.request_urlpath_json("POST", "/v1/charm", json={"name": "testname", "type": "stuff"}),
+        call.request_urlpath_json(
+            "POST", "/v1/charm", json={"name": "testname", "type": "stuff"}
+        ),
         call.logout(),
         call.login(
             ttl=108000,
@@ -524,7 +533,9 @@ def test_register_name_unauthorized_logs_in(client_mock, charmhub_config):
                 "package-view",
             ],
         ),
-        call.request_urlpath_json("POST", "/v1/charm", json={"name": "testname", "type": "stuff"}),
+        call.request_urlpath_json(
+            "POST", "/v1/charm", json={"name": "testname", "type": "stuff"}
+        ),
     ]
 
 
@@ -546,9 +557,13 @@ def test_unregister_name_success(client_mock, charmhub_config):
             id="unknown_name",
         ),
         pytest.param(
-            FakeResponse("discharge required", 401), StoreServerError, id="discharge_required"
+            FakeResponse("discharge required", 401),
+            StoreServerError,
+            id="discharge_required",
         ),
-        pytest.param(FakeResponse("Unauthorized", 401), StoreServerError, id="Unauthorized"),
+        pytest.param(
+            FakeResponse("Unauthorized", 401), StoreServerError, id="Unauthorized"
+        ),
         pytest.param(
             FakeResponse("Cannot unregister a package with existing revisions", 403),
             CraftError,
@@ -588,7 +603,9 @@ def test_unregister_name_errors(
         ),
     ],
 )
-def test_unregister_name_login(client_mock, charmhub_config, http_response: FakeResponse):
+def test_unregister_name_login(
+    client_mock, charmhub_config, http_response: FakeResponse
+):
     """Retry login when registering a name."""
     client_mock.unregister_name.side_effect = [StoreServerError(http_response), None]
 
@@ -713,7 +730,9 @@ def test_upload_straightforward(client_mock, emitter, charmhub_config):
     test_revision = 123
     test_status_ok = "test-status"
     status_response = {
-        "revisions": [{"status": test_status_ok, "revision": test_revision, "errors": None}]
+        "revisions": [
+            {"status": test_status_ok, "revision": test_revision, "errors": None}
+        ]
     }
 
     client_mock.request_urlpath_json.side_effect = [
@@ -732,7 +751,9 @@ def test_upload_straightforward(client_mock, emitter, charmhub_config):
     assert client_mock.mock_calls == [
         call.whoami(),
         call.push_file(test_filepath),
-        call.request_urlpath_json("POST", test_endpoint, json={"upload-id": test_upload_id}),
+        call.request_urlpath_json(
+            "POST", test_endpoint, json={"upload-id": test_upload_id}
+        ),
         call.request_urlpath_json("GET", test_status_url),
     ]
 
@@ -772,7 +793,9 @@ def test_upload_polls_status_ok(client_mock, emitter, charmhub_config):
         "revisions": [{"status": "more-revisions", "revision": None, "errors": None}]
     }
     status_response_3 = {
-        "revisions": [{"status": test_status_ok, "revision": test_revision, "errors": None}]
+        "revisions": [
+            {"status": test_status_ok, "revision": test_revision, "errors": None}
+        ]
     }
     client_mock.request_urlpath_json.side_effect = [
         {"status-url": test_status_url},
@@ -917,7 +940,9 @@ def test_upload_resources_endpoint(charmhub_config):
 
     with patch.object(store, "_upload") as mock:
         mock.return_value = test_results
-        result = store.upload_resource("test-charm", "test-resource", "test-type", "test-filepath")
+        result = store.upload_resource(
+            "test-charm", "test-resource", "test-type", "test-filepath"
+        )
     expected_endpoint = "/v1/charm/test-charm/resources/test-resource/revisions"
     mock.assert_called_once_with(
         expected_endpoint,
@@ -942,7 +967,9 @@ def test_upload_including_extra_parameters(client_mock, emitter, charmhub_config
     test_revision = 123
     test_status_ok = "test-status"
     status_response = {
-        "revisions": [{"status": test_status_ok, "revision": test_revision, "errors": None}]
+        "revisions": [
+            {"status": test_status_ok, "revision": test_revision, "errors": None}
+        ]
     }
 
     client_mock.request_urlpath_json.side_effect = [
@@ -985,7 +1012,9 @@ def test_list_revisions_ok(client_mock, charmhub_config):
                 "created-at": "2020-06-29T22:11:00.123",
                 "status": "approved",
                 "errors": None,
-                "bases": [{"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             }
         ]
     }
@@ -1032,7 +1061,9 @@ def test_list_revisions_errors(client_mock, charmhub_config):
                     {"message": "error text 1", "code": "error-code-1"},
                     {"message": "error text 2", "code": "error-code-2"},
                 ],
-                "bases": [{"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             }
         ]
     }
@@ -1063,7 +1094,9 @@ def test_list_revisions_several_mixed(client_mock, charmhub_config):
                 "errors": [
                     {"message": "error", "code": "code"},
                 ],
-                "bases": [{"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
             {
                 "revision": 2,
@@ -1071,7 +1104,9 @@ def test_list_revisions_several_mixed(client_mock, charmhub_config):
                 "created-at": "2020-06-29T22:11:02",
                 "status": "approved",
                 "errors": None,
-                "bases": [{"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
         ]
     }
@@ -1126,7 +1161,9 @@ def test_release_simple(client_mock, charmhub_config):
 
     expected_body = [{"revision": 123, "channel": "somechannel", "resources": []}]
     assert client_mock.mock_calls == [
-        call.request_urlpath_json("POST", "/v1/charm/testname/releases", json=expected_body),
+        call.request_urlpath_json(
+            "POST", "/v1/charm/testname/releases", json=expected_body
+        ),
     ]
 
 
@@ -1141,7 +1178,9 @@ def test_release_multiple_channels(client_mock, charmhub_config):
         {"revision": 123, "channel": "channel3", "resources": []},
     ]
     assert client_mock.mock_calls == [
-        call.request_urlpath_json("POST", "/v1/charm/testname/releases", json=expected_body),
+        call.request_urlpath_json(
+            "POST", "/v1/charm/testname/releases", json=expected_body
+        ),
     ]
 
 
@@ -1171,7 +1210,9 @@ def test_release_with_resources(client_mock, charmhub_config):
         },
     ]
     assert client_mock.mock_calls == [
-        call.request_urlpath_json("POST", "/v1/charm/testname/releases", json=expected_body),
+        call.request_urlpath_json(
+            "POST", "/v1/charm/testname/releases", json=expected_body
+        ),
     ]
 
 
@@ -1226,7 +1267,9 @@ def test_status_ok(client_mock, charmhub_config):
                 "created-at": "2020-06-29T22:11:05",
                 "status": "approved",
                 "errors": None,
-                "bases": [{"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
             {
                 "revision": 10,
@@ -1234,7 +1277,9 @@ def test_status_ok(client_mock, charmhub_config):
                 "created-at": "2020-06-29T22:11:10",
                 "status": "approved",
                 "errors": None,
-                "bases": [{"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
         ],
     }
@@ -1360,7 +1405,9 @@ def test_status_with_resources(client_mock, charmhub_config):
                 "created-at": "2020-06-29T22:11:05",
                 "status": "approved",
                 "errors": None,
-                "bases": [{"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}],
+                "bases": [
+                    {"architecture": "amd64", "channel": "20.04", "name": "ubuntu"}
+                ],
             },
         ],
     }
@@ -1814,7 +1861,8 @@ def test_get_oci_registry_credentials(client_mock, charmhub_config):
 
     assert client_mock.mock_calls == [
         call.request_urlpath_json(
-            "GET", "/v1/charm/charm-name/resources/resource-name/oci-image/upload-credentials"
+            "GET",
+            "/v1/charm/charm-name/resources/resource-name/oci-image/upload-credentials",
         )
     ]
     assert result.image_name == "test-image-name"
@@ -1826,7 +1874,9 @@ def test_get_oci_image_blob(client_mock, charmhub_config):
     """Get the blob generated by Charmhub to refer to the OCI image."""
     store = Store(charmhub_config)
     client_mock.request_urlpath_text.return_value = "some opaque stuff"
-    result = store.get_oci_image_blob("charm-name", "resource-name", "a-very-specific-digest")
+    result = store.get_oci_image_blob(
+        "charm-name", "resource-name", "a-very-specific-digest"
+    )
 
     assert client_mock.mock_calls == [
         call.request_urlpath_text(

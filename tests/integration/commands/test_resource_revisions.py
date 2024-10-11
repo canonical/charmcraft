@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for resource-revisions command."""
+
 import datetime
 from argparse import Namespace
 from unittest import mock
@@ -53,7 +54,9 @@ def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
         CharmResourceRevision(
             revision=1,
             size=pydantic.ByteSize(50),
-            created_at=datetime.datetime(2020, 7, 3, 2, 30, 40, tzinfo=datetime.timezone.utc),
+            created_at=datetime.datetime(
+                2020, 7, 3, 2, 30, 40, tzinfo=datetime.timezone.utc
+            ),
             bases=[ResponseCharmResourceBase()],
             name="testresource",
             sha256="",
@@ -65,7 +68,9 @@ def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
     ]
     store_mock.list_resource_revisions.return_value = store_response
 
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
+    args = Namespace(
+        charm_name="testcharm", resource_name="testresource", format=formatted
+    )
     ListResourceRevisionsCommand(config).run(args)
 
     assert store_mock.mock_calls == [
@@ -95,7 +100,9 @@ def test_resourcerevisions_empty(emitter, store_mock, config, formatted):
     store_response = []
     store_mock.list_resource_revisions.return_value = store_response
 
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
+    args = Namespace(
+        charm_name="testcharm", resource_name="testresource", format=formatted
+    )
     ListResourceRevisionsCommand(config).run(args)
 
     if formatted:
@@ -162,7 +169,9 @@ def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, form
     ]
     store_mock.list_resource_revisions.return_value = store_response
 
-    args = Namespace(charm_name="testcharm", resource_name="testresource", format=formatted)
+    args = Namespace(
+        charm_name="testcharm", resource_name="testresource", format=formatted
+    )
     ListResourceRevisionsCommand(config).run(args)
 
     if formatted:
@@ -183,9 +192,20 @@ def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, form
                 "revision": 4,
                 "created at": "2020-07-03T20:30:40+00:00",
                 "size": 876543,
-                "bases": [{"name": "all", "channel": "all", "architectures": ["amd64", "arm64"]}],
+                "bases": [
+                    {
+                        "name": "all",
+                        "channel": "all",
+                        "architectures": ["amd64", "arm64"],
+                    }
+                ],
             },
-            {"revision": 2, "created at": "2020-07-03T20:30:40+00:00", "size": 50, "bases": []},
+            {
+                "revision": 2,
+                "created at": "2020-07-03T20:30:40+00:00",
+                "size": 50,
+                "bases": [],
+            },
         ]
         emitter.assert_json_output(expected)
     else:

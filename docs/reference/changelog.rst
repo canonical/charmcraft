@@ -77,6 +77,13 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
+3.2.2 (2024-10-16)
+------------------
+
+- The ``whoami`` command now works with charm-scoped credentials.
+
+For a complete list of commits, see the `3.2.2`_ release on GitHub.
+
 3.2.1 (2024-09-16)
 ------------------
 

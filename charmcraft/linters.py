@@ -679,6 +679,9 @@ class PipCheck(Linter):
 
     def run(self, basedir: pathlib.Path) -> str:
         """Run pip check."""
+        if sys.platform == "win32":
+            self.text = "Linter does not work on Windows."
+            return self.Result.NONAPPLICABLE
         venv_dir = basedir / "venv"
         if not venv_dir.is_dir():
             self.text = "Charm does not contain a Python venv."

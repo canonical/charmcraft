@@ -107,8 +107,10 @@ class PartsLifecycle:
                             f"Running step {act.step.name} for part {act.part_name!r}"
                         )
                         with instrum.Timer(
-                            "Running step", step=act.step.name, part=act.part_name
-                        ):  # type: ignore[arg-type]
+                            "Running step",
+                            step=act.step.name,  # type: ignore[arg-type]
+                            part=act.part_name,  # type: ignore[arg-type]
+                        ):
                             with emit.open_stream("Execute action") as stream:
                                 aex.execute([act], stdout=stream, stderr=stream)
                     executor_timer.mark("Context exit")

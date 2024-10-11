@@ -57,7 +57,6 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "responses",
 ]
 lint = [
-    "black~=24.0",
     "codespell[tomli]",
     "yamllint",
 ]

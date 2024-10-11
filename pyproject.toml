@@ -112,10 +112,6 @@ git_describe_command = "git describe --long --match '[0-9]*.[0-9]*.[0-9]*' --exc
 include = ["*craft*"]
 namespaces = false
 
-[tool.black]
-target-version = ["py310", "py311"]
-line-length = 99
-
 [tool.codespell]
 ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread,socio-economic"
 skip = "requirements*.txt,.tox,.git,build,.*_cache,__pycache__,*.tar,*.snap,*.png,./node_modules,./docs/_build,.direnv,.venv,venv,.vscode,charmcraft.spec"

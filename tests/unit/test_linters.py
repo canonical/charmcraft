@@ -16,8 +16,8 @@
 """Unit tests for linters."""
 
 import pathlib
-import subprocess
 import sys
+
 from charmcraft import linters
 from charmcraft.models.lint import LintResult
 

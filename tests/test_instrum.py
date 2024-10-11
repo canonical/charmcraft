@@ -97,7 +97,10 @@ def test_measurement_extra_info_complex():
     weird_object = object()
 
     mid = measurements.start("test msg", {"foo": 42, "bar": weird_object})
-    assert measurements.measurements[mid]["extra"] == {"foo": "42", "bar": str(weird_object)}
+    assert measurements.measurements[mid]["extra"] == {
+        "foo": "42",
+        "bar": str(weird_object),
+    }
 
 
 def test_measurement_overlapped_measurements():
@@ -224,7 +227,9 @@ def test_measurement_merge_complex(tmp_path, fake_times):
     # merge from it and check merged structure
     measurements_outer.merge_from(measures_filepath)
     merged_1 = measurements_outer.measurements[mid_inner_1]
-    assert merged_1["parent"] == mid_outer_2  # the parent is the "current" outer measure
+    assert (
+        merged_1["parent"] == mid_outer_2
+    )  # the parent is the "current" outer measure
     assert merged_1["tstart"] == 25  # back to absolute
     assert merged_1["tend"] == 55  # back to absolute
     merged_2 = measurements_outer.measurements[mid_inner_2]
@@ -232,7 +237,9 @@ def test_measurement_merge_complex(tmp_path, fake_times):
     assert merged_2["tstart"] == 35  # back to absolute
     assert merged_2["tend"] == 45  # back to absolute
     merged_3 = measurements_outer.measurements[mid_inner_3]
-    assert merged_3["parent"] == mid_outer_2  # the parent is the "current" outer measure
+    assert (
+        merged_3["parent"] == mid_outer_2
+    )  # the parent is the "current" outer measure
     assert merged_3["tstart"] == 65  # back to absolute
     assert merged_3["tend"] == 75  # back to absolute
 

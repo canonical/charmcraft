@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for dispatch script creation."""
 
-
 import pathlib
 
 import pytest
@@ -52,7 +51,9 @@ def test_create_dispatch_no_entrypoint(fake_path: pathlib.Path, entrypoint):
     prime_dir.mkdir()
     dispatch_path = prime_dir / const.DISPATCH_FILENAME
 
-    pytest_check.is_false(dispatch.create_dispatch(prime_dir=prime_dir, entrypoint=entrypoint))
+    pytest_check.is_false(
+        dispatch.create_dispatch(prime_dir=prime_dir, entrypoint=entrypoint)
+    )
 
     pytest_check.is_false(dispatch_path.exists())
 
@@ -67,5 +68,7 @@ def test_create_dispatch_with_entrypoint(fake_path: pathlib.Path, entrypoint):
     dispatch_file = prime_dir / const.DISPATCH_FILENAME
     expected = dispatch.DISPATCH_SCRIPT_TEMPLATE.format(entrypoint=entrypoint)
 
-    pytest_check.is_true(dispatch.create_dispatch(prime_dir=prime_dir, entrypoint=entrypoint))
+    pytest_check.is_true(
+        dispatch.create_dispatch(prime_dir=prime_dir, entrypoint=entrypoint)
+    )
     pytest_check.equal(dispatch_file.read_text(), expected)

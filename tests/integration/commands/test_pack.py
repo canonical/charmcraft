@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for packing."""
+
 import sys
 import zipfile
 
@@ -27,7 +28,8 @@ CURRENT_PLATFORM = utils.get_os_platform()
 
 
 @pytest.mark.xfail(
-    sys.platform != "linux", reason="https://github.com/canonical/charmcraft/issues/1552"
+    sys.platform != "linux",
+    reason="https://github.com/canonical/charmcraft/issues/1552",
 )
 @pytest.mark.parametrize(
     ("bundle_yaml", "filename"),
@@ -66,14 +68,19 @@ def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, fil
                     {
                         "build-on": [{"name": "ubuntu", "channel": "22.04"}],
                         "run-on": [
-                            {"name": "ubuntu", "channel": "22.04", "architectures": ["amd64"]}
+                            {
+                                "name": "ubuntu",
+                                "channel": "22.04",
+                                "architectures": ["amd64"],
+                            }
                         ],
                     }
                 ],
             },
             "ubuntu-22.04-amd64",
             marks=pytest.mark.skipif(
-                CURRENT_PLATFORM.release != "22.04", reason="Bases charm only tested on jammy."
+                CURRENT_PLATFORM.release != "22.04",
+                reason="Bases charm only tested on jammy.",
             ),
             id="bases-charm",
         ),
@@ -85,13 +92,17 @@ def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, fil
                 "description": "A charm for testing",
                 "base": "ubuntu@22.04",
                 "platforms": {
-                    "ubuntu-22.04-amd64": {"build-on": ["amd64"], "build-for": ["amd64"]}
+                    "ubuntu-22.04-amd64": {
+                        "build-on": ["amd64"],
+                        "build-for": ["amd64"],
+                    }
                 },
                 "parts": {},
             },
             "ubuntu-22.04-amd64",
             marks=pytest.mark.skipif(
-                CURRENT_PLATFORM.release != "22.04", reason="Jammy charms only tested on jammy"
+                CURRENT_PLATFORM.release != "22.04",
+                reason="Jammy charms only tested on jammy",
             ),
             id="platforms-jammy-charm",
         ),
@@ -107,7 +118,8 @@ def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, fil
             },
             util.get_host_architecture(),
             marks=pytest.mark.skipif(
-                CURRENT_PLATFORM.release != "22.04", reason="Jammy charms only tested on jammy"
+                CURRENT_PLATFORM.release != "22.04",
+                reason="Jammy charms only tested on jammy",
             ),
             id="platforms-jammy-basic",
         ),
@@ -142,7 +154,8 @@ def test_build_basic_charm(
 
     monkeypatch.setenv("CRAFT_DEBUG", "1")
     monkeypatch.setattr(
-        "sys.argv", ["charmcraft", "pack", "--destructive-mode", f"--platform={platform}"]
+        "sys.argv",
+        ["charmcraft", "pack", "--destructive-mode", f"--platform={platform}"],
     )
 
     app.configure({})

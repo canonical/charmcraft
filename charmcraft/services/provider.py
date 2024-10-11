@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Service class for creating providers."""
+
 from __future__ import annotations
 
 import contextlib
@@ -140,7 +141,8 @@ def _maybe_lock_cache(path: pathlib.Path) -> io.TextIOBase | None:
         fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
         emit.progress(
-            "Shared cache locked by another process; running without cache.", permanent=True
+            "Shared cache locked by another process; running without cache.",
+            permanent=True,
         )
         return None
     else:

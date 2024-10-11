@@ -39,7 +39,9 @@ TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
 def build_user_agent():
     """Build the charmcraft's user agent."""
-    if any(key.startswith(prefix) for prefix in TESTING_ENV_PREFIXES for key in os.environ):
+    if any(
+        key.startswith(prefix) for prefix in TESTING_ENV_PREFIXES for key in os.environ
+    ):
         testing = " (testing) "
     else:
         testing = " "
@@ -53,15 +55,23 @@ class AnonymousClient:
     def __init__(self, api_base_url: str, storage_base_url: str):
         self.api_base_url = api_base_url.rstrip("/")
         self.storage_base_url = storage_base_url.rstrip("/")
-        self._http_client = craft_store.http_client.HTTPClient(user_agent=build_user_agent())
+        self._http_client = craft_store.http_client.HTTPClient(
+            user_agent=build_user_agent()
+        )
 
     def request_urlpath_text(self, method: str, urlpath: str, *args, **kwargs) -> str:
         """Return a request.Response to a urlpath."""
-        return self._http_client.request(method, self.api_base_url + urlpath, *args, **kwargs).text
+        return self._http_client.request(
+            method, self.api_base_url + urlpath, *args, **kwargs
+        ).text
 
-    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> dict[str, Any]:
+    def request_urlpath_json(
+        self, method: str, urlpath: str, *args, **kwargs
+    ) -> dict[str, Any]:
         """Return .json() from a request.Response to a urlpath."""
-        response = self._http_client.request(method, self.api_base_url + urlpath, *args, **kwargs)
+        response = self._http_client.request(
+            method, self.api_base_url + urlpath, *args, **kwargs
+        )
 
         try:
             return response.json()
@@ -71,7 +81,12 @@ class AnonymousClient:
             ) from json_error
 
     def get_library(
-        self, *, charm_name: str, library_id: str, api: int | None = None, patch: int | None = None
+        self,
+        *,
+        charm_name: str,
+        library_id: str,
+        api: int | None = None,
+        patch: int | None = None,
     ) -> Library:
         """Fetch a library attached to a charm.
 
@@ -100,10 +115,13 @@ class AnonymousClient:
         emit.trace(
             f"Fetching library metadata from charmhub: {libs}",
         )
-        response = self.request_urlpath_json("POST", "/v1/charm/libraries/bulk", json=libs)
+        response = self.request_urlpath_json(
+            "POST", "/v1/charm/libraries/bulk", json=libs
+        )
         if "libraries" not in response:
             raise CraftError(
-                "Server returned invalid response while querying libraries", details=str(response)
+                "Server returned invalid response while querying libraries",
+                details=str(response),
             )
         converted_response = [Library.from_dict(lib) for lib in response["libraries"]]
         emit.trace(f"Store response: {converted_response}")
@@ -130,7 +148,9 @@ class Client(craft_store.StoreClient):
         Supports both charmcraft 2.x style init and compatibility with upstream.
         """
         if base_url and api_base_url or not base_url and not api_base_url:
-            raise ValueError("Either base_url or api_base_url must be set, but not both.")
+            raise ValueError(
+                "Either base_url or api_base_url must be set, but not both."
+            )
         if base_url:
             api_base_url = base_url
         self.api_base_url = api_base_url.rstrip("/")
@@ -166,9 +186,13 @@ class Client(craft_store.StoreClient):
 
     def request_urlpath_text(self, method: str, urlpath: str, *args, **kwargs) -> str:
         """Return a request.Response to a urlpath."""
-        return super().request(method, self.api_base_url + urlpath, *args, **kwargs).text
+        return (
+            super().request(method, self.api_base_url + urlpath, *args, **kwargs).text
+        )
 
-    def request_urlpath_json(self, method: str, urlpath: str, *args, **kwargs) -> dict[str, Any]:
+    def request_urlpath_json(
+        self, method: str, urlpath: str, *args, **kwargs
+    ) -> dict[str, Any]:
         """Return .json() from a request.Response to a urlpath."""
         response = super().request(method, self.api_base_url + urlpath, *args, **kwargs)
 
@@ -190,7 +214,9 @@ class Client(craft_store.StoreClient):
 
             # create a monitor (so that progress can be displayed) as call the real pusher
             monitor = MultipartEncoderMonitor(encoder)
-            with emit.progress_bar("Uploading...", monitor.len, delta=False) as progress:
+            with emit.progress_bar(
+                "Uploading...", monitor.len, delta=False
+            ) as progress:
                 monitor.callback = lambda mon: progress.advance(mon.bytes_read)
                 response = self._storage_push(monitor)
 
@@ -207,6 +233,9 @@ class Client(craft_store.StoreClient):
         return super().request(
             "POST",
             self.storage_base_url + "/unscanned-upload/",
-            headers={"Content-Type": monitor.content_type, "Accept": "application/json"},
+            headers={
+                "Content-Type": monitor.content_type,
+                "Accept": "application/json",
+            },
             data=monitor,
         )

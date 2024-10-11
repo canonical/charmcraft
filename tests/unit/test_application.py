@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for application class."""
+
 import textwrap
 from unittest import mock
 
@@ -70,7 +71,13 @@ from charmcraft.application.main import PRIME_BEHAVIOUR_CHANGE_MESSAGE
 )
 @pytest.mark.parametrize(
     "expected",
-    [{"name": "test-charm", "summary": "A test charm", "description": "A charm for testing!"}],
+    [
+        {
+            "name": "test-charm",
+            "summary": "A test charm",
+            "description": "A charm for testing!",
+        }
+    ],
 )
 def test_extra_yaml_transform_success(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
@@ -83,7 +90,9 @@ def test_extra_yaml_transform_success(
     fs.create_file("metadata.yaml", contents=metadata_yaml)
     app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
 
-    actual = app._extra_yaml_transform(charmcraft_dict, build_on="amd64", build_for=None)
+    actual = app._extra_yaml_transform(
+        charmcraft_dict, build_on="amd64", build_for=None
+    )
 
     assert actual == expected
 
@@ -224,7 +233,9 @@ def test_deprecated_prime_warning(
             },
             id="named-reactive",
         ),
-        pytest.param({"parts": {"my-part": {"plugin": "reactive"}}}, id="reactive-plugin"),
+        pytest.param(
+            {"parts": {"my-part": {"plugin": "reactive"}}}, id="reactive-plugin"
+        ),
         pytest.param(
             {
                 "parts": {"bundle": {}},
@@ -285,7 +296,9 @@ def test_expand_environment_multi_arch(
 ) -> None:
     mock_parent_expand_environment = mock.Mock()
     monkeypatch.setattr(
-        craft_application.Application, "_expand_environment", mock_parent_expand_environment
+        craft_application.Application,
+        "_expand_environment",
+        mock_parent_expand_environment,
     )
     app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
 

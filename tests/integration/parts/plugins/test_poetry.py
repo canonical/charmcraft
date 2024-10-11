@@ -27,11 +27,15 @@ from craft_application import util
 from charmcraft import services
 from charmcraft.models import project
 
-pytestmark = [pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")]
+pytestmark = [
+    pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")
+]
 
 
 @pytest.fixture
-def charm_project(basic_charm_dict: dict[str, Any], project_path: pathlib.Path, request):
+def charm_project(
+    basic_charm_dict: dict[str, Any], project_path: pathlib.Path, request
+):
     return project.PlatformCharm.unmarshal(
         basic_charm_dict
         | {
@@ -51,7 +55,13 @@ def charm_project(basic_charm_dict: dict[str, Any], project_path: pathlib.Path, 
 @pytest.fixture
 def poetry_project(project_path: pathlib.Path) -> None:
     subprocess.run(
-        ["poetry", "init", "--name=test-charm", f"--directory={project_path}", "--no-interaction"],
+        [
+            "poetry",
+            "init",
+            "--name=test-charm",
+            f"--directory={project_path}",
+            "--no-interaction",
+        ],
         check=False,
     )
     source_dir = project_path / "src"

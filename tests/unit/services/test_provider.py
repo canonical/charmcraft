@@ -91,7 +91,9 @@ def test_get_base_forwards_cache(
     fake_path: pathlib.Path,
     base_name: bases.BaseName,
 ):
-    monkeypatch.setattr("charmcraft.env.get_host_shared_cache_path", lambda: fake_path / "cache")
+    monkeypatch.setattr(
+        "charmcraft.env.get_host_shared_cache_path", lambda: fake_path / "cache"
+    )
 
     base = provider_service.get_base(
         base_name=base_name,
@@ -127,7 +129,9 @@ def test_get_base_no_cache_if_locked(
     locked = _maybe_lock_cache(cache_path)
     assert locked
     new_cache_path = pathlib.Path(str(cache_path))
-    monkeypatch.setattr("charmcraft.env.get_host_shared_cache_path", lambda: new_cache_path)
+    monkeypatch.setattr(
+        "charmcraft.env.get_host_shared_cache_path", lambda: new_cache_path
+    )
 
     # Can't use the fixture as pyfakefs doesn't handle locks.
     provider_service = services.ProviderService(

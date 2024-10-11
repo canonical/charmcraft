@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Store helper utilities."""
+
 from collections.abc import Iterable
 
 from craft_store import endpoints
@@ -24,6 +25,12 @@ def get_packages(
 ) -> list[endpoints.Package]:
     """Get a list of packages from charms and bundles."""
     return [
-        *(endpoints.Package(package_type="charm", package_name=charm) for charm in charms),
-        *(endpoints.Package(package_type="bundle", package_name=bundle) for bundle in bundles),
+        *(
+            endpoints.Package(package_type="charm", package_name=charm)
+            for charm in charms
+        ),
+        *(
+            endpoints.Package(package_type="bundle", package_name=bundle)
+            for bundle in bundles
+        ),
     ]

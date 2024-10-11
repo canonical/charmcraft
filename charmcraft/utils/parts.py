@@ -32,7 +32,9 @@ def extend_python_build_environment(environment: dict[str, str]) -> dict[str, st
     }
 
 
-def get_charm_copy_commands(build_dir: pathlib.Path, install_dir: pathlib.Path) -> Collection[str]:
+def get_charm_copy_commands(
+    build_dir: pathlib.Path, install_dir: pathlib.Path
+) -> Collection[str]:
     """Get the commands to copy charm source and charmlibs into the install directory.
 
     The commands will only be included if the relevant directories exist.
@@ -43,8 +45,12 @@ def get_charm_copy_commands(build_dir: pathlib.Path, install_dir: pathlib.Path) 
 
     commands = []
     if src_dir.exists():
-        commands.append(shlex.join([*copy_command_base, str(src_dir), str(install_dir)]))
+        commands.append(
+            shlex.join([*copy_command_base, str(src_dir), str(install_dir)])
+        )
     if libs_dir.exists():
-        commands.append(shlex.join([*copy_command_base, str(libs_dir), str(install_dir)]))
+        commands.append(
+            shlex.join([*copy_command_base, str(libs_dir), str(install_dir)])
+        )
 
     return commands

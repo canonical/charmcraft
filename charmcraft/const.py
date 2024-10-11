@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Constants used in charmcraft."""
+
 import enum
 from typing import Literal
 

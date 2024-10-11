@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Service class for running craft lifecycle commands."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -67,4 +68,6 @@ class LifecycleService(services.LifecycleService):
 
         project_info = cast(craft_parts.ProjectInfo, step_info.project_info)
         # TODO: include an entrypoint override. #1896
-        return return_value | dispatch.create_dispatch(prime_dir=project_info.dirs.prime_dir)
+        return return_value | dispatch.create_dispatch(
+            prime_dir=project_info.dirs.prime_dir
+        )

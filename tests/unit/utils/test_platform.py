@@ -101,11 +101,15 @@ from charmcraft.utils.platform import (
     ],
 )
 @pytest.mark.parametrize("machine", ["x86_64", "riscv64", "arm64"])
-def test_get_os_platform_linux(tmp_path, os_release, expected_system, expected_release, machine):
+def test_get_os_platform_linux(
+    tmp_path, os_release, expected_system, expected_release, machine
+):
     """Utilize an /etc/os-release file to determine platform."""
     filepath = tmp_path / "os-release"
     filepath.write_text(os_release)
-    with patch("distro.distro._distro", distro.LinuxDistribution(os_release_file=filepath)):
+    with patch(
+        "distro.distro._distro", distro.LinuxDistribution(os_release_file=filepath)
+    ):
         with patch("platform.machine", return_value=machine):
             with patch("platform.system", return_value="Linux"):
                 os_platform = get_os_platform(filepath)
@@ -126,7 +130,9 @@ def test_get_os_platform_non_linux(system, release, machine):
     assert os_platform == OSPlatform(system, release, machine)
 
 
-@given(strategies.iterables(strategies.sampled_from(sorted(const.SUPPORTED_ARCHITECTURES))))
+@given(
+    strategies.iterables(strategies.sampled_from(sorted(const.SUPPORTED_ARCHITECTURES)))
+)
 def test_validate_architectures_valid_values(architectures):
     validate_architectures(architectures)
 

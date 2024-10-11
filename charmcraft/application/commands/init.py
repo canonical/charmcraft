@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for the 'init' command."""
+
 import argparse
 import os
 import pathlib
@@ -130,7 +131,9 @@ class InitCommand(base.CharmcraftCommand):
 
     def fill_parser(self, parser):
         """Specify command's specific parameters."""
-        parser.add_argument("--name", help="The name of the charm; defaults to the directory name")
+        parser.add_argument(
+            "--name", help="The name of the charm; defaults to the directory name"
+        )
         parser.add_argument(
             "--author",
             help="The charm author; defaults to the current user name per GECOS",

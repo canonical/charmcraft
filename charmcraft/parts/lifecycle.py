@@ -17,6 +17,7 @@
 
 PENDING DEPRECATION: we're moving this to a craft-application LifecycleService
 """
+
 import os
 import pathlib
 import shlex
@@ -88,7 +89,9 @@ class PartsLifecycle:
                 charm_part = self._all_parts["charm"]
                 if charm_part.get("plugin") == "charm":
                     entrypoint = os.path.normpath(charm_part["charm-entrypoint"])
-                    dis_entrypoint = os.path.normpath(_get_dispatch_entrypoint(self.prime_dir))
+                    dis_entrypoint = os.path.normpath(
+                        _get_dispatch_entrypoint(self.prime_dir)
+                    )
                     if entrypoint != dis_entrypoint:
                         self._lcm.clean(Step.BUILD, part_names=["charm"])
                         self._lcm.reload_state()
@@ -100,8 +103,12 @@ class PartsLifecycle:
                 with self._lcm.action_executor() as aex:
                     executor_timer.mark("Context enter")
                     for act in actions:
-                        emit.progress(f"Running step {act.step.name} for part {act.part_name!r}")
-                        with instrum.Timer("Running step", step=act.step.name, part=act.part_name):  # type: ignore[arg-type]
+                        emit.progress(
+                            f"Running step {act.step.name} for part {act.part_name!r}"
+                        )
+                        with instrum.Timer(
+                            "Running step", step=act.step.name, part=act.part_name
+                        ):  # type: ignore[arg-type]
                             with emit.open_stream("Execute action") as stream:
                                 aex.execute([act], stdout=stream, stderr=stream)
                     executor_timer.mark("Context exit")

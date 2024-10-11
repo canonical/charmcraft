@@ -72,7 +72,9 @@ def process_part_config(data: dict[str, Any]) -> dict[str, Any]:
     plugin_properties = plugin_class.properties_class.unmarshal(spec)
 
     # validate common part properties
-    part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name=plugin_name)
+    part_spec = craft_parts.plugins.extract_part_properties(
+        spec, plugin_name=plugin_name
+    )
     PartSpec(**part_spec)
 
     # get plugin properties data if it's model based (otherwise it's empty), and

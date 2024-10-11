@@ -88,6 +88,7 @@ build-packages:
   - libyaml-dev
 build-snaps:
   - rustup
+  - astral-uv
 
 
 parts:
@@ -137,22 +138,40 @@ parts:
     build-attributes:
       - enable-patchelf
     override-pull: |
-      craftctl default
+      /snap/snapcraft/current/libexec/snapcraft/craftctl default
       # Ensure we don't have a dubious ownership error from git with a remote build.
       git config --global --add safe.directory $CRAFT_PART_SRC
-      # set the version
-      version="$(python3 setup.py --version)"
-      craftctl set version="${version}"
-      [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
-      craftctl set grade="${grade}"
       # Set up the rust compiler
       rustup default 1.79
     override-build: |
-      craftctl default
-      cp -v completion.bash ../install
+      # Prepare the requirements with uv
+      uv export --frozen --no-hashes --no-editable --output-file requirements.txt
+
+      # Build
+      /snap/snapcraft/current/libexec/snapcraft/craftctl default
+
+      cp -v completion.bash "${CRAFT_PART_INSTALL}"
       sed -i -e '1 s|^#!/.*|#!/snap/charmcraft/current/bin/python -E|' $CRAFT_PART_INSTALL/bin/craftctl
+    override-stage: |
+      /snap/snapcraft/current/libexec/snapcraft/craftctl default
+
+      # Get the version from the charmcraft module and set it for the snap.
+      version=$("${CRAFT_STAGE}"/bin/python -c 'import charmcraft; print(charmcraft.__version__)')
+      /snap/snapcraft/current/libexec/snapcraft/craftctl set version="${version}"
+      [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
+      /snap/snapcraft/current/libexec/snapcraft/craftctl set grade="${grade}"
     organize:
       bin/craftctl: libexec/charmcraft/craftctl
+    stage:
+      - -bin/activate*
+      - -bin/craft-providers
+      - -bin/distro
+      - -bin/jsonschema
+      - -bin/keyring
+      - -bin/normalizer
+      - -bin/snap-helpers
+      - -bin/tabulate
+      - -bin/wheel
 
   skopeo:  # Copied from Rockcraft
     plugin: nil

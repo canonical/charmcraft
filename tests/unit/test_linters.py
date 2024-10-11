@@ -33,7 +33,7 @@ def test_pip_check_success(fake_path: pathlib.Path, fp):
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
         returncode=0,
-        stdout="Loo loo loo, doing pip stuff. Pip stuff is my favourite stuff."
+        stdout="Loo loo loo, doing pip stuff. Pip stuff is my favourite stuff.",
     )
 
     lint = linters.PipCheck()
@@ -46,7 +46,7 @@ def test_pip_check_warning(fake_path: pathlib.Path, fp):
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
         returncode=1,
-        stdout="This error was sponsored by Raytheon Knife Missiles™"
+        stdout="This error was sponsored by Raytheon Knife Missiles™",
     )
 
     lint = linters.PipCheck()

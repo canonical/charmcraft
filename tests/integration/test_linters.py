@@ -32,7 +32,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not sup
     [
         ["--version"],
         ["install", "pytest", "hypothesis"],
-    ]
+    ],
 )
 def test_pip_check_success(tmp_path: pathlib.Path, pip_cmd: list[str]):
     venv_path = tmp_path / "venv"
@@ -48,7 +48,7 @@ def test_pip_check_success(tmp_path: pathlib.Path, pip_cmd: list[str]):
     "pip_cmd",
     [
         ["install", "--no-deps", "pydantic==2.9.2"],
-    ]
+    ],
 )
 def test_pip_check_failure(tmp_path: pathlib.Path, pip_cmd: list[str]):
     venv_path = tmp_path / "venv"

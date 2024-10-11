@@ -18,6 +18,8 @@
 import pathlib
 import sys
 
+import pytest
+
 from charmcraft import linters
 from charmcraft.models.lint import LintResult
 
@@ -28,6 +30,7 @@ def test_pip_check_not_venv(fake_path: pathlib.Path):
     assert lint.text == "Charm does not contain a Python venv."
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_success(fake_path: pathlib.Path, fp):
     (fake_path / "venv").mkdir()
     fp.register(
@@ -41,6 +44,7 @@ def test_pip_check_success(fake_path: pathlib.Path, fp):
     assert lint.text == linters.PipCheck.text
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_warning(fake_path: pathlib.Path, fp):
     (fake_path / "venv").mkdir()
     fp.register(

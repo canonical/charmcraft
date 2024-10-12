@@ -123,7 +123,7 @@ jobs:
           tox run --skip-pkg-install --no-list-dependencies --result-json results/tox-${{ matrix.platform }}.json --colored yes -m tests
 
   snap-build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -306,7 +306,7 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@master
       - name: Cache Homebrew Bundler RubyGems
         id: cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.set-up-homebrew.outputs.gems-path }}
           key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}

@@ -35,12 +35,20 @@ MINIMAL_STRICT_CHARM = {
             {"charm-requirements": ["requirements.txt"]},
         ),
         (
-            {"charm-requirements": ["requirements.txt"], "charm-binary-python-packages": ["ops"]},
-            {"charm-requirements": ["requirements.txt"], "charm-binary-python-packages": ["ops"]},
+            {
+                "charm-requirements": ["requirements.txt"],
+                "charm-binary-python-packages": ["ops"],
+            },
+            {
+                "charm-requirements": ["requirements.txt"],
+                "charm-binary-python-packages": ["ops"],
+            },
         ),
     ],
 )
-def test_partconfig_strict_dependencies_success(fs: FakeFilesystem, part_config, expected):
+def test_partconfig_strict_dependencies_success(
+    fs: FakeFilesystem, part_config, expected
+):
     """Test various success scenarios for a charm part with strict dependencies."""
     for file in part_config.get("charm-requirements", ["requirements.txt"]):
         fs.create_file(file, contents="ops~=2.5")
@@ -61,10 +69,15 @@ def test_partconfig_strict_dependencies_success(fs: FakeFilesystem, part_config,
             {"charm-requirements": ["req.txt"], "charm-python-packages": ["ops"]},
             "Value error, 'charm-python-packages' must not be set if 'charm-strict-dependencies' is enabled",
         ),
-        ({}, "Value error, 'charm-strict-dependencies' requires at least one requirements file."),
+        (
+            {},
+            "Value error, 'charm-strict-dependencies' requires at least one requirements file.",
+        ),
     ],
 )
-def test_partconfig_strict_dependencies_failure(fs: FakeFilesystem, part_config, message):
+def test_partconfig_strict_dependencies_failure(
+    fs: FakeFilesystem, part_config, message
+):
     """Test failure scenarios for a charm part with strict dependencies."""
     for file in part_config.get("charm-requirements", []):
         fs.create_file(file, contents="ops==2.5.1\n")

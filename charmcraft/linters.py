@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Analyze and lint charm structures and files."""
+
 import abc
 import ast
 import os
@@ -247,7 +248,9 @@ class Framework(AttributeChecker):
     def _check_reactive(self, basedir: pathlib.Path) -> bool:
         """Detect if the Reactive Framework is used."""
         try:
-            metadata = CharmMetadataLegacy.from_yaml_file(basedir / const.METADATA_FILENAME)
+            metadata = CharmMetadataLegacy.from_yaml_file(
+                basedir / const.METADATA_FILENAME
+            )
         except Exception:
             # file not found, corrupted, or mandatory "name" not present
             return False
@@ -255,7 +258,9 @@ class Framework(AttributeChecker):
         wheelhouse_dir = basedir / "wheelhouse"
         if not wheelhouse_dir.exists():
             return False
-        if not any(f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()):
+        if not any(
+            f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()
+        ):
             return False
 
         module_basename = metadata.name.replace("-", "_")
@@ -435,9 +440,13 @@ class NamingConventions(Linter):
             return warnings
 
         with config_file.open("rt", encoding="utf8") as fh:
-            options = content.get("options", {}) if (content := yaml.safe_load(fh)) else {}
+            options = (
+                content.get("options", {}) if (content := yaml.safe_load(fh)) else {}
+            )
 
-        if check := NamingConventions.check_naming_convention(options.keys(), "config-options"):
+        if check := NamingConventions.check_naming_convention(
+            options.keys(), "config-options"
+        ):
             warnings.append(check)
 
         return warnings
@@ -467,7 +476,9 @@ class NamingConventions(Linter):
             for param in content.get(action_name, {}).get("params", [])
         ]
 
-        if check := NamingConventions.check_naming_convention(actions_params, "action params"):
+        if check := NamingConventions.check_naming_convention(
+            actions_params, "action params"
+        ):
             warnings.append(check)
 
         return warnings
@@ -508,7 +519,9 @@ class Entrypoint(Linter):
         """Run the proper verifications."""
         entrypoint = get_entrypoint_from_dispatch(basedir)
         if entrypoint is None:
-            self.text = "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            self.text = (
+                "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            )
             return self.Result.NONAPPLICABLE
 
         if not entrypoint.exists():
@@ -541,7 +554,9 @@ class OpsMainCall(Linter):
 
         entrypoint = get_entrypoint_from_dispatch(basedir)
         if entrypoint is None:
-            self.text = "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            self.text = (
+                "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            )
             return self.Result.NONAPPLICABLE
 
         if not entrypoint.exists():
@@ -638,7 +653,9 @@ class AdditionalFiles(Linter):
         )
     }
 
-    def _check_additional_files(self, stage_dir: pathlib.Path, prime_dir: pathlib.Path) -> str:
+    def _check_additional_files(
+        self, stage_dir: pathlib.Path, prime_dir: pathlib.Path
+    ) -> str:
         """Compare the staged files with the prime files."""
         errors: list[str] = []
         stage_dir = stage_dir.absolute()
@@ -654,7 +671,9 @@ class AdditionalFiles(Linter):
                 errors.append(f"File '{prime_file}' is not staged but in the charm.")
 
         if errors:
-            self.text = "Error: Additional files found in the charm:\n" + "\n".join(errors)
+            self.text = "Error: Additional files found in the charm:\n" + "\n".join(
+                errors
+            )
             return self.Result.ERROR
 
         return self.Result.OK
@@ -664,7 +683,9 @@ class AdditionalFiles(Linter):
         stage_dir = basedir.parent / "stage"
         if not stage_dir.exists() or not stage_dir.is_dir():
             # Does not work without the build environment
-            self.text = "Additional files check not applicable without a build environment."
+            self.text = (
+                "Additional files check not applicable without a build environment."
+            )
             return self.Result.NONAPPLICABLE
 
         return self._check_additional_files(stage_dir, basedir)

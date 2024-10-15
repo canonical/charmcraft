@@ -14,10 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Configuration for services integration tests."""
-import contextlib
-import sys
 
-import pyfakefs.fake_filesystem
 import pytest
 
 from charmcraft import services
@@ -25,19 +22,9 @@ from charmcraft.application.main import APP_METADATA, Charmcraft
 
 
 @pytest.fixture
-def service_factory(
-    fs: pyfakefs.fake_filesystem.FakeFilesystem, fake_path, simple_charm
-) -> services.CharmcraftServiceFactory:
-    fake_project_dir = fake_path / "project"
+def service_factory(simple_charm, new_path) -> services.CharmcraftServiceFactory:
+    fake_project_dir = new_path / "project"
     fake_project_dir.mkdir()
-
-    # Allow access to the real venv library path.
-    # This is necessary because certifi lazy-loads the certificate file.
-    for python_path in sys.path:
-        if not python_path:
-            continue
-        with contextlib.suppress(OSError):
-            fs.add_real_directory(python_path)
 
     factory = services.CharmcraftServiceFactory(app=APP_METADATA)
 

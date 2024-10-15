@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """New entrypoint for charmcraft."""
+
 from __future__ import annotations
 
 import pathlib
@@ -97,7 +98,6 @@ class Charmcraft(craft_application.Application):
     def _extra_yaml_transform(
         self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
     ) -> dict[str, Any]:
-
         # Extensions get applied on as close as possible to what the user provided.
         yaml_data = extensions.apply_extensions(self.project_dir, yaml_data.copy())
 
@@ -141,7 +141,9 @@ class Charmcraft(craft_application.Application):
     def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:
         """Override to get project_dir early."""
         super()._pre_run(dispatcher)
-        if not self.is_managed() and not getattr(dispatcher.parsed_args(), "project_dir", None):
+        if not self.is_managed() and not getattr(
+            dispatcher.parsed_args(), "project_dir", None
+        ):
             self.project_dir = pathlib.Path().expanduser().resolve()
 
     def run_managed(self, platform: str | None, build_for: str | None) -> None:
@@ -162,10 +164,14 @@ class Charmcraft(craft_application.Application):
                 output_path.mkdir(parents=True, exist_ok=True)
                 package_file_path = self._work_dir / ".charmcraft_output_packages.txt"
                 if package_file_path.exists():
-                    package_files = package_file_path.read_text().splitlines(keepends=False)
+                    package_files = package_file_path.read_text().splitlines(
+                        keepends=False
+                    )
                     package_file_path.unlink(missing_ok=True)
                     for filename in package_files:
-                        shutil.move(str(self._work_dir / filename), output_path / filename)
+                        shutil.move(
+                            str(self._work_dir / filename), output_path / filename
+                        )
 
     def _expand_environment(self, yaml_data: dict[str, Any], build_for: str) -> None:
         """Perform expansion of project environment variables.

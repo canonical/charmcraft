@@ -147,7 +147,9 @@ def run_charm_tool(args: list[str]):
             result_classification = "ERROR"
             raise
         result_classification = "WARNING"
-        print(f"charm tool execution {result_classification}: returncode={exc.returncode}")
+        print(
+            f"charm tool execution {result_classification}: returncode={exc.returncode}"
+        )
     else:
         print(
             f"charm tool execution {result_classification}: returncode={completed_process.returncode}"
@@ -155,7 +157,11 @@ def run_charm_tool(args: list[str]):
 
 
 def build(
-    *, charm_name: str, build_dir: Path, install_dir: Path, charm_build_arguments: list[str]
+    *,
+    charm_name: str,
+    build_dir: Path,
+    install_dir: Path,
+    charm_build_arguments: list[str],
 ):
     """Build a charm using charm tool.
 

@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for the 'test' command."""
+
 import argparse
 import os
 import subprocess

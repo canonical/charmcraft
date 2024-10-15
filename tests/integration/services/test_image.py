@@ -25,7 +25,8 @@ from charmcraft import application, services
 @pytest.fixture
 def image_service() -> services.ImageService:
     service = services.ImageService(
-        app=application.APP_METADATA, services=None  # pyright: ignore[reportArgumentType]
+        app=application.APP_METADATA,
+        services=None,  # pyright: ignore[reportArgumentType]
     )
     service.setup()
     return service
@@ -42,5 +43,7 @@ def image_service() -> services.ImageService:
     ],
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-def test_get_maybe_id_from_docker_no_exceptions(image_service: services.ImageService, url):
+def test_get_maybe_id_from_docker_no_exceptions(
+    image_service: services.ImageService, url
+):
     image_service.get_maybe_id_from_docker(url)

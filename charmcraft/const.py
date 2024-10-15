@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Constants used in charmcraft."""
+
 import enum
 from typing import Literal
 
@@ -60,6 +61,7 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@22.04",
     "ubuntu@23.10",
     "ubuntu@24.04",
+    "ubuntu@24.10",
     "centos@7",
     "almalinux@9",
 ]
@@ -73,7 +75,6 @@ SUPPORTED_BASES = frozenset(
         BaseName("ubuntu", "18.04"),
         BaseName("ubuntu", "20.04"),
         BaseName("ubuntu", "22.04"),
-        BaseName("ubuntu", "23.10"),
         BaseName("ubuntu", "24.04"),
         BaseName("ubuntu", "devel"),
         BaseName("centos", "7"),

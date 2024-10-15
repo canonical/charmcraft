@@ -44,7 +44,9 @@ from charmcraft.utils.package import exclude_packages
 
 MINIMUM_PIP_VERSION = (24, 1)
 KNOWN_GOOD_PIP_URL = "https://files.pythonhosted.org/packages/c0/d0/9641dc7b05877874c6418f8034ddefc809495e65caa14d38c7551cd114bb/pip-24.1.1.tar.gz"
-KNOWN_GOOD_PIP_HASH = "sha256:5aa64f65e1952733ee0a9a9b1f52496ebdb3f3077cc46f80a16d983b58d1180a"
+KNOWN_GOOD_PIP_HASH = (
+    "sha256:5aa64f65e1952733ee0a9a9b1f52496ebdb3f3077cc46f80a16d983b58d1180a"
+)
 
 
 def relativise(src, dst):
@@ -111,7 +113,9 @@ class CharmBuilder:
             dest_path.symlink_to(relative_link)
         else:
             rel_path = src_path.relative_to(self.builddir)
-            print(f"Ignoring symlink because targets outside the project: {str(rel_path)!r}")
+            print(
+                f"Ignoring symlink because targets outside the project: {str(rel_path)!r}"
+            )
 
     @instrum.Timer("Handling generic paths")
     def handle_generic_paths(self):
@@ -125,7 +129,9 @@ class CharmBuilder:
         """
         print("Linking in generic paths")
 
-        for basedir, dirnames, filenames in os.walk(str(self.builddir), followlinks=False):
+        for basedir, dirnames, filenames in os.walk(
+            str(self.builddir), followlinks=False
+        ):
             abs_basedir = pathlib.Path(basedir)
             rel_basedir = abs_basedir.relative_to(self.builddir)
 
@@ -204,10 +210,14 @@ class CharmBuilder:
             if node.resolve() == linked_entrypoint:
                 current_hooks_to_replace.append(node)
                 node.unlink()
-                print(f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint")
+                print(
+                    f"Replacing existing hook {node.name!r} as it's a symlink to the entrypoint"
+                )
 
         # include the mandatory ones and those we need to replace
-        hooknames = const.MANDATORY_HOOK_NAMES | {x.name for x in current_hooks_to_replace}
+        hooknames = const.MANDATORY_HOOK_NAMES | {
+            x.name for x in current_hooks_to_replace
+        }
         for hookname in hooknames:
             print(f"Creating the {hookname!r} hook script pointing to dispatch")
             dest_hook = dest_hookpath / hookname
@@ -240,7 +250,12 @@ class CharmBuilder:
             # known working version of pip.
             if get_pip_version(pip_cmd) < MINIMUM_PIP_VERSION:
                 _process_run(
-                    [pip_cmd, "install", "--force-reinstall", f"pip@{KNOWN_GOOD_PIP_URL}"]
+                    [
+                        pip_cmd,
+                        "install",
+                        "--force-reinstall",
+                        f"pip@{KNOWN_GOOD_PIP_URL}",
+                    ]
                 )
 
         with instrum.Timer("Installing all dependencies"):
@@ -267,9 +282,13 @@ class CharmBuilder:
                 )
             if self.python_packages:
                 print("Installing Python pre-dependencies from source.")
-                _process_run([pip_cmd, "install", "--no-binary=:all:", *self.python_packages])
+                _process_run(
+                    [pip_cmd, "install", "--no-binary=:all:", *self.python_packages]
+                )
             if self.requirement_paths or self.charmlib_deps:
-                print("Installing packages from requirements files and charm lib dependencies.")
+                print(
+                    "Installing packages from requirements files and charm lib dependencies."
+                )
                 requirements_packages = get_requirements_file_package_names(
                     *self.requirement_paths
                 )
@@ -406,7 +425,9 @@ def _process_run(cmd: list[str]) -> None:
     retcode = proc.wait()
 
     if retcode:
-        raise RuntimeError(f"Subprocess command {cmd} execution failed with retcode {retcode}")
+        raise RuntimeError(
+            f"Subprocess command {cmd} execution failed with retcode {retcode}"
+        )
 
 
 def _parse_arguments() -> argparse.Namespace:

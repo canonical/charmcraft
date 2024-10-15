@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Command for analysing a charm."""
+
 import argparse
 import json
 import pathlib

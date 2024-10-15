@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """File-related utilities."""
+
 import io
 import os
 import pathlib

@@ -128,8 +128,12 @@ def test_experimental_no_env(fake_extensions, tmp_path):
         "description": "test description",
         "bases": [
             {
-                "build-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}],
-                "run-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}],
+                "build-on": [
+                    {"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}
+                ],
+                "run-on": [
+                    {"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}
+                ],
             }
         ],
         "extensions": [ExperimentalExtension.name],
@@ -149,8 +153,12 @@ def test_wrong_base(fake_extensions, tmp_path):
         "description": "test description",
         "bases": [
             {
-                "build-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}],
-                "run-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}],
+                "build-on": [
+                    {"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}
+                ],
+                "run-on": [
+                    {"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}
+                ],
             }
         ],
         "extensions": [FakeExtension.name],
@@ -188,7 +196,13 @@ def test_apply_extensions(fake_extensions, tmp_path):
         "description": "test description",
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
         "extensions": [FullExtension.name],
-        "parts": {"my-part": {"plugin": "nil", "source": None, "stage-packages": ["old-package"]}},
+        "parts": {
+            "my-part": {
+                "plugin": "nil",
+                "source": None,
+                "stage-packages": ["old-package"],
+            }
+        },
     }
 
     applied = extensions.apply_extensions(tmp_path, charmcraft_config)

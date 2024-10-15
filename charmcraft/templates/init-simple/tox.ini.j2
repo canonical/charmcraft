@@ -49,6 +49,7 @@ description = Run unit tests
 deps =
     pytest
     coverage[toml]
+    ops[testing]
     -r {tox_root}/requirements.txt
 commands =
     coverage run --source={[vars]src_path} \
@@ -64,6 +65,7 @@ commands =
 description = Run static type checks
 deps =
     pyright
+    ops[testing]
     -r {tox_root}/requirements.txt
 commands =
     pyright {posargs}

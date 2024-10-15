@@ -44,6 +44,7 @@ more-itertools==10.5.0
 oauthlib==3.2.2
 overrides==7.7.0
 packaging==24.1
+pip==24.2
 platformdirs==4.3.6
 pluggy==1.5.0
 protobuf==5.28.2

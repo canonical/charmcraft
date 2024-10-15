@@ -30,9 +30,16 @@ def test_pip_check_not_venv(fake_path: pathlib.Path):
     assert lint.text == "Charm does not contain a Python venv."
 
 
+def test_pip_invalid_venv(fake_path: pathlib.Path):
+    (fake_path / "venv").mkdir()
+    lint = linters.PipCheck()
+    assert lint.run(fake_path) == LintResult.NONAPPLICABLE
+    assert lint.text == "Python venv is not valid."
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_success(fake_path: pathlib.Path, fp):
-    (fake_path / "venv").mkdir()
+    (fake_path / "venv" / "lib").mkdir(parents=True)
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
         returncode=0,
@@ -46,7 +53,7 @@ def test_pip_check_success(fake_path: pathlib.Path, fp):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_warning(fake_path: pathlib.Path, fp):
-    (fake_path / "venv").mkdir()
+    (fake_path / "venv" / "lib").mkdir(parents=True)
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
         returncode=1,

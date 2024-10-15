@@ -683,6 +683,9 @@ class PipCheck(Linter):
         if not venv_dir.is_dir():
             self.text = "Charm does not contain a Python venv."
             return self.Result.NONAPPLICABLE
+        if not (venv_dir / "lib").is_dir():
+            self.text = "Python venv is not valid."
+            return self.Result.NONAPPLICABLE
         if sys.platform == "win32":
             self.text = "Linter does not work on Windows."
             return self.Result.NONAPPLICABLE

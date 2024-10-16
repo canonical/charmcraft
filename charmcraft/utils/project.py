@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Charm project related utilities."""
+
 import itertools
 import os
 import pathlib
@@ -50,13 +51,17 @@ def find_charm_sources(
         lambda p: (p / const.CHARMCRAFT_FILENAME).exists(), outer_potential_paths
     )
     for path in potential_paths:
-        if path in charm_paths.values():  # Symlinks can cause ignorable duplicate paths.
+        if (
+            path in charm_paths.values()
+        ):  # Symlinks can cause ignorable duplicate paths.
             continue
         try:
             charm_name = get_charm_name_from_path(path)
         except InvalidCharmPathError:
             continue
-        if charm_name not in charm_names:  # We only care if the charm is listed for finding
+        if (
+            charm_name not in charm_names
+        ):  # We only care if the charm is listed for finding
             continue
         if charm_name != path.name:
             emit.verbose(f"Charm {charm_name!r} found in non-matching path {path}")

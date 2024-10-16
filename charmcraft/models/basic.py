@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft basic pydantic model."""
+
 from typing import Annotated
 
 import craft_parts.constraints

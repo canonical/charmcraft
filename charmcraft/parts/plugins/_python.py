@@ -25,7 +25,6 @@ from charmcraft import utils
 
 
 class PythonPluginProperties(python_plugin.PythonPluginProperties, frozen=True):
-
     python_packages: list[str] = []  # No default packages.
     python_keep_bins: bool = False
     """Keep the virtual environment's 'bin' directory."""
@@ -63,7 +62,10 @@ class PythonPlugin(python_plugin.PythonPlugin):
         pip = self._get_pip()
         install_params = shlex.join(
             (
-                *(f"--constraint={constraint}" for constraint in self._options.python_constraints),
+                *(
+                    f"--constraint={constraint}"
+                    for constraint in self._options.python_constraints
+                ),
                 *(
                     f"--requirement={requirement}"
                     for requirement in self._options.python_requirements

@@ -63,7 +63,13 @@ def simple_charm(basic_charm_dict: dict[str, Any]):
                             "architectures": [util.get_host_architecture()],
                         }
                     ],
-                    "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+                    "run-on": [
+                        {
+                            "name": "ubuntu",
+                            "channel": "22.04",
+                            "architectures": ["arm64"],
+                        }
+                    ],
                 }
             ],
         }
@@ -123,16 +129,19 @@ def service_factory(
 
 
 @pytest.fixture
-def default_build_plan():
+def default_build_info() -> models.BuildInfo:
     arch = util.get_host_architecture()
-    return [
-        models.BuildInfo(
-            base=bases.BaseName("ubuntu", "22.04"),
-            build_on=arch,
-            build_for="arm64",
-            platform="distro-1-test64",
-        )
-    ]
+    return models.BuildInfo(
+        base=bases.BaseName("ubuntu", "22.04"),
+        build_on=arch,
+        build_for="arm64",
+        platform="distro-1-test64",
+    )
+
+
+@pytest.fixture
+def default_build_plan(default_build_info: models.BuildInfo):
+    return [default_build_info]
 
 
 @pytest.fixture
@@ -314,7 +323,9 @@ def assert_output(capsys):
         for match_line in match_lines:
             if match_line not in printed_lines:
                 printed_repr = "\n".join(map(repr, printed_lines))
-                pytest.fail(f"Line {match_line!r} not found in the output found:\n{printed_repr}")
+                pytest.fail(
+                    f"Line {match_line!r} not found in the output found:\n{printed_repr}"
+                )
 
     return helper
 
@@ -374,7 +385,9 @@ def charm_plugin(tmp_path):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
+    return plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )
 
 
 @pytest.fixture
@@ -396,7 +409,9 @@ def bundle_plugin(tmp_path):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
+    return plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )
 
 
 @pytest.fixture

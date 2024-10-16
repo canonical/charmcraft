@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Build a charm remotely on Launchpad."""
+
 import argparse
 import os
 import pathlib
@@ -63,7 +64,9 @@ class RemoteBuild(ExtensibleCommand):
 
     @override
     def _fill_parser(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("--recover", action="store_true", help="recover an interrupted build")
+        parser.add_argument(
+            "--recover", action="store_true", help="recover an interrupted build"
+        )
         parser.add_argument(
             "--launchpad-accept-public-upload",
             action="store_true",
@@ -121,7 +124,9 @@ class RemoteBuild(ExtensibleCommand):
             emit.progress(f"Recovering build {build_id}")
             builds = builder.resume_builds(build_id)
         else:
-            emit.progress("Starting new build. It may take a while to upload large projects.")
+            emit.progress(
+                "Starting new build. It may take a while to upload large projects."
+            )
             builds = builder.start_builds(project_dir)
 
         try:
@@ -138,7 +143,9 @@ class RemoteBuild(ExtensibleCommand):
             builder.cleanup()
         return returncode
 
-    def _monitor_and_complete(self, build_id: str | None, builds: Collection[Build]) -> int:
+    def _monitor_and_complete(
+        self, build_id: str | None, builds: Collection[Build]
+    ) -> int:
         builder = self._services.remote_build
         emit.progress("Monitoring build")
         try:
@@ -168,10 +175,14 @@ class RemoteBuild(ExtensibleCommand):
                 emit.progress("; ".join(progress_parts))
         except TimeoutError:
             if build_id:
-                resume_command = f"{self._app.name} remote-build --recover --build-id={build_id}"
+                resume_command = (
+                    f"{self._app.name} remote-build --recover --build-id={build_id}"
+                )
             else:
                 resume_command = f"{self._app.name} remote-build --recover"
-            emit.message(f"Timed out waiting for build.\nTo resume, run {resume_command!r}")
+            emit.message(
+                f"Timed out waiting for build.\nTo resume, run {resume_command!r}"
+            )
             return 75  # Temporary failure
 
         emit.progress(f"Fetching {len(builds)} build logs...")

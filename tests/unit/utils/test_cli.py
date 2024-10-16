@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for CLI-related utilities."""
+
 import datetime
 import json
 from unittest.mock import call, patch
@@ -171,7 +172,9 @@ def test_confirm_with_user(user_input, expected, mock_input, mock_isatty):
     assert mock_input.mock_calls == [call("prompt [y/N]: ")]
 
 
-def test_confirm_with_user_errors_in_managed_mode(mock_is_charmcraft_running_in_managed_mode):
+def test_confirm_with_user_errors_in_managed_mode(
+    mock_is_charmcraft_running_in_managed_mode,
+):
     mock_is_charmcraft_running_in_managed_mode.return_value = True
 
     with pytest.raises(RuntimeError):

@@ -26,11 +26,15 @@ from craft_application import util
 from charmcraft import services
 from charmcraft.models import project
 
-pytestmark = [pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")]
+pytestmark = [
+    pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")
+]
 
 
 @pytest.fixture
-def charm_project(basic_charm_dict: dict[str, Any], project_path: pathlib.Path, request):
+def charm_project(
+    basic_charm_dict: dict[str, Any], project_path: pathlib.Path, request
+):
     return project.PlatformCharm.unmarshal(
         basic_charm_dict
         | {
@@ -71,7 +75,14 @@ def test_python_plugin(
     # Check that the part install directory looks correct.
     assert (install_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (install_path / "venv" / "lib").is_dir()
-    assert len(list((install_path / "venv" / "lib").glob("python*/site-packages/distro.py"))) == 1
+    assert (
+        len(
+            list(
+                (install_path / "venv" / "lib").glob("python*/site-packages/distro.py")
+            )
+        )
+        == 1
+    )
 
     # Check that the stage directory looks correct.
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"

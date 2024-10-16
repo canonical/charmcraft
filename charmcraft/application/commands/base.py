@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Base command for Charmcraft commands."""
+
 from __future__ import annotations
 
 import craft_application.commands

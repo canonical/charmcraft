@@ -42,7 +42,9 @@ def service(service_factory) -> LifecycleService:
         (f"foreign-{HOST_ARCH}", "foreign"),
     ],
 )
-def test_get_build_for_values(service: LifecycleService, plan_build_for: str, expected: str):
+def test_get_build_for_values(
+    service: LifecycleService, plan_build_for: str, expected: str
+):
     service._build_plan = [
         models.BuildInfo(
             base=bases.BaseName("ubuntu", "22.04"),

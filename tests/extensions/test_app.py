@@ -307,7 +307,9 @@ def flask_input_yaml_fixture():
         ),
     ],
 )
-def test_apply_extensions_correct(monkeypatch, experimental, tmp_path, input_yaml, expected):
+def test_apply_extensions_correct(
+    monkeypatch, experimental, tmp_path, input_yaml, expected
+):
     if experimental:
         monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
 

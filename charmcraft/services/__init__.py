@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Service classes charmcraft."""
+
 from __future__ import annotations
 
 import dataclasses

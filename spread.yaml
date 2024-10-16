@@ -202,12 +202,9 @@ suites:
       # https://github.com/canonical/lxd-cloud/blob/f20a64a8af42485440dcbfd370faf14137d2f349/test/includes/lxd.sh#L13-L23
       iptables -P FORWARD ACCEPT
 
-      # Ensure that the reused charms and bundles are registered if necessary.
+      # Ensure that the reused charms are registered if necessary.
       if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
-        charmcraft register $CHARM_DEFAULT_NAME || ERROR Charm $CHARM_DEFAULT_NAME cannot be registered to this account.
-      fi
-      if ! charmcraft status $BUNDLE_DEFAULT_NAME; then
-        charmcraft register-bundle $BUNDLE_DEFAULT_NAME || ERROR Charm $BUNDLE_DEFAULT_NAME cannot be registered to this account.
+        charmcraft register $CHARM_DEFAULT_NAME
       fi
 
       rm -f charmcraft.yaml
@@ -226,6 +223,7 @@ suites:
       # should be part of the environment (when running spread locally just define it,
       # for GH actions set it in Settings -> Security -> Actions -> Repository secrets)
       CHARMCRAFT_AUTH: "$(HOST: echo $CHARMCRAFT_AUTH)"
+      CHARMCRAFT_SINGLE_CHARM_AUTH: "$(HOST: echo $CHARMCRAFT_SINGLE_CHARM_AUTH)"
 
       # to not flood Charmhub with names the same two are always used in the Store related
       # tests (except in the names registration tests, of course); register them manually

@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for store commands."""
+
 import argparse
 import sys
 from unittest import mock
@@ -44,7 +45,9 @@ def store_mock():
 
 # region fetch-lib tests
 @pytest.mark.parametrize("formatted", [None, "json"])
-def test_fetchlib_simple_downloaded(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
+def test_fetchlib_simple_downloaded(
+    emitter, store_mock, tmp_path, monkeypatch, config, formatted
+):
     """Happy path fetching the lib for the first time (downloading it)."""
     monkeypatch.chdir(tmp_path)
 
@@ -101,7 +104,9 @@ def test_fetchlib_simple_downloaded(emitter, store_mock, tmp_path, monkeypatch, 
     assert saved_file.read_text() == lib_content
 
 
-def test_fetchlib_simple_dash_in_name(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_fetchlib_simple_dash_in_name(
+    emitter, store_mock, tmp_path, monkeypatch, config
+):
     """Happy path fetching the lib for the first time (downloading it)."""
     monkeypatch.chdir(tmp_path)
 
@@ -143,7 +148,9 @@ def test_fetchlib_simple_dash_in_name(emitter, store_mock, tmp_path, monkeypatch
     assert saved_file.read_text() == lib_content
 
 
-def test_fetchlib_simple_dash_in_name_on_disk(emitter, store_mock, tmp_path, monkeypatch, config):
+def test_fetchlib_simple_dash_in_name_on_disk(
+    emitter, store_mock, tmp_path, monkeypatch, config
+):
     """Happy path fetching the lib for the first time (downloading it)."""
     monkeypatch.chdir(tmp_path)
 
@@ -344,9 +351,11 @@ def test_fetchlib_store_not_found(emitter, store_mock, config, formatted):
     args = argparse.Namespace(library="charms.testcharm.v0.testlib", format=formatted)
     FetchLibCommand(config).run(args)
 
-    store_mock.get_libraries_tips.assert_called_once_with(
-        [{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]
-    ),
+    (
+        store_mock.get_libraries_tips.assert_called_once_with(
+            [{"charm_name": "testcharm", "lib_name": "testlib", "api": 0}]
+        ),
+    )
     error_message = "Library charms.testcharm.v0.testlib not found in Charmhub."
     if formatted:
         expected = [
@@ -364,7 +373,9 @@ def test_fetchlib_store_not_found(emitter, store_mock, config, formatted):
 
 
 @pytest.mark.parametrize("formatted", [None, "json"])
-def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, config, formatted):
+def test_fetchlib_store_is_old(
+    emitter, store_mock, tmp_path, monkeypatch, config, formatted
+):
     """The store has an older version that what is found locally."""
     monkeypatch.chdir(tmp_path)
 
@@ -385,8 +396,12 @@ def test_fetchlib_store_is_old(emitter, store_mock, tmp_path, monkeypatch, confi
     args = argparse.Namespace(library="charms.testcharm.v0.testlib", format=formatted)
     FetchLibCommand(config).run(args)
 
-    store_mock.get_libraries_tips.assert_called_once_with([{"lib_id": lib_id, "api": 0}])
-    error_message = "Library charms.testcharm.v0.testlib has local changes, cannot be updated."
+    store_mock.get_libraries_tips.assert_called_once_with(
+        [{"lib_id": lib_id, "api": 0}]
+    )
+    error_message = (
+        "Library charms.testcharm.v0.testlib has local changes, cannot be updated."
+    )
     if formatted:
         expected = [
             {
@@ -410,7 +425,9 @@ def test_fetchlib_store_same_versions_same_hash(
     monkeypatch.chdir(tmp_path)
 
     lib_id = "test-example-lib-id"
-    _, c_hash = factory.create_lib_filepath("testcharm", "testlib", api=0, patch=7, lib_id=lib_id)
+    _, c_hash = factory.create_lib_filepath(
+        "testcharm", "testlib", api=0, patch=7, lib_id=lib_id
+    )
 
     store_mock.get_libraries_tips.return_value = {
         (lib_id, 0): Library(
@@ -426,8 +443,12 @@ def test_fetchlib_store_same_versions_same_hash(
     args = argparse.Namespace(library="charms.testcharm.v0.testlib", format=formatted)
     FetchLibCommand(config).run(args)
 
-    store_mock.get_libraries_tips.assert_called_once_with([{"lib_id": lib_id, "api": 0}])
-    error_message = "Library charms.testcharm.v0.testlib was already up to date in version 0.7."
+    store_mock.get_libraries_tips.assert_called_once_with(
+        [{"lib_id": lib_id, "api": 0}]
+    )
+    error_message = (
+        "Library charms.testcharm.v0.testlib was already up to date in version 0.7."
+    )
     if formatted:
         expected = [
             {
@@ -470,7 +491,9 @@ def test_fetchlib_store_same_versions_different_hash(
     assert store_mock.mock_calls == [
         mock.call.get_libraries_tips([{"lib_id": lib_id, "api": 0}]),
     ]
-    error_message = "Library charms.testcharm.v0.testlib has local changes, cannot be updated."
+    error_message = (
+        "Library charms.testcharm.v0.testlib has local changes, cannot be updated."
+    )
     if formatted:
         expected = [
             {

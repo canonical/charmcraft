@@ -75,8 +75,13 @@ def test_find_charm_sources_extra_charms(tmp_path, build_charm_directory, fake_c
 
 
 @pytest.mark.parametrize("fake_charms", [BASIC_CHARM_MAP])
-def test_find_charm_sources_non_matching_path(tmp_path, build_charm_directory, fake_charms):
-    charms = {name: path.with_name(f"non_matching_{name}") for name, path in fake_charms.items()}
+def test_find_charm_sources_non_matching_path(
+    tmp_path, build_charm_directory, fake_charms
+):
+    charms = {
+        name: path.with_name(f"non_matching_{name}")
+        for name, path in fake_charms.items()
+    }
     build_charm_directory(tmp_path, charms)
 
     actual = find_charm_sources(tmp_path, fake_charms)
@@ -137,7 +142,10 @@ def test_get_charm_name_from_path_bundle(tmp_path, build_charm_directory, name, 
     with pytest.raises(InvalidCharmPathError) as exc_info:
         get_charm_name_from_path(full_path)
 
-    assert exc_info.value.args[0] == f"Path does not contain source for a valid charm: {full_path}"
+    assert (
+        exc_info.value.args[0]
+        == f"Path does not contain source for a valid charm: {full_path}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -158,7 +166,10 @@ def test_get_charm_name_from_path_missing_file(
     with pytest.raises(InvalidCharmPathError) as exc_info:
         get_charm_name_from_path(full_path)
 
-    assert exc_info.value.args[0] == f"Path does not contain source for a valid charm: {full_path}"
+    assert (
+        exc_info.value.args[0]
+        == f"Path does not contain source for a valid charm: {full_path}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -169,7 +180,9 @@ def test_get_charm_name_from_path_missing_file(
         ("test1", "operators/test1"),
     ],
 )
-def test_get_charm_name_from_path_wrong_name(tmp_path, build_charm_directory, name, path):
+def test_get_charm_name_from_path_wrong_name(
+    tmp_path, build_charm_directory, name, path
+):
     build_charm_directory(tmp_path, {name: path}, file_type="bundle")
     full_path = tmp_path / path
     with (full_path / const.METADATA_FILENAME).open("w") as file:
@@ -178,4 +191,7 @@ def test_get_charm_name_from_path_wrong_name(tmp_path, build_charm_directory, na
     with pytest.raises(InvalidCharmPathError) as exc_info:
         get_charm_name_from_path(full_path)
 
-    assert exc_info.value.args[0] == f"Path does not contain source for a valid charm: {full_path}"
+    assert (
+        exc_info.value.args[0]
+        == f"Path does not contain source for a valid charm: {full_path}"
+    )

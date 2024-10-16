@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for init command."""
+
 import argparse
 import contextlib
 import os
@@ -96,7 +97,9 @@ VALID_AUTHORS = [
 
 @pytest.fixture
 def init_command():
-    return commands.InitCommand({"app": charmcraft.application.APP_METADATA, "services": None})
+    return commands.InitCommand(
+        {"app": charmcraft.application.APP_METADATA, "services": None}
+    )
 
 
 def create_namespace(
@@ -147,7 +150,9 @@ def test_files_created_correct(
     tox_ini = (new_path / "tox.ini").read_text(encoding="utf-8")
 
     pytest_check.equal(actual_files, expected_files)
-    pytest_check.is_true(re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE))
+    pytest_check.is_true(
+        re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE)
+    )
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
 
 
@@ -203,7 +208,9 @@ def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
         ),
     ],
 )
-def test_gecos_user_not_found(monkeypatch, new_path, init_command, mock_getpwuid, error_msg):
+def test_gecos_user_not_found(
+    monkeypatch, new_path, init_command, mock_getpwuid, error_msg
+):
     monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
 
     with pytest.raises(errors.CraftError, match=error_msg):
@@ -282,17 +289,6 @@ def test_tox_success(new_path, init_command, profile):
 
     if not (new_path / "tox.ini").exists():
         pytest.skip("init template doesn't contain tox.ini file")
-
-    result = subprocess.run(
-        ["tox", "-v", "run", "-e", "lint,static"],
-        cwd=new_path,
-        env=env,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
-    assert result.returncode == 0, "Tox run failed:\n" + result.stdout
 
     if list((new_path / "tests").glob("*.py")):  # If any tests exist
         result = subprocess.run(

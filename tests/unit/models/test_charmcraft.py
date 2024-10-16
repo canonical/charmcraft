@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for Charmcraft models."""
+
 import pytest
 
 from charmcraft.models import charmcraft
@@ -22,9 +23,18 @@ from charmcraft.models import charmcraft
 @pytest.mark.parametrize(
     ("base_str", "expected"),
     [
-        ("ubuntu@24.04", charmcraft.Base(name="ubuntu", channel="24.04", architectures=[])),
-        ("ubuntu@22.04", charmcraft.Base(name="ubuntu", channel="22.04", architectures=[])),
-        ("almalinux@9", charmcraft.Base(name="almalinux", channel="9", architectures=[])),
+        (
+            "ubuntu@24.04",
+            charmcraft.Base(name="ubuntu", channel="24.04", architectures=[]),
+        ),
+        (
+            "ubuntu@22.04",
+            charmcraft.Base(name="ubuntu", channel="22.04", architectures=[]),
+        ),
+        (
+            "almalinux@9",
+            charmcraft.Base(name="almalinux", channel="9", architectures=[]),
+        ),
     ],
 )
 def test_get_base_from_str_and_arch(base_str, expected):

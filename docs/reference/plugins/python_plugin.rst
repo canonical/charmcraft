@@ -25,8 +25,8 @@ Dependencies
 ------------
 
 This plugin creates a Python virtual environment in the ``venv`` directory of your
-charm using the version of Python included with your base, using the requirements files
-provided in the ``python-requirements`` keyword.
+charm using the version of Python included with your base and the requirements files
+provided in the ``python-requirements`` key.
 
 .. note::
    The python plugin prevents :command:`pip` from installing dependencies for the

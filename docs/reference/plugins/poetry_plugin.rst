@@ -31,7 +31,7 @@ During the build step, the plugin performs the following actions:
 2. It uses :command:`poetry export` to create a ``requirements.txt`` in the project's
    build directory.
 3. It uses :command:`pip` to install the packages referenced in ``requirements.txt``
-   into the virtual environment, without any additional dependencies.
+   into the virtual environment. Undeclared dependencies are ignored.
 4. It copies any existing ``src`` and ``lib`` directories from your charm project into
    the final charm.
 5. It runs :command:`pip check` to ensure the virtual environment is consistent.

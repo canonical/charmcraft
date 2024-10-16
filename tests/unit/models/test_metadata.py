@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for metadata models."""
+
 import json
 
 import pytest
@@ -82,7 +83,10 @@ BASIC_BUNDLE_DICT = {
 def test_charm_metadata_from_charm_success(charm_dict, expected):
     charm = project.CharmcraftProject.unmarshal(charm_dict)
 
-    assert json.loads(json.dumps(metadata.CharmMetadata.from_charm(charm).marshal())) == expected
+    assert (
+        json.loads(json.dumps(metadata.CharmMetadata.from_charm(charm).marshal()))
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -95,5 +99,6 @@ def test_bundle_metadata_from_bundle(bundle_dict, expected):
     bundle = project.Bundle.unmarshal(BASIC_BUNDLE_DICT)
 
     assert (
-        json.loads(json.dumps(metadata.BundleMetadata.from_bundle(bundle).marshal())) == expected
+        json.loads(json.dumps(metadata.BundleMetadata.from_bundle(bundle).marshal()))
+        == expected
     )

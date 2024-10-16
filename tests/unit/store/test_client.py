@@ -29,7 +29,9 @@ def client() -> store.Client:
 
 @pytest.fixture
 def anonymous_client() -> store.AnonymousClient:
-    return store.AnonymousClient("http://charmhub.local", "http://storage.charmhub.local")
+    return store.AnonymousClient(
+        "http://charmhub.local", "http://storage.charmhub.local"
+    )
 
 
 @pytest.mark.parametrize(
@@ -48,7 +50,9 @@ def anonymous_client() -> store.AnonymousClient:
             0,
             0,
             mock.call(
-                "GET", "/v1/charm/libraries/my-charm/abcdefg", params={"api": 0, "patch": 0}
+                "GET",
+                "/v1/charm/libraries/my-charm/abcdefg",
+                params={"api": 0, "patch": 0},
             ),
         ),
     ],
@@ -68,7 +72,9 @@ def test_get_library_success(
     )
     monkeypatch.setattr(anonymous_client, "request_urlpath_json", mock_get_urlpath_json)
 
-    anonymous_client.get_library(charm_name=charm, library_id=lib_id, api=api, patch=patch)
+    anonymous_client.get_library(
+        charm_name=charm, library_id=lib_id, api=api, patch=patch
+    )
 
     mock_get_urlpath_json.assert_has_calls([expected_call])
 
@@ -105,7 +111,9 @@ def test_get_library_success(
         ),
     ],
 )
-def test_fetch_libraries_metadata(monkeypatch, anonymous_client, libs, json_response, expected):
+def test_fetch_libraries_metadata(
+    monkeypatch, anonymous_client, libs, json_response, expected
+):
     mock_get_urlpath_json = mock.Mock(return_value=json_response)
     monkeypatch.setattr(anonymous_client, "request_urlpath_json", mock_get_urlpath_json)
 

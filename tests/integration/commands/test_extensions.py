@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for extension commands."""
+
 import argparse
 import textwrap
 
@@ -41,7 +42,8 @@ def create_extension(ext_name, bases, experimental):
 @pytest.fixture(autouse=True, scope="module")
 def registered_extensions():
     default_extensions = {
-        name: extensions.get_extension_class(name) for name in extensions.get_extension_names()
+        name: extensions.get_extension_class(name)
+        for name in extensions.get_extension_names()
     }
     for ext in default_extensions:
         extensions.unregister(ext)

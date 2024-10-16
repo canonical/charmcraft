@@ -32,7 +32,9 @@ from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import BasesCharm
 
-SIMPLE_BUILD_BASE = models.charmcraft.Base(name="ubuntu", channel="22.04", architectures=["arm64"])
+SIMPLE_BUILD_BASE = models.charmcraft.Base(
+    name="ubuntu", channel="22.04", architectures=["arm64"]
+)
 SIMPLE_MANIFEST = models.Manifest(
     charmcraft_started_at="1970-01-01T00:00:00+00:00",
     bases=[SIMPLE_BUILD_BASE],
@@ -112,7 +114,9 @@ def test_get_charm_path(fake_path, package_service, bases, expected_name):
     ],
 )
 def test_get_manifest(package_service, simple_charm, lint, expected):
-    simple_charm._started_at = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    simple_charm._started_at = datetime.datetime(
+        1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+    )
 
     assert package_service.get_manifest(lint) == expected
 
@@ -181,10 +185,18 @@ def test_do_not_overwrite_actions_yaml(
             [
                 {
                     "build-on": [
-                        {"name": "ubuntu", "channel": "22.04", "architectures": ["riscv64"]}
+                        {
+                            "name": "ubuntu",
+                            "channel": "22.04",
+                            "architectures": ["riscv64"],
+                        }
                     ],
                     "run-on": [
-                        {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
+                        {
+                            "name": "ubuntu",
+                            "channel": "22.04",
+                            "architectures": ["all"],
+                        },
                     ],
                 },
             ],
@@ -206,20 +218,38 @@ def test_do_not_overwrite_actions_yaml(
                 build_for=util.get_host_architecture(),
                 base=BaseName("centos", "7"),
             ),
-            [{"name": "centos", "channel": "7", "architectures": [util.get_host_architecture()]}],
+            [
+                {
+                    "name": "centos",
+                    "channel": "7",
+                    "architectures": [util.get_host_architecture()],
+                }
+            ],
         ),
         pytest.param(
             [
                 {"name": "centos", "channel": "7"},
                 {
                     "build-on": [{"name": "ubuntu", "channel": "20.04"}],
-                    "run-on": [{"name": "ubuntu", "channel": "20.04", "architectures": ["all"]}],
+                    "run-on": [
+                        {"name": "ubuntu", "channel": "20.04", "architectures": ["all"]}
+                    ],
                 },
                 {
                     "build-on": [
-                        {"name": "ubuntu", "channel": "22.04", "architectures": ["amd64", "arm64"]}
+                        {
+                            "name": "ubuntu",
+                            "channel": "22.04",
+                            "architectures": ["amd64", "arm64"],
+                        }
                     ],
-                    "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+                    "run-on": [
+                        {
+                            "name": "ubuntu",
+                            "channel": "22.04",
+                            "architectures": ["arm64"],
+                        }
+                    ],
                 },
             ],
             BuildInfo(

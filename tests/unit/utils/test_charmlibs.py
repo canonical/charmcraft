@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Tests for store helpers commands (code in store/charmlibs.py)."""
+
 import hashlib
 import pathlib
 import sys
@@ -24,7 +25,9 @@ from craft_cli import CraftError
 
 from charmcraft import const
 from charmcraft.utils.charmlibs import (
+    QualifiedLibraryName,
     collect_charmlib_pydeps,
+    get_lib_charm_path,
     get_lib_info,
     get_lib_internals,
     get_lib_module_name,
@@ -32,6 +35,32 @@ from charmcraft.utils.charmlibs import (
     get_libs_from_tree,
     get_name_from_metadata,
 )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [("my-charm.my_lib", QualifiedLibraryName("my_charm", "my_lib"))],
+)
+def test_qualified_library_name_from_string_success(
+    value: str, expected: QualifiedLibraryName
+) -> None:
+    assert QualifiedLibraryName.from_string(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [(QualifiedLibraryName("my_charm", "my_lib"), "my-charm.my_lib")],
+)
+def test_qualified_library_name_to_string_success(
+    value: str, expected: QualifiedLibraryName
+) -> None:
+    assert str(value) == expected
+
+
+@pytest.mark.parametrize("value", ["", "charm-name", "charm-name.", ".", ".lib_name"])
+def test_qualified_library_name_from_string_error(value: str):
+    with pytest.raises(ValueError, match="Not a valid library name: "):
+        QualifiedLibraryName.from_string(value)
 
 
 # region Name-related tests
@@ -89,6 +118,16 @@ def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
 )
 def test_get_lib_path(charm: str, lib: str, api: int, expected: pathlib.Path):
     assert get_lib_path(charm, lib, api) == expected
+
+
+@pytest.mark.parametrize(
+    ("charm", "expected"),
+    [
+        ("my-charm", pathlib.Path("lib/charms/my_charm")),
+    ],
+)
+def test_get_lib_charm_path(charm: str, expected: pathlib.Path):
+    assert get_lib_charm_path(charm) == expected
 
 
 @pytest.mark.parametrize(
@@ -158,6 +197,23 @@ def test_getlibinfo_success_simple(tmp_path, monkeypatch):
     assert lib_data.content is not None
     assert lib_data.full_name == "charms.testcharm.v3.testlib"
     assert lib_data.path == test_path
+    assert lib_data.lib_name == "testlib"
+    assert lib_data.charm_name == "testcharm"
+
+
+def test_getlibinfo_success_absolute_path(tmp_path, monkeypatch):
+    """Simple basic case of success getting info from the library."""
+    monkeypatch.chdir(tmp_path)
+    test_path = _create_lib()
+
+    lib_data = get_lib_info(lib_path=test_path.absolute())
+    assert lib_data.lib_id == "test-lib-id"
+    assert lib_data.api == 3
+    assert lib_data.patch == 14
+    assert lib_data.content_hash is not None
+    assert lib_data.content is not None
+    assert lib_data.full_name == "charms.testcharm.v3.testlib"
+    assert lib_data.path == test_path.absolute()
     assert lib_data.lib_name == "testlib"
     assert lib_data.charm_name == "testcharm"
 
@@ -237,7 +293,10 @@ def test_getlibinfo_missing_library_from_name():
     assert lib_data.content_hash is None
     assert lib_data.content is None
     assert lib_data.full_name == test_name
-    assert lib_data.path == pathlib.Path("lib") / "charms" / "testcharm" / "v3" / "testlib.py"
+    assert (
+        lib_data.path
+        == pathlib.Path("lib") / "charms" / "testcharm" / "v3" / "testlib.py"
+    )
     assert lib_data.lib_name == "testlib"
     assert lib_data.charm_name == "testcharm"
 
@@ -312,13 +371,18 @@ def test_getlibinternals_success_content(tmp_path, monkeypatch):
 
     internals = get_lib_internals(test_path)
     assert internals.content == test_path.read_text(encoding="utf8")
-    assert internals.content_hash == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
+    assert (
+        internals.content_hash
+        == hashlib.sha256(extra_content.encode("utf8")).hexdigest()
+    )
 
 
 def test_getlibinternals_non_toplevel_names(tmp_path, monkeypatch):
     """Test non direct assignments."""
     monkeypatch.chdir(tmp_path)
-    test_path = _create_lib(extra_content="logging.getLogger('kazoo.client').disabled = True")
+    test_path = _create_lib(
+        extra_content="logging.getLogger('kazoo.client').disabled = True"
+    )
     internals = get_lib_internals(test_path)
 
     assert internals.lib_id == "test-lib-id"
@@ -349,7 +413,9 @@ def test_getlibinternals_malformed_content(tmp_path, monkeypatch):
         (["metadata_patch", "metadata_id"], "LIBID, LIBPATCH"),
     ],
 )
-def test_getlibinternals_missing_internals_field(tmp_path, empty_args, missing, monkeypatch):
+def test_getlibinternals_missing_internals_field(
+    tmp_path, empty_args, missing, monkeypatch
+):
     """Some internals field is not present."""
     monkeypatch.chdir(tmp_path)
     kwargs = {arg: "" for arg in empty_args}
@@ -512,7 +578,9 @@ def test_collectpydeps_generic(tmp_path, monkeypatch):
     otherdir = tmp_path / "otherdir"
     otherdir.mkdir()
     monkeypatch.chdir(otherdir)
-    _create_lib(charm_name="charm1", lib_name="lib1.py", pydeps="PYDEPS = ['foo', 'bar']")
+    _create_lib(
+        charm_name="charm1", lib_name="lib1.py", pydeps="PYDEPS = ['foo', 'bar']"
+    )
     _create_lib(charm_name="charm1", lib_name="lib2.py", pydeps="PYDEPS = ['bar']")
     _create_lib(charm_name="charm2", lib_name="lib3.py")
     _create_lib(charm_name="charm2", lib_name="lib3.py", pydeps="PYDEPS = ['baz']")

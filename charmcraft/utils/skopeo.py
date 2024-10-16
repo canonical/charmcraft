@@ -70,7 +70,9 @@ class Skopeo:
             command.append("--debug")
         return command
 
-    def _run_skopeo(self, command: Sequence[str], **kwargs) -> subprocess.CompletedProcess:
+    def _run_skopeo(
+        self, command: Sequence[str], **kwargs
+    ) -> subprocess.CompletedProcess:
         """Run skopeo, converting the error message if necessary."""
         try:
             return subprocess.run(command, check=True, **kwargs)
@@ -121,7 +123,12 @@ class Skopeo:
 
     @overload
     def inspect(
-        self, image: str, *, format_template: None = None, raw: bool = False, tags: bool = True
+        self,
+        image: str,
+        *,
+        format_template: None = None,
+        raw: bool = False,
+        tags: bool = True,
     ) -> dict[str, Any]: ...
     @overload
     def inspect(

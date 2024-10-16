@@ -26,9 +26,11 @@ from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
 from charmcraft import const
-from charmcraft.parts import reactive
+from charmcraft.parts.plugins import _reactive
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows not [yet] supported"
+)
 
 
 @pytest.fixture
@@ -69,7 +71,7 @@ def spec(tmp_path):
 
 @pytest.fixture
 def plugin_properties(spec):
-    return reactive.ReactivePluginProperties.unmarshal(spec)
+    return _reactive.ReactivePluginProperties.unmarshal(spec)
 
 
 @pytest.fixture
@@ -87,7 +89,9 @@ def plugin(tmp_path, plugin_properties, spec):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
+    return plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )
 
 
 def test_get_build_package(plugin):
@@ -104,7 +108,7 @@ def test_get_build_environment(plugin):
 
 def test_get_build_commands(plugin, tmp_path):
     assert plugin.get_build_commands() == [
-        f"{sys.executable} -I {reactive.__file__} fake-project "
+        f"{sys.executable} -I {_reactive.__file__} fake-project "
         f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
         "--charm-argument --charm-argument-with argument"
     ]
@@ -178,7 +182,7 @@ def fake_run():
 
 def test_build(build_dir, install_dir, fake_run):
     fake_run.return_value = CompletedProcess(("charm", "build"), 0)
-    returncode = reactive.build(
+    returncode = _reactive.build(
         charm_name="test-charm",
         build_dir=build_dir,
         install_dir=install_dir,
@@ -207,7 +211,7 @@ def test_build(build_dir, install_dir, fake_run):
 def test_build_charm_proof_raises_error_messages(build_dir, install_dir, fake_run):
     fake_run.side_effect = CalledProcessError(200, "E: name missing")
 
-    returncode = reactive.build(
+    returncode = _reactive.build(
         charm_name="test-charm",
         build_dir=build_dir,
         install_dir=install_dir,
@@ -226,7 +230,7 @@ def test_build_charm_proof_raises_warning_messages_does_not_raise(
 ):
     fake_run.side_effect = CalledProcessError(100, "W: Description is not pretty")
 
-    returncode = reactive.build(
+    returncode = _reactive.build(
         charm_name="test-charm",
         build_dir=build_dir,
         install_dir=install_dir,
@@ -266,7 +270,7 @@ def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_ru
 
     fake_run.side_effect = _run_generator()
 
-    returncode = reactive.build(
+    returncode = _reactive.build(
         charm_name="test-charm",
         build_dir=build_dir,
         install_dir=install_dir,
@@ -292,7 +296,7 @@ def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_ru
     ]
 
     # Also ensure negative return codes raises error
-    returncode = reactive.build(
+    returncode = _reactive.build(
         charm_name="test-charm",
         build_dir=build_dir,
         install_dir=install_dir,
@@ -315,7 +319,7 @@ def test_build_charm_build_raises_warning_messages_does_not_raise(
 
     fake_run.side_effect = _run_generator()
 
-    returncode = reactive.build(
+    returncode = _reactive.build(
         charm_name="test-charm",
         build_dir=build_dir,
         install_dir=install_dir,

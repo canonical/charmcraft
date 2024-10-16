@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Service class for packing."""
+
 from __future__ import annotations
 
 import pathlib
@@ -34,12 +35,18 @@ class AnalysisService(craft_application.AppService):
     _project: models.CharmcraftProject  # type: ignore[assignment]
 
     def __init__(  # (too many arguments)
-        self, app: craft_application.AppMetadata, services: craft_application.ServiceFactory
+        self,
+        app: craft_application.AppMetadata,
+        services: craft_application.ServiceFactory,
     ) -> None:
         super().__init__(app, services)
 
     def lint_directory(
-        self, path: pathlib.Path, *, ignore: Container[str] = (), include_ignored: bool = True
+        self,
+        path: pathlib.Path,
+        *,
+        ignore: Container[str] = (),
+        include_ignored: bool = True,
     ) -> Iterator[CheckResult]:
         """Lint an unpacked charm in the given directory."""
         for checker, run in self._gen_checkers(ignore=ignore):
@@ -49,7 +56,11 @@ class AnalysisService(craft_application.AppService):
                 yield checker.get_ignore_result()
 
     def lint_file(
-        self, path: pathlib.Path, *, ignore: Container[str] = (), include_ignored: bool = True
+        self,
+        path: pathlib.Path,
+        *,
+        ignore: Container[str] = (),
+        include_ignored: bool = True,
     ) -> Iterator[CheckResult]:
         """Lint a packed charm.
 
@@ -61,7 +72,9 @@ class AnalysisService(craft_application.AppService):
         """
         path = path.resolve(strict=True)
 
-        with tempfile.TemporaryDirectory(prefix=f"charmcraft_{path.name}_") as directory:
+        with tempfile.TemporaryDirectory(
+            prefix=f"charmcraft_{path.name}_"
+        ) as directory:
             directory_path = pathlib.Path(directory)
             try:
                 with zipfile.ZipFile(path) as zip_file:
@@ -85,7 +98,9 @@ class AnalysisService(craft_application.AppService):
             )
 
     @staticmethod
-    def _gen_checkers(ignore: Container[str]) -> Iterator[tuple[linters.BaseChecker, bool]]:
+    def _gen_checkers(
+        ignore: Container[str],
+    ) -> Iterator[tuple[linters.BaseChecker, bool]]:
         """Generate the checker classes to run, in their correct order."""
         for cls in linters.CHECKERS:
             run_linter = cls.name not in ignore

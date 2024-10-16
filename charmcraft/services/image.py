@@ -54,14 +54,20 @@ class ImageService(craft_application.AppService):
     """
 
     _skopeo: utils.Skopeo
-    _docker: docker.DockerClient
+    _docker: docker.DockerClient | None
 
     @override
     def setup(self) -> None:
         """Set up the image service."""
         super().setup()
         self._skopeo = utils.Skopeo(insecure_policy=True)
-        self._docker = docker.from_env()
+        try:
+            self._docker = docker.from_env()
+        except docker.errors.DockerException:
+            logger.debug(
+                "could not create Docker client. Docker may not be installed. Ignoring..."
+            )
+            self._docker = None
 
     def copy(
         self,
@@ -94,20 +100,42 @@ class ImageService(craft_application.AppService):
             preserve_digests=True,
         )
 
-    def get_maybe_id_from_docker(self, name: str) -> str | None:
+    @staticmethod
+    def get_name_from_url(url: str) -> str:
+        """Get the name of an image from a Docker URL or its name."""
+        if "://" not in url:
+            return url
+        # Return only the name, even if something is on ghcr or somewhere.
+        return url.partition("://")[2]
+
+    def get_maybe_id_from_docker(self, url: str) -> str | None:
         """Get the ID of an image from Docker.
 
-        :param name: Any string Docker recognises as the image name.
+        :param url: Any string Docker recognises as the image name or a docker:// url
         :returns: An image digest or None
 
         The digest will match the OCI digest spec:
         https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests
         """
+        if self._docker is None:
+            return None
+        name = self.get_name_from_url(url)
         try:
             image = self._docker.images.get(name)
         except docker.errors.ImageNotFound:
-            return None
-        return image.id
+            logger.debug("Image not found in local Docker")
+        except docker.errors.APIError as exc:
+            logger.debug(f"API error when querying local Docker: {exc}", exc_info=exc)
+        else:
+            return image.id
+        return None
+
+    @staticmethod
+    def convert_go_arch_to_charm_arch(architecture: str) -> const.CharmArch:
+        """Convert an OCI architecture to a charm architecture."""
+        return const.CharmArch(
+            const.GO_ARCH_TO_CHARM_ARCH.get(architecture, architecture)
+        )
 
     def inspect(self, image: str) -> OCIMetadata:
         """Inspect an image with Skopeo and return the relevant metadata.
@@ -132,7 +160,13 @@ class ImageService(craft_application.AppService):
                 platform = child.get("platform", {})
                 if platform.get("os") != "linux":
                     continue
-                architectures.append(const.CharmArch(platform["architecture"]))
+                arch = platform["architecture"]
+                try:
+                    charm_arch = self.convert_go_arch_to_charm_arch(arch)
+                except ValueError:
+                    logger.debug(f"Ignoring unknown architecture {arch}")
+                    continue
+                architectures.append(charm_arch)
             if not architectures:
                 raise errors.CraftError("No architectures found in image for Linux OS.")
         else:

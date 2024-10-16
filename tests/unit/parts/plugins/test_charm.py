@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for charm plugin."""
+
 import pathlib
 import sys
 from unittest.mock import patch
@@ -90,7 +91,9 @@ def test_charmplugin_get_build_environment_ubuntu(charm_plugin, mocker):
     mock_version = mocker.patch("craft_parts.utils.os_utils.OsRelease.version_id")
     mock_id.return_value = "ubuntu"
     mock_version.return_value = "22.04"
-    assert charm_plugin.get_build_environment() == {"CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"}
+    assert charm_plugin.get_build_environment() == {
+        "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true"
+    }
 
 
 def test_charmplugin_get_build_environment_centos_7(charm_plugin, mocker, monkeypatch):
@@ -105,7 +108,9 @@ def test_charmplugin_get_build_environment_centos_7(charm_plugin, mocker, monkey
     }
 
 
-def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, monkeypatch):
+def test_charmplugin_get_build_commands_ubuntu(
+    charm_plugin, tmp_path, mocker, monkeypatch
+):
     monkeypatch.setenv("PATH", "/some/path")
     monkeypatch.setenv("SNAP", "snap_value")
     monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
@@ -146,10 +151,14 @@ def test_charmplugin_get_build_commands_ubuntu(charm_plugin, tmp_path, mocker, m
     ]
 
     # check the callback is properly registered for running own method after build
-    mock_register.assert_called_with(charm_plugin.post_build_callback, step_list=[Step.BUILD])
+    mock_register.assert_called_with(
+        charm_plugin.post_build_callback, step_list=[Step.BUILD]
+    )
 
 
-def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker, monkeypatch):
+def test_charmplugin_get_build_commands_centos_7(
+    charm_plugin, tmp_path, mocker, monkeypatch
+):
     monkeypatch.setenv("PATH", "/some/path")
     monkeypatch.setenv("SNAP", "snap_value")
     monkeypatch.setenv("SNAP_ARCH", "snap_arch_value")
@@ -193,7 +202,9 @@ def test_charmplugin_get_build_commands_centos_7(charm_plugin, tmp_path, mocker,
     ]
 
     # check the callback is properly registered for running own method after build
-    mock_register.assert_called_with(charm_plugin.post_build_callback, step_list=[Step.BUILD])
+    mock_register.assert_called_with(
+        charm_plugin.post_build_callback, step_list=[Step.BUILD]
+    )
 
 
 def test_charmplugin_post_build_metric_collection(charm_plugin):
@@ -205,7 +216,7 @@ def test_charmplugin_post_build_metric_collection(charm_plugin):
 def test_charmpluginproperties_invalid_properties():
     content = {"source": ".", "charm-invalid": True}
     with pytest.raises(pydantic.ValidationError) as raised:
-        parts.CharmPlugin.properties_class.unmarshal(content)
+        parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
 
     assert len(err) == 1
@@ -216,14 +227,14 @@ def test_charmpluginproperties_invalid_properties():
 def test_charmpluginproperties_entrypoint_ok():
     """Simple valid entrypoint."""
     content = {"source": ".", "charm-entrypoint": "myep.py"}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_entrypoint == "myep.py"
 
 
 def test_charmpluginproperties_entrypoint_default():
     """Specific default if not configured."""
     content = {"source": "."}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_entrypoint == "src/charm.py"
 
 
@@ -231,7 +242,7 @@ def test_charmpluginproperties_entrypoint_relative(tmp_path):
     """The configuration is stored relative no matter what."""
     absolute_path = tmp_path / "myep.py"
     content = {"source": str(tmp_path), "charm-entrypoint": str(absolute_path)}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_entrypoint == "myep.py"
 
 
@@ -240,7 +251,7 @@ def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
     outside_path = tmp_path.parent / "charm.py"
     content = {"source": str(tmp_path), "charm-entrypoint": str(outside_path)}
     with pytest.raises(pydantic.ValidationError) as raised:
-        parts.CharmPlugin.properties_class.unmarshal(content)
+        parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
@@ -255,7 +266,7 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
     outside_path = tmp_path.parent / "charm.py"
     content = {"source": str(tmp_path), "charm-entrypoint": "../charm.py"}
     with pytest.raises(pydantic.ValidationError) as raised:
-        parts.CharmPlugin.properties_class.unmarshal(content)
+        parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     err = raised.value.errors()
     assert len(err) == 1
     assert err[0]["loc"] == ("charm-entrypoint",)
@@ -268,7 +279,7 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
 def test_charmpluginproperties_requirements_default(tmp_path):
     """The configuration is empty by default."""
     content = {"source": str(tmp_path)}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_requirements == []
 
 
@@ -276,7 +287,7 @@ def test_charmpluginproperties_requirements_filepresent_ok(tmp_path: pathlib.Pat
     """If a specific file is present in disk it's used."""
     (tmp_path / "requirements.txt").write_text("somedep")
     content = {"source": str(tmp_path)}
-    properties = parts.CharmPluginProperties.unmarshal(content)
+    properties = parts.plugins.CharmPluginProperties.unmarshal(content)
     assert properties.charm_requirements == ["requirements.txt"]
 
 
@@ -285,5 +296,5 @@ def test_charmpluginproperties_requirements_filepresent_but_configured(tmp_path)
     (tmp_path / "requirements.txt").write_text("somedep")
     (tmp_path / "alternative.txt").write_text("somedep")
     content = {"source": str(tmp_path), "charm-requirements": ["alternative.txt"]}
-    properties = parts.CharmPlugin.properties_class.unmarshal(content)
+    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
     assert properties.charm_requirements == ["alternative.txt"]

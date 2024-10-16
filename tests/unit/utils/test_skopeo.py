@@ -66,7 +66,9 @@ def test_find_skopeo_success(fake_process):
     ("kwargs", "expected"),
     [
         pytest.param({}, [], id="empty"),
-        pytest.param({"insecure_policy": True}, ["--insecure-policy"], id="insecure_policy"),
+        pytest.param(
+            {"insecure_policy": True}, ["--insecure-policy"], id="insecure_policy"
+        ),
         pytest.param({"arch": "amd64"}, ["--override-arch", "amd64"], id="amd64"),
         pytest.param({"arch": "arm64"}, ["--override-arch", "arm64"], id="arm64"),
         pytest.param({"arch": "riscv64"}, ["--override-arch", "riscv64"], id="riscv64"),
@@ -103,14 +105,25 @@ def fake_skopeo(fake_process):
         ({"preserve_digests": True}, ["--preserve-digests"]),
         ({"source_username": "user"}, ["--src-creds", "user"]),
         ({"source_password": "pass"}, ["--src-password", "pass"]),
-        ({"source_username": "user", "source_password": "pass"}, ["--src-creds", "user:pass"]),
+        (
+            {"source_username": "user", "source_password": "pass"},
+            ["--src-creds", "user:pass"],
+        ),
         ({"dest_username": "user"}, ["--dest-creds", "user"]),
         ({"dest_password": "pass"}, ["--dest-password", "pass"]),
-        ({"dest_username": "user", "dest_password": "pass"}, ["--dest-creds", "user:pass"]),
+        (
+            {"dest_username": "user", "dest_password": "pass"},
+            ["--dest-creds", "user:pass"],
+        ),
     ],
 )
 def test_get_copy_command(
-    fake_process, fake_skopeo: Skopeo, source_image, destination_image, kwargs, expected_args
+    fake_process,
+    fake_skopeo: Skopeo,
+    source_image,
+    destination_image,
+    kwargs,
+    expected_args,
 ):
     fake_process.register(
         [

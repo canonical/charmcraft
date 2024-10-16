@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Service class for store interaction."""
+
 from __future__ import annotations
 
 import platform
@@ -207,17 +208,23 @@ class StoreService(BaseStoreService):
             *(
                 models.CharmResourceRevisionUpdateRequest(
                     revision=revision,
-                    bases=[models.RequestCharmResourceBase(architectures=architectures)],
+                    bases=[
+                        models.RequestCharmResourceBase(architectures=architectures)
+                    ],
                 )
                 for revision, architectures in updates.items()
             ),
             name=name,
             resource_name=resource_name,
         )
-        new_revisions = self.client.list_resource_revisions(name=name, resource_name=resource_name)
+        new_revisions = self.client.list_resource_revisions(
+            name=name, resource_name=resource_name
+        )
         return [rev for rev in new_revisions if int(rev.revision) in updates]
 
-    def get_libraries_metadata(self, libraries: Sequence[CharmLib]) -> Sequence[Library]:
+    def get_libraries_metadata(
+        self, libraries: Sequence[CharmLib]
+    ) -> Sequence[Library]:
         """Get the metadata for one or more charm libraries.
 
         :param libraries: A sequence of libraries to request.
@@ -249,7 +256,12 @@ class StoreService(BaseStoreService):
         }
 
     def get_library(
-        self, charm_name: str, *, library_id: str, api: int | None = None, patch: int | None = None
+        self,
+        charm_name: str,
+        *,
+        library_id: str,
+        api: int | None = None,
+        patch: int | None = None,
     ) -> Library:
         """Get a library by charm name and ID from charmhub."""
         return self.anonymous_client.get_library(

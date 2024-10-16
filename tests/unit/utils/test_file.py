@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for file-related utilities."""
+
 import os
 import pathlib
 import sys

@@ -38,7 +38,9 @@ def test_lock_cache(
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
     lock_file = cache_path / "charmcraft.lock"
-    bash_lock_cmd = ["bash", "-c", f"flock -n {lock_file} true"] if shutil.which("flock") else None
+    bash_lock_cmd = (
+        ["bash", "-c", f"flock -n {lock_file} true"] if shutil.which("flock") else None
+    )
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
@@ -71,7 +73,9 @@ def test_locked_cache_no_cache(
     cache_path.mkdir()
     lock_file = cache_path / "charmcraft.lock"
 
-    bash_lock_cmd = ["bash", "-c", f"flock -n {lock_file} true"] if shutil.which("flock") else None
+    bash_lock_cmd = (
+        ["bash", "-c", f"flock -n {lock_file} true"] if shutil.which("flock") else None
+    )
     # Check that we can lock the file from another process.
     if bash_lock_cmd:
         subprocess.run(bash_lock_cmd, check=True)
@@ -97,7 +101,8 @@ def test_locked_cache_no_cache(
         # instance cache and not the shared cache.
         assert list(cache_path.iterdir()) == [cache_path / "charmcraft.lock"]
         emitter.assert_progress(
-            "Shared cache locked by another process; running without cache.", permanent=True
+            "Shared cache locked by another process; running without cache.",
+            permanent=True,
         )
 
         assert not (tmp_path / "cache_cached").exists()

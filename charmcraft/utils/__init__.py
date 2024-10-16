@@ -46,7 +46,13 @@ from charmcraft.utils.platform import (
     get_os_platform,
     validate_architectures,
 )
-from charmcraft.utils.file import S_IRALL, S_IXALL, make_executable, useful_filepath, build_zip
+from charmcraft.utils.file import (
+    S_IRALL,
+    S_IXALL,
+    make_executable,
+    useful_filepath,
+    build_zip,
+)
 from charmcraft.utils.package import (
     get_pypi_packages,
     PACKAGE_LINE_REGEX,
@@ -57,7 +63,10 @@ from charmcraft.utils.package import (
     get_requirements_file_package_names,
     validate_strict_dependencies,
 )
-from charmcraft.utils.parts import extend_python_build_environment, get_charm_copy_commands
+from charmcraft.utils.parts import (
+    extend_python_build_environment,
+    get_charm_copy_commands,
+)
 from charmcraft.utils.project import (
     find_charm_sources,
     get_charm_name_from_path,

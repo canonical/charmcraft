@@ -22,7 +22,9 @@ import pytest
 from craft_application import models
 from craft_providers import bases
 
-pytestmark = [pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")]
+pytestmark = [
+    pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")
+]
 
 
 @pytest.fixture

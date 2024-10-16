@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """The Store API handling."""
+
 import os
 import pathlib
 import platform
@@ -155,8 +156,12 @@ def _store_client_wrapper(auto_login: bool = True) -> Callable[[Callable], Calla
                             "Regenerate them and try again."
                         )
                     if not auto_login:
-                        raise CraftError("Existing credentials are no longer valid for Charmhub.")
-                    emit.progress("Existing credentials no longer valid. Trying to log in...")
+                        raise CraftError(
+                            "Existing credentials are no longer valid for Charmhub."
+                        )
+                    emit.progress(
+                        "Existing credentials no longer valid. Trying to log in..."
+                    )
                     # Clear credentials before trying to login again
                     self.logout()
                 else:
@@ -178,14 +183,20 @@ class Store:
         if needs_auth:
             try:
                 self._client = Client(
-                    charmhub_config.api_url, charmhub_config.storage_url, ephemeral=ephemeral
+                    charmhub_config.api_url,
+                    charmhub_config.storage_url,
+                    ephemeral=ephemeral,
                 )
             except craft_store.errors.NoKeyringError as error:
                 raise CraftError(str(error)) from error
         else:
-            self._client = AnonymousClient(charmhub_config.api_url, charmhub_config.storage_url)
+            self._client = AnonymousClient(
+                charmhub_config.api_url, charmhub_config.storage_url
+            )
 
-    def login(self, permissions=None, ttl=None, charms=None, bundles=None, channels=None):
+    def login(
+        self, permissions=None, ttl=None, charms=None, bundles=None, channels=None
+    ):
         """Login into the store."""
         hostname = _get_hostname()
         # Used to identify the login on Ubuntu SSO to ease future revokations.
@@ -201,11 +212,13 @@ class Store:
         packages = []
         if charms is not None:
             packages.extend(
-                endpoints.Package(package_type="charm", package_name=charm) for charm in charms
+                endpoints.Package(package_type="charm", package_name=charm)
+                for charm in charms
             )
         if bundles is not None:
             packages.extend(
-                endpoints.Package(package_type="bundle", package_name=bundle) for bundle in bundles
+                endpoints.Package(package_type="bundle", package_name=bundle)
+                for bundle in bundles
             )
         if packages:
             kwargs["packages"] = packages
@@ -233,7 +246,9 @@ class Store:
         response = self._client.whoami()
 
         acc = response["account"]
-        account = Account(name=acc["display-name"], username=acc["username"], id=acc["id"])
+        account = Account(
+            name=acc["display-name"], username=acc["username"], id=acc["id"]
+        )
         if response["packages"] is None:
             packages = None
         else:
@@ -352,11 +367,15 @@ class Store:
     @_store_client_wrapper()
     def list_revisions(self, name):
         """Return charm revisions for the indicated charm."""
-        response = self._client.request_urlpath_json("GET", f"/v1/charm/{name}/revisions")
+        response = self._client.request_urlpath_json(
+            "GET", f"/v1/charm/{name}/revisions"
+        )
         return [_build_revision(item) for item in response["revisions"]]
 
     @_store_client_wrapper()
-    def release(self, name: str, revision: int, channels: list[str], resources) -> dict[str, Any]:
+    def release(
+        self, name: str, revision: int, channels: list[str], resources
+    ) -> dict[str, Any]:
         """Release one or more revisions for a package."""
         endpoint = f"/v1/charm/{name}/releases"
         resources = [{"name": res.name, "revision": res.revision} for res in resources]
@@ -368,7 +387,9 @@ class Store:
         return self._client.request_urlpath_json("POST", endpoint, json=items)
 
     @_store_client_wrapper()
-    def list_releases(self, name: str) -> tuple[list[Release], list[Channel], list[Revision]]:
+    def list_releases(
+        self, name: str
+    ) -> tuple[list[Release], list[Channel], list[Revision]]:
         """List current releases for a package."""
         endpoint = f"/v1/charm/{name}/releases"
         response = self._client.request_urlpath_json("GET", endpoint)
@@ -416,7 +437,9 @@ class Store:
         return response["library-id"]
 
     @_store_client_wrapper()
-    def create_library_revision(self, charm_name, lib_id, api, patch, content, content_hash):
+    def create_library_revision(
+        self, charm_name, lib_id, api, patch, content, content_hash
+    ):
         """Create a new library revision."""
         endpoint = f"/v1/charm/libraries/{charm_name}/{lib_id}"
         payload = {
@@ -462,12 +485,17 @@ class Store:
             payload.append(item)
         response = self._client.request_urlpath_json("POST", endpoint, json=payload)
         libraries = response["libraries"]
-        return {(item["library-id"], item["api"]): _build_library(item) for item in libraries}
+        return {
+            (item["library-id"], item["api"]): _build_library(item)
+            for item in libraries
+        }
 
     @_store_client_wrapper()
     def list_resources(self, charm):
         """Return resources associated to the indicated charm."""
-        response = self._client.request_urlpath_json("GET", f"/v1/charm/{charm}/resources")
+        response = self._client.request_urlpath_json(
+            "GET", f"/v1/charm/{charm}/resources"
+        )
         return [_build_resource(item) for item in response["resources"]]
 
     @_store_client_wrapper()

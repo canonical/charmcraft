@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for the 'extensions' command."""
+
 import argparse
 from textwrap import dedent
 

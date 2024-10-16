@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Utilities related to Python packages."""
+
 import pathlib
 import re
 import string
@@ -121,7 +122,11 @@ def get_pip_command(
     source_only_packages = sorted(
         get_package_names(all_packages) - get_package_names(binary_packages)
     )
-    no_binary = [f"--no-binary={','.join(source_only_packages)}"] if source_only_packages else ()
+    no_binary = (
+        [f"--no-binary={','.join(source_only_packages)}"]
+        if source_only_packages
+        else ()
+    )
 
     return [
         *prefix,
@@ -133,7 +138,9 @@ def get_pip_command(
 
 def get_pip_version(pip_cmd: str) -> tuple[int, ...]:
     """Get the version of pip available from a specific pip command."""
-    result = subprocess.run([pip_cmd, "--version"], text=True, capture_output=True, check=True)
+    result = subprocess.run(
+        [pip_cmd, "--version"], text=True, capture_output=True, check=True
+    )
     version_data = result.stdout.split(" ")
     if len(version_data) < 2:
         raise ValueError("Unknown pip version")

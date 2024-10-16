@@ -41,7 +41,9 @@ ENCODED_CREDENTIALS = base64.b64encode(b"secret credentials").decode()
 def test_useragent_linux(monkeypatch):
     """Construct a user-agent as a patched Linux machine"""
     monkeypatch.setenv("TRAVIS_TESTING", "1")
-    os_platform = OSPlatform(system="Arch Linux", release="5.10.10-arch1-1", machine="x86_64")
+    os_platform = OSPlatform(
+        system="Arch Linux", release="5.10.10-arch1-1", machine="x86_64"
+    )
     with (
         patch("charmcraft.store.client.__version__", "1.2.3"),
         patch("charmcraft.utils.get_os_platform", return_value=os_platform),
@@ -50,7 +52,10 @@ def test_useragent_linux(monkeypatch):
         patch("platform.python_version", return_value="3.9.1"),
     ):
         ua = build_user_agent()
-    assert ua == "charmcraft/1.2.3 (testing) Arch Linux/5.10.10-arch1-1 (x86_64) python/3.9.1"
+    assert (
+        ua
+        == "charmcraft/1.2.3 (testing) Arch Linux/5.10.10-arch1-1 (x86_64) python/3.9.1"
+    )
 
 
 def test_useragent_windows(monkeypatch):
@@ -182,7 +187,9 @@ def test_client_request_text_error(client_class):
     """Hits the server in text mode, getting an error."""
     client = client_class("http://api.test", "http://storage.test")
     original_error_text = "bad bad server"
-    client.request_mock.side_effect = craft_store.errors.CraftStoreError(original_error_text)
+    client.request_mock.side_effect = craft_store.errors.CraftStoreError(
+        original_error_text
+    )
 
     with pytest.raises(craft_store.errors.CraftStoreError) as cm:
         client.request_urlpath_text("GET", "/somepath")
@@ -193,7 +200,9 @@ def test_client_request_json_error(client_class):
     """Hits the server in json mode, getting an error."""
     client = client_class("http://api.test", "http://storage.test")
     original_error_text = "bad bad server"
-    client.request_mock.side_effect = craft_store.errors.CraftStoreError(original_error_text)
+    client.request_mock.side_effect = craft_store.errors.CraftStoreError(
+        original_error_text
+    )
 
     with pytest.raises(craft_store.errors.CraftStoreError) as cm:
         client.request_urlpath_json("GET", "/somepath")
@@ -209,7 +218,9 @@ def test_client_hit_success_withbody(client_class):
 
     result = client.request_urlpath_text("GET", "/somepath", "somebody")
 
-    assert client.request_mock.mock_calls == [call("GET", "http://api.test/somepath", "somebody")]
+    assert client.request_mock.mock_calls == [
+        call("GET", "http://api.test/somepath", "somebody")
+    ]
     assert result == response_value
 
 
@@ -303,16 +314,16 @@ def test_client_push_response_unsuccessful(tmp_path, client_class):
     with patch.object(client, "_storage_push", return_value=fake_response):
         with pytest.raises(CraftError) as error:
             client.push_file(test_filepath)
-            expected_error = (
-                "Server error while pushing file: {'successful': False, 'upload_id': None}"
-            )
+            expected_error = "Server error while pushing file: {'successful': False, 'upload_id': None}"
             assert str(error.value) == expected_error
 
 
 def test_storage_push_succesful(client_class):
     """Bytes are properly pushed to the Storage."""
     test_monitor = MultipartEncoderMonitor(
-        MultipartEncoder(fields={"binary": ("filename", "somefile", "application/octet-stream")})
+        MultipartEncoder(
+            fields={"binary": ("filename", "somefile", "application/octet-stream")}
+        )
     )
 
     client = client_class("http://api.test", "http://test.url:0000")
@@ -335,9 +346,7 @@ def test_alternate_auth_login_forbidden(client_class, monkeypatch):
     client = client_class("http://api.test", "http://storage.test")
     with pytest.raises(CraftError) as cm:
         client.login()
-    expected_error = (
-        "Cannot login when using alternative auth through CHARMCRAFT_AUTH environment variable."
-    )
+    expected_error = "Cannot login when using alternative auth through CHARMCRAFT_AUTH environment variable."
     assert str(cm.value) == expected_error
 
 
@@ -347,9 +356,7 @@ def test_alternate_auth_logout_forbidden(client_class, monkeypatch):
     client = client_class("http://api.test", "http://storage.test")
     with pytest.raises(CraftError) as cm:
         client.logout()
-    expected_error = (
-        "Cannot logout when using alternative auth through CHARMCRAFT_AUTH environment variable."
-    )
+    expected_error = "Cannot logout when using alternative auth through CHARMCRAFT_AUTH environment variable."
     assert str(cm.value) == expected_error
 
 
@@ -373,12 +380,16 @@ def test_anonymous_client_request_success_simple():
     """Hits the server, all ok."""
     response_value = {"foo": "bar"}
     fake_response = FakeResponse(content=json.dumps(response_value), status_code=200)
-    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+    with patch(
+        "craft_store.http_client.HTTPClient.request"
+    ) as mock_http_client_request:
         mock_http_client_request.return_value = fake_response
         client = AnonymousClient("http://api.test", "http://storage.test")
         result = client.request_urlpath_json("GET", "/somepath")
 
-    assert mock_http_client_request.mock_calls == [call("GET", "http://api.test/somepath")]
+    assert mock_http_client_request.mock_calls == [
+        call("GET", "http://api.test/somepath")
+    ]
     assert result == response_value
 
 
@@ -386,18 +397,24 @@ def test_anonymous_client_request_success_without_json_parsing():
     """Hits the server, all ok, return the raw response without parsing the json."""
     response_value = "whatever test response"
     fake_response = FakeResponse(content=response_value, status_code=200)
-    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+    with patch(
+        "craft_store.http_client.HTTPClient.request"
+    ) as mock_http_client_request:
         client = AnonymousClient("http://api.test", "http://storage.test")
         mock_http_client_request.return_value = fake_response
         result = client.request_urlpath_text("GET", "/somepath")
 
-    assert mock_http_client_request.mock_calls == [call("GET", "http://api.test/somepath")]
+    assert mock_http_client_request.mock_calls == [
+        call("GET", "http://api.test/somepath")
+    ]
     assert result == response_value
 
 
 def test_anonymous_client_request_text_error():
     """Hits the server in text mode, getting an error."""
-    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+    with patch(
+        "craft_store.http_client.HTTPClient.request"
+    ) as mock_http_client_request:
         original_error_text = "bad bad server"
         mock_http_client_request.side_effect = craft_store.errors.CraftStoreError(
             original_error_text
@@ -412,7 +429,9 @@ def test_anonymous_client_request_text_error():
 
 def test_anonymous_client_request_json_error():
     """Hits the server in json mode, getting an error."""
-    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+    with patch(
+        "craft_store.http_client.HTTPClient.request"
+    ) as mock_http_client_request:
         original_error_text = "bad bad server"
         mock_http_client_request.side_effect = craft_store.errors.CraftStoreError(
             original_error_text
@@ -429,7 +448,9 @@ def test_anonymous_client_hit_success_withbody():
     """Hits the server including a body, all ok."""
     response_value = {"foo": "bar"}
     fake_response = FakeResponse(content=response_value, status_code=200)
-    with patch("craft_store.http_client.HTTPClient.request") as mock_http_client_request:
+    with patch(
+        "craft_store.http_client.HTTPClient.request"
+    ) as mock_http_client_request:
         mock_http_client_request.return_value = fake_response
         client = AnonymousClient("http://api.test", "http://storage.test")
 

@@ -1,0 +1,31 @@
+summary: pack a charm with parallel-installed charmcraft versions
+
+# Run last since we change snapd settings
+priority: -10
+
+prepare: |
+  snap install yq
+  if [[ $(snap get system experimental.parallel-instances) != true ]]; then
+    snap set system experimental.parallel-instances=true
+    REBOOT
+  fi
+  snap install --classic --channel=latest/candidate charmcraft
+  snap install --dangerous --classic --name=charmcraft_dev /charmcraft/charmcraft_*.snap
+
+restore: |
+  if [[ $(snap get system experimental.parallel-instances) == true ]]; then
+    snap remove charmcraft_dev
+    snap set system experimental.parallel-instances=false
+    REBOOT
+  fi
+  snap install --classic --dangerous /charmcraft/charmcraft_*.snap
+
+execute: |
+  # Check that the candidate version used the correct version
+  charmcraft pack
+  [[ $(unzip -p *.charm manifest.yaml | yq .charmcraft-version) == $(charmcraft --version | cut -f2 -d' ') ]]
+  rm *.charm
+
+  # Try the dev version
+  charmcraft_dev pack
+  [[ $(unzip -p *.charm manifest.yaml | yq .charmcraft-version) == $(charmcraft_dev --version | cut -f2 -d' ') ]]

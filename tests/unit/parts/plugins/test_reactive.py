@@ -28,7 +28,9 @@ from craft_parts.errors import PluginEnvironmentValidationError
 from charmcraft import const
 from charmcraft.parts.plugins import _reactive
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows not [yet] supported"
+)
 
 
 @pytest.fixture
@@ -87,7 +89,9 @@ def plugin(tmp_path, plugin_properties, spec):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
+    return plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )
 
 
 def test_get_build_package(plugin):

@@ -41,7 +41,9 @@ exec "${{python_path}}" "${{dispatch_path}}/{entrypoint}"
 """
 
 
-def create_dispatch(*, prime_dir: pathlib.Path, entrypoint: str = "src/charm.py") -> bool:
+def create_dispatch(
+    *, prime_dir: pathlib.Path, entrypoint: str = "src/charm.py"
+) -> bool:
     """If the charm has no hooks or dispatch, create a dispatch file.
 
     :param prime_dir: the prime directory to inspect and create the file in.

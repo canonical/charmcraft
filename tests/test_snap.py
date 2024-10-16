@@ -29,7 +29,9 @@ from charmcraft.snap import (
 
 @pytest.fixture
 def mock_snap_config():
-    with mock.patch("charmcraft.snap.snaphelpers.SnapConfig", autospec=True) as mock_snap_config:
+    with mock.patch(
+        "charmcraft.snap.snaphelpers.SnapConfig", autospec=True
+    ) as mock_snap_config:
         yield mock_snap_config
 
 
@@ -72,5 +74,7 @@ def test_get_snap_configuration_invalid_providers(mock_snap_config, provider):
     assert snap_config == CharmcraftSnapConfiguration(provider=provider)
     assert snap_config.provider == provider
 
-    with pytest.raises(ValueError, match=re.escape(f"provider {provider!r} is not supported")):
+    with pytest.raises(
+        ValueError, match=re.escape(f"provider {provider!r} is not supported")
+    ):
         validate_snap_configuration(snap_config)

@@ -22,7 +22,6 @@ dependencies = [
     "pyyaml",
     "requests",
     "requests-toolbelt",
-    "requests-unixsocket2",
     "snap-helpers",
     "tabulate",
 ]
@@ -58,7 +57,6 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "responses",
 ]
 lint = [
-    "black~=24.0",
     "codespell[tomli]",
     "yamllint",
 ]
@@ -113,10 +111,6 @@ git_describe_command = "git describe --long --match '[0-9]*.[0-9]*.[0-9]*' --exc
 [tool.setuptools.packages.find]
 include = ["*craft*"]
 namespaces = false
-
-[tool.black]
-target-version = ["py310", "py311"]
-line-length = 99
 
 [tool.codespell]
 ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread,socio-economic"

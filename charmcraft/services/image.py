@@ -133,7 +133,9 @@ class ImageService(craft_application.AppService):
     @staticmethod
     def convert_go_arch_to_charm_arch(architecture: str) -> const.CharmArch:
         """Convert an OCI architecture to a charm architecture."""
-        return const.CharmArch(const.GO_ARCH_TO_CHARM_ARCH.get(architecture, architecture))
+        return const.CharmArch(
+            const.GO_ARCH_TO_CHARM_ARCH.get(architecture, architecture)
+        )
 
     def inspect(self, image: str) -> OCIMetadata:
         """Inspect an image with Skopeo and return the relevant metadata.

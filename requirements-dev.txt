@@ -247,7 +247,6 @@ requests-toolbelt==1.0.0
     #   craft-store
 requests-unixsocket2==0.4.2
     # via
-    #   charmcraft (pyproject.toml)
     #   craft-parts
     #   craft-providers
 responses==0.25.3

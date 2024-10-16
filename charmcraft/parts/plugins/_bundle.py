@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Bundle plugin for craft-parts."""
+
 import sys
 from typing import Literal
 

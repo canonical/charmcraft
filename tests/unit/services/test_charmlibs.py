@@ -75,7 +75,9 @@ def test_is_downloaded_with_file(
     lib_path.write_text("LIBID='abc'\nLIBAPI=0\nLIBPATCH=1\n")
 
     assert (
-        service.is_downloaded(charm_name=charm_name, lib_name=lib_name, api=0, patch=patch)
+        service.is_downloaded(
+            charm_name=charm_name, lib_name=lib_name, api=0, patch=patch
+        )
         == expected
     )
 
@@ -84,10 +86,18 @@ def test_is_downloaded_with_file(
     ("charm_name", "lib_name", "lib_contents", "expected"),
     [
         pytest.param(
-            "my-charm", "my_lib", "LIBID='abc'\nLIBAPI=0\nLIBPATCH=1\n", (0, 1), id="0.1"
+            "my-charm",
+            "my_lib",
+            "LIBID='abc'\nLIBAPI=0\nLIBPATCH=1\n",
+            (0, 1),
+            id="0.1",
         ),
         pytest.param(
-            "my-charm", "my_lib", "LIBID='abc'\nLIBAPI=16\nLIBPATCH=19\n", (16, 19), id="16.19"
+            "my-charm",
+            "my_lib",
+            "LIBID='abc'\nLIBAPI=16\nLIBPATCH=19\n",
+            (16, 19),
+            id="16.19",
         ),
         pytest.param(
             "my-charm",
@@ -108,11 +118,15 @@ def test_get_local_version(
     expected: tuple[int, int] | None,
 ):
     if expected is not None:
-        lib_path = fake_project_dir / utils.get_lib_path(charm_name, lib_name, expected[0])
+        lib_path = fake_project_dir / utils.get_lib_path(
+            charm_name, lib_name, expected[0]
+        )
         (fake_project_dir / lib_path).parent.mkdir(parents=True)
         (fake_project_dir / lib_path).write_text(lib_contents)
 
-    assert service.get_local_version(charm_name=charm_name, lib_name=lib_name) == expected
+    assert (
+        service.get_local_version(charm_name=charm_name, lib_name=lib_name) == expected
+    )
 
 
 @pytest.mark.parametrize(

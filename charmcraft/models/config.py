@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft Juju Config pydantic model."""
+
 from typing import Annotated, Literal
 
 import pydantic
@@ -65,12 +66,17 @@ class JujuSecretOption(_BaseJujuOption):
     # the deployment in a model) is at the time that they are
     # writing the config, but included for completeness.
     default: (
-        Annotated[str, pydantic.StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")] | None
+        Annotated[str, pydantic.StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")]
+        | None
     ) = None
 
 
 JujuOption = Annotated[
-    JujuStringOption | JujuIntOption | JujuFloatOption | JujuBooleanOption | JujuSecretOption,
+    JujuStringOption
+    | JujuIntOption
+    | JujuFloatOption
+    | JujuBooleanOption
+    | JujuSecretOption,
     pydantic.Field(discriminator="type"),
 ]
 

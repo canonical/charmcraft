@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """craft-application based lifecycle commands."""
+
 from __future__ import annotations
 
 import pathlib
@@ -171,14 +172,20 @@ class PackCommand(lifecycle.PackCommand):
         # Always use a runner on non-Linux platforms.
         # Craft-parts is not designed to work on non-posix platforms, and most
         # notably here, the bundle plugin doesn't work on Windows.
-        if sys.platform == "linux" and charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
+        if (
+            sys.platform == "linux"
+            and charmcraft_yaml
+            and charmcraft_yaml.get("type") == "bundle"
+        ):
             return False
 
         return super().run_managed(parsed_args)
 
     def _update_charm_libs(self) -> None:
         """Update charm libs attached to the project."""
-        craft_cli.emit.progress("Checking that charmlibs match 'charmcraft.yaml' values")
+        craft_cli.emit.progress(
+            "Checking that charmlibs match 'charmcraft.yaml' values"
+        )
         project = cast(models.CharmcraftProject, self._services.project)
         libs_svc = cast(services.CharmLibsService, self._services.charm_libs)
         installable_libs: list[models.CharmLib] = []
